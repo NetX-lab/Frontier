@@ -1,0 +1,120 @@
+{
+  "observed_utc": "2026-10-31T17:59:08.268971+00:00",
+  "name": "exp-1101-015820-503227",
+  "uid": "9baebf2e-5cc3-473c-9264-0d8b87afe9af",
+  "creator": "i-fengyicheng",
+  "labels": {
+    "quotagroup.brainpp.cn/preemptible": "no",
+    "quotagroup.brainpp.cn/quotagroup": "step_main"
+  },
+  "status": {
+    "phase": "Running",
+    "reason": "RJobRunning",
+    "message": "Tasks is running: [default]",
+    "taskStatuses": {
+      "default": {
+        "active": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "annotations": {},
+  "tasks": {
+    "default": {
+      "replicas": 1,
+      "nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/g1h-supplement-build:/data/ycfeng/Frontier/.worktrees/g1h-supplement-build",
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "16",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "16",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "replicas": [
+    {
+      "name": "exp-1101-015820-503227-cfcd2084",
+      "uid": "9b00c0e0-12b8-479b-8fc4-e07ff542a27a",
+      "ownerReferences": [
+        {
+          "apiVersion": "rjob.brainpp.cn/v1alpha1",
+          "kind": "RJob",
+          "name": "exp-1101-015820-503227",
+          "uid": "9baebf2e-5cc3-473c-9264-0d8b87afe9af",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "status": {
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T17:58:48Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T17:58:59Z"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T17:58:59Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T17:58:39Z"
+          }
+        ],
+        "hostIP": "10.204.22.64",
+        "podIP": "10.204.22.64",
+        "podIPs": [
+          {
+            "ip": "10.204.22.64"
+          }
+        ],
+        "startTime": "2026-10-31T17:58:48Z",
+        "containerStatuses": [
+          {
+            "name": "default",
+            "state": {
+              "running": {
+                "startedAt": "2026-10-31T17:58:58Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca",
+            "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "containerID": "containerd://c005b1f951e8b847e7801be15d4cc3c67263a2b2fa84ae8fe31e988848cf4808",
+            "started": true
+          }
+        ],
+        "qosClass": "Guaranteed",
+        "phase": "Running",
+        "nodeName": "gpu-h200-0819.lgcm.sh.istep.fun"
+      }
+    }
+  ]
+}

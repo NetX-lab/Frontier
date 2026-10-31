@@ -1,0 +1,55 @@
+{
+  "charged_group": "step_main",
+  "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "cpu": 16,
+  "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+  "gpu": 1,
+  "gpu_type": "H200",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "job_tag": "dsv4-a6-repeatability-20261101-01",
+  "mem_gb": 128,
+  "name": "A6_REPEATABILITY",
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_attention/a6_repeatability_20261101_01",
+  "phases": [
+    {
+      "name": "A6_REPEATABILITY",
+      "steps": [
+        {
+          "commands": [
+            {
+              "argv": [
+                "{python}",
+                "-I",
+                "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/native_dummy_bootstrap.py",
+                "--config",
+                "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/bridge_config.json"
+              ],
+              "name": "bridge_run"
+            }
+          ]
+        },
+        {
+          "commands": [
+            {
+              "argv": [
+                "{python}",
+                "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/dsv4_graph_bridge_check.py",
+                "--config",
+                "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/bridge_config.json",
+                "--report"
+              ],
+              "name": "bridge_report"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "planning_gpu_hours_cap": 1.5,
+  "preemptible": false,
+  "source_revision": "a689ed05f462eb269b9dffe640da151e6614a5ef",
+  "source_snapshot": "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01",
+  "timeout_seconds": 5400,
+  "wheelhouse": "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/launch/wheelhouse",
+  "worker": "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/launch/glm_producer_worker.py"
+}

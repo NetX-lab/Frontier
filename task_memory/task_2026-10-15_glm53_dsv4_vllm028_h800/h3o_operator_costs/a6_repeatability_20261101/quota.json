@@ -1,0 +1,72 @@
+{
+  "observed_utc": "2026-10-31T17:56:41.680397+00:00",
+  "operation": "read only",
+  "personal_live_jobs": [
+    {
+      "name": "exp-1101-015004-312402",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "resource_labels": {
+        "quotagroup.brainpp.cn/preemptible": "yes",
+        "quotagroup.brainpp.cn/quotagroup": "step_main"
+      },
+      "preemptible_spec": null
+    },
+    {
+      "name": "exp-1031-165311-562571",
+      "phase": "Running",
+      "gpu_reservations": 56.0,
+      "resource_labels": {
+        "quotagroup.brainpp.cn/preemptible": "yes",
+        "quotagroup.brainpp.cn/quotagroup": "step_main"
+      },
+      "preemptible_spec": null
+    },
+    {
+      "name": "exp-1031-165342-167440",
+      "phase": "Starting",
+      "gpu_reservations": 56.0,
+      "resource_labels": {
+        "quotagroup.brainpp.cn/preemptible": "yes",
+        "quotagroup.brainpp.cn/quotagroup": "step_main"
+      },
+      "preemptible_spec": null
+    },
+    {
+      "name": "exp-1031-165327-473892",
+      "phase": "Running",
+      "gpu_reservations": 56.0,
+      "resource_labels": {
+        "quotagroup.brainpp.cn/preemptible": "yes",
+        "quotagroup.brainpp.cn/quotagroup": "step_main"
+      },
+      "preemptible_spec": null
+    },
+    {
+      "name": "exp-1031-165414-892398",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "resource_labels": {
+        "quotagroup.brainpp.cn/preemptible": "yes",
+        "quotagroup.brainpp.cn/quotagroup": "step_main"
+      },
+      "preemptible_spec": null
+    },
+    {
+      "name": "exp-1031-165358-400417",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "resource_labels": {
+        "quotagroup.brainpp.cn/preemptible": "yes",
+        "quotagroup.brainpp.cn/quotagroup": "step_main"
+      },
+      "preemptible_spec": null
+    }
+  ],
+  "pages": 1,
+  "personal_list_continues": false,
+  "quota_error": {
+    "type": "ForbiddenException",
+    "status": 403
+  }
+}

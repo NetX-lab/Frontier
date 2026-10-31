@@ -1,0 +1,40 @@
+{
+  "charged_group": "step_main",
+  "code_mount_point": "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build",
+  "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 5400 python3 /data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/launch/glm_producer_worker.py --config /data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/jobs/A6_REPEATABILITY.json'",
+  "cpu": 16,
+  "custom_resources": [
+    "mellanox.com/mlnx_rdma:1",
+    "rdma/mlnx_shared:8"
+  ],
+  "envs": {
+    "HF_DATASETS_OFFLINE": "1",
+    "HF_HUB_OFFLINE": "1",
+    "MC_DISABLE_METACACHE": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "VLLM_CUDA_COMPATIBILITY_PATH": "/usr/local/cuda-13.0/compat",
+    "VLLM_ENABLE_CUDA_COMPATIBILITY": "1"
+  },
+  "extra_requirements": [],
+  "gpu": 1,
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "mem_gb": 128,
+  "mounts": [
+    "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+  ],
+  "platform_operations": 0,
+  "positive_tags": [
+    "H200"
+  ],
+  "preemptible": false,
+  "replica": 1,
+  "status": "PASS_DRY_RUN",
+  "submission_cwd": "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build",
+  "task_specs": {
+    "default": {
+      "is_critical": true
+    }
+  },
+  "use_image": true
+}

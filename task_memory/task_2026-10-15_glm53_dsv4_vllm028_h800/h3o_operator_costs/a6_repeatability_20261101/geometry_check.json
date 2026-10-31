@@ -1,0 +1,1644 @@
+{
+  "original_steps": {
+    "g1-e0-0262-full": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      183024,
+      {
+        "case_id": "g1-e0-0262-full",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6148,
+          "num_actual_tokens": 16,
+          "num_reqs": 16,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 6148,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "FULL",
+          "num_reqs": 16,
+          "num_tokens": 16,
+          "num_tokens_across_dp": [
+            16,
+            16
+          ]
+        },
+        "engine_index": 0,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6148,
+          "num_actual_tokens": 16,
+          "num_reqs": 16,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "decode",
+        "requests": [
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6133
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6134
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6135
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6135
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6136
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6137
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6138
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6138
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6142
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6143
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6144
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6144
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6145
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6146
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6147
+          }
+        ],
+        "step_index": 247,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ],
+    "g1-e0-0263-full": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      183768,
+      {
+        "case_id": "g1-e0-0263-full",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6272,
+          "num_actual_tokens": 16,
+          "num_reqs": 16,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 6272,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "FULL",
+          "num_reqs": 16,
+          "num_tokens": 16,
+          "num_tokens_across_dp": [
+            16,
+            16
+          ]
+        },
+        "engine_index": 0,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6272,
+          "num_actual_tokens": 16,
+          "num_reqs": 16,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "decode",
+        "requests": [
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6133
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6134
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6135
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6135
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6136
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6137
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6138
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6138
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6139
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6140
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6141
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6269
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6269
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6270
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6271
+          }
+        ],
+        "step_index": 248,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 16,
+          "num_decodes": 16,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ],
+    "g1-e1-0729-first_tail": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+      11028,
+      {
+        "case_id": "g1-e1-0729-first_tail",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6145,
+          "num_actual_tokens": 3,
+          "num_reqs": 3,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 6145,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "PIECEWISE",
+          "num_reqs": null,
+          "num_tokens": 4,
+          "num_tokens_across_dp": [
+            4,
+            4
+          ]
+        },
+        "engine_index": 1,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6145,
+          "num_actual_tokens": 3,
+          "num_reqs": 3,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "first_tail",
+        "requests": [
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6142
+          },
+          {
+            "num_computed_tokens": 6144,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6143
+          },
+          {
+            "num_computed_tokens": 6143,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6144
+          }
+        ],
+        "step_index": 15,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ],
+    "g1-e1-0730-first_tail": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+      11767,
+      {
+        "case_id": "g1-e1-0730-first_tail",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6148,
+          "num_actual_tokens": 3,
+          "num_reqs": 3,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 6148,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "PIECEWISE",
+          "num_reqs": null,
+          "num_tokens": 4,
+          "num_tokens_across_dp": [
+            4,
+            4
+          ]
+        },
+        "engine_index": 1,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6148,
+          "num_actual_tokens": 3,
+          "num_reqs": 3,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "first_tail",
+        "requests": [
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6146
+          },
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6146
+          },
+          {
+            "num_computed_tokens": 6143,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6144
+          }
+        ],
+        "step_index": 16,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 3,
+          "num_decodes": 3,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ],
+    "g1hs-e0-0100-full": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      74054,
+      {
+        "case_id": "g1hs-e0-0100-full",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 7164,
+          "num_actual_tokens": 24,
+          "num_reqs": 24,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 7164,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "FULL",
+          "num_reqs": 24,
+          "num_tokens": 24,
+          "num_tokens_across_dp": [
+            24,
+            24
+          ]
+        },
+        "engine_index": 0,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 7164,
+          "num_actual_tokens": 24,
+          "num_reqs": 24,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "decode",
+        "requests": [
+          {
+            "num_computed_tokens": 6147,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6134
+          },
+          {
+            "num_computed_tokens": 6207,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6195
+          },
+          {
+            "num_computed_tokens": 6275,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6264
+          },
+          {
+            "num_computed_tokens": 6335,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6325
+          },
+          {
+            "num_computed_tokens": 6403,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6393
+          },
+          {
+            "num_computed_tokens": 6463,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6454
+          },
+          {
+            "num_computed_tokens": 6523,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6515
+          },
+          {
+            "num_computed_tokens": 6591,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6584
+          },
+          {
+            "num_computed_tokens": 6651,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6645
+          },
+          {
+            "num_computed_tokens": 6719,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6713
+          },
+          {
+            "num_computed_tokens": 6779,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6774
+          },
+          {
+            "num_computed_tokens": 6847,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6843
+          },
+          {
+            "num_computed_tokens": 6907,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6904
+          },
+          {
+            "num_computed_tokens": 6975,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6973
+          },
+          {
+            "num_computed_tokens": 7035,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7034
+          },
+          {
+            "num_computed_tokens": 7103,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7102
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7163
+          }
+        ],
+        "step_index": 100,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ],
+    "g1hs-e0-0101-full": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      74825,
+      {
+        "case_id": "g1hs-e0-0101-full",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 7040,
+          "num_actual_tokens": 24,
+          "num_reqs": 24,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 7040,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "FULL",
+          "num_reqs": 24,
+          "num_tokens": 24,
+          "num_tokens_across_dp": [
+            24,
+            24
+          ]
+        },
+        "engine_index": 0,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 7040,
+          "num_actual_tokens": 24,
+          "num_reqs": 24,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "decode",
+        "requests": [
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6258
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6259
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6260
+          },
+          {
+            "num_computed_tokens": 6399,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6389
+          },
+          {
+            "num_computed_tokens": 6399,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6389
+          },
+          {
+            "num_computed_tokens": 6399,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6390
+          },
+          {
+            "num_computed_tokens": 6527,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6519
+          },
+          {
+            "num_computed_tokens": 6527,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6520
+          },
+          {
+            "num_computed_tokens": 6655,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6649
+          },
+          {
+            "num_computed_tokens": 6655,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6649
+          },
+          {
+            "num_computed_tokens": 6783,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6778
+          },
+          {
+            "num_computed_tokens": 6783,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6779
+          },
+          {
+            "num_computed_tokens": 6911,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6908
+          },
+          {
+            "num_computed_tokens": 6911,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6909
+          },
+          {
+            "num_computed_tokens": 7039,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7038
+          },
+          {
+            "num_computed_tokens": 7039,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7038
+          },
+          {
+            "num_computed_tokens": 7039,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7039
+          }
+        ],
+        "step_index": 101,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 24,
+          "num_decodes": 24,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ],
+    "g1hs-e0-0253-piecewise": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      188339,
+      {
+        "case_id": "g1hs-e0-0253-piecewise",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6272,
+          "num_actual_tokens": 19,
+          "num_reqs": 19,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 6272,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "PIECEWISE",
+          "num_reqs": null,
+          "num_tokens": 24,
+          "num_tokens_across_dp": [
+            24,
+            24
+          ]
+        },
+        "engine_index": 0,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 6272,
+          "num_actual_tokens": 19,
+          "num_reqs": 19,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "decode",
+        "requests": [
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6257
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6258
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6259
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6260
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6260
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6261
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6262
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6263
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6263
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6264
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6265
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6266
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6266
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6267
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6268
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6269
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6270
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6270
+          },
+          {
+            "num_computed_tokens": 6271,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 6271
+          }
+        ],
+        "step_index": 253,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ],
+    "g1hs-e0-0254-piecewise": [
+      "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      189104,
+      {
+        "case_id": "g1hs-e0-0254-piecewise",
+        "csa_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 7164,
+          "num_actual_tokens": 19,
+          "num_reqs": 19,
+          "topk_tokens": 512
+        },
+        "csa_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_index_compressor_metadata": {
+          "block_size": 4,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "csa_indexer_metadata": {
+          "max_seq_len": 7164,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0
+        },
+        "csa_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "cudagraph_dispatch": {
+          "cg_mode": "PIECEWISE",
+          "num_reqs": null,
+          "num_tokens": 24,
+          "num_tokens_across_dp": [
+            24,
+            24
+          ]
+        },
+        "engine_index": 0,
+        "hca_attention_metadata": {
+          "block_size": 256,
+          "max_query_len": 1,
+          "max_seq_len": 7164,
+          "num_actual_tokens": 19,
+          "num_reqs": 19,
+          "topk_tokens": 512
+        },
+        "hca_compressor_metadata": {
+          "block_size": 8,
+          "c128_boundary": null,
+          "num_decode_tokens": null
+        },
+        "hca_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        },
+        "kind": "step",
+        "measurement": "KERNEL_ONLY",
+        "phase": "decode",
+        "requests": [
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7147
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7148
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7149
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7150
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7151
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7152
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7153
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7153
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7154
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7155
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7156
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7157
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7158
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7159
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7160
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7160
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7161
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7162
+          },
+          {
+            "num_computed_tokens": 7163,
+            "num_scheduled_tokens": 1,
+            "prompt_len": 7163
+          }
+        ],
+        "step_index": 254,
+        "uncompressed_swa_metadata": {
+          "block_size": 64,
+          "decode_swa_width": 128,
+          "max_decode_query_len": 1,
+          "num_decode_tokens": 19,
+          "num_decodes": 19,
+          "num_prefill_tokens": 0,
+          "num_prefills": 0,
+          "prefill_max_model_len": 0,
+          "prefill_max_num_batched_tokens": 0,
+          "prefill_window_size": 0
+        }
+      }
+    ]
+  },
+  "predicted": {
+    "cases_seen": 128,
+    "context_tolerance": 127,
+    "grid_complete": false,
+    "measured_steps": 128,
+    "mismatches": [],
+    "missing_steps": [],
+    "native": {
+      "cases": [],
+      "classes": 0,
+      "outside": 0
+    },
+    "outside_steps": [],
+    "prediction_matches": true,
+    "schema_version": "v4_attention_coverage.v1",
+    "steps_by_case": {
+      "a6-r00-g1-e0-0262-full": 1,
+      "a6-r00-g1-e0-0263-full": 1,
+      "a6-r00-g1-e1-0729-first_tail": 1,
+      "a6-r00-g1-e1-0730-first_tail": 1,
+      "a6-r00-g1hs-e0-0100-full": 1,
+      "a6-r00-g1hs-e0-0101-full": 1,
+      "a6-r00-g1hs-e0-0253-piecewise": 1,
+      "a6-r00-g1hs-e0-0254-piecewise": 1,
+      "a6-r01-g1-e0-0262-full": 1,
+      "a6-r01-g1-e0-0263-full": 1,
+      "a6-r01-g1-e1-0729-first_tail": 1,
+      "a6-r01-g1-e1-0730-first_tail": 1,
+      "a6-r01-g1hs-e0-0100-full": 1,
+      "a6-r01-g1hs-e0-0101-full": 1,
+      "a6-r01-g1hs-e0-0253-piecewise": 1,
+      "a6-r01-g1hs-e0-0254-piecewise": 1,
+      "a6-r02-g1-e0-0262-full": 1,
+      "a6-r02-g1-e0-0263-full": 1,
+      "a6-r02-g1-e1-0729-first_tail": 1,
+      "a6-r02-g1-e1-0730-first_tail": 1,
+      "a6-r02-g1hs-e0-0100-full": 1,
+      "a6-r02-g1hs-e0-0101-full": 1,
+      "a6-r02-g1hs-e0-0253-piecewise": 1,
+      "a6-r02-g1hs-e0-0254-piecewise": 1,
+      "a6-r03-g1-e0-0262-full": 1,
+      "a6-r03-g1-e0-0263-full": 1,
+      "a6-r03-g1-e1-0729-first_tail": 1,
+      "a6-r03-g1-e1-0730-first_tail": 1,
+      "a6-r03-g1hs-e0-0100-full": 1,
+      "a6-r03-g1hs-e0-0101-full": 1,
+      "a6-r03-g1hs-e0-0253-piecewise": 1,
+      "a6-r03-g1hs-e0-0254-piecewise": 1,
+      "a6-r04-g1-e0-0262-full": 1,
+      "a6-r04-g1-e0-0263-full": 1,
+      "a6-r04-g1-e1-0729-first_tail": 1,
+      "a6-r04-g1-e1-0730-first_tail": 1,
+      "a6-r04-g1hs-e0-0100-full": 1,
+      "a6-r04-g1hs-e0-0101-full": 1,
+      "a6-r04-g1hs-e0-0253-piecewise": 1,
+      "a6-r04-g1hs-e0-0254-piecewise": 1,
+      "a6-r05-g1-e0-0262-full": 1,
+      "a6-r05-g1-e0-0263-full": 1,
+      "a6-r05-g1-e1-0729-first_tail": 1,
+      "a6-r05-g1-e1-0730-first_tail": 1,
+      "a6-r05-g1hs-e0-0100-full": 1,
+      "a6-r05-g1hs-e0-0101-full": 1,
+      "a6-r05-g1hs-e0-0253-piecewise": 1,
+      "a6-r05-g1hs-e0-0254-piecewise": 1,
+      "a6-r06-g1-e0-0262-full": 1,
+      "a6-r06-g1-e0-0263-full": 1,
+      "a6-r06-g1-e1-0729-first_tail": 1,
+      "a6-r06-g1-e1-0730-first_tail": 1,
+      "a6-r06-g1hs-e0-0100-full": 1,
+      "a6-r06-g1hs-e0-0101-full": 1,
+      "a6-r06-g1hs-e0-0253-piecewise": 1,
+      "a6-r06-g1hs-e0-0254-piecewise": 1,
+      "a6-r07-g1-e0-0262-full": 1,
+      "a6-r07-g1-e0-0263-full": 1,
+      "a6-r07-g1-e1-0729-first_tail": 1,
+      "a6-r07-g1-e1-0730-first_tail": 1,
+      "a6-r07-g1hs-e0-0100-full": 1,
+      "a6-r07-g1hs-e0-0101-full": 1,
+      "a6-r07-g1hs-e0-0253-piecewise": 1,
+      "a6-r07-g1hs-e0-0254-piecewise": 1,
+      "a6-r08-g1-e0-0262-full": 1,
+      "a6-r08-g1-e0-0263-full": 1,
+      "a6-r08-g1-e1-0729-first_tail": 1,
+      "a6-r08-g1-e1-0730-first_tail": 1,
+      "a6-r08-g1hs-e0-0100-full": 1,
+      "a6-r08-g1hs-e0-0101-full": 1,
+      "a6-r08-g1hs-e0-0253-piecewise": 1,
+      "a6-r08-g1hs-e0-0254-piecewise": 1,
+      "a6-r09-g1-e0-0262-full": 1,
+      "a6-r09-g1-e0-0263-full": 1,
+      "a6-r09-g1-e1-0729-first_tail": 1,
+      "a6-r09-g1-e1-0730-first_tail": 1,
+      "a6-r09-g1hs-e0-0100-full": 1,
+      "a6-r09-g1hs-e0-0101-full": 1,
+      "a6-r09-g1hs-e0-0253-piecewise": 1,
+      "a6-r09-g1hs-e0-0254-piecewise": 1,
+      "a6-r10-g1-e0-0262-full": 1,
+      "a6-r10-g1-e0-0263-full": 1,
+      "a6-r10-g1-e1-0729-first_tail": 1,
+      "a6-r10-g1-e1-0730-first_tail": 1,
+      "a6-r10-g1hs-e0-0100-full": 1,
+      "a6-r10-g1hs-e0-0101-full": 1,
+      "a6-r10-g1hs-e0-0253-piecewise": 1,
+      "a6-r10-g1hs-e0-0254-piecewise": 1,
+      "a6-r11-g1-e0-0262-full": 1,
+      "a6-r11-g1-e0-0263-full": 1,
+      "a6-r11-g1-e1-0729-first_tail": 1,
+      "a6-r11-g1-e1-0730-first_tail": 1,
+      "a6-r11-g1hs-e0-0100-full": 1,
+      "a6-r11-g1hs-e0-0101-full": 1,
+      "a6-r11-g1hs-e0-0253-piecewise": 1,
+      "a6-r11-g1hs-e0-0254-piecewise": 1,
+      "a6-r12-g1-e0-0262-full": 1,
+      "a6-r12-g1-e0-0263-full": 1,
+      "a6-r12-g1-e1-0729-first_tail": 1,
+      "a6-r12-g1-e1-0730-first_tail": 1,
+      "a6-r12-g1hs-e0-0100-full": 1,
+      "a6-r12-g1hs-e0-0101-full": 1,
+      "a6-r12-g1hs-e0-0253-piecewise": 1,
+      "a6-r12-g1hs-e0-0254-piecewise": 1,
+      "a6-r13-g1-e0-0262-full": 1,
+      "a6-r13-g1-e0-0263-full": 1,
+      "a6-r13-g1-e1-0729-first_tail": 1,
+      "a6-r13-g1-e1-0730-first_tail": 1,
+      "a6-r13-g1hs-e0-0100-full": 1,
+      "a6-r13-g1hs-e0-0101-full": 1,
+      "a6-r13-g1hs-e0-0253-piecewise": 1,
+      "a6-r13-g1hs-e0-0254-piecewise": 1,
+      "a6-r14-g1-e0-0262-full": 1,
+      "a6-r14-g1-e0-0263-full": 1,
+      "a6-r14-g1-e1-0729-first_tail": 1,
+      "a6-r14-g1-e1-0730-first_tail": 1,
+      "a6-r14-g1hs-e0-0100-full": 1,
+      "a6-r14-g1hs-e0-0101-full": 1,
+      "a6-r14-g1hs-e0-0253-piecewise": 1,
+      "a6-r14-g1hs-e0-0254-piecewise": 1,
+      "a6-r15-g1-e0-0262-full": 1,
+      "a6-r15-g1-e0-0263-full": 1,
+      "a6-r15-g1-e1-0729-first_tail": 1,
+      "a6-r15-g1-e1-0730-first_tail": 1,
+      "a6-r15-g1hs-e0-0100-full": 1,
+      "a6-r15-g1hs-e0-0101-full": 1,
+      "a6-r15-g1hs-e0-0253-piecewise": 1,
+      "a6-r15-g1hs-e0-0254-piecewise": 1
+    },
+    "steps_by_category": {
+      "FULL": 64,
+      "PIECEWISE": 32,
+      "first_tail": 32
+    },
+    "window_counts": {
+      "missing": 1465,
+      "predicted": 8
+    }
+  },
+  "raw_inputs": {
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl": {
+      "bytes": 342060399,
+      "sha256": "bdaed9b8544859a9c7991e00694464cbb5bbfc4584a7a72d8e39ea62c16404a6"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl": {
+      "bytes": 148513216,
+      "sha256": "8f5318490c94de3776d341293be0f2f554a0864bafa4f44ac236b4b9bdb2112e"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl": {
+      "bytes": 150579244,
+      "sha256": "1c516e7aea195742ba31208a033e6ff6352ff601393623786a9e9dbe8b222ca2"
+    }
+  },
+  "retained_raw_step_check": {
+    "cases_seen": 128,
+    "context_tolerance": 127,
+    "grid_complete": false,
+    "measured_steps": 128,
+    "mismatches": [],
+    "missing_steps": [],
+    "native": {
+      "cases": [],
+      "classes": 0,
+      "outside": 0
+    },
+    "outside_steps": [],
+    "prediction_matches": true,
+    "schema_version": "v4_attention_coverage.v1",
+    "steps_by_case": {
+      "a6-r00-g1-e0-0262-full": 1,
+      "a6-r00-g1-e0-0263-full": 1,
+      "a6-r00-g1-e1-0729-first_tail": 1,
+      "a6-r00-g1-e1-0730-first_tail": 1,
+      "a6-r00-g1hs-e0-0100-full": 1,
+      "a6-r00-g1hs-e0-0101-full": 1,
+      "a6-r00-g1hs-e0-0253-piecewise": 1,
+      "a6-r00-g1hs-e0-0254-piecewise": 1,
+      "a6-r01-g1-e0-0262-full": 1,
+      "a6-r01-g1-e0-0263-full": 1,
+      "a6-r01-g1-e1-0729-first_tail": 1,
+      "a6-r01-g1-e1-0730-first_tail": 1,
+      "a6-r01-g1hs-e0-0100-full": 1,
+      "a6-r01-g1hs-e0-0101-full": 1,
+      "a6-r01-g1hs-e0-0253-piecewise": 1,
+      "a6-r01-g1hs-e0-0254-piecewise": 1,
+      "a6-r02-g1-e0-0262-full": 1,
+      "a6-r02-g1-e0-0263-full": 1,
+      "a6-r02-g1-e1-0729-first_tail": 1,
+      "a6-r02-g1-e1-0730-first_tail": 1,
+      "a6-r02-g1hs-e0-0100-full": 1,
+      "a6-r02-g1hs-e0-0101-full": 1,
+      "a6-r02-g1hs-e0-0253-piecewise": 1,
+      "a6-r02-g1hs-e0-0254-piecewise": 1,
+      "a6-r03-g1-e0-0262-full": 1,
+      "a6-r03-g1-e0-0263-full": 1,
+      "a6-r03-g1-e1-0729-first_tail": 1,
+      "a6-r03-g1-e1-0730-first_tail": 1,
+      "a6-r03-g1hs-e0-0100-full": 1,
+      "a6-r03-g1hs-e0-0101-full": 1,
+      "a6-r03-g1hs-e0-0253-piecewise": 1,
+      "a6-r03-g1hs-e0-0254-piecewise": 1,
+      "a6-r04-g1-e0-0262-full": 1,
+      "a6-r04-g1-e0-0263-full": 1,
+      "a6-r04-g1-e1-0729-first_tail": 1,
+      "a6-r04-g1-e1-0730-first_tail": 1,
+      "a6-r04-g1hs-e0-0100-full": 1,
+      "a6-r04-g1hs-e0-0101-full": 1,
+      "a6-r04-g1hs-e0-0253-piecewise": 1,
+      "a6-r04-g1hs-e0-0254-piecewise": 1,
+      "a6-r05-g1-e0-0262-full": 1,
+      "a6-r05-g1-e0-0263-full": 1,
+      "a6-r05-g1-e1-0729-first_tail": 1,
+      "a6-r05-g1-e1-0730-first_tail": 1,
+      "a6-r05-g1hs-e0-0100-full": 1,
+      "a6-r05-g1hs-e0-0101-full": 1,
+      "a6-r05-g1hs-e0-0253-piecewise": 1,
+      "a6-r05-g1hs-e0-0254-piecewise": 1,
+      "a6-r06-g1-e0-0262-full": 1,
+      "a6-r06-g1-e0-0263-full": 1,
+      "a6-r06-g1-e1-0729-first_tail": 1,
+      "a6-r06-g1-e1-0730-first_tail": 1,
+      "a6-r06-g1hs-e0-0100-full": 1,
+      "a6-r06-g1hs-e0-0101-full": 1,
+      "a6-r06-g1hs-e0-0253-piecewise": 1,
+      "a6-r06-g1hs-e0-0254-piecewise": 1,
+      "a6-r07-g1-e0-0262-full": 1,
+      "a6-r07-g1-e0-0263-full": 1,
+      "a6-r07-g1-e1-0729-first_tail": 1,
+      "a6-r07-g1-e1-0730-first_tail": 1,
+      "a6-r07-g1hs-e0-0100-full": 1,
+      "a6-r07-g1hs-e0-0101-full": 1,
+      "a6-r07-g1hs-e0-0253-piecewise": 1,
+      "a6-r07-g1hs-e0-0254-piecewise": 1,
+      "a6-r08-g1-e0-0262-full": 1,
+      "a6-r08-g1-e0-0263-full": 1,
+      "a6-r08-g1-e1-0729-first_tail": 1,
+      "a6-r08-g1-e1-0730-first_tail": 1,
+      "a6-r08-g1hs-e0-0100-full": 1,
+      "a6-r08-g1hs-e0-0101-full": 1,
+      "a6-r08-g1hs-e0-0253-piecewise": 1,
+      "a6-r08-g1hs-e0-0254-piecewise": 1,
+      "a6-r09-g1-e0-0262-full": 1,
+      "a6-r09-g1-e0-0263-full": 1,
+      "a6-r09-g1-e1-0729-first_tail": 1,
+      "a6-r09-g1-e1-0730-first_tail": 1,
+      "a6-r09-g1hs-e0-0100-full": 1,
+      "a6-r09-g1hs-e0-0101-full": 1,
+      "a6-r09-g1hs-e0-0253-piecewise": 1,
+      "a6-r09-g1hs-e0-0254-piecewise": 1,
+      "a6-r10-g1-e0-0262-full": 1,
+      "a6-r10-g1-e0-0263-full": 1,
+      "a6-r10-g1-e1-0729-first_tail": 1,
+      "a6-r10-g1-e1-0730-first_tail": 1,
+      "a6-r10-g1hs-e0-0100-full": 1,
+      "a6-r10-g1hs-e0-0101-full": 1,
+      "a6-r10-g1hs-e0-0253-piecewise": 1,
+      "a6-r10-g1hs-e0-0254-piecewise": 1,
+      "a6-r11-g1-e0-0262-full": 1,
+      "a6-r11-g1-e0-0263-full": 1,
+      "a6-r11-g1-e1-0729-first_tail": 1,
+      "a6-r11-g1-e1-0730-first_tail": 1,
+      "a6-r11-g1hs-e0-0100-full": 1,
+      "a6-r11-g1hs-e0-0101-full": 1,
+      "a6-r11-g1hs-e0-0253-piecewise": 1,
+      "a6-r11-g1hs-e0-0254-piecewise": 1,
+      "a6-r12-g1-e0-0262-full": 1,
+      "a6-r12-g1-e0-0263-full": 1,
+      "a6-r12-g1-e1-0729-first_tail": 1,
+      "a6-r12-g1-e1-0730-first_tail": 1,
+      "a6-r12-g1hs-e0-0100-full": 1,
+      "a6-r12-g1hs-e0-0101-full": 1,
+      "a6-r12-g1hs-e0-0253-piecewise": 1,
+      "a6-r12-g1hs-e0-0254-piecewise": 1,
+      "a6-r13-g1-e0-0262-full": 1,
+      "a6-r13-g1-e0-0263-full": 1,
+      "a6-r13-g1-e1-0729-first_tail": 1,
+      "a6-r13-g1-e1-0730-first_tail": 1,
+      "a6-r13-g1hs-e0-0100-full": 1,
+      "a6-r13-g1hs-e0-0101-full": 1,
+      "a6-r13-g1hs-e0-0253-piecewise": 1,
+      "a6-r13-g1hs-e0-0254-piecewise": 1,
+      "a6-r14-g1-e0-0262-full": 1,
+      "a6-r14-g1-e0-0263-full": 1,
+      "a6-r14-g1-e1-0729-first_tail": 1,
+      "a6-r14-g1-e1-0730-first_tail": 1,
+      "a6-r14-g1hs-e0-0100-full": 1,
+      "a6-r14-g1hs-e0-0101-full": 1,
+      "a6-r14-g1hs-e0-0253-piecewise": 1,
+      "a6-r14-g1hs-e0-0254-piecewise": 1,
+      "a6-r15-g1-e0-0262-full": 1,
+      "a6-r15-g1-e0-0263-full": 1,
+      "a6-r15-g1-e1-0729-first_tail": 1,
+      "a6-r15-g1-e1-0730-first_tail": 1,
+      "a6-r15-g1hs-e0-0100-full": 1,
+      "a6-r15-g1hs-e0-0101-full": 1,
+      "a6-r15-g1hs-e0-0253-piecewise": 1,
+      "a6-r15-g1hs-e0-0254-piecewise": 1
+    },
+    "steps_by_category": {
+      "FULL": 64,
+      "PIECEWISE": 32,
+      "first_tail": 32
+    },
+    "window_counts": {
+      "covered": 8,
+      "missing": 1465
+    }
+  }
+}

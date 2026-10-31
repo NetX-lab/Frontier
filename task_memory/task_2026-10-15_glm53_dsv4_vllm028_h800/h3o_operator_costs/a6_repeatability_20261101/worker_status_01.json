@@ -1,0 +1,27 @@
+{
+  "job_tag": "dsv4-a6-repeatability-20261101-01",
+  "phases": {
+    "A6_REPEATABILITY": {
+      "state": "running"
+    }
+  },
+  "runtime": {
+    "cuda_available": true,
+    "device_count": 1,
+    "device_name": "NVIDIA H200",
+    "flashinfer": "0.6.16.post3",
+    "nvidia_smi": [
+      "0, NVIDIA H200, 143771 MiB, 570.124.06"
+    ],
+    "pandas": "2.3.3",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "vllm": "0.28.0"
+  },
+  "source_revision": "a689ed05f462eb269b9dffe640da151e6614a5ef",
+  "unpacked_wheels": [
+    "pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+    "pytz-2026.5-py2.py3-none-any.whl",
+    "tzdata-2026.5-py2.py3-none-any.whl"
+  ]
+}
