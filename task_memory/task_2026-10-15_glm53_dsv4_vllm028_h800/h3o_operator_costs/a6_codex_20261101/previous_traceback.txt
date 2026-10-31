@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_heldout.py", line 532, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_heldout.py", line 522, in main
+    attention=attention, other_families=family_classification(collective_path, backend),
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_heldout.py", line 427, in family_classification
+    source=source_reference(MeasuredCCBackend._predict_unequal)),
+AttributeError: type object 'MeasuredCCBackend' has no attribute '_predict_unequal'

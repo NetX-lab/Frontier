@@ -161,3 +161,18 @@ def test_collective_points_are_left_out_one_at_a_time():
     assert bent["heldout"]["median_absolute"] == pytest.approx(1 - 2.0 / 3.0)
     # End points are never held out: the runtime does not extrapolate.
     assert held_out((1, 4), (1.0, 4.0))["verdict"] == "NOT_EVALUABLE"
+
+
+def test_family_report_uses_current_measured_collective_sources(tmp_path):
+    from test_measured_cc_backend import _backend, _row
+    from v4_attention_heldout import family_classification, source_reference
+    from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend
+
+    backend = _backend(tmp_path, [_row(size, float(size)) for size in (100, 200, 400)])
+    families = family_classification(tmp_path / "summary.csv", backend)
+    exact = next(row for row in families if row["family"].startswith("unequal"))
+    assert exact["prediction"] == "exact_only"
+    assert exact["source"] == source_reference(MeasuredCCBackend._predict_exact_sp)
+    uniform = next(row for row in families if row["family"] == "uniform measured collectives")
+    assert uniform["curves"][0]["heldout"]["count"] == 1
+    assert uniform["curves"][0]["verdict"] == "PASS"

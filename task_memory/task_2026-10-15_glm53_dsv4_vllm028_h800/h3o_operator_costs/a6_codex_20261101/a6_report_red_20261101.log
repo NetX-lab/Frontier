@@ -1,0 +1,64 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_family_report_uses_current_measured_collective_sources __________
+
+tmp_path = PosixPath('/data/ycfeng/tmp/a6_report_red_20261101/test_family_report_uses_curren0')
+
+    def test_family_report_uses_current_measured_collective_sources(tmp_path):
+        from test_measured_cc_backend import _backend, _row
+        from v4_attention_heldout import family_classification, source_reference
+        from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend
+    
+        backend = _backend(tmp_path, [_row(size, float(size)) for size in (100, 200, 400)])
+>       families = family_classification(tmp_path / "summary.csv", backend)
+
+tests/unit/test_v4_attention_heldout.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+collective_path = PosixPath('/data/ycfeng/tmp/a6_report_red_20261101/test_family_report_uses_curren0/summary.csv')
+backend = <frontier.cc_backend.backends.measured_cc_backend.MeasuredCCBackend object at 0x7f9aaed64190>
+
+    def family_classification(collective_path, backend):
+        from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend, _Curve
+        from frontier.execution_time_predictor.dsv4_operator_predictor import DeepSeekV4OperatorPredictor
+        from frontier.execution_time_predictor import dsv4_runtime
+        from frontier.execution_time_predictor.kernel_gap import _read_gap_rows_ms
+        headers = list(pd.read_csv(collective_path, nrows=0).columns)
+        return [
+            dict(family="standalone V4 operators", prediction="exact_only", operators=sorted(DEEPSEEK_V4_OPERATOR_AXES),
+                 source=source_reference(DeepSeekV4OperatorPredictor.operator),
+                 admission_source=source_reference(DeepSeekV4OperatorPredictor._exact)),
+            dict(family="MoE gating and routed rank classes", prediction="exact_only",
+                 sources=[source_reference(DeepSeekV4OperatorPredictor.gate),
+                          source_reference(DeepSeekV4OperatorPredictor.grouped_gemm)],
+                 admission_source=source_reference(DeepSeekV4OperatorPredictor._exact)),
+            dict(family="runner preparation, sampling and block rows", prediction="exact_only_or_legal_zero",
+                 sources=[source_reference(DeepSeekV4OperatorPredictor.runner),
+                          source_reference(DeepSeekV4OperatorPredictor.block_table_writes)]),
+            dict(family="attention signed scope gaps", prediction="same_admission_and_estimator_as_attention",
+                 heldout="included in this result; absolute microseconds, not gated"),
+            dict(family="non-attention kernel gaps", prediction="exact_segment_constant_times_exact_activity_count",
+                 sources=[source_reference(_read_gap_rows_ms), source_reference(dsv4_runtime._operator_gaps)],
+                 heldout="not an interpolating estimator; one measured constant per segment and TP"),
+            dict(family="unequal EP combine", prediction="exact_only",
+>                source=source_reference(MeasuredCCBackend._predict_unequal)),
+            dict(family="uniform measured collectives", prediction="interpolating",
+                 sources=[source_reference(MeasuredCCBackend.predict_operator_collective), source_reference(_Curve.predict_us)],
+                 input_path=str(collective_path), input_sha256=hashlib.sha256(collective_path.read_bytes()).hexdigest(),
+                 table_columns=headers,
+                 heldout_unit="one measured payload point of a curve with all its samples (D-A6-COLLECTIVE-UNIT)",
+                 heldout_source=source_reference(_Curve.describe),
+                 curves=[collective_heldout(curve) for curve in backend.describe_curves()]),
+        ]
+E       AttributeError: type object 'MeasuredCCBackend' has no attribute '_predict_unequal'
+
+tests/analysis/v4_attention_heldout.py:427: AttributeError
+----------------------------- Captured stdout call -----------------------------
+INFO 00:43:00 base_cc_backend.py:77] Initialized MeasuredCCBackend for cluster_type=prefill, device_type=h800, network_device=h800_dgx, num_devices=32
+INFO 00:43:00 measured_cc_backend.py:147] Measured collective coverage: [{'point_count': 3, 'byte_range': (100, 400), 'time_range_us': (100.0, 400.0), 'calls': ('embedding_all_reduce',), 'loo_absolute_relative_error': {'point_count': 1, 'median': 6.661338147750939e-16, 'p90': 6.661338147750939e-16, 'max': 6.661338147750939e-16}, 'key': ('all_reduce', 'tp', 8), 'source_files': ('/data/ycfeng/tmp/a6_report_red_20261101/test_family_report_uses_curren0/summary.csv',)}]; holdout rows: 0
+------------------------------ Captured log call -------------------------------
+INFO     frontier.cc_backend.base_cc_backend:base_cc_backend.py:77 Initialized MeasuredCCBackend for cluster_type=prefill, device_type=h800, network_device=h800_dgx, num_devices=32
+INFO     frontier.cc_backend.backends.measured_cc_backend:measured_cc_backend.py:147 Measured collective coverage: [{'point_count': 3, 'byte_range': (100, 400), 'time_range_us': (100.0, 400.0), 'calls': ('embedding_all_reduce',), 'loo_absolute_relative_error': {'point_count': 1, 'median': 6.661338147750939e-16, 'p90': 6.661338147750939e-16, 'max': 6.661338147750939e-16}, 'key': ('all_reduce', 'tp', 8), 'source_files': ('/data/ycfeng/tmp/a6_report_red_20261101/test_family_report_uses_curren0/summary.csv',)}]; holdout rows: 0
+=========================== short test summary info ============================
+FAILED tests/unit/test_v4_attention_heldout.py::test_family_report_uses_current_measured_collective_sources
+1 failed, 7 deselected in 2.06s
