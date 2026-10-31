@@ -1,0 +1,25 @@
+{
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/submit.py",
+    "--config",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_kv_02.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "host": "kun-workspace-vgen2",
+  "start_utc": "2026-10-31T16:42:02.482591+00:00",
+  "source_commit": "44f15f1d9387398773ff65bcb31a4d358a19bef6",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_launcher_20261101.log",
+  "gpus": 16,
+  "gpu_type": "H200",
+  "charged_group": "step_main",
+  "preemptible": false,
+  "estimated_gpuh": 8.785831,
+  "timeout_s": 4500,
+  "personal_h200_reservations_before": 0,
+  "personal_h200_limit": 32,
+  "launcher_pid": 261689,
+  "exit_code": 1,
+  "end_utc": "2026-10-31T16:49:54.362881+00:00"
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "path": "nodes/gpu-h200-1080.lgcm.sh.istep.fun/A_intra.log",
+    "excerpt": "[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 531, in main\n[rank0]:     {\"config\": config, \"cases\": len(plan), \"runtime\": runner.communicators()},\n[rank0]:                                                       ^^^^^^^^^^^^^^^^^^^^^^\n[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 240, in communicators\n[rank0]:     attr: getattr(comm, attr) is not None\n[rank0]:           ^^^^^^^^^^^^^^^^^^^\n[rank0]: AttributeError: 'NoneType' object has no attribute 'pynccl_comm'"
+  },
+  {
+    "path": "nodes/gpu-h200-1080.lgcm.sh.istep.fun/B_ring_boundary.log",
+    "excerpt": "[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 531, in main\n[rank0]:     {\"config\": config, \"cases\": len(plan), \"runtime\": runner.communicators()},\n[rank0]:                                                       ^^^^^^^^^^^^^^^^^^^^^^\n[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 240, in communicators\n[rank0]:     attr: getattr(comm, attr) is not None\n[rank0]:           ^^^^^^^^^^^^^^^^^^^\n[rank0]: AttributeError: 'NoneType' object has no attribute 'pynccl_comm'"
+  },
+  {
+    "path": "nodes/gpu-h200-1080.lgcm.sh.istep.fun/B_same_rail.log",
+    "excerpt": "[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 531, in main\n[rank0]:     {\"config\": config, \"cases\": len(plan), \"runtime\": runner.communicators()},\n[rank0]:                                                       ^^^^^^^^^^^^^^^^^^^^^^\n[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 240, in communicators\n[rank0]:     attr: getattr(comm, attr) is not None\n[rank0]:           ^^^^^^^^^^^^^^^^^^^\n[rank0]: AttributeError: 'NoneType' object has no attribute 'pynccl_comm'"
+  },
+  {
+    "path": "nodes/gpu-h200-1176.lgcm.sh.istep.fun/A_intra.log",
+    "excerpt": "[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 531, in main\n[rank0]:     {\"config\": config, \"cases\": len(plan), \"runtime\": runner.communicators()},\n[rank0]:                                                       ^^^^^^^^^^^^^^^^^^^^^^\n[rank0]:   File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/collectives/vllm_collective_benchmark.py\", line 240, in communicators\n[rank0]:     attr: getattr(comm, attr) is not None\n[rank0]:           ^^^^^^^^^^^^^^^^^^^\n[rank0]: AttributeError: 'NoneType' object has no attribute 'pynccl_comm'"
+  }
+]

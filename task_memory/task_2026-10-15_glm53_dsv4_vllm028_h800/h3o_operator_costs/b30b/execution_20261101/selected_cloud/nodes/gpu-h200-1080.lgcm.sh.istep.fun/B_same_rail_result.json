@@ -1,0 +1,28 @@
+{
+  "phase": "B_same_rail",
+  "started": 1793465234.6026363,
+  "returncode": 1,
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "torch.distributed.run",
+    "--nnodes",
+    "2",
+    "--nproc-per-node",
+    "1",
+    "--node-rank",
+    "0",
+    "--master-addr",
+    "10.204.13.32",
+    "--master-port",
+    "50515",
+    "-m",
+    "frontier.profiling.collectives.vllm_collective_benchmark",
+    "--config",
+    "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/nodes/gpu-h200-1080.lgcm.sh.istep.fun/B_same_rail_config.json"
+  ],
+  "visible_devices": "GPU-2bcd382b-f000-d54c-5498-3cfd65f5747f",
+  "ucx_net_devices": null,
+  "node_rank": 0,
+  "finished": 1793465268.3274796
+}

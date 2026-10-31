@@ -1,0 +1,79 @@
+{
+  "stage": "C_nixl",
+  "tensor_parallel_size": 8,
+  "kv_cache": {
+    "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/kv_layout_evidence.json",
+    "regions": [
+      {
+        "name": "packed_v4",
+        "count": 1,
+        "block_bytes": 1002240
+      }
+    ],
+    "block_size": 256,
+    "num_gpu_blocks": 1024,
+    "resident_bytes_per_block": 1002240,
+    "logical_groups": [
+      {
+        "name": "compressed",
+        "block_size": 256,
+        "window_tokens": null
+      },
+      {
+        "name": "swa_0",
+        "block_size": 64,
+        "window_tokens": 128
+      },
+      {
+        "name": "swa_1",
+        "block_size": 64,
+        "window_tokens": 128
+      },
+      {
+        "name": "csa_state_0",
+        "block_size": 4,
+        "window_tokens": 8
+      },
+      {
+        "name": "hca_state_0",
+        "block_size": 8,
+        "window_tokens": 128
+      }
+    ],
+    "pool_scope": "benchmark scratch, 1024 physical packed blocks; native capacity is not a fit input"
+  },
+  "nixl_num_threads": 4,
+  "process_group_timeout_seconds": 600,
+  "warmup": 2,
+  "repeats": 30,
+  "passes": 3,
+  "shuffle_seed": 20261031,
+  "notification_wait_seconds": 30,
+  "grid": [
+    {
+      "prompt_tokens": [
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192
+      ],
+      "active_pairs": [
+        1,
+        8
+      ],
+      "requests_in_flight": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ]
+    }
+  ],
+  "benchmark_module": "frontier.profiling.collectives.nixl_kv_read_benchmark",
+  "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl"
+}

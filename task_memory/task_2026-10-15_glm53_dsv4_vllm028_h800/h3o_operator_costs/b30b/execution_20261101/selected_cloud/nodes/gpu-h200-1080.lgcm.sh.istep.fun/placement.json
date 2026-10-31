@@ -1,0 +1,27 @@
+{
+  "allocated_uuids": [
+    "2bcd382b-f000-d54c-5498-3cfd65f5747f",
+    "466a2776-f5db-d5a1-d7a2-0941e9e57c1b",
+    "f0b209ac-159b-b098-efcf-997ba8d392dc",
+    "6c81cad0-722b-9821-14c9-94d8905cf8b4",
+    "75bf4aa0-c960-c3f3-1818-4465526c2d1c",
+    "c4e86e3e-2ac7-b1c3-be39-e676b33e964f",
+    "e8b4bf42-4650-68fb-0492-54e54d382216",
+    "eac2dc58-b155-6205-a6db-7c1121a8d8a9"
+  ],
+  "census_returncode": 0,
+  "census_error": "",
+  "node_rank": 0,
+  "visible_devices": "0,1,2,3,4,5,6,7",
+  "inventory": [
+    "0, GPU-2bcd382b-f000-d54c-5498-3cfd65f5747f, 00000000:19:00.0, NVIDIA H200",
+    "1, GPU-466a2776-f5db-d5a1-d7a2-0941e9e57c1b, 00000000:3B:00.0, NVIDIA H200",
+    "2, GPU-f0b209ac-159b-b098-efcf-997ba8d392dc, 00000000:4C:00.0, NVIDIA H200",
+    "3, GPU-6c81cad0-722b-9821-14c9-94d8905cf8b4, 00000000:5D:00.0, NVIDIA H200",
+    "4, GPU-75bf4aa0-c960-c3f3-1818-4465526c2d1c, 00000000:9B:00.0, NVIDIA H200",
+    "5, GPU-c4e86e3e-2ac7-b1c3-be39-e676b33e964f, 00000000:BB:00.0, NVIDIA H200",
+    "6, GPU-e8b4bf42-4650-68fb-0492-54e54d382216, 00000000:CB:00.0, NVIDIA H200",
+    "7, GPU-eac2dc58-b155-6205-a6db-7c1121a8d8a9, 00000000:DB:00.0, NVIDIA H200"
+  ],
+  "topology": "\t\u001b[4mGPU0\tGPU1\tGPU2\tGPU3\tGPU4\tGPU5\tGPU6\tGPU7\tNIC0\tNIC1\tNIC2\tNIC3\tNIC4\tNIC5\tNIC6\tNIC7\tNIC8\tNIC9\tNIC10\tCPU Affinity\tNUMA Affinity\tGPU NUMA ID\u001b[0m\nGPU0\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tPIX\tPIX\tSYS\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t0-47\t0\t\tN/A\nGPU1\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tSYS\tNODE\tPIX\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t0-47\t0\t\tN/A\nGPU2\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tSYS\tNODE\tNODE\tPIX\tNODE\tSYS\tSYS\tSYS\tSYS\t0-47\t0\t\tN/A\nGPU3\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tSYS\tNODE\tNODE\tNODE\tPIX\tSYS\tSYS\tSYS\tSYS\t0-47\t0\t\tN/A\nGPU4\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tSYS\tSYS\tPIX\tSYS\tSYS\tSYS\tSYS\tPIX\tNODE\tNODE\tNODE\t48-63\t1\t\tN/A\nGPU5\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tSYS\tSYS\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tPIX\tNODE\tNODE\t48-63\t1\t\tN/A\nGPU6\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tSYS\tSYS\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tPIX\tNODE\t48-63\t1\t\tN/A\nGPU7\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tSYS\tSYS\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tNODE\tPIX\t48-63\t1\t\tN/A\nNIC0\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t X \tPIX\tSYS\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC1\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\tPIX\t X \tSYS\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC2\tSYS\tSYS\tSYS\tSYS\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\t X \tSYS\tSYS\tSYS\tSYS\tPIX\tNODE\tNODE\tNODE\t\t\t\t\nNIC3\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\tPIX\tPIX\tSYS\t X \tNODE\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC4\tNODE\tPIX\tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tSYS\tNODE\t X \tNODE\tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC5\tNODE\tNODE\tPIX\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tSYS\tNODE\tNODE\t X \tNODE\tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC6\tNODE\tNODE\tNODE\tPIX\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tSYS\tNODE\tNODE\tNODE\t X \tSYS\tSYS\tSYS\tSYS\t\t\t\t\nNIC7\tSYS\tSYS\tSYS\tSYS\tPIX\tNODE\tNODE\tNODE\tSYS\tSYS\tPIX\tSYS\tSYS\tSYS\tSYS\t X \tNODE\tNODE\tNODE\t\t\t\t\nNIC8\tSYS\tSYS\tSYS\tSYS\tNODE\tPIX\tNODE\tNODE\tSYS\tSYS\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\t X \tNODE\tNODE\t\t\t\t\nNIC9\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tPIX\tNODE\tSYS\tSYS\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\t X \tNODE\t\t\t\t\nNIC10\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tNODE\tPIX\tSYS\tSYS\tNODE\tSYS\tSYS\tSYS\tSYS\tNODE\tNODE\tNODE\t X \t\t\t\t\n\nLegend:\n\n  X    = Self\n  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)\n  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node\n  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)\n  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)\n  PIX  = Connection traversing at most a single PCIe bridge\n  NV#  = Connection traversing a bonded set of # NVLinks\n\nNIC Legend:\n\n  NIC0: mlx5_2\n  NIC1: mlx5_3\n  NIC2: mlx5_bond_0\n  NIC3: mlx5_bond100\n  NIC4: mlx5_bond101\n  NIC5: mlx5_bond102\n  NIC6: mlx5_bond103\n  NIC7: mlx5_bond104\n  NIC8: mlx5_bond105\n  NIC9: mlx5_bond106\n  NIC10: mlx5_bond107\n\n"
+}

@@ -1,0 +1,180 @@
+{
+  "name": "exp-1101-004206-443314",
+  "observed_utc": "2026-10-31T16:50:50.986853+00:00",
+  "uid": "6595a838-fc08-48bb-8b70-2c9e3c4035d8",
+  "status": {
+    "phase": "Failed",
+    "reason": "RJobFailed",
+    "message": "Tasks with failed status: [default]",
+    "taskStatuses": {
+      "default": {
+        "failed": 2,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-31T16:49:51Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "creator": "i-fengyicheng",
+  "annotations": {
+    "rjob.brainpp.cn/system-stop-reason": "Task fail policy [any] caused undesired running replicas."
+  },
+  "replicas": [
+    {
+      "name": "exp-1101-004206-443314-cfcd2084",
+      "uid": "b4f564d2-06dd-4eca-b533-dc82e089d223",
+      "owner": [
+        {
+          "apiVersion": "rjob.brainpp.cn/v1alpha1",
+          "kind": "RJob",
+          "name": "exp-1101-004206-443314",
+          "uid": "6595a838-fc08-48bb-8b70-2c9e3c4035d8",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "status": {
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:42:26Z"
+          },
+          {
+            "type": "Ready",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:49:50Z",
+            "reason": "PodFailed"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:49:50Z",
+            "reason": "PodFailed"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:42:26Z"
+          }
+        ],
+        "hostIP": "10.204.13.32",
+        "podIP": "10.204.13.32",
+        "podIPs": [
+          {
+            "ip": "10.204.13.32"
+          }
+        ],
+        "startTime": "2026-10-31T16:42:26Z",
+        "containerStatuses": [
+          {
+            "name": "default",
+            "state": {
+              "terminated": {
+                "exitCode": 1,
+                "reason": "Error",
+                "message": "user command: exit status 1",
+                "startedAt": "2026-10-31T16:45:43Z",
+                "finishedAt": "2026-10-31T16:49:50Z",
+                "containerID": "containerd://975ee709f232b36c5a277e17101f14b91bc1a62a75aeabedd3606cfeb686cef0"
+              }
+            },
+            "lastState": {},
+            "ready": false,
+            "restartCount": 0,
+            "image": "sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca",
+            "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "containerID": "containerd://975ee709f232b36c5a277e17101f14b91bc1a62a75aeabedd3606cfeb686cef0",
+            "started": false
+          }
+        ],
+        "qosClass": "Guaranteed",
+        "phase": "Failed",
+        "nodeName": "gpu-h200-1080.lgcm.sh.istep.fun",
+        "finishTimestamp": "2026-10-31T16:49:51Z"
+      }
+    },
+    {
+      "name": "exp-1101-004206-443314-c4ca4238",
+      "uid": "92ed78d7-b210-4d3f-8e7a-4b5393884a82",
+      "owner": [
+        {
+          "apiVersion": "rjob.brainpp.cn/v1alpha1",
+          "kind": "RJob",
+          "name": "exp-1101-004206-443314",
+          "uid": "6595a838-fc08-48bb-8b70-2c9e3c4035d8",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "status": {
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:42:37Z"
+          },
+          {
+            "type": "Ready",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:49:51Z",
+            "reason": "PodFailed"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:49:51Z",
+            "reason": "PodFailed"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-31T16:42:26Z"
+          }
+        ],
+        "hostIP": "10.204.4.111",
+        "podIP": "10.204.4.111",
+        "podIPs": [
+          {
+            "ip": "10.204.4.111"
+          }
+        ],
+        "startTime": "2026-10-31T16:42:37Z",
+        "containerStatuses": [
+          {
+            "name": "default",
+            "state": {
+              "terminated": {
+                "exitCode": 1,
+                "reason": "Error",
+                "message": "user command: exit status 1",
+                "startedAt": "2026-10-31T16:45:41Z",
+                "finishedAt": "2026-10-31T16:49:50Z",
+                "containerID": "containerd://35102486e07f429268df70221ad41fc92e7d125386eb56023cb4999ff47d5235"
+              }
+            },
+            "lastState": {},
+            "ready": false,
+            "restartCount": 0,
+            "image": "sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca",
+            "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "containerID": "containerd://35102486e07f429268df70221ad41fc92e7d125386eb56023cb4999ff47d5235",
+            "started": false
+          }
+        ],
+        "qosClass": "Guaranteed",
+        "phase": "Failed",
+        "nodeName": "gpu-h200-1176.lgcm.sh.istep.fun",
+        "finishTimestamp": "2026-10-31T16:49:51Z"
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "name": "exp-1101-004206-443314",
+  "observed_utc": "2026-10-31T16:43:17.969447+00:00",
+  "uid": "6595a838-fc08-48bb-8b70-2c9e3c4035d8",
+  "labels": {
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "quotagroup.brainpp.cn/preemptible": "no",
+    "quotagroup.brainpp.cn/quotagroup": "step_main"
+  },
+  "status": {
+    "phase": "Starting",
+    "reason": "RJobStarting",
+    "message": "Tasks is starting: [default]",
+    "taskStatuses": {
+      "default": {
+        "pending": 2,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "tasks": {
+    "default": {
+      "replicas": 2,
+      "annotations": {
+        "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028"
+      },
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "64",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "64",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "replicas": [
+    {
+      "name": "exp-1101-004206-443314-cfcd2084",
+      "status": null,
+      "node_name": null,
+      "node_ip": null,
+      "phase": "Starting"
+    },
+    {
+      "name": "exp-1101-004206-443314-c4ca4238",
+      "status": null,
+      "node_name": null,
+      "node_ip": null,
+      "phase": "Starting"
+    }
+  ]
+}

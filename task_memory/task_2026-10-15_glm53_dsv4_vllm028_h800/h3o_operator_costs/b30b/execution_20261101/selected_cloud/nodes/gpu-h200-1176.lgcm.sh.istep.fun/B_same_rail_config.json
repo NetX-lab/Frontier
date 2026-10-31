@@ -1,0 +1,47 @@
+{
+  "model_config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/model/config.json",
+  "engine_source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/engine.json (TP8 DP2 PP1 EP on, bfloat16, async scheduling, default all2all backend)",
+  "warmup_calls": 5,
+  "repeats": 30,
+  "calls_per_repeat": 1,
+  "passes": 3,
+  "shuffle_seed": 20261031,
+  "gpus_per_node": 8,
+  "grid": {
+    "graph_tokens_per_lane": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64
+    ],
+    "eager_lane_tokens": [
+      1,
+      4,
+      16,
+      64,
+      256,
+      1024,
+      4096,
+      8192
+    ],
+    "calls": [
+      "moe_dispatch_all_gatherv",
+      "moe_combine_reduce_scatterv"
+    ]
+  },
+  "stage": "B_same_rail",
+  "engine": {
+    "async_scheduling": true,
+    "data_parallel_size": 2,
+    "dtype": "bfloat16",
+    "enable_expert_parallel": true,
+    "pipeline_parallel_size": 1,
+    "tensor_parallel_size": 1
+  },
+  "allow_link_probe_parallelism": true,
+  "benchmark_module": "frontier.profiling.collectives.vllm_collective_benchmark",
+  "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/B_same_rail"
+}

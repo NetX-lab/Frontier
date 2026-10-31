@@ -1,0 +1,8 @@
+{
+  "stage": "b30b_links_kv",
+  "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_kv_02.json",
+  "pid": 261689,
+  "start": 1793464926.4231021,
+  "gpus": 16,
+  "end": 1793465393.567907
+}

@@ -1,0 +1,27 @@
+{
+  "allocated_uuids": [
+    "26eeb061-1509-a0aa-150a-0b60f088ea32",
+    "3ad7530a-957c-758b-9655-76221ac169e9",
+    "5f9a2cca-e88a-3cde-e525-71790db84d64",
+    "49be98f4-3c0d-e39f-be86-2e9c816ad43a",
+    "d2a5ba8d-109b-e63c-8432-f976f60025b2",
+    "78483f64-61d5-cde0-ab8e-066764cd00d4",
+    "7607b820-e279-0ba1-2596-14eb8e98de50",
+    "35100a35-9378-09ee-d5f7-114bd79ebc5b"
+  ],
+  "census_returncode": 0,
+  "census_error": "",
+  "node_rank": 1,
+  "visible_devices": "0,1,2,3,4,5,6,7",
+  "inventory": [
+    "0, GPU-26eeb061-1509-a0aa-150a-0b60f088ea32, 00000000:18:00.0, NVIDIA H200",
+    "1, GPU-3ad7530a-957c-758b-9655-76221ac169e9, 00000000:2A:00.0, NVIDIA H200",
+    "2, GPU-5f9a2cca-e88a-3cde-e525-71790db84d64, 00000000:3A:00.0, NVIDIA H200",
+    "3, GPU-49be98f4-3c0d-e39f-be86-2e9c816ad43a, 00000000:5D:00.0, NVIDIA H200",
+    "4, GPU-d2a5ba8d-109b-e63c-8432-f976f60025b2, 00000000:9A:00.0, NVIDIA H200",
+    "5, GPU-78483f64-61d5-cde0-ab8e-066764cd00d4, 00000000:AB:00.0, NVIDIA H200",
+    "6, GPU-7607b820-e279-0ba1-2596-14eb8e98de50, 00000000:BA:00.0, NVIDIA H200",
+    "7, GPU-35100a35-9378-09ee-d5f7-114bd79ebc5b, 00000000:DB:00.0, NVIDIA H200"
+  ],
+  "topology": "\t\u001b[4mGPU0\tGPU1\tGPU2\tGPU3\tGPU4\tGPU5\tGPU6\tGPU7\tNIC0\tNIC1\tNIC2\tNIC3\tNIC4\tNIC5\tNIC6\tNIC7\tNIC8\tCPU Affinity\tNUMA Affinity\tGPU NUMA ID\u001b[0m\nGPU0\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t5-32\t0\t\tN/A\nGPU1\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t5-32\t0\t\tN/A\nGPU2\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\t5-32\t0\t\tN/A\nGPU3\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tNV18\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\t5-32\t0\t\tN/A\nGPU4\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tNV18\tNODE\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\t\t1\t\tN/A\nGPU5\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tNV18\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\t\t1\t\tN/A\nGPU6\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tNV18\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\t\t1\t\tN/A\nGPU7\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\tNV18\t X \tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tPIX\t\t1\t\tN/A\nNIC0\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t\t\t\t\nNIC1\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t\t\t\t\nNIC2\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t\t\t\t\nNIC3\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\tNODE\tNODE\tNODE\tNODE\t\t\t\t\nNIC4\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\tNODE\tNODE\tNODE\t\t\t\t\nNIC5\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\tNODE\tNODE\t\t\t\t\nNIC6\tNODE\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\tNODE\t\t\t\t\nNIC7\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \tNODE\t\t\t\t\nNIC8\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tPIX\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\tNODE\t X \t\t\t\t\n\nLegend:\n\n  X    = Self\n  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)\n  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node\n  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)\n  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)\n  PIX  = Connection traversing at most a single PCIe bridge\n  NV#  = Connection traversing a bonded set of # NVLinks\n\nNIC Legend:\n\n  NIC0: mlx5_bond_0\n  NIC1: mlx5_bond100\n  NIC2: mlx5_bond101\n  NIC3: mlx5_bond102\n  NIC4: mlx5_bond103\n  NIC5: mlx5_bond104\n  NIC6: mlx5_bond105\n  NIC7: mlx5_bond106\n  NIC8: mlx5_bond107\n\n"
+}

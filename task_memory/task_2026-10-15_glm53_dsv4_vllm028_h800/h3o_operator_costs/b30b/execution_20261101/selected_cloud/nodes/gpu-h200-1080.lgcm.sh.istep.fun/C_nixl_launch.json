@@ -1,0 +1,27 @@
+{
+  "phase": "C_nixl",
+  "started": 1793465310.420792,
+  "returncode": null,
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "torch.distributed.run",
+    "--nnodes",
+    "2",
+    "--nproc-per-node",
+    "8",
+    "--node-rank",
+    "0",
+    "--master-addr",
+    "10.204.13.32",
+    "--master-port",
+    "50515",
+    "-m",
+    "frontier.profiling.collectives.nixl_kv_read_benchmark",
+    "--config",
+    "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/nodes/gpu-h200-1080.lgcm.sh.istep.fun/C_nixl_config.json"
+  ],
+  "visible_devices": "GPU-2bcd382b-f000-d54c-5498-3cfd65f5747f,GPU-466a2776-f5db-d5a1-d7a2-0941e9e57c1b,GPU-f0b209ac-159b-b098-efcf-997ba8d392dc,GPU-6c81cad0-722b-9821-14c9-94d8905cf8b4,GPU-75bf4aa0-c960-c3f3-1818-4465526c2d1c,GPU-c4e86e3e-2ac7-b1c3-be39-e676b33e964f,GPU-e8b4bf42-4650-68fb-0492-54e54d382216,GPU-eac2dc58-b155-6205-a6db-7c1121a8d8a9",
+  "ucx_net_devices": "mlx5_bond100:1,mlx5_bond101:1,mlx5_bond102:1,mlx5_bond103:1,mlx5_bond104:1,mlx5_bond105:1,mlx5_bond106:1,mlx5_bond107:1,mlx5_bond_0:1",
+  "node_rank": 0
+}

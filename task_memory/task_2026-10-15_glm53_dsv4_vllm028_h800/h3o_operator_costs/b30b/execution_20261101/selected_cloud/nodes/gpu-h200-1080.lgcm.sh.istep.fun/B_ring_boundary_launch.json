@@ -1,0 +1,27 @@
+{
+  "phase": "B_ring_boundary",
+  "started": 1793465271.736816,
+  "returncode": null,
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "torch.distributed.run",
+    "--nnodes",
+    "2",
+    "--nproc-per-node",
+    "1",
+    "--node-rank",
+    "0",
+    "--master-addr",
+    "10.204.13.32",
+    "--master-port",
+    "50515",
+    "-m",
+    "frontier.profiling.collectives.vllm_collective_benchmark",
+    "--config",
+    "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/nodes/gpu-h200-1080.lgcm.sh.istep.fun/B_ring_boundary_config.json"
+  ],
+  "visible_devices": "GPU-eac2dc58-b155-6205-a6db-7c1121a8d8a9",
+  "ucx_net_devices": null,
+  "node_rank": 0
+}

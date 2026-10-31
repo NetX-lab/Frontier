@@ -5,6 +5,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recorded terminal links/KV02, singleton metadata repair167PASS, A6 recovery and F2 diagnostic K18. |
+| 2026-11-01 | Submitted fresh links/KV02 and repaired the observed A6 report source-reference failure. |
 | 2026-10-31 | Verified the UUID repair and fresh links/KV02 plan; analyzed F2 as AMBIGUOUS without choosing a K. |
 | 2026-10-31 | Synchronized the two direct submissions and terminal states; recorded exact links/KV UUID failure and independent successful F2 evidence. |
 | 2026-10-31 | Codex documentation/evidence milestone verified: 17 documents, 26 current links/anchors and diff whitespace PASS; check-progress S5 correction applied. The first title-only validator assumption was corrected without task/runtime changes. |
@@ -338,6 +340,13 @@
 
 <a id="current-session-handoff--2026-10-25-mainline-correction"></a>
 ## Current session handoff — Codex CLI (2026-10-31)
+
+- 2026-11-01 completed: links/KV02 terminal Failed; A/B/B each exit1 from singleton communicator metadata, C_nixl both exit0. Cause-specific metadata repair has RED2 -> GREEN167 (6.42s); see `test_report_2026-11-01_b30b_singleton_communicator.md`. Prepare collectives-only03, validate/fit retained NIXL02 concurrently.
+- 2026-11-01 completed: A6 recovery exit0 in308.673s with all five caches reused; four attention scopes exceed p90<=10%, so full05/09 remain open. F2 local interpolation yields18.285714 complete-forward units; diagnostic K18 selected, formalK19 unchanged. Two fresh CPU replays are next.
+
+- 2026-11-01 completed: UUID fix committed as `44f15f1d`; fresh links/KV02 submitted directly as `exp-1101-004206-443314`, launcher session52947/PID261689. Personal non-preemptible H200 before submission0, after16/32; quota listing complete. Initial platform identity, locked image, RDMA and local NFS100.96.128.195 verified; Starting. Evidence `h3o_operator_costs/b30b/execution_20261101/`.
+- 2026-11-01 in-progress: fresh A6 October31 run ended exit1 after five training folds because report metadata referenced removed `_predict_unequal`. Scoped correction to `_predict_exact_sp` and matching family name: real report regression RED1 -> affected GREEN82. Recover into `a6_codex_20261101/` through the existing fold-cache lookup after commit. F1a P2-64 PID2871701 remains CPU-active, no terminal receipt.
+
 
 **State: in-progress.** Continue decision 46 on the H200 operator path under D-CODEX-DIRECT-RJOB. [Current route](plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31), [checkpoint](h3o_operator_costs/codex_resume_20261031/check_progress_2026-10-31.md), and [test report](test_report_2026-10-31_codex_resume.md) own the current entry points. Historical handoffs below preserve their then-current evidence.
 

@@ -299,7 +299,8 @@ def test_communicators_records_custom_collective_state(monkeypatch, multicast, e
     runner = object.__new__(CollectiveRunner)
     runner.torch = types.SimpleNamespace(__version__="cpu-fixture")
     runner.groups = {"tp": types.SimpleNamespace(device_communicator=comm(custom), ranks=[0, 1]),
-                     "ep": types.SimpleNamespace(device_communicator=comm(None), ranks=[0, 1, 2, 3])}
+                     "ep": types.SimpleNamespace(device_communicator=comm(None), ranks=[0, 1, 2, 3]),
+                     "dp": types.SimpleNamespace(device_communicator=None, ranks=[0])}
     runner.hosts, runner.sleep_cycles_per_us = ["host"], 1.0
     record = runner.communicators()["communicators"]
     assert record["tp"]["custom_collectives"] == {
@@ -307,3 +308,4 @@ def test_communicators_records_custom_collective_state(monkeypatch, multicast, e
         "max_mnnvl_reduce_scatter_size": 16_777_216, "max_all_gather_size": 1_048_576,
         "max_reduce_scatter_size": 8_388_608, "fully_connected": True}
     assert "custom_collectives" not in record["ep"] and not record["ep"]["ca_comm"]
+    assert record["dp"] and not any(record["dp"].values())

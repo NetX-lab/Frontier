@@ -237,11 +237,11 @@ class CollectiveRunner:
         for name, group in self.groups.items():
             comm = group.device_communicator
             enabled[name] = {
-                attr: getattr(comm, attr) is not None
+                attr: comm is not None and getattr(comm, attr) is not None
                 and not getattr(getattr(comm, attr), "disabled", False)
                 for attr in ("pynccl_comm", "ca_comm", "symm_mem_comm", "fi_ar_comm",
                              "qr_comm", "all2all_manager")}
-            custom = comm.ca_comm
+            custom = comm.ca_comm if comm is not None else None
             if custom is not None:
                 enabled[name]["custom_collectives"] = {
                     "mnnvl_multicast_ptr": bool(getattr(custom, "mnnvl_multicast_ptr", 0)),
