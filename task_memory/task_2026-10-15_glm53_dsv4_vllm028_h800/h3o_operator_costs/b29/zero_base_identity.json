@@ -1,0 +1,26 @@
+{
+  "pd-disaggregation": {
+    "request_metrics.csv": {
+      "status": "PASS",
+      "sha256": "c718bf4ea074b1544e8a3a86d8004527b2d438b3cf7f18c866b8b9a34ba2b2e2",
+      "bytes": 2769
+    },
+    "system_metrics.json": {
+      "status": "PASS",
+      "sha256": "da59ad305e517e94d2ff023654371e5dec082af4479a75c0b2ca4473b9be927c",
+      "bytes": 4514
+    }
+  },
+  "co-location": {
+    "request_metrics.csv": {
+      "status": "PASS",
+      "sha256": "1a60e5951f4537efd0de81f732efea304e329acc6a90e00987598f0f22b9f00c",
+      "bytes": 2612
+    },
+    "system_metrics.json": {
+      "status": "PASS",
+      "sha256": "4ae865ecd8a6088c5d18e9b54fa8482a30a351544d57b0e8c7acb866aa3c280e",
+      "bytes": 3082
+    }
+  }
+}

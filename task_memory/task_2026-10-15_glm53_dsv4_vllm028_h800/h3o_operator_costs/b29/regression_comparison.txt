@@ -1,0 +1,55 @@
+{
+  "base_label": "regression_base_final",
+  "candidate_label": "regression_candidate_final",
+  "base_counts": {
+    "ERROR": 64,
+    "PASS": 4926,
+    "SKIP": 44,
+    "FAIL": 128
+  },
+  "candidate_counts": {
+    "ERROR": 64,
+    "PASS": 4959,
+    "SKIP": 44,
+    "FAIL": 128
+  },
+  "common_nodes": 5162,
+  "added_nodes": [
+    "tests/unit/test_dsv4_a10_tools.py::test_field_duplicates_and_option_conflicts_fail[options0]",
+    "tests/unit/test_dsv4_a10_tools.py::test_field_duplicates_and_option_conflicts_fail[options1]",
+    "tests/unit/test_dsv4_a10_tools.py::test_field_duplicates_and_option_conflicts_fail[options2]",
+    "tests/unit/test_dsv4_a10_tools.py::test_field_duplicates_and_option_conflicts_fail[options3]",
+    "tests/unit/test_dsv4_a10_tools.py::test_field_duplicates_and_option_conflicts_fail[options4]",
+    "tests/unit/test_dsv4_a10_tools.py::test_field_override_is_written_in_receipt",
+    "tests/unit/test_dsv4_a10_tools.py::test_field_variants_record_backend_and_override_diff",
+    "tests/unit/test_dsv4_a10_tools.py::test_serving_delay_options_and_receipt_diff[False-p2_32]",
+    "tests/unit/test_dsv4_a10_tools.py::test_serving_delay_options_and_receipt_diff[False-p2_64]",
+    "tests/unit/test_dsv4_a10_tools.py::test_serving_delay_options_and_receipt_diff[True-p2_32]",
+    "tests/unit/test_dsv4_a10_tools.py::test_serving_delay_options_and_receipt_diff[True-p2_64]",
+    "tests/unit/test_serving_path_delays.py::test_delay_defaults_are_zero",
+    "tests/unit/test_serving_path_delays.py::test_explicit_zero_delays_preserve_output_bytes[co-location]",
+    "tests/unit/test_serving_path_delays.py::test_explicit_zero_delays_preserve_output_bytes[pd-disaggregation]",
+    "tests/unit/test_serving_path_delays.py::test_flat_flags_round_trip",
+    "tests/unit/test_serving_path_delays.py::test_handoff_delay_independent_of_connector[nixl]",
+    "tests/unit/test_serving_path_delays.py::test_handoff_delay_independent_of_connector[none]",
+    "tests/unit/test_serving_path_delays.py::test_handoff_delay_independent_of_connector[p2p_nccl]",
+    "tests/unit/test_serving_path_delays.py::test_ingress_rejected_in_offline_batch_mode[co-location]",
+    "tests/unit/test_serving_path_delays.py::test_ingress_rejected_in_offline_batch_mode[pd-af-disaggregation]",
+    "tests/unit/test_serving_path_delays.py::test_ingress_rejected_in_offline_batch_mode[pd-disaggregation]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_handoff_delay_ms--1.0]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_handoff_delay_ms--inf]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_handoff_delay_ms-inf]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_handoff_delay_ms-nan]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_ingress_delay_ms--1.0]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_ingress_delay_ms--inf]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_ingress_delay_ms-inf]",
+    "tests/unit/test_serving_path_delays.py::test_invalid_delays_rejected[request_ingress_delay_ms-nan]",
+    "tests/unit/test_serving_path_delays.py::test_online_ingress_delays_queue_entry_and_ttft[co-location]",
+    "tests/unit/test_serving_path_delays.py::test_online_ingress_delays_queue_entry_and_ttft[pd-disaggregation]",
+    "tests/unit/test_serving_path_delays.py::test_parallel_arrivals_use_delayed_factory",
+    "tests/unit/test_serving_path_delays.py::test_pdd_online_handoff_shifts_transfer_and_decode"
+  ],
+  "removed_nodes": [],
+  "normalizations": "worktree roots; scratch/run identifiers; wall clocks; object addresses; redundant truncated CompletedProcess and TempPathFactory reprs; the moved offline-PDAF config log line; clipped banners/PYTHONPATH labels; unittest truncated PYTHONPATH root lengths. Raw messages/details retained; exception and assertion values preserved."
+}
+node/message differences 0

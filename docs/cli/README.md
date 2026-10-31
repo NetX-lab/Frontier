@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-31 | Documented measured serving path ingress and handoff delays. |
 | 2026-10-15 | Updated the release version to `pre-release-v0.4`. |
 | 2026-10-14 | Documented `attn_dp`, the device fields, the cluster scheduler choice, and the kernel-only, kernel-gap and CPU-overhead inputs; updated the profiling taxonomy. |
 | 2026-09-27 | Documented the `max_model_len` arrival check of the `vllm_v1` schedulers. |
@@ -413,3 +414,18 @@ Common files include:
 | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide, keep CSVs in the taxonomy above, and check that `--replica_config_device` and `--replica_config_network_device` name the data directories. |
 | A run stops with `ValueError: Request ... do not fit max_model_len=...`. | The `vllm_v1`, `sglang` and SJ2Q schedulers reject a request or thinking round whose prompt reaches `max_model_len`, or whose prompt plus output exceeds it, as vLLM's OpenAI server does; Frontier stops the run instead of failing one request. `max_model_len` defaults to the model's `max_position_embeddings`, not the workload's `max_tokens`. | Shorten the request or the thinking-round plan, or set `--<scheduler>_scheduler_config_max_model_len`, for example `--vllm_v1_scheduler_config_max_model_len` (vLLM `--max-model-len`). |
 | Plot export warns about `kaleido`. | PNG export is optional. | Keep `--no-metrics_config_store_plots` for smoke runs, or install `kaleido` if PNGs are needed. |
+
+### Serving path delays
+
+`--request_ingress_delay_ms` covers client arrival through the proxy and the
+first role's API server to the engine waiting queue. It delays request arrival
+events while `Request.arrived_at` stays the client arrival, so TTFT and E2E still
+start there. Nonzero values require online mode or
+`--offline_use_generated_request_arrivals`; offline batch mode has no arrival events.
+
+`--analytical_kv_cache_transfer_config_request_handoff_delay_ms` covers prefill
+engine output through the prefill API server response, proxy and decode API
+server enqueue. It delays KV transfer start while prefill retains its KV blocks.
+It applies to every KV connector and leaves the transfer duration model intact.
+Both fields default to 0 and accept finite, non-negative milliseconds. Values
+are per deployment and must come from measurements of the serving path.

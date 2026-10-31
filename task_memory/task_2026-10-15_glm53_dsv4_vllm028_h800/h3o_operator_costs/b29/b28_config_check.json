@@ -1,0 +1,20 @@
+{
+  "p2_32": {
+    "status": "PASS",
+    "flat_fields_compared": 782,
+    "new_fields_at_zero": [
+      "analytical_kv_cache_transfer_config_request_handoff_delay_ms",
+      "request_ingress_delay_ms"
+    ],
+    "normalization": "each run root -> <RUN_ROOT>; same scratch short trace for both sides"
+  },
+  "p2_64": {
+    "status": "PASS",
+    "flat_fields_compared": 782,
+    "new_fields_at_zero": [
+      "analytical_kv_cache_transfer_config_request_handoff_delay_ms",
+      "request_ingress_delay_ms"
+    ],
+    "normalization": "each run root -> <RUN_ROOT>; same scratch short trace for both sides"
+  }
+}

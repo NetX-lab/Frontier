@@ -1,0 +1,76 @@
+{
+  "pd-disaggregation": {
+    "command": [
+      "timeout",
+      "120",
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/b29-ingress-delays/tests/unit/test_serving_path_delays.py",
+      "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/base_zero_audit_pd-disaggregation",
+      "pd-disaggregation",
+      "{}"
+    ],
+    "cwd": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29",
+    "env": {
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b29-base:/data/ycfeng/Frontier/.worktrees/b29-base/tests/unit:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages",
+      "TMPDIR": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp",
+      "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "WANDB_DISABLED": "true",
+      "VIDUR_DISABLE_WANDB": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "memory_limit_kib": 31457280,
+    "files": {
+      "request_metrics.csv": {
+        "status": "PASS",
+        "sha256": "c718bf4ea074b1544e8a3a86d8004527b2d438b3cf7f18c866b8b9a34ba2b2e2",
+        "bytes": 2769
+      },
+      "system_metrics.json": {
+        "status": "PASS",
+        "sha256": "da59ad305e517e94d2ff023654371e5dec082af4479a75c0b2ca4473b9be927c",
+        "bytes": 4514
+      }
+    },
+    "candidate_metrics_dir": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp/focused_r3/test_explicit_zero_delays_pres0/explicit/metrics/meta_llama_llama_2_7b_hf/online_serving/serving_delay"
+  },
+  "co-location": {
+    "command": [
+      "timeout",
+      "120",
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/b29-ingress-delays/tests/unit/test_serving_path_delays.py",
+      "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/base_zero_audit_co-location",
+      "co-location",
+      "{}"
+    ],
+    "cwd": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29",
+    "env": {
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b29-base:/data/ycfeng/Frontier/.worktrees/b29-base/tests/unit:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages",
+      "TMPDIR": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp",
+      "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "WANDB_DISABLED": "true",
+      "VIDUR_DISABLE_WANDB": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "memory_limit_kib": 31457280,
+    "files": {
+      "request_metrics.csv": {
+        "status": "PASS",
+        "sha256": "1a60e5951f4537efd0de81f732efea304e329acc6a90e00987598f0f22b9f00c",
+        "bytes": 2612
+      },
+      "system_metrics.json": {
+        "status": "PASS",
+        "sha256": "4ae865ecd8a6088c5d18e9b54fa8482a30a351544d57b0e8c7acb866aa3c280e",
+        "bytes": 3082
+      }
+    },
+    "candidate_metrics_dir": "/data/ycfeng/tmp/codex-implement/6d8aed77-5e60-463c-87d4-b0f7a492b026/b29/tmp/focused_r3/test_explicit_zero_delays_pres1/explicit/metrics/meta_llama_llama_2_7b_hf/online_serving/serving_delay"
+  }
+}

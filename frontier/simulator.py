@@ -409,9 +409,7 @@ class Simulator:
                     if self._config.is_disaggregated_mode()
                     else ClusterType.MONOLITHIC
                 )
-                arrival_event = RequestArrivalEvent(
-                    request.arrived_at, request, cluster_type
-                )
+                arrival_event = self._request_arrival_event(request, cluster_type)
 
                 if cluster_type in self._cluster_simulators:
                     self._cluster_simulators[cluster_type].add_event(arrival_event)
@@ -419,6 +417,13 @@ class Simulator:
                     logger.warning(
                         f"Cluster {cluster_type} not found for request arrival event"
                     )
+
+    def _request_arrival_event(self, request, cluster_type) -> RequestArrivalEvent:
+        """Keep client arrival intact while delaying first-role queue entry."""
+        return RequestArrivalEvent(
+            request.arrived_at + self._config.request_ingress_delay_ms / 1000,
+            request, cluster_type,
+        )
 
     def run(self) -> None:
         """Run the simulation in either parallel or sequential mode."""
@@ -1339,7 +1344,7 @@ class Simulator:
                     else ClusterType.MONOLITHIC
                 )
                 self._add_event(
-                    RequestArrivalEvent(request.arrived_at, request, cluster_type)
+                    self._request_arrival_event(request, cluster_type)
                 )
 
     def _set_time(self, time: float) -> None:

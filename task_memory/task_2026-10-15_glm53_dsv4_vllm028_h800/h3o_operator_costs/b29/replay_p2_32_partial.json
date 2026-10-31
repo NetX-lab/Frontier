@@ -1,0 +1,330 @@
+[
+  {
+    "case": "p2_32",
+    "request": 0,
+    "baseline": {
+      "ttft_ms": 623.5352771153752,
+      "canonical_ttft_ms": 209.92197177742264,
+      "pure_decode_first_token_s": 0.6429629913286329,
+      "arrived_at_s": 0.0,
+      "arrival_s": 0.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 0.20992197177742264,
+      "transfer_start_s": 0.20992197177742264,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 0.2473719024298817,
+      "decode_first_token_s": 0.6235352771153752,
+      "first_decode_step_ms": 19.42771421325773,
+      "decode_lane": 0
+    },
+    "delayed": {
+      "ttft_ms": 645.2352771153783,
+      "canonical_ttft_ms": 220.22197177742262,
+      "pure_decode_first_token_s": 0.664662991328636,
+      "arrived_at_s": 0.0,
+      "arrival_s": 0.0103,
+      "arrival_offset_ms": 10.3,
+      "prefill_end_s": 0.22022197177742261,
+      "transfer_start_s": 0.2316219717774226,
+      "handoff_offset_ms": 11.399999999999993,
+      "transfer_end_s": 0.2690719024298847,
+      "decode_first_token_s": 0.6452352771153783,
+      "first_decode_step_ms": 19.42771421325773,
+      "decode_lane": 0
+    },
+    "ttft_delta_ms": 21.700000000003115,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.399999999999993,
+      "receive_duration_shift_ms": 3.0531133177191805e-12,
+      "receive_to_first_token_shift_ms": 1.6653345369377348e-13
+    }
+  },
+  {
+    "case": "p2_32",
+    "request": 1,
+    "baseline": {
+      "ttft_ms": 325.8608660428437,
+      "canonical_ttft_ms": 209.988018998845,
+      "pure_decode_first_token_s": 1.3452900148815785,
+      "arrived_at_s": 1.0,
+      "arrival_s": 1.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 1.209988018998845,
+      "transfer_start_s": 1.209988018998845,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 1.2666455723230048,
+      "decode_first_token_s": 1.3258608660428437,
+      "first_decode_step_ms": 19.42914883873481,
+      "decode_lane": 1
+    },
+    "delayed": {
+      "ttft_ms": 347.56086604284195,
+      "canonical_ttft_ms": 220.288018998845,
+      "pure_decode_first_token_s": 1.3669900148815768,
+      "arrived_at_s": 1.0,
+      "arrival_s": 1.0103,
+      "arrival_offset_ms": 10.299999999999976,
+      "prefill_end_s": 1.220288018998845,
+      "transfer_start_s": 1.231688018998845,
+      "handoff_offset_ms": 11.400000000000077,
+      "transfer_end_s": 1.288345572323003,
+      "decode_first_token_s": 1.347560866042842,
+      "first_decode_step_ms": 19.42914883873481,
+      "decode_lane": 1
+    },
+    "ttft_delta_ms": 21.699999999998226,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.400000000000077,
+      "receive_duration_shift_ms": -1.7763568394002505e-12,
+      "receive_to_first_token_shift_ms": 0.0
+    }
+  },
+  {
+    "case": "p2_32",
+    "request": 2,
+    "baseline": {
+      "ttft_ms": 320.5749507551925,
+      "canonical_ttft_ms": 209.92197177741235,
+      "pure_decode_first_token_s": 2.34026937893109,
+      "arrived_at_s": 2.0,
+      "arrival_s": 2.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 2.2099219717774123,
+      "transfer_start_s": 2.2099219717774123,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 2.28082366741044,
+      "decode_first_token_s": 2.3205749507551925,
+      "first_decode_step_ms": 19.694428175897727,
+      "decode_lane": 0
+    },
+    "delayed": {
+      "ttft_ms": 342.27495075517965,
+      "canonical_ttft_ms": 220.2219717774123,
+      "pure_decode_first_token_s": 2.3619693789310774,
+      "arrived_at_s": 2.0,
+      "arrival_s": 2.0103,
+      "arrival_offset_ms": 10.299999999999976,
+      "prefill_end_s": 2.2202219717774123,
+      "transfer_start_s": 2.2316219717774124,
+      "handoff_offset_ms": 11.400000000000077,
+      "transfer_end_s": 2.3025236674104272,
+      "decode_first_token_s": 2.3422749507551797,
+      "first_decode_step_ms": 19.694428175897727,
+      "decode_lane": 0
+    },
+    "ttft_delta_ms": 21.699999999987142,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.400000000000077,
+      "receive_duration_shift_ms": -1.2878587085651816e-11,
+      "receive_to_first_token_shift_ms": 0.0
+    }
+  },
+  {
+    "case": "p2_32",
+    "request": 3,
+    "baseline": {
+      "ttft_ms": 318.7915499446832,
+      "canonical_ttft_ms": 209.98801899884035,
+      "pure_decode_first_token_s": 3.3384737627826393,
+      "arrived_at_s": 3.0,
+      "arrival_s": 3.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 3.2099880189988403,
+      "transfer_start_s": 3.2099880189988403,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 3.2790248857325306,
+      "decode_first_token_s": 3.318791549944683,
+      "first_decode_step_ms": 19.682212837956126,
+      "decode_lane": 1
+    },
+    "delayed": {
+      "ttft_ms": 340.49154994467034,
+      "canonical_ttft_ms": 220.28801899884033,
+      "pure_decode_first_token_s": 3.3601737627826265,
+      "arrived_at_s": 3.0,
+      "arrival_s": 3.0103,
+      "arrival_offset_ms": 10.299999999999976,
+      "prefill_end_s": 3.2202880189988403,
+      "transfer_start_s": 3.2316880189988404,
+      "handoff_offset_ms": 11.400000000000077,
+      "transfer_end_s": 3.3007248857325178,
+      "decode_first_token_s": 3.3404915499446703,
+      "first_decode_step_ms": 19.682212837956126,
+      "decode_lane": 1
+    },
+    "ttft_delta_ms": 21.699999999987142,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.400000000000077,
+      "receive_duration_shift_ms": -1.2878587085651816e-11,
+      "receive_to_first_token_shift_ms": 0.0
+    }
+  },
+  {
+    "case": "p2_32",
+    "request": 4,
+    "baseline": {
+      "ttft_ms": 319.64326250570264,
+      "canonical_ttft_ms": 209.9219717774412,
+      "pure_decode_first_token_s": 4.33925856741119,
+      "arrived_at_s": 4.0,
+      "arrival_s": 4.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 4.209921971777441,
+      "transfer_start_s": 4.209921971777441,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 4.279714243862637,
+      "decode_first_token_s": 4.319643262505703,
+      "first_decode_step_ms": 19.615304905487463,
+      "decode_lane": 0
+    },
+    "delayed": {
+      "ttft_ms": 341.34326250569825,
+      "canonical_ttft_ms": 220.22197177744118,
+      "pure_decode_first_token_s": 4.360958567411186,
+      "arrived_at_s": 4.0,
+      "arrival_s": 4.0103,
+      "arrival_offset_ms": 10.299999999999976,
+      "prefill_end_s": 4.220221971777441,
+      "transfer_start_s": 4.231621971777441,
+      "handoff_offset_ms": 11.400000000000077,
+      "transfer_end_s": 4.301414243862633,
+      "decode_first_token_s": 4.341343262505698,
+      "first_decode_step_ms": 19.615304905487463,
+      "decode_lane": 0
+    },
+    "ttft_delta_ms": 21.69999999999561,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.400000000000077,
+      "receive_duration_shift_ms": -4.440892098500626e-12,
+      "receive_to_first_token_shift_ms": 0.0
+    }
+  },
+  {
+    "case": "p2_32",
+    "request": 5,
+    "baseline": {
+      "ttft_ms": 320.6108371593377,
+      "canonical_ttft_ms": 209.98801899883102,
+      "pure_decode_first_token_s": 5.340228956759083,
+      "arrived_at_s": 5.0,
+      "arrival_s": 5.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 5.209988018998831,
+      "transfer_start_s": 5.209988018998831,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 5.280740705632783,
+      "decode_first_token_s": 5.320610837159338,
+      "first_decode_step_ms": 19.618119599745576,
+      "decode_lane": 1
+    },
+    "delayed": {
+      "ttft_ms": 342.3108371593333,
+      "canonical_ttft_ms": 220.28801899883098,
+      "pure_decode_first_token_s": 5.361928956759079,
+      "arrived_at_s": 5.0,
+      "arrival_s": 5.0103,
+      "arrival_offset_ms": 10.299999999999976,
+      "prefill_end_s": 5.220288018998831,
+      "transfer_start_s": 5.231688018998831,
+      "handoff_offset_ms": 11.400000000000077,
+      "transfer_end_s": 5.302440705632779,
+      "decode_first_token_s": 5.342310837159333,
+      "first_decode_step_ms": 19.618119599745576,
+      "decode_lane": 1
+    },
+    "ttft_delta_ms": 21.69999999999561,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.400000000000077,
+      "receive_duration_shift_ms": -4.440892098500626e-12,
+      "receive_to_first_token_shift_ms": 0.0
+    }
+  },
+  {
+    "case": "p2_32",
+    "request": 6,
+    "baseline": {
+      "ttft_ms": 321.64921776198076,
+      "canonical_ttft_ms": 209.9219717774412,
+      "pure_decode_first_token_s": 6.341287546067205,
+      "arrived_at_s": 6.0,
+      "arrival_s": 6.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 6.209921971777441,
+      "transfer_start_s": 6.209921971777441,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 6.28180349209858,
+      "decode_first_token_s": 6.321649217761981,
+      "first_decode_step_ms": 19.638328305224384,
+      "decode_lane": 0
+    },
+    "delayed": {
+      "ttft_ms": 343.3492177619764,
+      "canonical_ttft_ms": 220.22197177744118,
+      "pure_decode_first_token_s": 6.362987546067201,
+      "arrived_at_s": 6.0,
+      "arrival_s": 6.0103,
+      "arrival_offset_ms": 10.299999999999976,
+      "prefill_end_s": 6.220221971777441,
+      "transfer_start_s": 6.231621971777441,
+      "handoff_offset_ms": 11.400000000000077,
+      "transfer_end_s": 6.303503492098575,
+      "decode_first_token_s": 6.343349217761976,
+      "first_decode_step_ms": 19.638328305224384,
+      "decode_lane": 0
+    },
+    "ttft_delta_ms": 21.69999999999561,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.400000000000077,
+      "receive_duration_shift_ms": -4.440892098500626e-12,
+      "receive_to_first_token_shift_ms": 0.0
+    }
+  },
+  {
+    "case": "p2_32",
+    "request": 7,
+    "baseline": {
+      "ttft_ms": 322.43353770840065,
+      "canonical_ttft_ms": 209.98801899883102,
+      "pure_decode_first_token_s": 7.342052018832712,
+      "arrived_at_s": 7.0,
+      "arrival_s": 7.0,
+      "arrival_offset_ms": 0.0,
+      "prefill_end_s": 7.209988018998831,
+      "transfer_start_s": 7.209988018998831,
+      "handoff_offset_ms": 0.0,
+      "transfer_end_s": 7.282587996770175,
+      "decode_first_token_s": 7.322433537708401,
+      "first_decode_step_ms": 19.618481124311415,
+      "decode_lane": 1
+    },
+    "delayed": {
+      "ttft_ms": 344.13353770839626,
+      "canonical_ttft_ms": 220.28801899883098,
+      "pure_decode_first_token_s": 7.363752018832708,
+      "arrived_at_s": 7.0,
+      "arrival_s": 7.0103,
+      "arrival_offset_ms": 10.299999999999976,
+      "prefill_end_s": 7.220288018998831,
+      "transfer_start_s": 7.231688018998831,
+      "handoff_offset_ms": 11.400000000000077,
+      "transfer_end_s": 7.304287996770171,
+      "decode_first_token_s": 7.344133537708396,
+      "first_decode_step_ms": 19.618481124311415,
+      "decode_lane": 1
+    },
+    "ttft_delta_ms": 21.69999999999561,
+    "delta_components": {
+      "prefill_shift_ms": 10.299999999999976,
+      "handoff_shift_ms": 11.400000000000077,
+      "receive_duration_shift_ms": -4.440892098500626e-12,
+      "receive_to_first_token_shift_ms": 0.0
+    }
+  }
+]

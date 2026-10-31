@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import math
 from typing import Optional
 
 from frontier.config.base_poly_config import BasePolyConfig
@@ -21,6 +22,12 @@ def _require_non_negative(value: float | int, field_name: str) -> None:
         raise ValueError(f"{field_name} must be >= 0, got {value}")
 
 
+def _require_finite_non_negative(value: float, field_name: str) -> None:
+    if not math.isfinite(value):
+        raise ValueError(f"{field_name} must be finite and >= 0, got {value}")
+    _require_non_negative(value, field_name)
+
+
 def _require_optional_positive(value: Optional[int], field_name: str) -> None:
     if value is not None and value <= 0:
         raise ValueError(f"{field_name} must be > 0 when set, got {value}")
@@ -40,6 +47,15 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
         metadata={"help": "Network latency in milliseconds for KV cache transfer."},
     )
     
+    request_handoff_delay_ms: float = field(
+        default=0.0,
+        metadata={
+            "help": "Serving path delay in milliseconds from prefill engine output, "
+            "through the prefill API server response and proxy, to the decode API "
+            "server enqueue for the decode engine."
+        },
+    )
+
     # Transfer optimization configuration
     enable_compression: bool = field(
         default=False,
@@ -91,6 +107,7 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
     )
 
     def __post_init__(self) -> None:
+        _require_finite_non_negative(self.request_handoff_delay_ms, "request_handoff_delay_ms")
         _require_positive(self.network_bandwidth_gbps, "network_bandwidth_gbps")
         _require_non_negative(self.network_latency_ms, "network_latency_ms")
         _require_positive(self.compression_ratio, "compression_ratio")

@@ -246,3 +246,77 @@ def test_driver_writes_receipts_at_each_phase(tools, monkeypatch, tmp_path, run_
         assert receipt["a11"]["forwards"]["rows"] == 0
     else:
         assert "a11" not in receipt
+
+
+@pytest.mark.parametrize("case", ["p2_32", "p2_64"])
+@pytest.mark.parametrize("without_ingress", [False, True])
+def test_serving_delay_options_and_receipt_diff(tools, tmp_path, case, without_ingress):
+    driver = tools.driver
+    args = driver.parse_args([case, str(tmp_path)] + (["--without-ingress"] if without_ingress else []))
+    config, changes = driver.build_config(case, tmp_path, args.fields)
+    ingress = 0.0 if without_ingress else driver.REQUEST_INGRESS_DELAY_MS
+    handoff = 0.0 if without_ingress else driver.REQUEST_HANDOFF_DELAY_MS
+    assert config.request_ingress_delay_ms == ingress
+    assert config.kv_cache_transfer_config.request_handoff_delay_ms == handoff
+    for name, value in (("request_ingress_delay_ms", ingress),
+                        ("analytical_kv_cache_transfer_config_request_handoff_delay_ms", handoff)):
+        assert changes["added_fields"][name] == 0.0
+        if without_ingress:
+            assert name not in changes["override_diff"]
+        else:
+            assert changes["override_diff"][name]["h4a4"] == value
+
+
+@pytest.mark.parametrize("options", [
+    ["--field", "seed=1", "--field", "seed=2"],
+    ["--trace", "/tmp/a.csv", "--field", "trace_request_generator_config_trace_file=b.csv"],
+    ["--without-run-ahead", "--field", "vllm_v1_scheduler_config_max_forwards_in_flight=1"],
+    ["--without-ingress", "--field", "request_ingress_delay_ms=1"],
+    ["--without-ingress", "--field", "analytical_kv_cache_transfer_config_request_handoff_delay_ms=1"],
+])
+def test_field_duplicates_and_option_conflicts_fail(tools, tmp_path, capsys, options):
+    with pytest.raises(SystemExit) as error:
+        tools.driver.parse_args(["p2_32", str(tmp_path), *options])
+    assert error.value.code == 2
+    assert "given twice or also set through another option" in capsys.readouterr().err
+
+
+def test_field_variants_record_backend_and_override_diff(tools, tmp_path):
+    driver = tools.driver
+    args = driver.parse_args(["p2_32", str(tmp_path), "--field", "cc_backend_config_type=astra_sim_analytical",
+                              "--field", "seed=7", "--field", "request_ingress_delay_ms=12.5"])
+    config, changes = driver.build_config("p2_32", tmp_path, args.fields)
+    for name, value in args.fields.items():
+        assert changes["override_diff"][name]["h4a4"] == value
+    records, facts = driver.resolved_inputs(config)
+    assert facts["cc_backend_types"] == {"PREFILL": "astra_sim_analytical", "DECODE": "astra_sim_analytical"}
+    assert len(records) == 6
+    assert "summary.csv" not in {Path(record["path"]).name for record in records}
+    assert all(not hasattr(cluster.cc_backend_config, "summary_csv_path")
+               for cluster in config.get_clusters().values())
+
+
+
+def test_field_override_is_written_in_receipt(tools, monkeypatch, tmp_path):
+    import frontier.simulator
+    from frontier.types import ClusterType
+
+    class Simulator:
+        def __init__(self, config):
+            self._predictors = {role: SimpleNamespace(_dsv4_step_costs=None)
+                                for role in (ClusterType.PREFILL, ClusterType.DECODE)}
+
+        def run(self):
+            pass
+
+    driver = tools.driver
+    monkeypatch.setattr(frontier.simulator, "Simulator", Simulator)
+    monkeypatch.setattr(driver.h4a4, "kv_admission", lambda *args: {})
+    args = driver.parse_args(["p2_32", str(tmp_path), "--field", "seed=7",
+                              "--field", "cc_backend_config_type=astra_sim_analytical"])
+    driver.main("p2_32", tmp_path, observe=False, fields=args.fields)
+    receipt = json.loads((tmp_path / "receipt.json").read_text())
+    assert receipt["status"] == "FINISHED"
+    assert receipt["override_diff"]["seed"]["h4a4"] == 7
+    assert receipt["override_diff"]["cc_backend_config_type"]["h4a4"] == "astra_sim_analytical"
+    assert receipt["a1"]["cc_backend_types"] == {"PREFILL": "astra_sim_analytical", "DECODE": "astra_sim_analytical"}
