@@ -50,7 +50,7 @@ Source identity snapshot uses `git rev-parse HEAD`, `git status --porcelain=v1`,
 | One-off memory display | Show workspace inventory values | First display TypeError on list set-membership; corrected JSON display shows one-entry lists 1.5/3 GiB | FAIL display, then PASS; collector unaffected |
 | Reproducible source-bound verification | Run the final audit.py --verify command, including the three native git-object checks | exit0 at 2026-10-31T16:02:56.350285+00:00; 160 source hashes, 384 rank pointers, 96 packed rows, 96 graph-memory rows, 37 source keys, 14 criteria, 24 metric rows and 3 native git objects PASS | PASS |
 | Native source-pin binding | Captured NIXL and memory/counter source bytes match original native source commit | Native HEAD 2cf0a6915ce544dc493a0990f2ea38d81601128a; 3/3 git objects match local captured bytes | PASS |
-| Scoped Git verification | Stage this qualification directory only; no source/README/main docs | Pending staging and commit | Pending |
+| Scoped Git verification | Stage this qualification directory only; no source/README/main docs | 12/12 staged/committed paths in scope; git diff --cached --check and git show --check PASS; post-commit clean porcelain; commit c04089d269d9a286e04d32a4214cf7b67ea37d40 | PASS |
 
 The initial authority mismatch is a document concurrency observation. Initial main plan SHA-256 was `34a45e6f4a7116a3707cade2a02fcfc5854afab04ea6e9b1206c0baf5cfc6d0f`; captured current plan is `939f953ba278cf62413e7ae00f208460374d3ffeba2dda38c38ca31f55887e5e`. Progress changed from `93796a9476792a7dac36dac62babc532d79798136159c90293d6aae143c3d35e` to `cfe15f6d87f593047142f474d02d9425550932cc6eacadb981b06e74d9ff5c75`. The initial capture guard was replaced with current source bytes and explicit changed-since-initial flags after the current route was read. No old measurement or receipt was changed.
 
@@ -86,3 +86,24 @@ git -C /data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a6
 ```
 
 The comparison is byte-for-byte in the local Python command, and `evidence/verification.json` records all three object paths and PASS. This binds the descriptor and memory explanations to the original clean source rather than relying on the directory name alone. No native source was edited or executed.
+
+## Scoped Git delivery
+
+Exact worktree commands:
+
+```bash
+git add -f -- task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/qualification_codex_20261031/
+git diff --cached --check
+git diff --cached --name-only
+git diff --cached --numstat
+git commit -m "Audit P2 H200 payload, memory and admission prerequisites" -m "Reconcile packed NIXL descriptors, retained startup memory counters and existing capacity results. Preserve original R4 admission and distinguish numerical diagnostics from formal qualification and future promotion requirements."
+git show --check --format= HEAD
+git status --porcelain=v1
+git diff --name-only dbd3ff6f HEAD
+```
+
+Report/evidence commit: `c04089d269d9a286e04d32a4214cf7b67ea37d40`. Expected and actual scope is exactly 12 files, all under this qualification directory, with 8,519 inserted lines and 0 deleted lines; 0 Frontier source files. The Python staged-path assertion requires all 12 paths to start with the exact directory prefix and rejects any unstaged tracked change. All checks PASS, and the worktree was clean after this commit. Final check time: `2026-10-31T16:06:27.032589+00:00`.
+
+The closing record commit changes only `progress.md`, `summary.md`, this test report and `check_progress_2026-10-31.md`; it records actual commit evidence without rewriting history. Its staged whitespace/path checks are run again. No new simulation or artifact experiment is required for those completion-record changes.
+
+The initial closing-record `git add` without `-f` emitted the existing ignored-parent warning for `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800`; the four expected tracked records were staged, as confirmed by the exact-path assertion. Repeated `git add -f -- <the four exact record paths>` completed with exit0, and staged whitespace/path checks passed again. This was a Git ignore-path warning, not an evidence or qualification failure.

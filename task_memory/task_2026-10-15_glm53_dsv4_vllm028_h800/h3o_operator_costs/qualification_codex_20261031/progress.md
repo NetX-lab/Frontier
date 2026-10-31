@@ -13,7 +13,7 @@
 - completed: B30b is already committed locally as dbd3ff6f and integrated by the lead as 5d1754d0; no implementation work is reopened.
 - completed: the new sidecar started from a clean worktree; read the main current route and ticket checkpoints.
 - completed: exact packed-payload, non-KV/capacity and original admission/promotion evidence reconciliation.
-- in-progress: final report verification, check-progress checkpoint and scoped report commit.
+- completed: report verification, task checkpoint and scoped report/evidence commit; completion records are included in the closing commit.
 
 ## Evidence milestone — 2026-10-31 continuation
 
@@ -21,7 +21,7 @@
 - completed (step 2): clean reference logs confirm one packed region and 1,002,240 B/block. Source-selected T6144 counts [24, 2, 2, 2, 16] imply 46,103,040 descriptor bytes/lane versus 39,521,664 component bytes/lane; the 6,581,376 B gap is reported without repair. Actual per-request wire selection remains unobserved.
 - completed (step 3): located the existing `stage4/f_variants/f4/p2_{32,64}_init/planner_blocks.json` files from the main command/report pointers. Read only startup memory/configuration fields in the 32+64 retained rank inventories and 12 named server logs. Exact native requested memory is 127,603,313,869 B; F4 requested memory is 128,687,957,606 B. Counts are 116,034/120,623 versus native 109,934/112,914. Workspace inventory is 1.5/3 GiB per rank; independent stage peaks remain explicitly unverified.
 - completed (step 4): both original R4 results are PASS under their preserved 2026-10-25 authorization; P2-64 explicitly includes clean reference and basic validation. Neither original manifest binds a promotion receipt. Retained B29 numeric results are reused; no A6/A10 execution or gate run is repeated.
-- in-progress (step 5): retain selected evidence with source hashes, write the English criterion table, verify arithmetic and references, run the task-local check-progress checkpoint and create the scoped report commit.
+- completed (step 5): selected evidence, English criterion table, arithmetic/reference verification, check-progress checkpoint and scoped report/evidence commit.
 
 Path discovery misses were limited to stale guessed F4/script filenames. Existing report pointers resolved the planner JSONs; these misses are not source defects. The user reports separate lead-owned running work; this audit does not inspect those jobs, sessions or outputs.
 
@@ -33,7 +33,7 @@ Path discovery misses were limited to stale guessed F4/script filenames. Existin
 - completed: resume snapshot confirms sidecar tracked/index diff is empty at `dbd3ff6f`; no independent writer with this worktree cwd was observed. Existing ignored local task files were preserved.
 - completed: English report contains 14 criteria, exact byte/capacity terms and all retained B29 repeat errors. Small task-local checks were added for all packed-registration rows, graph-memory log rows, report references and existing arithmetic; no project source or test was edited.
 - completed: final capture and report verification after the Ticket09 excerpt correction: 160 hashes, 73 selectors, 384 rank pointers, 96 packed rows, 96 graph-memory rows, 37 source keys, 14 criteria and 24 metric rows PASS at 15:58:36Z. Three native source files also match their original pinned git objects byte-for-byte.
-- in-progress: final task checkpoint, scoped Git staging and commit.
+- completed: final task checkpoint, scoped Git staging and report/evidence commit.
 
 A one-off display command failed with `TypeError: unhashable type: 'list'` when treating workspace inventory lists as scalar set members. The evidence collector was unaffected; JSON list display then confirmed workspace lists `[1610612736]` and `[3221225472]`. This is a display failure, not a native memory or qualification failure.
 
@@ -41,4 +41,15 @@ A one-off display command failed with `TypeError: unhashable type: 'list'` when 
 
 - completed: the final reproducible `audit.py --verify` command passed at 2026-10-31T16:02:56Z (2026-11-01 00:02:56 Asia/Hong_Kong), including the three original native git objects. All previous evidence counts and limits remain unchanged.
 - completed: check-progress found no D1-D7 drift or S1-S6 scope/acceptance defect in this sidecar. Steps 1-4 PASS; step 5 needs only the scoped commit and completion record.
-- pending: stage and commit the verified report/evidence, then record the exact commit and changed paths. The lead-owned formal prerequisites are findings, not blockers of this investigation delivery.
+- completed: report/evidence commit `c04089d269d9a286e04d32a4214cf7b67ea37d40` contains exactly 12 paths under this directory. `git diff --cached --check`, the staged-prefix assertion, `git show --check --format= HEAD` and post-commit clean porcelain all PASS. The lead-owned formal prerequisites are findings, not blockers of this investigation delivery.
+
+## Scoped delivery completion — 2026-11-01
+
+- completed: report/evidence commit `c04089d269d9a286e04d32a4214cf7b67ea37d40`, verified at `2026-10-31T16:06:27.032589+00:00`; 12 files, 8,519 inserted lines, 0 deletions and 0 Frontier source files. The evidence JSON accounts for 7,657 lines of retained source/case proof.
+- completed: requirements decision46 reread; task acceptance is evidence/report delivery only. Current Tickets05/09/11/19 remain OPEN, original receipts are unchanged and no GPU/platform/cloud operation occurred.
+- completed: final check-progress records all five local plan steps PASS, no drift and no new dependent action. The closing commit changes only the four local completion records.
+- completed: integration handoff consists of the report/evidence commit followed by this closing record commit. Reuse the already integrated B30b implementation; do not reapply its parent commit.
+
+There is no concrete blocker or unfinished sidecar action. Missing wire/rank scope, H200 fit binding, qualified coverage/A6 and any future pre-launch promotion remain with the main route and are not claimed complete.
+
+Closing-stage note: ordinary `git add` emitted an ignored-parent warning although the four expected records were staged. Explicit forced staging of those four paths completed with exit0 and all whitespace/path checks PASS. No unrelated path was staged.

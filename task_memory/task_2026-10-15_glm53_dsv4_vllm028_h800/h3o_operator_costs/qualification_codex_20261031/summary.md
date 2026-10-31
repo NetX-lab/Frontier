@@ -5,9 +5,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-11-01 | Completed the continued evidence verification and scoped Git delivery checks; retained the original task date and source receipts. |
-| 2026-10-31 | Prepared the report/evidence delivery after exact retained-artifact investigation; final verification and commit are recorded on completion. |
+| 2026-10-31 | Prepared the report/evidence delivery after exact retained-artifact investigation. |
 
 ## Result
+
+The local investigation and verification are complete.
 
 The hardware and original native R4 references are supported. Packed registration is one region at 1,002,240 B/block; T6144 source-selected 46 pages imply 46,103,040 B/lane versus the simulator's 39,521,664 component B/lane. Actual request-level transport bytes remain unobserved here.
 
@@ -32,3 +34,13 @@ All files are under `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_ope
 ## Remaining conditions and responsibility
 
 The lead completes already assigned hardware/payload/fit and A6 qualification, preserves the diagnostic/formal input distinction, and binds any eligible future 64-GPU promotion before submission. This sidecar performs no GPU/platform/cloud action, core fix, replay, source repair or main-document change. No concrete blocker prevents the investigation report commit; missing formal prerequisites are reported findings owned by the existing main route.
+
+## Verification and integration
+
+Report/evidence commit: `c04089d269d9a286e04d32a4214cf7b67ea37d40`. Verification PASS: 160 source hashes, 73 excerpt/JSON selectors, 384 rank field pointers, 96 packed-registration rows, 96 graph-memory rows, 37 report source keys, 14 criteria, 24 existing B29 metric rows and 3 original native source git objects. Exact Python executable is `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6), with `-B`, `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR=/data/ycfeng/tmp`.
+
+Git whitespace and scope checks PASS for all 12 report/evidence paths. Post-commit porcelain is clean. The final task checkpoint is 5/5 PASS for this investigation only. Initial authority drift and the one-off display error are retained with their corrected checks in the test report.
+
+Integrate the report/evidence commit followed by the closing record commit on this branch. The closing commit carries this summary, so its exact hash is the branch HEAD returned in the handoff. The already integrated B30b implementation is reused and its parent is not part of this delivery.
+
+No concrete blocker or unfinished authorized sidecar work remains. Formal qualification, actual payload/rank/timing admission, fresh A6 and any eligible future pre-launch promotion remain open with the main owners. Audit GPU usage is 0 GPUh; no source, main document, README or old receipt is changed.
