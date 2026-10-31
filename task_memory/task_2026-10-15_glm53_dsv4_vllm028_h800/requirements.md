@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Recorded YC's ruling on the ex-situ audit: measured communication data is allowed, so F1 is not a failure; the F1-F4 repairs run as comparison tests, and ingress option A is approved with its two delay fields (D-COMM-MEASURED-ALLOWED, item 46). |
 | 2026-10-31 | Recorded YC's request for an audit of the A10 inputs for shortcuts and dependence on large-cluster data before ingress option A (D-EX-SITU-AUDIT, item 44), and the cleanup approval (item 45). |
 | 2026-10-30 | Recorded the lead's launch rule for DP dummy forwards after the native P2-64 wave run (D-DP-DUMMY-RUN-AHEAD, item 43). |
 | 2026-10-30 | Recorded YC's approval of the disk deletions after the full disk (item 41) and of one instrumented native P2-64 diagnostic run for the TTFT gap (D-P2-64-WAVE-DIAGNOSTIC, item 42). |
@@ -418,6 +419,23 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - No input depends on data from the target large cluster. Examples: per-layer or per-step times measured at 32 or 64 GPUs and stored as table entries, or parameters read from native E2E runs.
     - Ingress option A (section 5.4 of the A10 report) is approved to start only after the audit passes. Each audit finding is reported to YC with its evidence and a proposed repair.
 45. **Cleanup approved (2026-10-31).** Delete the stray untracked files of the task directory (`combine_p2_64.txt`, `uniform_ep_p2_64.txt`, `uniform_ep_ranks.txt`) and the 9 traceback files `h3o_operator_costs/a10/k19/fifo_swaps/fifo_<name> <args>.txt`. Remove the finished worktrees listed in the B28 report: `b28-base`, `b28-eager-ep-exact-rows`, `fidelity-candidate-ee29d548`, `a10-k19-ee29d548`, and the earlier finished fidelity, A10 and Codex worktrees. Branches are kept.
+
+[Original Request] 2026-10-31, after the audit report:
+
+> 通信允许使用实测数据，不算fail。接下去并行2件事情：1.进行方案f1-f4的测试和对比，查看误差情况； 2.执行ingress 方案 A
+
+46. **D-COMM-MEASURED-ALLOWED.** YC's ruling on the audit of decision 44:
+    - Measured communication data is an allowed input. F1 is not a failure. The measured CC backend and the H200 network table stay the formal input (Q5 = B, D-W7-COMM-APPROVED K4 unchanged).
+    - Track 1, F1-F4 comparison tests. Each repair proposal of the audit report (section 5) is run as a diagnostic variant of the A10 replay, and its errors against native are reported beside the formal result. A variant replaces a formal input only after a new decision by YC.
+      - F1: collectives priced from hardware link parameters measured by small microbenchmarks (one 8-GPU node, and one GPU per node on two nodes), not from the G5h tables. The G5h tables serve as held-out validation of the model.
+      - F2: the launch-blocking depth measured on one GPU, compared with K = 19.
+      - F3: the NIXL KV read measured on two H200 nodes, against the H800 fit.
+      - F4: Frontier's memory planner sets `num_blocks` instead of the native startup value.
+    - Track 2, ingress option A, approved including its configuration schema change. Two delay fields, default 0, so existing results stay identical:
+      - request ingress delay: client arrival to the engine waiting queue (client dispatch, proxy, API server). It delays the arrival event; `arrived_at` stays the client arrival, so TTFT and E2E still start there. H200 value 10.3 ms (0.6 + 3.11 + 6.59 ms, A10 report sections 3.6 and 5.4).
+      - request handoff delay: prefill engine output to the decode `add_enqueue` (prefill response, proxy, decode API server), in the KV transfer config. It delays the KV transfer start. H200 value 11.4 ms (2.3 + 9.1 ms, A10 report section 3.6 observation 5).
+      - This lifts D-NO-NEW-MODELING (item 25) for these two fields only. The values are driver inputs, not code defaults.
+    - The two tracks run in parallel. Track 1 needs H200 time for its microbenchmarks; the lead reports the jobs and their GPU-hours to YC before submission and continues without waiting (D-NO-INTERRUPT).
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

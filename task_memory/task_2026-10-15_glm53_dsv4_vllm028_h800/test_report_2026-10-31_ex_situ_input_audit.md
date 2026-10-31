@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | YC's ruling (decision 46): measured communication is allowed, F1 is not a failure; F1-F4 run as comparison tests; ingress option A approved. |
 | 2026-10-31 | Created: inventory of every input of the B28 A10 replays, classification by origin, findings F1-F5, and the repair proposal. |
 
 ## Scope and criterion
@@ -16,6 +17,8 @@ Decision 44 (D-EX-SITU-AUDIT, requirements.md) asks whether the A10 numbers come
 Audited runs: the B28 replays `stage4/a10/p2_32_warm_k19b28` and `stage4/a10/p2_64_warm_k19b28` (source `ee29d548`, receipts `receipt.json` in each run root). P2-32 runs two roles of TP8 x DP2 (EP16, 16 GPUs each); P2-64 runs two roles of TP8 x DP4 (EP32, 32 GPUs each).
 
 ## Verdict: FAIL
+
+**Ruling by YC (2026-10-31, decision 46):** measured communication data is an allowed input, so F1 is not a failure and the measured backend stays the formal input. F2 remains a finding. The F1-F4 repairs of section 5 run as comparison tests, and ingress option A proceeds. The text below is the audit as first written.
 
 The compute side passes: every compute table comes from one-GPU profiling jobs, and no whole-step table is bound. Two inputs fail the criterion:
 
