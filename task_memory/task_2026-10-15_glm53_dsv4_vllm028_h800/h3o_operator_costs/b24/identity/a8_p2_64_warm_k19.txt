@@ -1,0 +1,15 @@
+run p2_64_warm_k19: 35 distinct requests, 33423394 calls
+role / operation / domain / devices              points     calls     exact    interp  unequal max_log_dist     total_ms
+decode / all_gatherv / ep / 32                        1   8366080   8366080         0        0        0.000    2142921.2
+decode / all_reduce / tp / 8                          4     48030     48030         0        0        0.000        485.2
+decode / logits_all_gather / tp / 8                   7    189680    189680         0        0        0.000       5228.4
+decode / reduce_scatterv / ep / 32                    1   8366080   8366080         0        0        0.000     971295.2
+decode / sp_all_gather / tp / 8                       2   2259850   2259850         0        0        0.000      16703.5
+decode / sp_reduce_scatter / tp / 8                   4   2065290   2065290         0        0        0.000      17553.5
+prefill / all_gatherv / ep / 32                       2   5327872   5327872         0        0        0.000    1509106.0
+prefill / all_reduce / tp / 8                         2     15488     15488         0        0        0.000        183.3
+prefill / logits_all_gather / tp / 8                  1      1024      1024         0        0        0.000         19.7
+prefill / reduce_scatterv / ep / 32                   5   5327872   5327872         0   176128        0.000     957583.1
+prefill / sp_all_gather / tp / 8                      4    790016    790016         0        0        0.000       7327.7
+prefill / sp_reduce_scatter / tp / 8                  2    666112    666112         0        0        0.000       8774.0
+violations 0

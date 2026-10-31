@@ -1,0 +1,3 @@
+FAILED ../../../Frontier/.worktrees/b28-eager-ep-exact-rows/tests/unit/test_v4_measured_collective_consumer.py::test_v4_wave_passes_widths_without_mutating_source_batches
+FAILED ../../../Frontier/.worktrees/b28-eager-ep-exact-rows/tests/unit/test_v4_replay_census.py::test_observer_snapshots_final_descriptor_and_records_end_once
+2 failed, 365 passed, 1 warning in 109.80s (0:01:49)

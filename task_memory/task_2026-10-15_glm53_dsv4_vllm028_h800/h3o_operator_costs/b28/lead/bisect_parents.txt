@@ -1,0 +1,6 @@
+FAILED tests/unit/test_v4_replay_census.py::test_observer_snapshots_final_descriptor_and_records_end_once
+FAILED tests/unit/test_v4_replay_census.py::test_observer_snapshots_final_descriptor_and_records_end_once
+FAILED tests/unit/test_v4_measured_collective_consumer.py::test_v4_wave_passes_widths_without_mutating_source_batches
+FAILED tests/unit/test_v4_replay_census.py::test_observer_snapshots_final_descriptor_and_records_end_once
+1a2cb3a4 rc=0 2 passed in 2.17s
+ff5b8a41 rc=0 2 passed in 2.18s

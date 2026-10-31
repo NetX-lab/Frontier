@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Section 3: P2-64 full-length identity PASS (cold and warm); A8 census of the P2-64 warm run without B24. |
 | 2026-10-30 | Section 3: P2-32 full-length identity PASS (cold and warm); A8 census counts with and without B24. |
 | 2026-10-30 | Created: lead review of B24 (Codex request `9de7af1c`), the CPU-torch rerun, the 77-case fidelity matrix of main `901bc091`, and the start of the full-length identity check. |
 
@@ -47,8 +48,11 @@ Scripts and outputs are copied to `h3o_operator_costs/b24/identity/`: `k19_ident
 | --- | --- | --- | --- | --- |
 | P2-32 warm | `python k19_identity.py stage4/a10/p2_32_warm_k19 stage4/a10/p2_32_warm_k19b24`, then `k19_identity_detail.py` on the same roots (`k19_identity_p2_32.txt`, `k19_identity_p2_32_detail.txt`) | `request_metrics.csv`, `system_metrics.json`, `metrics_ground_truth.jsonl`, `frontier_transfer_ledger.jsonl` and `op_precision_metadata.csv` identical; `config.json` differs only in run paths; `collectives.json` differs only in predictor call counts and their totals; forwards equal | 5 metrics files identical; `config.json` 3 of 913 keys differ, all run-root paths (`cc_backend_config.cache_dir`, `metrics_config.cache_dir`, `metrics_config.output_dir`); `collectives.json` 50 of 648 leaves differ, 25 `call_count` and 25 `predicted_total_ms`; forwards equal | PASS |
 | P2-32 cold | same, cold roots | same | same as warm: 5 metrics files identical, the same 3 path keys, 50 leaves (`call_count` and `predicted_total_ms`), forwards equal | PASS |
-| P2-64 warm and cold | same, P2-64 roots | same | running: the `50ed2061` replays were still writing `metrics_ground_truth.jsonl` at 15:40 | pending |
+| P2-64 warm | same, P2-64 warm roots (`k19_identity_p2_64.txt`, `k19_identity_p2_64_detail.txt`) | same | 5 metrics files identical; `config.json` 3 of 913 keys differ, the same run-root paths; `collectives.json` 40 of 538 leaves differ, 20 `call_count` and 20 `predicted_total_ms`; forwards equal | PASS |
+| P2-64 cold | same, cold roots | same | same as warm: 5 metrics files identical, the same 3 path keys, 40 leaves (`call_count` and `predicted_total_ms`), forwards equal | PASS |
 
 `collectives.json` counts predictor calls, not simulated collective calls, so B24 lowers the counts by design. The A8 census of the two warm P2-32 runs shows the size (`a8_p2_32_warm_k19.txt`, `a8_p2_32_warm_k19b24.txt`): 19,436,010 calls without B24 against 6,310,644 with it, all exact and 0 violations in both. The census of the earlier run on main `9a4f3471` (before B26) counted 19,438,100. The drop to 6.3 million therefore comes from B24's reuse, not from the B26 host run-ahead, which changed the count by 2,090 calls. The A8 census of a B24 run therefore reports predictions, not calls; its exactness and violation results are unaffected because each reused prediction is the same priced point.
 
 The gate of the warm run without B24 (`stage4/a10_gate/p2_32_warm_k19_post/gate_stdout.txt`) gives the same values as with B24: TTFT 335.1145 against 364.0296 ms (−7.94%), TPOT 19.9269 against 19.9190 ms, E2E 20,720.30 against 20,741.13 ms, throughput 6,226.14 against 6,231.42 tokens/s, PASS, routing MATCH.
+
+On P2-64 the A8 census of the warm run without B24 (`a8_p2_64_warm_k19.txt`) counts 33,423,394 calls, against 9,024,624 with B24 (`stage4/a10_gate/p2_64_warm_k19b24_post/a8_stdout.txt`); both are all exact with 0 violations. Because the metrics files are byte-identical, the P2-64 gate without B24 equals the B24 reading (TTFT 655.102 against 741.216 ms, −11.62%) and was not rerun.
