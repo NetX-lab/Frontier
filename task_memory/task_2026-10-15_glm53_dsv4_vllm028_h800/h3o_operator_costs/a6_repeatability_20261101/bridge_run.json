@@ -1,0 +1,18 @@
+{
+  "runs": {
+    "FULL_AND_PIECEWISE/e0": {
+      "exit_code": 0,
+      "start": "2026-10-31T17:59:23.744176+00:00",
+      "end": "2026-10-31T18:13:49.290029+00:00",
+      "duration_seconds": 865.5458619594574,
+      "error": null
+    },
+    "FULL_AND_PIECEWISE/e1": {
+      "exit_code": 0,
+      "start": "2026-10-31T18:13:49.290916+00:00",
+      "end": "2026-10-31T18:15:37.325265+00:00",
+      "duration_seconds": 108.03436463698745,
+      "error": null
+    }
+  }
+}

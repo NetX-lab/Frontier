@@ -1,0 +1,10 @@
+wrote /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f1a_p2_64/rows
+ttft_ms                  vllm 741.2164 frontier 463.8971 rel 0.3741 FAIL
+tpot_ms                  vllm 25.8705 frontier 15.5650 rel 0.3983 FAIL
+request_e2e_time_ms      vllm 27206.7695 frontier 16386.9236 rel 0.3977 FAIL
+token_throughput_tps     vllm 5963.2063 frontier 6404.2740 rel 0.0740 PASS
+dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path: FAIL (routing MATCH)
+ttft_ms: native=741.2163514151567 frontier=463.89705160133656 absolute_error=277.3192998138202 relative_error=0.37414082849677055
+tpot_ms: native=25.870530968031684 frontier=15.565030883995991 absolute_error=10.305500084035693 relative_error=0.3983489978141631
+request_e2e_time_ms: native=27206.76953171157 frontier=16386.923645929233 absolute_error=10819.845885782335 relative_error=0.3976894747893894
+token_throughput_tps: native=5963.20631789112 frontier=6404.273988886411 absolute_error=441.0676709952904 relative_error=0.0739648517060321

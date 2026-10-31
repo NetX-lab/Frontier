@@ -4,18 +4,59 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Completed F1a P2-64 with all-repeat latency FAIL; retained exact references, six compute hashes and active F2 replays. |
 | 2026-10-31 | Codex update: F4/B28 five-artifact identity on both scales, B29 per-repeat results, F1a P2-32 final FAIL and fresh P2-64 replay. |
 | 2026-10-31 | Created: F1 per-call screen and astra defect, F4 planner terms; F4 replays, B29, B30a and B30b pending. |
 
-## Latest comparison checkpoint — 2026-10-31 Codex resume
+## Latest comparison checkpoint — 2026-11-01
 
-B29 is merged and its finished measured-CC P2-32 reading PASSes all three references. P2-64 remains FAIL: repeat 1 TTFT 779.888727400 vs 684.313826604 ms, 12.254940665%; pooled 7.67691% does not change the verdict. F1a P2-32 is FINISHED: TTFT 3.31698%, TPOT 28.38101%, E2E 27.82468%, THPT 3.79951%, FAIL. A fresh F1a P2-64 replay is running at `stage4/f_variants/runs/f1a_p2_64_codex_20261031a`; the original incomplete attempt remains retained.
+F1a is complete at both scales. P2-32 has pooled TPOT28.38101% and E2E27.82468% errors (FAIL). P2-64 completed128 formal requests and917,504 tokens: TTFT/TPOT/E2E FAIL in every reference repetition; total THPT PASS. Specification-link parameters substantially underpredict the observed latencies on these two cases. The original incomplete P2-64 attempt remains retained; these results come only from the fresh completed run.
 
-F4 at both scales is FINISHED and its five metric artifacts are byte-identical to B28. It used zero ingress/handoff, so its TTFT difference from B29 is a serving-delay difference. Planner-only metric effect is zero on these traces. F1b/F2/F3 preparation remains with B30b. Complete values, all per-repeat verdicts, exact commands, clean source revisions and limits: [Codex test report](test_report_2026-10-31_codex_resume.md) and `h3o_operator_costs/codex_resume_20261031/`.
+B29 remains the formal measured-CC input: P2-32 numerical PASS in all three repetitions; P2-64 repeat1 TTFT12.254940665% FAIL (779.888727400ms native versus684.313826604ms Frontier). Pooled TTFT7.67691% does not override it. F4 five metric artifacts remain byte-identical to B28 at both scales; its zero ingress/handoff differs from B29. F1b's prescribed positive fit fails G5h held-out validation and both replays terminate COVERAGE_MISS; no complete four-metric F1b result exists. F3's completed NIXL data yields an invalid affine fit and no replacement/replay. Both F2K18 CPU replays are still running; watcher23683 owns their gates.
+
+F1a P2-64 uses source `9f5f8b614f1e278b02ad39015f0230de562c82ba`, clean, in `f1a-astra-diagnostic`. Both roles use ASTRA Switch links3,600/400Gbit/s and1/1µs latency, with K19 and B29 ingress10.3ms/handoff11.4ms. No dummy or step-cost table is bound. The six compute-table hashes match B29; all three normalized native reference CSVs are byte-identical to B29's retained CSVs. There are128 unique complete formal request rows, no token/request/metric gaps,53,248 forward and stage-end records, and zero stale stage ends. `collectives.calls=0` is the measured-backend census field on an ASTRA run; it is not evidence that no communication was simulated. Memory admission remains DIFFERS (2,940 modeled versus2,944 native blocks per request), as in the existing qualification record.
+
+Execution: initialization72.455524s, simulation12,215.365581s; launcher session50972 exit0 and workload log ends `EXIT 0`. Existing startup warnings are retained in the selected log tail. The watcher executed the existing gate once at2026-10-31T18:22:43.811894Z; exit0 means the gate ran successfully, its accuracy verdict is FAIL. Evidence: `h3o_operator_costs/f_comparisons_20261101/f1a_p2_64/`, `f1a_p2_64_receipt.json` and `f1a_p2_64_verification.json`.
+
+Commands:
+
+```bash
+bash /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/run_f1a.sh p2_64 f1a_p2_64_codex_20261031a
+/data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_gate.py p2_64 /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f1a_p2_64
+/data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/verify_f1a_p2_64.py
+```
+
+The wrapper and exact environment are retained as `f_comparisons_20261101/run_f1a.sh`: Python3.10.6, the isolated checkout's PYTHONPATH, one BLAS/OpenMP thread, `/data/ycfeng/tmp` scratch and60GiB RLIMIT_AS. Verification initially looked for old normalized CSVs beside the archived reading; `commands.json` points to the original scratch output instead. Correcting that lookup produced `PASS_EVIDENCE_FAIL_ACCURACY`:128 rows, three unchanged references and six unchanged compute hashes. No normalization or gate was rerun.
+
+Pooled reference values are supplementary; each repeat below still decides its own gate. Relative errors use absolute reference denominators, all positive; zero would be undefined.
+
+| Metric | Native pooled | B29 measured-CC prediction | F1a prediction | F1a absolute error | F1a relative error | F1a verdict |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| TTFT (ms) | 741.216351 | 684.313827 | 463.897052 | 277.319300 | 37.414083% | FAIL |
+| TPOT (ms) | 25.870531 | 25.295337 | 15.565031 | 10.305500 | 39.834900% | FAIL |
+| E2E (ms) | 27206.769532 | 26561.443186 | 16386.923646 | 10819.845886 | 39.768947% | FAIL |
+| THPT (tok/s) | 5963.206318 | 5975.251570 | 6404.273989 | 441.067671 | 7.396485% | PASS |
+
+| Reference repeat | Metric | Native | F1a | Absolute error | Relative error | Verdict |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| repeat01 | TTFT (ms) | 779.888727 | 463.897052 | 315.991676 | 40.517533% | FAIL |
+| repeat01 | TPOT (ms) | 25.429869 | 15.565031 | 9.864838 | 38.792327% | FAIL |
+| repeat01 | E2E (ms) | 26794.644444 | 16386.923646 | 10407.720798 | 38.842541% | FAIL |
+| repeat01 | THPT (tok/s) | 5948.029629 | 6404.273989 | 456.244359 | 7.670513% | PASS |
+| repeat02 | TTFT (ms) | 725.492280 | 463.897052 | 261.595228 | 36.057617% | FAIL |
+| repeat02 | TPOT (ms) | 26.255496 | 15.565031 | 10.690465 | 40.717055% | FAIL |
+| repeat02 | E2E (ms) | 27584.864259 | 16386.923646 | 11197.940614 | 40.594510% | FAIL |
+| repeat02 | THPT (tok/s) | 5976.592892 | 6404.273989 | 427.681097 | 7.155935% | PASS |
+| repeat03 | TTFT (ms) | 718.268047 | 463.897052 | 254.370995 | 35.414494% | FAIL |
+| repeat03 | TPOT (ms) | 25.926229 | 15.565031 | 10.361198 | 39.964153% | FAIL |
+| repeat03 | E2E (ms) | 27240.799892 | 16386.923646 | 10853.876246 | 39.844191% | FAIL |
+| repeat03 | THPT (tok/s) | 5965.065720 | 6404.273989 | 439.208269 | 7.363008% | PASS |
+
+Decision under D-NO-INTERRUPT: this completes the F1a comparison requested by decision46. Preserve the failing readings; do not tune specification links against these native values or promote B30a/the diagnostic backend. Continue the two existing F2 replays, then assemble the F1–F4 comparison. A6 repeatability is independently complete as a diagnostic with no qualification change; see [report](test_report_2026-11-01_a6_repeatability.md). Formal tables, K19, metric endpoints, thresholds and three references remain unchanged.
 
 The initial screen, predictions and then-pending statuses below are historical. The measured backend stays formal; no diagnostic variant or B30a default change is promoted.
 
-## Scope
+## Historical initial scope
 
 YC ruled on the ex-situ audit (decision 46): measured communication data is an allowed input, so the measured backend stays the formal input. The F1-F4 repair proposals of the audit ([test_report_2026-10-31_ex_situ_input_audit.md](test_report_2026-10-31_ex_situ_input_audit.md), section 5) run as diagnostic A10 variants, and their errors are compared with the B28 baseline. A variant replaces a formal input only after a new decision by YC.
 

@@ -1,0 +1,45 @@
+{
+  "classification": "CONDITIONAL_COST_ESTIMATES_NO_LAUNCH",
+  "cases": 1421,
+  "engine_indices": [
+    0,
+    1,
+    2
+  ],
+  "one_reconstruction_engine_steps": 14468,
+  "options": [
+    {
+      "reconstructions_per_case": 1,
+      "measured_steps": 1421,
+      "estimated_engine_steps": 14468,
+      "estimated_gpu_hours": 1.3079033333333332
+    },
+    {
+      "reconstructions_per_case": 2,
+      "measured_steps": 2842,
+      "estimated_engine_steps": 28936,
+      "estimated_gpu_hours": 2.21072
+    },
+    {
+      "reconstructions_per_case": 4,
+      "measured_steps": 5684,
+      "estimated_engine_steps": 57872,
+      "estimated_gpu_hours": 4.016353333333333
+    },
+    {
+      "reconstructions_per_case": 8,
+      "measured_steps": 11368,
+      "estimated_engine_steps": 115744,
+      "estimated_gpu_hours": 7.6276199999999985
+    },
+    {
+      "reconstructions_per_case": 16,
+      "measured_steps": 22736,
+      "estimated_engine_steps": 231488,
+      "estimated_gpu_hours": 14.85015333333333
+    }
+  ],
+  "table_sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+  "model_source": "g1h/README.md timing model; same constants as the frozen probe",
+  "limits": "Planning estimates only, not timeout exposure or platform billing; probe results must justify any next step."
+}

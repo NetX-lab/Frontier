@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Completed F1a at both scales with failed latency readings; both F2K18 replays and formal qualification remain open. |
 | 2026-11-01 | Recorded both F1b terminal coverage failures; no incomplete-request metric gate or formal input change. |
 | 2026-11-01 | Synchronized completed A6/F3 evidence and the active F1/F2 comparisons; acceptance criteria unchanged. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
@@ -26,7 +27,7 @@
 
 Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
 
-Five canonical readings now exist: B29 P2-32 PASS; B29 P2-64 FAIL on repeat 1 TTFT; F1a P2-32 FAIL on TPOT/E2E; both F4 readings FAIL TTFT and equal B28 metrics. Fresh F1a P2-64 and both F2 K18 CPU replays are running, with the existing canonical gate scheduled after completion. Collectives-only03 completed; F1b fitting and G5h validation are recorded, and both F1b CPU replays terminated COVERAGE_MISS. The held-out validation fails, and no complete F1b E2E metrics exist; both limitations are retained. F3 measurements are complete but the affine fit fails; no F3 replay is claimed. Fresh A6 completed with qualification failures. All four metrics and all three repeats are required; pooled PASS never overrides a repeat FAIL. Complete 05/09 qualification and formal measured acceptance remain OPEN.
+Six comparison readings now exist: B29 P2-32 PASS; B29 P2-64 FAIL on repeat 1 TTFT; F1a P2-32 FAIL on TPOT/E2E; both F4 readings FAIL TTFT and equal B28 metrics. F1a P2-64 is complete: all-repeat TTFT/TPOT/E2E FAIL (pooled37.41/39.83/39.77%), THPT7.40%PASS; its gate ran once. Both F2K18 CPU replays continue, with the existing canonical gate scheduled after completion. See [F comparison report](../test_report_2026-10-31_f_variant_comparison.md). Collectives-only03 completed; F1b fitting and G5h validation are recorded, and both F1b CPU replays terminated COVERAGE_MISS. The held-out validation fails, and no complete F1b E2E metrics exist; both limitations are retained. F3 measurements are complete but the affine fit fails; no F3 replay is claimed. Fresh A6 completed with qualification failures. All four metrics and all three repeats are required; pooled PASS never overrides a repeat FAIL. Complete 05/09 qualification and formal measured acceptance remain OPEN.
 
 ## Historical execution status
 

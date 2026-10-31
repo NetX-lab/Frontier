@@ -1,0 +1,16 @@
+{
+  "command": [
+    "bash",
+    "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/launch/launch_glm_producers.sh",
+    "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_01/jobs/A6_REPEATABILITY.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "started_utc": "2026-10-31T17:58:16.241905+00:00",
+  "pid": 1411357,
+  "log": "/data/ycfeng/tmp/glm53_dsv4/a6_repeatability_launcher_20261101.log",
+  "exit_code": 0,
+  "status": "TERMINAL",
+  "launcher_pid": 1411411,
+  "elapsed_seconds": 1151.371130763553,
+  "finished_utc": "2026-10-31T18:17:27.613369+00:00"
+}

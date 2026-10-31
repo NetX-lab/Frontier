@@ -1,0 +1,37 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "tests/analysis/v4_attention_repeatability.py",
+    "--package-plan",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/package_plan.json",
+    "--case-mapping",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/case_mapping.json",
+    "--reference-raw",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+    "--raw",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_repeatability_20261101_download/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_repeatability_20261101_download/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+    "--published-table",
+    "data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/result.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "source_commit": "8b778e094267bf738bdd4b0ee45d5adb17edb9be",
+  "analyzer_sha256": "cd63ebc8cec7e4bf3dc16448a5aaabc6d4ae8bb6ee0c9f2dcc45383f36e71b94",
+  "started_utc": "2026-10-31T18:21:12.873028+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 16.544673724565655,
+  "finished_utc": "2026-10-31T18:21:29.417738+00:00"
+}

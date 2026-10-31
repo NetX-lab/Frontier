@@ -1,0 +1,10 @@
+  rows = pd.read_csv(file_path, float_precision=float_precision)
+WARNING 22:58:43 quantization_manager.py:825] Profiling metadata mismatch for op=attn_pre_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 22:58:43 quantization_manager.py:825] Profiling metadata mismatch for op=attn_post_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 22:58:43 sklearn_execution_time_predictor.py:2549] Profiling file missing: ./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv
+WARNING 22:58:43 quantization_manager.py:825] Profiling metadata mismatch for op=moe_gating_routing_topk (precision mismatch (BF16 -> FP32)). Using approximation factor=2.000. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv
+WARNING 22:58:43 quantization_manager.py:825] Profiling metadata mismatch for op=attn_pre_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 22:58:43 quantization_manager.py:825] Profiling metadata mismatch for op=attn_post_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 22:58:43 sklearn_execution_time_predictor.py:2549] Profiling file missing: ./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv
+WARNING 22:58:43 quantization_manager.py:825] Profiling metadata mismatch for op=moe_gating_routing_topk (precision mismatch (BF16 -> FP32)). Using approximation factor=2.000. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv
+EXIT 0

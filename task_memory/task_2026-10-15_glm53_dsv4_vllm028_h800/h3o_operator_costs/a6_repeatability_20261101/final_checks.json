@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "ast_files": [
+    "tests/analysis/v4_attention_repeatability.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/verify_business.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/collect_selected.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/reference_check.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/reconstruction_costs.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/verify_f1a_p2_64.py"
+  ],
+  "current_links_checked": 17,
+  "limits": "Syntax and current relative links only. Actual A6 and F1a evidence verification is recorded separately."
+}

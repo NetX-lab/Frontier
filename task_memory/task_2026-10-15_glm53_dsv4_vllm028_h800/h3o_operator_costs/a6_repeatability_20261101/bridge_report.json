@@ -1,0 +1,1279 @@
+{
+  "verdict": "PASS",
+  "reasons": [],
+  "runs": {
+    "FULL_AND_PIECEWISE/e0": {
+      "run_exit_code": 0,
+      "capture_summary": {
+        "cudagraph_mode": "FULL_AND_PIECEWISE",
+        "cudagraph_capture_sizes": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          24,
+          32,
+          40,
+          48,
+          56,
+          64,
+          72,
+          80,
+          88,
+          96,
+          104,
+          112,
+          120,
+          128,
+          136,
+          144,
+          152,
+          160,
+          168,
+          176,
+          184,
+          192,
+          200,
+          208,
+          216,
+          224,
+          232,
+          240,
+          248,
+          256
+        ],
+        "captures_by_kind": {
+          "graph": 19,
+          "breakable_segment": 420
+        },
+        "node_count": 25985,
+        "kernel_node_count": 25966,
+        "clone_count": 25985,
+        "eager_break_count": 385,
+        "eager_break_owner_scopes": [
+          "dsv4_attention_layer"
+        ]
+      },
+      "cg_mode_counts": {
+        "FULL": 64,
+        "PIECEWISE": 32
+      },
+      "traces": [
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1-e0-0263-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 7977,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1-e0-0262-full.json",
+          "graph_kernel_interval_count": 488,
+          "eager_kernel_interval_count": 82,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 329,
+          "unattributed_launch_count": 8037,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1hs-e0-0101-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1hs-e0-0100-full.json",
+          "graph_kernel_interval_count": 520,
+          "eager_kernel_interval_count": 80,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 359,
+          "unattributed_launch_count": 9373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1hs-e0-0254-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 11373,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1hs-e0-0253-piecewise.json",
+          "graph_kernel_interval_count": 474,
+          "eager_kernel_interval_count": 121,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 354,
+          "unattributed_launch_count": 10036,
+          "error": null
+        }
+      ],
+      "artifact_errors": []
+    },
+    "FULL_AND_PIECEWISE/e1": {
+      "run_exit_code": 0,
+      "capture_summary": {
+        "cudagraph_mode": "FULL_AND_PIECEWISE",
+        "cudagraph_capture_sizes": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          24,
+          32,
+          40,
+          48,
+          56,
+          64,
+          72,
+          80,
+          88,
+          96,
+          104,
+          112,
+          120,
+          128,
+          136,
+          144,
+          152,
+          160,
+          168,
+          176,
+          184,
+          192,
+          200,
+          208,
+          216,
+          224,
+          232,
+          240,
+          248,
+          256
+        ],
+        "captures_by_kind": {
+          "graph": 19,
+          "breakable_segment": 420
+        },
+        "node_count": 25985,
+        "kernel_node_count": 25966,
+        "clone_count": 25985,
+        "eager_break_count": 385,
+        "eager_break_owner_scopes": [
+          "dsv4_attention_layer"
+        ]
+      },
+      "cg_mode_counts": {
+        "PIECEWISE": 32
+      },
+      "traces": [
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r00-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r01-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r02-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r03-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r04-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r05-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r06-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r07-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r08-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r09-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r10-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r11-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r12-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r13-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r14-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1-e1-0729-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 124,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 325,
+          "unattributed_launch_count": 734,
+          "error": null
+        },
+        {
+          "path": "/tmp/glm_producers/out/A6_REPEATABILITY/bridge/FULL_AND_PIECEWISE/traces/a6-r15-g1-e1-0730-first_tail.json",
+          "graph_kernel_interval_count": 442,
+          "eager_kernel_interval_count": 122,
+          "hold_interval_count": 1,
+          "outside_kernel_count": 323,
+          "unattributed_launch_count": 734,
+          "error": null
+        }
+      ],
+      "artifact_errors": []
+    }
+  }
+}

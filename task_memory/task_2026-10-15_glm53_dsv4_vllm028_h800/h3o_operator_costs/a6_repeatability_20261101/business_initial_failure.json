@@ -1,0 +1,11 @@
+{
+  "status": "HARNESS_ASSERTION_FAILURE",
+  "source": "verify_business.py original line 40",
+  "expected_incorrectly": {
+    "FULL": 32
+  },
+  "actual_and_frozen_expected": {
+    "PIECEWISE": 32
+  },
+  "resolution": "Correct the evidence verifier to the first-tail graph dispatch already verified by production check_steps. No worker artifact, source or plan changed."
+}

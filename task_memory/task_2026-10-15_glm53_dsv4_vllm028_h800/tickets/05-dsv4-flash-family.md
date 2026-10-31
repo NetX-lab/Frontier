@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Completed the 128-step A6 repeatability diagnostic; retained failed qualification and uniform-generation/budget limits. |
 | 2026-11-01 | Added collective curve attribution; full qualification remains open. |
 | 2026-11-01 | Attributed all four A6 failures to exact-feature errors sufficient to fail p90; estimator tuning alone cannot close qualification. |
 | 2026-11-01 | Synchronized completed A6/F3 evidence and the active F1/F2 comparisons; acceptance criteria unchanged. |
@@ -85,7 +86,7 @@ Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-p
 
 B16–B28 implement the H200 non-dummy operator path; A10 uses no whole-step table. Fresh A6 completed on November 1: four attention scopes exceed the p90 threshold, and seven of eight uniform collective curves fail. Exact-feature errors alone exceed 10% in more than 10% of all evaluable samples for each failing attention scope; inspect feature-equivalent measurements before changing the estimator. Full family qualification remains OPEN; see [A6 report](../test_report_2026-11-01_a6_report_recovery.md). This ticket and 09 own qualification; B29 numerical PASS on P2-32 does not close it.
 
-CSA follow-up (2026-11-01): raw median reconstruction passes; independent G2h rows match all workload/layer identities but do not preserve the first/reuse-layer contrasts. Keep predictor features unchanged and test freshly reconstructed one-step workloads before any measurement correction. Evidence: [A6 report](../test_report_2026-11-01_a6_report_recovery.md).
+CSA follow-up (2026-11-01): the sole one-H200 reconstruction probe completed with platform/container/launcher success,128/128 geometries,640 rows and zero identity/count mismatches. All544 original medians reconstruct. Timings and CSA contrasts vary across16 repeats; the index-compression control still has20.50%half-median difference. Keep predictor features and formal tables unchanged; complete active F comparisons before choosing a uniform measurement correction. No repetition count is yet qualified, and two full reconstructions exceed the remaining approximate7-GPUh budget. Evidence: [repeatability report](../test_report_2026-11-01_a6_repeatability.md).
 
 Collective follow-up (2026-11-01): all eight curve summaries and source medians reproduce; six of seven failing curves also fail separately in every retained pass. Sparse payload intervals, mode/kernel changes and within-pass variability remain distinct findings, with no input or threshold change. See [collective attribution](../test_report_2026-11-01_a6_collective_curves.md).
 

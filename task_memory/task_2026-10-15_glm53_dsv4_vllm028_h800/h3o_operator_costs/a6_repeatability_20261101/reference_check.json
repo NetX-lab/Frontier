@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "started_utc": "2026-10-31T18:03:11.731046+00:00",
+  "elapsed_seconds": 10.321978910826147,
+  "reference_rows": 40,
+  "published_medians_verified": 544,
+  "inputs": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      "sha256": "bdaed9b8544859a9c7991e00694464cbb5bbfc4584a7a72d8e39ea62c16404a6",
+      "selected_records": {
+        "engine": 1,
+        "step": 2,
+        "call": 310,
+        "interval": 1176
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/download/G1H_ATTENTION/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+      "sha256": "8f5318490c94de3776d341293be0f2f554a0864bafa4f44ac236b4b9bdb2112e",
+      "selected_records": {
+        "engine": 1,
+        "step": 2,
+        "call": 310,
+        "interval": 1162
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+      "sha256": "1c516e7aea195742ba31208a033e6ff6352ff601393623786a9e9dbe8b222ca2",
+      "selected_records": {
+        "engine": 1,
+        "step": 4,
+        "call": 620,
+        "interval": 2448
+      }
+    }
+  ]
+}

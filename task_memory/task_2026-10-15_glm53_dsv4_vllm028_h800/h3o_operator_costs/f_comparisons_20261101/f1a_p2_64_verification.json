@@ -1,0 +1,45 @@
+{
+  "status": "PASS_EVIDENCE_FAIL_ACCURACY",
+  "observed_utc": "2026-10-31T18:28:55.533751+00:00",
+  "source_commit": "9f5f8b614f1e278b02ad39015f0230de562c82ba",
+  "source_dirty_paths": [],
+  "launcher_session": 50972,
+  "launcher_exit_code": 0,
+  "business_exit_marker": "EXIT 0",
+  "init_wall_s": 72.45552397891879,
+  "run_wall_s": 12215.365581097081,
+  "formal_rows": 128,
+  "formal_tokens": 917504,
+  "reference_csv_sha256": {
+    "dsv4-h200-p2-64-canonical-20261025-01-repeat01.csv": "49752e06acb0cb75794f42d540e6ee50d06a48d755432a5e48ba501737aa2c2e",
+    "dsv4-h200-p2-64-canonical-20261025-01-repeat02.csv": "7df7280ea032c9295e78316e490ef4e3177200726e63abeca54e96ed639f7c0c",
+    "dsv4-h200-p2-64-canonical-20261025-01-repeat03.csv": "3eb3a505d439a32b67363d7724e3585d6171d506265ab65752ac21859688dd61"
+  },
+  "compute_table_sha256_equal_to_b29": {
+    "attention_graph_replay_kernel_only.csv": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+    "kernel_gap.csv": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+    "linear_op_kernel_only.csv": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+    "model_runner_block_kernel_only.csv": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+    "model_runner_replay_kernel_only.csv": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+    "moe_kernel_only.csv": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f"
+  },
+  "gate": {
+    "status": "READING_COMPLETE",
+    "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a",
+    "driver_status": "FINISHED",
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_gate.py",
+      "p2_64",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f1a_p2_64"
+    ],
+    "started_utc": "2026-10-31T18:22:43.811894+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/tmp/glm53_dsv4/f1a_p2_64_gate_20261101.log",
+    "finished_utc": "2026-10-31T18:22:44.879319+00:00",
+    "verdict": "FAIL"
+  },
+  "reading": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f1a_p2_64/reading.json",
+  "limitations": "Diagnostic ASTRA result; no promotion. Formal qualification remains open. Gate is consumed once, not regenerated."
+}
