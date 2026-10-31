@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "source_head": "833c7e3145b1bafd33928d850266ebeb8fa160b2",
+  "changed_tracked_paths": [
+    "data/profiling/network/h200_dgx/summary.csv",
+    "data/profiling/network/h200_dgx/summary_provenance.json",
+    "docs/general/measured-communication.md",
+    "frontier/cc_backend/backends/measured_cc_backend.py",
+    "frontier/operators/families.py",
+    "frontier/operators/sequence_parallel_moe.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_observer.py",
+    "tests/unit/test_glm_sp_moe_comm.py",
+    "tests/unit/test_measured_cc_backend.py",
+    "tests/unit/test_v4_measured_collective_consumer.py",
+    "tests/unit/test_v4_replay_census.py"
+  ],
+  "python_line_counts": {
+    "frontier/cc_backend/backends/measured_cc_backend.py": 325,
+    "frontier/operators/families.py": 969,
+    "frontier/operators/sequence_parallel_moe.py": 168,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_observer.py": 311,
+    "tests/unit/test_glm_sp_moe_comm.py": 379,
+    "tests/unit/test_measured_cc_backend.py": 522,
+    "tests/unit/test_v4_measured_collective_consumer.py": 415,
+    "tests/unit/test_v4_replay_census.py": 253,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b28/build_table.py": 129,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b28/run_checks.py": 61,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b28/price_check.py": 89,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b28/curve_diff.py": 118,
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b28/compare_regression.py": 87
+  },
+  "replaced_data_rows": 108,
+  "unchanged_data_rows": 276,
+  "header_and_crlf_preserved": true,
+  "original_provenance_sources_preserved": true,
+  "all_changed_python_parse_successfully": true
+}

@@ -74,11 +74,11 @@ def collective_request(backend, alias, implementation, data_size_bytes,
                        num_devices, comm_domain, sp_rows, predicted_ms):
     key = backend._curve_key(alias, implementation, num_devices, comm_domain)
     rows = tuple(sp_rows) if sp_rows is not None else None
-    unequal = key[:2] == ("reduce_scatterv", "ep") and rows is not None and max(rows) != min(rows)
+    unequal = backend.uses_exact_sp_rows(key, rows)
     if unequal:
         # Unequal curves admit only an exact (ordered rows, bytes) measurement.
         exact, lower, upper, ratio = True, data_size_bytes, data_size_bytes, None
-        lower_us = upper_us = backend._unequal_combine_times[(key, rows, data_size_bytes)]
+        lower_us = upper_us = backend._exact_sp_times[(key, rows, data_size_bytes)]
     else:
         rows = None
         curve = backend._curves[key]

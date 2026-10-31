@@ -1,0 +1,32 @@
+{
+  "input_sha256": {
+    "base": "f4d52911770cc39939dddc0fa98ce30b530b1cd60ea2bd94070d293e200ca559",
+    "16": "e26e697a948c8f1dcb9a5190cd828450219697b254c4d1205d163e47a5719886",
+    "32": "8ed9d86330cf7c462867efc23e83a7e2d23bc7d8eb7a1a8e50b9150c1bc907a0"
+  },
+  "output_sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+  "rows": 384,
+  "replaced_rows": 108,
+  "counts": [
+    {
+      "group_size": 16,
+      "call": "moe_combine_reduce_scatterv",
+      "rows": 9
+    },
+    {
+      "group_size": 16,
+      "call": "moe_dispatch_all_gatherv",
+      "rows": 9
+    },
+    {
+      "group_size": 32,
+      "call": "moe_combine_reduce_scatterv",
+      "rows": 45
+    },
+    {
+      "group_size": 32,
+      "call": "moe_dispatch_all_gatherv",
+      "rows": 45
+    }
+  ]
+}

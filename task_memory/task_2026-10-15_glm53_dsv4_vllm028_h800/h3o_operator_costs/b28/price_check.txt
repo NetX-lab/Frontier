@@ -1,0 +1,17 @@
+base: /data/ycfeng/Frontier/.worktrees/b28-base
+P2-32 EP16 dispatch: 801.7 us, input 6346752 bytes, SP rows (768, 1); isolated median 560.2 us
+P2-32 EP16 combine: 763.9 us, input 50397184 bytes, SP rows (768, 1); isolated median 734.6 us
+P2-32 43 layers, planned change from base: dispatch -10.38 ms, combine -1.26 ms, total -11.64 ms
+P2-64 EP32 dispatch: 1076.0 us, input 6346752 bytes, SP rows (768, 1, 1, 1); isolated median 1043.0 us
+P2-64 EP32 combine: 2011.1 us, input 50528256 bytes, SP rows (768, 1, 1, 1); isolated median 2172.0 us
+P2-64 43 layers, planned change from base: dispatch -1.42 ms, combine +6.92 ms, total +5.50 ms
+PASS: operator prices and forward changes match B28 decisions
+
+candidate: /data/ycfeng/Frontier/.worktrees/b28-eager-ep-exact-rows
+P2-32 EP16 dispatch: 560.2 us, input 6346752 bytes, SP rows (768, 1); isolated median 560.2 us
+P2-32 EP16 combine: 734.6 us, input 50397184 bytes, SP rows (768, 1); isolated median 734.6 us
+P2-32 43 layers, actual change from base: dispatch -10.38 ms, combine -1.26 ms, total -11.64 ms
+P2-64 EP32 dispatch: 1043.0 us, input 6346752 bytes, SP rows (768, 1, 1, 1); isolated median 1043.0 us
+P2-64 EP32 combine: 2172.0 us, input 50528256 bytes, SP rows (768, 1, 1, 1); isolated median 2172.0 us
+P2-64 43 layers, actual change from base: dispatch -1.42 ms, combine +6.92 ms, total +5.50 ms
+PASS: operator prices and forward changes match B28 decisions

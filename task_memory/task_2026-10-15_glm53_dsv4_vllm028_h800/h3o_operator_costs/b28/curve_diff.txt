@@ -1,0 +1,59 @@
+h200_dgx
+  curve ('all_gatherv', 'ep', 16) bytes=6346752: 801.660776138 -> 567.487984896 us
+  curve ('all_gatherv', 'ep', 32) bytes=6346752: 1076.022386551 -> 1138.767957687 us
+  curve ('reduce_scatterv', 'ep', 16) bytes=100663296: 768.513607979 -> 454.272001982 us
+  curve ('reduce_scatterv', 'ep', 32) bytes=201326592: 865.223979950 -> 895.792007446 us
+  exact (('reduce_scatterv', 'ep', 16), (1, 768), 50397184): 798.739218712 -> 728.287994862 us
+  exact (('reduce_scatterv', 'ep', 16), (768, 1), 50397184): 763.857579231 -> 734.575986862 us
+  exact (('reduce_scatterv', 'ep', 32), (1, 1, 1, 768), 50528256): 2008.993625641 -> 2145.391941071 us
+  exact (('reduce_scatterv', 'ep', 32), (1, 1, 768, 1), 50528256): 2066.531181335 -> 2196.176052094 us
+  exact (('reduce_scatterv', 'ep', 32), (1, 1, 768, 768), 100794368): 1789.123153687 -> 1857.855975628 us
+  exact (('reduce_scatterv', 'ep', 32), (1, 768, 1, 1), 50528256): 2077.182388306 -> 2176.752090454 us
+  exact (('reduce_scatterv', 'ep', 32), (1, 768, 1, 768), 100794368): 1852.000045776 -> 1916.992008686 us
+  exact (('reduce_scatterv', 'ep', 32), (1, 768, 768, 1), 100794368): 1849.689579010 -> 1898.447990417 us
+  exact (('reduce_scatterv', 'ep', 32), (1, 768, 768, 768), 151060480): 2061.390399933 -> 2106.559991837 us
+  exact (('reduce_scatterv', 'ep', 32), (768, 1, 1, 1), 50528256): 2011.121559143 -> 2171.999931335 us
+  exact (('reduce_scatterv', 'ep', 32), (768, 1, 1, 768), 100794368): 1780.782318115 -> 1922.335982323 us
+  exact (('reduce_scatterv', 'ep', 32), (768, 1, 768, 1), 100794368): 1807.839965820 -> 1918.832004070 us
+  exact (('reduce_scatterv', 'ep', 32), (768, 1, 768, 768), 151060480): 2067.867183685 -> 2292.079925537 us
+  exact (('reduce_scatterv', 'ep', 32), (768, 768, 1, 1), 100794368): 1787.827205658 -> 1871.951997280 us
+  exact (('reduce_scatterv', 'ep', 32), (768, 768, 1, 768), 151060480): 2091.500854492 -> 2298.143982887 us
+  exact (('reduce_scatterv', 'ep', 32), (768, 768, 768, 1), 151060480): 2052.043247223 -> 2145.328044891 us
+  new exact (('all_gatherv', 'ep', 16), (1, 768), 6346752): 568.015992641 us
+  new exact (('all_gatherv', 'ep', 16), (768, 1), 6346752): 560.192018747 us
+  new exact (('all_gatherv', 'ep', 32), (1, 1, 1, 768), 6346752): 1060.063958168 us
+  new exact (('all_gatherv', 'ep', 32), (1, 1, 768, 1), 6346752): 1048.352003098 us
+  new exact (('all_gatherv', 'ep', 32), (1, 1, 768, 768), 6346752): 1096.656024456 us
+  new exact (('all_gatherv', 'ep', 32), (1, 768, 1, 1), 6346752): 1058.127999306 us
+  new exact (('all_gatherv', 'ep', 32), (1, 768, 1, 768), 6346752): 1085.168004036 us
+  new exact (('all_gatherv', 'ep', 32), (1, 768, 768, 1), 6346752): 1099.840044975 us
+  new exact (('all_gatherv', 'ep', 32), (1, 768, 768, 768), 6346752): 1126.464009285 us
+  new exact (('all_gatherv', 'ep', 32), (768, 1, 1, 1), 6346752): 1043.007969856 us
+  new exact (('all_gatherv', 'ep', 32), (768, 1, 1, 768), 6346752): 1091.152012348 us
+  new exact (('all_gatherv', 'ep', 32), (768, 1, 768, 1), 6346752): 1083.680033684 us
+  new exact (('all_gatherv', 'ep', 32), (768, 1, 768, 768), 6346752): 1134.383976460 us
+  new exact (('all_gatherv', 'ep', 32), (768, 768, 1, 1), 6346752): 1087.199985981 us
+  new exact (('all_gatherv', 'ep', 32), (768, 768, 1, 768), 6346752): 1133.791983128 us
+  new exact (('all_gatherv', 'ep', 32), (768, 768, 768, 1), 6346752): 1137.392044067 us
+  holdouts ('all_gatherv', 'ep', 16): 6 -> 0
+  holdouts ('all_gatherv', 'ep', 32): 42 -> 0
+  totals: curve changes=4, combine changes=16, new dispatch entries=16, exact entries=16 -> 32, holdouts=48 -> 0
+  SP-vector coverage: dispatch=16, combine=16, combine-only=[], dispatch-only=[]
+  ordered raw-lane coverage: dispatch=16, combine=16, combine-only=[], dispatch-only=[]
+  covered ordered lane vectors: [(16, (1, 6144)), (16, (6144, 1)), (32, (1, 1, 1, 6144)), (32, (1, 1, 6144, 1)), (32, (1, 1, 6144, 6144)), (32, (1, 6144, 1, 1)), (32, (1, 6144, 1, 6144)), (32, (1, 6144, 6144, 1)), (32, (1, 6144, 6144, 6144)), (32, (6144, 1, 1, 1)), (32, (6144, 1, 1, 6144)), (32, (6144, 1, 6144, 1)), (32, (6144, 1, 6144, 6144)), (32, (6144, 6144, 1, 1)), (32, (6144, 6144, 1, 6144)), (32, (6144, 6144, 6144, 1))]
+h800_dgx
+  new exact (('all_gatherv', 'ep', 32), (4, 1, 1, 1), 49408): 334.529602528 us
+  new exact (('all_gatherv', 'ep', 32), (8, 1, 1, 1), 98816): 336.737596989 us
+  new exact (('all_gatherv', 'ep', 32), (16, 1, 1, 1), 197632): 336.091196537 us
+  new exact (('all_gatherv', 'ep', 32), (32, 1, 1, 1), 395264): 343.172794580 us
+  new exact (('all_gatherv', 'ep', 32), (64, 1, 1, 1), 790528): 364.342403412 us
+  new exact (('all_gatherv', 'ep', 32), (128, 1, 1, 1), 1581056): 402.873611450 us
+  new exact (('all_gatherv', 'ep', 32), (256, 1, 1, 1), 3162112): 496.985602379 us
+  new exact (('all_gatherv', 'ep', 32), (512, 1, 1, 1), 6324224): 1242.256021500 us
+  new exact (('all_gatherv', 'ep', 32), (1024, 1, 1, 1), 12648448): 2188.248062134 us
+  holdouts ('all_gatherv', 'ep', 32): 39 -> 9
+  totals: curve changes=0, combine changes=0, new dispatch entries=9, exact entries=9 -> 18, holdouts=282 -> 252
+  SP-vector coverage: dispatch=9, combine=9, combine-only=[], dispatch-only=[]
+  ordered raw-lane coverage: dispatch=9, combine=9, combine-only=[], dispatch-only=[]
+  covered ordered lane vectors: [(32, (32, 1, 1, 1)), (32, (64, 1, 1, 1)), (32, (128, 1, 1, 1)), (32, (256, 1, 1, 1)), (32, (512, 1, 1, 1)), (32, (1024, 1, 1, 1)), (32, (2048, 1, 1, 1)), (32, (4096, 1, 1, 1)), (32, (8192, 1, 1, 1))]
+PASS: only the planned curve, exact-entry and holdout differences; coverage is equal

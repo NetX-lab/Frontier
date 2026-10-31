@@ -1,0 +1,1222 @@
+{
+  "input_sha256": {
+    "base": "f4d52911770cc39939dddc0fa98ce30b530b1cd60ea2bd94070d293e200ca559",
+    "16": "e26e697a948c8f1dcb9a5190cd828450219697b254c4d1205d163e47a5719886",
+    "32": "8ed9d86330cf7c462867efc23e83a7e2d23bc7d8eb7a1a8e50b9150c1bc907a0"
+  },
+  "output_sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+  "rows": 384,
+  "replaced_rows": 108,
+  "counts": [
+    {
+      "group_size": 16,
+      "call": "moe_combine_reduce_scatterv",
+      "rows": 9
+    },
+    {
+      "group_size": 16,
+      "call": "moe_dispatch_all_gatherv",
+      "rows": 9
+    },
+    {
+      "group_size": 32,
+      "call": "moe_combine_reduce_scatterv",
+      "rows": 45
+    },
+    {
+      "group_size": 32,
+      "call": "moe_dispatch_all_gatherv",
+      "rows": 45
+    }
+  ],
+  "replacements": [
+    {
+      "data_row_index": 10,
+      "key": {
+        "group_size": "16",
+        "pass": "0",
+        "scenario": "eager_t6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 812.7120018005371,
+      "new_median_us": 560.1920187473297
+    },
+    {
+      "data_row_index": 18,
+      "key": {
+        "group_size": "16",
+        "pass": "0",
+        "scenario": "eager_t1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 800.6752014160156,
+      "new_median_us": 725.519984960556
+    },
+    {
+      "data_row_index": 23,
+      "key": {
+        "group_size": "16",
+        "pass": "0",
+        "scenario": "eager_t6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 801.6607761383057,
+      "new_median_us": 561.9840025901794
+    },
+    {
+      "data_row_index": 26,
+      "key": {
+        "group_size": "16",
+        "pass": "0",
+        "scenario": "eager_t6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 763.8575792312622,
+      "new_median_us": 733.7760031223297
+    },
+    {
+      "data_row_index": 29,
+      "key": {
+        "group_size": "16",
+        "pass": "0",
+        "scenario": "eager_t1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 779.9056053161621,
+      "new_median_us": 568.015992641449
+    },
+    {
+      "data_row_index": 36,
+      "key": {
+        "group_size": "16",
+        "pass": "0",
+        "scenario": "eager_t6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 768.5136079788208,
+      "new_median_us": 454.27200198173523
+    },
+    {
+      "data_row_index": 94,
+      "key": {
+        "group_size": "16",
+        "pass": "1",
+        "scenario": "eager_t1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 798.5136032104492,
+      "new_median_us": 735.0240051746368
+    },
+    {
+      "data_row_index": 106,
+      "key": {
+        "group_size": "16",
+        "pass": "1",
+        "scenario": "eager_t6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 801.8064022064209,
+      "new_median_us": 567.8240060806274
+    },
+    {
+      "data_row_index": 128,
+      "key": {
+        "group_size": "16",
+        "pass": "1",
+        "scenario": "eager_t6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 763.3471965789795,
+      "new_median_us": 467.53600239753723
+    },
+    {
+      "data_row_index": 129,
+      "key": {
+        "group_size": "16",
+        "pass": "1",
+        "scenario": "eager_t1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 763.5103940963745,
+      "new_median_us": 567.6960051059723
+    },
+    {
+      "data_row_index": 138,
+      "key": {
+        "group_size": "16",
+        "pass": "1",
+        "scenario": "eager_t6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 764.736008644104,
+      "new_median_us": 734.5759868621826
+    },
+    {
+      "data_row_index": 145,
+      "key": {
+        "group_size": "16",
+        "pass": "1",
+        "scenario": "eager_t6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 805.8448314666748,
+      "new_median_us": 567.4879848957062
+    },
+    {
+      "data_row_index": 164,
+      "key": {
+        "group_size": "16",
+        "pass": "2",
+        "scenario": "eager_t6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 799.7583866119385,
+      "new_median_us": 575.4719972610474
+    },
+    {
+      "data_row_index": 169,
+      "key": {
+        "group_size": "16",
+        "pass": "2",
+        "scenario": "eager_t6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 761.4560127258301,
+      "new_median_us": 734.7519993782043
+    },
+    {
+      "data_row_index": 183,
+      "key": {
+        "group_size": "16",
+        "pass": "2",
+        "scenario": "eager_t1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 773.7679958343506,
+      "new_median_us": 571.0560083389282
+    },
+    {
+      "data_row_index": 184,
+      "key": {
+        "group_size": "16",
+        "pass": "2",
+        "scenario": "eager_t6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 797.544002532959,
+      "new_median_us": 549.8239994049072
+    },
+    {
+      "data_row_index": 196,
+      "key": {
+        "group_size": "16",
+        "pass": "2",
+        "scenario": "eager_t1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 798.739218711853,
+      "new_median_us": 728.2879948616028
+    },
+    {
+      "data_row_index": 222,
+      "key": {
+        "group_size": "16",
+        "pass": "2",
+        "scenario": "eager_t6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 779.3728113174438,
+      "new_median_us": 454.1279971599579
+    },
+    {
+      "data_row_index": 248,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2054.1647911071777,
+      "new_median_us": 2195.215940475464
+    },
+    {
+      "data_row_index": 249,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 881.5279960632324,
+      "new_median_us": 896.016001701355
+    },
+    {
+      "data_row_index": 252,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2130.191993713379,
+      "new_median_us": 2314.0480518341064
+    },
+    {
+      "data_row_index": 255,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1826.1631965637207,
+      "new_median_us": 1925.3759980201721
+    },
+    {
+      "data_row_index": 257,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1782.4736595153809,
+      "new_median_us": 1922.3359823226929
+    },
+    {
+      "data_row_index": 259,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1071.0000038146973,
+      "new_median_us": 1087.1999859809875
+    },
+    {
+      "data_row_index": 260,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1016.3167953491211,
+      "new_median_us": 1046.447992324829
+    },
+    {
+      "data_row_index": 262,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1834.9760055541992,
+      "new_median_us": 1898.4479904174805
+    },
+    {
+      "data_row_index": 263,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1091.2176132202148,
+      "new_median_us": 1103.2959818840027
+    },
+    {
+      "data_row_index": 264,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1118.6831951141357,
+      "new_median_us": 1134.1440081596375
+    },
+    {
+      "data_row_index": 266,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_1_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1075.8912086486816,
+      "new_median_us": 1105.9679985046387
+    },
+    {
+      "data_row_index": 267,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1076.8511772155762,
+      "new_median_us": 1100.9600162506104
+    },
+    {
+      "data_row_index": 269,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_1_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2068.571186065674,
+      "new_median_us": 2199.24795627594
+    },
+    {
+      "data_row_index": 270,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1104.5728206634521,
+      "new_median_us": 1126.4640092849731
+    },
+    {
+      "data_row_index": 272,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1027.0095825195312,
+      "new_median_us": 1043.0079698562622
+    },
+    {
+      "data_row_index": 273,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2067.8671836853027,
+      "new_median_us": 2292.0799255371094
+    },
+    {
+      "data_row_index": 274,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1063.5136127471924,
+      "new_median_us": 1094.5760011672974
+    },
+    {
+      "data_row_index": 275,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1786.6544723510742,
+      "new_median_us": 1869.2799806594849
+    },
+    {
+      "data_row_index": 276,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1110.4976177215576,
+      "new_median_us": 1129.1199922561646
+    },
+    {
+      "data_row_index": 277,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_1_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1025.051212310791,
+      "new_median_us": 1041.711986064911
+    },
+    {
+      "data_row_index": 278,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1074.4719982147217,
+      "new_median_us": 1135.5040073394775
+    },
+    {
+      "data_row_index": 279,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_1_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2011.1215591430664,
+      "new_median_us": 2171.999931335449
+    },
+    {
+      "data_row_index": 281,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t6144_6144_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1109.3727588653564,
+      "new_median_us": 1137.3920440673828
+    },
+    {
+      "data_row_index": 283,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1050.593614578247,
+      "new_median_us": 1078.2560110092163
+    },
+    {
+      "data_row_index": 284,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2048.521614074707,
+      "new_median_us": 2109.2000007629395
+    },
+    {
+      "data_row_index": 285,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_1_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1017.8208351135254,
+      "new_median_us": 1060.0639581680298
+    },
+    {
+      "data_row_index": 287,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_1_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2006.6944122314453,
+      "new_median_us": 2145.807981491089
+    },
+    {
+      "data_row_index": 289,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2064.339256286621,
+      "new_median_us": 2176.7520904541016
+    },
+    {
+      "data_row_index": 290,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_6144_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1850.9888648986816,
+      "new_median_us": 1919.2000031471252
+    },
+    {
+      "data_row_index": 291,
+      "key": {
+        "group_size": "32",
+        "pass": "0",
+        "scenario": "eager_t1_1_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1789.1231536865234,
+      "new_median_us": 1857.2480082511902
+    },
+    {
+      "data_row_index": 292,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1852.0000457763672,
+      "new_median_us": 1916.6399836540222
+    },
+    {
+      "data_row_index": 293,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 857.7327728271484,
+      "new_median_us": 878.8959980010986
+    },
+    {
+      "data_row_index": 294,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1807.8399658203125,
+      "new_median_us": 1916.5120124816895
+    },
+    {
+      "data_row_index": 296,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_1_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2066.531181335449,
+      "new_median_us": 2194.4799423217773
+    },
+    {
+      "data_row_index": 298,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1076.200008392334,
+      "new_median_us": 1098.1279611587524
+    },
+    {
+      "data_row_index": 299,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2088.156795501709,
+      "new_median_us": 2298.143982887268
+    },
+    {
+      "data_row_index": 300,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1071.4128017425537,
+      "new_median_us": 1081.2639594078064
+    },
+    {
+      "data_row_index": 302,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2090.548801422119,
+      "new_median_us": 2293.887972831726
+    },
+    {
+      "data_row_index": 306,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1071.3312149047852,
+      "new_median_us": 1087.183952331543
+    },
+    {
+      "data_row_index": 307,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_1_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2009.7504615783691,
+      "new_median_us": 2140.3039693832397
+    },
+    {
+      "data_row_index": 309,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1064.4543647766113,
+      "new_median_us": 1083.6800336837769
+    },
+    {
+      "data_row_index": 312,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1121.9103813171387,
+      "new_median_us": 1133.3279609680176
+    },
+    {
+      "data_row_index": 314,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_1_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1789.0975952148438,
+      "new_median_us": 1862.6239895820618
+    },
+    {
+      "data_row_index": 315,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_1_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1072.1936225891113,
+      "new_median_us": 1092.7680134773254
+    },
+    {
+      "data_row_index": 318,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1849.6895790100098,
+      "new_median_us": 1896.336019039154
+    },
+    {
+      "data_row_index": 320,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1787.827205657959,
+      "new_median_us": 1873.2320070266724
+    },
+    {
+      "data_row_index": 321,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2062.252712249756,
+      "new_median_us": 2105.855941772461
+    },
+    {
+      "data_row_index": 322,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2128.2015800476074,
+      "new_median_us": 2173.4399795532227
+    },
+    {
+      "data_row_index": 323,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1027.947187423706,
+      "new_median_us": 1064.0000104904175
+    },
+    {
+      "data_row_index": 325,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1111.9775772094727,
+      "new_median_us": 1133.3119869232178
+    },
+    {
+      "data_row_index": 326,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2045.3248023986816,
+      "new_median_us": 2141.632080078125
+    },
+    {
+      "data_row_index": 328,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1780.7823181152344,
+      "new_median_us": 1922.3840236663818
+    },
+    {
+      "data_row_index": 329,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_1_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1018.4512138366699,
+      "new_median_us": 1046.2719798088074
+    },
+    {
+      "data_row_index": 331,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1124.1392135620117,
+      "new_median_us": 1164.9280190467834
+    },
+    {
+      "data_row_index": 332,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2009.6783638000488,
+      "new_median_us": 2181.2639236450195
+    },
+    {
+      "data_row_index": 333,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1121.5712070465088,
+      "new_median_us": 1142.2240138053894
+    },
+    {
+      "data_row_index": 334,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_1_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1043.0607795715332,
+      "new_median_us": 1057.055950164795
+    },
+    {
+      "data_row_index": 335,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_6144_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1076.0223865509033,
+      "new_median_us": 1177.8879761695862
+    },
+    {
+      "data_row_index": 336,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t6144_1_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1042.583990097046,
+      "new_median_us": 1055.616021156311
+    },
+    {
+      "data_row_index": 337,
+      "key": {
+        "group_size": "32",
+        "pass": "1",
+        "scenario": "eager_t1_6144_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1077.5487899780273,
+      "new_median_us": 1104.2239665985107
+    },
+    {
+      "data_row_index": 338,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2091.5008544921875,
+      "new_median_us": 2297.8720664978027
+    },
+    {
+      "data_row_index": 339,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1090.001630783081,
+      "new_median_us": 1099.8400449752808
+    },
+    {
+      "data_row_index": 340,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_1_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1790.5648231506348,
+      "new_median_us": 1857.8559756278992
+    },
+    {
+      "data_row_index": 341,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_1_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1080.4351806640625,
+      "new_median_us": 1096.6560244560242
+    },
+    {
+      "data_row_index": 342,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1115.172815322876,
+      "new_median_us": 1134.3839764595032
+    },
+    {
+      "data_row_index": 344,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2064.6111488342285,
+      "new_median_us": 2275.7439613342285
+    },
+    {
+      "data_row_index": 345,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1057.1839809417725,
+      "new_median_us": 1061.3279938697815
+    },
+    {
+      "data_row_index": 347,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1807.5663566589355,
+      "new_median_us": 1918.832004070282
+    },
+    {
+      "data_row_index": 348,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1075.428819656372,
+      "new_median_us": 1086.8160128593445
+    },
+    {
+      "data_row_index": 349,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_1_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2008.9936256408691,
+      "new_median_us": 2145.3919410705566
+    },
+    {
+      "data_row_index": 352,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1031.9087982177734,
+      "new_median_us": 1033.519983291626
+    },
+    {
+      "data_row_index": 353,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 865.2239799499512,
+      "new_median_us": 895.7920074462891
+    },
+    {
+      "data_row_index": 355,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1780.344009399414,
+      "new_median_us": 1917.9840087890625
+    },
+    {
+      "data_row_index": 358,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_1_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1035.9440326690674,
+      "new_median_us": 1058.127999305725
+    },
+    {
+      "data_row_index": 361,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1119.9584007263184,
+      "new_median_us": 1121.7600107192993
+    },
+    {
+      "data_row_index": 362,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2011.6080284118652,
+      "new_median_us": 2169.0560579299927
+    },
+    {
+      "data_row_index": 363,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_6144_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2061.3903999328613,
+      "new_median_us": 2106.559991836548
+    },
+    {
+      "data_row_index": 365,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_1_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1037.067174911499,
+      "new_median_us": 1048.3520030975342
+    },
+    {
+      "data_row_index": 370,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_1_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2066.36323928833,
+      "new_median_us": 2196.176052093506
+    },
+    {
+      "data_row_index": 371,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1119.5903778076172,
+      "new_median_us": 1133.791983127594
+    },
+    {
+      "data_row_index": 372,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_1_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1031.1967849731445,
+      "new_median_us": 1068.0959820747375
+    },
+    {
+      "data_row_index": 374,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2052.0432472229004,
+      "new_median_us": 2145.3280448913574
+    },
+    {
+      "data_row_index": 375,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_6144_1",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1115.0415897369385,
+      "new_median_us": 1145.3920006752014
+    },
+    {
+      "data_row_index": 376,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 2077.182388305664,
+      "new_median_us": 2189.679980278015
+    },
+    {
+      "data_row_index": 377,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_6144_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1850.271987915039,
+      "new_median_us": 1905.8240056037903
+    },
+    {
+      "data_row_index": 379,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_1_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1070.3135967254639,
+      "new_median_us": 1091.152012348175
+    },
+    {
+      "data_row_index": 380,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_1_1",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1789.0944480895996,
+      "new_median_us": 1871.9519972801208
+    },
+    {
+      "data_row_index": 381,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_1_6144",
+        "call": "moe_combine_reduce_scatterv"
+      },
+      "old_median_us": 1863.7519836425781,
+      "new_median_us": 1916.9920086860657
+    },
+    {
+      "data_row_index": 382,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t6144_6144_6144_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1076.8399715423584,
+      "new_median_us": 1138.767957687378
+    },
+    {
+      "data_row_index": 383,
+      "key": {
+        "group_size": "32",
+        "pass": "2",
+        "scenario": "eager_t1_6144_1_6144",
+        "call": "moe_dispatch_all_gatherv"
+      },
+      "old_median_us": 1052.1167755126953,
+      "new_median_us": 1085.1680040359497
+    }
+  ]
+}

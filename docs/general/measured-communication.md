@@ -75,13 +75,13 @@ holdouts. Curation omitted one logits row whose queue-hold check failed.
 - EP32 has only one allocation's evidence. Cross-allocation reproducibility
   is not established. LOO errors exceed 10% at some points; loaded coverage is
   not an accuracy guarantee.
-- Unequal SP row counts select different NCCL kernels. The scalar API cannot
-  infer this from byte size. The future SP-MoE caller must reject uneven
-  combine with the typed coverage error **before lookup**: uniform curves
-  underpredict it by up to 85%. Do not pool holdouts as if they were the same
-  kernel. Unequal raw tokens that still yield equal SP rows are not this case.
-  Dispatch retains largest-rank bytes; its DP4 uneven holdout is within 10%
-  through 512 tokens, not at every larger measured size.
+- Unequal SP row counts select different NCCL kernels. Dispatch uses its exact
+  measured AllGatherV row; combine uses its exact per-root BF16 Reduce row.
+  Both require the ordered SP rows, EP group size and largest-rank input bytes
+  to match a measured entry. An unmeasured vector or byte size raises
+  `MeasuredCCOutOfRangeError`; neither call falls back to a uniform curve or
+  interpolates between vectors. Unequal raw tokens that yield equal SP rows
+  use uniform curves; their nonuniform measurement rows remain holdouts.
 - No device charge is made for async gloo DP synchronization. Same-NIC EP/NIXL
   contention and multiple queued reads remain unmodeled.
 

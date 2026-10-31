@@ -1,0 +1,18 @@
+{
+  "cwd": "/data/ycfeng/tmp/codex-implement/d684ea95-b7ff-4a6d-8fec-63b038641a41/b28/focused_base",
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "VLLM_BS_SOURCE_ROOT": "/data/ycfeng/tmp/opencode/vllm-v0.28.0",
+    "TMPDIR": "/data/ycfeng/tmp/codex-implement/d684ea95-b7ff-4a6d-8fec-63b038641a41/b28/tmp",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp/codex-implement/d684ea95-b7ff-4a6d-8fec-63b038641a41/b28/tmp",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b28-base:/data/ycfeng/Frontier/.worktrees/b28-base/tests/unit:/data/ycfeng/Frontier/.worktrees/b28-base/tests/comparison/calibration:/data/ycfeng/Frontier/.worktrees/b28-base/tests/analysis:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages"
+  },
+  "command": "timeout 3600 /data/ycfeng/envs/frontier-py310/bin/python -m pytest /data/ycfeng/Frontier/.worktrees/b28-base/tests/unit/test_measured_cc_backend.py /data/ycfeng/Frontier/.worktrees/b28-base/tests/unit/test_glm_sp_moe_comm.py /data/ycfeng/Frontier/.worktrees/b28-base/tests/unit/test_v4_measured_collective_consumer.py /data/ycfeng/Frontier/.worktrees/b28-base/tests/unit/test_v4_replay_census.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/codex-implement/d684ea95-b7ff-4a6d-8fec-63b038641a41/b28/tmp/focused_base --junitxml=/data/ycfeng/tmp/codex-implement/d684ea95-b7ff-4a6d-8fec-63b038641a41/b28/focused_base.xml",
+  "memory_kib": 31457280,
+  "returncode": 1
+}
