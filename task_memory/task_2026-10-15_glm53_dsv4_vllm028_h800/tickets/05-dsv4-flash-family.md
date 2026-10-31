@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Attributed all four A6 failures to exact-feature errors sufficient to fail p90; estimator tuning alone cannot close qualification. |
 | 2026-11-01 | Synchronized completed A6/F3 evidence and the active F1/F2 comparisons; acceptance criteria unchanged. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block, moved V4 PD (M4) from the GLM dependency to H4a-2, and stated how explicit balanced_topk selection relates to the hash-layer routing rule. |
@@ -81,7 +82,7 @@
 
 Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
 
-B16–B28 implement the H200 non-dummy operator path; A10 uses no whole-step table. Fresh A6 completed on November 1: four attention scopes exceed the p90 threshold, and seven of eight uniform collective curves fail. Full family qualification remains OPEN; see [A6 report](../test_report_2026-11-01_a6_report_recovery.md). This ticket and 09 own qualification; B29 numerical PASS on P2-32 does not close it.
+B16–B28 implement the H200 non-dummy operator path; A10 uses no whole-step table. Fresh A6 completed on November 1: four attention scopes exceed the p90 threshold, and seven of eight uniform collective curves fail. Exact-feature errors alone exceed 10% in more than 10% of all evaluable samples for each failing attention scope; inspect feature-equivalent measurements before changing the estimator. Full family qualification remains OPEN; see [A6 report](../test_report_2026-11-01_a6_report_recovery.md). This ticket and 09 own qualification; B29 numerical PASS on P2-32 does not close it.
 
 ## Historical route — DSV4 H800 mainline (2026-10-25)
 

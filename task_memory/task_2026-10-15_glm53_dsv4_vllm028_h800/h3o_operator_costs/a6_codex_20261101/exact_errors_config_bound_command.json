@@ -1,0 +1,30 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "tests/analysis/v4_attention_exact_errors.py",
+    "--result",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+    "--output",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_exact_config_bound_20261101.json",
+    "--scratch-dir",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_exact_config_bound_20261101"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "script_sha256": "16207c512a595cff11ce2c77c2e60c1467bd92a534460a10981888d36d91deba",
+  "start_utc": "2026-10-31T17:35:56.847447+00:00",
+  "source_base": "2fea0ac0",
+  "exit_code": 0,
+  "wall_s": 15.366595961153507,
+  "end_utc": "2026-10-31T17:36:12.214078+00:00",
+  "original_result_equal": true,
+  "sha256": "dc532f2b19245e1ea0dd021c8cea7b379e02281fc4da26afbc969d52bb743165"
+}

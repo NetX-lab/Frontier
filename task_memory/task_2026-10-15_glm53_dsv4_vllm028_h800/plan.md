@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Added the verified A6 exact-feature finding to the qualification route; no estimator tuning or new GPU run. |
 | 2026-11-01 | Recorded F1b terminal coverage failures; kept three independent CPU replays active and preserved all formal inputs. |
 | 2026-11-01 | Completed collectives03 integrity and F1b fit/held-out checks; started both diagnostic replays and preserved the failed link model. |
 | 2026-11-01 | Advanced collectives03/F2 replays; recorded A6 qualification failures and rejected F3 fit without changing criteria. |
@@ -152,7 +153,7 @@ Mainline: branch `feat/glm53-dsv4-vllm028`, this worktree and task directory. In
 | Milestone | Tickets | Current state and completion condition |
 | --- | --- | --- |
 | P2 case/reference binding | 17/18 | p2_32r and p2_64r R4 PASS; reuse their exact three clean repeats. Historical native admission is not rewritten as a new promotion. |
-| H3o operator composition | 05/09 | B16–B28 runtime and H200 tables are implemented; A10 runs without dummy mode or a step table. Fresh A6 completed with four attention and seven uniform-collective curve failures; full qualification remains open. |
+| H3o operator composition | 05/09 | B16–B28 runtime and H200 tables are implemented; A10 runs without dummy mode or a step table. Fresh A6 completed with four attention and seven uniform-collective curve failures. Exact-feature errors alone force all four attention p90 failures; inspect measurement/input strata before changing the estimator. Full qualification remains open. |
 | Ingress option A / B29 | 07/08/19 | Implemented and merged a69a5213. Inputs 10.3 ms ingress + 11.4 ms handoff; default zero fidelity verified. B29 P2-32 numeric PASS; P2-64 FAIL on repeat 1 TTFT (12.25494%). |
 | F4 memory planner comparison | 09/11/19 | Both replays finished. Five metric artifacts are byte-identical to B28 at each scale; full comparison recorded in the Codex test report. Memory accounting limits remain open. |
 | F1a specification links | 06/11/19 | P2-32 finished, TPOT/E2E FAIL. Fresh P2-64 replay running in f1a-astra-diagnostic; retain its former incomplete attempt. |

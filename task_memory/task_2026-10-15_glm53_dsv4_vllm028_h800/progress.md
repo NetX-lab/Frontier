@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Exact-feature A6 attribution completed: all four failures persist even if every interpolated prediction were perfect. |
 | 2026-11-01 | Both F1b replays terminated COVERAGE_MISS; exact rejections reproduced, three remaining CPU runs continue. |
 | 2026-11-01 | Completed collectives03 (1,644 rows/548 kernels); F1b held-out accuracy fails, both full comparisons now running; synchronized A6/F3 qualification states. |
 | 2026-11-01 | Recorded terminal links/KV02, singleton metadata repair167PASS, A6 recovery and F2 diagnostic K18. |
@@ -357,6 +358,7 @@
 - completed: NIXL02 integrity80cases*3passes,240CSV/raw rows,32,400reader timings,214,272notifications; CSV exactly reconstructs. Packed stride1,002,240B and both nodes' UCX RDMA settings recorded. `h3o_operator_costs/b30b/f3_nixl02_20261101/verification.json`.
 - failed: F3 affine fit yields−46.676920us intercept/305.707821Gbit/s, p90error29.175907%; repeated-case spreadmedian25.367988%,max100.589004%. No replacement fields or F3 replay. Retained-data analysis is complete: byte-identical T128/T256 cases differ by median24.164% with eight pairs; preparation/posting median1.70% of completion time. Cause is not isolated. Preserve the invalid comparison outcome without clamping/selecting favorable passes or duplicating the GPU phase. `test_report_2026-11-01_f3_h200_nixl.md`.
 - completed: A6 recovery after report fix3e906fa3,exit0/308.673018s, allfive independent caches reused. Four attention p90FAILs10.225/12.267/13.992/17.506%;7/8uniform collective curvesFAIL. Zero legally-zero selection errors;94,982shared-admission predictions unchanged. Full05/09remainopen. `test_report_2026-11-01_a6_report_recovery.md`.
+- completed: A6 exact-feature attribution on unchanged folds/table: counts reproduce all four scopes; exact rows alone exceed10%error for734/6995,480/2798,890/5576,540/2794 evaluable samples. Interpolation tuning alone cannot meet p90. `tests/analysis/v4_attention_exact_errors.py`, `h3o_operator_costs/a6_codex_20261101/exact_errors.json` and the A6 report retain absolute errors. Next05/09 inspect feature-equivalent measurement/native-input strata before any feature or data change.
 - completed: Ptolemy qualification audit integrated as2f81a48c/ac0f908a;160source hashes checked,only ongoing progress.md changed since audit. All96rank startup memory identities valid but counters overlap. Native source implies46,103,040packedB/lane atT6144 versus39,521,664componentB/lane; actual native request wirebytes unobserved. F4counts+5.55/+6.83%;spec10.4 permits case-bound measured capacity. Preserve originalR4 and no retroactive promotion. `h3o_operator_costs/qualification_codex_20261031/`.
 
 Next actions:

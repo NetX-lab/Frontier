@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | A6 exact-feature归因里程碑自查：四scope都不能靠改进插值过门限；下一步检查既有测量和native输入。 |
 | 2026-11-01 | 自查collectives03完成、F1b held-out失败和两次coverage终态；A6/spec/ticket当前状态已同步。 |
 | 2026-11-01 | 自查A6恢复、singleton提交、03启动和F2双规模；F3保留真实拟合失败。 |
 | 2026-11-01 | fresh links/KV02 已提交；A6 报告引用已定位并修复，82 项受影响检查通过。 |
@@ -19,7 +20,7 @@
 | 02 observer and gate | TODO | client gate 已实现；完整 observer qualification 未关闭。 |
 | 03 inventory | TODO | source/cache 合同存在；native 完整验收未关闭。 |
 | 04 GLM family | SKIPPED | 用户暂停 GLM。 |
-| 05 DSV4 family | TODO | operator path 已实现；A6已恢复，四scope超过p90门限。 |
+| 05 DSV4 family | TODO | operator path已实现；A6四scope失败且exact errors已足够令p90失败。 |
 | 06 communication | TODO | 03已Succeeded，测量验证完成；F1b held-out失败，两次replay均COVERAGE_MISS。 |
 | 07 NIXL PD | TODO | lifecycle/ingress 已实现；F3实测完整但fit失败；native packed payload资格仍未关闭。 |
 | 08 workflow | TODO | run-ahead 与 B29 已验证；完整验收未关闭。 |
@@ -47,7 +48,7 @@
 | D3 支线问题修补 | CLEAR | 下载、fit、heldout和failure reproduction均服务06/11/19；A6状态同步服务05/09。 |
 | D4 可并行任务停滞 | CLEAR | F1b两规模同时完成；F1a64和两F2一直独立运行。F3无可用fit不阻塞其他比较。 |
 | D5 超范围镀金 | CLEAR | simulator/profiler及正式K19、CC、ingress、references未改；没有新增容量/通信framework。 |
-| D6 分析空转 | CLEAR | 03终态、62文件hash验证、274 pooled fits、128 heldout cases和两次CPU终态均形成具体证据；未循环重拟合。 |
+| D6 分析空转 | CLEAR | 03终态、62文件hash验证、274 pooled fit points、128 heldout cases和两次CPU终态已提交2fea0ac0；A6原fold重建exact errors给出不调RF的明确路线，未循环重拟合。 |
 | D7 路线违背 | CLEAR | decision46和D-CODEX-DIRECT-RJOB有效；本轮没有新GPU提交；所有F variant保留diagnostic标签。 |
 
 **文档检查：** S1无新增错误依赖，F3不阻塞独立比较；S2两项coverage属于05/09/19，无新owner缺口；S3固定128请求/三次reference/四指标条件可判定，当前variant失败不是改标准的理由；S4门限明确；S5曾命中：spec当前输入合同及05/09/11/19旧入口仍把已完成且失败的A6写为待完成，且F1b运行状态刚过时；现已按A6/F1b报告同步；S6既有ticket切分无新矛盾。
@@ -66,7 +67,7 @@
 1. 06/11/19：提交03测量、fit/heldout、F1b coverage终态、F3 variation和本次自查 → 完成标志：准确路径、命令和失败边界均在同一主分支。
 2. 并行：11/19 F1a P2-64 ‖ F2 P2-32 ‖ F2 P2-64 → 完成标志：原launcher终态、完整128请求和每个reference repeat的四项误差；只有完整运行进入gate。
 3. 19：汇总F1–F4 → 完成标志：完整运行有absolute/predicted/relative值，F1b/COVERAGE_MISS和F3/invalid-fit单独列出，不能以部分请求补值。
-4. 05/09：根据上述结果处理A6四scope、7/8 collective曲线及硬件/payload资格缺口 → 完成标志沿用已记录的qualified-input条件；现在不关闭这些ticket。
+4. 05/09：A6 exact errors已证明插值调参不能过门限，先检查CSA/FULL宽度8/16等相同特征下的既有实测/native输入，再处理7/8 collective曲线及硬件/payload资格缺口 → 完成标志沿用已记录的qualified-input条件；现在不关闭这些ticket。
 
 ## 4. 最值得关注的 3 点
 

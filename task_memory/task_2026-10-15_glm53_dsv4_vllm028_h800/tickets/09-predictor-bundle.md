@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Attributed all four A6 failures to exact-feature errors sufficient to fail p90; estimator tuning alone cannot close qualification. |
 | 2026-11-01 | Synchronized completed A6/F3 evidence and the active F1/F2 comparisons; acceptance criteria unchanged. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; this ticket owns the H4a-3 diagnostic step-cost tables, and the trace-audit state is historical. |
@@ -58,7 +59,7 @@
 
 Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
 
-H200 operator tables/runtime and full A10 replays are implemented; numerical comparison has started. No dummy mode or step-cost table is bound. Fresh A6 completed but failed qualification: four attention scopes and seven of eight uniform collective curves remain outside their thresholds. Full bundle qualification remains OPEN for those failures and the hardware/coverage requirements; see [A6 report](../test_report_2026-11-01_a6_report_recovery.md). B30b fits and F comparisons remain diagnostic.
+H200 operator tables/runtime and full A10 replays are implemented; numerical comparison has started. No dummy mode or step-cost table is bound. Fresh A6 completed but failed qualification: four attention scopes and seven of eight uniform collective curves remain outside their thresholds. Exact-feature errors alone exceed 10% in more than 10% of all evaluable samples for each failing attention scope; inspect feature-equivalent measurements before changing the estimator. Full bundle qualification remains OPEN for those failures and the hardware/coverage requirements; see [A6 report](../test_report_2026-11-01_a6_report_recovery.md). B30b fits and F comparisons remain diagnostic.
 
 ## Historical route — DSV4 H800 mainline (2026-10-25)
 

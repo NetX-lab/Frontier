@@ -1,0 +1,27 @@
+{
+  "command": [
+    "env",
+    "PYTHONPATH=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "OMP_NUM_THREADS=1",
+    "TMPDIR=/data/ycfeng/tmp",
+    "timeout",
+    "60s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "tests/analysis/v4_attention_exact_errors.py",
+    "--result",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+    "--output",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/exact_errors.json"
+  ],
+  "working_directory": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "3.10.6",
+  "source_base": "2fea0ac0",
+  "script_sha256": "4e1a519201fa0e60c9af605c9aa1136a7c8ffb876f0fc492b435074586095c8a",
+  "exit_code": 0,
+  "expected": "Exact/rejected/interpolation counts match original A6 in every failing scope; original summary statistics match for exact-only scopes.",
+  "actual": "PASS: counts match A6; exact-only scope statistics match recorded results",
+  "recorded_utc": "2026-10-31T17:34:37.963280+00:00",
+  "timing_note": "Execution start/end timestamps were not captured; recorded_utc is receipt creation time."
+}
