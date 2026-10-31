@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block, moved V4 PD (M4) from the GLM dependency to H4a-2, and stated how explicit balanced_topk selection relates to the hash-layer routing rule. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: advanced current pointer past completed package preparation; full05 and historical checklists unchanged. |
 | 2026-10-24 | Advanced bounded scope/lifetime CPU-source frontier, preserving full ticket and trace/ownership gates. |
@@ -75,7 +76,13 @@
 
 
 
-## Current route — DSV4 H800 mainline (2026-10-25)
+## Current Codex checkpoint — 2026-10-31
+
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+B16–B28 implement the H200 non-dummy operator path; A10 uses no whole-step table. Full family qualification remains OPEN, including a fresh A6 on promoted attention inputs. This ticket and 09 own qualification; B29 numerical PASS on P2-32 does not close it.
+
+## Historical route — DSV4 H800 mainline (2026-10-25)
 
 Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25). Handoff: [progress.md](../progress.md#current-session-handoff--2026-10-25-mainline-correction).
 

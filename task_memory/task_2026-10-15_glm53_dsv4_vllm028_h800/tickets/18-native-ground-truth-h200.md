@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: P0 native06 reference subtask PASS/ACCEPTED_NATIVE_REFERENCE_R4; full18 other hardware/prerequisites open, native05/originalR3 remain historical. |
 | 2026-10-23 | Recorded native06 client/RCA completion and the bounded versioned-reader correction; admission remains open. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: completed native06 frozen R3 routing identity FAIL blocks reference; independent D-Q10 isolated prerequisite accepted, root merge underway. |
@@ -24,7 +25,13 @@
 | 2026-10-21 | Created from the canonical H200 calibration contract (`calibration.md`, decisions Q1–Q12). Folds the per-model native reference collection and the MTP/CUDA-graph/quantization parity checks into one ticket so the reference and its parity evidence share one manifest. |
 | 2026-10-21 | Second round: MTP parity resolved at source level for both models (native default disabled); reference repetition rule raised to at least 3 clean repetitions inside one job, each with its own warmup and measurement window. |
 
-## Final execution state — current (2026-10-23)
+## Current Codex checkpoint — 2026-10-31
+
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+P2-32 reference exp-1025-152327-225209 and P2-64 reference exp-1025-155441-668927 have R4 PASS. Exact reports: h200_mainline/diagnostic/inputs/p2_32r and p2_64r/run_check_status.groundtruth_clean.json. Reuse all three independently warmed clean repetitions. Their original checkers, authorization and admission remain unchanged; current resource/promotion rules do not rewrite past receipts. Complete all-hardware native qualification stays OPEN.
+
+## Final execution state — historical (2026-10-23)
 
 **P0 native06 reference subtask: PASS / ACCEPTED_NATIVE_REFERENCE_R4. Full ticket18: unfinished (other hardware/prerequisites).** Native05 remains historical UNVERIFIED; DSV4-only/GLM pause and official mean/total-THPT/30%/10% gates unchanged. Final acceptance is the new R4 JSON, not relabeling old R3 FAIL or platform/client-only evidence.
 

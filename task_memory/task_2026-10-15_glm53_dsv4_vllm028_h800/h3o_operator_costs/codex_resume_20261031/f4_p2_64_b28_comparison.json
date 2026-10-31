@@ -1,0 +1,70 @@
+{
+  "case": "p2_64",
+  "base": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28",
+  "variant": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner",
+  "base_commit": "ee29d548474dbc8bc155e531597bb7ba8580c374",
+  "variant_commit": "6a7ff2a458b18cb6359021f7ac227646e1b292c8",
+  "statuses": [
+    "FINISHED",
+    "FINISHED"
+  ],
+  "metrics": {
+    "request_metrics.csv": {
+      "equal": true,
+      "sizes": [
+        86944,
+        86944
+      ]
+    },
+    "system_metrics.json": {
+      "equal": true,
+      "sizes": [
+        5669,
+        5669
+      ]
+    },
+    "metrics_ground_truth.jsonl": {
+      "equal": true,
+      "sizes": [
+        141353,
+        141353
+      ]
+    },
+    "frontier_transfer_ledger.jsonl": {
+      "equal": true,
+      "sizes": [
+        91173,
+        91173
+      ]
+    },
+    "op_precision_metadata.csv": {
+      "equal": true,
+      "sizes": [
+        11472,
+        11472
+      ]
+    }
+  },
+  "config_differences": {
+    "/cluster_config/replica_scheduler_config/num_blocks": [
+      112914,
+      0
+    ],
+    "/metrics_config/cache_dir": [
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/cache",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/cache"
+    ],
+    "/cluster_config/cc_backend_config/cache_dir": [
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/cc_cache",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/cc_cache"
+    ],
+    "/metrics_config/output_dir": [
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path"
+    ],
+    "/cluster_config/replica_scheduler_config/num_blocks_mode": [
+      "explicit",
+      "memory_planner_profiled"
+    ]
+  }
+}

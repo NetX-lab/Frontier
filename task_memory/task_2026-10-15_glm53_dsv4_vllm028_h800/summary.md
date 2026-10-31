@@ -1,9 +1,10 @@
-# Task archive: active DeepSeek-V4-Flash on H800-32/64; H200 deferred; GLM-5.3 paused
+# Task archive: DSV4 H200 operator simulation in Codex CLI; H800 follows; GLM paused
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Archived current Codex/H200 route, B29/A8/F4 observations and incomplete F comparisons/qualification in English. |
 | 2026-10-26 | Archived D-NO-STEP-COST-SHORTCUT and D-OPERATOR-LEVEL-ROUTE: the step-cost results are diagnostic only, and operator-level DSV4 costs (H3o) are the next route. |
 | 2026-10-25 | Archived D-DSV4-H800-MAINLINE-CORRECTION: this directory is the single mainline, H4a is the next milestone, and the trace-audit state is historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: archived package CPU acceptance and next-session pointer without sealing/submission or full-ticket admission. |
@@ -86,7 +87,17 @@
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
 
-## Current state — DSV4 H800 mainline (2026-10-25)
+## Current state — Codex CLI continuation (2026-10-31)
+
+The task remains in progress. DSV4 H200 P2-32/P2-64 operator simulation is the mainline under D-H200-MAINLINE-CONTINUE; H800 follows and GLM remains paused. Codex directly uses personal StepMind Python RJobBackend for the approved probes (D-CODEX-DIRECT-RJOB). The formal measured CC input and three-repeat gates are unchanged.
+
+Observed deliverables: B29 ingress/handoff is merged at a69a5213 with 10.3/11.4 ms driver inputs and zero defaults. Its P2-32 numerical gate passes all three references; P2-64 remains FAIL because repeat 1 TTFT error is 12.254940665%. Both B29 A8 censuses are entirely exact with zero violations. F4 metrics are byte-identical to B28 at both scales; its zero-delay inputs explain its difference from B29. F1a P2-32 FAILs TPOT/E2E; the fresh P2-64 replay is running.
+
+Exact retained paths: `h3o_operator_costs/codex_resume_20261031/` contains five full readings, command records, fresh A8 receipts and F4/B28 comparisons; `test_report_2026-10-31_codex_resume.md` reports their values and limits; the current `requirements.md`, `spec.md`, `plan.md`, `progress.md` and tickets carry the corrected execution route. B30b code/plans are still being prepared in `/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes` and will be integrated here before launch.
+
+Open work: complete F1–F4 measurements/fits/replays, inspect fresh A6 and actual H200 NIXL/memory/payload coverage, then assess formal qualification. Numerical PASS does not establish full H3o/09/19 acceptance; historical promotion/reference admissions are preserved without retroactive changes. B30a remains diagnostic pending YC approval of its default ASTRA multi-server behavior change.
+
+## Historical state — DSV4 H800 mainline (2026-10-25)
 
 Overview: D-DSV4-H800-MAINLINE-CORRECTION ([requirements](requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority), [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md)) makes this task directory the single route authority. Scope is DeepSeek-V4-Flash on H800-32 (P0) and H800-64 (P1). H200 is deferred and GLM is paused. The gates are unchanged: mean client TTFT, TPOT, E2E and total THPT, at 30% for promotion and 10% for final acceptance.
 

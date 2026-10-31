@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Recorded the original Codex CLI continuation request and D-CODEX-DIRECT-RJOB; retained decision 46 and formal input/admission boundaries. |
 | 2026-10-31 | Recorded YC's ruling on the ex-situ audit: measured communication data is allowed, so F1 is not a failure; the F1-F4 repairs run as comparison tests, and ingress option A is approved with its two delay fields (D-COMM-MEASURED-ALLOWED, item 46). |
 | 2026-10-31 | Recorded YC's request for an audit of the A10 inputs for shortcuts and dependence on large-cluster data before ingress option A (D-EX-SITU-AUDIT, item 44), and the cleanup approval (item 45). |
 | 2026-10-30 | Recorded the lead's launch rule for DP dummy forwards after the native P2-64 wave run (D-DP-DUMMY-RUN-AHEAD, item 43). |
@@ -141,7 +142,14 @@
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
 
-## [Decision] 2026-10-25 — D-DSV4-H800-MAINLINE-CORRECTION (current route authority)
+## [Original Request / Decision] 2026-10-31 — Codex CLI continuation
+
+> we are move to codex cli. resume the task and continue based on docs(spec and tickets). you donot need to use pi to launch rjob (just directly use codex)
+
+**D-CODEX-DIRECT-RJOB.** Resume the existing task and tickets in this worktree. Codex directly submits and monitors approved RJobs through StepMind Python `RJobBackend` as `i-fengyicheng`; Pi/helper execution is superseded. D-H200-MAINLINE-CONTINUE and decision 46 remain the active route. This request does not replace the formal measured CC input or change metric/admission rules. Apply the current workspace resource rule to new jobs: at most 32 non-preemptible H200 GPUs across personal reservations, including queued jobs; this continuation's planned probes use 17 in total.
+
+<a id="decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority"></a>
+## [Decision] 2026-10-25 — D-DSV4-H800-MAINLINE-CORRECTION (historical route; later decisions below supersede its H200 deferral)
 
 [Original Request — review]
 > 请你充分 review 当前branch的任务docs和代码，生成一个具体的review reports（附带依据），review的核心为：1. 任务现在的推进执行过程是否偏离了规划的 ** 为 frontier 添加对 deepseek-v4 的模拟支持能力，并完成精度矫正**？是否反复循环在部分bugs或者与主线任务关系不大的问题上？如果有，请你指出问题，并给出下一步的执行建议。2. 请你对进行完成的spec、tickets进行review，查找是否存在严重错误、遗漏。ps：当前可能存在多个worktree branch 和 task menu，请你正确梳理它们；当前task的任务范围已经缩小在 h800（32/64卡）的deepseek-v4模拟支持+精度矫正

@@ -1,0 +1,93 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a8_collectives.py",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "started_utc": "2026-10-31T15:06:06.223863+00:00",
+  "finished_utc": "2026-10-31T15:06:06.259033+00:00",
+  "exit_code": 0,
+  "source_commit": "a69a52132257ca854a8759249bca65b32ffa06bf",
+  "source_dirty_paths": [],
+  "run_status": "FINISHED",
+  "distinct_requests": 44,
+  "calls": 6310644,
+  "exact_calls": 6310644,
+  "a11": {
+    "forwards": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/forwards.jsonl.gz",
+      "rows": 23040,
+      "sha256": "ff019cfb34266873844114004cb17191f6df3120e3972af25f8e188e15e1f271"
+    },
+    "collectives": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/collectives.json",
+      "sha256": "7b38a30294f8586e4f2f9c403ec883ca199624c0c050f208f2c3ca6106215f97",
+      "calls": 6310644
+    },
+    "stage_end_events": 23040,
+    "stale_stage_end_events": 0,
+    "scope_mapping": {
+      "prepare": [
+        "dsv4_input_preparation"
+      ],
+      "post": [
+        "dsv4_lm_head",
+        "dsv4_logits_gather",
+        "dsv4_sampling"
+      ],
+      "own_columns": [
+        "dsv4_block_table_write",
+        "kv_cache_block_zero"
+      ],
+      "dispatch": [
+        "dsv4_attention_output_zero",
+        "dsv4_compressor_fused_compress_store",
+        "dsv4_compressor_projection",
+        "dsv4_compressor_save_partial_states",
+        "dsv4_embedding",
+        "dsv4_embedding_allreduce",
+        "dsv4_ep_dispatch_allgather",
+        "dsv4_ep_output_reduce_scatter",
+        "dsv4_final_norm",
+        "dsv4_fused_q_kv_prepare",
+        "dsv4_fused_qkv_projection",
+        "dsv4_fused_qkv_rmsnorm",
+        "dsv4_grouped_output_projection",
+        "dsv4_index_compressor_fused_compress_store",
+        "dsv4_index_compressor_projection",
+        "dsv4_index_compressor_save_partial_states",
+        "dsv4_index_fused_query_prepare",
+        "dsv4_index_query_projection",
+        "dsv4_index_scores",
+        "dsv4_index_short_context_fill",
+        "dsv4_index_topk",
+        "dsv4_index_weights_projection",
+        "dsv4_mhc_attn_post_ffn_pre",
+        "dsv4_mhc_ffn_post_attn_pre",
+        "dsv4_mhc_final_post",
+        "dsv4_mhc_first_pre",
+        "dsv4_mhc_head",
+        "dsv4_output_inv_rope_quant",
+        "dsv4_output_projection",
+        "dsv4_q_projection",
+        "dsv4_query_padding",
+        "dsv4_sp_attention_allgather",
+        "dsv4_sp_attention_reduce_scatter",
+        "dsv4_sp_final_mhc_allgather",
+        "dsv4_sparse_attention",
+        "moe_gating_linear",
+        "moe_gating_routing_topk",
+        "moe_grouped_gemm",
+        "moe_shuffling",
+        "share_expert_act",
+        "share_expert_down_proj",
+        "share_expert_up_proj"
+      ],
+      "unknown_scopes": "each is retained as its own column",
+      "coordination_and_overlap": "signed composed time minus mapped segments and own columns"
+    }
+  },
+  "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/a8_p2_32.log",
+  "passed": true
+}

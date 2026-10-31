@@ -1,0 +1,10 @@
+wrote /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/f4_p2_32_planner/rows
+ttft_ms                  vllm 364.0296 frontier 323.1790 rel 0.1122 FAIL
+tpot_ms                  vllm 19.9190 frontier 19.9268 rel 0.0004 PASS
+request_e2e_time_ms      vllm 20741.1319 frontier 20708.2814 rel 0.0016 PASS
+token_throughput_tps     vllm 6231.4155 frontier 6226.6527 rel 0.0008 PASS
+dsv4-h200-p2-canonical-fixed128-qps1/a10_operator_path: FAIL (routing MATCH)
+ttft_ms: native=364.0296495311001 frontier=323.1789913388025 absolute_error=40.8506581922976 relative_error=0.11221794226079272
+tpot_ms: native=19.918966075308955 frontier=19.926786349460166 absolute_error=0.007820274151210782 relative_error=0.00039260442141646077
+request_e2e_time_ms: native=20741.131944572164 frontier=20708.28142683655 absolute_error=32.85051773561281 relative_error=0.0015838343742955458
+token_throughput_tps: native=6231.415496060633 frontier=6226.652709243508 absolute_error=4.762786817124834 relative_error=0.0007643186078886515

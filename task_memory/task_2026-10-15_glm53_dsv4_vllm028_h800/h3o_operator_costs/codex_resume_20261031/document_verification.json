@@ -1,0 +1,140 @@
+{
+  "status": "PASS",
+  "documents": 17,
+  "current_links_checked": 26,
+  "links": [
+    {
+      "source": "spec.md",
+      "target": "plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "spec.md",
+      "target": "test_report_2026-10-31_codex_resume.md",
+      "status": "PASS"
+    },
+    {
+      "source": "progress.md",
+      "target": "plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "progress.md",
+      "target": "h3o_operator_costs/codex_resume_20261031/check_progress_2026-10-31.md",
+      "status": "PASS"
+    },
+    {
+      "source": "progress.md",
+      "target": "test_report_2026-10-31_codex_resume.md",
+      "status": "PASS"
+    },
+    {
+      "source": "test_report_2026-10-31_f_variant_comparison.md",
+      "target": "test_report_2026-10-31_codex_resume.md",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/05-dsv4-flash-family.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/05-dsv4-flash-family.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/06-communication-measurement.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/06-communication-measurement.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/07-nixl-pd-integration.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/07-nixl-pd-integration.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/08-workflow-delta-pd-placement.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/08-workflow-delta-pd-placement.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/09-predictor-bundle.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/09-predictor-bundle.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/10-h800-predictive-e2e.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/10-h800-predictive-e2e.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/11-h200-regression-delivery.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/11-h200-regression-delivery.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/17-dsv4-canonical-case.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/17-dsv4-canonical-case.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/18-native-ground-truth-h200.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/18-native-ground-truth-h200.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/19-comparison-and-acceptance.md",
+      "target": "../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31",
+      "status": "PASS"
+    },
+    {
+      "source": "tickets/19-comparison-and-acceptance.md",
+      "target": "../progress.md#current-session-handoff--codex-cli-2026-10-31",
+      "status": "PASS"
+    }
+  ],
+  "preserved_p2_64_repeat_fail": true,
+  "previous_validator_error": "An assertion required Codex in the plan title; this is not a task requirement. The validator was corrected without changing execution or metric semantics.",
+  "runtime_tests": "Not required for documentation/evidence capture; A8 commands rerun directly."
+}

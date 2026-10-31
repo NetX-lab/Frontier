@@ -11,6 +11,7 @@ native evidence and19 owns both the promotion receipt and final metric gate.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | Checked the five h4a_p0_diagnostic items (DIAGNOSTIC result in test_report_2026-10-25_h4a_p0_diagnostic.md); next is the YC checkpoint. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added milestone h4a_p0_diagnostic as the next P0 step, pointed the status to the mainline handoff, and closed the P0 binding and native-reference items with native06 R4 evidence. |
 | 2026-10-22 | W128-V4-S5-STATUS: relabelled obsolete execution snapshots and linked current main progress/05/18; H800 milestones and gates unchanged. |
@@ -25,7 +26,13 @@ native evidence and19 owns both the promotion receipt and final metric gate.
 | 2026-10-15 | Review remediation: `thresholds_frozen` gets its own blockers and separate request E2E and request-throughput verdicts (S4); validated probe output is required before formal runs (S2); GLM-5.3 representative cells finish with recorded verdicts before the DeepSeek-V4-Flash cells start (S1, Q12). |
 | 2026-10-15 | Re-review fix R3: each model's light-mode measurement is compared with the frozen limit before its formal runs. |
 
-## Current priority milestones
+## Current Codex checkpoint — 2026-10-31
+
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+H800 P0/P1 remains subsequent hardware scope after the active H200 route. P0 R4 and completed H4a diagnostics are reused; H200 results do not qualify H800. The historical H4a/step-cost verdicts remain diagnostic only.
+
+## Historical priority milestones
 
 ### Current execution status
 

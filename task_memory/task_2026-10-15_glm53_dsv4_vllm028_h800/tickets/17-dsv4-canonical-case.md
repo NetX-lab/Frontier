@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; stated which checklist applies to P0, mapped the two open P0 items to H4a, and deferred the H200 rows. |
 | 2026-10-23 | W128-V4-P0-CASE-BINDING: closed explicit P0 workload/client subitems from unchanged native06 R4; retained all-case checkboxes, memory-budget and10%/30% gates open. |
 | 2026-10-22 | D-DSV4-ONLY-GLM-PAUSED: DSV4 directly reuses accepted shared68f891b workload; removed unfinished GLM16 completion dependency and retained all four V4 cases/mean gates. |
@@ -36,7 +37,13 @@ consumption and decode profiling now prioritize the H80032 P0 case. No formal
 four-metric or30% promotion receipt exists for V4. H200 costs/capacity are not
 H800 qualification, and earlier single-role G0-B does not prove all P/D cases.
 
-## Current route — DSV4 H800 mainline (2026-10-25)
+## Current Codex checkpoint — 2026-10-31
+
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+P2-32/P2-64 workload and serving bindings are reused from h200_mainline packages; p2_32r/p2_64r R4 reports are PASS. Fixed128/QPS1 and client metric meanings stay unchanged. Numeric B29 results belong to 19; full four-case binding qualification is not completed here.
+
+## Historical route — DSV4 H800 mainline (2026-10-25)
 
 Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25).
 

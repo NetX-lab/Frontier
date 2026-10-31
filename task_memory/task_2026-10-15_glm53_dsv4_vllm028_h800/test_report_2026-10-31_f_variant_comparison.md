@@ -4,7 +4,16 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Codex update: F4/B28 five-artifact identity on both scales, B29 per-repeat results, F1a P2-32 final FAIL and fresh P2-64 replay. |
 | 2026-10-31 | Created: F1 per-call screen and astra defect, F4 planner terms; F4 replays, B29, B30a and B30b pending. |
+
+## Latest comparison checkpoint — 2026-10-31 Codex resume
+
+B29 is merged and its finished measured-CC P2-32 reading PASSes all three references. P2-64 remains FAIL: repeat 1 TTFT 779.888727400 vs 684.313826604 ms, 12.254940665%; pooled 7.67691% does not change the verdict. F1a P2-32 is FINISHED: TTFT 3.31698%, TPOT 28.38101%, E2E 27.82468%, THPT 3.79951%, FAIL. A fresh F1a P2-64 replay is running at `stage4/f_variants/runs/f1a_p2_64_codex_20261031a`; the original incomplete attempt remains retained.
+
+F4 at both scales is FINISHED and its five metric artifacts are byte-identical to B28. It used zero ingress/handoff, so its TTFT difference from B29 is a serving-delay difference. Planner-only metric effect is zero on these traces. F1b/F2/F3 preparation remains with B30b. Complete values, all per-repeat verdicts, exact commands, clean source revisions and limits: [Codex test report](test_report_2026-10-31_codex_resume.md) and `h3o_operator_costs/codex_resume_20261031/`.
+
+The initial screen, predictions and then-pending statuses below are historical. The measured backend stays formal; no diagnostic variant or B30a default change is promoted.
 
 ## Scope
 

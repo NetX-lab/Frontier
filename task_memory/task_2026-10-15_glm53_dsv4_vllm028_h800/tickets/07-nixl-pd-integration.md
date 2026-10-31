@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; grouped NIXL for V4 PREFILL/DECODE is part of H4a-2, and the GLM-first ordering no longer applies. |
 | 2026-10-22 | DSV4-only active NIXL acceptance removes GLM07/full-path predecessors; retained accepted shared implementation/native gates and parked GLM simulation/tests/calibration. |
 | 2026-10-21 | P/D path now binds four priority hardware/scale cases; retained B structural acceptance and stopped CUPTI investigation without relaxing native timing. |
@@ -44,7 +45,13 @@
 **Status:** PARTIAL baseline/source preparation. C11 `dc3912c` admits GLM PP1 full-model PREFILL/DECODE source storage with157isolatedPASS and77exact artifact/cache comparisons. C16 controlled NIXL structural implementation is accepted at2da11c8 on existing owners, including actual allocator/event tests and full78-layer offline/online structural execution. Measured integration is NOT STARTED. C15 records the source-derived structural contract; native lifecycle and native PD serving capability remain unqualified. See `../test_report_2026-10-18_glm_unified_role_storage.md`.
 
 
-## Current route — DSV4 H800 mainline (2026-10-25)
+## Current Codex checkpoint — 2026-10-31
+
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+H4b READ completion/depth-2 and B29 ingress/handoff are implemented and verified. B29 driver delays are 10.3/11.4 ms. F3 compares the H800 NIXL fit with fresh two-node H200 measurements using one packed native V4 region of 1,002,240 B/block; simulator payload/hardware limits remain OPEN.
+
+## Historical route — DSV4 H800 mainline (2026-10-25)
 
 Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25). Handoff: [progress.md](../progress.md#current-session-handoff--2026-10-25-mainline-correction).
 

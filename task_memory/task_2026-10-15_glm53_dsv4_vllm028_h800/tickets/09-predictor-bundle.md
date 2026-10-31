@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; this ticket owns the H4a-3 diagnostic step-cost tables, and the trace-audit state is historical. |
 | 2026-10-25 | W128-HANDOFF-PARENT-POINTERS: linked accepted package preparation and next-session gates; full09 and historical checklists unchanged. |
 | 2026-10-24 | Recorded CPU-source acceptance and mirrored-package next step without predictor/cost admission. |
@@ -52,7 +53,13 @@
 | 2026-10-15 | Re-review fix R1: `14[DSV4]` is a decision and does not wait for `full_frontier_path[GLM]`. |
 
 
-## Current route — DSV4 H800 mainline (2026-10-25)
+## Current Codex checkpoint — 2026-10-31
+
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+H200 operator tables/runtime and full A10 replays are implemented; numerical comparison has started. No dummy mode or step-cost table is bound. Full bundle qualification remains OPEN for fresh A6 and the hardware/coverage requirements. B30b fits and F comparisons remain diagnostic.
+
+## Historical route — DSV4 H800 mainline (2026-10-25)
 
 Authority: D-DSV4-H800-MAINLINE-CORRECTION in [requirements](../requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). Route: [plan.md](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25). Handoff: [progress.md](../progress.md#current-session-handoff--2026-10-25-mainline-correction).
 

@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_gate.py",
+    "p2_32",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_32_spec",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/f1a_p2_32_spec"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "started_utc": "2026-10-31T14:45:48.289007+00:00",
+  "finished_utc": "2026-10-31T14:45:49.868767+00:00",
+  "exit_code": 0,
+  "log": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/f1a_p2_32_spec_gate.log"
+}

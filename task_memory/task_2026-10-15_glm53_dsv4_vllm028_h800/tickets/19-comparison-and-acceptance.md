@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: pointed the status to the mainline handoff, added the H4a diagnostic comparison milestone, and deferred the H200 cases. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: admitted18 P0 native06 referenceR4 and integrated D-Q10 remove those pending pointers; full19 costs/prediction/four-metric gates remain unfinished. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: terminal Succeeded/frozen identity FAIL leaves18 unadmitted; D-Q10 isolated prerequisite accepted, full costs/four-error comparison still open. |
@@ -19,7 +20,13 @@
 | 2026-10-21 | Created from the canonical H200 calibration contract (`calibration.md`, decisions Q1–Q12). Replaces ticket 10's per-cell gate with one four-metric result per model; absorbs the delivery portion of ticket 11. |
 | 2026-10-21 | Second round: THPT confirmed as total prompt+output token throughput (output-only and request/s are diagnostics); anti-overfitting repetition aligned with the reference's 3-clean-repetition rule. |
 
-## Current execution status
+## Current Codex checkpoint — 2026-10-31
+
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+Five canonical readings now exist: B29 P2-32 PASS; B29 P2-64 FAIL on repeat 1 TTFT; F1a P2-32 FAIL on TPOT/E2E; both F4 readings FAIL TTFT and equal B28 metrics. Fresh F1a P2-64 is running; B30b F1b/F2/F3 probes/fits follow. All four metrics and all three repeats are required; pooled PASS never overrides a repeat FAIL. Complete 05/09 qualification and formal measured acceptance remain OPEN.
+
+## Historical execution status
 
 Use the [mainline handoff](../progress.md#current-session-handoff--2026-10-25-mainline-correction)
 and the [current route](../plan.md#current-execution-route--dsv4-h800-mainline-2026-10-25)
@@ -65,7 +72,7 @@ measurement-proposal follow-up PAUSED_PENDING_USER_APPROVAL until a new explicit
 GLM data/receipts/globalUNVERIFIED,not PASS. The FULL KERNEL_ONLY proposal is
 parked,not this task's next approval question.
 
-**Status:** PARTIAL — canonical client metric and input binding is implemented and source/CPU accepted; native comparison, calibration and final measured acceptance have not started.
+**Status:** PARTIAL — canonical binding and H200 operator comparisons are implemented; F variants and full measured qualification/final acceptance remain incomplete.
 
 ### Historical source execution checkpoint — superseded (2026-10-22)
 
@@ -83,18 +90,17 @@ mean latency/total THPT definitions and thresholds below stay unchanged.
 ### canonical_metric_binding
 - [x] Reuse simulator ground-truth `first_decode_token_completed_at` and native streamed first/last-token records through the existing normalize/gate CLI with `gate: client`. Preserve public CSV/internal TTFT semantics and all four definitions. Bind the actual native manifest to its pinned receipt's producer origin; verify frozen formal/warmup IDs and scheduled arrivals while preserving actual native dispatch jitter. Implementation1400f12 merged/pushed as9f58dbe after P1/P2 re-review, primary153 merged checks and strict77-case equality. [Verification](../q10_client_metrics_20261021/test_report_2026-10-21_client_metrics.md). This is a prerequisite, not native qualification or an accuracy result.
 
-### h4a_diagnostic_comparison (P0 H800-32, DIAGNOSTIC, next)
+### h4a_diagnostic_comparison (P0 H800-32, DIAGNOSTIC, completed 2026-10-25)
 
 This milestone does not satisfy `frontier_reference_run` or
 `comparison_and_calibration`, and it does not count toward the 30% or 10% gates.
 Its inputs may include profile04 step-level costs and other listed substitutions
-(D-V4-STEP-COST-FIRST-PASS). YC decides after H4a whether step-level costs may
-support the formal gates.
-- [ ] Run the P0 case through the existing normalize/gate CLI with `gate: client`
+(D-V4-STEP-COST-FIRST-PASS). D-NO-STEP-COST-SHORTCUT excludes whole-step tables from the formal gates.
+- [x] Run the P0 case through the existing normalize/gate CLI with `gate: client`
   and report the four errors against each native06 R4 round and their mean.
-- [ ] Attribute the TTFT error (P queue wait, prefill compute, KV transfer, D first
+- [x] Attribute the TTFT error (P queue wait, prefill compute, KV transfer, D first
   step) and the TPOT error (decode step cost, per-lane batch size over time).
-- [ ] List every substituted input with its source in the H4a test report.
+- [x] List every substituted input with its source in the H4a test report.
 
 ### frontier_reference_run
 - [ ] Run the exact68f891b workload on each eligible priority case with measured

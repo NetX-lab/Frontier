@@ -1,9 +1,10 @@
-# Plan: active DSV4 H800-32/64 simulation support and calibration; H200-32/64 temporary mainline until 03:00 UTC 2026-10-26; GLM paused
+# Plan: DSV4 H200 operator simulation and calibration; H800 follows; GLM paused
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Replaced stale route entry points with direct Codex execution, active H200 operator comparisons and current milestones; preserved historical routes and gates. |
 | 2026-10-26 | Applied D-NO-STEP-COST-SHORTCUT and D-OPERATOR-LEVEL-ROUTE: H3r superseded by H3o (operator-level DSV4 costs), H4 needs H3o, dependency updated. |
 | 2026-10-25 | Applied D-H200-TEMP-MAINLINE: added the H200 temporary route (milestones P2-32r/32p/32d/64r/64p/64d, waves and dependency); wave 1 submitted. |
 | 2026-10-25 | P1b: linked the design and recorded that `package_01` passed its CPU checks; submission waits for H4b-(a) and 64 free H800. |
@@ -137,7 +138,30 @@
 | 2026-10-18 | Approved controlled CUTLASS fixture and renewed parallel ticket02 coverage/ticket03 cache preparation under unchanged gates. |
 
 
-## Current execution route — DSV4 H800 mainline (2026-10-25)
+<a id="current-execution-route--dsv4-h800-mainline-2026-10-25"></a>
+## Current execution route — Codex CLI, H200 operator path (2026-10-31)
+
+Authority: requirements D-H200-MAINLINE-CONTINUE (item 21), D-NO-STEP-COST-SHORTCUT (item 26), D-COMM-MEASURED-ALLOWED (item 46), and D-CODEX-DIRECT-RJOB. The active work is DSV4 H200 P2-32/P2-64, then the retained H800 cases. GLM remains paused. Use this section and the current progress handoff; dated routes below preserve history.
+
+Mainline: branch `feat/glm53-dsv4-vllm028`, this worktree and task directory. Integrate accepted code and task evidence from the B30b worktree onto this branch. GPU execution is direct Codex -> personal StepMind Python RJobBackend. New probes reserve at most 17 non-preemptible H200 GPUs together, within the current 32-GPU personal ceiling; refresh quota and personal reservations before submission.
+
+| Milestone | Tickets | Current state and completion condition |
+| --- | --- | --- |
+| P2 case/reference binding | 17/18 | p2_32r and p2_64r R4 PASS; reuse their exact three clean repeats. Historical native admission is not rewritten as a new promotion. |
+| H3o operator composition | 05/09 | B16–B28 runtime and H200 tables are implemented; A10 runs without dummy mode or a step table. Full qualification remains open, including fresh A6. |
+| Ingress option A / B29 | 07/08/19 | Implemented and merged a69a5213. Inputs 10.3 ms ingress + 11.4 ms handoff; default zero fidelity verified. B29 P2-32 numeric PASS; P2-64 FAIL on repeat 1 TTFT (12.25494%). |
+| F4 memory planner comparison | 09/11/19 | Both replays finished. Five metric artifacts are byte-identical to B28 at each scale; full comparison recorded in the Codex test report. Memory accounting limits remain open. |
+| F1a specification links | 06/11/19 | P2-32 finished, TPOT/E2E FAIL. Fresh P2-64 replay running in f1a-astra-diagnostic; retain its former incomplete attempt. |
+| B30b F1b/F2/F3 preparations | 06/09 | Existing probe/fit slice in progress. Finish bounded checks and fresh plans, report jobs/GPU-hours, then directly submit the two approved jobs. |
+| F1b/F2/F3 comparisons | 11/19 | Fit measured links, launch depth and NIXL; replay each as a diagnostic variant with fixed formal references and all four per-repeat errors. |
+| Qualified P2 formal acceptance | 05/09/11/19 | Requires qualified measured inputs and all four errors <=10% in every admitted repeat; numerical P2-32 PASS alone does not close qualification. |
+| H800 P0/P1 continuation | 10/17/18/19 | Retained subsequent hardware scope. H200 results never qualify H800. |
+
+Dependency: `B30b checks -> {F1b/F3 two-node probe || F2 one-GPU probe} -> fits -> diagnostic replays -> F1–F4 comparison`; `F1a P2-64 replay` proceeds in parallel. `B29` is complete and is reused. `fresh A6 + hardware/payload/coverage admission + per-repeat gates -> formal acceptance` remains a separate requirement.
+
+The measured CC backend remains the formal input. A diagnostic variant may replace it only after a new YC decision. B30a's default ASTRA multi-server behavior change remains on its diagnostic branch pending that decision. Do not revive whole-step-cost refinement, parked GLM work, or the stopped full trace-audit route.
+
+## Historical execution route — DSV4 H800 mainline (2026-10-25)
 
 **Authority.** [D-DSV4-H800-MAINLINE-CORRECTION](requirements.md#decision-2026-10-25--d-dsv4-h800-mainline-correction-current-route-authority). This section and the [progress.md handoff](progress.md#current-session-handoff--2026-10-25-mainline-correction) are the only route entry points. Next-action lists in sub-task directories and in older "current" sections of tickets do not set the route.
 
@@ -165,7 +189,7 @@
 
 Dependency: `H4a -> D-H4A-CHECKPOINT -> H4b-(a) -> H4b-(b)`; `H4c` runs while the H4b-(a) job queues and runs; from 2026-10-26 `H3o-(a) -> YC review -> H3o-(b) -> H4 -> H6(P0) -> P1f` (D-OPERATOR-LEVEL-ROUTE), with the open H4b-(b) READ items deferred until YC reopens them; `P1b` runs in parallel and `{P1b, H6 promotion} -> P1f`. Accepted data from H1, H2 and H5 is reused, not redone.
 
-### H200 temporary route — D-H200-TEMP-MAINLINE (2026-10-25)
+### Historical H200 temporary route — D-H200-TEMP-MAINLINE (2026-10-25)
 
 **Authority.** [D-H200-TEMP-MAINLINE](requirements.md) item 16: until 03:00 UTC 2026-10-26, at most 64 H200 for this session (running plus queued), `step_main`, non-preemptible. Design: [h200_mainline/design.md](h200_mainline/design.md). The H800 packages and tools are reused; only hardware, identity and, for 64, the DP4/EP32 layout change.
 
