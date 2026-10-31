@@ -1,0 +1,387 @@
+{
+  "job": "exp-1101-005741-958298",
+  "raw_root": "/data/ycfeng/tmp/glm53_dsv4/b30b_links03_20261101",
+  "phases": {
+    "A_intra/node0": {
+      "cases": 132,
+      "rows": 396,
+      "kernels": 132,
+      "csv_reconstruction": "PASS_FLOAT64_ROUNDING",
+      "max_absolute_numeric_delta": 1.4210854715202004e-14,
+      "numeric_relative_tolerance": 1e-12,
+      "numeric_absolute_tolerance": 1e-12,
+      "critical_trials": 39600,
+      "trials_with_a_rank_not_held": 595,
+      "rows_with_a_rank_not_held": 204,
+      "min_rank_held_fraction": 0.985,
+      "aligned_only_median_relative_change_max": 0.05525241160773531,
+      "aligned_only_median_relative_change_median": 0.0,
+      "runtime": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "communicators": {
+          "tp": {
+            "pynccl_comm": true,
+            "ca_comm": true,
+            "symm_mem_comm": true,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false,
+            "custom_collectives": {
+              "mnnvl_multicast_ptr": true,
+              "max_mnnvl_all_gather_size": 2097152,
+              "max_mnnvl_reduce_scatter_size": 16777216,
+              "max_all_gather_size": 2097152,
+              "max_reduce_scatter_size": 16777216,
+              "fully_connected": true
+            }
+          },
+          "ep": {
+            "pynccl_comm": true,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          },
+          "dp": {
+            "pynccl_comm": false,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          }
+        },
+        "group_ranks": {
+          "tp": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "ep": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "dp": [
+            0
+          ]
+        },
+        "hosts": [
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0375.lgcm.sh.istep.fun"
+        ],
+        "sleep_cycles_per_us": 1977.9481835885774
+      }
+    },
+    "A_intra/node1": {
+      "cases": 132,
+      "rows": 396,
+      "kernels": 132,
+      "csv_reconstruction": "PASS_FLOAT64_ROUNDING",
+      "max_absolute_numeric_delta": 2.842170943040401e-14,
+      "numeric_relative_tolerance": 1e-12,
+      "numeric_absolute_tolerance": 1e-12,
+      "critical_trials": 39600,
+      "trials_with_a_rank_not_held": 748,
+      "rows_with_a_rank_not_held": 208,
+      "min_rank_held_fraction": 0.98625,
+      "aligned_only_median_relative_change_max": 0.027080346285984547,
+      "aligned_only_median_relative_change_median": 0.0,
+      "runtime": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "communicators": {
+          "tp": {
+            "pynccl_comm": true,
+            "ca_comm": true,
+            "symm_mem_comm": true,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false,
+            "custom_collectives": {
+              "mnnvl_multicast_ptr": true,
+              "max_mnnvl_all_gather_size": 2097152,
+              "max_mnnvl_reduce_scatter_size": 16777216,
+              "max_all_gather_size": 2097152,
+              "max_reduce_scatter_size": 16777216,
+              "fully_connected": true
+            }
+          },
+          "ep": {
+            "pynccl_comm": true,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          },
+          "dp": {
+            "pynccl_comm": false,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          }
+        },
+        "group_ranks": {
+          "tp": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "ep": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "dp": [
+            0
+          ]
+        },
+        "hosts": [
+          "gpu-h200-0912.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun"
+        ],
+        "sleep_cycles_per_us": 1978.123558017545
+      }
+    },
+    "B_same_rail": {
+      "cases": 142,
+      "rows": 426,
+      "kernels": 142,
+      "csv_reconstruction": "PASS_FLOAT64_ROUNDING",
+      "max_absolute_numeric_delta": 1.4210854715202004e-14,
+      "numeric_relative_tolerance": 1e-12,
+      "numeric_absolute_tolerance": 1e-12,
+      "critical_trials": 12780,
+      "trials_with_a_rank_not_held": 12,
+      "rows_with_a_rank_not_held": 11,
+      "min_rank_held_fraction": 0.9666666666666667,
+      "aligned_only_median_relative_change_max": 0.0022497032080376345,
+      "aligned_only_median_relative_change_median": 0.0,
+      "runtime": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "communicators": {
+          "tp": {
+            "pynccl_comm": false,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          },
+          "ep": {
+            "pynccl_comm": true,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": true
+          },
+          "dp": {
+            "pynccl_comm": true,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          }
+        },
+        "group_ranks": {
+          "tp": [
+            0
+          ],
+          "ep": [
+            0,
+            1
+          ],
+          "dp": [
+            0,
+            1
+          ]
+        },
+        "hosts": [
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun"
+        ],
+        "sleep_cycles_per_us": 1978.0985559323658
+      }
+    },
+    "B_ring_boundary": {
+      "cases": 142,
+      "rows": 426,
+      "kernels": 142,
+      "csv_reconstruction": "PASS_FLOAT64_ROUNDING",
+      "max_absolute_numeric_delta": 1.4210854715202004e-14,
+      "numeric_relative_tolerance": 1e-12,
+      "numeric_absolute_tolerance": 1e-12,
+      "critical_trials": 12780,
+      "trials_with_a_rank_not_held": 8,
+      "rows_with_a_rank_not_held": 7,
+      "min_rank_held_fraction": 0.9666666666666667,
+      "aligned_only_median_relative_change_max": 0.0033680242192341003,
+      "aligned_only_median_relative_change_median": 0.0,
+      "runtime": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "communicators": {
+          "tp": {
+            "pynccl_comm": false,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          },
+          "ep": {
+            "pynccl_comm": true,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": true
+          },
+          "dp": {
+            "pynccl_comm": true,
+            "ca_comm": false,
+            "symm_mem_comm": false,
+            "fi_ar_comm": false,
+            "qr_comm": false,
+            "all2all_manager": false
+          }
+        },
+        "group_ranks": {
+          "tp": [
+            0
+          ],
+          "ep": [
+            0,
+            1
+          ],
+          "dp": [
+            0,
+            1
+          ]
+        },
+        "hosts": [
+          "gpu-h200-0375.lgcm.sh.istep.fun",
+          "gpu-h200-0912.lgcm.sh.istep.fun"
+        ],
+        "sleep_cycles_per_us": 1973.8005207368622
+      }
+    }
+  },
+  "runtime": {
+    "gpu-h200-0375.lgcm.sh.istep.fun": {
+      "passed": 22,
+      "workspace_head": "ac0f908a2cab3e6475f1ad1daf0791362123edf0"
+    },
+    "gpu-h200-0912.lgcm.sh.istep.fun": {
+      "passed": 22,
+      "workspace_head": "ac0f908a2cab3e6475f1ad1daf0791362123edf0"
+    }
+  },
+  "placement": {
+    "gpu-h200-0375.lgcm.sh.istep.fun": {
+      "A_intra": {
+        "gpu_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "returncode": 0,
+        "wall_s": 319.7748258113861
+      },
+      "B_same_rail": {
+        "gpu_indices": [
+          0
+        ],
+        "returncode": 0,
+        "wall_s": 170.99263429641724
+      },
+      "B_ring_boundary": {
+        "gpu_indices": [
+          7
+        ],
+        "returncode": 0,
+        "wall_s": 144.30727529525757
+      }
+    },
+    "gpu-h200-0912.lgcm.sh.istep.fun": {
+      "A_intra": {
+        "gpu_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "returncode": 0,
+        "wall_s": 288.80576944351196
+      },
+      "B_same_rail": {
+        "gpu_indices": [
+          0
+        ],
+        "returncode": 0,
+        "wall_s": 170.16121363639832
+      },
+      "B_ring_boundary": {
+        "gpu_indices": [
+          0
+        ],
+        "returncode": 0,
+        "wall_s": 144.07897925376892
+      }
+    }
+  },
+  "status": "PASS_DATA_INTEGRITY",
+  "limitations": [
+    "Not every timing trial queued completely before the GPU sleep ended. The aligned-only median comparison is diagnostic; original rows and all-pass fits remain unchanged.",
+    "Kernel evidence comes from a separate untimed pass; no native target-pod identity is inferred from the two-rank measurements."
+  ]
+}

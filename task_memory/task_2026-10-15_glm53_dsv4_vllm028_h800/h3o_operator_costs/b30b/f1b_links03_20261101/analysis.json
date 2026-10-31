@@ -1,0 +1,228 @@
+{
+  "container_seconds_by_replica": [
+    659.0,
+    833.0
+  ],
+  "observed_container_gpu_hours": 3.3155555555555556,
+  "fit": {
+    "intra": {
+      "latency_us": 3.044683905184167,
+      "bandwidth_gbps": 2621.59339483298,
+      "rows": 132,
+      "median_absolute_relative_error": 0.19758736570924973,
+      "p90_absolute_relative_error": 0.4802584157800111,
+      "maximum_absolute_relative_error": 1.1859284291043988,
+      "minimum_samples_per_pool": 6,
+      "maximum_samples_per_pool": 6
+    },
+    "inter": {
+      "latency_us": 115.37844958781528,
+      "bandwidth_gbps": 250.47532616015482,
+      "rows": 142,
+      "median_absolute_relative_error": 0.20760166833578636,
+      "p90_absolute_relative_error": 1.053650961162481,
+      "maximum_absolute_relative_error": 2.7438517946844327,
+      "minimum_samples_per_pool": 6,
+      "maximum_samples_per_pool": 6
+    }
+  },
+  "heldout": {
+    "fields": {
+      "cc_backend_config_type": "astra_sim_analytical",
+      "cluster_config_prefill_cc_backend_config_type": "astra_sim_analytical",
+      "cluster_config_decode_cc_backend_config_type": "astra_sim_analytical",
+      "astra_sim_analytical_cc_backend_config_intra_server_latency_us": 3.044683905184167,
+      "astra_sim_analytical_cc_backend_config_intra_server_bandwidth_gbps": 2621.59339483298,
+      "astra_sim_analytical_cc_backend_config_inter_server_latency_us": 115.37844958781528,
+      "astra_sim_analytical_cc_backend_config_inter_server_bandwidth_gbps": 250.47532616015482,
+      "cluster_config_prefill_cc_backend_config_intra_server_latency_us": 3.044683905184167,
+      "cluster_config_prefill_cc_backend_config_intra_server_bandwidth_gbps": 2621.59339483298,
+      "cluster_config_prefill_cc_backend_config_inter_server_latency_us": 115.37844958781528,
+      "cluster_config_prefill_cc_backend_config_inter_server_bandwidth_gbps": 250.47532616015482,
+      "cluster_config_decode_cc_backend_config_intra_server_latency_us": 3.044683905184167,
+      "cluster_config_decode_cc_backend_config_intra_server_bandwidth_gbps": 2621.59339483298,
+      "cluster_config_decode_cc_backend_config_inter_server_latency_us": 115.37844958781528,
+      "cluster_config_decode_cc_backend_config_inter_server_bandwidth_gbps": 250.47532616015482
+    },
+    "source": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/network/h200_dgx/summary.csv",
+    "rows": 128,
+    "ratio_by_curve": {
+      "all_gather/tp8": {
+        "n": 24,
+        "min": 0.6832,
+        "median": 0.8161,
+        "max": 1.1466
+      },
+      "all_gatherv/ep16": {
+        "n": 11,
+        "min": 8.4,
+        "median": 11.8787,
+        "max": 12.968
+      },
+      "all_gatherv/ep32": {
+        "n": 23,
+        "min": 8.6591,
+        "median": 9.302,
+        "max": 14.2609
+      },
+      "all_reduce/tp8": {
+        "n": 9,
+        "min": 1.237,
+        "median": 4.176,
+        "max": 4.819
+      },
+      "reduce_scatterv/ep16": {
+        "n": 11,
+        "min": 4.4103,
+        "median": 27.4798,
+        "max": 30.885
+      },
+      "reduce_scatterv/ep32": {
+        "n": 23,
+        "min": 2.3405,
+        "median": 3.6038,
+        "max": 31.8239
+      },
+      "sp_all_gather/tp8": {
+        "n": 18,
+        "min": 0.9635,
+        "median": 2.6529,
+        "max": 3.1727
+      },
+      "sp_reduce_scatter/tp8": {
+        "n": 9,
+        "min": 0.9941,
+        "median": 2.2124,
+        "max": 2.652
+      }
+    },
+    "graph_forward_us": {
+      "graph_t1/ep16": {
+        "measured": 9005.1,
+        "predicted": 149177.2,
+        "ratio": 16.5659
+      },
+      "graph_t1/ep32": {
+        "measured": 16082.7,
+        "predicted": 308299.6,
+        "ratio": 19.1696
+      },
+      "graph_t1/tp8": {
+        "measured": 728.4,
+        "predicted": 1906.1,
+        "ratio": 2.6168
+      },
+      "graph_t16/ep16": {
+        "measured": 8809.6,
+        "predicted": 149516.2,
+        "ratio": 16.972
+      },
+      "graph_t16/ep32": {
+        "measured": 16397.2,
+        "predicted": 309000.2,
+        "ratio": 18.8447
+      },
+      "graph_t16/tp8": {
+        "measured": 713.9,
+        "predicted": 1929.1,
+        "ratio": 2.7023
+      },
+      "graph_t2/ep16": {
+        "measured": 8693.7,
+        "predicted": 149177.2,
+        "ratio": 17.1593
+      },
+      "graph_t2/ep32": {
+        "measured": 16127.2,
+        "predicted": 308299.6,
+        "ratio": 19.1168
+      },
+      "graph_t2/tp8": {
+        "measured": 789.4,
+        "predicted": 1907.1,
+        "ratio": 2.416
+      },
+      "graph_t24/ep16": {
+        "measured": 9351.9,
+        "predicted": 149855.2,
+        "ratio": 16.024
+      },
+      "graph_t24/ep32": {
+        "measured": 18646.6,
+        "predicted": 309700.8,
+        "ratio": 16.609
+      },
+      "graph_t24/tp8": {
+        "measured": 794.8,
+        "predicted": 1945.2,
+        "ratio": 2.4473
+      },
+      "graph_t32/ep16": {
+        "measured": 11189.6,
+        "predicted": 150194.3,
+        "ratio": 13.4226
+      },
+      "graph_t32/ep32": {
+        "measured": 27111.7,
+        "predicted": 310401.4,
+        "ratio": 11.449
+      },
+      "graph_t32/tp8": {
+        "measured": 824.9,
+        "predicted": 1961.3,
+        "ratio": 2.3775
+      },
+      "graph_t4/ep16": {
+        "measured": 8916.1,
+        "predicted": 149177.2,
+        "ratio": 16.7312
+      },
+      "graph_t4/ep32": {
+        "measured": 15973.9,
+        "predicted": 308299.6,
+        "ratio": 19.3002
+      },
+      "graph_t4/tp8": {
+        "measured": 709.5,
+        "predicted": 1909.0,
+        "ratio": 2.6906
+      },
+      "graph_t8/ep16": {
+        "measured": 8740.3,
+        "predicted": 149177.2,
+        "ratio": 17.0678
+      },
+      "graph_t8/ep32": {
+        "measured": 15975.0,
+        "predicted": 308299.6,
+        "ratio": 19.2989
+      },
+      "graph_t8/tp8": {
+        "measured": 658.3,
+        "predicted": 1913.0,
+        "ratio": 2.9059
+      }
+    }
+  },
+  "input_hashes": {
+    "measurements/A_intra/node0/summary.csv": "991f107ad117367c5c2612f6b41e4dd911807690776de66224cfd7b4ddda5440",
+    "measurements/A_intra/node0/plan.json": "dfce36199b673f2edc7eba43b1f357078253eddb129d476e57c27e6cfef87829",
+    "measurements/A_intra/node1/summary.csv": "eb32e9238ac9492f4d18932050d5a50b7683045f2252c85cddc7a5384fabc2f5",
+    "measurements/A_intra/node1/plan.json": "724d6b8c9fc64fcd77aa6e001b178fbd983cc8d9ffc88ab6eaa1bc5859d9dfc3",
+    "measurements/B_same_rail/summary.csv": "b4a24a0c37cdeb348523010e4b53bae5046db35575b20a28d344eb836fbe0f13",
+    "measurements/B_same_rail/plan.json": "fcb3dbc9d2d16eb465ef393bbac8c0b2ac7d5560076a97ffd5edb14d76b958e2",
+    "measurements/B_ring_boundary/summary.csv": "0e5d880b6b4e48392777b70b9ae3d39bf9303f221dd4bd4a74565d4dacb16429",
+    "measurements/B_ring_boundary/plan.json": "f494540ac456f1038a7385fe1920f8476446a325a0f8d4bf1c897a855cce8e10"
+  },
+  "inter_by_placement": {
+    "B_same_rail": {
+      "latency_us": 111.9076839906876,
+      "bandwidth_gbps": 251.07287694022625
+    },
+    "B_ring_boundary": {
+      "latency_us": 117.86121990053411,
+      "bandwidth_gbps": 249.1871446658739
+    }
+  },
+  "fit_disposition": "Positive parameters; poor fit and failed target-topology validation. Diagnostic full replays only."
+}

@@ -17,5 +17,7 @@
   "personal_non_preemptible_before": 0,
   "personal_limit": 32,
   "fresh_cloud_path_checked_absent": true,
-  "pid": 495129
+  "pid": 495129,
+  "exit_code": 0,
+  "end_utc": "2026-10-31T17:12:01.933151+00:00"
 }

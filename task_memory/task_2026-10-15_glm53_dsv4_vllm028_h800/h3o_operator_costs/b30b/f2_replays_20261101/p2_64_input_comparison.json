@@ -1,0 +1,97 @@
+{
+  "case": "p2_64",
+  "status": "INITIALIZED",
+  "init_wall_s": 73.57442914135754,
+  "differences": [
+    {
+      "path": "/cluster_config/cc_backend_config/cache_dir",
+      "baseline": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cc_cache",
+      "candidate": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101/cc_cache"
+    },
+    {
+      "path": "/cluster_config/replica_scheduler_config/max_forwards_in_flight",
+      "baseline": 19,
+      "candidate": 18
+    },
+    {
+      "path": "/metrics_config/cache_dir",
+      "baseline": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cache",
+      "candidate": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101/cache"
+    },
+    {
+      "path": "/metrics_config/output_dir",
+      "baseline": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path",
+      "candidate": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path"
+    }
+  ],
+  "table_hashes_equal": true,
+  "trace_equal": true,
+  "a1": {
+    "enable_dummy_mode": {
+      "PREFILL": false,
+      "DECODE": false
+    },
+    "cc_backend_types": {
+      "PREFILL": "measured",
+      "DECODE": "measured"
+    },
+    "resolved_inputs": {
+      "PREFILL": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_block_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_replay_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv"
+      ],
+      "DECODE": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_block_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_replay_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv"
+      ]
+    },
+    "step_cost_files_beside_inputs": [],
+    "no_step_cost_file_beside_inputs": true,
+    "step_cost_table_bound_by_predictor": {
+      "PREFILL": false,
+      "DECODE": false
+    }
+  },
+  "table_paths_equal": false,
+  "path_difference_reason": "Same seven tables are resolved from different worktrees; SHA256 and consumer bindings are identical."
+}

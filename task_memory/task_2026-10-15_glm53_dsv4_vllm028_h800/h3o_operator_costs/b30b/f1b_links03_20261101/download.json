@@ -1,0 +1,18 @@
+{
+  "started_utc": "2026-10-31T17:12:11.350429+00:00",
+  "finished_utc": "2026-10-31T17:12:17.564527+00:00",
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "test \"$(id -un)\" = i-fengyicheng && python3 -u -"
+  ],
+  "cloud_root": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_03",
+  "remote_root": "/mnt/ws-jfs/ycfeng/glm53_dsv4/comm/h200/b30b_links_03",
+  "files": 62,
+  "bytes": 34807505,
+  "hashes_equal": true
+}

@@ -1,0 +1,18 @@
+{
+  "started_utc": "2026-10-31T17:18:08.126686+00:00",
+  "pid": 805144,
+  "classification": "DIAGNOSTIC",
+  "cases": {
+    "p2_32": {
+      "status": "RUN_FAILED",
+      "launch_exit": 1,
+      "driver_status": "FAILED"
+    },
+    "p2_64": {
+      "status": "RUN_FAILED",
+      "launch_exit": 1,
+      "driver_status": "FAILED"
+    }
+  },
+  "status": "COMPLETE"
+}

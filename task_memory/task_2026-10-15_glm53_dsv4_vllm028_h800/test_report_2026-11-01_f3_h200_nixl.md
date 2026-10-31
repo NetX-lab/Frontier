@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Added retained-data variation analysis and a bounded disposition; no extra GPU measurement or fit selection. |
 | 2026-11-01 | Verified completed NIXL02 measurements; diagnosed and retained the invalid affine fit without selecting replacement parameters. |
 
 Tickets06/07/11/19; decision46. The C_nixl phase of `exp-1101-004206-443314` completed on two distinct H200 nodes with all16ranks and both node returncodes0. The job's collective phases failed independently. Source/runtime checks22/22 per node and physical placement passed. Raw cloud input: `/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl/`.
@@ -25,3 +26,13 @@ The retained H800126.2Gbit/s+64.7us pair overpredicts the120eight-reader measure
 Measurements have valid data/notification provenance, but the current affine timing fit is not qualified. The negative intercept and residual spread are observations; shared-fabric contention or UCX scheduling are unproven possible causes. Do not clamp the intercept, select one pass, resubmit successful NIXL02, or replace the formal H800 pair. F3 replay awaits a defensible physical fit or a separately decided model/collection correction. F1/F2 work proceeds independently. This standalone probe does not observe native serving request wire bytes; the packed/component accounting limitation remains.
 
 Evidence: `h3o_operator_costs/b30b/f3_nixl02_20261101/{verification.json,nixl_summary.csv,fit_diagnosis.json}`. Raw local input remains `/data/ycfeng/tmp/glm53_dsv4/b30b_nixl02_20261101/`; download hashes and exact cloud paths are in verification.json.
+
+## Variation analysis and next action
+
+`/data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/glm53_dsv4/analyze_nixl02_variation_20261101.py` reads the same retained raw/CSV inputs and writes `h3o_operator_costs/b30b/f3_nixl02_20261101/variation.json`. The analysis completed; it does not change the failed fit.
+
+- Identical-case spread across three passes, `(max - min) / median`: one active pair has median 0.440676%, with 12/40 cases above 10%; eight active pairs have median 25.367988%, with 25/40 above 10%.
+- T128 and T256 have identical descriptor counts and bytes. Across 15 matched pass/inflight combinations, `abs(T128 / T256 - 1)` has median 0.101944% with one pair and 24.164046% with eight pairs (eight-pair maximum 89.462509%). A payload-only deterministic model cannot explain those observed timing differences.
+- Eight-pair slowest/fastest reader median ratios are 1.007083 at the median, 1.568741 at p90 and 2.060215 maximum. Reader rank 12 is slowest in 62/120 cases. Preparation plus posting accounts for median 1.700539% and p90 2.899034% of recorded completion time.
+
+These observations locate the variation mainly after posting and show dependence on execution order or concurrency; they do not establish a fabric or UCX cause. The current two-parameter model has no admissible F3 result. Retain that as the comparison outcome, finish independent F1/F2 comparisons, then assess the effect of this remaining input limitation beside their results. A new collection or model is justified only by a concrete cause and discriminator; this analysis selects neither new parameters nor another run. Native request wire bytes remain a separate qualification requirement.

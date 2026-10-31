@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recorded both F1b terminal coverage failures; no incomplete-request metric gate or formal input change. |
+| 2026-11-01 | Synchronized completed A6/F3 evidence and the active F1/F2 comparisons; acceptance criteria unchanged. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: pointed the status to the mainline handoff, added the H4a diagnostic comparison milestone, and deferred the H200 cases. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: admitted18 P0 native06 referenceR4 and integrated D-Q10 remove those pending pointers; full19 costs/prediction/four-metric gates remain unfinished. |
@@ -24,7 +26,7 @@
 
 Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
 
-Five canonical readings now exist: B29 P2-32 PASS; B29 P2-64 FAIL on repeat 1 TTFT; F1a P2-32 FAIL on TPOT/E2E; both F4 readings FAIL TTFT and equal B28 metrics. Fresh F1a P2-64 is running; B30b F1b/F2/F3 probes/fits follow. All four metrics and all three repeats are required; pooled PASS never overrides a repeat FAIL. Complete 05/09 qualification and formal measured acceptance remain OPEN.
+Five canonical readings now exist: B29 P2-32 PASS; B29 P2-64 FAIL on repeat 1 TTFT; F1a P2-32 FAIL on TPOT/E2E; both F4 readings FAIL TTFT and equal B28 metrics. Fresh F1a P2-64 and both F2 K18 CPU replays are running, with the existing canonical gate scheduled after completion. Collectives-only03 completed; F1b fitting and G5h validation are recorded, and both F1b CPU replays terminated COVERAGE_MISS. The held-out validation fails, and no complete F1b E2E metrics exist; both limitations are retained. F3 measurements are complete but the affine fit fails; no F3 replay is claimed. Fresh A6 completed with qualification failures. All four metrics and all three repeats are required; pooled PASS never overrides a repeat FAIL. Complete 05/09 qualification and formal measured acceptance remain OPEN.
 
 ## Historical execution status
 

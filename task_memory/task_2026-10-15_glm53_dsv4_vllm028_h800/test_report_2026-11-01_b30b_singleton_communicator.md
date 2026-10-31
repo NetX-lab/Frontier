@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Archived exact-job RCA coverage: six successful reads and two timed-out all-operation audits. |
 | 2026-11-01 | Preserved links/KV02 failure evidence, verified the cause-specific repair, and prepared collectives-only generation 03. |
 
 Tickets 06/09/11/19; decision 46 and D-CODEX-DIRECT-RJOB authorize the diagnostic probes and their ordinary in-scope repairs.
@@ -33,3 +34,9 @@ Generation `stage_b30b_links_03.json` retains the three unmeasured collective ph
 Planner: `/data/ycfeng/envs/frontier-py310/bin/python h3o_operator_costs/b30b/planner.py --config h3o_operator_costs/b30b/stage_b30b_links_03.json --output h3o_operator_costs/b30b/dry_run_03` (paths relative to this task; PYTHONPATH is the repo). PASS:548 case instances; estimated1,677.589s/7.455951GPUh, timeout3,900s/17.333333GPUh. The NIXL phase is absent as intended.
 
 At2026-10-31T16:56:37Z, the complete personal RJob listing found zero non-preemptible reservations. The quota CRD read returned403; it is preserved as an unavailable query, not treated as zero capacity. The fresh personal cloud destination was absent. Codex directly launched the existing `g5h/launch/launch_g5h.sh` through Python RJobBackend at16:57:41Z as `exp-1101-005741-958298`, sourceac0f908a (contains repair662a427e). Initial creator,16H200,non-preemptible/step_main,image,RDMA,and local NFS100.96.128.195 were verified; Starting with two replicas. Launcher session67965/PID495129 remains alive. Receipt and exact commands: `h3o_operator_costs/b30b/execution_links03_20261101/`.
+
+## Exact-job RCA coverage
+
+The bundled RCA collector completed with exit 1 for `exp-1101-004206-443314`, replica `exp-1101-004206-443314-cfcd2084`, window 2026-10-31 16:45:00–16:50:00 UTC. Python 3.10.6 / brainpp 2.8.6, personal identity `i-fengyicheng`. Six read families succeeded: live and historical events for job and replica, incident logs, and existing DeepScan (zero existing flows, complete pagination). Both all-operation audit queries failed with `ReadTimeout`, 15 seconds. They are unavailable evidence, not empty audit results. Stop actor/reason remain UNKNOWN; the original application traceback and phase returncodes already establish the collective metadata failure.
+
+Exact source paths, query timestamps, identities, errors and hashes are retained in `h3o_operator_costs/b30b/execution_20261101/rca_coverage.json`; raw collector output remains `/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/`. No additional platform repair or job restart follows from those audit timeouts.

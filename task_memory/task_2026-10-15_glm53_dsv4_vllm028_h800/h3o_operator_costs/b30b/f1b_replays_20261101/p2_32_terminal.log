@@ -1,0 +1,95 @@
+WARNING 01:17:18 model_architectures.py:1314] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: trained operator execution supports MONOLITHIC, PREFILL and unified DECODE on measured H200 coordinates; dsv4_step_cost.json is diagnostic only; PD-AF, prefix caching, speculative decoding / MTP and CPU-overhead modeling are unsupported; sampling measures MONOLITHIC and unified DECODE requests with min_tokens=max_tokens (logits processing on) and PREFILL requests from the vLLM 0.28 PD proxy without min_tokens (logits processing off); other sampling parameters are unmeasured
+WARNING 01:17:18 cluster_config.py:1575] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/dsv4_predictor.py:56: DtypeWarning: Columns (49,50) have mixed types. Specify dtype option on import or set low_memory=False.
+  rows = pd.read_csv(file_path, float_precision=float_precision)
+/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/dsv4_predictor.py:56: DtypeWarning: Columns (49,50) have mixed types. Specify dtype option on import or set low_memory=False.
+  rows = pd.read_csv(file_path, float_precision=float_precision)
+WARNING 01:18:30 quantization_manager.py:825] Profiling metadata mismatch for op=attn_pre_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 01:18:30 quantization_manager.py:825] Profiling metadata mismatch for op=attn_post_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 01:18:30 sklearn_execution_time_predictor.py:2549] Profiling file missing: ./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv
+WARNING 01:18:30 quantization_manager.py:825] Profiling metadata mismatch for op=moe_gating_routing_topk (precision mismatch (BF16 -> FP32)). Using approximation factor=2.000. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv
+WARNING 01:18:30 quantization_manager.py:825] Profiling metadata mismatch for op=attn_pre_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 01:18:30 quantization_manager.py:825] Profiling metadata mismatch for op=attn_post_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv
+WARNING 01:18:30 sklearn_execution_time_predictor.py:2549] Profiling file missing: ./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv
+WARNING 01:18:30 quantization_manager.py:825] Profiling metadata mismatch for op=moe_gating_routing_topk (precision mismatch (BF16 -> FP32)). Using approximation factor=2.000. File=./data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py", line 240, in <module>
+    main(args.case, args.root, observe=not args.without_observer, fields=args.fields)
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py", line 189, in main
+    simulator.run()
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/simulator.py", line 433, in run
+    self._run_sequential()
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/simulator.py", line 638, in _run_sequential
+    new_events = event.handle_event(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/events/decode_sync_event.py", line 55, in handle_event
+    return cluster_scheduler.on_decode_sync(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py", line 1297, in on_decode_sync
+    return enter_decode_sync(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/scheduler/utils/sync_entry.py", line 212, in enter_decode_sync
+    return enter_layer_sync(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/scheduler/utils/sync_entry.py", line 115, in enter_layer_sync
+    resolve_first_layer_inputs(scheduler, replica_id, stage_id, layer_id, sync_room)
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/scheduler/utils/dp_dummy_forward.py", line 170, in resolve_first_layer_inputs
+    _price_dp_rendezvous(scheduler, stage_id, layer_id, room)
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/scheduler/utils/dp_dummy_forward.py", line 236, in _price_dp_rendezvous
+    execution_time = _predict_layer(scheduler, stage_id, batch, layer_id)
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/scheduler/utils/dp_dummy_forward.py", line 45, in _predict_layer
+    return scheduler._predictor.predict_stage_execution_time(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py", line 1411, in predict_stage_execution_time
+    return super().predict_stage_execution_time(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_observer.py", line 192, in call
+    result = original(predictor, batch, stage_id, cluster_type, *args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 1306, in predict_stage_execution_time
+    layers = [
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 1307, in <listcomp>
+    self._predict_layer_with_kernel_gap(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/kernel_gap.py", line 214, in _predict_layer_with_kernel_gap
+    layer = predict_layer(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 1384, in _predict_moe_layer_execution_time
+    return self._predict_dsv4_structural_execution(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 107, in _predict_dsv4_structural_execution
+    return predict_structural_execution(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/deepseek_v4.py", line 367, in predict_structural_execution
+    source = predict_source_execution(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/deepseek_v4.py", line 265, in predict_source_execution
+    local_scope(
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/deepseek_v4.py", line 250, in local_scope
+    prediction = predictor._predictions["dsv4_operators"].operator(name, rows, selected_tp)
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/dsv4_operator_predictor.py", line 354, in operator
+    return self._exact(name, operator_model_name(name, DEEPSEEK_V4_OPERATOR_AXES[name], tp), (float(rows),))
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/dsv4_operator_predictor.py", line 312, in _exact
+    _reject(name, f"missing measured coordinate {coordinates}, model {key}")
+  File "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/frontier/execution_time_predictor/dsv4_operator_predictor.py", line 42, in _reject
+    raise DeepSeekV4CoverageError(f"V4 {operator}: {message}")
+frontier.attention.deepseek_v4.DeepSeekV4CoverageError: V4 dsv4_embedding: missing measured coordinate (32.0,), model dsv4_operator__dsv4_embedding__descriptor_rows__8

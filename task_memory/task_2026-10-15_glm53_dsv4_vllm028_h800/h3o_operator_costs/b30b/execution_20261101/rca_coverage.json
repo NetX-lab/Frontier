@@ -1,0 +1,98 @@
+{
+  "job": "exp-1101-004206-443314",
+  "replica": "exp-1101-004206-443314-cfcd2084",
+  "rjob_uid": "6595a838-fc08-48bb-8b70-2c9e3c4035d8",
+  "replica_uid": "b4f564d2-06dd-4eca-b533-dc82e089d223",
+  "window": {
+    "start": "2026-10-31T16:45:00+00:00",
+    "end": "2026-10-31T16:50:00+00:00"
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "brainpp": "2.8.6",
+  "sources": [
+    {
+      "query": "rjob-historical-events",
+      "ok": true,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/rjob-historical-events.json",
+      "sha256": "544b26ed4125a963edefca370b6bb22d44adc2a7538f56bfe53eae4f6913ba43",
+      "started_at": "2026-10-31T17:02:13.050885+00:00",
+      "finished_at": "2026-10-31T17:02:14.603448+00:00"
+    },
+    {
+      "query": "replica-historical-events",
+      "ok": true,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/replica-historical-events.json",
+      "sha256": "9a3bcb9773bf43ee02c5350e5553aebe9bfc5b43106b02a37c0658845fbd036b",
+      "started_at": "2026-10-31T17:02:13.052201+00:00",
+      "finished_at": "2026-10-31T17:02:14.493001+00:00"
+    },
+    {
+      "query": "rjob-live-events",
+      "ok": true,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/rjob-live-events.json",
+      "sha256": "d3c2eed2134db950b4613b43177f91383f6cc3f87a5827090d83bea57c2752be",
+      "started_at": "2026-10-31T17:02:13.053055+00:00",
+      "finished_at": "2026-10-31T17:02:13.205150+00:00"
+    },
+    {
+      "query": "replica-live-events",
+      "ok": true,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/replica-live-events.json",
+      "sha256": "a6d3b330bbc5bc5d94f1be667607d9d83d82928fe258e28bdb7f6959ba25ffda",
+      "started_at": "2026-10-31T17:02:13.054102+00:00",
+      "finished_at": "2026-10-31T17:02:13.287706+00:00"
+    },
+    {
+      "query": "incident-logs",
+      "ok": true,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/incident-logs.json",
+      "sha256": "66ba7755ac19e94a44c8c495247dbab9c7139365eb6cd75eea644f16658b6c4b",
+      "started_at": "2026-10-31T17:02:13.054800+00:00",
+      "finished_at": "2026-10-31T17:02:14.535305+00:00"
+    },
+    {
+      "query": "rjob-audit",
+      "ok": false,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/rjob-audit.json",
+      "sha256": "40cc4af2e18063022b755d851a11e3b9e2b7f29cd6e467b932788ea56fc0a0bd",
+      "started_at": "2026-10-31T17:02:13.056440+00:00",
+      "finished_at": "2026-10-31T17:02:29.258296+00:00",
+      "error": {
+        "type": "ReadTimeout",
+        "message": "HTTPSConnectionPool(host='platform.shaipower.com', port=443): Read timed out. (read timeout=15.0)"
+      }
+    },
+    {
+      "query": "replica-audit",
+      "ok": false,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/replica-audit.json",
+      "sha256": "3914301bf491015be92d80bbae9a829a946ac63a25fb21deac843299c02672bd",
+      "started_at": "2026-10-31T17:02:13.057318+00:00",
+      "finished_at": "2026-10-31T17:02:29.313957+00:00",
+      "error": {
+        "type": "ReadTimeout",
+        "message": "HTTPSConnectionPool(host='platform.shaipower.com', port=443): Read timed out. (read timeout=15.0)"
+      }
+    },
+    {
+      "query": "existing-deepscan",
+      "ok": true,
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_links_kv02_rca_20261101/existing-deepscan.json",
+      "sha256": "773639dca4d79eea1de5258ccc9a3935058ea92e658db36a8ee6aa6f94b531de",
+      "started_at": "2026-10-31T17:02:13.058831+00:00",
+      "finished_at": "2026-10-31T17:02:14.987340+00:00",
+      "count": 0,
+      "pagination_complete": true
+    }
+  ],
+  "collector_exit_code": 1,
+  "initiating_stop_actor": "UNKNOWN",
+  "initiating_stop_reason": "UNKNOWN",
+  "business_failure": "CollectiveRunner.communicators accessed disabled singleton device_communicator; each collective phase failed, while C_nixl completed on both nodes.",
+  "limitations": [
+    "Six successful read families; both all-operation audit reads timed out after 15 seconds, not empty responses.",
+    "No new DeepScan flow was created.",
+    "Historical events have empty involvedObject fields; exact names/UIDs belong to the requests, not invented server object bindings.",
+    "The retained application traceback establishes the business failure independently of unavailable stop audit fields."
+  ]
+}

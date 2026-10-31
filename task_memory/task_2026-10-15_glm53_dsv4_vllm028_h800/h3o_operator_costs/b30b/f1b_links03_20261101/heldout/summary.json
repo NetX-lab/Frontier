@@ -1,0 +1,178 @@
+{
+  "fields": {
+    "cc_backend_config_type": "astra_sim_analytical",
+    "cluster_config_prefill_cc_backend_config_type": "astra_sim_analytical",
+    "cluster_config_decode_cc_backend_config_type": "astra_sim_analytical",
+    "astra_sim_analytical_cc_backend_config_intra_server_latency_us": 3.044683905184167,
+    "astra_sim_analytical_cc_backend_config_intra_server_bandwidth_gbps": 2621.59339483298,
+    "astra_sim_analytical_cc_backend_config_inter_server_latency_us": 115.37844958781528,
+    "astra_sim_analytical_cc_backend_config_inter_server_bandwidth_gbps": 250.47532616015482,
+    "cluster_config_prefill_cc_backend_config_intra_server_latency_us": 3.044683905184167,
+    "cluster_config_prefill_cc_backend_config_intra_server_bandwidth_gbps": 2621.59339483298,
+    "cluster_config_prefill_cc_backend_config_inter_server_latency_us": 115.37844958781528,
+    "cluster_config_prefill_cc_backend_config_inter_server_bandwidth_gbps": 250.47532616015482,
+    "cluster_config_decode_cc_backend_config_intra_server_latency_us": 3.044683905184167,
+    "cluster_config_decode_cc_backend_config_intra_server_bandwidth_gbps": 2621.59339483298,
+    "cluster_config_decode_cc_backend_config_inter_server_latency_us": 115.37844958781528,
+    "cluster_config_decode_cc_backend_config_inter_server_bandwidth_gbps": 250.47532616015482
+  },
+  "source": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/network/h200_dgx/summary.csv",
+  "rows": 128,
+  "ratio_by_curve": {
+    "all_gather/tp8": {
+      "n": 24,
+      "min": 0.6832,
+      "median": 0.8161,
+      "max": 1.1466
+    },
+    "all_gatherv/ep16": {
+      "n": 11,
+      "min": 8.4,
+      "median": 11.8787,
+      "max": 12.968
+    },
+    "all_gatherv/ep32": {
+      "n": 23,
+      "min": 8.6591,
+      "median": 9.302,
+      "max": 14.2609
+    },
+    "all_reduce/tp8": {
+      "n": 9,
+      "min": 1.237,
+      "median": 4.176,
+      "max": 4.819
+    },
+    "reduce_scatterv/ep16": {
+      "n": 11,
+      "min": 4.4103,
+      "median": 27.4798,
+      "max": 30.885
+    },
+    "reduce_scatterv/ep32": {
+      "n": 23,
+      "min": 2.3405,
+      "median": 3.6038,
+      "max": 31.8239
+    },
+    "sp_all_gather/tp8": {
+      "n": 18,
+      "min": 0.9635,
+      "median": 2.6529,
+      "max": 3.1727
+    },
+    "sp_reduce_scatter/tp8": {
+      "n": 9,
+      "min": 0.9941,
+      "median": 2.2124,
+      "max": 2.652
+    }
+  },
+  "graph_forward_us": {
+    "graph_t1/ep16": {
+      "measured": 9005.1,
+      "predicted": 149177.2,
+      "ratio": 16.5659
+    },
+    "graph_t1/ep32": {
+      "measured": 16082.7,
+      "predicted": 308299.6,
+      "ratio": 19.1696
+    },
+    "graph_t1/tp8": {
+      "measured": 728.4,
+      "predicted": 1906.1,
+      "ratio": 2.6168
+    },
+    "graph_t16/ep16": {
+      "measured": 8809.6,
+      "predicted": 149516.2,
+      "ratio": 16.972
+    },
+    "graph_t16/ep32": {
+      "measured": 16397.2,
+      "predicted": 309000.2,
+      "ratio": 18.8447
+    },
+    "graph_t16/tp8": {
+      "measured": 713.9,
+      "predicted": 1929.1,
+      "ratio": 2.7023
+    },
+    "graph_t2/ep16": {
+      "measured": 8693.7,
+      "predicted": 149177.2,
+      "ratio": 17.1593
+    },
+    "graph_t2/ep32": {
+      "measured": 16127.2,
+      "predicted": 308299.6,
+      "ratio": 19.1168
+    },
+    "graph_t2/tp8": {
+      "measured": 789.4,
+      "predicted": 1907.1,
+      "ratio": 2.416
+    },
+    "graph_t24/ep16": {
+      "measured": 9351.9,
+      "predicted": 149855.2,
+      "ratio": 16.024
+    },
+    "graph_t24/ep32": {
+      "measured": 18646.6,
+      "predicted": 309700.8,
+      "ratio": 16.609
+    },
+    "graph_t24/tp8": {
+      "measured": 794.8,
+      "predicted": 1945.2,
+      "ratio": 2.4473
+    },
+    "graph_t32/ep16": {
+      "measured": 11189.6,
+      "predicted": 150194.3,
+      "ratio": 13.4226
+    },
+    "graph_t32/ep32": {
+      "measured": 27111.7,
+      "predicted": 310401.4,
+      "ratio": 11.449
+    },
+    "graph_t32/tp8": {
+      "measured": 824.9,
+      "predicted": 1961.3,
+      "ratio": 2.3775
+    },
+    "graph_t4/ep16": {
+      "measured": 8916.1,
+      "predicted": 149177.2,
+      "ratio": 16.7312
+    },
+    "graph_t4/ep32": {
+      "measured": 15973.9,
+      "predicted": 308299.6,
+      "ratio": 19.3002
+    },
+    "graph_t4/tp8": {
+      "measured": 709.5,
+      "predicted": 1909.0,
+      "ratio": 2.6906
+    },
+    "graph_t8/ep16": {
+      "measured": 8740.3,
+      "predicted": 149177.2,
+      "ratio": 17.0678
+    },
+    "graph_t8/ep32": {
+      "measured": 15975.0,
+      "predicted": 308299.6,
+      "ratio": 19.2989
+    },
+    "graph_t8/tp8": {
+      "measured": 658.3,
+      "predicted": 1913.0,
+      "ratio": 2.9059
+    }
+  }
+}

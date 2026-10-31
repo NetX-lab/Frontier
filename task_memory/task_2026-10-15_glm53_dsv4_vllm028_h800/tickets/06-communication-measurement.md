@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recorded both F1b terminal coverage failures; no incomplete-request metric gate or formal input change. |
+| 2026-11-01 | Synchronized completed A6/F3 evidence and the active F1/F2 comparisons; acceptance criteria unchanged. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-22 | Active communication/coverage acceptance DSV4 only; parked GLM all-tier work and removed GLM-first consumer/completion dependency while retaining measured rows and hardware-specific limits. |
 | 2026-10-21 | Accepted54rows/248traces;1241-row generation preserves1187 prior rows; exact P/D lookup0.731449604ms succeeds. |
@@ -37,7 +39,7 @@ GLM raw/model milestones are PAUSED_PENDING_USER_APPROVAL,not a current edge.
 
 Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
 
-Measured communication remains the formal input. B29 A8: P2-32 6,310,644 and P2-64 9,002,176 calls, all exact, zero violations. B30b owns diagnostic F1b link and F3 H200/V4 NIXL probes/fits; no cross-hardware fit or diagnostic input is promoted automatically.
+Measured communication remains the formal input. B29 A8: P2-32 6,310,644 and P2-64 9,002,176 calls, all exact, zero violations. B30b owns diagnostic F1b link and F3 H200/V4 NIXL probes/fits. Collectives-only03 completed Succeeded: 1,644 measured rows and 548 kernel records verify against the plan. Its positive link fit fails G5h validation; both prescribed F1b CPU replays failed compute coverage (embedding descriptor32; query16 in padded24 attention group), so complete E2E readings are unavailable. See [F1b report](../test_report_2026-11-01_f1b_h200_links.md). NIXL02 completed all 240 records with matching notifications and CSV reconstruction; its affine fit fails (negative intercept, p90 residual 29.18%). No replacement F3 fields or replay exist. See [F3 report](../test_report_2026-11-01_f3_h200_nixl.md). No cross-hardware fit or diagnostic input is promoted automatically.
 
 ## Historical priority-case workload coverage — 2026-10-21
 

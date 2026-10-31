@@ -1,0 +1,171 @@
+{
+  "case": "p2_64",
+  "status": "PASS_INPUT_IDENTITY",
+  "driver_status": "INITIALIZED",
+  "init_wall_s": 72.88492806209251,
+  "compute_tables_equal": true,
+  "compute_table_count": 6,
+  "trace_equal": true,
+  "input_sha256_equal": true,
+  "kv_admission_equal": true,
+  "differences": [
+    {
+      "path": "/cluster_config/cc_backend_config/cache_dir",
+      "baseline": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cc_cache",
+      "candidate": "cache"
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/cluster_gpus_per_server",
+      "baseline": null,
+      "candidate": 8
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/cluster_servers",
+      "baseline": null,
+      "candidate": 1
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/inter_server_bandwidth_gbps",
+      "baseline": null,
+      "candidate": 250.47532616015482
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/inter_server_latency_us",
+      "baseline": null,
+      "candidate": 115.37844958781528
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/inter_server_topology",
+      "baseline": null,
+      "candidate": "FullyConnected"
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/intra_server_bandwidth_gbps",
+      "baseline": null,
+      "candidate": 2621.59339483298
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/intra_server_latency_us",
+      "baseline": null,
+      "candidate": 3.044683905184167
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/intra_server_topology",
+      "baseline": null,
+      "candidate": "FullyConnected"
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/name",
+      "baseline": "measured",
+      "candidate": "astra_sim_analytical"
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/p2p_dst_index",
+      "baseline": null,
+      "candidate": 1
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/p2p_src_index",
+      "baseline": null,
+      "candidate": 0
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/placement_order",
+      "baseline": null,
+      "candidate": "TP,CP,DP,EP"
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/prediction_cache_size",
+      "baseline": null,
+      "candidate": 4096
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/ring_bidirectional",
+      "baseline": null,
+      "candidate": true
+    },
+    {
+      "path": "/cluster_config/cc_backend_config/summary_csv_path",
+      "baseline": "{profiling_data_dir}/{NETWORK_DEVICE}/summary.csv",
+      "candidate": null
+    },
+    {
+      "path": "/cluster_config/decode_cc_backend_config_inter_server_bandwidth_gbps",
+      "baseline": null,
+      "candidate": 250.47532616015482
+    },
+    {
+      "path": "/cluster_config/decode_cc_backend_config_inter_server_latency_us",
+      "baseline": null,
+      "candidate": 115.37844958781528
+    },
+    {
+      "path": "/cluster_config/decode_cc_backend_config_intra_server_bandwidth_gbps",
+      "baseline": null,
+      "candidate": 2621.59339483298
+    },
+    {
+      "path": "/cluster_config/decode_cc_backend_config_intra_server_latency_us",
+      "baseline": null,
+      "candidate": 3.044683905184167
+    },
+    {
+      "path": "/cluster_config/decode_cc_backend_config_type",
+      "baseline": null,
+      "candidate": "astra_sim_analytical"
+    },
+    {
+      "path": "/cluster_config/prefill_cc_backend_config_inter_server_bandwidth_gbps",
+      "baseline": null,
+      "candidate": 250.47532616015482
+    },
+    {
+      "path": "/cluster_config/prefill_cc_backend_config_inter_server_latency_us",
+      "baseline": null,
+      "candidate": 115.37844958781528
+    },
+    {
+      "path": "/cluster_config/prefill_cc_backend_config_intra_server_bandwidth_gbps",
+      "baseline": null,
+      "candidate": 2621.59339483298
+    },
+    {
+      "path": "/cluster_config/prefill_cc_backend_config_intra_server_latency_us",
+      "baseline": null,
+      "candidate": 3.044683905184167
+    },
+    {
+      "path": "/cluster_config/prefill_cc_backend_config_type",
+      "baseline": null,
+      "candidate": "astra_sim_analytical"
+    },
+    {
+      "path": "/metrics_config/cache_dir",
+      "baseline": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cache",
+      "candidate": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_64_links03_codex_20261101/cache"
+    },
+    {
+      "path": "/metrics_config/output_dir",
+      "baseline": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path",
+      "candidate": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_64_links03_codex_20261101/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path"
+    }
+  ],
+  "source_commit": "9f5f8b614f1e278b02ad39015f0230de562c82ba",
+  "source_dirty_paths": [],
+  "a1": {
+    "enable_dummy_mode": {
+      "PREFILL": false,
+      "DECODE": false
+    },
+    "cc_backend_types": {
+      "PREFILL": "astra_sim_analytical",
+      "DECODE": "astra_sim_analytical"
+    },
+    "step_cost_files_beside_inputs": [],
+    "no_step_cost_file_beside_inputs": true,
+    "step_cost_table_bound_by_predictor": {
+      "PREFILL": false,
+      "DECODE": false
+    }
+  }
+}

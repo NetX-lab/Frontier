@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/fit_tools.py",
+    "astra",
+    "--intra",
+    "/data/ycfeng/tmp/glm53_dsv4/b30b_links03_20261101/A_intra/node0/summary.csv",
+    "--intra",
+    "/data/ycfeng/tmp/glm53_dsv4/b30b_links03_20261101/A_intra/node1/summary.csv",
+    "--inter",
+    "/data/ycfeng/tmp/glm53_dsv4/b30b_links03_20261101/B_same_rail/summary.csv",
+    "--inter",
+    "/data/ycfeng/tmp/glm53_dsv4/b30b_links03_20261101/B_ring_boundary/summary.csv",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/f1b_links03_20261101/fit"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "source_commit": "06c7f1e63e722397f0ba166a379b420a38df7445",
+  "started_utc": "2026-10-31T17:15:28.419866+00:00",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/f1b_links03_fit_20261101.log",
+  "classification": "DIAGNOSTIC",
+  "exit_code": 0,
+  "finished_utc": "2026-10-31T17:15:29.887039+00:00"
+}

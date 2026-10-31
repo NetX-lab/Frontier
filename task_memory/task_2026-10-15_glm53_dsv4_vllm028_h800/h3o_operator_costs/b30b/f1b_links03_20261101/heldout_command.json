@@ -1,0 +1,29 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_variants/f1_astra_per_call.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/f1b_links03_20261101/heldout",
+    "cc_backend_config_type=astra_sim_analytical",
+    "cluster_config_prefill_cc_backend_config_type=astra_sim_analytical",
+    "cluster_config_decode_cc_backend_config_type=astra_sim_analytical",
+    "astra_sim_analytical_cc_backend_config_intra_server_latency_us=3.044683905184167",
+    "astra_sim_analytical_cc_backend_config_intra_server_bandwidth_gbps=2621.59339483298",
+    "astra_sim_analytical_cc_backend_config_inter_server_latency_us=115.37844958781528",
+    "astra_sim_analytical_cc_backend_config_inter_server_bandwidth_gbps=250.47532616015482",
+    "cluster_config_prefill_cc_backend_config_intra_server_latency_us=3.044683905184167",
+    "cluster_config_prefill_cc_backend_config_intra_server_bandwidth_gbps=2621.59339483298",
+    "cluster_config_prefill_cc_backend_config_inter_server_latency_us=115.37844958781528",
+    "cluster_config_prefill_cc_backend_config_inter_server_bandwidth_gbps=250.47532616015482",
+    "cluster_config_decode_cc_backend_config_intra_server_latency_us=3.044683905184167",
+    "cluster_config_decode_cc_backend_config_intra_server_bandwidth_gbps=2621.59339483298",
+    "cluster_config_decode_cc_backend_config_inter_server_latency_us=115.37844958781528",
+    "cluster_config_decode_cc_backend_config_inter_server_bandwidth_gbps=250.47532616015482"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic",
+  "source_commit": "9f5f8b614f1e278b02ad39015f0230de562c82ba",
+  "started_utc": "2026-10-31T17:16:13.711680+00:00",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/f1b_links03_heldout_20261101.log",
+  "classification": "DIAGNOSTIC; G5h is validation only",
+  "exit_code": 0,
+  "finished_utc": "2026-10-31T17:16:15.479560+00:00"
+}

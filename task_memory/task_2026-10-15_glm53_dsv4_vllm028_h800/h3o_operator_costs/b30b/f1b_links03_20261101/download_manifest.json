@@ -1,0 +1,312 @@
+[
+  {
+    "path": "A_intra/node0/all_reduce.csv",
+    "bytes": 5563,
+    "sha256": "6459d24832d7ef95c348bf301d94693f28e13a7e607bea2ab1f341dd75954418"
+  },
+  {
+    "path": "A_intra/node0/forward_totals.csv",
+    "bytes": 10959,
+    "sha256": "69f188433c084b265f93c37efaaff3517003893ac98c6c40b2c04ba0d8064d61"
+  },
+  {
+    "path": "A_intra/node0/kernels.jsonl",
+    "bytes": 407470,
+    "sha256": "7bec89aab0cfcebff20c4f1394de23d847656277cbc7f0cc6582ee266fa96108"
+  },
+  {
+    "path": "A_intra/node0/measurements.jsonl",
+    "bytes": 14354676,
+    "sha256": "4e83c94723c79e122bc4b7cf521efddcc986a08cd42396020619a900701f7e3f"
+  },
+  {
+    "path": "A_intra/node0/plan.json",
+    "bytes": 3211,
+    "sha256": "dfce36199b673f2edc7eba43b1f357078253eddb129d476e57c27e6cfef87829"
+  },
+  {
+    "path": "A_intra/node0/summary.csv",
+    "bytes": 157889,
+    "sha256": "991f107ad117367c5c2612f6b41e4dd911807690776de66224cfd7b4ddda5440"
+  },
+  {
+    "path": "A_intra/node1/all_reduce.csv",
+    "bytes": 5568,
+    "sha256": "9450a6ec1829aecfbec329bb514b8b834182405cb0c12a808c10c002feaff950"
+  },
+  {
+    "path": "A_intra/node1/forward_totals.csv",
+    "bytes": 10950,
+    "sha256": "c113a9e6e2b5c05c50c1c303a94576d873a37a6c32d2185b9563e92c7d48d1c8"
+  },
+  {
+    "path": "A_intra/node1/kernels.jsonl",
+    "bytes": 407470,
+    "sha256": "7cec7a1bf261853e49f2c00c2d701cc61ce428bca2f2a3059bfbf35add3af4a1"
+  },
+  {
+    "path": "A_intra/node1/measurements.jsonl",
+    "bytes": 14371193,
+    "sha256": "5ee25fdd7dcd32a0b138012f3426a9913224a0e217f7f3b6e2c785cbbd085afa"
+  },
+  {
+    "path": "A_intra/node1/plan.json",
+    "bytes": 3210,
+    "sha256": "724d6b8c9fc64fcd77aa6e001b178fbd983cc8d9ffc88ab6eaa1bc5859d9dfc3"
+  },
+  {
+    "path": "A_intra/node1/summary.csv",
+    "bytes": 158009,
+    "sha256": "eb32e9238ac9492f4d18932050d5a50b7683045f2252c85cddc7a5384fabc2f5"
+  },
+  {
+    "path": "B_ring_boundary/forward_totals.csv",
+    "bytes": 18144,
+    "sha256": "bce21028550ecef9f57358c3953203ad890adfef1cfb1917c41c9705a55e5277"
+  },
+  {
+    "path": "B_ring_boundary/kernels.jsonl",
+    "bytes": 126756,
+    "sha256": "011dee34cb71f86c3d8c63fc7259feb1fc9ec094f45b3193688cb221a444d482"
+  },
+  {
+    "path": "B_ring_boundary/measurements.jsonl",
+    "bytes": 1331628,
+    "sha256": "59b678a08fe1fa5d912b15a3819d02d6e0bcf1ab166194d53e444ad1dda97e4b"
+  },
+  {
+    "path": "B_ring_boundary/plan.json",
+    "bytes": 2455,
+    "sha256": "f494540ac456f1038a7385fe1920f8476446a325a0f8d4bf1c897a855cce8e10"
+  },
+  {
+    "path": "B_ring_boundary/summary.csv",
+    "bytes": 134819,
+    "sha256": "0e5d880b6b4e48392777b70b9ae3d39bf9303f221dd4bd4a74565d4dacb16429"
+  },
+  {
+    "path": "B_same_rail/forward_totals.csv",
+    "bytes": 18134,
+    "sha256": "300b9c146db097381de768e29ea6d2464062d9b5f57ca4c111e7e1cdace884eb"
+  },
+  {
+    "path": "B_same_rail/kernels.jsonl",
+    "bytes": 125620,
+    "sha256": "22e5ea9a1b1785aeb2c6281b6455e795af1dcbebfd6246743855088ddf5f0f59"
+  },
+  {
+    "path": "B_same_rail/measurements.jsonl",
+    "bytes": 1330410,
+    "sha256": "258d170c7455c499b033fd2b9633ca68bec86a79df904a427ef2a63387d0c783"
+  },
+  {
+    "path": "B_same_rail/plan.json",
+    "bytes": 2447,
+    "sha256": "fcb3dbc9d2d16eb465ef393bbac8c0b2ac7d5560076a97ffd5edb14d76b958e2"
+  },
+  {
+    "path": "B_same_rail/summary.csv",
+    "bytes": 134774,
+    "sha256": "b4a24a0c37cdeb348523010e4b53bae5046db35575b20a28d344eb836fbe0f13"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/A_intra.log",
+    "bytes": 584975,
+    "sha256": "6d8becba3848e0b3495a3714358e7896bdb3c466135ca1f8fa683e75d6bc42a6"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/A_intra_config.json",
+    "bytes": 1394,
+    "sha256": "43766e0558cda3d278391454b348e7e80be04917dc480998f7bad56fd73a284f"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/A_intra_launch.json",
+    "bytes": 935,
+    "sha256": "073967c0a664d1a2697c5a46d9cc5ab2867970824652822dcfa75c1bc29e2304"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/A_intra_prepared.json",
+    "bytes": 17,
+    "sha256": "12b34da73b0c67a0319e6eddbd3582af66e3b558b4d44e4a6860e0cec20d726f"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/A_intra_result.json",
+    "bytes": 966,
+    "sha256": "cb51bb4765484194d561b6008f16ffb97272701c23671d8dcf106c886c4beda9"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_ring_boundary.log",
+    "bytes": 117896,
+    "sha256": "620f69c970f6ec9c7fc87e5050325108eeeb7c26b79db67c73305ef0419bf372"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_ring_boundary_config.json",
+    "bytes": 1341,
+    "sha256": "63331a03cfdc9552c318e50d68f2855b7c03f911685ad3255ec06e235e36ee1f"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_ring_boundary_launch.json",
+    "bytes": 664,
+    "sha256": "a42a3220aba7b877a20ace4cd830c48a0934954d812d3a26b008ce1838b022c4"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_ring_boundary_prepared.json",
+    "bytes": 17,
+    "sha256": "12b34da73b0c67a0319e6eddbd3582af66e3b558b4d44e4a6860e0cec20d726f"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_ring_boundary_result.json",
+    "bytes": 694,
+    "sha256": "351fad953c7f1867c7c463b462b0d72756ba1c40b71879c68679cc691b25e702"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_same_rail.log",
+    "bytes": 117918,
+    "sha256": "1d17eea4ea46dcc8b445fcfec7afa3d3a3ace0990ead3859fd9e1d8990ccf8e4"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_same_rail_config.json",
+    "bytes": 1333,
+    "sha256": "a53be23889e7cb45bb3cd3610285526823009be7720e9abad1b2f3a2e960bd19"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_same_rail_launch.json",
+    "bytes": 654,
+    "sha256": "329ecb0d4b4f129b3be7347ea821956cb6976b4bd20751fcd685868a0b96dce6"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_same_rail_prepared.json",
+    "bytes": 17,
+    "sha256": "12b34da73b0c67a0319e6eddbd3582af66e3b558b4d44e4a6860e0cec20d726f"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/B_same_rail_result.json",
+    "bytes": 685,
+    "sha256": "e770b694e887b9b425d968f5c61f00562affc5096149ef731f09e63c5cc2609d"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/node.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/placement.json",
+    "bytes": 4001,
+    "sha256": "81d767a176f73077d27c412ca55f72d92ea6435b0f28c5b075016326bbf989b2"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/ready.json",
+    "bytes": 89,
+    "sha256": "46e08a34757616ff5654c096e196bb269548b4e4b805b094d15e9e605278463d"
+  },
+  {
+    "path": "nodes/gpu-h200-0375.lgcm.sh.istep.fun/result.json",
+    "bytes": 2724,
+    "sha256": "cd7707ff0a0565efb98787ef95f8594451d625eeb5025f792340e76650bf01fe"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/A_intra.log",
+    "bytes": 584545,
+    "sha256": "a46a461e717ced80daf09c027f47863ff2e3894131702082b4605f6f80b8d548"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/A_intra_config.json",
+    "bytes": 1394,
+    "sha256": "97777c6f1117d56e288d9cfb5b8d1aa88b720b6e58eb70873eaa7ba5347013b6"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/A_intra_launch.json",
+    "bytes": 934,
+    "sha256": "64329f2a3a5669225f5401e4b5cd03d7cbf87d360879c73da7b3578be2abdab8"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/A_intra_prepared.json",
+    "bytes": 17,
+    "sha256": "12b34da73b0c67a0319e6eddbd3582af66e3b558b4d44e4a6860e0cec20d726f"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/A_intra_result.json",
+    "bytes": 964,
+    "sha256": "6f97c112390aed090bb0c960f9f68e18b4394366aa0082d14c940d37c035d271"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_ring_boundary.log",
+    "bytes": 115773,
+    "sha256": "1a8c6b58dfbbaf8bb90e43ead46ccda3eb3cef9f2861010b2aa64545fdac7715"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_ring_boundary_config.json",
+    "bytes": 1341,
+    "sha256": "63331a03cfdc9552c318e50d68f2855b7c03f911685ad3255ec06e235e36ee1f"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_ring_boundary_launch.json",
+    "bytes": 664,
+    "sha256": "a308f5b8c661d64760ebbd2b5e516f9d164c1aa85e3e2aac11b95ba7861d7f8d"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_ring_boundary_prepared.json",
+    "bytes": 17,
+    "sha256": "12b34da73b0c67a0319e6eddbd3582af66e3b558b4d44e4a6860e0cec20d726f"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_ring_boundary_result.json",
+    "bytes": 694,
+    "sha256": "0a315982eb123552a3dba53c3f82901c2bebf6e4c496276c93c4f80963726d27"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_same_rail.log",
+    "bytes": 115842,
+    "sha256": "335691a16e65f95caa6f018c42c39df873352ad9acc891774aa3fe6a6e641f22"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_same_rail_config.json",
+    "bytes": 1333,
+    "sha256": "a53be23889e7cb45bb3cd3610285526823009be7720e9abad1b2f3a2e960bd19"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_same_rail_launch.json",
+    "bytes": 656,
+    "sha256": "479a89fd975c56b46e7347cab0de2a160098703f72b968e1dcb9a0d9369efe4c"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_same_rail_prepared.json",
+    "bytes": 17,
+    "sha256": "12b34da73b0c67a0319e6eddbd3582af66e3b558b4d44e4a6860e0cec20d726f"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/B_same_rail_result.json",
+    "bytes": 686,
+    "sha256": "17298ea456609edb500d009097dbf6a9a55079d8c7ddc1daa01292092c7eb10c"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/node.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/placement.json",
+    "bytes": 4468,
+    "sha256": "a7bd911f3e0b9e95ace1f733d820887b6612c8d29629ace3d4a4a4ab54d404e7"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/ready.json",
+    "bytes": 88,
+    "sha256": "cd0b195b3858e1650986a252141a94e8c12197141b8398b6182449ad346d72e3"
+  },
+  {
+    "path": "nodes/gpu-h200-0912.lgcm.sh.istep.fun/result.json",
+    "bytes": 2723,
+    "sha256": "464213762b369a7c19c6c6ad47f04f07d5d666c4e63fe4fc068d1a741cdfd47e"
+  },
+  {
+    "path": "runtime_checks/gpu-h200-0375.lgcm.sh.istep.fun.json",
+    "bytes": 8837,
+    "sha256": "0eec7a3600c69c15d4b48de8ff1a1c288635526701ab129d71b9ccaf6d572bcb"
+  },
+  {
+    "path": "runtime_checks/gpu-h200-0912.lgcm.sh.istep.fun.json",
+    "bytes": 8837,
+    "sha256": "b92b9d914ff0b5c4f194ca52e3c0ef440a8187f78ad27e9b97313cb9896fab60"
+  }
+]

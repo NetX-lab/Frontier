@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recorded F1b terminal coverage failures; kept three independent CPU replays active and preserved all formal inputs. |
+| 2026-11-01 | Completed collectives03 integrity and F1b fit/held-out checks; started both diagnostic replays and preserved the failed link model. |
 | 2026-11-01 | Advanced collectives03/F2 replays; recorded A6 qualification failures and rejected F3 fit without changing criteria. |
 | 2026-10-31 | Verified UUID representation repair and prepared fresh links/KV02; F2 initial single-capacity analysis is AMBIGUOUS. |
 | 2026-10-31 | Replaced stale route entry points with direct Codex execution, active H200 operator comparisons and current milestones; preserved historical routes and gates. |
@@ -154,12 +156,12 @@ Mainline: branch `feat/glm53-dsv4-vllm028`, this worktree and task directory. In
 | Ingress option A / B29 | 07/08/19 | Implemented and merged a69a5213. Inputs 10.3 ms ingress + 11.4 ms handoff; default zero fidelity verified. B29 P2-32 numeric PASS; P2-64 FAIL on repeat 1 TTFT (12.25494%). |
 | F4 memory planner comparison | 09/11/19 | Both replays finished. Five metric artifacts are byte-identical to B28 at each scale; full comparison recorded in the Codex test report. Memory accounting limits remain open. |
 | F1a specification links | 06/11/19 | P2-32 finished, TPOT/E2E FAIL. Fresh P2-64 replay running in f1a-astra-diagnostic; retain its former incomplete attempt. |
-| B30b F1b/F2/F3 preparations | 06/09 | Source/scoped work complete. UUID44f15f1d and singleton662a427e fix observed probe blockers. Collectives-only03 exp-1101-005741-958298 now running through local launcher;548cases/16H200/7.455951GPUh. Successful NIXL02 integrity verified; affine fit rejected for negative intercept and29.18%p90 residual. F2localK18 replays running; global single-capacity result staysAMBIGUOUS. |
-| F1b/F2/F3 comparisons | 11/19 | F1b awaits collectives03; two F2K18 CPU replays run independently; F3 needs a defensible fit after observed variation. Keep all formal inputs/references and report all four per-repeat errors. |
+| B30b F1b/F2/F3 preparations | 06/09 | Source/scoped work complete. UUID44f15f1d and singleton662a427e fix observed probe blockers. Collectives-only03 exp-1101-005741-958298 Succeeded;1,644rows/548kernel records,3.315556 observed container GPUh. F1b positive fit fails G5h validation (EP graph-forward ratios11.449–19.300); both CPU replays then terminate COVERAGE_MISS on unchanged compute tables. Successful NIXL02 integrity verified; affine fit rejected for negative intercept and29.18%p90 residual. F2localK18 replays running; global single-capacity result staysAMBIGUOUS. |
+| F1b/F2/F3 comparisons | 11/19 | Both F1b replays failed compute coverage and have no complete metric reading; retain their terminal receipts and exact rejection reproduction. Two F2K18 CPU replays run alongside F1a P2-64; existing gates are scheduled after completion. F3 has no admissible affine result after the retained-data analysis; preserve the failed comparison and avoid another unmotivated fit or collection. Keep all formal inputs/references and report all four per-repeat errors. |
 | Qualified P2 formal acceptance | 05/09/11/19 | Requires qualified measured inputs and all four errors <=10% in every admitted repeat; numerical P2-32 PASS alone does not close qualification. |
 | H800 P0/P1 continuation | 10/17/18/19 | Retained subsequent hardware scope. H200 results never qualify H800. |
 
-Dependency: `B30b checks -> {F1b/F3 two-node probe || F2 one-GPU probe} -> fits -> diagnostic replays -> F1–F4 comparison`; `F1a P2-64 replay` proceeds in parallel. `B29` is complete and is reused. `fresh A6 + hardware/payload/coverage admission + per-repeat gates -> formal acceptance` remains a separate requirement.
+Dependency: `completed B30b measurements -> {F1b fit/heldout -> two terminal COVERAGE_MISS outcomes || F2 K18 -> two running replays || F3 retained invalid-fit outcome} -> F1–F4 comparison`; `F1a P2-64 replay` proceeds in parallel. `B29` is complete and is reused. `passing A6 + hardware/payload/coverage admission + per-repeat gates -> formal acceptance` remains a separate requirement; the completed A6 failed qualification.
 
 The measured CC backend remains the formal input. A diagnostic variant may replace it only after a new YC decision. B30a's default ASTRA multi-server behavior change remains on its diagnostic branch pending that decision. Do not revive whole-step-cost refinement, parked GLM work, or the stopped full trace-audit route.
 

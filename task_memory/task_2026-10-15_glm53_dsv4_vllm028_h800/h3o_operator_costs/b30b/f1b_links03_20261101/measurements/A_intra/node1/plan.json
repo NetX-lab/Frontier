@@ -1,0 +1,134 @@
+{
+  "config": {
+    "model_config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/model/config.json",
+    "engine_source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/engine.json (TP8 DP2 PP1 EP on, bfloat16, async scheduling, default all2all backend)",
+    "warmup_calls": 5,
+    "repeats": 100,
+    "calls_per_repeat": 1,
+    "passes": 3,
+    "shuffle_seed": 20261031,
+    "gpus_per_node": 8,
+    "grid": {
+      "graph_tokens_per_lane": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "eager_lane_tokens": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192
+      ],
+      "logits_rows_per_lane": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32
+      ]
+    },
+    "stage": "A_intra",
+    "engine": {
+      "async_scheduling": true,
+      "data_parallel_size": 1,
+      "dtype": "bfloat16",
+      "enable_expert_parallel": true,
+      "pipeline_parallel_size": 1,
+      "tensor_parallel_size": 8
+    },
+    "allow_link_probe_parallelism": true,
+    "benchmark_module": "frontier.profiling.collectives.vllm_collective_benchmark",
+    "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_03/A_intra/node1"
+  },
+  "cases": 132,
+  "runtime": {
+    "torch": "2.13.0+cu130",
+    "vllm": "0.28.0",
+    "communicators": {
+      "tp": {
+        "pynccl_comm": true,
+        "ca_comm": true,
+        "symm_mem_comm": true,
+        "fi_ar_comm": false,
+        "qr_comm": false,
+        "all2all_manager": false,
+        "custom_collectives": {
+          "mnnvl_multicast_ptr": true,
+          "max_mnnvl_all_gather_size": 2097152,
+          "max_mnnvl_reduce_scatter_size": 16777216,
+          "max_all_gather_size": 2097152,
+          "max_reduce_scatter_size": 16777216,
+          "fully_connected": true
+        }
+      },
+      "ep": {
+        "pynccl_comm": true,
+        "ca_comm": false,
+        "symm_mem_comm": false,
+        "fi_ar_comm": false,
+        "qr_comm": false,
+        "all2all_manager": false
+      },
+      "dp": {
+        "pynccl_comm": false,
+        "ca_comm": false,
+        "symm_mem_comm": false,
+        "fi_ar_comm": false,
+        "qr_comm": false,
+        "all2all_manager": false
+      }
+    },
+    "group_ranks": {
+      "tp": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "ep": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "dp": [
+        0
+      ]
+    },
+    "hosts": [
+      "gpu-h200-0912.lgcm.sh.istep.fun",
+      "gpu-h200-0912.lgcm.sh.istep.fun",
+      "gpu-h200-0912.lgcm.sh.istep.fun",
+      "gpu-h200-0912.lgcm.sh.istep.fun",
+      "gpu-h200-0912.lgcm.sh.istep.fun",
+      "gpu-h200-0912.lgcm.sh.istep.fun",
+      "gpu-h200-0912.lgcm.sh.istep.fun",
+      "gpu-h200-0912.lgcm.sh.istep.fun"
+    ],
+    "sleep_cycles_per_us": 1978.123558017545
+  }
+}

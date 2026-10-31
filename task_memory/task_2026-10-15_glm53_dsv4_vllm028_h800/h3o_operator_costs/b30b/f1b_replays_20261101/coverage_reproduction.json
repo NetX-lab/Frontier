@@ -1,0 +1,310 @@
+{
+  "classification": "COVERAGE_MISS",
+  "cases": {
+    "p2_32": {
+      "error": {
+        "type": "DeepSeekV4CoverageError",
+        "message": "V4 dsv4_embedding: missing measured coordinate (32.0,), model dsv4_operator__dsv4_embedding__descriptor_rows__8",
+        "phase": "run",
+        "batch": {
+          "batch_id": 363845,
+          "role": "DECODE",
+          "request_ids": [
+            49,
+            0,
+            3,
+            5,
+            6,
+            8,
+            9,
+            11,
+            14,
+            17,
+            19,
+            20,
+            22,
+            25,
+            27,
+            28,
+            30,
+            31,
+            33,
+            36,
+            38,
+            39,
+            41,
+            44,
+            47
+          ],
+          "query_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "context_lengths": [
+            6143,
+            6431,
+            6418,
+            6415,
+            6409,
+            6378,
+            6372,
+            6369,
+            6358,
+            6332,
+            6328,
+            6322,
+            6309,
+            6283,
+            6279,
+            6273,
+            6242,
+            6235,
+            6232,
+            6221,
+            6193,
+            6187,
+            6184,
+            6175,
+            6147
+          ],
+          "request_is_decoding": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "graph_metadata": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "PIECEWISE",
+            "capture_hit": true,
+            "is_mixed_batch": true,
+            "original_total_tokens": 25,
+            "padded_total_tokens": 32,
+            "original_decode_batch_size": 24,
+            "padded_decode_batch_size": 24
+          }
+        }
+      },
+      "init_wall_s": 71.68612495297566,
+      "run_wall_s": 357.9296984472312,
+      "tables": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+          "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+          "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+          "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_block_kernel_only.csv",
+          "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_replay_kernel_only.csv",
+          "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+          "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f"
+        }
+      ],
+      "reproduced_error": "V4 dsv4_embedding: missing measured coordinate (32.0,), model dsv4_operator__dsv4_embedding__descriptor_rows__8",
+      "measured_embedding_rows": [
+        1.0,
+        2.0,
+        4.0,
+        8.0,
+        16.0,
+        24.0,
+        6144.0
+      ]
+    },
+    "p2_64": {
+      "error": {
+        "type": "DeepSeekV4CoverageError",
+        "message": "V4 coverage missing for operator dsv4_fused_q_kv_prepare, key ('dsv4_fused_q_kv_prepare', 'uncompressed', 'PIECEWISE', 'decode'), group ('dsv4_fused_q_kv_prepare', 'uncompressed', 'PIECEWISE', 'decode', 24): num_query_tokens=16 outside [17.0, 24.0]",
+        "phase": "run",
+        "batch": {
+          "batch_id": 458882,
+          "role": "DECODE",
+          "request_ids": [
+            5,
+            6,
+            10,
+            14,
+            18,
+            22,
+            26,
+            30,
+            34,
+            38,
+            42,
+            46,
+            50,
+            54,
+            58,
+            62
+          ],
+          "query_lengths": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "context_lengths": [
+            6322,
+            6316,
+            6313,
+            6300,
+            6286,
+            6276,
+            6262,
+            6251,
+            6237,
+            6223,
+            6213,
+            6199,
+            6188,
+            6175,
+            6161,
+            6150
+          ],
+          "request_is_decoding": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "graph_metadata": {
+            "config_mode": "full_and_piecewise",
+            "runtime_mode": "PIECEWISE",
+            "capture_hit": true,
+            "is_mixed_batch": false,
+            "original_total_tokens": 16,
+            "padded_total_tokens": 24,
+            "original_decode_batch_size": 16,
+            "padded_decode_batch_size": 16
+          }
+        }
+      },
+      "init_wall_s": 72.88492806209251,
+      "run_wall_s": 336.97130524227396,
+      "tables": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+          "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+          "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+          "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_block_kernel_only.csv",
+          "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_replay_kernel_only.csv",
+          "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/f1a-astra-diagnostic/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+          "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f"
+        }
+      ],
+      "reproduced_error": "V4 coverage missing for operator dsv4_fused_q_kv_prepare, key ('dsv4_fused_q_kv_prepare', 'uncompressed', 'PIECEWISE', 'decode'), group ('dsv4_fused_q_kv_prepare', 'uncompressed', 'PIECEWISE', 'decode', 24): num_query_tokens=16 outside [17.0, 24.0]",
+      "features": {
+        "num_sequences": 16,
+        "num_query_tokens": 16,
+        "padded_rows": 24,
+        "sum_swa_key_pairs": 2048,
+        "sum_compressed_key_pairs": 0,
+        "sum_selected_key_pairs": 0,
+        "num_compressed_writes": 0,
+        "min_query_len": 1,
+        "max_query_len": 1,
+        "min_context_len": 6150,
+        "max_context_len": 6322,
+        "max_key_len": 6323
+      }
+    }
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "status": "PASS_REPRODUCED_BOTH_COVERAGE_FAILURES"
+}

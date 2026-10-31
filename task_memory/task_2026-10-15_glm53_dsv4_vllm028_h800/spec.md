@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recorded F1b held-out and terminal coverage failures without changing the measured-input or acceptance contract. |
+| 2026-11-01 | Updated A6 from pending to completed with qualification failures; recorded rejected F3 fit. |
 | 2026-10-31 | Synchronized Codex execution, active H200 route, measured formal inputs, B29 delays and per-repeat qualification limits. |
 | 2026-10-22 | W128-V4-S5-STATUS: separated historical execution snapshots from current scope/rules and linked main progress; no contract changes. |
 | 2026-10-22 | Final execution snapshot: GLM pause confirmed,warm-q1 corrected job Running/business pending,native04 sealed/unadmitted and05 unsealed pending versioned full-checker repair;no new scope/gate approval. |
@@ -114,7 +116,7 @@ The latest requirements decisions supersede older execution snapshots: D-H200-MA
 
 H3o costs are composed from operator measurements and communication costs; whole-step tables remain diagnostic only. Decision 46 permits measured communication, which remains the formal input. F1–F4 are diagnostic comparisons; promotion of a variant to a formal input requires a new YC decision.
 
-Ingress option A is implemented (B29, a69a5213): 10.3 ms delays engine arrival while preserving client arrival; 11.4 ms delays the KV handoff start. Both code defaults are zero. Three-repeat client TTFT/TPOT/E2E and total THPT gates are unchanged. P2-32 B29 is a numerical PASS; P2-64 repeat 1 is FAIL at 12.25494% TTFT even though pooled TTFT is 7.67691%. Full operator qualification, fresh A6 and hardware-specific NIXL/memory coverage remain open.
+Ingress option A is implemented (B29, a69a5213): 10.3 ms delays engine arrival while preserving client arrival; 11.4 ms delays the KV handoff start. Both code defaults are zero. Three-repeat client TTFT/TPOT/E2E and total THPT gates are unchanged. P2-32 B29 is a numerical PASS; P2-64 repeat 1 is FAIL at 12.25494% TTFT even though pooled TTFT is 7.67691%. Fresh A6 completed on November 1 but failed qualification (four attention scopes and seven of eight uniform collective curves). Full operator qualification and hardware-specific NIXL/memory coverage remain open. F1b held-out validation fails; both replays also terminate on compute COVERAGE_MISS and provide no complete E2E reading. Completed F3 NIXL measurements have an invalid affine fit; they provide no replacement input. See [A6 recovery](test_report_2026-11-01_a6_report_recovery.md) and [F3 measurements](test_report_2026-11-01_f3_h200_nixl.md).
 
 The priority table and dated source snapshots below are historical where they disagree with this section. The common fixed workload, metric definitions, three-repeat admission, hardware identity and no-step-cost contract remain binding. See [current plan](plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [Codex test report](test_report_2026-10-31_codex_resume.md).
 

@@ -1,0 +1,20 @@
+{
+  "started_utc": "2026-10-31T17:05:39.416022+00:00",
+  "pid": 615185,
+  "source_commit": "06c7f1e63e722397f0ba166a379b420a38df7445",
+  "cases": {
+    "f1a_p2_64": {
+      "status": "WAITING",
+      "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a"
+    },
+    "f2_p2_32": {
+      "status": "WAITING",
+      "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101"
+    },
+    "f2_p2_64": {
+      "status": "WAITING",
+      "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101"
+    }
+  },
+  "classification": "DIAGNOSTIC: numerical gate does not promote inputs or close formal qualification"
+}
