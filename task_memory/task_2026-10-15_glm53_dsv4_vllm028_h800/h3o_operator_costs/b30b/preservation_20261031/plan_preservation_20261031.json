@@ -1,0 +1,608 @@
+{
+  "contract": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/plan_preservation.json",
+  "baseline_ref": "b0e568f5",
+  "plans": [
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_isolated_01.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_isolated_01.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_isolated_01.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "a6392ec82d3a5b394cb27b0660ceb84b08205e22afe23e8f8df3bb10b7a5b544",
+      "baseline_listing_sha256": "a6392ec82d3a5b394cb27b0660ceb84b08205e22afe23e8f8df3bb10b7a5b544",
+      "listing_sha256": "a6392ec82d3a5b394cb27b0660ceb84b08205e22afe23e8f8df3bb10b7a5b544",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 35 passes 3 measurements 105"
+      ],
+      "expected_historical_error": []
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_tp8_dp2_ep16.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_tp8_dp2_ep16.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_tp8_dp2_ep16.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "191f137d4201712e6926f1207f7a5f7f3df674d92e804bc26f819aa4faa23ce8",
+      "baseline_listing_sha256": "191f137d4201712e6926f1207f7a5f7f3df674d92e804bc26f819aa4faa23ce8",
+      "listing_sha256": "191f137d4201712e6926f1207f7a5f7f3df674d92e804bc26f819aa4faa23ce8",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 82 passes 3 measurements 246"
+      ],
+      "expected_historical_error": []
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_isolated_01.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_isolated_01.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_isolated_01.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "36e5de40e0de6dc8438c39bd3bc86167f2247a6e8429f672113f5f3f49adbeec",
+      "baseline_listing_sha256": "36e5de40e0de6dc8438c39bd3bc86167f2247a6e8429f672113f5f3f49adbeec",
+      "listing_sha256": "36e5de40e0de6dc8438c39bd3bc86167f2247a6e8429f672113f5f3f49adbeec",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 46 passes 3 measurements 138"
+      ],
+      "expected_historical_error": []
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_tp8_dp4_ep32.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_tp8_dp4_ep32.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_tp8_dp4_ep32.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "36e5de40e0de6dc8438c39bd3bc86167f2247a6e8429f672113f5f3f49adbeec",
+      "baseline_listing_sha256": "36e5de40e0de6dc8438c39bd3bc86167f2247a6e8429f672113f5f3f49adbeec",
+      "listing_sha256": "36e5de40e0de6dc8438c39bd3bc86167f2247a6e8429f672113f5f3f49adbeec",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 46 passes 3 measurements 138"
+      ],
+      "expected_historical_error": []
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 1,
+      "returncode": 1,
+      "baseline_returncode": 1,
+      "expected_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "baseline_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [],
+      "expected_historical_error": [
+        "KeyError: 'passes'"
+      ]
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp2_ep16.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp2_ep16.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp2_ep16.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 1,
+      "returncode": 1,
+      "baseline_returncode": 1,
+      "expected_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "baseline_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [],
+      "expected_historical_error": [
+        "KeyError: 'passes'"
+      ]
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp4_ep32.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp4_ep32.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp4_ep32.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 1,
+      "returncode": 1,
+      "baseline_returncode": 1,
+      "expected_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "baseline_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [],
+      "expected_historical_error": [
+        "KeyError: 'passes'"
+      ]
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_nixl_read_tp8.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.nixl_kv_read_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_nixl_read_tp8.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.nixl_kv_read_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_nixl_read_tp8.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 1,
+      "returncode": 1,
+      "baseline_returncode": 1,
+      "expected_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "baseline_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [],
+      "expected_historical_error": [
+        "TypeError: string indices must be integers"
+      ]
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8_02.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8_02.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8_02.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 1,
+      "returncode": 1,
+      "baseline_returncode": 1,
+      "expected_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "baseline_listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "listing_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [],
+      "expected_historical_error": [
+        "KeyError: 'passes'"
+      ]
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp4_ep32.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp4_ep32.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp4_ep32.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "c4011b4748284eef087e01c368410090d46988f72ade121d4d2c1d5cb7caa154",
+      "baseline_listing_sha256": "c4011b4748284eef087e01c368410090d46988f72ade121d4d2c1d5cb7caa154",
+      "listing_sha256": "c4011b4748284eef087e01c368410090d46988f72ade121d4d2c1d5cb7caa154",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 324 passes 3 measurements 972"
+      ],
+      "expected_historical_error": []
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp2_ep16.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp2_ep16.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.vllm_collective_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp2_ep16.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "f60c96ad6dc662ea82af441ed90a68f6ea2a73290735cb83740345a6ff38e6b0",
+      "baseline_listing_sha256": "f60c96ad6dc662ea82af441ed90a68f6ea2a73290735cb83740345a6ff38e6b0",
+      "listing_sha256": "f60c96ad6dc662ea82af441ed90a68f6ea2a73290735cb83740345a6ff38e6b0",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 324 passes 3 measurements 972"
+      ],
+      "expected_historical_error": []
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_nixl_read_tp8.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.nixl_kv_read_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_nixl_read_tp8.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.nixl_kv_read_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_nixl_read_tp8.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "95a678f78be965f2cd335b52a6573a3fd7708f455b8b9d00ab906733b466bde3",
+      "baseline_listing_sha256": "95a678f78be965f2cd335b52a6573a3fd7708f455b8b9d00ab906733b466bde3",
+      "listing_sha256": "95a678f78be965f2cd335b52a6573a3fd7708f455b8b9d00ab906733b466bde3",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 62 passes 3 measurements 186"
+      ],
+      "expected_historical_error": []
+    },
+    {
+      "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_ep_nixl_overlap.json",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "frontier.profiling.collectives.ep_kv_read_overlap_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_ep_nixl_overlap.json",
+        "--list-cases"
+      ],
+      "baseline_command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import sys,runpy; import frontier.profiling.collectives as p; p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/baseline_collectives",
+        "frontier.profiling.collectives.ep_kv_read_overlap_benchmark",
+        "--config",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_ep_nixl_overlap.json",
+        "--list-cases"
+      ],
+      "expected_returncode": 0,
+      "returncode": 0,
+      "baseline_returncode": 0,
+      "expected_listing_sha256": "ae4cd73a1716487cf37ea5803a4569b31d4201e99e8ba6301373deb06d39a49e",
+      "baseline_listing_sha256": "ae4cd73a1716487cf37ea5803a4569b31d4201e99e8ba6301373deb06d39a49e",
+      "listing_sha256": "ae4cd73a1716487cf37ea5803a4569b31d4201e99e8ba6301373deb06d39a49e",
+      "byte_identical": true,
+      "status": "PASS",
+      "listing_tail": [
+        "cases 14 passes 3 measurements 42"
+      ],
+      "expected_historical_error": []
+    }
+  ],
+  "sources": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/runtime_check.py",
+      "expected": "44b1e98eaee39fb93be820791c5e8450ed22c32bed8f26f3abd4090c354ea701",
+      "actual": "44b1e98eaee39fb93be820791c5e8450ed22c32bed8f26f3abd4090c354ea701",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/submit.py",
+      "expected": "4c847c161ca30fd09807577540a5c8f57fdb3198b6928d3341cecc4f9e296c07",
+      "actual": "4c847c161ca30fd09807577540a5c8f57fdb3198b6928d3341cecc4f9e296c07",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_isolated_01.json",
+      "expected": "b598bce61eac98b745466e5782353e32bd2a94d8a519be542e8493c3dd85df2f",
+      "actual": "b598bce61eac98b745466e5782353e32bd2a94d8a519be542e8493c3dd85df2f",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h16_tp8_dp2_ep16.json",
+      "expected": "7da232180e570d642d09d7b61ed5aae8449f4632827f516309f85ddca57e84de",
+      "actual": "7da232180e570d642d09d7b61ed5aae8449f4632827f516309f85ddca57e84de",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_isolated_01.json",
+      "expected": "a91ff0fdd177b7bd9a9bb370109d61174248741fe2cef6bbde15f9972c6c878b",
+      "actual": "a91ff0fdd177b7bd9a9bb370109d61174248741fe2cef6bbde15f9972c6c878b",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/stage_g5h32_tp8_dp4_ep32.json",
+      "expected": "518a80c163a8fdfcfb1b11f4854f0dfa5e65b8897eafc732bd088fcae9cfb8e8",
+      "actual": "518a80c163a8fdfcfb1b11f4854f0dfa5e65b8897eafc732bd088fcae9cfb8e8",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/node_entry.py",
+      "expected": "8bbf641498192f82e83ecc7e4a97904bf733267dfeeeacbb02de2ff1416f2fd4",
+      "actual": "8bbf641498192f82e83ecc7e4a97904bf733267dfeeeacbb02de2ff1416f2fd4",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/submit.py",
+      "expected": "50e9b07b8d387d0da01b6cd47c6640184a5ad3f92fb1bc57b6c73272201a125f",
+      "actual": "50e9b07b8d387d0da01b6cd47c6640184a5ad3f92fb1bc57b6c73272201a125f",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8.json",
+      "expected": "7a3145e239b60af09637597be1feeabf951becbd5a5a43d555506e8a22b9508c",
+      "actual": "7a3145e239b60af09637597be1feeabf951becbd5a5a43d555506e8a22b9508c",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp2_ep16.json",
+      "expected": "cc184cdbb2dd3137f6e52837896d440d810a2e2e56557c7c757fcc1864ed4c6d",
+      "actual": "cc184cdbb2dd3137f6e52837896d440d810a2e2e56557c7c757fcc1864ed4c6d",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_tp8_dp4_ep32.json",
+      "expected": "5d9aaac47eb2ad818c893660061b464993b4c9e9f3108ffc1bf47d8547cdc3c8",
+      "actual": "5d9aaac47eb2ad818c893660061b464993b4c9e9f3108ffc1bf47d8547cdc3c8",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_nixl_read_tp8.json",
+      "expected": "8ee7c13ca43505a5d4498e28b1c6c83e1f8fc767a5986bde5afb3621128829dd",
+      "actual": "8ee7c13ca43505a5d4498e28b1c6c83e1f8fc767a5986bde5afb3621128829dd",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_smoke_tp4_dp2_ep8_02.json",
+      "expected": "061e57a2ab47f7208cd9ed5af8321d58fb9a213a085a565fa90eee402878b217",
+      "actual": "061e57a2ab47f7208cd9ed5af8321d58fb9a213a085a565fa90eee402878b217",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp4_ep32.json",
+      "expected": "000c316fa1bff0ebe5dec9db684d70f084711707a2a6bbde871de948e39a4e17",
+      "actual": "000c316fa1bff0ebe5dec9db684d70f084711707a2a6bbde871de948e39a4e17",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_tp8_dp2_ep16.json",
+      "expected": "efcbc542c9acc6c2def11549ff6ef041158bc86e2e06e0eac740204760f3ed6c",
+      "actual": "efcbc542c9acc6c2def11549ff6ef041158bc86e2e06e0eac740204760f3ed6c",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_nixl_read_tp8.json",
+      "expected": "f38617e24c83334827d04bc124235b9a47d1d65f6b273f8c3a35f311f8286752",
+      "actual": "f38617e24c83334827d04bc124235b9a47d1d65f6b273f8c3a35f311f8286752",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/stage_k5_ep_nixl_overlap.json",
+      "expected": "5435f4babccd08ddd96d2e3389ef2185c2442fc355e4b4132d7a20250e8fd86f",
+      "actual": "5435f4babccd08ddd96d2e3389ef2185c2442fc355e4b4132d7a20250e8fd86f",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/__init__.py",
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/benchmark_runner.py",
+      "expected": "1b67734715e1897db76a420b72c6c552bcec90110e20760a2ff8ca97a3350244",
+      "actual": "1b67734715e1897db76a420b72c6c552bcec90110e20760a2ff8ca97a3350244",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/collectives_impl.py",
+      "expected": "9e95bcdcd3c6514d3a14e41b9ef7c30f68e63cd792bde374033d8d2386f021de",
+      "actual": "9e95bcdcd3c6514d3a14e41b9ef7c30f68e63cd792bde374033d8d2386f021de",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/collectives_input.py",
+      "expected": "10cf4278cd0f36af3d8cdbb04649d7539a90e379302ca6841bbea080dceeca4d",
+      "actual": "10cf4278cd0f36af3d8cdbb04649d7539a90e379302ca6841bbea080dceeca4d",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/collectives_wrapper.py",
+      "expected": "c6bf2ab1433dca9ef9295c91bfb6d12ce2c0f49e1a6ae81c919d09123b871888",
+      "actual": "c6bf2ab1433dca9ef9295c91bfb6d12ce2c0f49e1a6ae81c919d09123b871888",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/ep_kv_read_overlap_benchmark.py",
+      "expected": "9ad059a3b8a693b6bffc3b07ddf70a0d426e890b0ec076b058633c799dcb8cf2",
+      "actual": "9ad059a3b8a693b6bffc3b07ddf70a0d426e890b0ec076b058633c799dcb8cf2",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/main.py",
+      "expected": "682a0d59a5b1d2c802014aa74d679c00d76b803180f13d338754c211d6eb835a",
+      "actual": "682a0d59a5b1d2c802014aa74d679c00d76b803180f13d338754c211d6eb835a",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/nixl_kv_read_benchmark.py",
+      "expected": "76ef39e01a39e60f18563776e62fc952f03b7480901b7e4738a0532089a3243b",
+      "actual": "76ef39e01a39e60f18563776e62fc952f03b7480901b7e4738a0532089a3243b",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/vllm_collective_benchmark.py",
+      "expected": "e7366d58aed788fd968427d16c1d212036c6dcc83fecf8f114ba0c73e37531a4",
+      "actual": "e7366d58aed788fd968427d16c1d212036c6dcc83fecf8f114ba0c73e37531a4",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/vllm_dsv4_forward_collectives.py",
+      "expected": "dc7c04d117b67bae9cc81ba48b917527ae17d8a5c06529bc60e2e3b51818c81b",
+      "actual": "dc7c04d117b67bae9cc81ba48b917527ae17d8a5c06529bc60e2e3b51818c81b",
+      "unchanged_from_existing_patch": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/frontier/profiling/collectives/vllm_forward_collectives.py",
+      "expected": "c7eb38ee3e378ef79428587fc87488bdd5ab02e6c6513bf598890136949903a4",
+      "actual": "c7eb38ee3e378ef79428587fc87488bdd5ab02e6c6513bf598890136949903a4",
+      "unchanged_from_existing_patch": true
+    }
+  ],
+  "successful_listings": 8,
+  "historical_failures_preserved": 5,
+  "status": "PASS"
+}

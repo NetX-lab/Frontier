@@ -1,0 +1,16 @@
+graph_decode_b8 moe_dispatch_all_gatherv all_gatherv (12352, 197632)
+graph_decode_b8 moe_combine_reduce_scatterv reduce_scatterv (196608, 12288)
+graph_decode_b16 moe_dispatch_all_gatherv all_gatherv (24704, 395264)
+graph_decode_b16 moe_combine_reduce_scatterv reduce_scatterv (393216, 24576)
+graph_decode_b32 moe_dispatch_all_gatherv all_gatherv (49408, 790528)
+graph_decode_b32 moe_combine_reduce_scatterv reduce_scatterv (786432, 49152)
+graph_decode_b64 moe_dispatch_all_gatherv all_gatherv (98816, 1581056)
+graph_decode_b64 moe_combine_reduce_scatterv reduce_scatterv (1572864, 98304)
+graph_decode_b128 moe_dispatch_all_gatherv all_gatherv (197632, 3162112)
+graph_decode_b128 moe_combine_reduce_scatterv reduce_scatterv (3145728, 196608)
+graph_decode_b256 moe_dispatch_all_gatherv all_gatherv (395264, 6324224)
+graph_decode_b256 moe_combine_reduce_scatterv reduce_scatterv (6291456, 393216)
+graph_decode_b512 moe_dispatch_all_gatherv all_gatherv (790528, 12648448)
+graph_decode_b512 moe_combine_reduce_scatterv reduce_scatterv (12582912, 786432)
+read t8192_pairs16_inflight1 758808576
+cases 14 passes 3 measurements 42

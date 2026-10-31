@@ -1,0 +1,4954 @@
+{
+  "stage": "b30b_links_kv",
+  "total_cases": 628,
+  "phases": [
+    {
+      "name": "A_intra",
+      "copies": 2,
+      "cases_per_copy": 132,
+      "total_cases": 264,
+      "cases": [
+        {
+          "scenario": "graph_t1",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t1",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t1",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t1",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 16528,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 66112,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": true,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t1",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t2",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t2",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t4",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t8",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8192,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t8",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t16",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16528,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t32",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t32",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t32",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t32",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t32",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t32",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t64",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 66112,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t128",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t128",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t128",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t128",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t128",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t128",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 2097152,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t256",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 2097152,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 264448,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 2097152,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t512",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 4194304,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t512",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t512",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 4194304,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t512",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 2097152,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t512",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t512",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 4194304,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8388608,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t1024",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8388608,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 4194304,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 1057792,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8388608,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2048",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16777216,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t2048",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 2097152,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2048",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16777216,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2048",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8388608,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t2048",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t2048",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16777216,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 33554432,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t4096",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 4194304,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 33554432,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 16777216,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 4231168,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 33554432,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192",
+          "call": "embedding_all_reduce",
+          "op": "all_reduce",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 67108864,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t8192",
+          "call": "sp_attention_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8388608,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192",
+          "call": "sp_attention_reduce_scatter",
+          "op": "sp_reduce_scatter",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 67108864,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192",
+          "call": "sp_final_mhc_all_gather",
+          "op": "sp_all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 33554432,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "eager_t8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 67108864,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "logits_b1",
+          "call": "logits_all_gather",
+          "op": "all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 32320,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "logits_b2",
+          "call": "logits_all_gather",
+          "op": "all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 64640,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "logits_b4",
+          "call": "logits_all_gather",
+          "op": "all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 129280,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "logits_b8",
+          "call": "logits_all_gather",
+          "op": "all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 258560,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "logits_b16",
+          "call": "logits_all_gather",
+          "op": "all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 517120,
+          "calls_per_forward": 1
+        },
+        {
+          "scenario": "logits_b32",
+          "call": "logits_all_gather",
+          "op": "all_gather",
+          "group": "tp",
+          "group_size": 8,
+          "cuda_graph": false,
+          "max_input_bytes": 1034240,
+          "calls_per_forward": 1
+        }
+      ],
+      "estimate": {
+        "service_seconds": 88.9005644989252,
+        "overhead_seconds": 118.8,
+        "process_startup_seconds": 45,
+        "wall_seconds": 252.7005644989252,
+        "arithmetic": "sum(envelope_us) * 1216/1e6 + 132*3*0.3 + process startup"
+      },
+      "gpu_indices": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/A_intra"
+    },
+    {
+      "name": "B_same_rail",
+      "copies": 1,
+      "cases_per_copy": 142,
+      "total_cases": 142,
+      "cases": [
+        {
+          "scenario": "graph_t1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 16528,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 66112,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 264448,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 40960,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 139264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 532480,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2105344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8396800,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33562624,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67117056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 40960,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 163840,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 557056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2129920,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8421376,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33587200,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67141632,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 139264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 163840,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 655360,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2228224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8519680,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33685504,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67239936,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 532480,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 557056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 655360,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2621440,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8912896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 34078720,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67633152,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2105344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2129920,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2228224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2621440,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 4194304,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 10485760,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 35651584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 69206016,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8396800,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8421376,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8519680,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8912896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 10485760,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 16777216,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 41943040,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 75497472,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33562624,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33587200,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33685504,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 34078720,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 35651584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 41943040,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67108864,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 100663296,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67117056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67141632,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67239936,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67633152,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 69206016,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 75497472,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 100663296,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 134217728,
+          "calls_per_forward": 43
+        }
+      ],
+      "estimate": {
+        "service_seconds": 170.04600850734712,
+        "overhead_seconds": 127.8,
+        "process_startup_seconds": 45,
+        "wall_seconds": 342.8460085073471,
+        "arithmetic": "sum(envelope_us) * 376/1e6 + 142*3*0.3 + process startup"
+      },
+      "gpu_indices": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/B_same_rail"
+    },
+    {
+      "name": "B_ring_boundary",
+      "copies": 1,
+      "cases_per_copy": 142,
+      "total_cases": 142,
+      "cases": [
+        {
+          "scenario": "graph_t1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 16528,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t2",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 32768,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 66112,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t8",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 131072,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 264448,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t32",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 524288,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "graph_t64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": true,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 16384,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 40960,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 139264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 532480,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2105344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8396800,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33562624,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67117056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 40960,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 65536,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 163840,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 557056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2129920,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8421376,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33587200,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67141632,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 139264,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 163840,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 132224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 262144,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 655360,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2228224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8519680,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33685504,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t16_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67239936,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 532480,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 557056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 655360,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 528896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 1048576,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2621440,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8912896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 34078720,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t64_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67633152,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2105344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2129920,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2228224,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2621440,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 2115584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 4194304,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 10485760,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 35651584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t256_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 69206016,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8396800,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8421376,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8519680,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8912896,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 10485760,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 8462336,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 16777216,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 41943040,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t1024_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 75497472,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33562624,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33587200,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33685504,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 34078720,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 35651584,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 41943040,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 33849344,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67108864,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t4096_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 100663296,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67117056,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67141632,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_16",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_16",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67239936,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_64",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_64",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67633152,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_256",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_256",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 69206016,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1024",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_1024",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 75497472,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4096",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_4096",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 100663296,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_8192",
+          "call": "moe_dispatch_all_gatherv",
+          "op": "all_gatherv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 67698688,
+          "calls_per_forward": 43
+        },
+        {
+          "scenario": "eager_t8192_8192",
+          "call": "moe_combine_reduce_scatterv",
+          "op": "reduce_scatterv",
+          "group": "ep",
+          "group_size": 2,
+          "cuda_graph": false,
+          "max_input_bytes": 134217728,
+          "calls_per_forward": 43
+        }
+      ],
+      "estimate": {
+        "service_seconds": 170.04600850734712,
+        "overhead_seconds": 127.8,
+        "process_startup_seconds": 45,
+        "wall_seconds": 342.8460085073471,
+        "arithmetic": "sum(envelope_us) * 376/1e6 + 142*3*0.3 + process startup"
+      },
+      "gpu_indices": [
+        [
+          7
+        ],
+        [
+          0
+        ]
+      ],
+      "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/B_ring_boundary"
+    },
+    {
+      "name": "C_nixl",
+      "copies": 1,
+      "cases_per_copy": 80,
+      "total_cases": 80,
+      "cases": [
+        {
+          "case": "t64_pairs1_inflight1",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 13029120
+        },
+        {
+          "case": "t64_pairs1_inflight2",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 26058240
+        },
+        {
+          "case": "t64_pairs1_inflight4",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 52116480
+        },
+        {
+          "case": "t64_pairs1_inflight8",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 104232960
+        },
+        {
+          "case": "t64_pairs1_inflight16",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 208465920
+        },
+        {
+          "case": "t64_pairs8_inflight1",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 13029120
+        },
+        {
+          "case": "t64_pairs8_inflight2",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 26058240
+        },
+        {
+          "case": "t64_pairs8_inflight4",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 52116480
+        },
+        {
+          "case": "t64_pairs8_inflight8",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 104232960
+        },
+        {
+          "case": "t64_pairs8_inflight16",
+          "prompt_tokens": 64,
+          "blocks_per_request": 13,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 208465920
+        },
+        {
+          "case": "t128_pairs1_inflight1",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 23051520
+        },
+        {
+          "case": "t128_pairs1_inflight2",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 46103040
+        },
+        {
+          "case": "t128_pairs1_inflight4",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 92206080
+        },
+        {
+          "case": "t128_pairs1_inflight8",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 184412160
+        },
+        {
+          "case": "t128_pairs1_inflight16",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 368824320
+        },
+        {
+          "case": "t128_pairs8_inflight1",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 23051520
+        },
+        {
+          "case": "t128_pairs8_inflight2",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 46103040
+        },
+        {
+          "case": "t128_pairs8_inflight4",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 92206080
+        },
+        {
+          "case": "t128_pairs8_inflight8",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 184412160
+        },
+        {
+          "case": "t128_pairs8_inflight16",
+          "prompt_tokens": 128,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 368824320
+        },
+        {
+          "case": "t256_pairs1_inflight1",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 23051520
+        },
+        {
+          "case": "t256_pairs1_inflight2",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 46103040
+        },
+        {
+          "case": "t256_pairs1_inflight4",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 92206080
+        },
+        {
+          "case": "t256_pairs1_inflight8",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 184412160
+        },
+        {
+          "case": "t256_pairs1_inflight16",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 368824320
+        },
+        {
+          "case": "t256_pairs8_inflight1",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 23051520
+        },
+        {
+          "case": "t256_pairs8_inflight2",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 46103040
+        },
+        {
+          "case": "t256_pairs8_inflight4",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 92206080
+        },
+        {
+          "case": "t256_pairs8_inflight8",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 184412160
+        },
+        {
+          "case": "t256_pairs8_inflight16",
+          "prompt_tokens": 256,
+          "blocks_per_request": 23,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 368824320
+        },
+        {
+          "case": "t512_pairs1_inflight1",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 24053760
+        },
+        {
+          "case": "t512_pairs1_inflight2",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 48107520
+        },
+        {
+          "case": "t512_pairs1_inflight4",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 96215040
+        },
+        {
+          "case": "t512_pairs1_inflight8",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 192430080
+        },
+        {
+          "case": "t512_pairs1_inflight16",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 384860160
+        },
+        {
+          "case": "t512_pairs8_inflight1",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 24053760
+        },
+        {
+          "case": "t512_pairs8_inflight2",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 48107520
+        },
+        {
+          "case": "t512_pairs8_inflight4",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 96215040
+        },
+        {
+          "case": "t512_pairs8_inflight8",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 192430080
+        },
+        {
+          "case": "t512_pairs8_inflight16",
+          "prompt_tokens": 512,
+          "blocks_per_request": 24,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 384860160
+        },
+        {
+          "case": "t1024_pairs1_inflight1",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 26058240
+        },
+        {
+          "case": "t1024_pairs1_inflight2",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 52116480
+        },
+        {
+          "case": "t1024_pairs1_inflight4",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 104232960
+        },
+        {
+          "case": "t1024_pairs1_inflight8",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 208465920
+        },
+        {
+          "case": "t1024_pairs1_inflight16",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 416931840
+        },
+        {
+          "case": "t1024_pairs8_inflight1",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 26058240
+        },
+        {
+          "case": "t1024_pairs8_inflight2",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 52116480
+        },
+        {
+          "case": "t1024_pairs8_inflight4",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 104232960
+        },
+        {
+          "case": "t1024_pairs8_inflight8",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 208465920
+        },
+        {
+          "case": "t1024_pairs8_inflight16",
+          "prompt_tokens": 1024,
+          "blocks_per_request": 26,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 416931840
+        },
+        {
+          "case": "t2048_pairs1_inflight1",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 30067200
+        },
+        {
+          "case": "t2048_pairs1_inflight2",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 60134400
+        },
+        {
+          "case": "t2048_pairs1_inflight4",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 120268800
+        },
+        {
+          "case": "t2048_pairs1_inflight8",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 240537600
+        },
+        {
+          "case": "t2048_pairs1_inflight16",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 481075200
+        },
+        {
+          "case": "t2048_pairs8_inflight1",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 30067200
+        },
+        {
+          "case": "t2048_pairs8_inflight2",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 60134400
+        },
+        {
+          "case": "t2048_pairs8_inflight4",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 120268800
+        },
+        {
+          "case": "t2048_pairs8_inflight8",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 240537600
+        },
+        {
+          "case": "t2048_pairs8_inflight16",
+          "prompt_tokens": 2048,
+          "blocks_per_request": 30,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 481075200
+        },
+        {
+          "case": "t4096_pairs1_inflight1",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 38085120
+        },
+        {
+          "case": "t4096_pairs1_inflight2",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 76170240
+        },
+        {
+          "case": "t4096_pairs1_inflight4",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 152340480
+        },
+        {
+          "case": "t4096_pairs1_inflight8",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 304680960
+        },
+        {
+          "case": "t4096_pairs1_inflight16",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 609361920
+        },
+        {
+          "case": "t4096_pairs8_inflight1",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 38085120
+        },
+        {
+          "case": "t4096_pairs8_inflight2",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 76170240
+        },
+        {
+          "case": "t4096_pairs8_inflight4",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 152340480
+        },
+        {
+          "case": "t4096_pairs8_inflight8",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 304680960
+        },
+        {
+          "case": "t4096_pairs8_inflight16",
+          "prompt_tokens": 4096,
+          "blocks_per_request": 38,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 609361920
+        },
+        {
+          "case": "t8192_pairs1_inflight1",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 1,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 54120960
+        },
+        {
+          "case": "t8192_pairs1_inflight2",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 1,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 108241920
+        },
+        {
+          "case": "t8192_pairs1_inflight4",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 1,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 216483840
+        },
+        {
+          "case": "t8192_pairs1_inflight8",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 1,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 432967680
+        },
+        {
+          "case": "t8192_pairs1_inflight16",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 1,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 865935360
+        },
+        {
+          "case": "t8192_pairs8_inflight1",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 8,
+          "requests_in_flight": 1,
+          "bytes_per_reader": 54120960
+        },
+        {
+          "case": "t8192_pairs8_inflight2",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 8,
+          "requests_in_flight": 2,
+          "bytes_per_reader": 108241920
+        },
+        {
+          "case": "t8192_pairs8_inflight4",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 8,
+          "requests_in_flight": 4,
+          "bytes_per_reader": 216483840
+        },
+        {
+          "case": "t8192_pairs8_inflight8",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 8,
+          "requests_in_flight": 8,
+          "bytes_per_reader": 432967680
+        },
+        {
+          "case": "t8192_pairs8_inflight16",
+          "prompt_tokens": 8192,
+          "blocks_per_request": 54,
+          "active_pairs": 8,
+          "requests_in_flight": 16,
+          "bytes_per_reader": 865935360
+        }
+      ],
+      "estimate": {
+        "service_seconds": 106.48209916539936,
+        "overhead_seconds": 48.0,
+        "process_startup_seconds": 45,
+        "wall_seconds": 199.48209916539935,
+        "arithmetic": "sum(reader_bytes)*max(K5_us/reader_bytes) * 3*32/1e6 + 80*3*0.2 + process startup"
+      },
+      "gpu_indices": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_01/C_nixl"
+    }
+  ],
+  "startup_seconds": 180,
+  "unpadded_wall_seconds": 1317.8746806790189,
+  "safety_factor": 1.5,
+  "wall_seconds": 1976.8120210185284,
+  "allocated_gpus": 16,
+  "gpu_hours": 8.785831204526794,
+  "timeout_seconds": 4500,
+  "timeout_gpu_hours": 20.0,
+  "arithmetic": "(180 + sum(phase wall seconds))*1.5; GPUh=wall*16/3600",
+  "timings_use": "G5h and K5 are wall-time proxies only; excluded from F1b/F3 parameter fits",
+  "timing_sources": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/download/summary.csv",
+      "sha256": "c142ac9a876f18f8c3af7386a33dd822a2b48b7c2be30b9df7aefbae71f42673"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/download/summary.csv",
+      "sha256": "0ca76121531180eb69199a084821feaccd8d65d430d5ecabf04edcd2551990ca"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w5_comm_k5/nixl_summary.csv",
+      "sha256": "8b16ca8f34845d4319bb350b059721b1361db6eefeab7260ec262693147579e0"
+    }
+  ]
+}

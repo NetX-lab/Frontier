@@ -1,0 +1,89 @@
+{
+  "working_directory": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes",
+  "baseline_ref": "b0e568f55ed5ade0c234949697bf22a84cd2f184",
+  "commands": [
+    {
+      "name": "required_pytest",
+      "argv": [
+        "timeout",
+        "240s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "pytest",
+        "tests/unit/test_b30b_ex_situ_probes.py",
+        "tests/unit/test_collective_benchmark_helpers.py",
+        "tests/unit/test_vllm_dsv4_forward_collectives.py",
+        "tests/unit/test_vllm_forward_collectives.py",
+        "tests/unit/test_collective_kernel_evidence.py",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/tests",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp=/data/ycfeng/tmp/b30b_sidecar_20261031_2257/pytest_initial",
+        "--junitxml=/data/ycfeng/tmp/b30b_sidecar_20261031_2257/pytest_initial.xml"
+      ],
+      "returncode": 0,
+      "result": "163 passed in 6.02s",
+      "log": "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/pytest_initial.log"
+    },
+    {
+      "name": "fresh_planner",
+      "argv": [
+        "timeout",
+        "60s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/planner.py",
+        "--output",
+        "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/fresh_dry_run_20261031_01"
+      ],
+      "returncode": 0,
+      "log": "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/dry_run_initial.log"
+    },
+    {
+      "name": "historical_preservation",
+      "argv": [
+        "timeout",
+        "60s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/verify_plan_preservation.py"
+      ],
+      "returncode": 0,
+      "result": "8 successful listings byte-identical; 5 historical failures preserved",
+      "log": "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/preservation.log"
+    },
+    {
+      "name": "independent_generated_plan_audit",
+      "argv": [
+        "timeout",
+        "60s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/audit_fresh_plan.py"
+      ],
+      "returncode": 0,
+      "result": "74 independent checks PASS"
+    },
+    {
+      "name": "whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "scoped_staging_whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--cached",
+        "--check",
+        "--",
+        ".",
+        ":(exclude)task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/evidence_20261031_initial/initial_worktree.patch"
+      ],
+      "returncode": 0,
+      "result": "All source/doc paths pass; immutable unified-diff snapshot excluded because its 14 blank context lines retain mandatory single spaces."
+    }
+  ]
+}

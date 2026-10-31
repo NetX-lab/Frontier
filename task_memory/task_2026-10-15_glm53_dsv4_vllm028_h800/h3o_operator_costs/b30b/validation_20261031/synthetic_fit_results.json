@@ -1,0 +1,67 @@
+{
+  "source_fixture": "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/pytest_initial/test_fit_and_launch_analysis_c0",
+  "checks": [
+    {
+      "component": "astra_intra",
+      "metric": "latency_us",
+      "expected": 2.5,
+      "actual": 2.5000000000000804,
+      "absolute_error": 8.038014698286133e-14,
+      "relative_error": 3.2152058793144536e-14,
+      "status": "PASS"
+    },
+    {
+      "component": "astra_intra",
+      "metric": "bandwidth_gbps",
+      "expected": 320.0,
+      "actual": 319.9999999999682,
+      "absolute_error": 3.177547114319168e-11,
+      "relative_error": 9.9298347322474e-14,
+      "status": "PASS"
+    },
+    {
+      "component": "astra_inter",
+      "metric": "latency_us",
+      "expected": 11.5,
+      "actual": 11.499999999998899,
+      "absolute_error": 1.1013412404281553e-12,
+      "relative_error": 9.576880351549176e-14,
+      "status": "PASS"
+    },
+    {
+      "component": "astra_inter",
+      "metric": "bandwidth_gbps",
+      "expected": 125.0,
+      "actual": 124.99999999997488,
+      "absolute_error": 2.5124791136477143e-11,
+      "relative_error": 2.0099832909181714e-13,
+      "status": "PASS"
+    },
+    {
+      "component": "nixl",
+      "metric": "latency_us",
+      "expected": 75.0,
+      "actual": 74.99999999999991,
+      "absolute_error": 8.526512829121202e-14,
+      "relative_error": 1.1368683772161603e-15,
+      "status": "PASS"
+    },
+    {
+      "component": "nixl",
+      "metric": "bandwidth_gbps",
+      "expected": 110.0,
+      "actual": 109.99999999999999,
+      "absolute_error": 1.4210854715202004e-14,
+      "relative_error": 1.291895883200182e-16,
+      "status": "PASS"
+    }
+  ],
+  "synthetic_launch": {
+    "status": "PREDICTED",
+    "native_kernel_count_read": 2240,
+    "predicted_K": 127.99999999999997,
+    "expected_K": 128,
+    "observed_native_K": 19
+  },
+  "limitation": "Recovered only synthetic known-parameter fixtures from the already completed required test; no measured H200 fits or launch depth."
+}

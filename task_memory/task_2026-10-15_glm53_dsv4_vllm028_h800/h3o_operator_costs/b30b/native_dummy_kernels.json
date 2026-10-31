@@ -1,0 +1,16 @@
+{
+  "role": "prefill",
+  "mode": "FULL",
+  "real": false,
+  "lane": 0,
+  "kernel_counts": [
+    2240
+  ],
+  "forwards_by_kernel_count": {
+    "2240": 93
+  },
+  "sources": [
+    "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792946186223519831.pt.trace.json.gz"
+  ],
+  "method": "v4_runtime_census.forward_kernel_events: every correlated dispatch kernel; all streams"
+}

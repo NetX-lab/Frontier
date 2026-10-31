@@ -487,13 +487,19 @@ ARCHITECTURE_PLANNERS = {
 }
 
 
-def plan_from_config(model_config: dict, parallel: ServingParallelism, grid: dict) -> list:
+def plan_from_config(model_config: dict, parallel: ServingParallelism, grid: dict, *,
+                     allow_link_probe_parallelism: bool = False) -> list:
     """Select the shape parser and planner by the model's first architecture."""
     architecture = model_config["architectures"][0]
     if architecture not in ARCHITECTURE_PLANNERS:
         raise ValueError(f"Unsupported architecture {architecture!r}; supported: "
                          f"{', '.join(ARCHITECTURE_PLANNERS)}")
     shape_parser, plan_builder = ARCHITECTURE_PLANNERS[architecture]
+    if allow_link_probe_parallelism:
+        if architecture != "DeepseekV4ForCausalLM":
+            raise ValueError("Link probe admission is supported only for V4")
+        return plan_builder(shape_parser(model_config), parallel, grid,
+                            allow_link_probe_parallelism=True)
     return plan_builder(shape_parser(model_config), parallel, grid)
 
 
@@ -506,7 +512,8 @@ def main() -> None:
     config = json.loads(args.config.read_text())
     parallel = ServingParallelism.from_engine(config["engine"])
     plan = plan_from_config(json.loads(Path(config["model_config"]).read_text()),
-                            parallel, config["grid"])
+                            parallel, config["grid"],
+                            allow_link_probe_parallelism=config.get("allow_link_probe_parallelism", False))
     settings = {key: int(config[key]) for key in RUN_SETTINGS}
     if args.list_cases:
         for scenario, call in plan:

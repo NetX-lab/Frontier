@@ -36,13 +36,24 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def checker_path(config, config_path):
+    """A stage may use the shared checker from a different launch directory."""
+    if config.get("runtime_check"):
+        return Path(config["workspace"]) / config["runtime_check"]
+    return Path(config_path).parent / "runtime_check.py"
+
+
 def build_lock(config, config_path):
     """Hash committed mounted sources and the pinned P2/native reference files."""
     workspace = Path(config["workspace"]).resolve()
     config_path = Path(config_path).resolve()
     sources = [workspace / "frontier/profiling/collectives" / name
                for name in BENCHMARK_MODULES]
-    sources += [config_path.parent / "runtime_check.py", workspace / K5_NODE_ENTRY, config_path]
+    sources += [checker_path(config, config_path), workspace / K5_NODE_ENTRY, config_path]
+    sources += [workspace / name for name in config.get("lock_sources", [])]
+    if config.get("node_entry"):
+        sources.append(workspace / config["node_entry"])
+    sources = list(dict.fromkeys(sources))
     relative = [str(path.relative_to(workspace)) for path in sources]
     status = subprocess.run(
         ["git", "-C", str(workspace), "status", "--porcelain", "--untracked-files=all",
@@ -66,9 +77,9 @@ def build_lock(config, config_path):
 def worker_command(config, config_path, lock_path):
     """Worker shell command, also inspectable without importing steptron."""
     config_path = Path(config_path)
-    check = shlex.join(["python3", str(config_path.parent / "runtime_check.py"),
+    check = shlex.join(["python3", str(checker_path(config, config_path)),
                         "--config", str(config_path), "--lock", str(lock_path)])
-    entry = shlex.join(["python3", "-u", str(Path(config["workspace"]) / K5_NODE_ENTRY),
+    entry = shlex.join(["python3", "-u", str(Path(config["workspace"]) / config.get("node_entry", K5_NODE_ENTRY)),
                        "--config", str(config_path)])
     command = shlex.join(["timeout", str(config["timeout_seconds"]), "bash", "-c",
                           check + " && " + entry])

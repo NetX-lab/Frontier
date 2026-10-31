@@ -1,0 +1,724 @@
+{
+  "captured_at": "2026-10-31T23:10:18.564692+08:00",
+  "status": "PASS",
+  "retained_paths_checked": 114,
+  "checks": [
+    {
+      "path": "README.md",
+      "expected_sha256": "8cd7ae9f7cb856b389ad0b6c17e16ca6546629eb4b7d57ff9c7c0a8192c5aa0c",
+      "actual_sha256": "8cd7ae9f7cb856b389ad0b6c17e16ca6546629eb4b7d57ff9c7c0a8192c5aa0c",
+      "status": "PASS"
+    },
+    {
+      "path": "docs/cli/README.md",
+      "expected_sha256": "c671e8d180099c9bb670c7493765b9a67f37d99b8fd3b1cfd88b759027bc0949",
+      "actual_sha256": "c671e8d180099c9bb670c7493765b9a67f37d99b8fd3b1cfd88b759027bc0949",
+      "status": "PASS"
+    },
+    {
+      "path": "docs/profiling/README.md",
+      "expected_sha256": "c56c0ab0d1d94b9f05832c5dc3a777f1b4c30e5200a961b8091175330f0fe4f5",
+      "actual_sha256": "c56c0ab0d1d94b9f05832c5dc3a777f1b4c30e5200a961b8091175330f0fe4f5",
+      "status": "PASS"
+    },
+    {
+      "path": "docs/roadmap/README.md",
+      "expected_sha256": "38b35ca37d3f16c22b4346e45e21f252a98bfe9952257fbad5138c718a6db8b2",
+      "actual_sha256": "38b35ca37d3f16c22b4346e45e21f252a98bfe9952257fbad5138c718a6db8b2",
+      "status": "PASS"
+    },
+    {
+      "path": "docs/training/README.md",
+      "expected_sha256": "2ac6859aae0f5742a82f8ea618cd9dde39a42ec99f026e7f681431109ceb2d44",
+      "actual_sha256": "2ac6859aae0f5742a82f8ea618cd9dde39a42ec99f026e7f681431109ceb2d44",
+      "status": "PASS"
+    },
+    {
+      "path": "examples/README.md",
+      "expected_sha256": "db66ee0eaa090e9125dfe1a4b2dc5b3b28254f3d053d7d676a7e631d9435799e",
+      "actual_sha256": "db66ee0eaa090e9125dfe1a4b2dc5b3b28254f3d053d7d676a7e631d9435799e",
+      "status": "PASS"
+    },
+    {
+      "path": "examples/architecture/README.md",
+      "expected_sha256": "8e081af0f20337c88ee4d2c7e5d04107bcd8975d22ef5004725faa3be0db5030",
+      "actual_sha256": "8e081af0f20337c88ee4d2c7e5d04107bcd8975d22ef5004725faa3be0db5030",
+      "status": "PASS"
+    },
+    {
+      "path": "examples/profiling/README.md",
+      "expected_sha256": "3e406d402183c08843098a3dc31449cd72f47678d8c62a856ade880b24ad8391",
+      "actual_sha256": "3e406d402183c08843098a3dc31449cd72f47678d8c62a856ade880b24ad8391",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/README.md",
+      "expected_sha256": "ca704ed0b81d3f1cb9bb5b076c0d972cf8032b4e169ced24e3d4d523d453bd6b",
+      "actual_sha256": "ca704ed0b81d3f1cb9bb5b076c0d972cf8032b4e169ced24e3d4d523d453bd6b",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/collectives/cuda_launch_depth.py",
+      "expected_sha256": "9495ee6da28d23e6b47cb146865a5c1f258470032ba2ac0dae223ed8ae576269",
+      "actual_sha256": "9495ee6da28d23e6b47cb146865a5c1f258470032ba2ac0dae223ed8ae576269",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/collectives/nixl_kv_read_benchmark.py",
+      "expected_sha256": "76ef39e01a39e60f18563776e62fc952f03b7480901b7e4738a0532089a3243b",
+      "actual_sha256": "76ef39e01a39e60f18563776e62fc952f03b7480901b7e4738a0532089a3243b",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/collectives/rank_placement.py",
+      "expected_sha256": "efa3a06234ea985a460fd75ff2dabc0a05217ba9ee6f71f56d3f6e412c7a5b88",
+      "actual_sha256": "efa3a06234ea985a460fd75ff2dabc0a05217ba9ee6f71f56d3f6e412c7a5b88",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_collective_benchmark.py",
+      "expected_sha256": "e7366d58aed788fd968427d16c1d212036c6dcc83fecf8f114ba0c73e37531a4",
+      "actual_sha256": "e7366d58aed788fd968427d16c1d212036c6dcc83fecf8f114ba0c73e37531a4",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_dsv4_forward_collectives.py",
+      "expected_sha256": "dc7c04d117b67bae9cc81ba48b917527ae17d8a5c06529bc60e2e3b51818c81b",
+      "actual_sha256": "dc7c04d117b67bae9cc81ba48b917527ae17d8a5c06529bc60e2e3b51818c81b",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/example/README.md",
+      "expected_sha256": "c3acee94b16ebb8eeaa049a88fbcde7732eb61f57141d28d6762d6debcaadce2",
+      "actual_sha256": "c3acee94b16ebb8eeaa049a88fbcde7732eb61f57141d28d6762d6debcaadce2",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/gdn/README.md",
+      "expected_sha256": "6d2697a9579253e87c3748249942597de18ec0b661a2154351d1b5aee57838d5",
+      "actual_sha256": "6d2697a9579253e87c3748249942597de18ec0b661a2154351d1b5aee57838d5",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/linear_op/README.md",
+      "expected_sha256": "f810316a9cc90d32b4768af6ca2d8b21b8a724bb239ea2e0de136da88007d87d",
+      "actual_sha256": "f810316a9cc90d32b4768af6ca2d8b21b8a724bb239ea2e0de136da88007d87d",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/moe/README.md",
+      "expected_sha256": "857502494ae3d15af21fe252f0ce14d6726e59d115b65ace548819db0375200e",
+      "actual_sha256": "857502494ae3d15af21fe252f0ce14d6726e59d115b65ace548819db0375200e",
+      "status": "PASS"
+    },
+    {
+      "path": "frontier/profiling/non_kv_cache_overhead/README.md",
+      "expected_sha256": "86fbc7e39f37d79d05a1176a9a3b0516fd08c5a753d2d25495bfaf7c5539beb5",
+      "actual_sha256": "86fbc7e39f37d79d05a1176a9a3b0516fd08c5a753d2d25495bfaf7c5539beb5",
+      "status": "PASS"
+    },
+    {
+      "path": "skills/README.md",
+      "expected_sha256": "425a71a276beba15e3377a072180a31df665f49c637e926e4284e7de9c71b700",
+      "actual_sha256": "425a71a276beba15e3377a072180a31df665f49c637e926e4284e7de9c71b700",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/design.md",
+      "expected_sha256": "524a27808f92fb99f3b1f720aa5110111ee3e517b9e43526e62f974844ddaa8f",
+      "actual_sha256": "524a27808f92fb99f3b1f720aa5110111ee3e517b9e43526e62f974844ddaa8f",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/future.md",
+      "expected_sha256": "19c7a63cb6f9ad63f1a4502dfae8f024d6b2a4aa2807e1edad294b7e9d2542cb",
+      "actual_sha256": "19c7a63cb6f9ad63f1a4502dfae8f024d6b2a4aa2807e1edad294b7e9d2542cb",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/README.md",
+      "expected_sha256": "1f5ff11fb64d60abecea118ee07513038c1d1ef24e33f1f44e22e23ced63d8ab",
+      "actual_sha256": "1f5ff11fb64d60abecea118ee07513038c1d1ef24e33f1f44e22e23ced63d8ab",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/dry_run/b30b_launch_depth.json",
+      "expected_sha256": "bd143747fcb741e5b81ad8efe022f9d786a0a4bf58fc81002d72ac801fcf2f20",
+      "actual_sha256": "bd143747fcb741e5b81ad8efe022f9d786a0a4bf58fc81002d72ac801fcf2f20",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/dry_run/b30b_launch_depth.txt",
+      "expected_sha256": "0157c344e67670d9852c2a593f7c75df51e0922c0376476e1345aa69caeec3f1",
+      "actual_sha256": "0157c344e67670d9852c2a593f7c75df51e0922c0376476e1345aa69caeec3f1",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/dry_run/b30b_links_kv.json",
+      "expected_sha256": "3fc7687d50899a0bf4a3b5b0aa573d43ac44d526a67d44239d0dcde57e90079e",
+      "actual_sha256": "3fc7687d50899a0bf4a3b5b0aa573d43ac44d526a67d44239d0dcde57e90079e",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/dry_run/b30b_links_kv.txt",
+      "expected_sha256": "6aedd24b2eab2ff60aa983911d56811c9fa5a8d5a49de1883f170e6eaad63d57",
+      "actual_sha256": "6aedd24b2eab2ff60aa983911d56811c9fa5a8d5a49de1883f170e6eaad63d57",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/fit_tools.py",
+      "expected_sha256": "df722722399102ff72697e40281bf433ad3dad6965c97a712298707b8fe30057",
+      "actual_sha256": "df722722399102ff72697e40281bf433ad3dad6965c97a712298707b8fe30057",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/kv_layout_evidence.json",
+      "expected_sha256": "9672246fe6e4001c34a90f8ebf4fb88e9309090c7a178214dccc1e2f6a781ea5",
+      "actual_sha256": "9672246fe6e4001c34a90f8ebf4fb88e9309090c7a178214dccc1e2f6a781ea5",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/launch_analysis.py",
+      "expected_sha256": "c18cf017effc6bcda55d8c6fcfc830999fb67be00aad7ab1a7801bc8042ed67c",
+      "actual_sha256": "c18cf017effc6bcda55d8c6fcfc830999fb67be00aad7ab1a7801bc8042ed67c",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/native_dummy_kernels.json",
+      "expected_sha256": "916171a3aa5c95b29d243ed430ce3af0eb4050c9729e7760aea52b9edf95a5e2",
+      "actual_sha256": "916171a3aa5c95b29d243ed430ce3af0eb4050c9729e7760aea52b9edf95a5e2",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/phase_runner.py",
+      "expected_sha256": "cfa0ae403530aefc728d177611813eaf1603412eaece6f6a9499c1dcd973fecd",
+      "actual_sha256": "cfa0ae403530aefc728d177611813eaf1603412eaece6f6a9499c1dcd973fecd",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/plan_preservation.json",
+      "expected_sha256": "c7187d3e3df2713377436ded7266c0d7135d6b4fb16a38a5bd925a72fd49e935",
+      "actual_sha256": "c7187d3e3df2713377436ded7266c0d7135d6b4fb16a38a5bd925a72fd49e935",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/planner.py",
+      "expected_sha256": "11b7e5c4ec8bea832c7291169e3510efc7a38c9d85443f6f91579d070139d00c",
+      "actual_sha256": "11b7e5c4ec8bea832c7291169e3510efc7a38c9d85443f6f91579d070139d00c",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_launch_depth.json",
+      "expected_sha256": "b0e5d2a62b2ae9d6cb20dec40549005f5392262b4183e8f53ae6555d9d6be3bb",
+      "actual_sha256": "b0e5d2a62b2ae9d6cb20dec40549005f5392262b4183e8f53ae6555d9d6be3bb",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_kv.json",
+      "expected_sha256": "e1838e5065abd7a9b1a6f3f4b30718665602abe793dfd06c72e743c5badceef7",
+      "actual_sha256": "e1838e5065abd7a9b1a6f3f4b30718665602abe793dfd06c72e743c5badceef7",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g1h/README.md",
+      "expected_sha256": "a11c97333d23fedbcb34f3895293b0f18f0aaf61da471e7cb47aa77390aab839",
+      "actual_sha256": "a11c97333d23fedbcb34f3895293b0f18f0aaf61da471e7cb47aa77390aab839",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g1h_supplement/README.md",
+      "expected_sha256": "fdc67e8f97c579a7fd7692f12537a1d925c057ad30a2612ab84adfc600fb6b15",
+      "actual_sha256": "fdc67e8f97c579a7fd7692f12537a1d925c057ad30a2612ab84adfc600fb6b15",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g2h_runner/README.md",
+      "expected_sha256": "69cd30da41e843fe3fe2a2f2b1528c03c8566733a17a886f682444c45c6022fb",
+      "actual_sha256": "69cd30da41e843fe3fe2a2f2b1528c03c8566733a17a886f682444c45c6022fb",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/runtime_check.py",
+      "expected_sha256": "44b1e98eaee39fb93be820791c5e8450ed22c32bed8f26f3abd4090c354ea701",
+      "actual_sha256": "44b1e98eaee39fb93be820791c5e8450ed22c32bed8f26f3abd4090c354ea701",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/issues.md",
+      "expected_sha256": "e633eba996de7b9ddf2c6d8c181c97d9f05dfc0b5c7e564ef54fa805c5cf0e00",
+      "actual_sha256": "e633eba996de7b9ddf2c6d8c181c97d9f05dfc0b5c7e564ef54fa805c5cf0e00",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "expected_sha256": "6555ca5887a1e3aa18ccceab6356fcf464af497f94575ff0fdb739562b41a1e7",
+      "actual_sha256": "6555ca5887a1e3aa18ccceab6356fcf464af497f94575ff0fdb739562b41a1e7",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "expected_sha256": "8e06f9fb99d089a3c7da7e303e47390ca4d5fb66163f5681d16dae27e769f4a6",
+      "actual_sha256": "8e06f9fb99d089a3c7da7e303e47390ca4d5fb66163f5681d16dae27e769f4a6",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "expected_sha256": "b284be96a1d80f2f9fdb7e0cd4eda562c6be6e9581a5b4400327499c6690c477",
+      "actual_sha256": "b284be96a1d80f2f9fdb7e0cd4eda562c6be6e9581a5b4400327499c6690c477",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/review_report_2026-10-25_dsv4_mainline_and_tickets.md",
+      "expected_sha256": "a9029e3c50677b0df2dfc8a80935f39cb42d332a1ab0f25fc33ba7aacbd998c2",
+      "actual_sha256": "a9029e3c50677b0df2dfc8a80935f39cb42d332a1ab0f25fc33ba7aacbd998c2",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "expected_sha256": "f02c8047ff2eeabcd337bfe3855db18404c471477e97806f353998bc3dfd63f6",
+      "actual_sha256": "f02c8047ff2eeabcd337bfe3855db18404c471477e97806f353998bc3dfd63f6",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h200_h4b_lifecycle.md",
+      "expected_sha256": "91b4f8916610b4606f655cbf4e53de7bd6a583a3dd5950fc06e481ab61c2eee5",
+      "actual_sha256": "91b4f8916610b4606f655cbf4e53de7bd6a583a3dd5950fc06e481ab61c2eee5",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h200_p2_diagnostic.md",
+      "expected_sha256": "91becc482037697e4423092692c256a2a567cded00c4155da0f016396ab7ad0a",
+      "actual_sha256": "91becc482037697e4423092692c256a2a567cded00c4155da0f016396ab7ad0a",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h200_package_preparation.md",
+      "expected_sha256": "582803491331c9d9dbd5c8578df91d3318851c676459304c96f8ed2d2a6fcaef",
+      "actual_sha256": "582803491331c9d9dbd5c8578df91d3318851c676459304c96f8ed2d2a6fcaef",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h4a_p0_diagnostic.md",
+      "expected_sha256": "853398eee7919f1e35a8878e9781c0d4f2022527803bea497ad596ee9caa7355",
+      "actual_sha256": "853398eee7919f1e35a8878e9781c0d4f2022527803bea497ad596ee9caa7355",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h4b_lifecycle_preparation.md",
+      "expected_sha256": "df7e70b4ac8a0096f15fe9ddbb990a59e6209e238b5af25f742ea28a8c5bbd58",
+      "actual_sha256": "df7e70b4ac8a0096f15fe9ddbb990a59e6209e238b5af25f742ea28a8c5bbd58",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h4c_step_cost_speed.md",
+      "expected_sha256": "0af5d854c9fa58668e09b5a62b9c71f52fc42e9f6c79aa3832d543083956a39f",
+      "actual_sha256": "0af5d854c9fa58668e09b5a62b9c71f52fc42e9f6c79aa3832d543083956a39f",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_p1b_package_preparation.md",
+      "expected_sha256": "987eb1dcea7498d6e6a2516a7e4f8a543908dfd4f0e2d7c436edb81ea544e8a8",
+      "actual_sha256": "987eb1dcea7498d6e6a2516a7e4f8a543908dfd4f0e2d7c436edb81ea544e8a8",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-26_h200_p2_64_lifecycle.md",
+      "expected_sha256": "73b2956fdda423f31ac5c782885515a8e2bf58bfedec153ea76f2c613c4a09da",
+      "actual_sha256": "73b2956fdda423f31ac5c782885515a8e2bf58bfedec153ea76f2c613c4a09da",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-26_h4b_item1_engine_step.md",
+      "expected_sha256": "2d2018f915c9c207deda8ae8d86cacecd1d51a3dfd8602d0a90b15a2ed08b413",
+      "actual_sha256": "2d2018f915c9c207deda8ae8d86cacecd1d51a3dfd8602d0a90b15a2ed08b413",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-26_h4b_item2_decode_depth2.md",
+      "expected_sha256": "367a6a21af542278963552bc289f73977a16673d5572121f2185c6f6c1508b0c",
+      "actual_sha256": "367a6a21af542278963552bc289f73977a16673d5572121f2185c6f6c1508b0c",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-26_h4b_k1_reprice.md",
+      "expected_sha256": "59989aa6c0f147d36fc6b317bd21dfccd287654fe10b3827628bb90c71501d8c",
+      "actual_sha256": "59989aa6c0f147d36fc6b317bd21dfccd287654fe10b3827628bb90c71501d8c",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-26_h800_h4b_lifecycle.md",
+      "expected_sha256": "f2b5d6d3e0cb2f946473fa4c752238666cffa3b335d8971497c4bbd76d5416f4",
+      "actual_sha256": "f2b5d6d3e0cb2f946473fa4c752238666cffa3b335d8971497c4bbd76d5416f4",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-26_step_cost_relocation.md",
+      "expected_sha256": "69160b325cb983cd1862b5b1827ccca565c8146a34efb4e9aa65a0c264d76674",
+      "actual_sha256": "69160b325cb983cd1862b5b1827ccca565c8146a34efb4e9aa65a0c264d76674",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-27_b1_graph_replay_integration.md",
+      "expected_sha256": "079edcba36b46419a2eefbe28a46a5621488773df095d0fef9b8c55271510e96",
+      "actual_sha256": "079edcba36b46419a2eefbe28a46a5621488773df095d0fef9b8c55271510e96",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-27_entry2_dsv4_composition.md",
+      "expected_sha256": "d57310f2803f28e9509bb78ae7cc63e4d9f5b4586e1ed032945ea36f4c2c35be",
+      "actual_sha256": "d57310f2803f28e9509bb78ae7cc63e4d9f5b4586e1ed032945ea36f4c2c35be",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-27_h3o_dp_sync.md",
+      "expected_sha256": "77534d548772a54c960038f84bc13706df198f487fd9cd91946c2a76365f4dad",
+      "actual_sha256": "77534d548772a54c960038f84bc13706df198f487fd9cd91946c2a76365f4dad",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-27_stage1a_library.md",
+      "expected_sha256": "67a5f8db1b272b36b2455930f5ed9037fb52885811513abc63b8e66e85a87216",
+      "actual_sha256": "67a5f8db1b272b36b2455930f5ed9037fb52885811513abc63b8e66e85a87216",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b10_g5h16.md",
+      "expected_sha256": "ec0cd63db17e9d5f53e5131b7a3f2d0af6cb1788e25a755f1fa2cc24a08fb9c8",
+      "actual_sha256": "ec0cd63db17e9d5f53e5131b7a3f2d0af6cb1788e25a755f1fa2cc24a08fb9c8",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b11_g1h_attention_grid.md",
+      "expected_sha256": "07cc80427a8903125e5429097785d7e3b282982984643576c75a2706e092de65",
+      "actual_sha256": "07cc80427a8903125e5429097785d7e3b282982984643576c75a2706e092de65",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b12_g3h_moe_rank_classes.md",
+      "expected_sha256": "57c80b87fd313de30285a5b1225107ed1ec72bd2188805409b8f5f9f01445945",
+      "actual_sha256": "57c80b87fd313de30285a5b1225107ed1ec72bd2188805409b8f5f9f01445945",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b13_v4_standalone_operators.md",
+      "expected_sha256": "7d2e1eceff487553517add1fdc7288dfa424f9200eff6d2aef43e681384faf89",
+      "actual_sha256": "7d2e1eceff487553517add1fdc7288dfa424f9200eff6d2aef43e681384faf89",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b2_replay_gaps_composition.md",
+      "expected_sha256": "1057b2e143f3dcb665560683de8e4d87dd1dd3eb3f372d40eac1f0bc755460e2",
+      "actual_sha256": "1057b2e143f3dcb665560683de8e4d87dd1dd3eb3f372d40eac1f0bc755460e2",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b3_hold_pilot_identity.md",
+      "expected_sha256": "ac27ee46e2075b4c68f980f7e0a1ab10d3ab19a2416da51c7ebbf2be3fd68111",
+      "actual_sha256": "ac27ee46e2075b4c68f980f7e0a1ab10d3ab19a2416da51c7ebbf2be3fd68111",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b4_tile_schedule_groups.md",
+      "expected_sha256": "db882bc63adafeb2d412981cfbd0cf3e0c307c378286f7e8d8bed0165600b9da",
+      "actual_sha256": "db882bc63adafeb2d412981cfbd0cf3e0c307c378286f7e8d8bed0165600b9da",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b5_identity_shape_keys.md",
+      "expected_sha256": "a8ff04ab231d5bb742a297478f5dcdeb1d3161dd039eec458c8539363cc242e0",
+      "actual_sha256": "a8ff04ab231d5bb742a297478f5dcdeb1d3161dd039eec458c8539363cc242e0",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b6_replay_rows.md",
+      "expected_sha256": "0dca6ccecaff33436fab02666a806d07bdf5f51d02d58b5c84b08d9515d4a0bd",
+      "actual_sha256": "0dca6ccecaff33436fab02666a806d07bdf5f51d02d58b5c84b08d9515d4a0bd",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b7_dsv4_attention_predictor.md",
+      "expected_sha256": "8dc09f175ec380a95e7f3b8251bb4ae2e9cd55b047573b21b27b8fe7e99c3a8e",
+      "actual_sha256": "8dc09f175ec380a95e7f3b8251bb4ae2e9cd55b047573b21b27b8fe7e99c3a8e",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b8_dsv4_attention_runtime.md",
+      "expected_sha256": "ca95aa15edf60d4512ed973dc9ea454ea250d364c62d2f51ecb3bb0fb6887976",
+      "actual_sha256": "ca95aa15edf60d4512ed973dc9ea454ea250d364c62d2f51ecb3bb0fb6887976",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_b9_dsv4_forward_collectives.md",
+      "expected_sha256": "8b227f4ac55dfbe0022c6027e44cc9950275c1542a74ce1faa428f62ce301ef2",
+      "actual_sha256": "8b227f4ac55dfbe0022c6027e44cc9950275c1542a74ce1faa428f62ce301ef2",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_g1h_worker_import_fix.md",
+      "expected_sha256": "ae011ebe8b0391ff4e874e56033093604dcd44d1bcc1974caef72d1d27b1f89c",
+      "actual_sha256": "ae011ebe8b0391ff4e874e56033093604dcd44d1bcc1974caef72d1d27b1f89c",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_g5h_collective_kernel_comparison.md",
+      "expected_sha256": "cef2555dfdf721f08c40dd9e18bdbe8da81a3765009b94717da326d457f12be7",
+      "actual_sha256": "cef2555dfdf721f08c40dd9e18bdbe8da81a3765009b94717da326d457f12be7",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-28_p1h_package03.md",
+      "expected_sha256": "6ad8f5e2ea8209328463c7a168082a6e7c99bea0baaf0334b8a72f15e0443073",
+      "actual_sha256": "6ad8f5e2ea8209328463c7a168082a6e7c99bea0baaf0334b8a72f15e0443073",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b13r_v4_runner_operators.md",
+      "expected_sha256": "c61908cf8291a97842e3570b6cfe755033eda7e497f82b91c428b2ed6933f7d0",
+      "actual_sha256": "c61908cf8291a97842e3570b6cfe755033eda7e497f82b91c428b2ed6933f7d0",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b13s_g2h_sampling_scope.md",
+      "expected_sha256": "0cad9c4ebd1ea5b796f4f645947a31be83760a41c948ce3e82f6072a7c2ac6ee",
+      "actual_sha256": "0cad9c4ebd1ea5b796f4f645947a31be83760a41c948ce3e82f6072a7c2ac6ee",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b15_v4_collective_consumer.md",
+      "expected_sha256": "9ccc27bc4dc6094577e82f84077de1a6c3e97c1c269bb8f9f76292b434a179bb",
+      "actual_sha256": "9ccc27bc4dc6094577e82f84077de1a6c3e97c1c269bb8f9f76292b434a179bb",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b16_v4_operator_consumer.md",
+      "expected_sha256": "d1a6f7c2193ed4b0eb5bf455bed0e935fe60cb3faa9ba5f31117bbf71d0d8ac8",
+      "actual_sha256": "d1a6f7c2193ed4b0eb5bf455bed0e935fe60cb3faa9ba5f31117bbf71d0d8ac8",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b17_v4_runner_operators.md",
+      "expected_sha256": "ca4ee31982963951120e68e407a1dacf46619d6415758248267c3108d165c9b0",
+      "actual_sha256": "ca4ee31982963951120e68e407a1dacf46619d6415758248267c3108d165c9b0",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b17b_v4_sampling_contract.md",
+      "expected_sha256": "01a6a516a284f98160b25d53e4faf1f08fb44a7bc9741a3ab1438c1f7ea08353",
+      "actual_sha256": "01a6a516a284f98160b25d53e4faf1f08fb44a7bc9741a3ab1438c1f7ea08353",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b18_first_tail_dispatch.md",
+      "expected_sha256": "88b4730c93ff8f52942fb7f50ea8e7efca39ae95312cf4ae7716e76bcd149f27",
+      "actual_sha256": "88b4730c93ff8f52942fb7f50ea8e7efca39ae95312cf4ae7716e76bcd149f27",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b19_joint_coverage_heldout.md",
+      "expected_sha256": "a293417a7f713aa5f4c51eaaaeabcda46d594343e6e419f90789c3eed1c4f4cc",
+      "actual_sha256": "a293417a7f713aa5f4c51eaaaeabcda46d594343e6e419f90789c3eed1c4f4cc",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b20_operator_path_speed.md",
+      "expected_sha256": "10bc320acf1a372f8f1b85ebff9fe8362abe5e1d712f99c1c7fb82208b7035a3",
+      "actual_sha256": "10bc320acf1a372f8f1b85ebff9fe8362abe5e1d712f99c1c7fb82208b7035a3",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b21_replay_census.md",
+      "expected_sha256": "77c02616c8cb8d88327cd2594d60f13912df80460c82f463a42deb2b50d44fe4",
+      "actual_sha256": "77c02616c8cb8d88327cd2594d60f13912df80460c82f463a42deb2b50d44fe4",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_b22_g1h_writer_supplement.md",
+      "expected_sha256": "dc742b81c3bc40990799e0fd33e3d905c549b4935fac5b3644631810e6f7f435",
+      "actual_sha256": "dc742b81c3bc40990799e0fd33e3d905c549b4935fac5b3644631810e6f7f435",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_g2h_runner_01.md",
+      "expected_sha256": "f16514cd4520ee13261137df029c8517c8a167fcd26147b49816cfd63a4948d9",
+      "actual_sha256": "f16514cd4520ee13261137df029c8517c8a167fcd26147b49816cfd63a4948d9",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_g2h_runner_02.md",
+      "expected_sha256": "865718cea6e8e152ec65a6fccca31e2ac4cd21d9951a2a819261447c3eb4bac8",
+      "actual_sha256": "865718cea6e8e152ec65a6fccca31e2ac4cd21d9951a2a819261447c3eb4bac8",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-29_g2h_runner_04.md",
+      "expected_sha256": "030fdd5bbb4eafc156f8654fb4a30f18d71de76df32be08dfb9a5006ffdaa20e",
+      "actual_sha256": "030fdd5bbb4eafc156f8654fb4a30f18d71de76df32be08dfb9a5006ffdaa20e",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-30_a10_operator_path_replay.md",
+      "expected_sha256": "2c7f8e58bd0692cc26bcacdb6f6da422d49e301b184813ee48a0d0e0b67b1901",
+      "actual_sha256": "2c7f8e58bd0692cc26bcacdb6f6da422d49e301b184813ee48a0d0e0b67b1901",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-30_b24_v4_ep_lane_reuse.md",
+      "expected_sha256": "3f081391c235bfd9c02d5a3235e5824606861d0e44578ce816c7879bd8b3ad88",
+      "actual_sha256": "3f081391c235bfd9c02d5a3235e5824606861d0e44578ce816c7879bd8b3ad88",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-30_b26_dp_host_run_ahead.md",
+      "expected_sha256": "56debea618b12f31076f3750ef610bab40f7317494dfcb3aaba49095e895056b",
+      "actual_sha256": "56debea618b12f31076f3750ef610bab40f7317494dfcb3aaba49095e895056b",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-31_ex_situ_input_audit.md",
+      "expected_sha256": "43276b9338744fdf18111a1db8405bb59851bbe99959c5b5ac96bec8caed55b4",
+      "actual_sha256": "43276b9338744fdf18111a1db8405bb59851bbe99959c5b5ac96bec8caed55b4",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "expected_sha256": "3fcbb52341a2905451c88506895b0de57bc5969a8ff0cc695983a74f911b50cc",
+      "actual_sha256": "3fcbb52341a2905451c88506895b0de57bc5969a8ff0cc695983a74f911b50cc",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/07-nixl-pd-integration.md",
+      "expected_sha256": "46b8b9ad4e582fb511910fd41c57d7f62ddf9158cac5f8e99e872eb35d2dbd0c",
+      "actual_sha256": "46b8b9ad4e582fb511910fd41c57d7f62ddf9158cac5f8e99e872eb35d2dbd0c",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "expected_sha256": "8dada25dc65ec197545a14bde7911e9d6a55a9d8000075613b6d71ec890f106f",
+      "actual_sha256": "8dada25dc65ec197545a14bde7911e9d6a55a9d8000075613b6d71ec890f106f",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/10-h800-predictive-e2e.md",
+      "expected_sha256": "381402c65f664dd2c7b3874bf44a09b75b49b5fdeefa489df9ac2280815e5465",
+      "actual_sha256": "381402c65f664dd2c7b3874bf44a09b75b49b5fdeefa489df9ac2280815e5465",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/17-dsv4-canonical-case.md",
+      "expected_sha256": "fea48cb09bb140bec23b2879391ab6e91b8ac42de9002ffa43c63a376ba69de7",
+      "actual_sha256": "fea48cb09bb140bec23b2879391ab6e91b8ac42de9002ffa43c63a376ba69de7",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/18-native-ground-truth-h200.md",
+      "expected_sha256": "c0a3870f19dd6ad599b0e3610ca29131d7422822383d73ca2a0d5c1d7dc2bd58",
+      "actual_sha256": "c0a3870f19dd6ad599b0e3610ca29131d7422822383d73ca2a0d5c1d7dc2bd58",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "expected_sha256": "3c3a53353fa8314ab561e598d1e5bc2f144983ec55830d7c5e90c02308dae9f7",
+      "actual_sha256": "3c3a53353fa8314ab561e598d1e5bc2f144983ec55830d7c5e90c02308dae9f7",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "expected_sha256": "3213c7267a0123290746d3b6c47b30a558d5cf7fcdba508354c904c14b8160b9",
+      "actual_sha256": "3213c7267a0123290746d3b6c47b30a558d5cf7fcdba508354c904c14b8160b9",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/README.md",
+      "expected_sha256": "ca704ed0b81d3f1cb9bb5b076c0d972cf8032b4e169ced24e3d4d523d453bd6b",
+      "actual_sha256": "ca704ed0b81d3f1cb9bb5b076c0d972cf8032b4e169ced24e3d4d523d453bd6b",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/example/README.md",
+      "expected_sha256": "c3acee94b16ebb8eeaa049a88fbcde7732eb61f57141d28d6762d6debcaadce2",
+      "actual_sha256": "c3acee94b16ebb8eeaa049a88fbcde7732eb61f57141d28d6762d6debcaadce2",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/gdn/README.md",
+      "expected_sha256": "6d2697a9579253e87c3748249942597de18ec0b661a2154351d1b5aee57838d5",
+      "actual_sha256": "6d2697a9579253e87c3748249942597de18ec0b661a2154351d1b5aee57838d5",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/linear_op/README.md",
+      "expected_sha256": "f810316a9cc90d32b4768af6ca2d8b21b8a724bb239ea2e0de136da88007d87d",
+      "actual_sha256": "f810316a9cc90d32b4768af6ca2d8b21b8a724bb239ea2e0de136da88007d87d",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/moe/README.md",
+      "expected_sha256": "857502494ae3d15af21fe252f0ce14d6726e59d115b65ace548819db0375200e",
+      "actual_sha256": "857502494ae3d15af21fe252f0ce14d6726e59d115b65ace548819db0375200e",
+      "status": "PASS"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/source/56e9405dad76d30d4ada9d5bdab124f898bf5065/frontier/profiling/non_kv_cache_overhead/README.md",
+      "expected_sha256": "86fbc7e39f37d79d05a1176a9a3b0516fd08c5a753d2d25495bfaf7c5539beb5",
+      "actual_sha256": "86fbc7e39f37d79d05a1176a9a3b0516fd08c5a753d2d25495bfaf7c5539beb5",
+      "status": "PASS"
+    },
+    {
+      "path": "tests/analysis/v4_dummy_kernel_count.py",
+      "expected_sha256": "0afcc8b65850b831b886a569848ecd97232948641adb6e74fadd8408bdfd4278",
+      "actual_sha256": "0afcc8b65850b831b886a569848ecd97232948641adb6e74fadd8408bdfd4278",
+      "status": "PASS"
+    },
+    {
+      "path": "tests/comparison/e2e_gate/README.md",
+      "expected_sha256": "33d26ec906891f1f912bf4c6d88e778d6585385d8b02bcfa2a066ca410bd289b",
+      "actual_sha256": "33d26ec906891f1f912bf4c6d88e778d6585385d8b02bcfa2a066ca410bd289b",
+      "status": "PASS"
+    },
+    {
+      "path": "tests/fixtures/pr31_hybrid/README.md",
+      "expected_sha256": "570cb2e3d4970ec33160392ff1619068fcfbee7749747b7b3396cf2201d8fb80",
+      "actual_sha256": "570cb2e3d4970ec33160392ff1619068fcfbee7749747b7b3396cf2201d8fb80",
+      "status": "PASS"
+    },
+    {
+      "path": "tests/unit/test_b30b_ex_situ_probes.py",
+      "expected_sha256": "6c1e9a37cd258fa4c03cf819614a0dc05f1bceb202c562c6392693f8e03683a2",
+      "actual_sha256": "6c1e9a37cd258fa4c03cf819614a0dc05f1bceb202c562c6392693f8e03683a2",
+      "status": "PASS"
+    }
+  ],
+  "writers": [],
+  "writer_method": "Scoped /proc writable-fd census; current command and ancestors excluded; no process arguments retained.",
+  "original_visible_diff": {
+    "paths": 8,
+    "added": 677,
+    "deleted": 11,
+    "changed_lines": 688
+  },
+  "frontier_diff": {
+    "paths": 5,
+    "added": 235,
+    "deleted": 8,
+    "changed_lines": 243
+  },
+  "original_ignored_b30b_python_lines": 679,
+  "source_repairs_in_continuation": 0,
+  "reviewed_implementation_paths": [
+    "frontier/profiling/collectives/nixl_kv_read_benchmark.py",
+    "frontier/profiling/collectives/vllm_collective_benchmark.py",
+    "frontier/profiling/collectives/vllm_dsv4_forward_collectives.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/runtime_check.py",
+    "frontier/profiling/collectives/cuda_launch_depth.py",
+    "frontier/profiling/collectives/rank_placement.py",
+    "tests/analysis/v4_dummy_kernel_count.py",
+    "tests/unit/test_b30b_ex_situ_probes.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/planner.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/phase_runner.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/fit_tools.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/launch_analysis.py"
+  ],
+  "standards_findings": [],
+  "spec_findings": [],
+  "limitations": "Bounded manual source review plus the required CPU checks; not an independent sub-agent review or hardware acceptance."
+}

@@ -1,0 +1,95 @@
+{
+  "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+  "glibc": [
+    "glibc",
+    "2.35"
+  ],
+  "packages": {
+    "numpy": {
+      "version": "1.24.3",
+      "path": "/usr/local/lib/python3.10/dist-packages/numpy/__init__.py"
+    },
+    "scipy": {
+      "version": "1.10.1",
+      "path": "/usr/local/lib/python3.10/dist-packages/scipy/__init__.py"
+    },
+    "pandas": {
+      "version": "2.0.1",
+      "path": "/usr/local/lib/python3.10/dist-packages/pandas/__init__.py"
+    },
+    "pytest": {
+      "version": "9.1.1",
+      "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pytest/__init__.py"
+    }
+  },
+  "supplied_torch": {
+    "version": "2.1.0+cu121",
+    "path": "/usr/local/lib/python3.10/dist-packages/torch/__init__.py",
+    "cuda_available": false,
+    "observation": "Already collected during baseline verification; not a worker CUDA test."
+  },
+  "variables": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes:/usr/local/lib/python3.10/dist-packages:/usr/lib/python3/dist-packages",
+    "TMPDIR": "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/tmp",
+    "XDG_CACHE_HOME": "/data/ycfeng/tmp/b30b_sidecar_20261031_2257/cache",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "memory_limit_kib": 31457280,
+  "scratch": "/data/ycfeng/tmp/b30b_sidecar_20261031_2257",
+  "pytest_module_counts": {
+    "tests.unit.test_b30b_ex_situ_probes": 28,
+    "tests.unit.test_collective_benchmark_helpers": 18,
+    "tests.unit.test_vllm_dsv4_forward_collectives": 58,
+    "tests.unit.test_vllm_forward_collectives": 15,
+    "tests.unit.test_collective_kernel_evidence": 3,
+    "task_memory.task_2026-10-15_glm53_dsv4_vllm028_h800.h3o_operator_costs.g5h.launch.tests.test_runtime_check": 41
+  },
+  "base_cpu_environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "modules": {
+      "numpy": {
+        "version": "2.2.6",
+        "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/numpy/__init__.py"
+      },
+      "scipy": {
+        "version": "1.15.3",
+        "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/scipy/__init__.py"
+      },
+      "pandas": {
+        "version": "2.3.3",
+        "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/__init__.py"
+      },
+      "pytest": {
+        "version": "9.1.1",
+        "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pytest/__init__.py"
+      }
+    }
+  },
+  "required_pytest_environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "modules": {
+      "numpy": {
+        "version": "1.24.3",
+        "path": "/usr/local/lib/python3.10/dist-packages/numpy/__init__.py"
+      },
+      "scipy": {
+        "version": "1.10.1",
+        "path": "/usr/local/lib/python3.10/dist-packages/scipy/__init__.py"
+      },
+      "pandas": {
+        "version": "2.0.1",
+        "path": "/usr/local/lib/python3.10/dist-packages/pandas/__init__.py"
+      },
+      "pytest": {
+        "version": "9.1.1",
+        "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pytest/__init__.py"
+      }
+    }
+  },
+  "version_note": "Base CPU environment package versions differ from imports under the explicit PYTHONPATH used by the required suite. Both import paths and versions are retained."
+}

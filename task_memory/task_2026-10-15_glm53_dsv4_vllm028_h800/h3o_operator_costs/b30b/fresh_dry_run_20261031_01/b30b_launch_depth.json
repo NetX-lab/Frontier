@@ -1,0 +1,555 @@
+{
+  "stage": "b30b_launch_depth",
+  "total_cases": 84,
+  "phases": [
+    {
+      "name": "F2_launch_depth",
+      "copies": 1,
+      "cases_per_copy": 84,
+      "total_cases": 84,
+      "cases": [
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 8,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 8,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 8,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 8,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 8,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 8,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 16,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 16,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 16,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 16,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 16,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 16,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 32,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 32,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 32,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 32,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 32,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 32,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 64,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 64,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 64,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 64,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 64,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 64,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 128,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 128,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 128,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 128,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 128,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 128,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 256,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 256,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 256,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 256,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 256,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 256,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 512,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 512,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 512,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 512,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 512,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 512,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1024,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1024,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1024,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1024,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1024,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 1024,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2048,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2048,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2048,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2048,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2048,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 2048,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4096,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4096,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4096,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4096,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4096,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "graph",
+          "kernels_per_graph": 4096,
+          "sleep_ms": 1000,
+          "trial": 2
+        },
+        {
+          "mode": "plain",
+          "kernels_per_graph": 1,
+          "sleep_ms": 500,
+          "trial": 0
+        },
+        {
+          "mode": "plain",
+          "kernels_per_graph": 1,
+          "sleep_ms": 500,
+          "trial": 1
+        },
+        {
+          "mode": "plain",
+          "kernels_per_graph": 1,
+          "sleep_ms": 500,
+          "trial": 2
+        },
+        {
+          "mode": "plain",
+          "kernels_per_graph": 1,
+          "sleep_ms": 1000,
+          "trial": 0
+        },
+        {
+          "mode": "plain",
+          "kernels_per_graph": 1,
+          "sleep_ms": 1000,
+          "trial": 1
+        },
+        {
+          "mode": "plain",
+          "kernels_per_graph": 1,
+          "sleep_ms": 1000,
+          "trial": 2
+        }
+      ],
+      "estimate": {
+        "service_seconds": 305.25628710937497,
+        "overhead_seconds": 8.191,
+        "process_startup_seconds": 45,
+        "wall_seconds": 358.44728710937494,
+        "arithmetic": "sleep sum + worst-case 44040192 enqueued kernels * G5h min call 5.5008us/1e6 + capture + process startup"
+      },
+      "gpu_indices": [
+        [
+          0
+        ]
+      ],
+      "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01/F2_launch_depth"
+    }
+  ],
+  "startup_seconds": 180,
+  "unpadded_wall_seconds": 538.4472871093749,
+  "safety_factor": 1.5,
+  "wall_seconds": 807.6709306640623,
+  "allocated_gpus": 1,
+  "gpu_hours": 0.22435303629557288,
+  "timeout_seconds": 3600,
+  "timeout_gpu_hours": 1.0,
+  "arithmetic": "(180 + sum(phase wall seconds))*1.5; GPUh=wall*1/3600",
+  "timings_use": "G5h and K5 are wall-time proxies only; excluded from F1b/F3 parameter fits",
+  "timing_sources": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/download/summary.csv",
+      "sha256": "c142ac9a876f18f8c3af7386a33dd822a2b48b7c2be30b9df7aefbae71f42673"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/download/summary.csv",
+      "sha256": "0ca76121531180eb69199a084821feaccd8d65d430d5ecabf04edcd2551990ca"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w5_comm_k5/nixl_summary.csv",
+      "sha256": "8b16ca8f34845d4319bb350b059721b1361db6eefeab7260ec262693147579e0"
+    }
+  ]
+}

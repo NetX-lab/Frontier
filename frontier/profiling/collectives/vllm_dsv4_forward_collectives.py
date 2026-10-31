@@ -70,9 +70,18 @@ class DeepseekV4Shape:
 
 
 def dsv4_forward_collectives(model: DeepseekV4Shape, parallel: ServingParallelism,
-                             scenario: ForwardScenario) -> list[CollectiveCall]:
+                             scenario: ForwardScenario, *,
+                             allow_link_probe_parallelism: bool = False) -> list[CollectiveCall]:
     """Distinct collective calls, in the G5h §3 call-list order, of one step."""
-    parallel.validate_sequence_parallel_moe()
+    if allow_link_probe_parallelism:
+        # B30b isolates SP-shaped operators on link-sized worlds. This is a
+        # profiling admission, not a claim that a native full forward uses SP.
+        if parallel.tensor_parallel_size < 1 or parallel.data_parallel_size < 1:
+            raise ValueError("Link probes require positive TP and DP")
+        replace(parallel, tensor_parallel_size=max(2, parallel.tensor_parallel_size),
+                data_parallel_size=max(2, parallel.data_parallel_size)).validate_sequence_parallel_moe()
+    else:
+        parallel.validate_sequence_parallel_moe()
     tp, dp = parallel.tensor_parallel_size, parallel.data_parallel_size
     if len(scenario.tokens_per_dp_rank) != dp or len(scenario.logit_rows_per_dp_rank) != dp:
         raise ValueError("Scenario must give one token and logits count per DP rank")
@@ -120,7 +129,8 @@ def dsv4_forward_collectives(model: DeepseekV4Shape, parallel: ServingParallelis
 
 
 def dsv4_plan(model: DeepseekV4Shape, parallel: ServingParallelism,
-              grid: dict) -> list[tuple[ForwardScenario, CollectiveCall]]:
+              grid: dict, *, allow_link_probe_parallelism: bool = False
+              ) -> list[tuple[ForwardScenario, CollectiveCall]]:
     """Select G5h graph, ordered eager-lane and eager-logits measurements."""
     unknown = set(grid) - set(GRID_KEYS)
     if unknown:
@@ -133,7 +143,8 @@ def dsv4_plan(model: DeepseekV4Shape, parallel: ServingParallelism,
 
     def append(scenario, keep):
         plan.extend((scenario, call) for call in
-                    dsv4_forward_collectives(model, parallel, scenario)
+                    dsv4_forward_collectives(model, parallel, scenario,
+                                            allow_link_probe_parallelism=allow_link_probe_parallelism)
                     if keep(call) and (selected is None or call.name in selected))
 
     for tokens in grid.get("graph_tokens_per_lane", []):

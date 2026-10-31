@@ -1,0 +1,537 @@
+{
+  "status": "PASS",
+  "jobs": [
+    {
+      "stage": "b30b_links_kv",
+      "total_cases": 628,
+      "planned_pass_rows": 1884,
+      "phases": [
+        {
+          "name": "A_intra",
+          "cases_per_copy": 132,
+          "copies": 2,
+          "total_cases": 264,
+          "planned_pass_rows": 792,
+          "wall_seconds": 252.7005644989252,
+          "timeout_seconds": 900
+        },
+        {
+          "name": "B_same_rail",
+          "cases_per_copy": 142,
+          "copies": 1,
+          "total_cases": 142,
+          "planned_pass_rows": 426,
+          "wall_seconds": 342.8460085073471,
+          "timeout_seconds": 1200
+        },
+        {
+          "name": "B_ring_boundary",
+          "cases_per_copy": 142,
+          "copies": 1,
+          "total_cases": 142,
+          "planned_pass_rows": 426,
+          "wall_seconds": 342.8460085073471,
+          "timeout_seconds": 1200
+        },
+        {
+          "name": "C_nixl",
+          "cases_per_copy": 80,
+          "copies": 1,
+          "total_cases": 80,
+          "planned_pass_rows": 240,
+          "wall_seconds": 199.48209916539938,
+          "timeout_seconds": 600
+        }
+      ],
+      "allocated_gpus": 16,
+      "unpadded_wall_seconds": 1317.8746806790189,
+      "wall_seconds": 1976.8120210185284,
+      "gpu_hours": 8.785831204526794,
+      "timeout_seconds": 4500,
+      "timeout_gpu_hours": 20.0,
+      "plan_path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/fresh_dry_run_20261031_01/b30b_links_kv.json"
+    },
+    {
+      "stage": "b30b_launch_depth",
+      "total_cases": 84,
+      "planned_pass_rows": 84,
+      "phases": [
+        {
+          "name": "F2_launch_depth",
+          "cases_per_copy": 84,
+          "copies": 1,
+          "total_cases": 84,
+          "planned_pass_rows": 84,
+          "wall_seconds": 358.44728710937494,
+          "timeout_seconds": 3000
+        }
+      ],
+      "allocated_gpus": 1,
+      "unpadded_wall_seconds": 538.4472871093749,
+      "wall_seconds": 807.6709306640623,
+      "gpu_hours": 0.22435303629557288,
+      "timeout_seconds": 3600,
+      "timeout_gpu_hours": 1.0,
+      "plan_path": "/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/fresh_dry_run_20261031_01/b30b_launch_depth.json"
+    }
+  ],
+  "combined_gpu_hours": 9.010184240822367,
+  "combined_timeout_gpu_hours": 21.0,
+  "checks": [
+    {
+      "name": "timing_sha256:/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/download/summary.csv",
+      "expected": "c142ac9a876f18f8c3af7386a33dd822a2b48b7c2be30b9df7aefbae71f42673",
+      "actual": "c142ac9a876f18f8c3af7386a33dd822a2b48b7c2be30b9df7aefbae71f42673",
+      "status": "PASS"
+    },
+    {
+      "name": "timing_sha256:/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/download/summary.csv",
+      "expected": "0ca76121531180eb69199a084821feaccd8d65d430d5ecabf04edcd2551990ca",
+      "actual": "0ca76121531180eb69199a084821feaccd8d65d430d5ecabf04edcd2551990ca",
+      "status": "PASS"
+    },
+    {
+      "name": "timing_sha256:/data/ycfeng/tmp/glm53_dsv4/w5_comm_k5/nixl_summary.csv",
+      "expected": "8b16ca8f34845d4319bb350b059721b1361db6eefeab7260ec262693147579e0",
+      "actual": "8b16ca8f34845d4319bb350b059721b1361db6eefeab7260ec262693147579e0",
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:case_array_length",
+      "expected": 132,
+      "actual": 132,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:copies",
+      "expected": 2,
+      "actual": 2,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:case_total",
+      "expected": 264,
+      "actual": 264,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:case_uniqueness",
+      "expected": 132,
+      "actual": 132,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:service_multiplier",
+      "expected": 1216,
+      "actual": 1216,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:graph_cases",
+      "expected": 42,
+      "actual": 42,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:service_seconds",
+      "expected": 88.9005644989252,
+      "actual": 88.9005644989252,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:overhead_seconds",
+      "expected": 118.8,
+      "actual": 118.8,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:wall_seconds",
+      "expected": 252.7005644989252,
+      "actual": 252.7005644989252,
+      "status": "PASS"
+    },
+    {
+      "name": "A_intra:padded_phase_below_timeout",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:case_array_length",
+      "expected": 142,
+      "actual": 142,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:copies",
+      "expected": 1,
+      "actual": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:case_total",
+      "expected": 142,
+      "actual": 142,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:case_uniqueness",
+      "expected": 142,
+      "actual": 142,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:service_multiplier",
+      "expected": 376,
+      "actual": 376,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:graph_cases",
+      "expected": 14,
+      "actual": 14,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:service_seconds",
+      "expected": 170.04600850734712,
+      "actual": 170.04600850734712,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:overhead_seconds",
+      "expected": 127.8,
+      "actual": 127.8,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:wall_seconds",
+      "expected": 342.8460085073471,
+      "actual": 342.8460085073471,
+      "status": "PASS"
+    },
+    {
+      "name": "B_same_rail:padded_phase_below_timeout",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:case_array_length",
+      "expected": 142,
+      "actual": 142,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:copies",
+      "expected": 1,
+      "actual": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:case_total",
+      "expected": 142,
+      "actual": 142,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:case_uniqueness",
+      "expected": 142,
+      "actual": 142,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:service_multiplier",
+      "expected": 376,
+      "actual": 376,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:graph_cases",
+      "expected": 14,
+      "actual": 14,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:service_seconds",
+      "expected": 170.04600850734712,
+      "actual": 170.04600850734712,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:overhead_seconds",
+      "expected": 127.8,
+      "actual": 127.8,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:wall_seconds",
+      "expected": 342.8460085073471,
+      "actual": 342.8460085073471,
+      "status": "PASS"
+    },
+    {
+      "name": "B_ring_boundary:padded_phase_below_timeout",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:case_array_length",
+      "expected": 80,
+      "actual": 80,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:copies",
+      "expected": 1,
+      "actual": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:case_total",
+      "expected": 80,
+      "actual": 80,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:case_uniqueness",
+      "expected": 80,
+      "actual": 80,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:max_pool_use",
+      "expected": 864,
+      "actual": 864,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:pool_admits_all_cases",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:T6144_live_blocks",
+      "expected": 46,
+      "actual": 46,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:T8192_live_blocks",
+      "expected": [
+        54
+      ],
+      "actual": [
+        54
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:service_seconds",
+      "expected": 106.48209916539938,
+      "actual": 106.48209916539936,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:overhead_seconds",
+      "expected": 48.0,
+      "actual": 48.0,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:wall_seconds",
+      "expected": 199.48209916539938,
+      "actual": 199.48209916539935,
+      "status": "PASS"
+    },
+    {
+      "name": "C_nixl:padded_phase_below_timeout",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:phase_count",
+      "expected": 4,
+      "actual": 4,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:total_cases",
+      "expected": 628,
+      "actual": 628,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:unpadded_wall_seconds",
+      "expected": 1317.8746806790189,
+      "actual": 1317.8746806790189,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:wall_seconds",
+      "expected": 1976.8120210185284,
+      "actual": 1976.8120210185284,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:allocated_gpus",
+      "expected": 16,
+      "actual": 16,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:gpu_hours",
+      "expected": 8.785831204526794,
+      "actual": 8.785831204526794,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:timeout_gpu_hours",
+      "expected": 20.0,
+      "actual": 20.0,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_links_kv:padded_job_below_timeout",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    },
+    {
+      "name": "timing_sha256:/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/download/summary.csv",
+      "expected": "c142ac9a876f18f8c3af7386a33dd822a2b48b7c2be30b9df7aefbae71f42673",
+      "actual": "c142ac9a876f18f8c3af7386a33dd822a2b48b7c2be30b9df7aefbae71f42673",
+      "status": "PASS"
+    },
+    {
+      "name": "timing_sha256:/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/download/summary.csv",
+      "expected": "0ca76121531180eb69199a084821feaccd8d65d430d5ecabf04edcd2551990ca",
+      "actual": "0ca76121531180eb69199a084821feaccd8d65d430d5ecabf04edcd2551990ca",
+      "status": "PASS"
+    },
+    {
+      "name": "timing_sha256:/data/ycfeng/tmp/glm53_dsv4/w5_comm_k5/nixl_summary.csv",
+      "expected": "8b16ca8f34845d4319bb350b059721b1361db6eefeab7260ec262693147579e0",
+      "actual": "8b16ca8f34845d4319bb350b059721b1361db6eefeab7260ec262693147579e0",
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:case_array_length",
+      "expected": 84,
+      "actual": 84,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:copies",
+      "expected": 1,
+      "actual": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:case_total",
+      "expected": 84,
+      "actual": 84,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:case_uniqueness",
+      "expected": 84,
+      "actual": 84,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:kernel_enqueue_ceiling_sum",
+      "expected": 44040192,
+      "actual": 44040192,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:mode_counts",
+      "expected": {
+        "graph": 78,
+        "plain": 6
+      },
+      "actual": {
+        "graph": 78,
+        "plain": 6
+      },
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:service_seconds",
+      "expected": 305.25628710937497,
+      "actual": 305.25628710937497,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:overhead_seconds",
+      "expected": 8.191,
+      "actual": 8.191,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:wall_seconds",
+      "expected": 358.44728710937494,
+      "actual": 358.44728710937494,
+      "status": "PASS"
+    },
+    {
+      "name": "F2_launch_depth:padded_phase_below_timeout",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:phase_count",
+      "expected": 1,
+      "actual": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:total_cases",
+      "expected": 84,
+      "actual": 84,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:unpadded_wall_seconds",
+      "expected": 538.4472871093749,
+      "actual": 538.4472871093749,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:wall_seconds",
+      "expected": 807.6709306640623,
+      "actual": 807.6709306640623,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:allocated_gpus",
+      "expected": 1,
+      "actual": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:gpu_hours",
+      "expected": 0.22435303629557288,
+      "actual": 0.22435303629557288,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:timeout_gpu_hours",
+      "expected": 1.0,
+      "actual": 1.0,
+      "status": "PASS"
+    },
+    {
+      "name": "b30b_launch_depth:padded_job_below_timeout",
+      "expected": true,
+      "actual": true,
+      "status": "PASS"
+    }
+  ],
+  "limits": "CPU arithmetic of fresh generated arrays and local retained timings; no GPU measurements or platform actions."
+}

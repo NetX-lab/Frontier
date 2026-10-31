@@ -50,17 +50,39 @@ class KVRegionLayout:
     region_block_bytes: tuple[int, ...]
     block_size: int
     num_gpu_blocks: int
+    # Packed V4: native _compute_desc_ids concatenates live IDs from all groups.
+    # Each selected physical block transfers the complete packed region.
+    logical_groups: tuple[tuple[int, int | None], ...] = ()
 
     @classmethod
     def from_config(cls, config: dict) -> "KVRegionLayout":
         regions = tuple(int(group["block_bytes"]) for group in config["regions"]
                         for _ in range(int(group["count"])))
-        layout = cls(regions, int(config["block_size"]), int(config["num_gpu_blocks"]))
+        groups = tuple((int(g["block_size"]), g.get("window_tokens"))
+                       for g in config.get("logical_groups", []))
+        layout = cls(regions, int(config["block_size"]), int(config["num_gpu_blocks"]), groups)
+        if not regions or min(regions) <= 0 or min(layout.block_size, layout.num_gpu_blocks) <= 0:
+            raise ValueError("KV regions, block size and pool must be positive")
+        if any(b <= 0 or (w is not None and (type(w) is not int or w <= 0))
+               for b, w in groups):
+            raise ValueError("Invalid logical group block size or window")
         expected = int(config["resident_bytes_per_block"])
         if layout.block_bytes != expected:
             raise ValueError(f"Regions sum to {layout.block_bytes} bytes per block, "
                              f"the cache contract states {expected}")
         return layout
+
+    def request_blocks(self, tokens: int) -> int:
+        """Live handoff IDs, excluding pruned/null prefixes; full-cache default.
+
+        Native SlidingWindowManager skips floor((T-window+1)/B) whole blocks.
+        The packed connector concatenates the selected IDs of all groups.
+        """
+        if tokens <= 0:
+            raise ValueError("Prompt tokens must be positive")
+        groups = self.logical_groups or ((self.block_size, None),)
+        return sum(-(-tokens // b) - (max(0, tokens - w + 1) // b if w else 0)
+                   for b, w in groups)
 
     @property
     def num_regions(self) -> int:
@@ -105,11 +127,13 @@ def read_cases(grids: list[dict], layout: KVRegionLayout, pairs: int) -> list[Re
     cases = []
     for grid in grids:
         for tokens in grid["prompt_tokens"]:
-            blocks = -(-int(tokens) // layout.block_size)
+            blocks = layout.request_blocks(int(tokens))
             for active in grid["active_pairs"]:
                 if not 0 < active <= pairs:
                     raise ValueError(f"active_pairs={active} outside 1..{pairs}")
                 for in_flight in grid["requests_in_flight"]:
+                    if type(in_flight) is not int or in_flight < 1:
+                        raise ValueError("Requests in flight must be positive integers")
                     if blocks * in_flight > layout.num_gpu_blocks:
                         raise ValueError(f"{in_flight} requests of {blocks} blocks exceed "
                                          f"{layout.num_gpu_blocks} GPU blocks")

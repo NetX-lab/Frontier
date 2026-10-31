@@ -1,0 +1,84 @@
+{
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "workspace": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "cpu": 16,
+  "gpu": 1,
+  "mem_gb": 128,
+  "gpu_type": "H200",
+  "charged_group": "step_main",
+  "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+  "peer_wait_seconds": 1200,
+  "final_wait_seconds": 600,
+  "p2_overlay": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/overlay.json",
+  "native_checkout": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm",
+  "runtime_check_gate": "soft",
+  "node_entry": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/phase_runner.py",
+  "k5_node_entry": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/node_entry.py",
+  "envs": {
+    "NCCL_DEBUG": "INFO",
+    "NCCL_DEBUG_SUBSYS": "INIT,NET"
+  },
+  "lock_sources": [
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/phase_runner.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/planner.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_kv.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_launch_depth.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/kv_layout_evidence.json",
+    "frontier/profiling/collectives/cuda_launch_depth.py",
+    "frontier/profiling/collectives/rank_placement.py",
+    "frontier/profiling/collectives/nixl_kv_read_benchmark.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/runtime_lock/probe_nixl_read.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/runtime_lock/probe_runtime_inventory.py"
+  ],
+  "stage": "b30b_launch_depth",
+  "job_tag": "dsv4-b30b-launch-depth-01",
+  "replica": 1,
+  "timeout_seconds": 3600,
+  "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_launch_depth_01",
+  "phases": [
+    {
+      "name": "F2_launch_depth",
+      "benchmark_module": "frontier.profiling.collectives.cuda_launch_depth",
+      "gpu_indices": [
+        [
+          0
+        ]
+      ],
+      "timeout_seconds": 3000,
+      "config": {
+        "stage": "F2_launch_depth",
+        "kernels_per_graph": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512,
+          1024,
+          2048,
+          4096
+        ],
+        "sleep_ms": [
+          500,
+          1000
+        ],
+        "trials": 3,
+        "max_launches": 8192,
+        "max_enqueued_kernels": 1048576
+      },
+      "physical_gpu_indices": false
+    }
+  ],
+  "estimate": {
+    "startup_seconds": 180,
+    "process_startup_seconds": 45,
+    "capture_seconds_per_kernel": 0.001,
+    "safety_factor": 1.5
+  },
+  "runtime_check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/runtime_check.py"
+}

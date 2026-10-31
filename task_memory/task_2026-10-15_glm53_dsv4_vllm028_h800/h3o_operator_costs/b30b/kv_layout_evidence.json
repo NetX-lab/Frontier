@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "logs": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/nodes/gpu-h200-0040.lgcm.sh.istep.fun/server.log",
+      "line": 253,
+      "text": "total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+      "line": 212,
+      "text": "total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/nodes/gpu-h200-0577.lgcm.sh.istep.fun/server.log",
+      "line": 243,
+      "text": "total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+      "line": 208,
+      "text": "total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0040.lgcm.sh.istep.fun/server.log",
+      "line": 261,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0146.lgcm.sh.istep.fun/server.log",
+      "line": 208,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0543.lgcm.sh.istep.fun/server.log",
+      "line": 218,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+      "line": 218,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0722.lgcm.sh.istep.fun/server.log",
+      "line": 263,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0760.lgcm.sh.istep.fun/server.log",
+      "line": 212,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+      "line": 212,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/nodes/gpu-h200-0968.lgcm.sh.istep.fun/server.log",
+      "line": 216,
+      "text": "total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+    }
+  ],
+  "native_source": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py",
+  "source_symbols": [
+    "register_kv_caches",
+    "_register_packed_kv_cache",
+    "_compute_desc_ids"
+  ],
+  "logical_groups_source": "task_memory/task_2026-10-21_v4_grouped_nixl/native_retention.md:14-59",
+  "native_source_sha256": "4860f51b6ac3301c243794b7626b5536f6b0ec41204e426ee6b61bc0e1d0bdb7",
+  "logical_groups_source_sha256": "a4016110bff9bcd50cf0fbb2382d9012edb8f9b8be4810be2b6a5643e5c62f20"
+}

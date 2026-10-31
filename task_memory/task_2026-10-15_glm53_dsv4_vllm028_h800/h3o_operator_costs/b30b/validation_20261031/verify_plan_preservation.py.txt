@@ -1,0 +1,67 @@
+"""Re-run the existing B30b plan-preservation contract without GPU imports."""
+import hashlib
+import json
+import os
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+root = Path.cwd()
+area = root / "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b"
+scratch = Path(__file__).resolve().parent
+baseline = scratch / "baseline_collectives"
+baseline.mkdir(exist_ok=False)
+for name in ("nixl_kv_read_benchmark.py", "vllm_collective_benchmark.py", "vllm_dsv4_forward_collectives.py"):
+    blob = subprocess.check_output(["git", "show", "b0e568f5:frontier/profiling/collectives/" + name])
+    (baseline / name).write_bytes(blob)
+contract = json.loads((area / "plan_preservation.json").read_text())
+output = area / "preservation_20261031"
+output.mkdir(exist_ok=False)
+bootstrap = ("import sys,runpy; import frontier.profiling.collectives as p; "
+             "p.__path__.insert(0,sys.argv[1]); m=sys.argv[2]; "
+             "sys.argv=[m]+sys.argv[3:]; runpy.run_module(m,run_name='__main__')")
+
+def check(row):
+    command = [sys.executable, *row["command"][1:]]
+    old_command = [sys.executable, "-c", bootstrap, str(baseline), command[2], *command[3:]]
+    old = subprocess.run(old_command, capture_output=True, timeout=30)
+    current = subprocess.run(command, capture_output=True, timeout=30)
+    name = Path(row["config"]).stem
+    (output / (name + ".txt")).write_bytes(current.stdout)
+    (scratch / (name + ".baseline.txt")).write_bytes(old.stdout)
+    (scratch / (name + ".stderr.txt")).write_bytes(current.stderr)
+    expected_errors = row["expected_historical_error"]
+    expected_sha = row["baseline_listing_sha256"]
+    current_sha = hashlib.sha256(current.stdout).hexdigest()
+    old_sha = hashlib.sha256(old.stdout).hexdigest()
+    ok = (old.returncode == current.returncode == row["baseline_returncode"] and
+          old.stdout == current.stdout and current_sha == old_sha == expected_sha and
+          all(e.encode() in old.stderr and e.encode() in current.stderr for e in expected_errors))
+    return {"config": row["config"], "command": command, "baseline_command": old_command,
+            "expected_returncode": row["baseline_returncode"], "returncode": current.returncode,
+            "baseline_returncode": old.returncode, "expected_listing_sha256": expected_sha,
+            "baseline_listing_sha256": old_sha, "listing_sha256": current_sha,
+            "byte_identical": old.stdout == current.stdout, "status": "PASS" if ok else "FAIL",
+            "listing_tail": current.stdout.decode().splitlines()[-1:],
+            "expected_historical_error": expected_errors}
+
+with ThreadPoolExecutor(max_workers=4) as pool:
+    rows = list(pool.map(check, contract["plans"]))
+sources = []
+for item in contract["sources"]:
+    actual = hashlib.sha256(Path(item["path"]).read_bytes()).hexdigest()
+    sources.append({"path": item["path"], "expected": item["after"], "actual": actual,
+                    "unchanged_from_existing_patch": actual == item["after"]})
+result = {"contract": str(area / "plan_preservation.json"), "baseline_ref": "b0e568f5",
+          "plans": rows, "sources": sources,
+          "successful_listings": sum(r["returncode"] == 0 for r in rows),
+          "historical_failures_preserved": sum(r["returncode"] != 0 and r["status"] == "PASS" for r in rows),
+          "status": "PASS" if all(r["status"] == "PASS" for r in rows) and
+                    all(s["unchanged_from_existing_patch"] for s in sources) else "FAIL"}
+(output / "plan_preservation_20261031.json").write_text(json.dumps(result, indent=2) + "\n")
+for row in rows:
+    print(Path(row["config"]).name, row["status"], row["listing_tail"] or row["expected_historical_error"])
+print("Preservation:", result["status"], "successful listings", result["successful_listings"],
+      "historical failures", result["historical_failures_preserved"])
+raise SystemExit(0 if result["status"] == "PASS" else 1)
