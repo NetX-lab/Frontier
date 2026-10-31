@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Recorded YC's request for an audit of the A10 inputs for shortcuts and dependence on large-cluster data before ingress option A (D-EX-SITU-AUDIT, item 44), and the cleanup approval (item 45). |
 | 2026-10-30 | Recorded the lead's launch rule for DP dummy forwards after the native P2-64 wave run (D-DP-DUMMY-RUN-AHEAD, item 43). |
 | 2026-10-30 | Recorded YC's approval of the disk deletions after the full disk (item 41) and of one instrumented native P2-64 diagnostic run for the TTFT gap (D-P2-64-WAVE-DIAGNOSTIC, item 42). |
 | 2026-10-29 | Recorded the lead's routing-descriptor rule for tables merged from two packages (D-ROUTING-ORIGIN-PROVENANCE). |
@@ -407,6 +408,16 @@ Basis: [review report](review_report_2026-10-25_dsv4_mainline_and_tickets.md). T
     - An integer K >= 1 applies the native rule on lanes that run DP dummy forwards: after forming its forward n, a lane starts its next iteration once its forward n-K has ended on the device and every lane of its DP group has formed its forward n. The busy-loop counter, the 32-step DP sync and the batch-queue rules stay as they are.
     - The A10 replays set K = 19 from the depth measurement (section 3.5, observation 4), not from a fit to TTFT. P2-32 uses the same value: same engine build, model and graph mode; its TTFT must stay flat.
     - Implemented by Codex as B26 ([assignment](h3o_operator_costs/codex_assignment_B26_dp_dummy_run_ahead.md)). Rejected: a TTFT offset or a scaling of the dummy price (an error-hiding factor); waiting for every dummy as now (leaves the measured run-ahead out); run-ahead without the lockstep (an idle lane would queue its own dummies ahead of a request it receives, which the native all-reduce prevents).
+
+[Original Request] 2026-10-31, after the B28 replay report:
+
+> 请你先自查，当前校准中 frontier得到的数值结果是否是在 frontier以一种合理、正常模拟的方式进行的，该模拟方案没有引入不合理的捷径（例如是否引入了同 测量32卡、64卡下每个layer的耗时，记录entry来完成e2e模拟）。一个正常的frontier的模拟执行流程是，基于profiling统计的得到的csv database（单卡即可得到） + 正确建模的 workflow + 在没有依赖大规模集群的数据的情况 得到的，这保证了 frontier 的可用性和ex-situ特点。该自查通过后，再进行ingree方案a。批准清理
+
+44. **D-EX-SITU-AUDIT.** Before ingress option A starts, the lead audits the inputs and mechanisms behind the current A10 numbers. The audit checks two things:
+    - Frontier composes every cost from profiling CSVs that one GPU can produce, with a modeled workflow.
+    - No input depends on data from the target large cluster. Examples: per-layer or per-step times measured at 32 or 64 GPUs and stored as table entries, or parameters read from native E2E runs.
+    - Ingress option A (section 5.4 of the A10 report) is approved to start only after the audit passes. Each audit finding is reported to YC with its evidence and a proposed repair.
+45. **Cleanup approved (2026-10-31).** Delete the stray untracked files of the task directory (`combine_p2_64.txt`, `uniform_ep_p2_64.txt`, `uniform_ep_ranks.txt`) and the 9 traceback files `h3o_operator_costs/a10/k19/fifo_swaps/fifo_<name> <args>.txt`. Remove the finished worktrees listed in the B28 report: `b28-base`, `b28-eager-ep-exact-rows`, `fidelity-candidate-ee29d548`, `a10-k19-ee29d548`, and the earlier finished fidelity, A10 and Codex worktrees. Branches are kept.
 
 ## [Decision] 2026-10-22 — D-V4-BALANCED-RUNTIME-SELECTOR
 

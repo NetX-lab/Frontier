@@ -1,0 +1,58 @@
+== /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28
+decode_dummy: n=170 mean_composed_ms=19.116 mean_comm_scope_ms=9.620 share=50.324%
+    dsv4_ep_dispatch_allgather: 6.076 ms/forward
+    dsv4_ep_output_reduce_scatter: 2.654 ms/forward
+    dsv4_sp_attention_reduce_scatter: 0.535 ms/forward
+    dsv4_sp_attention_allgather: 0.335 ms/forward
+    dsv4_embedding_allreduce: 0.010 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.009 ms/forward
+decode_real: n=14678 mean_composed_ms=19.881 mean_comm_scope_ms=9.585 share=48.213%
+    dsv4_ep_dispatch_allgather: 6.103 ms/forward
+    dsv4_ep_output_reduce_scatter: 2.723 ms/forward
+    dsv4_sp_attention_reduce_scatter: 0.396 ms/forward
+    dsv4_sp_attention_allgather: 0.342 ms/forward
+    dsv4_embedding_allreduce: 0.010 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.010 ms/forward
+prefill_6144: n=128 mean_composed_ms=209.955 mean_comm_scope_ms=70.293 share=33.480%
+    dsv4_ep_output_reduce_scatter: 31.475 ms/forward
+    dsv4_ep_dispatch_allgather: 24.280 ms/forward
+    dsv4_sp_attention_allgather: 6.973 ms/forward
+    dsv4_sp_attention_reduce_scatter: 6.758 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.555 ms/forward
+    dsv4_embedding_allreduce: 0.252 ms/forward
+prefill_dummy: n=8064 mean_composed_ms=21.760 mean_comm_scope_ms=10.366 share=47.637%
+    dsv4_ep_dispatch_allgather: 6.365 ms/forward
+    dsv4_ep_output_reduce_scatter: 3.111 ms/forward
+    dsv4_sp_attention_reduce_scatter: 0.535 ms/forward
+    dsv4_sp_attention_allgather: 0.335 ms/forward
+    dsv4_embedding_allreduce: 0.010 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.009 ms/forward
+== /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28
+decode_dummy: n=612 mean_composed_ms=24.984 mean_comm_scope_ms=16.939 share=67.799%
+    dsv4_ep_dispatch_allgather: 11.036 ms/forward
+    dsv4_ep_output_reduce_scatter: 5.014 ms/forward
+    dsv4_sp_attention_reduce_scatter: 0.535 ms/forward
+    dsv4_sp_attention_allgather: 0.335 ms/forward
+    dsv4_embedding_allreduce: 0.010 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.009 ms/forward
+decode_real: n=23708 mean_composed_ms=25.298 mean_comm_scope_ms=16.789 share=66.367%
+    dsv4_ep_dispatch_allgather: 11.036 ms/forward
+    dsv4_ep_output_reduce_scatter: 5.014 ms/forward
+    dsv4_sp_attention_reduce_scatter: 0.385 ms/forward
+    dsv4_sp_attention_allgather: 0.335 ms/forward
+    dsv4_embedding_allreduce: 0.011 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.009 ms/forward
+prefill_6144: n=128 mean_composed_ms=279.867 mean_comm_scope_ms=153.259 share=54.761%
+    dsv4_ep_output_reduce_scatter: 93.444 ms/forward
+    dsv4_ep_dispatch_allgather: 45.276 ms/forward
+    dsv4_sp_attention_allgather: 6.973 ms/forward
+    dsv4_sp_attention_reduce_scatter: 6.758 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.555 ms/forward
+    dsv4_embedding_allreduce: 0.252 ms/forward
+prefill_dummy: n=15232 mean_composed_ms=30.821 mean_comm_scope_ms=20.032 share=64.993%
+    dsv4_ep_dispatch_allgather: 11.899 ms/forward
+    dsv4_ep_output_reduce_scatter: 7.243 ms/forward
+    dsv4_sp_attention_reduce_scatter: 0.535 ms/forward
+    dsv4_sp_attention_allgather: 0.335 ms/forward
+    dsv4_embedding_allreduce: 0.010 ms/forward
+    dsv4_sp_final_mhc_allgather: 0.009 ms/forward

@@ -1,0 +1,6 @@
+p2_32 {'enable_dummy_mode': {'PREFILL': False, 'DECODE': False}, 'step_cost_files_beside_inputs': [], 'no_step_cost_file_beside_inputs': True, 'step_cost_table_bound_by_predictor': {'PREFILL': False, 'DECODE': False}}
+p2_32 collective rows 44 exact 44 calls 6310644 calls_exact 6310644
+p2_32 kv {"decode_replica1_lane0": {"num_blocks": 109934, "admission_blocks_at_max_model_len": 2940, "max_concurrency": 37.39251700680272}, "decode_replica1_lane1": {"num_blocks": 109934, "admission_blocks_at_max_model_len": 2940, "max_concurrency": 37.39251700680272}, "native": 37.34, "native_admission_bloc
+p2_64 {'enable_dummy_mode': {'PREFILL': False, 'DECODE': False}, 'step_cost_files_beside_inputs': [], 'no_step_cost_file_beside_inputs': True, 'step_cost_table_bound_by_predictor': {'PREFILL': False, 'DECODE': False}}
+p2_64 collective rows 38 exact 38 calls 9002176 calls_exact 9002176
+p2_64 kv {"decode_replica1_lane0": {"num_blocks": 112914, "admission_blocks_at_max_model_len": 2940, "max_concurrency": 38.406122448979595}, "decode_replica1_lane1": {"num_blocks": 112914, "admission_blocks_at_max_model_len": 2940, "max_concurrency": 38.406122448979595}, "decode_replica1_lane2": {"num_blocks
