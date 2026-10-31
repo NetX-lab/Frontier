@@ -156,7 +156,7 @@ def main(name, root, *, observe=True, fields=None):
             role.name: predictor._dsv4_step_costs is not None
             for role, predictor in simulator._predictors.items()
         }
-        receipt["kv_admission"] = h4a4.kv_admission(simulator, CASES[name]["max_concurrency"])
+        receipt["kv_admission"] = h4a4.kv_admission(simulator, CASES[name])
         receipt["metrics_dir"] = str(config.metrics_config.output_dir)
         receipt["status"] = "INITIALIZED"
         write()

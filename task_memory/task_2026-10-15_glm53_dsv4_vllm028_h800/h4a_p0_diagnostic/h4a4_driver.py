@@ -112,7 +112,7 @@ def build_config(name, case, root, fields):
     return config, {"added_fields": added, "override_diff": diff}
 
 
-def kv_admission(simulator, native_max_concurrency):
+def kv_admission(simulator, case):
     from frontier.types import ClusterType
 
     scheduler = simulator._global_scheduler.get_cluster_scheduler(ClusterType.DECODE)
@@ -125,10 +125,11 @@ def kv_admission(simulator, native_max_concurrency):
         pool = int(replica._config.num_blocks)
         rows[f"decode_replica{replica_id}_lane{lane}"] = {"num_blocks": pool, "admission_blocks_at_max_model_len": blocks,
                                                          "max_concurrency": pool / blocks}
-    pools = {row["num_blocks"] for row in rows.values()}
     demands = {row["admission_blocks_at_max_model_len"] for row in rows.values()}
-    [pool], [demand] = pools, demands
-    # Per-request block counts for which vLLM's two-decimal log reads the native concurrency.
+    [demand] = demands
+    # Per-request block counts for which vLLM's two-decimal log reads the native concurrency
+    # from the native pool; the simulated pool may differ (planner mode).
+    pool, native_max_concurrency = case["num_blocks"], case["max_concurrency"]
     native = [b for b in range(1, pool + 1) if round(pool / b, 2) == native_max_concurrency]
     return {**rows, "native": native_max_concurrency, "native_admission_blocks": [min(native), max(native)],
             "status": "MATCH" if demand in native else "DIFFERS"}
@@ -171,7 +172,7 @@ def main(name, root, fields):
     from frontier.simulator import Simulator
 
     simulator = Simulator(config)
-    receipt["kv_admission"] = kv_admission(simulator, case["max_concurrency"])
+    receipt["kv_admission"] = kv_admission(simulator, case)
     write()
     started = time.monotonic()
     simulator.run()
