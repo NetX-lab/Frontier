@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-31 | Added section 5.7: the B28 replays on main `ee29d548`. P2-32 TTFT −11.22% (FAIL; B24 −7.94%) and P2-64 −10.60% (FAIL; −8.05% against 720.6 ms; B24 −11.62%); the other metrics stay within 2.45%. The per-forward EP change depends only on the DP lane of the 6,144-token prefill; the dp0 values equal the B28 price check. P2-32's earlier PASS rested partly on an EP16 price about 12 ms per forward too high. |
 | 2026-10-30 | Added section 5.6: Frontier's 6,144-token prefill against the native kernels of the P2-64 profiled run. Only the EP combine differs much (−7.08 ms of the about 8.2 ms device gap). Its back-to-back benchmark timing is the period of pipelined calls (rank 0 2,011 µs) and not the time of a call started on aligned ranks (2,176 µs). On EP16 the error has the opposite sign. The host part, about 7.5 ms, is not modeled for V4. |
 | 2026-10-30 | Added section 5.5: every repeat of the lifecycle runs of 2026-10-25/26 is slower on the prefill side than every canonical repeat (by 13.8-34.4 ms), so the 300 ms native prefill step of sections 3.2 and 3.5 is overstated; on the wave run, whose timing matches the canonical run, the step is 289.6 ms. FIFO parameter swaps attribute the P2-64 in-engine gap to the prefill step. |
 | 2026-10-30 | Added section 5: the K = 19 replays on main `901bc091` (B26 + B24). P2-32 PASS (TTFT −7.94%); P2-64 TTFT −11.62% (FAIL; −9.09% against 720.6 ms), prefill side 513.3 ms as predicted; A9 EQUAL for both cases. New split of the native prefill ingress; section 3.1's 6.2 ms corrected. Section 4 notes B24's lane reuse. |
@@ -481,3 +482,81 @@ Frontier models a 3.27 ms scheduling wait (section 3.1) and no other host time f
   - Each timed call follows a barrier on the group's stream.
   - The kernel trace gives each rank's end time, and the price is the latest end in the timed lane.
   - Compare the result with the native kernels of every group, decode included, before the consumer changes.
+
+### 5.7 B28 replays (isolated eager EP rows, exact uneven dispatch)
+
+Code: main `ee29d548`, which adds B28 (`issues.md` I-008) to the code of sections 5.1-5.6. The H200 network table takes the EP rows of every eager scenario with a 6,144-token lane from the isolated single-call runs, and `MeasuredCCBackend` prices an uneven EP dispatch from its exact `AllGatherV` row. Detached worktree `.worktrees/a10-k19-ee29d548`; launcher `/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/run_a10_k19_b28.sh`; roots `stage4/a10/p2_{32,64}_warm_k19b28`. Each warm cache is a `cp -a` copy of `stage4/a10/p2_{32,64}_cold_g1hs_r2/cache` (1,758 files). There are no cold runs: the network table is read into the backend and never cached (`h3o_operator_costs/b28/cache_audit.md`), so a cold run would test nothing that B28 changes. Post-processing as in section 5 (`post_k19.sh`, `per_repeat.py`); copies of the outputs are in `h3o_operator_costs/a10/k19/` (`*_k19b28*`). The comparisons with the B24 runs are in `k19/b28/` (`interim.py`, `wave_prices.py`, `scope_diff.py`, `wave_ep_by_dp.py`; outputs `post_p2_32.txt`, `post_p2_64.txt`, `scope_diff.txt`, `wave_ep_by_dp.txt`).
+
+| Run | Status | Wall time (init / run) | Source commit, dirty paths |
+| --- | --- | --- | --- |
+| P2-32 warm | FINISHED | 83.7 s / 9,576.2 s (2.66 h) | `ee29d548`, none |
+| P2-64 warm | FINISHED | 87.0 s / 12,012.0 s (3.34 h) | `ee29d548`, none |
+
+**P2-32** (gate output `stage4/a10_gate/p2_32_warm_k19b28_run/`):
+
+| Metric | Native vLLM (3 repeats) | Frontier | Absolute error | Relative error | Limit | Result | B24 (section 5.1) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TTFT mean | 364.030 ms | 323.179 ms | −40.851 ms | 11.22% | 10% | FAIL | 7.94% |
+| TPOT mean | 19.919 ms | 19.927 ms | +0.008 ms | 0.04% | 10% | PASS | 0.04% |
+| Request E2E mean | 20,741.132 ms | 20,708.281 ms | −32.851 ms | 0.16% | 10% | PASS | 0.10% |
+| Token throughput (window rate) | 6,231.415 tps | 6,226.653 tps | −4.763 tps | 0.08% | 10% | PASS | 0.08% |
+
+Per native repeat, the TTFT error is 10.72% / 11.40% / 11.55%; TPOT 0.10% / 0.19% / 0.17%; E2E 0.09% / 0.01% / 0.37%; throughput 0.12% / 0.08% / 0.03%. Overall FAIL on TTFT only, with routing MATCH.
+
+**P2-64** (gate output `stage4/a10_gate/p2_64_warm_k19b28_run/`):
+
+| Metric | Native vLLM (3 repeats) | Frontier | Absolute error | Relative error | Limit | Result | B24 (section 5.2) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TTFT mean | 741.216 ms | 662.614 ms | −78.603 ms | 10.60% | 10% | FAIL | 11.62% |
+| TPOT mean | 25.871 ms | 25.295 ms | −0.575 ms | 2.22% | 10% | PASS | 2.23% |
+| Request E2E mean | 27,206.770 ms | 26,539.743 ms | −667.026 ms | 2.45% | 10% | PASS | 2.48% |
+| Token throughput (window rate) | 5,963.206 tps | 5,976.096 tps | +12.890 tps | 0.22% | 10% | PASS | 0.22% |
+
+Per native repeat, the TTFT error is 15.04% / 8.67% / 7.75%; TPOT 0.53% / 3.66% / 2.43%; E2E 0.95% / 3.79% / 2.57%; throughput 0.47% / 0.01% / 0.18%. Overall FAIL on TTFT only, with routing MATCH. Against the diagnostic reference without the first-contact requests (720.6 ms, section 3.6), the TTFT error is −8.05%.
+
+**The price change per prefill forward** (`wave_ep_by_dp.py`, every wave with a 6,144-token lane, paired by order with the B24 run). In both cases, every such wave is (6,144, 1) on P2-32 and (6,144, 1, 1, 1) on P2-64 (`wave_prices.py`: 128 waves each). No A10 wave has more than one prefill lane, so the uniform rows that B28 also replaced (I-008, "Uniform rows") are never used here. The change depends only on which DP lane holds the 6,144 tokens, and it is the same for every wave of that lane:
+
+| Case, lane of the 6,144 tokens | Waves | Dispatch (B24 → B28) | Combine (B24 → B28) | Forward change |
+| --- | --- | --- | --- | --- |
+| P2-32, dp0 | 64 | 34.495 → 24.112 ms | 32.869 → 31.610 ms | −11.642 ms |
+| P2-32, dp1 | 64 | 34.495 → 24.448 ms | 34.369 → 31.340 ms | −13.076 ms |
+| P2-64, dp0 | 32 | 46.292 → 44.873 ms | 86.502 → 93.419 ms | +5.498 ms |
+| P2-64, dp1 | 32 | 46.292 → 45.523 ms | 89.342 → 93.624 ms | +3.512 ms |
+| P2-64, dp2 | 32 | 46.292 → 45.103 ms | 88.884 → 94.459 ms | +4.385 ms |
+| P2-64, dp3 | 32 | 46.292 → 45.606 ms | 86.410 → 92.275 ms | +5.179 ms |
+
+- The dp0 rows equal the expected change of the B28 price check (`h3o_operator_costs/evidence/collective_kernels/expected_prices.txt`: P2-32 −10.38 / −1.26 / −11.64 ms, P2-64 −1.42 / +6.92 / +5.50 ms). That check covered only the dp0 arrangement; the other lanes use their own measured rows. In B24 the dispatch price did not depend on the lane, because the uneven dispatch was priced from the uniform curve at the largest rank's size. `scope_diff.txt` shows that only the two EP scopes change in the first wave of each case.
+- Mean over the waves: P2-32 −12.359 ms, P2-64 +4.644 ms. P2-32's prefill side falls by the same 12.4 ms (222.3 → 210.0 ms): its prefills do not queue. P2-64's prefill side rises by 6.80 ms (513.3 → 520.1 ms, range 279.0-755.4 ms), 1.46 times the forward change, because a later prefill end also delays the queue behind it (section 5.5). The time after the prefill side barely moves: 113.2 ms (112.8) and 142.5 ms (141.8). Request 0 is again the slowest (P2-32 TTFT 623.5 ms).
+- Against the native critical paths of I-008 (per forward of 43 layers on the dp0 arrangement): P2-32 dispatch 24.112 against 23.327 ms and combine 31.610 against 30.847 ms, together 1.55 ms high; P2-64 dispatch 44.873 against about 45.06 ms and combine 93.419 against 93.36 ms, within 0.2 ms. Section 5.6's P2-64 forward becomes 279.44 ms against the native 282.1 ms, so its device gap falls from 8.2 ms to about 2.7 ms.
+
+**A8** (`k19/a8_p2_32_warm_k19b28_stdout.txt`, `k19/a8_p2_64_warm_k19b28_stdout.txt`):
+
+| Run | Distinct requests | Calls | Exact | Interpolated | Unequal prefill dispatches / combines (all exact) | Violations |
+| --- | --- | --- | --- | --- | --- | --- |
+| P2-32 warm K19 B28 | 44 (B24 43) | 6,310,644 | 6,310,644 | 0 | 16,512 / 16,512 | 0 |
+| P2-64 warm K19 B28 | 38 (B24 35) | 9,002,176 | 9,002,176 | 0 | 27,520 / 27,520 | 0 |
+
+The uneven prefill dispatches are now priced from exact measured rows (B24: 0 unequal dispatches), which adds the distinct requests. As section 3 of the B24 report explains, these counts are predictions, not simulated calls. P2-32's count is unchanged. P2-64's falls by 22,448, and its prefill TP all-reduce predictions fall from 15,488 to 15,360. Inference, not checked: with the changed prefill timing, the prefill DP group formed fewer dummy forwards. The decode counts differ by fewer than 100 predictions per row, and B28 did not change the decode rows of the table.
+
+**Reading.**
+
+- B28 does what it was built for. Every EP price of a 6,144-token prefill forward now comes from a single aligned call, and on the dp0 arrangement it matches the native critical path within 1.55 ms (P2-32) and 0.2 ms (P2-64) per forward. On P2-64, the TTFT error falls from −11.62% to −10.60%.
+- P2-32 passed before (−7.94%) partly because its EP16 calls were priced about 12 ms per forward too high. That error offset some of what Frontier does not model. Without it, P2-32 fails at −11.22%.
+- What remains (against 364.0 and 720.6 ms; the native parts are those of section 5.4):
+
+| Part (mean) | P2-64 native | P2-64 Frontier B28 | Difference | P2-32 native | P2-32 Frontier B28 | Difference |
+| --- | --- | --- | --- | --- | --- | --- |
+| Client dispatch to proxy arrival | 0.6 ms | 0 | −0.6 ms | 0.5 ms | 0 | −0.5 ms |
+| Prefill side | 552.0 ms | 520.1 ms | −31.9 ms | 235.5 ms | 210.0 ms | −25.5 ms |
+| After the prefill side, to the client | 168.0 ms | 142.5 ms | −25.5 ms | 128.1 ms | 113.2 ms | −14.9 ms |
+| TTFT | 720.6 ms | 662.6 ms | −58.0 ms | 364.0 ms | 323.2 ms | −40.9 ms |
+
+- Inference, from sections 5.4-5.6:
+  - The path outside the engine (about 22 ms per request; section 5.4) is still not modeled.
+  - The host part of the prefill step (about 7.5 ms on P2-64, inferred in section 5.6) is still not modeled for V4 (D2 (c): explicit zero).
+  - On P2-32, the step itself is now about 12 ms shorter than native: about 222 ms native (section 5.5) against 210.0 ms.
+- **Expected effect of ingress option A** (section 5.4; arithmetic, not a run). Adding about 22 ms per request outside the engine shifts every engine arrival by the same amount, so the queues do not change:
+  - P2-32: about 345 ms (−5.2%);
+  - P2-64: about 685 ms (−7.6% against 741.2 ms).
+  - Both would PASS. This needs new delay fields, a configuration schema change, and YC's approval (D-NO-NEW-MODELING).
+- **Host part.** Modeling the host part would revisit D2 (c), which keeps V4 host time at zero. It needs host-time data for V4: the CPU probe of `frontier.profiling.cpu_overhead.vllm_cpu_probe` would have to be ported to the V4 serving image, followed by a GPU run.

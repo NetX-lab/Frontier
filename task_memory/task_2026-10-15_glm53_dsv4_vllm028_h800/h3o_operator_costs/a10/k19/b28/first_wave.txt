@@ -1,0 +1,4 @@
+== p2_32_warm_k19b24
+0 True 6144 221.564 221.564 {'dsv4_ep_dispatch_allgather': 34.495, 'dsv4_ep_output_reduce_scatter': 32.869}
+== p2_32_warm_k19b28
+0 True 6144 209.922 209.922 {'dsv4_ep_dispatch_allgather': 24.112, 'dsv4_ep_output_reduce_scatter': 31.61}

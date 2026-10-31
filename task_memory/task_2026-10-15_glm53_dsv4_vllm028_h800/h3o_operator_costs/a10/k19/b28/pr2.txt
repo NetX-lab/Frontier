@@ -1,0 +1,19 @@
+repeat01 ttft_ms: native 361.975 rel 10.72% tpot_ms: native 19.907 rel 0.10% request_e2e_time_ms: native 20726.677 rel 0.09% token_throughput_tps: native 6234.124 rel 0.12%
+repeat02 ttft_ms: native 364.748 rel 11.40% tpot_ms: native 19.889 rel 0.19% request_e2e_time_ms: native 20710.778 rel 0.01% token_throughput_tps: native 6231.405 rel 0.08%
+repeat03 ttft_ms: native 365.366 rel 11.55% tpot_ms: native 19.961 rel 0.17% request_e2e_time_ms: native 20785.941 rel 0.37% token_throughput_tps: native 6228.720 rel 0.03%
+repeat01 ttft_ms: native 361.975 rel 7.42% tpot_ms: native 19.907 rel 0.10% request_e2e_time_ms: native 20726.677 rel 0.03% token_throughput_tps: native 6234.124 rel 0.13%
+repeat02 ttft_ms: native 364.748 rel 8.12% tpot_ms: native 19.889 rel 0.19% request_e2e_time_ms: native 20710.778 rel 0.05% token_throughput_tps: native 6231.405 rel 0.08%
+repeat03 ttft_ms: native 365.366 rel 8.28% tpot_ms: native 19.961 rel 0.17% request_e2e_time_ms: native 20785.941 rel 0.32% token_throughput_tps: native 6228.720 rel 0.04%
+FINISHED ee29d548474dbc8bc155e531597bb7ba8580c374 [] 83.6925187362358 9576.197651603725
+p2_32 all n 128
+  ttft_ms                              base   222.314 candidate   209.955 difference  -12.359
+  decode_first_token_completed_at_ms   base   355.025 candidate   343.089 difference  -11.936
+  tpot_ms                              base    19.927 candidate    19.927 difference   -0.000
+  request_e2e_time_ms                  base 20720.305 candidate 20708.281 difference  -12.024
+p2_32 without request 0 n 127
+  ttft_ms                              base   222.320 candidate   209.955 difference  -12.365
+  decode_first_token_completed_at_ms   base   352.666 candidate   340.728 difference  -11.938
+  tpot_ms                              base    19.929 candidate    19.929 difference   -0.000
+  request_e2e_time_ms                  base 20719.886 candidate 20707.859 difference  -12.027
+p2_32 shape (local tokens per lane) | base n, mean ms | candidate n, mean ms | difference
+  (6144, 1) |   128   222.314 |   128   209.955 |  -12.359

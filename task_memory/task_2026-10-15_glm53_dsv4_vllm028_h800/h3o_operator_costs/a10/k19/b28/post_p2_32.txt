@@ -1,0 +1,36 @@
+post done p2_32_warm_k19b28
+wrote /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10_gate/p2_32_warm_k19b28_run/rows
+ttft_ms                  vllm 364.0296 frontier 323.1790 rel 0.1122 FAIL
+tpot_ms                  vllm 19.9190 frontier 19.9268 rel 0.0004 PASS
+request_e2e_time_ms      vllm 20741.1319 frontier 20708.2814 rel 0.0016 PASS
+token_throughput_tps     vllm 6231.4155 frontier 6226.6527 rel 0.0008 PASS
+dsv4-h200-p2-canonical-fixed128-qps1/a10_operator_path: FAIL (routing MATCH)
+ttft_ms: native=364.0296495311001 frontier=323.1789913388025 absolute_error=40.8506581922976 relative_error=0.11221794226079272
+tpot_ms: native=19.918966075308955 frontier=19.926786349460166 absolute_error=0.007820274151210782 relative_error=0.00039260442141646077
+request_e2e_time_ms: native=20741.131944572164 frontier=20708.28142683655 absolute_error=32.85051773561281 relative_error=0.0015838343742955458
+token_throughput_tps: native=6231.415496060633 frontier=6226.652709243508 absolute_error=4.762786817124834 relative_error=0.0007643186078886515
+====
+run p2_32_warm_k19b28: 44 distinct requests, 6310644 calls
+role / operation / domain / devices              points     calls     exact    interp  unequal max_log_dist     total_ms
+decode / all_gatherv / ep / 16                        2    957696    957696         0        0        0.000     135447.4
+decode / all_reduce / tp / 8                          5     29526     29526         0        0        0.000        292.7
+decode / logits_all_gather / tp / 8                  11     22010     22010         0        0        0.000        751.2
+decode / reduce_scatterv / ep / 16                    2    957696    957696         0        0        0.000      60154.9
+decode / sp_all_gather / tp / 8                       4   1291890   1291890         0        0        0.000       9678.7
+decode / sp_reduce_scatter / tp / 8                   5   1269618   1269618         0        0        0.000      11090.7
+prefill / all_gatherv / ep / 16                       3    528384    528384         0    16512        0.000      81389.3
+prefill / all_reduce / tp / 8                         2      8192      8192         0        0        0.000        111.5
+prefill / logits_all_gather / tp / 8                  1       192       192         0        0        0.000          3.7
+prefill / reduce_scatterv / ep / 16                   3    528384    528384         0    16512        0.000      43413.0
+prefill / sp_all_gather / tp / 8                      4    364672    364672         0        0        0.000       3648.9
+prefill / sp_reduce_scatter / tp / 8                  2    352384    352384         0        0        0.000       5025.4
+violations 0
+====
+requests 128 kv bytes [39521664]
+ttft_ms                        mean    323.2 min    310.3 max    623.5 median    321.6
+p_side_ms                      mean    210.0 min    209.9 max    210.0 median    210.0
+remainder_ms                   mean    113.2 min    100.3 max    413.6 median    111.6
+arrival->prefill_done          mean    210.0 min    209.9 max    210.0 median    210.0
+prefill_done->kv_start         mean      0.0 min      0.0 max      0.0 median      0.0
+kv_start->kv_end               mean     70.0 min     37.4 max     79.6 median     70.8
+kv_end->first_decode           mean     43.3 min     39.8 max    376.2 median     40.6

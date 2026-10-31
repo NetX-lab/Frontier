@@ -1,0 +1,12 @@
+== p2_32
+waves 128
+dp 0 n   64 composed -11.642 dispatch -10.383 combine  -1.259 | base dispatch 34.495-34.495 combine 32.869-32.869 | cand dispatch 24.112-24.112 combine 31.610-31.610
+dp 1 n   64 composed -13.076 dispatch -10.047 combine  -3.029 | base dispatch 34.495-34.495 combine 34.369-34.369 | cand dispatch 24.448-24.448 combine 31.340-31.340
+all composed -12.359 dispatch -10.215 combine  -2.144
+== p2_64
+waves 128
+dp 0 n   32 composed  +5.498 dispatch  -1.420 combine  +6.918 | base dispatch 46.292-46.292 combine 86.502-86.502 | cand dispatch 44.873-44.873 combine 93.419-93.419
+dp 1 n   32 composed  +3.512 dispatch  -0.769 combine  +4.281 | base dispatch 46.292-46.292 combine 89.342-89.342 | cand dispatch 45.523-45.523 combine 93.624-93.624
+dp 2 n   32 composed  +4.385 dispatch  -1.190 combine  +5.575 | base dispatch 46.292-46.292 combine 88.884-88.884 | cand dispatch 45.103-45.103 combine 94.459-94.459
+dp 3 n   32 composed  +5.179 dispatch  -0.686 combine  +5.865 | base dispatch 46.292-46.292 combine 86.410-86.410 | cand dispatch 45.606-45.606 combine 92.275-92.275
+all composed  +4.644 dispatch  -1.016 combine  +5.660

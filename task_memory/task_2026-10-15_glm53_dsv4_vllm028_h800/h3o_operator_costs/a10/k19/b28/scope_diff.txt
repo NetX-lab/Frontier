@@ -1,0 +1,19 @@
+composed_ms 221.564 209.922 -11.642
+segment coordination_and_overlap -0.0 -0.0 0.0
+segment dispatch 218.307 206.664 -11.642
+segment dsv4_block_table_write 0.009 0.009 0.0
+segment kv_cache_block_zero 2.911 2.911 0.0
+segment post 0.101 0.101 0.0
+segment prepare 0.237 0.237 0.0
+scope dsv4_ep_dispatch_allgather 34.495 24.112 -10.383
+scope dsv4_ep_output_reduce_scatter 32.869 31.61 -1.259
+
+composed_ms 273.94 279.438 5.498
+segment coordination_and_overlap 0.017 0.017 -0.0
+segment dispatch 270.666 276.164 5.498
+segment dsv4_block_table_write 0.009 0.009 0.0
+segment kv_cache_block_zero 2.911 2.911 0.0
+segment post 0.101 0.101 0.0
+segment prepare 0.237 0.237 0.0
+scope dsv4_ep_dispatch_allgather 46.292 44.873 -1.42
+scope dsv4_ep_output_reduce_scatter 86.502 93.419 6.918

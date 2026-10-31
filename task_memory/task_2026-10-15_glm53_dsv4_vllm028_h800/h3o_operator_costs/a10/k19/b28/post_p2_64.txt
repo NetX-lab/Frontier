@@ -1,0 +1,53 @@
+post done p2_64_warm_k19b28
+wrote /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10_gate/p2_64_warm_k19b28_run/rows
+ttft_ms                  vllm 741.2164 frontier 662.6138 rel 0.1060 FAIL
+tpot_ms                  vllm 25.8705 frontier 25.2953 rel 0.0222 PASS
+request_e2e_time_ms      vllm 27206.7695 frontier 26539.7432 rel 0.0245 PASS
+token_throughput_tps     vllm 5963.2063 frontier 5976.0961 rel 0.0022 PASS
+dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path: FAIL (routing MATCH)
+ttft_ms: native=741.2163514151567 frontier=662.6138266042597 absolute_error=78.60252481089708 relative_error=0.1060453195087053
+tpot_ms: native=25.870530968031684 frontier=25.29533661765233 absolute_error=0.575194350379352 relative_error=0.022233573446564427
+request_e2e_time_ms: native=27206.76953171157 frontier=26539.743186462594 absolute_error=667.0263452489744 relative_error=0.0245169256302739
+token_throughput_tps: native=5963.20631789112 frontier=5976.096120185796 absolute_error=12.889802294675974 relative_error=0.0021615556476728506
+====
+run p2_64_warm_k19b28: 38 distinct requests, 9002176 calls
+role / operation / domain / devices              points     calls     exact    interp  unequal max_log_dist     total_ms
+decode / all_gatherv / ep / 32                        1   1045760   1045760         0        0        0.000     267865.1
+decode / all_reduce / tp / 8                          4     48028     48028         0        0        0.000        485.4
+decode / logits_all_gather / tp / 8                   7     23708     23708         0        0        0.000        653.5
+decode / reduce_scatterv / ep / 32                    1   1045760   1045760         0        0        0.000     121411.9
+decode / sp_all_gather / tp / 8                       2   2089524   2089524         0        0        0.000      15277.9
+decode / sp_reduce_scatter / tp / 8                   4   2065204   2065204         0        0        0.000      17538.8
+prefill / all_gatherv / ep / 32                       5    665984    665984         0    27520        0.000     192500.4
+prefill / all_reduce / tp / 8                         2     15360     15360         0        0        0.000        182.0
+prefill / logits_all_gather / tp / 8                  1       160       160         0        0        0.000          3.1
+prefill / reduce_scatterv / ep / 32                   5    665984    665984         0    27520        0.000     133914.6
+prefill / sp_all_gather / tp / 8                      4    676096    676096         0        0        0.000       5908.0
+prefill / sp_reduce_scatter / tp / 8                  2    660608    660608         0        0        0.000       8708.3
+violations 0
+====
+requests 128 kv bytes [39521664]
+ttft_ms                        mean    662.6 min    418.3 max    897.3 median    658.6
+p_side_ms                      mean    520.1 min    279.0 max    755.4 median    529.4
+remainder_ms                   mean    142.5 min    127.6 max    538.0 median    138.1
+arrival->prefill_done          mean    520.1 min    279.0 max    755.4 median    529.4
+prefill_done->kv_start         mean      0.0 min      0.0 max      0.0 median      0.0
+kv_start->kv_end               mean     87.3 min     48.8 max    100.9 median     86.8
+kv_end->first_decode           mean     55.2 min     51.1 max    489.3 median     51.2
+====
+repeat01 ttft_ms: native 779.889 rel 15.04% tpot_ms: native 25.430 rel 0.53% request_e2e_time_ms: native 26794.644 rel 0.95% token_throughput_tps: native 5948.030 rel 0.47%
+repeat02 ttft_ms: native 725.492 rel 8.67% tpot_ms: native 26.255 rel 3.66% request_e2e_time_ms: native 27584.864 rel 3.79% token_throughput_tps: native 5976.593 rel 0.01%
+repeat03 ttft_ms: native 718.268 rel 7.75% tpot_ms: native 25.926 rel 2.43% request_e2e_time_ms: native 27240.800 rel 2.57% token_throughput_tps: native 5965.066 rel 0.18%
+FINISHED ee29d548474dbc8bc155e531597bb7ba8580c374 [] 86.95818367507309 12012.011938250158
+p2_64 all n 128
+  ttft_ms                              base   513.295 candidate   520.095 difference   +6.800
+  decode_first_token_completed_at_ms   base   680.381 candidate   687.898 difference   +7.518
+  tpot_ms                              base    25.295 candidate    25.295 difference   +0.001
+  request_e2e_time_ms                  base 26531.441 candidate 26539.743 difference   +8.302
+p2_64 without request 0 n 127
+  ttft_ms                              base   515.179 candidate   521.990 difference   +6.810
+  decode_first_token_completed_at_ms   base   679.147 candidate   686.681 difference   +7.533
+  tpot_ms                              base    25.295 candidate    25.295 difference   +0.001
+  request_e2e_time_ms                  base 26530.140 candidate 26538.493 difference   +8.352
+p2_64 shape (local tokens per lane) | base n, mean ms | candidate n, mean ms | difference
+  (6144, 1, 1, 1) |   128   275.223 |   128   279.867 |   +4.644

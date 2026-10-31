@@ -1,0 +1,8 @@
+requests 128 kv bytes [39521664]
+ttft_ms                        mean    323.2 min    310.3 max    623.5 median    321.6
+p_side_ms                      mean    210.0 min    209.9 max    210.0 median    210.0
+remainder_ms                   mean    113.2 min    100.3 max    413.6 median    111.6
+arrival->prefill_done          mean    210.0 min    209.9 max    210.0 median    210.0
+prefill_done->kv_start         mean      0.0 min      0.0 max      0.0 median      0.0
+kv_start->kv_end               mean     70.0 min     37.4 max     79.6 median     70.8
+kv_end->first_decode           mean     43.3 min     39.8 max    376.2 median     40.6
