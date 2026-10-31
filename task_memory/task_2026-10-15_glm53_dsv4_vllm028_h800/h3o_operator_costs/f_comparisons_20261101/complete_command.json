@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "tests/analysis/v4_f_variant_comparison.py",
+    "--task-root",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800",
+    "--stage-root",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4",
+    "--output",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/complete"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_utc": "2026-10-31T19:26:54.013467+00:00",
+  "end_utc": "2026-10-31T19:26:54.096444+00:00",
+  "exit_code": 0,
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "python_version": "Python 3.10.6",
+  "collector_source_commit": "b659da114c0a116d3aa0a43f90b1f42f86b3855f",
+  "stdout": "PASS_EVIDENCE_CHECKS readings=8 metrics=128 unavailable=3\n",
+  "stderr": "",
+  "timeout_s": 60,
+  "rlimit_as_gib": 30
+}

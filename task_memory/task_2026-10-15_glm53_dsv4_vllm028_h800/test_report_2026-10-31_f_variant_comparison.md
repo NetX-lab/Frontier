@@ -4,13 +4,85 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
 | 2026-11-01 | Verified F2 P2-32 all-repeat numerical PASS and A8 exact coverage; only F2 P2-64 remains running. |
 | 2026-11-01 | Verified six completed readings/96 metric entries for the final comparison collector while both original F2 replays continue. |
 | 2026-11-01 | Completed F1a P2-64 with all-repeat latency FAIL; retained exact references, six compute hashes and active F2 replays. |
 | 2026-10-31 | Codex update: F4/B28 five-artifact identity on both scales, B29 per-repeat results, F1a P2-32 final FAIL and fresh P2-64 replay. |
 | 2026-10-31 | Created: F1 per-call screen and astra defect, F4 planner terms; F4 replays, B29, B30a and B30b pending. |
 
-## Latest comparison checkpoint — 2026-11-01
+## Completed diagnostic comparison — 2026-11-01
+
+Decision 46's F1–F4 experiment series has terminal outcomes. The unchanged collector reports **PASS_EVIDENCE_CHECKS, 8 readings, 128 metric entries, 3 unavailable results**. This means the retained evidence is consistent; it does not mean the variants or formal qualification pass. No simulator, native run, normalization or gate was repeated in this closeout.
+
+F2 K18 P2-64 fails repeat01 TTFT: native 779.888727400 ms, predicted 680.123765687 ms, absolute error 99.764961713 ms, relative error 12.792204607%. Its other 11 per-repeat metrics pass. Pooled TTFT 8.242207% does not override the failed repeat. F2 P2-32 passes all 12 per-repeat metrics. The original P2-64 launcher and watcher both exited0; no comparison replay or watcher remains active.
+
+Each cell below is **prediction / worst error across the three individual repeats**. Latencies are ms and THPT is tok/s. The verdict includes every metric and every repeat. All native and predicted values, signed differences, absolute errors and relative errors for every repeat are in `h3o_operator_costs/f_comparisons_20261101/complete/metrics.csv`; `comparison.json` pins the source revisions, inputs, reference hashes and readings.
+
+| Variant | Case | TTFT | TPOT | E2E | THPT | Numerical verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| B29 | p2_32 | 344.878991 / 5.607176% | 19.926786 / 0.192044% | 20729.981427 / 0.269220% | 6225.735862 / 0.134548% | PASS |
+| B29 | p2_64 | 684.313827 / 12.254941% | 25.295337 / 3.656983% | 26561.443186 / 3.710082% | 5975.251570 / 0.457663% | FAIL |
+| F4 | p2_32 | 323.178991 / 11.546431% | 19.926786 / 0.192044% | 20708.281427 / 0.373618% | 6226.652709 / 0.119841% | FAIL |
+| F4 | p2_64 | 662.613827 / 15.037389% | 25.295337 / 3.656983% | 26539.743186 / 3.788748% | 5976.096120 / 0.471862% | FAIL |
+| F1A | p2_32 | 376.104429 / 3.903495% | 14.265762 / 28.533481% | 14969.979091 / 27.980269% | 6468.179037 / 3.844430% | FAIL |
+| F1A | p2_64 | 463.897052 / 40.517533% | 15.565031 / 40.717055% | 16386.923646 / 40.594510% | 6404.273989 / 7.670513% | FAIL |
+| F2 | p2_32 | 345.032252 / 5.565229% | 19.929652 / 0.206450% | 20733.065841 / 0.254381% | 6224.402906 / 0.155930% | PASS |
+| F2 | p2_64 | 680.123766 / 12.792205% | 25.292822 / 3.666561% | 26554.680541 / 3.734598% | 5971.825583 / 0.400064% | FAIL |
+
+F1a specification links fail latency metrics at both scales. F1b's measured link fit fails its independent G5h validation (EP graph-forward predictions 11.449–19.300 times measured); both replays additionally stop with compute COVERAGE_MISS. Their complete E2E metrics remain null. F3's complete H200 NIXL measurements yield a negative affine intercept −46.676920 us and p90 residual 29.175907%; no admissible input or F3 replay is available. These three unavailable results are explicitly recorded by the collector.
+
+F4's five metric artifacts equal B28 byte for byte at both scales. F4 and B28 use zero serving delays; B29 uses 10.3/11.4 ms. The F4/B29 difference cannot be attributed to the memory planner. The planner changes its pool by +5.55%/+6.83%, but the retained workload's request metrics are unchanged against the matched B28 baseline.
+
+F2 changes only K19 to18. At P2-64 this lowers predicted TTFT by 4.190060917 ms and increases repeat01's TTFT error from 12.254940665% to 12.792204607%. It does not resolve the failing formal reading. The one-GPU single-capacity explanation remains AMBIGUOUS; K18 is only the retained local-interpolation diagnostic. Under D-NO-INTERRUPT, keep measured CC, formal K19, ingress 10.3 ms, handoff 11.4 ms, all three native references and every threshold unchanged. No F variant is promoted.
+
+## F2 P2-64 terminal verification
+
+Source `662a427ed32bc1bc2f29b177e7c073cbd460c0b4`, clean at launch. Initialization 73.574429 s, simulation 8979.857535 s. The output contains 128 complete unique formal requests and 917,504 tokens. All three native CSV hashes and all six compute-table hashes equal B29; the pre-run comparison pins all seven profiling tables and records K as the only behavior change. No dummy mode or whole-step table is bound.
+
+The completed gzip contains 39,680 forward records, equal to the receipt and stage-end count. Both observer-file SHA256 values reproduce. Zero stale stage ends. A8 returns 38 distinct collective requests, 9,003,672/9,003,672 exact calls, zero interpolated calls and zero violations. Its actual stdout is retained; exit 0 alone was not used as the acceptance condition. Memory admission retains the existing DIFFERS status (2,940 modeled versus 2,944 native blocks per request).
+
+The original watcher executed the gate once from 2026-11-01 03:26:49 to 03:26:50 UTC+8. It reused the three clean references. Supplementary pooled values and every individual repeat follow; all actual values are positive, so no undefined relative errors occur.
+
+| Reference | Metric | Native | F2 K18 | Absolute error | Relative error | Verdict |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| pooled | ttft_ms | 741.216351 | 680.123766 | 61.092586 | 8.242207% | PASS |
+| pooled | tpot_ms | 25.870531 | 25.292822 | 0.577709 | 2.233078% | PASS |
+| pooled | request_e2e_time_ms | 27206.769532 | 26554.680541 | 652.088991 | 2.396789% | PASS |
+| pooled | token_throughput_tps | 5963.206318 | 5971.825583 | 8.619265 | 0.144541% | PASS |
+| repeat01 | ttft_ms | 779.888727 | 680.123766 | 99.764962 | 12.792205% | FAIL |
+| repeat01 | tpot_ms | 25.429869 | 25.292822 | 0.137047 | 0.538921% | PASS |
+| repeat01 | request_e2e_time_ms | 26794.644444 | 26554.680541 | 239.963903 | 0.895567% | PASS |
+| repeat01 | token_throughput_tps | 5948.029629 | 5971.825583 | 23.795953 | 0.400064% | PASS |
+| repeat02 | ttft_ms | 725.492280 | 680.123766 | 45.368514 | 6.253480% | PASS |
+| repeat02 | tpot_ms | 26.255496 | 25.292822 | 0.962674 | 3.666561% | PASS |
+| repeat02 | request_e2e_time_ms | 27584.864259 | 26554.680541 | 1030.183719 | 3.734598% | PASS |
+| repeat02 | token_throughput_tps | 5976.592892 | 5971.825583 | 4.767309 | 0.079766% | PASS |
+| repeat03 | ttft_ms | 718.268047 | 680.123766 | 38.144281 | 5.310591% | PASS |
+| repeat03 | tpot_ms | 25.926229 | 25.292822 | 0.633407 | 2.443112% | PASS |
+| repeat03 | request_e2e_time_ms | 27240.799892 | 26554.680541 | 686.119351 | 2.518720% | PASS |
+| repeat03 | token_throughput_tps | 5965.065720 | 5971.825583 | 6.759863 | 0.113324% | PASS |
+
+Commands ran in the current worktree with Python 3.10.6 at `/data/ycfeng/envs/frontier-py310/bin/python`. The closeout command inherits a 30 GiB address-space limit, uses `/data/ycfeng/tmp`, sets `PYTHONDONTWRITEBYTECODE=1`, and gives each existing checker a 60 s timeout. `finish_comparison_command.py` preserves the exact orchestration; `complete_command.json` records times, environment and stdout. The script waited for the existing watcher and never invoked a gate.
+
+```bash
+/data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/glm53_dsv4/finish_f_comparison_20261101.py
+```
+
+The existing commands it executes once are:
+
+```bash
+/data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a8_collectives.py /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101
+/data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_f_variant_comparison.py --task-root task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800 --stage-root /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4 --output task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/complete
+```
+
+Observed: the closeout command and both existing checkers exit 0; A8 `violations 0`; collector `PASS_EVIDENCE_CHECKS readings=8 metrics=128 unavailable=3`. F2 accuracy remains FAIL as stated above. Evidence: `f2_p2_64/reading.json`, its normalized rows, `f2_p2_64_{receipt,verification,collectives,a8}.json`, `f2_p2_64_a8_stdout.txt`, and `complete/` in the comparison evidence directory.
+
+Report values were checked against all 32 variant/case/metric cells; the document diff check passed. The staged default whitespace check then flagged the collector CSV’s 129 CRLF line endings. All 129 records use CRLF consistently and have no trailing spaces or tabs; the original collector bytes are preserved. `git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check` passes while recognizing those CSV line endings. No simulator or profiling source changed in this step.
+
+The next qualification work belongs to tickets 05/09: a supported uniform measurement correction for the failed A6 attention/collective conditions, plus the retained hardware/NIXL/memory requirements. The completed 128-case repeatability result does not establish a sufficient repeat count. The scratch 16-reconstruction draft is not selected or authorized; its estimated 14.850153 GPUh is above the remaining approximate 2.160175 GPUh. No new GPU operation, table generation, source behavior or resource increase occurred in this closeout. Tickets 05/09/11/19 remain open.
+
+## Historical F1a checkpoint — before F2 P2-64 completion
 
 F1a is complete at both scales. P2-32 has pooled TPOT28.38101% and E2E27.82468% errors (FAIL). P2-64 completed128 formal requests and917,504 tokens: TTFT/TPOT/E2E FAIL in every reference repetition; total THPT PASS. Specification-link parameters substantially underpredict the observed latencies on these two cases. The original incomplete P2-64 attempt remains retained; these results come only from the fresh completed run.
 
@@ -58,7 +130,7 @@ Decision under D-NO-INTERRUPT: this completes the F1a comparison requested by de
 
 The initial screen, predictions and then-pending statuses below are historical. The measured backend stays formal; no diagnostic variant or B30a default change is promoted.
 
-## F2 P2-32 completed — 2026-11-01
+## Historical F2 P2-32 completion — before P2-64 termination
 
 The existing launcher86884 exited0 and the watcher ran the canonical gate once at02:57:46–02:57:47 UTC+8. The reading is numerical PASS against every reference repeat. Source662a427e is clean, initialization71.904930s and simulation7225.211242s. The128 complete requests contain917,504tokens; allthree native CSVs and six compute-table hashes equal B29. The pre-run input comparison verifies allseven profiling hashes and effective behavior differs only by K19→18. Both serving delays remain10.3/11.4ms. There are23,040 forwards and matching stage ends, zero stale ends. A8 reports6,310,733/6,310,733 exact collective calls,44 distinct requests, zero violations.
 
@@ -87,7 +159,7 @@ Evidence: `h3o_operator_costs/f_comparisons_20261101/f2_p2_32/reading.json`, `f2
 
 Decision under D-NO-INTERRUPT: retain this diagnostic result and formalK19. A close E2E match does not resolve the single-capacity AMBIGUOUS finding or establish that the synthetic one-GPU launch queue represents native concurrent streams and collectives. P2-64 remains running in its original session87208; its gate and final comparison collection remain pending. A6/memory/NIXL qualification is unchanged.
 
-## Comparison collector verification — 2026-11-01
+## Historical comparison collector precheck — before P2-64 termination
 
 `tests/analysis/v4_f_variant_comparison.py` reads retained canonical outputs and does not execute a normalizer, gate or simulator. It checks the eight expected B29/F1a/F2/F4 readings against the corresponding B29 reference CSV bytes, six compute-table hashes, fixed request/token population, all four metrics, every repeat and the unchanged10% threshold. Its output uses a nonnegative absolute error and retains a separate signed delta. F1b coverage failures and F3 invalid-fit results have null metrics. F4 retains its pre-B29 zero-delay configuration.
 

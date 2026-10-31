@@ -1,0 +1,767 @@
+{
+  "schema": "a11-collectives-v1",
+  "rows": [
+    {
+      "role": "prefill",
+      "curve_key": [
+        "sp_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 6291456,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 6291456,
+      "upper_bytes": 6291456,
+      "lower_time_us": 161.6096019744873,
+      "upper_time_us": 161.6096019744873,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.16160960197448732,
+      "call_count": 5632,
+      "predicted_total_ms": 910.1852783203991
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "sp_reduce_scatter",
+        "tp",
+        8
+      ],
+      "requested_bytes": 50331648,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 50331648,
+      "upper_bytes": 50331648,
+      "lower_time_us": 156.62400126457214,
+      "upper_time_us": 156.62400126457214,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.15662400126457215,
+      "call_count": 5632,
+      "predicted_total_ms": 882.1063751221516
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "all_reduce",
+        "tp",
+        8
+      ],
+      "requested_bytes": 50331648,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 50331648,
+      "upper_bytes": 50331648,
+      "lower_time_us": 251.7375946044922,
+      "upper_time_us": 251.7375946044922,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.2517375946044922,
+      "call_count": 128,
+      "predicted_total_ms": 32.222412109375
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "sp_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 8192,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8192,
+      "upper_bytes": 8192,
+      "lower_time_us": 7.29920007288456,
+      "upper_time_us": 7.29920007288456,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.00729920007288456,
+      "call_count": 654976,
+      "predicted_total_ms": 4780.800866935742
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "sp_reduce_scatter",
+        "tp",
+        8
+      ],
+      "requested_bytes": 8192,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8192,
+      "upper_bytes": 8192,
+      "lower_time_us": 11.948800086975098,
+      "upper_time_us": 11.948800086975098,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.011948800086975098,
+      "call_count": 654976,
+      "predicted_total_ms": 7826.177285858165
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "all_reduce",
+        "tp",
+        8
+      ],
+      "requested_bytes": 8192,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8192,
+      "upper_bytes": 8192,
+      "lower_time_us": 9.836000017821789,
+      "upper_time_us": 9.836000017821789,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.009836000017821788,
+      "call_count": 15232,
+      "predicted_total_ms": 149.82195227150456
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "all_gatherv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 6346752,
+      "unequal_rows": [
+        768,
+        1,
+        1,
+        1
+      ],
+      "exact": true,
+      "lower_bytes": 6346752,
+      "upper_bytes": 6346752,
+      "lower_time_us": 1043.0079698562622,
+      "upper_time_us": 1043.0079698562622,
+      "log_distance_ratio": null,
+      "predicted_ms": 1.0430079698562622,
+      "call_count": 6880,
+      "predicted_total_ms": 7175.894832611084
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "reduce_scatterv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 50528256,
+      "unequal_rows": [
+        768,
+        1,
+        1,
+        1
+      ],
+      "exact": true,
+      "lower_bytes": 50528256,
+      "upper_bytes": 50528256,
+      "lower_time_us": 2171.999931335449,
+      "upper_time_us": 2171.999931335449,
+      "log_distance_ratio": null,
+      "predicted_ms": 2.171999931335449,
+      "call_count": 6880,
+      "predicted_total_ms": 14943.35952758789
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "sp_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 25165824,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 25165824,
+      "upper_bytes": 25165824,
+      "lower_time_us": 554.7055959701538,
+      "upper_time_us": 554.7055959701538,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.5547055959701538,
+      "call_count": 160,
+      "predicted_total_ms": 88.75289535522447
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 32320,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 32320,
+      "upper_bytes": 32320,
+      "lower_time_us": 19.19039934873581,
+      "upper_time_us": 19.19039934873581,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.019190399348735808,
+      "call_count": 160,
+      "predicted_total_ms": 3.070463895797738
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "sp_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 32768,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 32768,
+      "upper_bytes": 32768,
+      "lower_time_us": 8.370399847626686,
+      "upper_time_us": 8.370399847626686,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.008370399847626686,
+      "call_count": 15328,
+      "predicted_total_ms": 128.30148886438585
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "all_gatherv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 8264,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8264,
+      "upper_bytes": 8264,
+      "lower_time_us": 256.14399909973145,
+      "upper_time_us": 256.14399909973145,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.25614399909973146,
+      "call_count": 638464,
+      "predicted_total_ms": 163538.72224163526
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "reduce_scatterv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 262144,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 262144,
+      "upper_bytes": 262144,
+      "lower_time_us": 116.09920263290405,
+      "upper_time_us": 116.09920263290405,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.11609920263290405,
+      "call_count": 638464,
+      "predicted_total_ms": 74125.16130996366
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "sp_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 8192,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8192,
+      "upper_bytes": 8192,
+      "lower_time_us": 7.29920007288456,
+      "upper_time_us": 7.29920007288456,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.00729920007288456,
+      "call_count": 2065935,
+      "predicted_total_ms": 15079.672903086172
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "sp_reduce_scatter",
+        "tp",
+        8
+      ],
+      "requested_bytes": 8192,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8192,
+      "upper_bytes": 8192,
+      "lower_time_us": 11.948800086975098,
+      "upper_time_us": 11.948800086975098,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.011948800086975098,
+      "call_count": 94815,
+      "predicted_total_ms": 1132.9254802470903
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "all_reduce",
+        "tp",
+        8
+      ],
+      "requested_bytes": 8192,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8192,
+      "upper_bytes": 8192,
+      "lower_time_us": 9.836000017821789,
+      "upper_time_us": 9.836000017821789,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.009836000017821788,
+      "call_count": 2205,
+      "predicted_total_ms": 21.68838003929663
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "all_gatherv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 8264,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 8264,
+      "upper_bytes": 8264,
+      "lower_time_us": 256.14399909973145,
+      "upper_time_us": 256.14399909973145,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.25614399909973146,
+      "call_count": 1045760,
+      "predicted_total_ms": 267865.148503701
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "reduce_scatterv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 262144,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 262144,
+      "upper_bytes": 262144,
+      "lower_time_us": 116.09920263290405,
+      "upper_time_us": 116.09920263290405,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.11609920263290405,
+      "call_count": 1045760,
+      "predicted_total_ms": 121411.90214316417
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "sp_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 32768,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 32768,
+      "upper_bytes": 32768,
+      "lower_time_us": 8.370399847626686,
+      "upper_time_us": 8.370399847626686,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.008370399847626686,
+      "call_count": 24320,
+      "predicted_total_ms": 203.5681242941939
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 32320,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 32320,
+      "upper_bytes": 32320,
+      "lower_time_us": 19.19039934873581,
+      "upper_time_us": 19.19039934873581,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.019190399348735808,
+      "call_count": 1297,
+      "predicted_total_ms": 24.889947955310795
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "all_gatherv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 6346752,
+      "unequal_rows": [
+        1,
+        768,
+        1,
+        1
+      ],
+      "exact": true,
+      "lower_bytes": 6346752,
+      "upper_bytes": 6346752,
+      "lower_time_us": 1058.127999305725,
+      "upper_time_us": 1058.127999305725,
+      "log_distance_ratio": null,
+      "predicted_ms": 1.058127999305725,
+      "call_count": 6880,
+      "predicted_total_ms": 7279.920635223389
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "reduce_scatterv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 50528256,
+      "unequal_rows": [
+        1,
+        768,
+        1,
+        1
+      ],
+      "exact": true,
+      "lower_bytes": 50528256,
+      "upper_bytes": 50528256,
+      "lower_time_us": 2176.7520904541016,
+      "upper_time_us": 2176.7520904541016,
+      "log_distance_ratio": null,
+      "predicted_ms": 2.1767520904541016,
+      "call_count": 6880,
+      "predicted_total_ms": 14976.054382324219
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "all_gatherv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 6346752,
+      "unequal_rows": [
+        1,
+        1,
+        768,
+        1
+      ],
+      "exact": true,
+      "lower_bytes": 6346752,
+      "upper_bytes": 6346752,
+      "lower_time_us": 1048.3520030975342,
+      "upper_time_us": 1048.3520030975342,
+      "log_distance_ratio": null,
+      "predicted_ms": 1.0483520030975342,
+      "call_count": 6880,
+      "predicted_total_ms": 7212.661781311035
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "reduce_scatterv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 50528256,
+      "unequal_rows": [
+        1,
+        1,
+        768,
+        1
+      ],
+      "exact": true,
+      "lower_bytes": 50528256,
+      "upper_bytes": 50528256,
+      "lower_time_us": 2196.176052093506,
+      "upper_time_us": 2196.176052093506,
+      "log_distance_ratio": null,
+      "predicted_ms": 2.196176052093506,
+      "call_count": 6880,
+      "predicted_total_ms": 15109.69123840332
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "all_gatherv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 6346752,
+      "unequal_rows": [
+        1,
+        1,
+        1,
+        768
+      ],
+      "exact": true,
+      "lower_bytes": 6346752,
+      "upper_bytes": 6346752,
+      "lower_time_us": 1060.0639581680298,
+      "upper_time_us": 1060.0639581680298,
+      "log_distance_ratio": null,
+      "predicted_ms": 1.0600639581680298,
+      "call_count": 6880,
+      "predicted_total_ms": 7293.240032196045
+    },
+    {
+      "role": "prefill",
+      "curve_key": [
+        "reduce_scatterv",
+        "ep",
+        32
+      ],
+      "requested_bytes": 50528256,
+      "unequal_rows": [
+        1,
+        1,
+        1,
+        768
+      ],
+      "exact": true,
+      "lower_bytes": 50528256,
+      "upper_bytes": 50528256,
+      "lower_time_us": 2145.3919410705566,
+      "upper_time_us": 2145.3919410705566,
+      "log_distance_ratio": null,
+      "predicted_ms": 2.1453919410705566,
+      "call_count": 6880,
+      "predicted_total_ms": 14760.29655456543
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "sp_reduce_scatter",
+        "tp",
+        8
+      ],
+      "requested_bytes": 16384,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 16384,
+      "upper_bytes": 16384,
+      "lower_time_us": 10.627200081944466,
+      "upper_time_us": 10.627200081944466,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.010627200081944465,
+      "call_count": 112488,
+      "predicted_total_ms": 1195.4324828152312
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "all_reduce",
+        "tp",
+        8
+      ],
+      "requested_bytes": 16384,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 16384,
+      "upper_bytes": 16384,
+      "lower_time_us": 8.99519994854927,
+      "upper_time_us": 8.99519994854927,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.008995199948549271,
+      "call_count": 2616,
+      "predicted_total_ms": 23.531443065405636
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 64640,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 64640,
+      "upper_bytes": 64640,
+      "lower_time_us": 24.303999543190002,
+      "upper_time_us": 24.303999543190002,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.024303999543190003,
+      "call_count": 1268,
+      "predicted_total_ms": 30.8174714207643
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "sp_reduce_scatter",
+        "tp",
+        8
+      ],
+      "requested_bytes": 32768,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 32768,
+      "upper_bytes": 32768,
+      "lower_time_us": 8.894399926066399,
+      "upper_time_us": 8.894399926066399,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.008894399926066398,
+      "call_count": 210872,
+      "predicted_total_ms": 1875.579901202964
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "all_reduce",
+        "tp",
+        8
+      ],
+      "requested_bytes": 32768,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 32768,
+      "upper_bytes": 32768,
+      "lower_time_us": 9.359999746084213,
+      "upper_time_us": 9.359999746084213,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.009359999746084213,
+      "call_count": 4904,
+      "predicted_total_ms": 45.901438754794476
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 96960,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 96960,
+      "upper_bytes": 96960,
+      "lower_time_us": 25.203199684619904,
+      "upper_time_us": 25.203199684619904,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.025203199684619905,
+      "call_count": 1244,
+      "predicted_total_ms": 31.352780407666454
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 129280,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 129280,
+      "upper_bytes": 129280,
+      "lower_time_us": 25.1568004488945,
+      "upper_time_us": 25.1568004488945,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.0251568004488945,
+      "call_count": 1248,
+      "predicted_total_ms": 31.395686960219717
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "sp_reduce_scatter",
+        "tp",
+        8
+      ],
+      "requested_bytes": 65536,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 65536,
+      "upper_bytes": 65536,
+      "lower_time_us": 8.102399855852127,
+      "upper_time_us": 8.102399855852127,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.008102399855852127,
+      "call_count": 1647760,
+      "predicted_total_ms": 13350.810386095814
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "all_reduce",
+        "tp",
+        8
+      ],
+      "requested_bytes": 65536,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 65536,
+      "upper_bytes": 65536,
+      "lower_time_us": 10.291200131177902,
+      "upper_time_us": 10.291200131177902,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.010291200131177902,
+      "call_count": 38320,
+      "predicted_total_ms": 394.3587890267372
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 161600,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 161600,
+      "upper_bytes": 161600,
+      "lower_time_us": 26.737599074840546,
+      "upper_time_us": 26.737599074840546,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.026737599074840544,
+      "call_count": 1312,
+      "predicted_total_ms": 35.07972998619166
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 193920,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 193920,
+      "upper_bytes": 193920,
+      "lower_time_us": 26.974400877952576,
+      "upper_time_us": 26.974400877952576,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.026974400877952574,
+      "call_count": 9537,
+      "predicted_total_ms": 257.2548611729967
+    },
+    {
+      "role": "decode",
+      "curve_key": [
+        "logits_all_gather",
+        "tp",
+        8
+      ],
+      "requested_bytes": 226240,
+      "unequal_rows": null,
+      "exact": true,
+      "lower_bytes": 226240,
+      "upper_bytes": 226240,
+      "lower_time_us": 31.08160048723221,
+      "upper_time_us": 31.08160048723221,
+      "log_distance_ratio": null,
+      "predicted_ms": 0.031081600487232207,
+      "call_count": 7819,
+      "predicted_total_ms": 243.02703420963797
+    }
+  ]
+}

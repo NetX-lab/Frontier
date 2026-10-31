@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
 | 2026-10-31 | Archived current Codex/H200 route, B29/A8/F4 observations and incomplete F comparisons/qualification in English. |
 | 2026-10-26 | Archived D-NO-STEP-COST-SHORTCUT and D-OPERATOR-LEVEL-ROUTE: the step-cost results are diagnostic only, and operator-level DSV4 costs (H3o) are the next route. |
 | 2026-10-25 | Archived D-DSV4-H800-MAINLINE-CORRECTION: this directory is the single mainline, H4a is the next milestone, and the trace-audit state is historical. |
@@ -87,15 +88,25 @@
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
 
-## Current state — Codex CLI continuation (2026-10-31)
+## Current state — Codex CLI continuation (2026-11-01)
 
-The task remains in progress. DSV4 H200 P2-32/P2-64 operator simulation is the mainline under D-H200-MAINLINE-CONTINUE; H800 follows and GLM remains paused. Codex directly uses personal StepMind Python RJobBackend for the approved probes (D-CODEX-DIRECT-RJOB). The formal measured CC input and three-repeat gates are unchanged.
+The task remains in progress. The active route is DSV4 H200 P2-32/P2-64, followed by H800; GLM remains paused. Codex uses the local personal StepMind Python RJobBackend directly under D-CODEX-DIRECT-RJOB. This comparison closeout used CPU checks only.
 
-Observed deliverables: B29 ingress/handoff is merged at a69a5213 with 10.3/11.4 ms driver inputs and zero defaults. Its P2-32 numerical gate passes all three references; P2-64 remains FAIL because repeat 1 TTFT error is 12.254940665%. Both B29 A8 censuses are entirely exact with zero violations. F4 metrics are byte-identical to B28 at both scales; its zero-delay inputs explain its difference from B29. F1a P2-32 FAILs TPOT/E2E; the fresh P2-64 replay is running.
+Decision 46's ingress option A is implemented at `a69a5213`: driver inputs 10.3 ms ingress and 11.4 ms handoff, with zero code defaults. Formal B29 P2-32 passes all three references numerically; P2-64 remains FAIL because repeat01 TTFT error is 12.254940665%. Formal measured CC, K19 and all reference/qualification rules are unchanged.
 
-Exact retained paths: `h3o_operator_costs/codex_resume_20261031/` contains five full readings, command records, fresh A8 receipts and F4/B28 comparisons; `test_report_2026-10-31_codex_resume.md` reports their values and limits; the current `requirements.md`, `spec.md`, `plan.md`, `progress.md` and tickets carry the corrected execution route. B30b code/plans are still being prepared in `/data/ycfeng/Frontier/.worktrees/b30b-ex-situ-link-probes` and will be integrated here before launch.
+The F1–F4 diagnostic experiment series now has terminal outcomes. F1a fails latency metrics at both scales. F1b's measured link model fails held-out validation and both replays stop with COVERAGE_MISS; no complete E2E metrics exist. F2 local K18 passes P2-32 but fails P2-64 repeat01 TTFT at 12.792204607% (779.888727400 ms native, 680.123765687 ms predicted); the other 11 P2-64 per-repeat metrics pass. F3's complete H200 NIXL data has an invalid affine fit and no replay. F4's five metric artifacts equal B28 at both scales; its zero delays differ from B29, so that difference cannot be attributed to the planner. No variant is promoted.
 
-Open work: complete F1–F4 measurements/fits/replays, inspect fresh A6 and actual H200 NIXL/memory/payload coverage, then assess formal qualification. Numerical PASS does not establish full H3o/09/19 acceptance; historical promotion/reference admissions are preserved without retroactive changes. B30a remains diagnostic pending YC approval of its default ASTRA multi-server behavior change.
+The final P2-64 run has 128 complete requests, 917,504 tokens, 39,680 matching forward/stage-end records, zero stale events and 9,003,672/9,003,672 exact collective calls with zero violations. All three reference CSVs and six compute hashes match B29. The original launcher and watcher completed successfully; no comparison remains running. The unchanged collector reports PASS_EVIDENCE_CHECKS for 8 readings, 128 metric entries and 3 unavailable results. This verifies evidence, not formal qualification.
+
+Deliverables, relative to this task directory:
+
+- `test_report_2026-10-31_f_variant_comparison.md`: all variant outcomes, absolute predictions/errors, validation commands and limitations.
+- `h3o_operator_costs/f_comparisons_20261101/complete/comparison.json` and `metrics.csv` in the same directory: all pooled/per-repeat values and pinned source/reference identities.
+- `h3o_operator_costs/f_comparisons_20261101/f2_p2_64/`: last reading and normalized rows; adjacent `f2_p2_64_{receipt,verification,collectives,a8}.json` and `f2_p2_64_a8_stdout.txt` retain verification.
+- `h3o_operator_costs/f_comparisons_20261101/complete_command.json` and `finish_comparison_command.py`: exact closeout commands, environment and results.
+- `h3o_operator_costs/codex_resume_20261031/`: earlier B29/F4 commands and identities, and the updated check-progress checkpoint.
+
+B30b code and retained outcomes are integrated on the current mainline. Tickets 05/09/11/19 and all other unfinished active DSV4 criteria remain open. A6 fails four attention scopes and seven of eight collective curves. The completed 128-step repeatability diagnostic preserves identities/counts but does not qualify a repetition count or identify the cause of variation. The remaining approximate G1h–G4h budget is 2.160175 GPUh. The scratch 16-repeat full-grid proposal is not selected or approved; it has no package, adapter or new measurement generation. A supported uniform measurement correction and qualified hardware/NIXL/memory coverage precede formal acceptance, followed by H800 continuation. B30a remains on its diagnostic branch pending YC's decision; historical native admission is preserved.
 
 ## Historical state — DSV4 H800 mainline (2026-10-25)
 

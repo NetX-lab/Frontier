@@ -1,0 +1,15 @@
+{
+  "observed_utc": "2026-10-31T19:26:53.971856+00:00",
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a8_collectives.py",
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101"
+  ],
+  "exit_code": 0,
+  "distinct_requests": 38,
+  "calls": 9003672,
+  "exact_calls": 9003672,
+  "violations": 0,
+  "actual_forward_rows": 39680,
+  "source_evidence": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_collectives.json"
+}
