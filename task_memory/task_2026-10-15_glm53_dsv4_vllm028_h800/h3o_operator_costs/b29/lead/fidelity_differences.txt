@@ -1,0 +1,4 @@
+cases compared 77 mismatched 77 identical 0
+cases whose only differences are the two new config keys: 77
+other differences: 0
+candidate-only failures [] cache names only in baseline [] only in candidate []
