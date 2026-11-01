@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-11-01 | Supplement business/integrity and full three-run tables PASS; reviewed forward code/current output and 31 tests complete; median3 qualification and four CPU replays running, overall qualification still open. |
+| 2026-11-01 | Median3 qualification completed and directly verified with unchanged folds/references/omissions; complete classes PASS, only four independent-pass P2 outcomes/comparison pending; overall qualification still open. |
 | 2026-11-01 | Archived C PASS, the B cause and phase-level held-out, and the A blocker. |
 | 2026-11-01 | Archived the A6 noise-floor result and the three pending YC decisions. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
@@ -119,7 +119,9 @@ Forward code and current all-scope invocation are complete: primary 31 tests PAS
 
 Verified code commits: `21ab3b31` for configured full-model qualification, `fb8670ac` for coherent independent-pass tables. The phase checkpoint is `check_progress_2026-11-01_forward_attention.md`; its 4 PASS / 2 TODO result does not close tickets or formal acceptance.
 
-Four original independent-pass P2 CPU replays started once at 07:53:42 UTC (supervisor 223761), followed independently by same-fold median3 A6/forward qualification at 07:54:32 UTC (supervisor 236919). Run/cache/log roots are `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/`; exact commands/PIDs, source/input hashes and later gate results are retained under `h3o_operator_costs/{a6_pass_replays_20261101,a6_forward_attention_20261101}/`. They remain unfinished. See `test_report_2026-11-01_forward_attention_continuation.md` for paths, commands, actual values, resolved execution errors and limits. No new GPU allocation or formal publication is authorized; full 05/09/11/19 acceptance remains OPEN.
+Median3 qualification finished at 08:37:48 UTC: A6 2,379.995336s + forward 216.090562s, both exit 0. Direct verification preserves all 1,421 workload/fold assignments, all 1,373 measured references/layer weights and the same 182 row skips/48 workload omissions. Complete-class median/p90 errors are FULL/decode 0.679554%/1.628628%, PIECEWISE/decode 0.727630%/1.932193%, PIECEWISE/first_tail 0.911188%/2.215912%. All complete classes PASS, zero complete rows exceed 10%, but overall NOT_EVALUABLE and E2E NOT_ASSESSED remain. PIECEWISE p90 increases by 0.285765/0.329259 percentage points, so median3 is not uniformly more accurate. Its kernel-only median replacement retains original gaps/window reference; independent-pass replay tables use all timing statistics from one pass.
+
+Four original independent-pass P2 CPU replays started once at 07:53:42 UTC (supervisor 223761); their outcomes/comparison remain pending. Run/cache/log roots are `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/`; exact commands/PIDs, source/input hashes and gate results are retained under `h3o_operator_costs/{a6_pass_replays_20261101,a6_forward_attention_20261101}/`. Selected median3 evidence is `median3_verification.json`, `median3_summary.json` and `median3_forward_workloads.csv` in the latter directory. See `test_report_2026-11-01_forward_attention_continuation.md` for commands, actual values, resolved errors and limits. No new GPU allocation or formal publication is authorized; full 05/09/11/19 acceptance remains OPEN.
 
 ### Retained checkpoint before forward-attention approval and supplement completion
 

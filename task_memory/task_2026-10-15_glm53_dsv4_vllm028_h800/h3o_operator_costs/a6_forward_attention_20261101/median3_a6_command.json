@@ -31,11 +31,15 @@
   "script_sha256": "3a13ad2246082aac47182fffe327777c36cdeac36387ce4f4ec460270d44637a",
   "table_sha256": "bb240084c1e80742693caa90110079a0ba807fe01d7eba357594cf1463216566",
   "started_utc": "2026-11-01T07:54:32.009198+00:00",
-  "status": "RUNNING",
+  "status": "FINISHED",
   "output_dir": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/median3_a6",
   "scratch_dir": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/a6_median3_scratch",
   "log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/median3_a6.log",
   "supervisor_pid": 236919,
   "limits": "Scope errors are diagnostic; only complete-forward attention qualifies under D-A6-FORWARD-ATTENTION. No table publication or GPU.",
-  "pid": 237030
+  "pid": 237030,
+  "exit_code": 0,
+  "elapsed_seconds": 2379.9953361619264,
+  "finished_utc": "2026-11-01T08:34:12.004950+00:00",
+  "result_sha256": "0ecd31b81007535cdb6b918382292cb6b65286e0ad9e95dd5bcc9a1460716dc2"
 }

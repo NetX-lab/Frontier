@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-11-01 | Applied forward-attention approval; supplement verification/full tables PASS, reviewed current forward code and 31 tests complete; median3 qualification and four CPU replays running. |
+| 2026-11-01 | Median3 A6/forward complete with original folds/reference/omissions unchanged and complete classes PASS; four original CPU P2 outcomes/comparison pending, whole ticket OPEN. |
 | 2026-11-01 | Added the decision follow-up: collective rule PASS, CSA FULL decode cause and phase-level held-out, supplement blocked by I-009; qualification remains open. |
 | 2026-11-01 | Added the A6 noise-floor and three-run-target follow-up; qualification remains open pending YC decisions. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
@@ -102,7 +102,7 @@ Decision follow-up (2026-11-01): YC decided D-A6-THREE-RUN, D-A6-CSA-FULL-CAUSE 
 
 Requirements D-A6-FORWARD-ATTENTION supersedes the pending scope-versus-phase decision above. This ticket and 09 require full-model attention qualification per complete workload and forward class against measured layer windows, with unchanged folds and 5%/10% limits. Per-scope and per-key phase errors are diagnostics for every scope; coverage omissions remain explicit. The simulator, predictor and four clean E2E gates are unchanged.
 
-D-A6-PASS-REPLAYS approves four CPU comparisons using two independent attention generations, keeping measured CC/K19/ingress/workload/reference inputs fixed. B29 is the reference-table baseline. Supplement `exp-1101-143721-849401` and selected-copy/workload/business checks PASS; all 1,421 workloads now have three runs, and full table-field/input bindings PASS. Forward code/current-table execution and 31 tests are complete, with no phase-review findings: three complete forward classes PASS, but 48 omitted workloads keep overall attention NOT_EVALUABLE. The original median3 qualification and four CPU P2 replays are running; exact commands/PIDs are in the root continuation report. No formal table promotion or new GPU allocation is approved. Full ticket remains OPEN.
+D-A6-PASS-REPLAYS approves four CPU comparisons using two independent attention generations, keeping measured CC/K19/ingress/workload/reference inputs fixed. B29 is the reference-table baseline. Supplement `exp-1101-143721-849401`, business checks, all 1,421 three-run workloads and full table/input bindings PASS. Reviewed forward code/current-table execution and 31 tests are complete. Original median3 A6/forward now finished once: all folds/reference/weights/omissions unchanged; complete-class p90 1.628628%/1.932193%/2.215912% PASS, 48 omissions preserve overall NOT_EVALUABLE. Four original CPU P2 outcomes/comparison are still pending; exact commands and selected verification are in the root continuation report. No formal promotion or new GPU allocation is approved. Full ticket remains OPEN.
 
 ## Historical route — DSV4 H800 mainline (2026-10-25)
 

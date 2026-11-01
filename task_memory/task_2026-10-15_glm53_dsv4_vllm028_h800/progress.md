@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Median3 A6/forward completed once and verified: original folds/references/omissions unchanged, three complete classes PASS; only P2 outcomes/comparison remain in this continuation. |
 | 2026-11-01 | Approved A6 continuation: supplement business/integrity and complete tables PASS; reviewed forward code/current output complete, 31 tests PASS; four CPU replays and median3 qualification started once. |
 | 2026-11-01 | YC asked to judge the A6 CSA FULL correction from the user's side; added user-impact analysis and report section 6 with a revised recommendation; awaiting decision. |
 | 2026-11-01 | I-009 resolved; A6 supplement job `exp-1101-143721-849401` submitted once and Running. |
@@ -362,7 +363,8 @@
 - **completed**: B-FORWARD-GATE implementation and primary 31-test suite; full current-table invocation exit 0/322.008842s. Three complete forward classes PASS, but 48 workload omissions/four unevaluable classes keep overall attention NOT_EVALUABLE. B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) reports No actionable findings. Input exploration (`ses_e69f9250effeJF2Iqsv5BW073s`) is complete.
 - **completed**: scoped source commits `21ab3b31` (forward qualification), `fb8670ac` (coherent independent-pass tables), `e033c2cc` (already-executed supplement completion scripts); no `frontier/` or published data change. [Phase checkpoint](check_progress_2026-11-01_forward_attention.md): 4 PASS / 2 TODO, stale current-route/Next-actions corrected, original qualification/replay runs preserved.
 - **in-progress**: four actual CPU P2 replays started at 07:53:42 UTC; supervisor 223761, original timeout PIDs pass1/P2-32 223796, pass1/P2-64 223794, pass2/P2-32 223800, pass2/P2-64 223798. Original supervisor runs each gate once after success. Exact `*_command.json` files under `a6_pass_replays_20261101`; run/log/gate roots `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/`.
-- **in-progress**: same-fold median3 A6/forward pipeline started at 07:54:32 UTC; supervisor 236919, timeout PID 237030, `a6_forward_attention_20261101/median3_a6_command.json`. After A6 fits finish, the supervisor runs the approved forward qualification. No source/runtime/table-promotion change.
+- **completed**: original same-fold median3 A6/forward pipeline, both exit 0, 2,379.995336s + 216.090562s, final 08:37:48 UTC. Direct verification proves all 1,421 fold assignments/coordinates, all 1,373 measured references/weights and all 182 skips/48 omissions unchanged. FULL/decode, PIECEWISE/decode and first_tail p90 = 1.628628% / 1.932193% / 2.215912%, all complete classes PASS; overall NOT_EVALUABLE, E2E NOT_ASSESSED. PIECEWISE p90 does not improve. `a6_forward_attention_20261101/{median3_summary.json,median3_verification.json,median3_forward_workloads.csv}` retain metrics and hashes. Do not restart the completed pipeline; no source/runtime/table-promotion change.
+- **completed**: selected CSV uses standard CRLF, so default staged diff check flagged its terminators. The check with default whitespace flags plus `cr-at-eol` passes; bytes/output hashes and repository configuration are unchanged. Phase checkpoint is now 5 PASS / 1 TODO (four original P2 outcomes and comparison).
 - Evidence and exact commands: [continuation test report](test_report_2026-11-01_forward_attention_continuation.md). No new formal-table publication, GPU run, prefill expansion or E2E closure.
 
 ### Historical restart continuation — before completed integrity/table generation
@@ -414,8 +416,8 @@
 - in-progress (2026-11-01 06:37 UTC, D-A6-THREE-RUN): name resolution works again (I-009 resolved). Quota check: no personal non-preemptible H200 job before this one. Submitted once: `exp-1101-143721-849401`, creator `i-fengyicheng`, non-preemptible, `step_main`, 1 H200, NFS source the build worktree on this host, Running at 06:38 UTC; launcher pid 3087410 under `setsid nohup`, log `/data/ycfeng/tmp/a6_supplement_passes_20261101_01/launcher.log`. Details in issues.md I-009.
 
 Next actions:
-1. Finish the original same-fold median3 A6/forward pipeline; preserve omissions and report complete-forward errors. A's GPU supplement, business checks and complete three-run table generation already passed; do not submit again.
-2. Finish the four original independent-pass P2 CPU replays and once-run gates; compare all four metrics against B29 and every admitted clean repeat. Restart recovery reads original PIDs/receipts and never duplicates a live/completed run.
+1. Finish the four original independent-pass P2 CPU replays and once-run gates; compare all four metrics against B29 and every admitted clean repeat. Restart recovery reads original PIDs/receipts and never duplicates a live/completed run. A and median3 are completed; do not repeat them.
+2. Record cross-generation errors/spread and unchanged non-attention bindings; keep all 48 unqualified workload omissions and median3's original gap/window reference limitation visible.
 3. Record the results before any further table-promotion decision. NIXL/memory input qualification, formal P2 acceptance and then H800 remain separate unfinished work; tickets 05/09/11/19 stay open, GLM paused. F1–F4 comparisons are terminal; new pass replays are running. The unselected 16-repeat draft and unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched.
 
 ## Historical session handoff — 2026-10-25 mainline correction

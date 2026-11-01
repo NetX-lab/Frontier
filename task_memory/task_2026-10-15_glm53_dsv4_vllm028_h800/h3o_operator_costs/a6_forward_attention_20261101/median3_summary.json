@@ -1,0 +1,135 @@
+{
+  "status": "PASS_VERIFICATION_WITH_UNQUALIFIED_OMISSIONS",
+  "sources": {
+    "current_a6": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+      "sha256": "65132e28c3713462e194f544a773137a807810801bd096418130286edba55460"
+    },
+    "median3_a6": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/median3_a6/result.json",
+      "sha256": "0ecd31b81007535cdb6b918382292cb6b65286e0ad9e95dd5bcc9a1460716dc2"
+    },
+    "current_forward": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/current_phase_heldout.json",
+      "sha256": "d17258d6f5cec99a8042b76aae6e89a7dfbaba779173e75465cca3eae9ca0274"
+    },
+    "median3_forward": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/median3_forward_attention.json",
+      "sha256": "c48cf5692ec6748022bcd2482979d5998290e7c9a83e5e2542304111d258cabd"
+    }
+  },
+  "input_table": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/median3_all/attention_graph_replay_kernel_only.csv",
+    "sha256": "bb240084c1e80742693caa90110079a0ba807fe01d7eba357594cf1463216566"
+  },
+  "fold_assignment_equal": true,
+  "fold_count": 5,
+  "seed": 1234,
+  "limits": {
+    "median": 0.05,
+    "p90": 0.1
+  },
+  "all_1421_workload_coordinates_and_fold_ids_equal": true,
+  "all_1373_measured_references_and_layer_weights_equal": true,
+  "all_182_row_skips_and_48_workload_omissions_equal": true,
+  "evaluated_rows": 6923,
+  "total_rows": 7105,
+  "attention_verdict": "NOT_EVALUABLE",
+  "e2e_acceptance": "NOT_ASSESSED",
+  "complete_workloads": 1373,
+  "omitted_workloads": 48,
+  "method_limit": "Median3 changes kernel-time medians only; gaps and measured-window reference remain the original generation. Independent replay passes change all timing statistics together.",
+  "groups": [
+    {
+      "key": [
+        "FULL",
+        "decode"
+      ],
+      "count": 464,
+      "verdict": "PASS",
+      "median_pct": 0.6795535242186757,
+      "p90_pct": 1.6286281798958209,
+      "signed_mean_pct": -0.15127966126454753,
+      "max_pct": 7.223121684489955,
+      "p90_change_percentage_points": -0.039190004355268634
+    },
+    {
+      "key": [
+        "FULL",
+        "dummy"
+      ],
+      "count": 0,
+      "verdict": "NOT_EVALUABLE",
+      "median_pct": null,
+      "p90_pct": null,
+      "signed_mean_pct": null,
+      "max_pct": null,
+      "p90_change_percentage_points": null
+    },
+    {
+      "key": [
+        "NONE",
+        "dummy"
+      ],
+      "count": 0,
+      "verdict": "NOT_EVALUABLE",
+      "median_pct": null,
+      "p90_pct": null,
+      "signed_mean_pct": null,
+      "max_pct": null,
+      "p90_change_percentage_points": null
+    },
+    {
+      "key": [
+        "NONE",
+        "prefill"
+      ],
+      "count": 0,
+      "verdict": "NOT_EVALUABLE",
+      "median_pct": null,
+      "p90_pct": null,
+      "signed_mean_pct": null,
+      "max_pct": null,
+      "p90_change_percentage_points": null
+    },
+    {
+      "key": [
+        "PIECEWISE",
+        "decode"
+      ],
+      "count": 469,
+      "verdict": "PASS",
+      "median_pct": 0.7276302376696784,
+      "p90_pct": 1.9321933078589155,
+      "signed_mean_pct": -0.08679342193934098,
+      "max_pct": 3.7058496213189747,
+      "p90_change_percentage_points": 0.28576491064379383
+    },
+    {
+      "key": [
+        "PIECEWISE",
+        "dummy"
+      ],
+      "count": 0,
+      "verdict": "NOT_EVALUABLE",
+      "median_pct": null,
+      "p90_pct": null,
+      "signed_mean_pct": null,
+      "max_pct": null,
+      "p90_change_percentage_points": null
+    },
+    {
+      "key": [
+        "PIECEWISE",
+        "first_tail"
+      ],
+      "count": 440,
+      "verdict": "PASS",
+      "median_pct": 0.9111882411459826,
+      "p90_pct": 2.2159119341291897,
+      "signed_mean_pct": -0.0947739694020948,
+      "max_pct": 3.9152958520228287,
+      "p90_change_percentage_points": 0.3292594953347071
+    }
+  ]
+}

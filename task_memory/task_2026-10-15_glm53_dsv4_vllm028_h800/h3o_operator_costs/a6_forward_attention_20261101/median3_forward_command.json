@@ -1,0 +1,37 @@
+{
+  "classification": "D-A6-FORWARD-ATTENTION_MEDIAN3_QUALIFICATION",
+  "command": [
+    "timeout",
+    "7200s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_phase_heldout.py",
+    "--result",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/median3_a6/result.json",
+    "--scratch-dir",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/a6_median3_scratch",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/median3_forward_attention.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "python": "3.10.6",
+  "script_sha256": "84f6e816dff7342804278578d98408ec6e201e3c0e5de217bd7c7dc3cc4640d0",
+  "started_utc": "2026-11-01T08:34:12.011832+00:00",
+  "status": "FINISHED",
+  "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/median3_forward_attention.json",
+  "log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/median3_forward_attention.log",
+  "supervisor_pid": 236919,
+  "pid": 864958,
+  "exit_code": 0,
+  "elapsed_seconds": 216.0905622849241,
+  "finished_utc": "2026-11-01T08:37:48.102585+00:00",
+  "output_sha256": "c48cf5692ec6748022bcd2482979d5998290e7c9a83e5e2542304111d258cabd"
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Median3 A6/forward completed and verified against original folds, references and omissions; three complete classes PASS, four P2 outcomes pending. |
 | 2026-11-01 | Supplement business verification, complete three-run tables, current-table forward qualification and review complete; four CPU replays and median3 qualification running. |
 
 ## Scope and expected results
@@ -88,12 +89,29 @@ The existing random-forest factory uses `random_state=0` in `frontier/execution_
 
 Run/log/gate roots: `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/{runs,logs,gates}`. The original supervisor waits and invokes the unchanged `a10_gate.py` once after each successful run, against all three pinned native clean repeats. Gate exit success alone does not imply numerical PASS. B29 P2-64 repeat01 TTFT is already FAIL at 12.254940665%; all per-repeat results must remain visible.
 
-Median3 A6 fits/scope diagnostics started at 07:54:32 UTC, supervisor PID 236919 / timeout PID 237030, 30 GiB limit. Exact command: `h3o_operator_costs/a6_forward_attention_20261101/median3_a6_command.json`; same KFold5/seed1234 and 5%/10% thresholds. The same supervisor then records and invokes the updated forward qualification, using the same table/fold cache. Scope errors stay diagnostic, and no new formal table is published. Original processes/receipts must be inspected after any restart; never relaunch live or completed workloads because an exit notification was lost.
+Median3 A6/forward is complete, not an active process: A6 fits/scope diagnostics exit 0 in 2,379.995336 seconds (07:54:32–08:34:12 UTC); forward qualification exit 0 in 216.090562 seconds (08:34:12–08:37:48 UTC), with the same table/fold cache and 30 GiB limit. Exact commands/environment/source/output hashes: `h3o_operator_costs/a6_forward_attention_20261101/{median3_a6_command.json,median3_forward_command.json}`. Scope errors stay diagnostic; no new formal table is published. The original supervisor's two stages finished once and must not be relaunched.
+
+## Median3 verification and comparison
+
+Direct verification PASS: all 1,421 workload coordinates/row indices/fold IDs, KFold5/seed1234, thresholds, config input hash and configured layer-group counts match the original A6. Every one of the 1,373 complete forwards retains exactly the same measured reference and 43-layer weighting. All 182 row skips and 48 workload omissions are identical (24 partial / 24 fully unevaluable); E2E remains NOT_ASSESSED and overall attention NOT_EVALUABLE. All output/table hashes match the completed command receipts. No successful exit alone is used as qualification evidence.
+
+| Forward class | Complete workloads | Median error | p90 error | Original p90 | Change (percentage points) | Maximum error | Verdict |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| FULL/decode | 464 | 0.679554% | 1.628628% | 1.667818% | -0.039190 | 7.223122% | PASS |
+| PIECEWISE/decode | 469 | 0.727630% | 1.932193% | 1.646428% | +0.285765 | 3.705850% | PASS |
+| PIECEWISE/first_tail | 440 | 0.911188% | 2.215912% | 1.886652% | +0.329259 | 3.915296% | PASS |
+
+No complete workload exceeds 10%; signed mean relative errors are -0.151280%, -0.086793%, -0.094774%. The four other forward classes remain unevaluable. Median3 does **not** uniformly improve accuracy: PIECEWISE p90 rises modestly, though all complete-class limits pass. This supports robustness of the forward qualification to this target reconstruction, not a demonstrated improvement in ordinary serving metrics or permission to publish it.
+
+Exact verification body/environment: `median3_verification_command.json` in the same directory. Selected evidence: `median3_verification.json` (source hashes, comparisons, maximum absolute errors in microseconds and scope diagnostics), `median3_summary.json`, and `median3_forward_workloads.csv` (1,373 predicted/actual values in microseconds, signed errors and absolute relative errors). Relative-error denominators were positive in all complete rows; none are undefined. Full local output `median3_forward_attention.json` has SHA-256 `c48cf5692ec6748022bcd2482979d5998290e7c9a83e5e2542304111d258cabd`; it is retained locally, not duplicated into Git.
+
+The existing median3 generator replaces kernel-time medians only; gap/window reference remains original. The independent pass1/pass2 replay tables replace all timing statistics together. This difference is retained in the comparison record and cannot be hidden by a phase PASS.
+
+Record-format check: ordinary `git diff --check` passed before adding new artifacts. `git diff --cached --check` then reported the standard Python CSV writer's CRLF endings as trailing whitespace (exit 2). The CSV bytes and recorded hash were preserved. `git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check` passed (exit 0), retaining the default whitespace checks and recognizing CRLF. No source/config file or numerical evidence was changed for this format check.
 
 ## Pending acceptance
 
-1. Same-fold median3 A6/forward result and coverage comparison; originals running.
-2. Four complete CPU P2 replay/gate results, all-repeat metric and cross-pass sensitivity comparison; originals running.
-3. Retain findings, review any new defect and obtain a further decision before formal table promotion; do not close unrelated qualification gaps.
+1. Four complete CPU P2 replay/gate results, all-repeat metric and cross-pass sensitivity comparison; original processes only. Median3 qualification is finished and verified.
+2. Retain findings, review any new defect and obtain a further decision before formal table promotion; do not close unrelated qualification gaps.
 
 Tickets 05/09/11/19 and formal bundle/E2E acceptance remain OPEN. Attention measurements come from the retained single-H200 graph-replay setup; the CPU sensitivity comparison does not establish an unmeasured real-serving schedule distribution or qualify H800. No prefill, hardware-generalization, or other scope is added here.

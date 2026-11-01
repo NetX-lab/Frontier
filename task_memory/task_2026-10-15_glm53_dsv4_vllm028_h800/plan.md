@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-11-01 | Approved A6 continuation: supplement integrity/business and full tables PASS; forward code/current output reviewed with 31 tests PASS; original median3 qualification and four CPU replays running. |
+| 2026-11-01 | Approved A6 continuation: supplement/full tables and reviewed forward code complete; median3 qualification verified with unchanged folds/references/omissions, complete classes PASS; only four P2 results/comparison pending. |
 | 2026-11-01 | Recorded C PASS, the B cause and phase-level held-out, and the A blocker (I-009) in the H3o row. |
 | 2026-11-01 | Recorded the A6 noise-floor result and the three pending YC decisions in the H3o row. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
@@ -160,7 +160,7 @@ Mainline: branch `feat/glm53-dsv4-vllm028`, this worktree and task directory. In
 | Milestone | Tickets | Current state and completion condition |
 | --- | --- | --- |
 | P2 case/reference binding | 17/18 | p2_32r and p2_64r R4 PASS; reuse their exact three clean repeats. Historical native admission is not rewritten as a new promotion. |
-| H3o operator composition | 05/09 | B16–B28 runtime and published H200 tables stay unchanged; A10 uses neither dummy mode nor a step table. Both P2 consumers PASS the exact-point collective rule. YC approved D-A6-FORWARD-ATTENTION and D-A6-PASS-REPLAYS. A's supplement Succeeded with business/integrity PASS and all 1,421 workloads measured three times. Forward code/current-table verification and 31 tests PASS; three complete forward classes PASS, but 48 omitted workloads/four unevaluable classes keep overall attention NOT_EVALUABLE. Median3 qualification and four independent-pass CPU P2 comparisons run under the approved continuation below. Scope errors are diagnostic; no new formal input or GPU submission. Full qualification remains open. |
+| H3o operator composition | 05/09 | B16–B28 runtime and published H200 tables stay unchanged; A10 uses neither dummy mode nor a step table. Both baseline P2 consumers PASS the exact-point collective rule. Approved A6 supplement integrity/business and all 1,421 three-run workloads are complete; forward code/current and median3 verification PASS with 31 tests and phase review. Both table generations pass three complete classes, but 48 omitted workloads/four unevaluable classes keep overall attention NOT_EVALUABLE. Only the four original independent-pass CPU P2 outcomes/comparison remain in this continuation. Scope errors are diagnostic; no new formal input or GPU submission. Full qualification remains open. |
 | Ingress option A / B29 | 07/08/19 | Implemented and merged a69a5213. Inputs 10.3 ms ingress + 11.4 ms handoff; default zero fidelity verified. B29 P2-32 numeric PASS; P2-64 FAIL on repeat 1 TTFT (12.25494%). |
 | F4 memory planner comparison | 09/11/19 | Both replays finished. Five metric artifacts are byte-identical to B28 at each scale; full comparison recorded in the Codex test report. Memory accounting limits remain open. |
 | F1a specification links | 06/11/19 | Both scales complete: P2-32 TPOT/E2E FAIL; P2-64 TTFT/TPOT/E2E FAIL in all three references, pooled37.41/39.83/39.77%. THPT7.40%PASS at P2-64. Retain the former incomplete attempt and keep ASTRA diagnostic-only. |
@@ -169,7 +169,7 @@ Mainline: branch `feat/glm53-dsv4-vllm028`, this worktree and task directory. In
 | Qualified P2 formal acceptance | 05/09/11/19 | Requires qualified measured inputs and all four errors <=10% in every admitted repeat; numerical P2-32 PASS alone does not close qualification. |
 | H800 P0/P1 continuation | 10/17/18/19 | Retained subsequent hardware scope. H200 results never qualify H800. |
 
-Dependency: `completed B30b measurements -> {F1b fit/heldout -> two terminal COVERAGE_MISS outcomes || F2 K18 -> P2-32 numericalPASS and P2-64 repeat01 TTFTFAIL || F3 retained invalid-fit outcome} -> completed F1–F4 comparison`; `F1a at both scales` is complete with failed latency readings. `B29` is complete and is reused. `qualified forward-attention/collective inputs + hardware/payload/coverage admission + per-repeat gates -> formal acceptance` remains separate; current full-domain attention is NOT_EVALUABLE, and median3/replay evidence remains pending.
+Dependency: `completed B30b measurements -> {F1b fit/heldout -> two terminal COVERAGE_MISS outcomes || F2 K18 -> P2-32 numericalPASS and P2-64 repeat01 TTFTFAIL || F3 retained invalid-fit outcome} -> completed F1–F4 comparison`; `F1a at both scales` is complete with failed latency readings. `B29` is complete and is reused. `qualified forward-attention/collective inputs + hardware/payload/coverage admission + per-repeat gates -> formal acceptance` remains separate; original and median3 full-domain attention are NOT_EVALUABLE, and independent-pass P2 outcomes remain pending.
 
 The measured CC backend remains the formal input. A diagnostic variant may replace it only after a new YC decision. B30a's default ASTRA multi-server behavior change remains on its diagnostic branch pending that decision. Do not revive whole-step-cost refinement, parked GLM work, or the stopped full trace-audit route.
 
@@ -177,7 +177,7 @@ The measured CC backend remains the formal input. A diagnostic variant may repla
 
 Authority: requirements D-A6-FORWARD-ATTENTION and D-A6-PASS-REPLAYS. This section supersedes the earlier pending B decision, A launch blocker and scope-level attention verdict.
 
-Latest execution: supplement integrity/business verification PASS; complete three-run/independent-pass tables and all four input bindings PASS. Forward code/current-table verification and phase review complete, 31 tests PASS. Original median3 qualification and four CPU P2 replays are running; exact processes/receipts are in the current progress continuation. No replay result or full-domain attention PASS is yet claimed.
+Latest execution: supplement integrity/business verification PASS; complete three-run/independent-pass tables and all four input bindings PASS. Forward code/current-table verification and phase review complete, 31 tests PASS. Original median3 A6/forward finished once; all 1,421 folds and 1,373 measured references/weights unchanged, complete-class p90 1.628628%/1.932193%/2.215912% PASS, but 48 omissions preserve overall NOT_EVALUABLE. Four original CPU P2 replay/gate outcomes and comparison remain pending. No full-domain attention or E2E PASS is claimed.
 
 Dependency: `{forward-gate code and focused tests || existing supplement job completion/integrity} -> {median-of-three table -> unchanged-fold A6 and forward qualification || independent-pass tables -> four P2 CPU replays} -> integrity/metric comparison -> YC table-promotion decision`.
 
