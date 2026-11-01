@@ -1,0 +1,601 @@
+{
+  "groups": [
+    {
+      "group": "compressed",
+      "selected_pages": 24,
+      "logical_block": 256,
+      "real_page_bytes": 1002240,
+      "structural_bytes": 24053760,
+      "packed_bytes": 24053760
+    },
+    {
+      "group": "swa_0",
+      "selected_pages": 2,
+      "logical_block": 64,
+      "real_page_bytes": 823680,
+      "structural_bytes": 1647360,
+      "packed_bytes": 2004480
+    },
+    {
+      "group": "swa_1",
+      "selected_pages": 2,
+      "logical_block": 64,
+      "real_page_bytes": 786240,
+      "structural_bytes": 1572480,
+      "packed_bytes": 2004480
+    },
+    {
+      "group": "csa_state_0",
+      "selected_pages": 2,
+      "logical_block": 4,
+      "real_page_bytes": 870912,
+      "structural_bytes": 1741824,
+      "packed_bytes": 2004480
+    },
+    {
+      "group": "hca_state_0",
+      "selected_pages": 16,
+      "logical_block": 8,
+      "real_page_bytes": 656640,
+      "structural_bytes": 10506240,
+      "packed_bytes": 16035840
+    }
+  ],
+  "physical_block_size_bytes": 1002240,
+  "structural_bytes": 39521664,
+  "native_packed_bytes": 46103040,
+  "missing_wire_bytes": 6581376,
+  "missing_fraction_native": 0.1427536231884058,
+  "native": {
+    "wave64": {
+      "n": 128,
+      "handles_hist": {
+        "8": 127,
+        "16": 1
+      },
+      "bytes": [
+        46103040
+      ],
+      "descriptors": [
+        19,
+        21,
+        22,
+        23,
+        25,
+        26,
+        28,
+        29,
+        33,
+        34,
+        35,
+        36,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "mean_max_xfer_ms": 37.0270390625,
+      "mean_handle_xfer_ms": 27.266880813953488,
+      "mean_post_ms": 0.08196802325581395,
+      "registrations": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 237,
+          "text": "(Worker_DP0_TP0_EP0 pid=2775) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 258,
+          "text": "(Worker_DP0_TP7_EP7 pid=2782) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 259,
+          "text": "(Worker_DP0_TP6_EP6 pid=2781) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 260,
+          "text": "(Worker_DP0_TP1_EP1 pid=2776) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 261,
+          "text": "(Worker_DP0_TP3_EP3 pid=2778) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 262,
+          "text": "(Worker_DP0_TP2_EP2 pid=2777) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 263,
+          "text": "(Worker_DP0_TP5_EP5 pid=2780) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0142.lgcm.sh.istep.fun/server.log",
+          "line": 264,
+          "text": "(Worker_DP0_TP4_EP4 pid=2779) INFO 10-30 06:55:59 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 176,
+          "text": "(Worker_DP1_TP7_EP15 pid=1610) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 203,
+          "text": "(Worker_DP1_TP5_EP13 pid=1608) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 204,
+          "text": "(Worker_DP1_TP4_EP12 pid=1607) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 209,
+          "text": "(Worker_DP1_TP2_EP10 pid=1577) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 210,
+          "text": "(Worker_DP1_TP3_EP11 pid=1578) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 211,
+          "text": "(Worker_DP1_TP1_EP9 pid=1576) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 212,
+          "text": "(Worker_DP1_TP0_EP8 pid=1575) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0229.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP1_TP6_EP14 pid=1609) INFO 10-30 06:55:58 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 188,
+          "text": "(Worker_DP2_TP6_EP22 pid=1586) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 189,
+          "text": "(Worker_DP2_TP4_EP20 pid=1584) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 190,
+          "text": "(Worker_DP2_TP7_EP23 pid=1587) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 191,
+          "text": "(Worker_DP2_TP5_EP21 pid=1585) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 210,
+          "text": "(Worker_DP2_TP1_EP17 pid=1581) INFO 10-30 06:55:58 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 211,
+          "text": "(Worker_DP2_TP3_EP19 pid=1583) INFO 10-30 06:55:58 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 212,
+          "text": "(Worker_DP2_TP2_EP18 pid=1582) INFO 10-30 06:55:58 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0556.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP2_TP0_EP16 pid=1580) INFO 10-30 06:55:58 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 176,
+          "text": "(Worker_DP3_TP3_EP27 pid=1565) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 195,
+          "text": "(Worker_DP3_TP5_EP29 pid=1567) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 196,
+          "text": "(Worker_DP3_TP2_EP26 pid=1564) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 197,
+          "text": "(Worker_DP3_TP0_EP24 pid=1562) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 198,
+          "text": "(Worker_DP3_TP1_EP25 pid=1563) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 211,
+          "text": "(Worker_DP3_TP7_EP31 pid=1569) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 212,
+          "text": "(Worker_DP3_TP4_EP28 pid=1566) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP3_TP6_EP30 pid=1568) INFO 10-30 06:55:57 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 235,
+          "text": "(Worker_DP0_TP3_EP3 pid=2823) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 248,
+          "text": "(Worker_DP0_TP2_EP2 pid=2822) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 249,
+          "text": "(Worker_DP0_TP1_EP1 pid=2821) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 260,
+          "text": "(Worker_DP0_TP4_EP4 pid=2824) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 261,
+          "text": "(Worker_DP0_TP7_EP7 pid=2827) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 262,
+          "text": "(Worker_DP0_TP6_EP6 pid=2826) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 263,
+          "text": "(Worker_DP0_TP5_EP5 pid=2825) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+          "line": 264,
+          "text": "(Worker_DP0_TP0_EP0 pid=2820) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 178,
+          "text": "(Worker_DP1_TP0_EP8 pid=1607) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 195,
+          "text": "(Worker_DP1_TP4_EP12 pid=1611) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 196,
+          "text": "(Worker_DP1_TP7_EP15 pid=1614) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 197,
+          "text": "(Worker_DP1_TP1_EP9 pid=1608) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 198,
+          "text": "(Worker_DP1_TP5_EP13 pid=1612) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 207,
+          "text": "(Worker_DP1_TP2_EP10 pid=1609) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 208,
+          "text": "(Worker_DP1_TP3_EP11 pid=1610) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP1_TP6_EP14 pid=1613) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 182,
+          "text": "(Worker_DP2_TP3_EP19 pid=1621) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 187,
+          "text": "(Worker_DP2_TP0_EP16 pid=1618) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 208,
+          "text": "(Worker_DP2_TP6_EP22 pid=1624) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 209,
+          "text": "(Worker_DP2_TP4_EP20 pid=1622) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 210,
+          "text": "(Worker_DP2_TP5_EP21 pid=1623) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 211,
+          "text": "(Worker_DP2_TP7_EP23 pid=1625) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 212,
+          "text": "(Worker_DP2_TP2_EP18 pid=1620) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP2_TP1_EP17 pid=1619) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 176,
+          "text": "(Worker_DP3_TP1_EP25 pid=1647) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 191,
+          "text": "(Worker_DP3_TP7_EP31 pid=1653) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 192,
+          "text": "(Worker_DP3_TP4_EP28 pid=1650) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 193,
+          "text": "(Worker_DP3_TP0_EP24 pid=1646) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 202,
+          "text": "(Worker_DP3_TP2_EP26 pid=1648) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 203,
+          "text": "(Worker_DP3_TP3_EP27 pid=1649) INFO 10-30 06:55:36 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 212,
+          "text": "(Worker_DP3_TP5_EP29 pid=1651) INFO 10-30 06:55:37 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP3_TP6_EP30 pid=1652) INFO 10-30 06:55:37 [base_worker.py:994] Registering packed KV cache: total_size=113166927360, block_stride=1002240, num_blocks=112914, num_regions=1"
+        }
+      ]
+    },
+    "lifecycle32": {
+      "n": 384,
+      "handles_hist": {
+        "8": 384
+      },
+      "bytes": [
+        46103040
+      ],
+      "descriptors": [
+        16,
+        18,
+        19,
+        33,
+        34,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "mean_max_xfer_ms": 38.3084140625,
+      "mean_handle_xfer_ms": 19.96260546875,
+      "mean_post_ms": 0.078416015625,
+      "registrations": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 209,
+          "text": "(Worker_DP0_TP5_EP5 pid=2244) INFO 10-25 19:20:49 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 234,
+          "text": "(Worker_DP0_TP6_EP6 pid=2245) INFO 10-25 19:20:49 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 235,
+          "text": "(Worker_DP0_TP3_EP3 pid=2242) INFO 10-25 19:20:49 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 236,
+          "text": "(Worker_DP0_TP2_EP2 pid=2241) INFO 10-25 19:20:49 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 237,
+          "text": "(Worker_DP0_TP4_EP4 pid=2243) INFO 10-25 19:20:49 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 238,
+          "text": "(Worker_DP0_TP7_EP7 pid=2246) INFO 10-25 19:20:49 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 239,
+          "text": "(Worker_DP0_TP1_EP1 pid=2237) INFO 10-25 19:20:49 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+          "line": 246,
+          "text": "(Worker_DP0_TP0_EP0 pid=2236) INFO 10-25 19:20:50 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 161,
+          "text": "(Worker_DP1_TP1_EP9 pid=1563) INFO 10-25 19:20:50 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 170,
+          "text": "(Worker_DP1_TP3_EP11 pid=1565) INFO 10-25 19:20:50 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 171,
+          "text": "(Worker_DP1_TP5_EP13 pid=1567) INFO 10-25 19:20:50 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 176,
+          "text": "(Worker_DP1_TP4_EP12 pid=1566) INFO 10-25 19:20:50 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 183,
+          "text": "(Worker_DP1_TP0_EP8 pid=1562) INFO 10-25 19:20:51 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 188,
+          "text": "(Worker_DP1_TP2_EP10 pid=1564) INFO 10-25 19:20:51 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 197,
+          "text": "(Worker_DP1_TP7_EP15 pid=1569) INFO 10-25 19:20:51 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0628.lgcm.sh.istep.fun/server.log",
+          "line": 198,
+          "text": "(Worker_DP1_TP6_EP14 pid=1568) INFO 10-25 19:20:51 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP0_TP2_EP2 pid=2239) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 222,
+          "text": "(Worker_DP0_TP6_EP6 pid=2243) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 223,
+          "text": "(Worker_DP0_TP7_EP7 pid=2244) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 224,
+          "text": "(Worker_DP0_TP3_EP3 pid=2240) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 233,
+          "text": "(Worker_DP0_TP1_EP1 pid=2238) INFO 10-25 19:20:12 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 234,
+          "text": "(Worker_DP0_TP5_EP5 pid=2242) INFO 10-25 19:20:12 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 239,
+          "text": "(Worker_DP0_TP4_EP4 pid=2241) INFO 10-25 19:20:12 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-0705.lgcm.sh.istep.fun/server.log",
+          "line": 246,
+          "text": "(Worker_DP0_TP0_EP0 pid=2237) INFO 10-25 19:20:12 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 180,
+          "text": "(Worker_DP1_TP1_EP9 pid=1644) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 207,
+          "text": "(Worker_DP1_TP6_EP14 pid=1649) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 208,
+          "text": "(Worker_DP1_TP0_EP8 pid=1643) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 209,
+          "text": "(Worker_DP1_TP3_EP11 pid=1646) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 210,
+          "text": "(Worker_DP1_TP2_EP10 pid=1645) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 211,
+          "text": "(Worker_DP1_TP5_EP13 pid=1648) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 212,
+          "text": "(Worker_DP1_TP4_EP12 pid=1647) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts/nodes/gpu-h200-1191.lgcm.sh.istep.fun/server.log",
+          "line": 213,
+          "text": "(Worker_DP1_TP7_EP15 pid=1650) INFO 10-25 19:20:11 [base_worker.py:994] Registering packed KV cache: total_size=110180252160, block_stride=1002240, num_blocks=109934, num_regions=1"
+        }
+      ]
+    }
+  },
+  "lifecycle_timing_limit": "All-request geometry/statistics only, not a warm timing reference. No per-worker start_load_kv, transfer(handle), check_xfer_state or get_finished timestamp/handle-ID is retained; scheduler stats update is not the wire completion endpoint."
+}

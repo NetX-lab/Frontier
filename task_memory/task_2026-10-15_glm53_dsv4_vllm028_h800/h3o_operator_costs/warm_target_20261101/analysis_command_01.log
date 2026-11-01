@@ -1,0 +1,17 @@
+canonical_p2_32 {'handshake_log_lines': 32, 'events': 4, 'warmup_events': 4, 'formal_events': 0} NOT_APPLICABLE_CLEAN_NO_LIFECYCLE []
+canonical_p2_64 {'handshake_log_lines': 128, 'events': 16, 'warmup_events': 11, 'formal_events': 5} NOT_APPLICABLE_CLEAN_NO_LIFECYCLE ['fixed-6144-1024-req128-qps1-formal-r006-repeat01', 'fixed-6144-1024-req128-qps1-formal-r017-repeat01', 'fixed-6144-1024-req128-qps1-formal-r027-repeat01', 'fixed-6144-1024-req128-qps1-formal-r035-repeat01', 'fixed-6144-1024-req128-qps1-formal-r036-repeat01']
+lifecycle {'handshake_log_lines': 128, 'events': 16, 'warmup_events': 11, 'formal_events': 5} PASS_EXACT ['fixed-6144-1024-req128-qps1-formal-r002-repeat01', 'fixed-6144-1024-req128-qps1-formal-r004-repeat01', 'fixed-6144-1024-req128-qps1-formal-r006-repeat01', 'fixed-6144-1024-req128-qps1-formal-r009-repeat01', 'fixed-6144-1024-req128-qps1-formal-r053-repeat01']
+wave {'handshake_log_lines': 128, 'events': 16, 'warmup_events': 13, 'formal_events': 3} PASS_EXACT ['fixed-6144-1024-req128-qps1-formal-r005-repeat01', 'fixed-6144-1024-req128-qps1-formal-r017-repeat01', 'fixed-6144-1024-req128-qps1-formal-r037-repeat01']
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=379
+PASS_EXACT original; warm=FAIL retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=379
+PASS_EXACT original; warm=FAIL retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=379
+PASS_EXACT original; warm=FAIL retained=384
+PASS six original/empty-set reproductions; 192 metric rows; canonical source hashes unchanged

@@ -1,0 +1,6 @@
+B29 model wait 240.226 ahead 10.219 | Frontier arrival->start 240.228 ahead 10.219
+   model ahead sequence head: [0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 19, 19, 0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 19, 19, 0, 2, 3, 5]
+pass1_all model wait 255.777 ahead 10.875 | Frontier arrival->start 255.890 ahead 10.875
+   model ahead sequence head: [0, 2, 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 18, 19, 19, 19, 0, 2, 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 18, 19, 19, 19, 0, 2]
+pass2_all model wait 255.369 ahead 10.812 | Frontier arrival->start 255.467 ahead 10.812
+   model ahead sequence head: [0, 2, 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 17, 19, 19, 19, 0, 2, 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 17, 19, 19, 19, 0, 2]

@@ -1,0 +1,25 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-m",
+    "pytest",
+    "tests/unit/test_e2e_gate.py",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "env": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "source_commit": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+  "python_version": "Python 3.10.6",
+  "started_utc": "2026-11-01T12:47:05.372075+00:00",
+  "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/warm_target_harness_regression_20261101.log",
+  "exit_code": 0,
+  "elapsed_seconds": 2.219246029853821,
+  "finished_utc": "2026-11-01T12:47:07.591367+00:00",
+  "log_sha256": "37075fc246878c659ef4a85d60630fdae4dcb2b6bb1684595cf7adfcfb8146d3"
+}

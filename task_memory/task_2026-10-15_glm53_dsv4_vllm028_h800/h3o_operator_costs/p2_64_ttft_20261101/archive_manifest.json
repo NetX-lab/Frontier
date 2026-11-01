@@ -1,0 +1,173 @@
+{
+  "classification": "HISTORICAL_DIAGNOSTIC_SCRATCH_ARCHIVE",
+  "verified_utc": "2026-11-01T12:45:59.720495+00:00",
+  "files": [
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/fifo_sweep.json",
+      "size": 107850,
+      "sha256": "3ca1a0239d5c4305cf1a487202d492d35e2344b79aaed99645ef025205a267ae",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/fifo_sweep.json",
+      "scratch_sha256": "3ca1a0239d5c4305cf1a487202d492d35e2344b79aaed99645ef025205a267ae",
+      "byte_identical_to_scratch": true,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/fifo_sweep.py",
+      "size": 1432,
+      "sha256": "071476a1ba51f3b475aa40d29e533a091ecccc0fad55adc5eaecd5d9a1894062",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/fifo_sweep.py",
+      "scratch_sha256": "acde4b837fb4cb71f17a36d614d91f628a37590da69a9380f4e9ebaf11bd2cb0",
+      "byte_identical_to_scratch": false,
+      "archive_adjustment": "Archive-local import/output paths replace the scratch path."
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/fifo_sweep_stdout.txt",
+      "size": 529,
+      "sha256": "04508ded2c7e25bd2dea8078cbc206637f92dc0558d20f035a582476f9e9c86f",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/forward_prices.py",
+      "size": 2073,
+      "sha256": "bb32e1c42429e558e56dc8609647de10b8cb419144286b62d757098f02c5a777",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/forward_prices.py",
+      "scratch_sha256": "bb32e1c42429e558e56dc8609647de10b8cb419144286b62d757098f02c5a777",
+      "byte_identical_to_scratch": true,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/forward_prices_p2_32_stdout.txt",
+      "size": 5658,
+      "sha256": "e5bdde3e51686c90701bab0933567a79e321385ed7c73642241a28981b2ed93b",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/forward_prices_p2_64_stdout.txt",
+      "size": 5721,
+      "sha256": "dc9d9ed072b71bb20f5355a7102c243d1751d360009e21e3c1369b87a3a8f97e",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/frontier_fifo.py",
+      "size": 2612,
+      "sha256": "e0475d8d2d786bd6bfd3853fd52f609b852fb0557616289e01c5324cf6f262f7",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/frontier_fifo.py",
+      "scratch_sha256": "e0475d8d2d786bd6bfd3853fd52f609b852fb0557616289e01c5324cf6f262f7",
+      "byte_identical_to_scratch": true,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/frontier_fifo_stdout.txt",
+      "size": 712,
+      "sha256": "2e2251a8247cce9cfa143fb56918f2c8e2d097cf835df133ae3d30f00a802b82",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/frontier_parts.py",
+      "size": 2229,
+      "sha256": "9212990a8c40d518b9c93eb0f60d961dc60992efe84f4ae4a4ec254966931a24",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/frontier_parts.py",
+      "scratch_sha256": "9212990a8c40d518b9c93eb0f60d961dc60992efe84f4ae4a4ec254966931a24",
+      "byte_identical_to_scratch": true,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/frontier_parts_stdout.txt",
+      "size": 1572,
+      "sha256": "45f335897aad25c201667f2869677d4748418c2e1c7824f55daf3e536e29c684",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/lane_timeline.py",
+      "size": 1559,
+      "sha256": "60bee72db06b756cfcf9f3740dde5970c94c87ddd9f728758ea33d057537dfc5",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/lane_timeline.py",
+      "scratch_sha256": "60bee72db06b756cfcf9f3740dde5970c94c87ddd9f728758ea33d057537dfc5",
+      "byte_identical_to_scratch": true,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/lane_timeline_stdout.txt",
+      "size": 4146,
+      "sha256": "b4dfac291ae72aca8692d0adb2ce29044a8a9242b2d1d38f47a5dea5e2553737",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/native_repeats.py",
+      "size": 2272,
+      "sha256": "b21227ced3a2aa3d7d541651cad2f04427a11fe76c289485c0bf2b5acac942cb",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/native_repeats.py",
+      "scratch_sha256": "b21227ced3a2aa3d7d541651cad2f04427a11fe76c289485c0bf2b5acac942cb",
+      "byte_identical_to_scratch": true,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/native_repeats_stdout.txt",
+      "size": 1070,
+      "sha256": "204c044bcf2226cace594d99bd4236de17c8e79741e67ae0bd71580dd24caaf1",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/pair_coverage.py",
+      "size": 2392,
+      "sha256": "d0959574e7af09438a2e20532435318d233a1ebe87a57f57b51b358189d7f8da",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/pair_coverage.py",
+      "scratch_sha256": "d0959574e7af09438a2e20532435318d233a1ebe87a57f57b51b358189d7f8da",
+      "byte_identical_to_scratch": true,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/pair_coverage_stdout.txt",
+      "size": 1646,
+      "sha256": "e301a39ddc54e3baaa5255a16a10fca9834dfdd0346733754a0c8a905a18cf29",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/prefill_wait.py",
+      "size": 2715,
+      "sha256": "d1a51bc7ae5f4a6b6150f548f899c95e27dc71cb9ec65581cde722ef70292e91",
+      "scratch_source": "/data/ycfeng/tmp/p2_64_ttft_decomposition_20261101/prefill_wait.py",
+      "scratch_sha256": "52cfc0fee014fad99f31f4f760ca7b5670b31ab11b700d5e1aca20f0fbb894c7",
+      "byte_identical_to_scratch": false,
+      "archive_adjustment": "Unused placeholder local variable removed; returned fields unchanged."
+    },
+    {
+      "archive": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/p2_64_ttft_20261101/prefill_wait_stdout.txt",
+      "size": 1409,
+      "sha256": "3fce137acf73b0175e72edeba56d8954342abee0ff4deb82b54c8a4ab71d3020",
+      "scratch_source": null,
+      "scratch_sha256": null,
+      "byte_identical_to_scratch": null,
+      "archive_adjustment": null
+    }
+  ],
+  "reexecuted_on_verification": false,
+  "authoritative_successors": [
+    "../warm_target_20261101/readings/",
+    "../warm_residual_20261101/"
+  ]
+}

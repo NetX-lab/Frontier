@@ -1,0 +1,1200 @@
+[
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/identify_openers.py",
+      "--run",
+      "canonical_p2_32=/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts",
+      "--run",
+      "canonical_p2_64=/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts",
+      "--run",
+      "lifecycle=/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-lifecycle-20261026-01/artifacts",
+      "--run",
+      "wave=/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-wave-20261030-01/artifacts",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/openers.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:37.448291+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:40.370069+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_01.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_01.log": "ecb4bb4cdf63c48dd098a914c9d687571a1d7b82ad7236cfacebaff2679a5190",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/openers.json": "d665e0091fa4c3757ed9531a7fc8a957a1715169389d705ffaac59bdb47edee1"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_32_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:40.373348+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:40.897573+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_02.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_02.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_warm_reading.json": "d40b041f91a1a958dd79b91594be8ebf89a70db02a4472daaddc7dce31070969"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_32_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:40.900742+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:41.496683+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_03.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_03.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_empty_reading.json": "29cc5283b128bf45a6994fd1042bcd98d6cb7536f5584cd4a172b56ae6cbd686"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_64_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:41.509986+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:42.034801+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_04.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_04.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_warm_reading.json": "dec14f5252affb97eb29002f7f84245a2627e7c5eda381071624bf20bb48e59e"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_64_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:42.035885+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:42.603622+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_05.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_05.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_empty_reading.json": "27c939a06386cb9234b649b2f87192d30c95e296c83621eebb3d5be199a6fcdf"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:42.624544+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:43.135381+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_06.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_06.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_warm_reading.json": "611ed900c41d2e2fd2c973b3774857de9bd46db9d39d4ff6321da09b733b4ac3"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:43.136423+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:43.641699+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_07.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_07.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_empty_reading.json": "8c71d2bca5b21f6933dd491190d8b830c67c4a987f199711e9c3df07afd8a754"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:43.652874+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:44.113161+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_08.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_08.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_warm_reading.json": "c2c986f3c260ce20a0a2339733c9bd68a8bf5d5f0d2dc2d91b1d5b58a13b635d"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:44.114298+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:44.653279+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_09.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_09.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_empty_reading.json": "0566eea46b7b1979d06ebf6b7a1671c3cae2a920bed0532b23ff32f125eb0eef"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:44.674460+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:45.196639+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_10.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_10.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_warm_reading.json": "14fe7be5d51caa03bb4d941ecdedb1f6b38333bc4fbdba0b905a23b61c6aa7a5"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:45.197829+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:45.652907+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_11.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_11.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_empty_reading.json": "712929fefc2e6d911579bc6a6eb75502522dea7dd4daa071c97c7585d416e66f"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:45.664223+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:46.174311+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_12.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_12.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_warm_reading.json": "7c7709b66a02ebba85e050b86bfed9c20b10923b5c635d9fd7266d5f40413243"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:46.175562+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:46.669493+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_13.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_13.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_empty_reading.json": "cd8ee004c35462280ca1674b698e66f2bf18d405486b479ddc075e4155a478a6"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/run_analysis.py"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:14:37.385384+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:14:46.699666+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/analysis_command_01.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/plan.md": "9e30b344f1b83840b3f74577c391326a33f0af3ed012ff2c7faf9a0a0ad641d9",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/identify_openers.py": "32a2ec4b58832313291c6b3d2e768a670ac2aa649132b8c2dd92492ffd1999de",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/run_analysis.py": "4bc340ae62fd7c488251f3cb9e47d5d945d119015450a11f3671b13ecd66c976",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/openers.json": "d665e0091fa4c3757ed9531a7fc8a957a1715169389d705ffaac59bdb47edee1",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_01.log": "ecb4bb4cdf63c48dd098a914c9d687571a1d7b82ad7236cfacebaff2679a5190",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json": "0a7d0b1718692beec04480bd01fad0429364aec12a87b76410d03a1f81977a13",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json": "0a7d0b1718692beec04480bd01fad0429364aec12a87b76410d03a1f81977a13",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_warm_reading.json": "d40b041f91a1a958dd79b91594be8ebf89a70db02a4472daaddc7dce31070969",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_02.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_empty_reading.json": "29cc5283b128bf45a6994fd1042bcd98d6cb7536f5584cd4a172b56ae6cbd686",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_03.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json": "7899c8f7d5e4fad744904353900d7cf58a81071a0e6b1124bd74e076da22bdd0",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json": "6d90c472829cda565889d65d13076ec844f3d65b967a923cba63831bce63e61b",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_warm_reading.json": "dec14f5252affb97eb29002f7f84245a2627e7c5eda381071624bf20bb48e59e",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_04.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_empty_reading.json": "27c939a06386cb9234b649b2f87192d30c95e296c83621eebb3d5be199a6fcdf",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_05.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_warm_reading.json": "611ed900c41d2e2fd2c973b3774857de9bd46db9d39d4ff6321da09b733b4ac3",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_06.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_empty_reading.json": "8c71d2bca5b21f6933dd491190d8b830c67c4a987f199711e9c3df07afd8a754",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_07.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_warm_reading.json": "c2c986f3c260ce20a0a2339733c9bd68a8bf5d5f0d2dc2d91b1d5b58a13b635d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_08.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_empty_reading.json": "0566eea46b7b1979d06ebf6b7a1671c3cae2a920bed0532b23ff32f125eb0eef",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_09.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_warm_reading.json": "14fe7be5d51caa03bb4d941ecdedb1f6b38333bc4fbdba0b905a23b61c6aa7a5",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_10.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_empty_reading.json": "712929fefc2e6d911579bc6a6eb75502522dea7dd4daa071c97c7585d416e66f",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_11.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_warm_reading.json": "7c7709b66a02ebba85e050b86bfed9c20b10923b5c635d9fd7266d5f40413243",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_12.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_empty_reading.json": "cd8ee004c35462280ca1674b698e66f2bf18d405486b479ddc075e4155a478a6",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_13.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/metrics.csv": "52d1a7b3f070999f124f82249516489104b1d03fc34dec77b6f25d4f8fb55ba7",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/verification.json": "90e3f9ec892410579bdc0bd942def930d6b3f8d65b70d6d1e0d3307cb2a3cab6",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/analysis_command_01.log": "eba132518a0bc6bc878217611f261a1eef4fe8ae00a17e2dec1c4e043677d45c"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_32_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:05.663845+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:06.184969+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_15.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_15.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_warm_reading.json": "3e3a3501f1ae0c662ddf527832faf323f058937911882d003b9dc2a8b9e8eb5e"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_32_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:06.186438+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:06.747384+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_16.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_16.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_empty_reading.json": "9816b9b8991effd9a80ed461b3c5af17447307b8417d9de9bc385c295b2d25c1"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_64_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:06.760599+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:07.277021+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_17.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_17.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_warm_reading.json": "8b222423a5a2b3288595a35a7ba6b72e8ad2f64ce3b0b801ed402138fa6690fd"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows",
+      "--reading",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_64_warm_k19b29/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:07.278638+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:07.778220+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_18.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_18.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_empty_reading.json": "3178548fa87dd3ed0fbeb0c8dddbb584af83b28cdf75b78b3dff8a92cfb48932"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_32_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:07.800298+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:08.346083+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_19.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_19.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_32_warm_reading.json": "efa9460b8f2d6e10ede1191d84db695ec7d5f0564e9f26d7b814bb60109c5798"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_32_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:08.347711+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:08.871006+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_20.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_20.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_32_empty_reading.json": "785212e1be09acf2357c64f5396de9d7979bc8fd0bdae4b647874826e4d4849c"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_64_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:08.882797+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:09.395607+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_21.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_21.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_64_warm_reading.json": "9721c68b7240a74effd76e9b598109968700bbf304ceb3ba15eaae25e83e74c4"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_64_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:09.397219+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:09.865209+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_22.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_22.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_64_empty_reading.json": "f650f4abd9d34f6bc0dc4e63b135e73631650701357e81c2a3ffe98b5d6c08ad"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_32_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:09.886814+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:10.447286+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_23.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_23.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_32_warm_reading.json": "a9c4b245dd0f91f28b92e288874fc4684948c18adc378a938f7910d02c057176"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_32/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_32_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:10.448904+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:11.013684+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_24.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_24.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_32_empty_reading.json": "523955af90c8dd9a5af850c3b975f93c190efc30e225cd870f7c2c30247be1e1"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_64_warm_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:11.026412+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:11.522594+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_25.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_25.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_64_warm_reading.json": "34ebd2d5aefea148cb93c199329a29b6e098e037d3c819021baf2b0245ede00a"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "--rows",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/rows",
+      "--reading",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass2_all_p2_64/reading.json",
+      "--openers",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json",
+      "--output",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_64_empty_reading.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:11.524342+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:12.024753+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_26.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_26.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_64_empty_reading.json": "659033375ec579b34114736f7aa5149431b7f09860d6085f475c8e3843f24a20"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/run_analysis.py"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:16:05.598188+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:16:12.054639+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/analysis_command_02.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/plan.md": "9e30b344f1b83840b3f74577c391326a33f0af3ed012ff2c7faf9a0a0ad641d9",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/identify_openers.py": "32a2ec4b58832313291c6b3d2e768a670ac2aa649132b8c2dd92492ffd1999de",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/run_analysis.py": "2d86213a990d283f77745cfb69d82f9b8d3eab0d734945b988720a5f2e5dca5d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/openers.json": "d665e0091fa4c3757ed9531a7fc8a957a1715169389d705ffaac59bdb47edee1",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_01.log": "ecb4bb4cdf63c48dd098a914c9d687571a1d7b82ad7236cfacebaff2679a5190",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json": "0a7d0b1718692beec04480bd01fad0429364aec12a87b76410d03a1f81977a13",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json": "0a7d0b1718692beec04480bd01fad0429364aec12a87b76410d03a1f81977a13",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_warm_reading.json": "d40b041f91a1a958dd79b91594be8ebf89a70db02a4472daaddc7dce31070969",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_02.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_empty_reading.json": "29cc5283b128bf45a6994fd1042bcd98d6cb7536f5584cd4a172b56ae6cbd686",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_03.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_repeat_openers.json": "7899c8f7d5e4fad744904353900d7cf58a81071a0e6b1124bd74e076da22bdd0",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_64_empty_openers.json": "6d90c472829cda565889d65d13076ec844f3d65b967a923cba63831bce63e61b",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_warm_reading.json": "dec14f5252affb97eb29002f7f84245a2627e7c5eda381071624bf20bb48e59e",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_04.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_empty_reading.json": "27c939a06386cb9234b649b2f87192d30c95e296c83621eebb3d5be199a6fcdf",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_05.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_warm_reading.json": "611ed900c41d2e2fd2c973b3774857de9bd46db9d39d4ff6321da09b733b4ac3",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_06.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_empty_reading.json": "8c71d2bca5b21f6933dd491190d8b830c67c4a987f199711e9c3df07afd8a754",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_07.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_warm_reading.json": "c2c986f3c260ce20a0a2339733c9bd68a8bf5d5f0d2dc2d91b1d5b58a13b635d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_08.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_empty_reading.json": "0566eea46b7b1979d06ebf6b7a1671c3cae2a920bed0532b23ff32f125eb0eef",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_09.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_warm_reading.json": "14fe7be5d51caa03bb4d941ecdedb1f6b38333bc4fbdba0b905a23b61c6aa7a5",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_10.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_empty_reading.json": "712929fefc2e6d911579bc6a6eb75502522dea7dd4daa071c97c7585d416e66f",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_11.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_warm_reading.json": "7c7709b66a02ebba85e050b86bfed9c20b10923b5c635d9fd7266d5f40413243",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_12.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_empty_reading.json": "cd8ee004c35462280ca1674b698e66f2bf18d405486b479ddc075e4155a478a6",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_13.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/metrics.csv": "52d1a7b3f070999f124f82249516489104b1d03fc34dec77b6f25d4f8fb55ba7",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/verification.json": "90e3f9ec892410579bdc0bd942def930d6b3f8d65b70d6d1e0d3307cb2a3cab6",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/analysis_command_01.log": "eba132518a0bc6bc878217611f261a1eef4fe8ae00a17e2dec1c4e043677d45c",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_15.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_16.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_17.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_18.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_19.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_20.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_21.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_22.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_23.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_24.log": "4153fe05cf03308bebfd0d2b9acbe6df0d860073214a726207d4690dda04c64d",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_25.log": "2c3946bfce1037ac187a1f0a7c8bde51e009f0149c65d4ef93f66eedede528d4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/command_26.log": "08ef6379bd3540b127fba80a4af2c5b1ae4dbb8473b170a7fba36520b77d37cd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/analysis_command_02.log": "c54083ae0c0213370c6776a5dcd18fd0cf75f212e4396765ceaed569b03a1ef4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_warm_reading.json": "3e3a3501f1ae0c662ddf527832faf323f058937911882d003b9dc2a8b9e8eb5e",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_empty_reading.json": "9816b9b8991effd9a80ed461b3c5af17447307b8417d9de9bc385c295b2d25c1",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_warm_reading.json": "8b222423a5a2b3288595a35a7ba6b72e8ad2f64ce3b0b801ed402138fa6690fd",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_empty_reading.json": "3178548fa87dd3ed0fbeb0c8dddbb584af83b28cdf75b78b3dff8a92cfb48932",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_32_warm_reading.json": "efa9460b8f2d6e10ede1191d84db695ec7d5f0564e9f26d7b814bb60109c5798",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_32_empty_reading.json": "785212e1be09acf2357c64f5396de9d7979bc8fd0bdae4b647874826e4d4849c",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_64_warm_reading.json": "9721c68b7240a74effd76e9b598109968700bbf304ceb3ba15eaae25e83e74c4",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_64_empty_reading.json": "f650f4abd9d34f6bc0dc4e63b135e73631650701357e81c2a3ffe98b5d6c08ad",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_32_warm_reading.json": "a9c4b245dd0f91f28b92e288874fc4684948c18adc378a938f7910d02c057176",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_32_empty_reading.json": "523955af90c8dd9a5af850c3b975f93c190efc30e225cd870f7c2c30247be1e1",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_64_warm_reading.json": "34ebd2d5aefea148cb93c199329a29b6e098e037d3c819021baf2b0245ede00a",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_64_empty_reading.json": "659033375ec579b34114736f7aa5149431b7f09860d6085f475c8e3843f24a20",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/metrics.csv": "1ffe18a1e9758c1e51c245fb77e058d1c64e932d879799fbfa7760a732378660",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/verification.json": "1dd8ffbe45968e048b3af23a47fe94c5c256391b0dde279e0dac2c63a34d7f12"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/verify_outputs.py"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:17:44.856675+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:17:45.865113+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/verification_command_01.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/verification_command_01.log": "7886cf5ced744b88534cd9baf03412e3d0c38e807e92ddb949da4c5558f37763",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/output_verification.json": "b82a6308b4e3e2b4be2fba2829acc3e6df527ceb76ab706a90f1567b4b8b9e6e",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/test_report_2026-11-01_warm_reading.md": "037dd447bb123aa9ce24ce046107aa6d73e26251ae6cefb07dfe12db57047208"
+    }
+  },
+  {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "tests/analysis/e2e_warm_reading.py",
+      "--help"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:19:52.560491+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:19:52.998804+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/final_check_01.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/final_check_01.log": "6841b100fad44830c1b1fbfe44d0d412c1f1f16178e0a704afb83adb62e307da"
+    }
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+    },
+    "started_utc": "2026-11-01T12:19:53.001017+00:00",
+    "git_head": "3eae2adb337a4024689a2ea49a537e1df48baec0",
+    "dirty_paths": [
+      " M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+      "?? .cortexkit/.gitignore",
+      "?? .pi/subagents.json",
+      "?? remaining_measurements/moe_grid_design.md",
+      "?? tests/analysis/e2e_warm_reading.py"
+    ],
+    "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "virtual_memory_limit_kib": 31457280,
+    "finished_utc": "2026-11-01T12:19:53.042646+00:00",
+    "exit_code": 0,
+    "log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/final_check_02.log",
+    "output_sha256": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/final_check_02.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+]

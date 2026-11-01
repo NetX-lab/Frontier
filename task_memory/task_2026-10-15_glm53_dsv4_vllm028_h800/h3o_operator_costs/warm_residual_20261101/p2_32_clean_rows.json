@@ -1,0 +1,3458 @@
+[
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r000-repeat01",
+    "client_dispatch": 1.0102177038788795,
+    "p_side": 255.3584473207593,
+    "handoff": 342.8431237116456,
+    "client_egress": 0.1728404313325882,
+    "ttft": 599.3846291676164,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r001-repeat01",
+    "client_dispatch": 0.7843412458896637,
+    "p_side": 236.6081103682518,
+    "handoff": 123.71763866394758,
+    "client_egress": 0.23156777024269104,
+    "ttft": 361.34165804833174,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r002-repeat01",
+    "client_dispatch": 0.8263429626822472,
+    "p_side": 232.6373364776373,
+    "handoff": 120.71625050157309,
+    "client_egress": 0.24247262626886368,
+    "ttft": 354.4224025681615,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r003-repeat01",
+    "client_dispatch": 0.719945877790451,
+    "p_side": 229.55178283154964,
+    "handoff": 188.32022324204445,
+    "client_egress": 0.24279486387968063,
+    "ttft": 418.8347468152642,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r004-repeat01",
+    "client_dispatch": 0.6237300112843513,
+    "p_side": 228.3442746847868,
+    "handoff": 131.8117892369628,
+    "client_egress": 0.1859636977314949,
+    "ttft": 360.96575763076544,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r005-repeat01",
+    "client_dispatch": 0.6748707965016365,
+    "p_side": 226.52870789170265,
+    "handoff": 113.78192715346813,
+    "client_egress": 0.2458011731505394,
+    "ttft": 341.23130701482296,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r006-repeat01",
+    "client_dispatch": 0.6761439144611359,
+    "p_side": 228.54855470359325,
+    "handoff": 126.74651481211185,
+    "client_egress": 0.2130577340722084,
+    "ttft": 356.18427116423845,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r007-repeat01",
+    "client_dispatch": 0.7038675248622894,
+    "p_side": 235.74959952384233,
+    "handoff": 122.87944369018078,
+    "client_egress": 0.21925568580627441,
+    "ttft": 359.5521664246917,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r008-repeat01",
+    "client_dispatch": 0.7211705669760704,
+    "p_side": 230.4461421445012,
+    "handoff": 119.49529685080051,
+    "client_egress": 0.21277647465467453,
+    "ttft": 350.87538603693247,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r009-repeat01",
+    "client_dispatch": 0.728873535990715,
+    "p_side": 229.83781155198812,
+    "handoff": 115.52054714411497,
+    "client_egress": 0.34256279468536377,
+    "ttft": 346.4297950267792,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r010-repeat01",
+    "client_dispatch": 0.6658993661403656,
+    "p_side": 229.1559176519513,
+    "handoff": 104.30172178894281,
+    "client_egress": 0.22442732006311417,
+    "ttft": 334.3479661270976,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r011-repeat01",
+    "client_dispatch": 0.6129331886768341,
+    "p_side": 226.65169183164835,
+    "handoff": 123.48672840744257,
+    "client_egress": 0.25242939591407776,
+    "ttft": 351.00378282368183,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r012-repeat01",
+    "client_dispatch": 0.675479881465435,
+    "p_side": 226.86201333999634,
+    "handoff": 143.36838014423847,
+    "client_egress": 0.26230793446302414,
+    "ttft": 371.16818130016327,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r013-repeat01",
+    "client_dispatch": 0.8606761693954468,
+    "p_side": 228.9989423006773,
+    "handoff": 102.47859824448824,
+    "client_egress": 0.05132891237735748,
+    "ttft": 332.38954562693834,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r014-repeat01",
+    "client_dispatch": 0.6854003295302391,
+    "p_side": 231.2455289065838,
+    "handoff": 172.7362098172307,
+    "client_egress": 0.22616330534219742,
+    "ttft": 404.8933023586869,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r015-repeat01",
+    "client_dispatch": 0.71770790964365,
+    "p_side": 245.787569321692,
+    "handoff": 102.18330938369036,
+    "client_egress": 0.05510356277227402,
+    "ttft": 348.74369017779827,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r016-repeat01",
+    "client_dispatch": 0.7080584764480591,
+    "p_side": 228.57781406491995,
+    "handoff": 123.30309301614761,
+    "client_egress": 0.25404058396816254,
+    "ttft": 352.8430061414838,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r017-repeat01",
+    "client_dispatch": 1.0542599484324455,
+    "p_side": 227.95997839421034,
+    "handoff": 102.38904319703579,
+    "client_egress": 0.27917884290218353,
+    "ttft": 331.68246038258076,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r018-repeat01",
+    "client_dispatch": 0.7148794829845428,
+    "p_side": 230.23233655840158,
+    "handoff": 95.67026421427727,
+    "client_egress": 0.052669085562229156,
+    "ttft": 326.6701493412256,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r019-repeat01",
+    "client_dispatch": 0.7232492789626122,
+    "p_side": 233.90646744519472,
+    "handoff": 123.33948351442814,
+    "client_egress": 0.49382075667381287,
+    "ttft": 358.4630209952593,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r020-repeat01",
+    "client_dispatch": 0.4200031980872154,
+    "p_side": 248.2786662876606,
+    "handoff": 116.57807696610689,
+    "client_egress": 0.1550903543829918,
+    "ttft": 365.4318368062377,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r021-repeat01",
+    "client_dispatch": 0.42035244405269623,
+    "p_side": 230.38922622799873,
+    "handoff": 121.8287069350481,
+    "client_egress": 0.3671674057841301,
+    "ttft": 353.00545301288366,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r022-repeat01",
+    "client_dispatch": 0.3987187519669533,
+    "p_side": 257.5389603152871,
+    "handoff": 115.21615833044052,
+    "client_egress": 0.2829357981681824,
+    "ttft": 373.43677319586277,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r023-repeat01",
+    "client_dispatch": 0.4120366647839546,
+    "p_side": 231.37844167649746,
+    "handoff": 110.56207213550806,
+    "client_egress": 0.25937147438526154,
+    "ttft": 342.61192195117474,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r024-repeat01",
+    "client_dispatch": 0.37880800664424896,
+    "p_side": 250.60762651264668,
+    "handoff": 175.50641763955355,
+    "client_egress": 0.08262787014245987,
+    "ttft": 426.57548002898693,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r025-repeat01",
+    "client_dispatch": 0.3824755549430847,
+    "p_side": 236.64672579616308,
+    "handoff": 126.08324363827705,
+    "client_egress": 0.17090141773223877,
+    "ttft": 363.28334640711546,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r026-repeat01",
+    "client_dispatch": 0.37214159965515137,
+    "p_side": 253.9739403873682,
+    "handoff": 107.34422504901886,
+    "client_egress": 0.05988217890262604,
+    "ttft": 361.75018921494484,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r027-repeat01",
+    "client_dispatch": 0.36483071744441986,
+    "p_side": 244.28425170481205,
+    "handoff": 131.252801977098,
+    "client_egress": 0.06671342998743057,
+    "ttft": 375.9685978293419,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r028-repeat01",
+    "client_dispatch": 0.3980100154876709,
+    "p_side": 247.1162499859929,
+    "handoff": 127.81860027462244,
+    "client_egress": 0.38671866059303284,
+    "ttft": 375.71957893669605,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r029-repeat01",
+    "client_dispatch": 0.34640170633792877,
+    "p_side": 229.38142903149128,
+    "handoff": 110.28067581355572,
+    "client_egress": 0.0634416937828064,
+    "ttft": 340.07194824516773,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r030-repeat01",
+    "client_dispatch": 0.9397557005286217,
+    "p_side": 228.9997674524784,
+    "handoff": 119.48116403073072,
+    "client_egress": 0.15188567340373993,
+    "ttft": 349.5725728571415,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r031-repeat01",
+    "client_dispatch": 0.44959038496017456,
+    "p_side": 249.473225325346,
+    "handoff": 153.0979946255684,
+    "client_egress": 0.07138308137655258,
+    "ttft": 403.0921934172511,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r032-repeat01",
+    "client_dispatch": 0.3912756219506264,
+    "p_side": 232.14522749185562,
+    "handoff": 110.10420974344015,
+    "client_egress": 0.09967666119337082,
+    "ttft": 342.74038951843977,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r033-repeat01",
+    "client_dispatch": 0.4137670621275902,
+    "p_side": 247.50105943530798,
+    "handoff": 134.1093946248293,
+    "client_egress": 0.12212526053190231,
+    "ttft": 382.14634638279676,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r034-repeat01",
+    "client_dispatch": 0.9836312383413315,
+    "p_side": 229.0983684360981,
+    "handoff": 124.15566388517618,
+    "client_egress": 0.05015544593334198,
+    "ttft": 354.28781900554895,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r035-repeat01",
+    "client_dispatch": 0.3961808979511261,
+    "p_side": 231.5808292478323,
+    "handoff": 130.49018569290638,
+    "client_egress": 0.35690050572156906,
+    "ttft": 362.8240963444114,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r036-repeat01",
+    "client_dispatch": 0.4076315090060234,
+    "p_side": 256.95927161723375,
+    "handoff": 144.1150475293398,
+    "client_egress": 0.0535380095243454,
+    "ttft": 401.5354886651039,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r037-repeat01",
+    "client_dispatch": 0.40256232023239136,
+    "p_side": 229.97713647782803,
+    "handoff": 121.49302940815687,
+    "client_egress": 0.06638653576374054,
+    "ttft": 351.93911474198103,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r038-repeat01",
+    "client_dispatch": 0.3307238221168518,
+    "p_side": 229.1890298947692,
+    "handoff": 158.84109120815992,
+    "client_egress": 0.05611497908830643,
+    "ttft": 388.4169599041343,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r039-repeat01",
+    "client_dispatch": 0.3821933642029762,
+    "p_side": 226.92671325057745,
+    "handoff": 117.24793445318937,
+    "client_egress": 0.056235119700431824,
+    "ttft": 344.61307618767023,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r040-repeat01",
+    "client_dispatch": 0.39306841790676117,
+    "p_side": 226.05345956981182,
+    "handoff": 112.74399608373642,
+    "client_egress": 0.052764080464839935,
+    "ttft": 339.24328815191984,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r041-repeat01",
+    "client_dispatch": 0.41727256029844284,
+    "p_side": 228.273656219244,
+    "handoff": 133.21563880890608,
+    "client_egress": 0.051837414503097534,
+    "ttft": 361.9584050029516,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r042-repeat01",
+    "client_dispatch": 0.46516209840774536,
+    "p_side": 229.64972350746393,
+    "handoff": 124.33697376400232,
+    "client_egress": 0.1262221485376358,
+    "ttft": 354.57808151841164,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r043-repeat01",
+    "client_dispatch": 0.4737451672554016,
+    "p_side": 229.54416926950216,
+    "handoff": 173.98378811776638,
+    "client_egress": 0.38491375744342804,
+    "ttft": 404.3866163119674,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r044-repeat01",
+    "client_dispatch": 0.4506641998887062,
+    "p_side": 228.69082912802696,
+    "handoff": 117.592659778893,
+    "client_egress": 0.1885863021016121,
+    "ttft": 346.9227394089103,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r045-repeat01",
+    "client_dispatch": 0.40648505091667175,
+    "p_side": 245.98709493875504,
+    "handoff": 125.83807948976755,
+    "client_egress": 0.5801934748888016,
+    "ttft": 372.81185295432806,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r046-repeat01",
+    "client_dispatch": 0.8478853851556778,
+    "p_side": 239.66364562511444,
+    "handoff": 120.26978936046362,
+    "client_egress": 0.15196297317743301,
+    "ttft": 360.93328334391117,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r047-repeat01",
+    "client_dispatch": 0.45987311750650406,
+    "p_side": 231.1284840106964,
+    "handoff": 148.42386357486248,
+    "client_egress": 0.2528596669435501,
+    "ttft": 380.26508037000895,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r048-repeat01",
+    "client_dispatch": 0.4211980849504471,
+    "p_side": 228.92352286726236,
+    "handoff": 125.14444440603256,
+    "client_egress": 0.26535242795944214,
+    "ttft": 354.7545177862048,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r049-repeat01",
+    "client_dispatch": 0.430927611887455,
+    "p_side": 246.00961338728666,
+    "handoff": 130.65939210355282,
+    "client_egress": 0.25736168026924133,
+    "ttft": 377.3572947829962,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r050-repeat01",
+    "client_dispatch": 0.4734378308057785,
+    "p_side": 229.88879960030317,
+    "handoff": 114.25712518393993,
+    "client_egress": 0.09008962661027908,
+    "ttft": 344.70945224165916,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r051-repeat01",
+    "client_dispatch": 0.4019280895590782,
+    "p_side": 242.24958289414644,
+    "handoff": 156.83941543102264,
+    "client_egress": 0.5668718367815018,
+    "ttft": 400.05779825150967,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r052-repeat01",
+    "client_dispatch": 0.3830399364233017,
+    "p_side": 240.06737768650055,
+    "handoff": 92.05204527825117,
+    "client_egress": 0.06927642971277237,
+    "ttft": 332.5717393308878,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r053-repeat01",
+    "client_dispatch": 0.33714715391397476,
+    "p_side": 228.41387894004583,
+    "handoff": 117.56278574466705,
+    "client_egress": 0.06936676800251007,
+    "ttft": 346.3831786066294,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r054-repeat01",
+    "client_dispatch": 0.32231584191322327,
+    "p_side": 241.31082650274038,
+    "handoff": 134.08217951655388,
+    "client_egress": 0.25567691773176193,
+    "ttft": 375.97099877893925,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r055-repeat01",
+    "client_dispatch": 0.3597913309931755,
+    "p_side": 228.9432231336832,
+    "handoff": 116.0287270322442,
+    "client_egress": 0.06116926670074463,
+    "ttft": 345.39291076362133,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r056-repeat01",
+    "client_dispatch": 0.5981149151921272,
+    "p_side": 227.52119414508343,
+    "handoff": 122.5515017285943,
+    "client_egress": 0.07216166704893112,
+    "ttft": 350.7429724559188,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r057-repeat01",
+    "client_dispatch": 0.37393439561128616,
+    "p_side": 244.7355017066002,
+    "handoff": 158.63484144210815,
+    "client_egress": 0.6287908181548119,
+    "ttft": 404.37306836247444,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r058-repeat01",
+    "client_dispatch": 0.6133345887064934,
+    "p_side": 241.99731647968292,
+    "handoff": 111.84300296008587,
+    "client_egress": 0.054010190069675446,
+    "ttft": 354.50766421854496,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r059-repeat01",
+    "client_dispatch": 0.9691482409834862,
+    "p_side": 227.28300839662552,
+    "handoff": 117.8195783868432,
+    "client_egress": 0.06452016532421112,
+    "ttft": 346.1362551897764,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r060-repeat01",
+    "client_dispatch": 0.3868136554956436,
+    "p_side": 233.77560172230005,
+    "handoff": 115.42209051549435,
+    "client_egress": 0.096101313829422,
+    "ttft": 349.68060720711946,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r061-repeat01",
+    "client_dispatch": 0.4433784633874893,
+    "p_side": 245.27277518063784,
+    "handoff": 184.2412706464529,
+    "client_egress": 0.07295887917280197,
+    "ttft": 430.03038316965103,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r062-repeat01",
+    "client_dispatch": 0.49223005771636963,
+    "p_side": 244.59439981728792,
+    "handoff": 121.30064703524113,
+    "client_egress": 0.1128166913986206,
+    "ttft": 366.50009360164404,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r063-repeat01",
+    "client_dispatch": 0.4571331664919853,
+    "p_side": 234.43654458969831,
+    "handoff": 111.22991144657135,
+    "client_egress": 0.0646570697426796,
+    "ttft": 346.18824627250433,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r064-repeat01",
+    "client_dispatch": 0.42502954602241516,
+    "p_side": 243.42333804816008,
+    "handoff": 163.1982009857893,
+    "client_egress": 0.25721266865730286,
+    "ttft": 407.3037812486291,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r065-repeat01",
+    "client_dispatch": 0.35238638520240784,
+    "p_side": 226.4322256669402,
+    "handoff": 115.07883667945862,
+    "client_egress": 0.10406970977783203,
+    "ttft": 341.96751844137907,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r066-repeat01",
+    "client_dispatch": 0.4292195662856102,
+    "p_side": 243.44209861010313,
+    "handoff": 119.10869739949703,
+    "client_egress": 0.10981597006320953,
+    "ttft": 363.089831545949,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r067-repeat01",
+    "client_dispatch": 0.41979458183050156,
+    "p_side": 224.9896265566349,
+    "handoff": 110.19726656377316,
+    "client_egress": 0.05822349339723587,
+    "ttft": 335.6649111956358,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r068-repeat01",
+    "client_dispatch": 0.4045693203806877,
+    "p_side": 240.94802886247635,
+    "handoff": 94.48222443461418,
+    "client_egress": 0.07108598947525024,
+    "ttft": 335.90590860694647,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r069-repeat01",
+    "client_dispatch": 0.4261992871761322,
+    "p_side": 253.55887971818447,
+    "handoff": 109.85196102410555,
+    "client_egress": 0.26606395840644836,
+    "ttft": 364.1031039878726,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r070-repeat01",
+    "client_dispatch": 0.4197657108306885,
+    "p_side": 242.27293208241463,
+    "handoff": 136.38843223452568,
+    "client_egress": 0.2527190372347832,
+    "ttft": 379.3338490650058,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r071-repeat01",
+    "client_dispatch": 0.3428049385547638,
+    "p_side": 226.20296757668257,
+    "handoff": 127.45547853410244,
+    "client_egress": 0.05741044878959656,
+    "ttft": 354.05866149812937,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r072-repeat01",
+    "client_dispatch": 0.34726783633232117,
+    "p_side": 229.57247868180275,
+    "handoff": 108.04202686995268,
+    "client_egress": 0.04904530942440033,
+    "ttft": 338.01081869751215,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r073-repeat01",
+    "client_dispatch": 0.3544474020600319,
+    "p_side": 234.0159136801958,
+    "handoff": 146.21074218302965,
+    "client_egress": 0.05622580647468567,
+    "ttft": 380.6373290717602,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r074-repeat01",
+    "client_dispatch": 0.3618607297539711,
+    "p_side": 248.8831365481019,
+    "handoff": 114.16609864681959,
+    "client_egress": 0.13281498104333878,
+    "ttft": 363.5439109057188,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r075-repeat01",
+    "client_dispatch": 0.41982252150774,
+    "p_side": 232.96212498098612,
+    "handoff": 113.40410076081753,
+    "client_egress": 0.19785482436418533,
+    "ttft": 346.98390308767557,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r076-repeat01",
+    "client_dispatch": 0.4523852840065956,
+    "p_side": 228.5971911624074,
+    "handoff": 121.67538143694401,
+    "client_egress": 0.059478916227817535,
+    "ttft": 350.7844367995858,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r077-repeat01",
+    "client_dispatch": 0.380663201212883,
+    "p_side": 230.03999330103397,
+    "handoff": 115.75860157608986,
+    "client_egress": 0.30103325843811035,
+    "ttft": 346.4802913367748,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r078-repeat01",
+    "client_dispatch": 0.3563482314348221,
+    "p_side": 231.41687270253897,
+    "handoff": 125.67593809217215,
+    "client_egress": 0.12352410703897476,
+    "ttft": 357.5726831331849,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r079-repeat01",
+    "client_dispatch": 0.6233081221580505,
+    "p_side": 227.80181281268597,
+    "handoff": 119.39597316086292,
+    "client_egress": 0.26969145983457565,
+    "ttft": 348.0907855555415,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r080-repeat01",
+    "client_dispatch": 0.4401160404086113,
+    "p_side": 252.207244746387,
+    "handoff": 132.73853715509176,
+    "client_egress": 0.07604528218507767,
+    "ttft": 385.46194322407246,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r081-repeat01",
+    "client_dispatch": 0.36301370710134506,
+    "p_side": 227.52962913364172,
+    "handoff": 111.23410519212484,
+    "client_egress": 0.27117691934108734,
+    "ttft": 339.397924952209,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r082-repeat01",
+    "client_dispatch": 0.4059821367263794,
+    "p_side": 225.95205251127481,
+    "handoff": 156.47175256162882,
+    "client_egress": 0.10099168866872787,
+    "ttft": 382.93077889829874,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r083-repeat01",
+    "client_dispatch": 0.41227415204048157,
+    "p_side": 227.1054945886135,
+    "handoff": 110.25579832494259,
+    "client_egress": 0.08002389222383499,
+    "ttft": 337.8535909578204,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r084-repeat01",
+    "client_dispatch": 0.4558013752102852,
+    "p_side": 225.7598377764225,
+    "handoff": 118.20992175489664,
+    "client_egress": 0.2804761752486229,
+    "ttft": 344.70603708177805,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r085-repeat01",
+    "client_dispatch": 0.4315664991736412,
+    "p_side": 227.66317520290613,
+    "handoff": 123.17078653723001,
+    "client_egress": 0.28891582041978836,
+    "ttft": 351.5544440597296,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r086-repeat01",
+    "client_dispatch": 0.3756927326321602,
+    "p_side": 248.5828259959817,
+    "handoff": 139.248950406909,
+    "client_egress": 0.20468048751354218,
+    "ttft": 388.4121496230364,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r087-repeat01",
+    "client_dispatch": 0.44872332364320755,
+    "p_side": 230.7562455534935,
+    "handoff": 123.19786660373211,
+    "client_egress": 0.2042604610323906,
+    "ttft": 354.6070959419012,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r088-repeat01",
+    "client_dispatch": 0.3660432994365692,
+    "p_side": 230.40776420384645,
+    "handoff": 111.91911995410919,
+    "client_egress": 0.18671993166208267,
+    "ttft": 342.8796473890543,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r089-repeat01",
+    "client_dispatch": 0.47850050032138824,
+    "p_side": 225.63052456825972,
+    "handoff": 156.47615678608418,
+    "client_egress": 0.10249391198158264,
+    "ttft": 382.68767576664686,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r090-repeat01",
+    "client_dispatch": 0.41514448821544647,
+    "p_side": 254.9430336803198,
+    "handoff": 164.94469810277224,
+    "client_egress": 0.10380707681179047,
+    "ttft": 420.40668334811926,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r091-repeat01",
+    "client_dispatch": 0.4001948982477188,
+    "p_side": 230.9825448319316,
+    "handoff": 139.24678601324558,
+    "client_egress": 0.058484263718128204,
+    "ttft": 370.688010007143,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r092-repeat01",
+    "client_dispatch": 0.46533532440662384,
+    "p_side": 248.4880769625306,
+    "handoff": 103.45412138849497,
+    "client_egress": 0.0737244263291359,
+    "ttft": 352.48125810176134,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r093-repeat01",
+    "client_dispatch": 0.38320571184158325,
+    "p_side": 231.95780348032713,
+    "handoff": 124.65005926787853,
+    "client_egress": 0.07539987564086914,
+    "ttft": 357.0664683356881,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r094-repeat01",
+    "client_dispatch": 0.4388121888041496,
+    "p_side": 246.6476960107684,
+    "handoff": 121.98602873831987,
+    "client_egress": 0.06317067891359329,
+    "ttft": 369.13570761680603,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r095-repeat01",
+    "client_dispatch": 0.3582462668418884,
+    "p_side": 229.0954301133752,
+    "handoff": 120.20296044647694,
+    "client_egress": 0.06806012243032455,
+    "ttft": 349.72469694912434,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r096-repeat01",
+    "client_dispatch": 0.3599217161536217,
+    "p_side": 243.94440278410912,
+    "handoff": 115.23100081831217,
+    "client_egress": 0.3743218258023262,
+    "ttft": 359.90964714437723,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r097-repeat01",
+    "client_dispatch": 0.4439130425453186,
+    "p_side": 230.63177522271872,
+    "handoff": 127.09442060440779,
+    "client_egress": 0.19825901836156845,
+    "ttft": 358.3683678880334,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r098-repeat01",
+    "client_dispatch": 0.4258798435330391,
+    "p_side": 227.42662765085697,
+    "handoff": 96.6216791421175,
+    "client_egress": 0.13235025107860565,
+    "ttft": 324.6065368875861,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r099-repeat01",
+    "client_dispatch": 0.3705844283103943,
+    "p_side": 246.60020787268877,
+    "handoff": 115.24309404194355,
+    "client_egress": 0.053775496780872345,
+    "ttft": 362.2676618397236,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r100-repeat01",
+    "client_dispatch": 0.4458017647266388,
+    "p_side": 235.12956593185663,
+    "handoff": 157.04447589814663,
+    "client_egress": 0.11022016406059265,
+    "ttft": 392.7300637587905,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r101-repeat01",
+    "client_dispatch": 0.4356950521469116,
+    "p_side": 235.82279682159424,
+    "handoff": 111.81251797825098,
+    "client_egress": 0.06236601620912552,
+    "ttft": 348.13337586820126,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r102-repeat01",
+    "client_dispatch": 0.4573836922645569,
+    "p_side": 227.72785276174545,
+    "handoff": 125.814707018435,
+    "client_egress": 0.13877078890800476,
+    "ttft": 354.138714261353,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r103-repeat01",
+    "client_dispatch": 0.43441448360681534,
+    "p_side": 228.40796504169703,
+    "handoff": 110.05568224936724,
+    "client_egress": 0.0640740618109703,
+    "ttft": 338.96213583648205,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r104-repeat01",
+    "client_dispatch": 0.4002600908279419,
+    "p_side": 231.542038731277,
+    "handoff": 120.16100063920021,
+    "client_egress": 0.06598327308893204,
+    "ttft": 352.1692827343941,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r105-repeat01",
+    "client_dispatch": 0.40821824222803116,
+    "p_side": 227.35830396413803,
+    "handoff": 125.79399812966585,
+    "client_egress": 0.060277059674263,
+    "ttft": 353.6207973957062,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r106-repeat01",
+    "client_dispatch": 0.3704708069562912,
+    "p_side": 230.16085661947727,
+    "handoff": 116.72586761415005,
+    "client_egress": 0.058935023844242096,
+    "ttft": 347.31613006442785,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r107-repeat01",
+    "client_dispatch": 0.4369327798485756,
+    "p_side": 229.0986469015479,
+    "handoff": 120.26343960314989,
+    "client_egress": 0.2922983840107918,
+    "ttft": 350.09131766855717,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r108-repeat01",
+    "client_dispatch": 0.4288777709007263,
+    "p_side": 228.59088703989983,
+    "handoff": 116.1658400669694,
+    "client_egress": 0.06132200360298157,
+    "ttft": 345.24692688137293,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r109-repeat01",
+    "client_dispatch": 0.4101581871509552,
+    "p_side": 234.5158439129591,
+    "handoff": 110.63679959625006,
+    "client_egress": 0.06259046494960785,
+    "ttft": 345.6253921613097,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r110-repeat01",
+    "client_dispatch": 0.4225820302963257,
+    "p_side": 231.38155322521925,
+    "handoff": 122.77862057089806,
+    "client_egress": 0.08115731179714203,
+    "ttft": 354.6639131382108,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r111-repeat01",
+    "client_dispatch": 0.4209596663713455,
+    "p_side": 226.07011627405882,
+    "handoff": 162.10655868053436,
+    "client_egress": 0.09050965309143066,
+    "ttft": 388.68814427405596,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r112-repeat01",
+    "client_dispatch": 0.4238830879330635,
+    "p_side": 233.1838384270668,
+    "handoff": 109.58277620375156,
+    "client_egress": 0.09023118764162064,
+    "ttft": 343.28072890639305,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r113-repeat01",
+    "client_dispatch": 0.34949928522109985,
+    "p_side": 245.57870160788298,
+    "handoff": 149.6374411508441,
+    "client_egress": 0.0754157081246376,
+    "ttft": 395.6410577520728,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r114-repeat01",
+    "client_dispatch": 0.44600479304790497,
+    "p_side": 229.33947201818228,
+    "handoff": 119.3831181153655,
+    "client_egress": 0.08093472570180893,
+    "ttft": 349.2495296522975,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r115-repeat01",
+    "client_dispatch": 0.4127444699406624,
+    "p_side": 229.8202533274889,
+    "handoff": 97.29398041963577,
+    "client_egress": 0.061831437051296234,
+    "ttft": 327.58880965411663,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r116-repeat01",
+    "client_dispatch": 0.7814234122633934,
+    "p_side": 231.29828926175833,
+    "handoff": 117.39967204630375,
+    "client_egress": 0.06666593253612518,
+    "ttft": 349.5460506528616,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r117-repeat01",
+    "client_dispatch": 0.6681336089968681,
+    "p_side": 226.44652146846056,
+    "handoff": 153.30813452601433,
+    "client_egress": 0.06070174276828766,
+    "ttft": 380.48349134624004,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r118-repeat01",
+    "client_dispatch": 0.7260981947183609,
+    "p_side": 227.7333801612258,
+    "handoff": 116.56356696039438,
+    "client_egress": 0.06360374391078949,
+    "ttft": 345.08664906024933,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r119-repeat01",
+    "client_dispatch": 0.41755475103855133,
+    "p_side": 225.87989550083876,
+    "handoff": 132.1422765031457,
+    "client_egress": 0.06362702697515488,
+    "ttft": 358.50335378199816,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r120-repeat01",
+    "client_dispatch": 0.36662351340055466,
+    "p_side": 233.9298576116562,
+    "handoff": 120.77957950532436,
+    "client_egress": 0.0566728413105011,
+    "ttft": 355.1327334716916,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r121-repeat01",
+    "client_dispatch": 0.4194006323814392,
+    "p_side": 228.85056491941214,
+    "handoff": 130.44508267194033,
+    "client_egress": 0.05593709647655487,
+    "ttft": 359.77098532021046,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r122-repeat01",
+    "client_dispatch": 0.43040327727794647,
+    "p_side": 227.23171394318342,
+    "handoff": 114.14791457355022,
+    "client_egress": 0.06217695772647858,
+    "ttft": 341.87220875173807,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r123-repeat01",
+    "client_dispatch": 0.37734489887952805,
+    "p_side": 226.25405061990023,
+    "handoff": 113.22018690407276,
+    "client_egress": 0.05401112139225006,
+    "ttft": 339.90559354424477,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r124-repeat01",
+    "client_dispatch": 0.41172467172145844,
+    "p_side": 228.40424813330173,
+    "handoff": 108.92493650317192,
+    "client_egress": 0.13440661132335663,
+    "ttft": 337.87531591951847,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r125-repeat01",
+    "client_dispatch": 0.417882576584816,
+    "p_side": 229.44383043795824,
+    "handoff": 142.30282977223396,
+    "client_egress": 0.10989420115947723,
+    "ttft": 372.2744369879365,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r126-repeat01",
+    "client_dispatch": 0.37023238837718964,
+    "p_side": 226.85626428574324,
+    "handoff": 122.13527876883745,
+    "client_egress": 0.1268051564693451,
+    "ttft": 349.4885805994272,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r127-repeat01",
+    "client_dispatch": 0.33595599234104156,
+    "p_side": 227.6048706844449,
+    "handoff": 111.79254669696093,
+    "client_egress": 0.3657108172774315,
+    "ttft": 340.0990841910243,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r000-repeat02",
+    "client_dispatch": 0.7178774103522301,
+    "p_side": 240.1863094419241,
+    "handoff": 253.172030672431,
+    "client_egress": 0.14243833720684052,
+    "ttft": 494.21865586191416,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r001-repeat02",
+    "client_dispatch": 0.6767800077795982,
+    "p_side": 229.4346671551466,
+    "handoff": 130.6589711457491,
+    "client_egress": 0.1877807080745697,
+    "ttft": 360.95819901674986,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r002-repeat02",
+    "client_dispatch": 0.654575414955616,
+    "p_side": 229.56399247050285,
+    "handoff": 170.8369506523013,
+    "client_egress": 0.22188294678926468,
+    "ttft": 401.27740148454905,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r003-repeat02",
+    "client_dispatch": 0.6285840645432472,
+    "p_side": 227.9719104990363,
+    "handoff": 122.43102584034204,
+    "client_egress": 0.24812668561935425,
+    "ttft": 351.27964708954096,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r004-repeat02",
+    "client_dispatch": 0.8692881092429161,
+    "p_side": 227.2732751443982,
+    "handoff": 119.11577545106411,
+    "client_egress": 0.21376647055149078,
+    "ttft": 347.47210517525673,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r005-repeat02",
+    "client_dispatch": 0.7325857877731323,
+    "p_side": 230.87232932448387,
+    "handoff": 155.13788629323244,
+    "client_egress": 0.21377112716436386,
+    "ttft": 386.9565725326538,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r006-repeat02",
+    "client_dispatch": 0.6882445886731148,
+    "p_side": 227.68174298107624,
+    "handoff": 106.33251816034317,
+    "client_egress": 0.1868903636932373,
+    "ttft": 334.88939609378576,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r007-repeat02",
+    "client_dispatch": 0.6853174418210983,
+    "p_side": 227.78393421322107,
+    "handoff": 114.83263876289129,
+    "client_egress": 0.22249668836593628,
+    "ttft": 343.5243871062994,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r008-repeat02",
+    "client_dispatch": 0.6826547905802727,
+    "p_side": 228.4540142863989,
+    "handoff": 107.44571220129728,
+    "client_egress": 0.06299279630184174,
+    "ttft": 336.6453740745783,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r009-repeat02",
+    "client_dispatch": 0.6677508354187012,
+    "p_side": 225.79404804855585,
+    "handoff": 132.91276060044765,
+    "client_egress": 0.23878924548625946,
+    "ttft": 359.61334872990847,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r010-repeat02",
+    "client_dispatch": 0.6219036877155304,
+    "p_side": 225.67719873040915,
+    "handoff": 118.93714778125286,
+    "client_egress": 0.05424581468105316,
+    "ttft": 345.2904960140586,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r011-repeat02",
+    "client_dispatch": 0.9804973378777504,
+    "p_side": 225.61030089855194,
+    "handoff": 106.8548671901226,
+    "client_egress": 0.2408558502793312,
+    "ttft": 333.6865212768316,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r012-repeat02",
+    "client_dispatch": 0.6573470309376717,
+    "p_side": 228.3523939549923,
+    "handoff": 108.3827717229724,
+    "client_egress": 0.24543050676584244,
+    "ttft": 337.6379432156682,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r013-repeat02",
+    "client_dispatch": 0.673527829349041,
+    "p_side": 249.24523383378983,
+    "handoff": 111.90518084913492,
+    "client_egress": 0.2727219834923744,
+    "ttft": 362.09666449576616,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r014-repeat02",
+    "client_dispatch": 0.6915638223290443,
+    "p_side": 233.3338400349021,
+    "handoff": 164.67049811035395,
+    "client_egress": 0.26802532374858856,
+    "ttft": 398.9639272913337,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r015-repeat02",
+    "client_dispatch": 0.683576799929142,
+    "p_side": 250.00107660889626,
+    "handoff": 119.36923675239086,
+    "client_egress": 0.06100907921791077,
+    "ttft": 370.11489924043417,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r016-repeat02",
+    "client_dispatch": 0.6654206663370132,
+    "p_side": 231.94707371294498,
+    "handoff": 137.87197787314653,
+    "client_egress": 0.24044513702392578,
+    "ttft": 370.72491738945246,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r017-repeat02",
+    "client_dispatch": 0.6026569753885269,
+    "p_side": 227.28948760777712,
+    "handoff": 112.02466581016779,
+    "client_egress": 0.24346914142370224,
+    "ttft": 340.16027953475714,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r018-repeat02",
+    "client_dispatch": 0.6961384788155556,
+    "p_side": 226.4750087633729,
+    "handoff": 124.25617687404156,
+    "client_egress": 0.09133480489253998,
+    "ttft": 351.51865892112255,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r019-repeat02",
+    "client_dispatch": 0.7993727922439575,
+    "p_side": 226.50806605815887,
+    "handoff": 131.73251692205667,
+    "client_egress": 0.06804149597883224,
+    "ttft": 359.10799726843834,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r020-repeat02",
+    "client_dispatch": 0.6656469777226448,
+    "p_side": 226.7545061185956,
+    "handoff": 113.84909600019455,
+    "client_egress": 0.23110397160053253,
+    "ttft": 341.5003530681133,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r021-repeat02",
+    "client_dispatch": 0.3696037456393242,
+    "p_side": 227.94493939727545,
+    "handoff": 114.22023829072714,
+    "client_egress": 0.32727979123592377,
+    "ttft": 342.86206122487783,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r022-repeat02",
+    "client_dispatch": 0.3705965355038643,
+    "p_side": 225.80881882458925,
+    "handoff": 110.33130902796984,
+    "client_egress": 0.06009824573993683,
+    "ttft": 336.5708226338029,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r023-repeat02",
+    "client_dispatch": 0.35757292062044144,
+    "p_side": 227.65031922608614,
+    "handoff": 121.25992681831121,
+    "client_egress": 0.05558133125305176,
+    "ttft": 349.32340029627085,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r024-repeat02",
+    "client_dispatch": 0.3321012482047081,
+    "p_side": 224.65994022786617,
+    "handoff": 138.95177002996206,
+    "client_egress": 0.05312170833349228,
+    "ttft": 363.99693321436644,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r025-repeat02",
+    "client_dispatch": 0.5228081718087196,
+    "p_side": 226.32173169404268,
+    "handoff": 112.29941435158253,
+    "client_egress": 0.2331780269742012,
+    "ttft": 339.37713224440813,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r026-repeat02",
+    "client_dispatch": 0.36374107003211975,
+    "p_side": 227.09719743579626,
+    "handoff": 125.19109435379505,
+    "client_egress": 0.08111819624900818,
+    "ttft": 352.73315105587244,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r027-repeat02",
+    "client_dispatch": 0.37225987762212753,
+    "p_side": 243.25337633490562,
+    "handoff": 137.31937389820814,
+    "client_egress": 0.08898694068193436,
+    "ttft": 381.0339970514178,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r028-repeat02",
+    "client_dispatch": 0.36944542080163956,
+    "p_side": 242.2575419768691,
+    "handoff": 179.0263531729579,
+    "client_egress": 0.10964926332235336,
+    "ttft": 421.762989833951,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r029-repeat02",
+    "client_dispatch": 0.4140688106417656,
+    "p_side": 250.24070497602224,
+    "handoff": 129.93424758315086,
+    "client_egress": 0.062105245888233185,
+    "ttft": 380.6511266157031,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r030-repeat02",
+    "client_dispatch": 0.5925288423895836,
+    "p_side": 246.78888637572527,
+    "handoff": 96.37930803000927,
+    "client_egress": 0.06679818034172058,
+    "ttft": 343.82752142846584,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r031-repeat02",
+    "client_dispatch": 0.3307722508907318,
+    "p_side": 226.8955558538437,
+    "handoff": 121.20772060006857,
+    "client_egress": 0.05470495671033859,
+    "ttft": 348.48875366151333,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r032-repeat02",
+    "client_dispatch": 0.37815794348716736,
+    "p_side": 246.2964439764619,
+    "handoff": 175.61703082174063,
+    "client_egress": 0.3265468403697014,
+    "ttft": 422.6181795820594,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r033-repeat02",
+    "client_dispatch": 0.3765001893043518,
+    "p_side": 228.30763831734657,
+    "handoff": 123.04574064910412,
+    "client_egress": 0.07668416947126389,
+    "ttft": 351.8065633252263,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r034-repeat02",
+    "client_dispatch": 0.40310248732566833,
+    "p_side": 246.98917288333178,
+    "handoff": 145.2268185093999,
+    "client_egress": 0.05791615694761276,
+    "ttft": 392.67701003700495,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r035-repeat02",
+    "client_dispatch": 0.3806827589869499,
+    "p_side": 229.0932321920991,
+    "handoff": 111.39291618019342,
+    "client_egress": 0.07381848990917206,
+    "ttft": 340.94064962118864,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r036-repeat02",
+    "client_dispatch": 0.3750082105398178,
+    "p_side": 243.47036238759756,
+    "handoff": 112.08154540508986,
+    "client_egress": 0.05647726356983185,
+    "ttft": 355.98339326679707,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r037-repeat02",
+    "client_dispatch": 0.3490382805466652,
+    "p_side": 242.35329497605562,
+    "handoff": 116.13558698445559,
+    "client_egress": 0.2508927136659622,
+    "ttft": 359.08881295472383,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r038-repeat02",
+    "client_dispatch": 0.38358941674232483,
+    "p_side": 225.74243880808353,
+    "handoff": 151.5857707709074,
+    "client_egress": 0.060467980802059174,
+    "ttft": 377.7722669765353,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r039-repeat02",
+    "client_dispatch": 0.3805076703429222,
+    "p_side": 227.08852495998144,
+    "handoff": 110.23543775081635,
+    "client_egress": 0.07079634815454483,
+    "ttft": 337.77526672929525,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r040-repeat02",
+    "client_dispatch": 0.4080869257450104,
+    "p_side": 228.41993998736143,
+    "handoff": 115.94434082508087,
+    "client_egress": 0.07718149572610855,
+    "ttft": 344.8495492339134,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r041-repeat02",
+    "client_dispatch": 0.3960784524679184,
+    "p_side": 227.24072262644768,
+    "handoff": 129.86759562045336,
+    "client_egress": 0.2726716920733452,
+    "ttft": 357.7770683914423,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r042-repeat02",
+    "client_dispatch": 0.3956686705350876,
+    "p_side": 226.94437764585018,
+    "handoff": 130.3838286548853,
+    "client_egress": 0.06013363599777222,
+    "ttft": 357.78400860726833,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r043-repeat02",
+    "client_dispatch": 0.3720596432685852,
+    "p_side": 245.89085765182972,
+    "handoff": 157.02285431325436,
+    "client_egress": 0.27103908360004425,
+    "ttft": 403.5568106919527,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r044-repeat02",
+    "client_dispatch": 0.35543087869882584,
+    "p_side": 226.6484722495079,
+    "handoff": 116.57791398465633,
+    "client_egress": 0.0573405995965004,
+    "ttft": 343.63915771245956,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r045-repeat02",
+    "client_dispatch": 0.39967428892850876,
+    "p_side": 244.21754013746977,
+    "handoff": 117.76807066053152,
+    "client_egress": 0.11005345731973648,
+    "ttft": 362.49533854424953,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r046-repeat02",
+    "client_dispatch": 0.36661699414253235,
+    "p_side": 244.16066333651543,
+    "handoff": 126.69756822288036,
+    "client_egress": 0.06974395364522934,
+    "ttft": 371.29459250718355,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r047-repeat02",
+    "client_dispatch": 0.4044314846396446,
+    "p_side": 226.53657104820013,
+    "handoff": 107.36312624067068,
+    "client_egress": 0.059898942708969116,
+    "ttft": 334.3640277162194,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r048-repeat02",
+    "client_dispatch": 0.37645455449819565,
+    "p_side": 227.28400491178036,
+    "handoff": 110.13105791062117,
+    "client_egress": 0.08181016892194748,
+    "ttft": 337.87332754582167,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r049-repeat02",
+    "client_dispatch": 0.3868900239467621,
+    "p_side": 244.56342589110136,
+    "handoff": 143.5818299651146,
+    "client_egress": 0.0729970633983612,
+    "ttft": 388.6051429435611,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r050-repeat02",
+    "client_dispatch": 0.37319399416446686,
+    "p_side": 242.35505610704422,
+    "handoff": 126.28581374883652,
+    "client_egress": 0.31002145260572433,
+    "ttft": 369.32408530265093,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r051-repeat02",
+    "client_dispatch": 0.33292826265096664,
+    "p_side": 245.0499664992094,
+    "handoff": 118.10150370001793,
+    "client_egress": 0.06098207086324692,
+    "ttft": 363.54538053274155,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r052-repeat02",
+    "client_dispatch": 0.35457685589790344,
+    "p_side": 240.64470920711756,
+    "handoff": 135.41024830192327,
+    "client_egress": 0.056731514632701874,
+    "ttft": 376.46626587957144,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r053-repeat02",
+    "client_dispatch": 0.36237481981515884,
+    "p_side": 245.51289156079292,
+    "handoff": 140.33422619104385,
+    "client_egress": 0.054708682000637054,
+    "ttft": 386.2642012536526,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r054-repeat02",
+    "client_dispatch": 0.3981059417128563,
+    "p_side": 227.14935708791018,
+    "handoff": 122.8316631168127,
+    "client_egress": 0.06911996752023697,
+    "ttft": 350.448246113956,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r055-repeat02",
+    "client_dispatch": 0.39151497185230255,
+    "p_side": 244.92566101253033,
+    "handoff": 114.85227011144161,
+    "client_egress": 0.06562471389770508,
+    "ttft": 360.23507080972195,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r056-repeat02",
+    "client_dispatch": 0.39699114859104156,
+    "p_side": 244.67387981712818,
+    "handoff": 166.69221874326468,
+    "client_egress": 0.09572412818670273,
+    "ttft": 411.8588138371706,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r057-repeat02",
+    "client_dispatch": 0.3884360194206238,
+    "p_side": 242.2708235681057,
+    "handoff": 114.53840415924788,
+    "client_egress": 0.05511753261089325,
+    "ttft": 357.2527812793851,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r058-repeat02",
+    "client_dispatch": 0.3381958231329918,
+    "p_side": 227.56917029619217,
+    "handoff": 129.35387156903744,
+    "client_egress": 0.155535526573658,
+    "ttft": 357.41677321493626,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r059-repeat02",
+    "client_dispatch": 0.3632279112935066,
+    "p_side": 284.53688230365515,
+    "handoff": 117.50663258135319,
+    "client_egress": 0.16792584210634232,
+    "ttft": 402.5746686384082,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r060-repeat02",
+    "client_dispatch": 0.34520402550697327,
+    "p_side": 228.51801943033934,
+    "handoff": 162.57074940949678,
+    "client_egress": 0.05373544991016388,
+    "ttft": 391.48770831525326,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r061-repeat02",
+    "client_dispatch": 0.3347247838973999,
+    "p_side": 229.50569540262222,
+    "handoff": 113.92681486904621,
+    "client_egress": 0.06972812116146088,
+    "ttft": 343.8369631767273,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r062-repeat02",
+    "client_dispatch": 0.3418652340769768,
+    "p_side": 250.53560640662909,
+    "handoff": 108.8296240195632,
+    "client_egress": 0.06034504622220993,
+    "ttft": 359.76744070649147,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r063-repeat02",
+    "client_dispatch": 0.34904759377241135,
+    "p_side": 231.23841639608145,
+    "handoff": 127.22165323793888,
+    "client_egress": 0.10150671005249023,
+    "ttft": 358.91062393784523,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r064-repeat02",
+    "client_dispatch": 0.46607572585344315,
+    "p_side": 227.69560478627682,
+    "handoff": 111.84678692370653,
+    "client_egress": 0.26544928550720215,
+    "ttft": 340.273916721344,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r065-repeat02",
+    "client_dispatch": 0.3340383991599083,
+    "p_side": 249.79962781071663,
+    "handoff": 166.69697500765324,
+    "client_egress": 0.0955481082201004,
+    "ttft": 416.9261893257499,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r066-repeat02",
+    "client_dispatch": 0.33996906131505966,
+    "p_side": 232.48870577663183,
+    "handoff": 121.99218850582838,
+    "client_egress": 0.08947402238845825,
+    "ttft": 354.91033736616373,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r067-repeat02",
+    "client_dispatch": 0.3318954259157181,
+    "p_side": 250.41179172694683,
+    "handoff": 123.6195769160986,
+    "client_egress": 0.05908682942390442,
+    "ttft": 374.42235089838505,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r068-repeat02",
+    "client_dispatch": 0.35209860652685165,
+    "p_side": 246.10444530844688,
+    "handoff": 140.55093005299568,
+    "client_egress": 0.06071757525205612,
+    "ttft": 387.0681915432215,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r069-repeat02",
+    "client_dispatch": 0.37660542875528336,
+    "p_side": 245.7627346739173,
+    "handoff": 115.2889747172594,
+    "client_egress": 0.2552475780248642,
+    "ttft": 361.68356239795685,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r070-repeat02",
+    "client_dispatch": 0.34575723111629486,
+    "p_side": 247.96894006431103,
+    "handoff": 126.07268989086151,
+    "client_egress": 0.06394553929567337,
+    "ttft": 374.4513327255845,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r071-repeat02",
+    "client_dispatch": 0.33149030059576035,
+    "p_side": 250.9478097781539,
+    "handoff": 120.69782055914402,
+    "client_egress": 0.08828938007354736,
+    "ttft": 372.0654100179672,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r072-repeat02",
+    "client_dispatch": 0.3672586753964424,
+    "p_side": 244.1285690292716,
+    "handoff": 141.9802913442254,
+    "client_egress": 0.1278156414628029,
+    "ttft": 386.60393469035625,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r073-repeat02",
+    "client_dispatch": 0.4150429740548134,
+    "p_side": 229.73276488482952,
+    "handoff": 118.32956690341234,
+    "client_egress": 0.05923677235841751,
+    "ttft": 348.5366115346551,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r074-repeat02",
+    "client_dispatch": 0.3407532349228859,
+    "p_side": 230.75624462217093,
+    "handoff": 112.37477138638496,
+    "client_egress": 0.25321729481220245,
+    "ttft": 343.724986538291,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r075-repeat02",
+    "client_dispatch": 0.3751693293452263,
+    "p_side": 248.8172771409154,
+    "handoff": 121.17002345621586,
+    "client_egress": 0.06528478115797043,
+    "ttft": 370.42775470763445,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r076-repeat02",
+    "client_dispatch": 0.3735097125172615,
+    "p_side": 229.83163874596357,
+    "handoff": 102.07787156105042,
+    "client_egress": 0.06813555955886841,
+    "ttft": 332.3511555790901,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r077-repeat02",
+    "client_dispatch": 0.36230310797691345,
+    "p_side": 251.19767896831036,
+    "handoff": 143.35739891976118,
+    "client_egress": 0.21144282072782516,
+    "ttft": 395.1288238167763,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r078-repeat02",
+    "client_dispatch": 0.37568341940641403,
+    "p_side": 230.07373791188002,
+    "handoff": 105.39858601987362,
+    "client_egress": 0.07881876081228256,
+    "ttft": 335.92682611197233,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r079-repeat02",
+    "client_dispatch": 0.3724675625562668,
+    "p_side": 250.31478889286518,
+    "handoff": 118.3230159804225,
+    "client_egress": 0.05929730832576752,
+    "ttft": 369.0695697441697,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r080-repeat02",
+    "client_dispatch": 0.35983603447675705,
+    "p_side": 226.69361252337694,
+    "handoff": 118.06558538228273,
+    "client_egress": 0.07329322397708893,
+    "ttft": 345.1923271641135,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r081-repeat02",
+    "client_dispatch": 0.3540012985467911,
+    "p_side": 251.19000859558582,
+    "handoff": 193.72382666915655,
+    "client_egress": 0.07610674947500229,
+    "ttft": 445.34394331276417,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r082-repeat02",
+    "client_dispatch": 0.3591347485780716,
+    "p_side": 226.1889474466443,
+    "handoff": 125.56850630789995,
+    "client_egress": 0.06810575723648071,
+    "ttft": 352.1846942603588,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r083-repeat02",
+    "client_dispatch": 0.3755120560526848,
+    "p_side": 251.4407653361559,
+    "handoff": 137.8121916204691,
+    "client_egress": 0.0669313594698906,
+    "ttft": 389.69540037214756,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r084-repeat02",
+    "client_dispatch": 0.3646891564130783,
+    "p_side": 249.3857890367508,
+    "handoff": 159.58490874618292,
+    "client_egress": 0.07786601781845093,
+    "ttft": 409.41325295716524,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r085-repeat02",
+    "client_dispatch": 0.33962447196245193,
+    "p_side": 230.53637519478798,
+    "handoff": 118.37663687765598,
+    "client_egress": 0.17615407705307007,
+    "ttft": 349.4287906214595,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r086-repeat02",
+    "client_dispatch": 0.3656046465039253,
+    "p_side": 246.72862514853477,
+    "handoff": 114.86782319843769,
+    "client_egress": 0.05614478141069412,
+    "ttft": 362.0181977748871,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r087-repeat02",
+    "client_dispatch": 0.3700908273458481,
+    "p_side": 226.0787934064865,
+    "handoff": 110.64216867089272,
+    "client_egress": 0.11552311480045319,
+    "ttft": 337.2065760195255,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r088-repeat02",
+    "client_dispatch": 0.36106351763010025,
+    "p_side": 229.48972880840302,
+    "handoff": 123.51444084197283,
+    "client_egress": 0.09800586849451065,
+    "ttft": 353.46323903650045,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r089-repeat02",
+    "client_dispatch": 0.37279631942510605,
+    "p_side": 244.64133009314537,
+    "handoff": 165.82350432872772,
+    "client_egress": 0.07157120853662491,
+    "ttft": 410.9092019498348,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r090-repeat02",
+    "client_dispatch": 0.3670938313007355,
+    "p_side": 225.94308760017157,
+    "handoff": 119.78254374116659,
+    "client_egress": 0.23916736245155334,
+    "ttft": 346.33189253509045,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r091-repeat02",
+    "client_dispatch": 0.3757597878575325,
+    "p_side": 225.30237026512623,
+    "handoff": 176.23076774179935,
+    "client_egress": 0.25322847068309784,
+    "ttft": 402.1621262654662,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r092-repeat02",
+    "client_dispatch": 0.33915601670742035,
+    "p_side": 278.28881330788136,
+    "handoff": 113.16598765552044,
+    "client_egress": 0.057688914239406586,
+    "ttft": 391.8516458943486,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r093-repeat02",
+    "client_dispatch": 0.4671495407819748,
+    "p_side": 227.2364031523466,
+    "handoff": 127.85348668694496,
+    "client_egress": 0.05434732884168625,
+    "ttft": 355.61138670891523,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r094-repeat02",
+    "client_dispatch": 0.37770532071590424,
+    "p_side": 250.22800639271736,
+    "handoff": 121.40865717083216,
+    "client_egress": 0.06262306123971939,
+    "ttft": 372.07699194550514,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r095-repeat02",
+    "client_dispatch": 0.40392205119132996,
+    "p_side": 232.9111946746707,
+    "handoff": 118.44935081899166,
+    "client_egress": 0.06383098661899567,
+    "ttft": 351.8282985314727,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r096-repeat02",
+    "client_dispatch": 0.4173489287495613,
+    "p_side": 228.56738697737455,
+    "handoff": 116.33401364088058,
+    "client_egress": 0.07479451596736908,
+    "ttft": 345.39354406297207,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r097-repeat02",
+    "client_dispatch": 0.4364466294646263,
+    "p_side": 226.5247693285346,
+    "handoff": 164.0957035124302,
+    "client_egress": 0.05590356886386871,
+    "ttft": 391.1128230392933,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r098-repeat02",
+    "client_dispatch": 0.37370622158050537,
+    "p_side": 229.0678983554244,
+    "handoff": 133.39403830468655,
+    "client_egress": 0.05485024303197861,
+    "ttft": 362.89049312472343,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r099-repeat02",
+    "client_dispatch": 0.36889780312776566,
+    "p_side": 225.28221178799868,
+    "handoff": 117.4217564985156,
+    "client_egress": 0.06320793181657791,
+    "ttft": 343.1360740214586,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r100-repeat02",
+    "client_dispatch": 0.37955865263938904,
+    "p_side": 226.5284564346075,
+    "handoff": 162.01204434037209,
+    "client_egress": 0.056502409279346466,
+    "ttft": 388.9765618368983,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r101-repeat02",
+    "client_dispatch": 0.37742312997579575,
+    "p_side": 227.65452228486538,
+    "handoff": 110.67797616124153,
+    "client_egress": 0.05709286779165268,
+    "ttft": 338.76701444387436,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r102-repeat02",
+    "client_dispatch": 0.4003942012786865,
+    "p_side": 226.20175313204527,
+    "handoff": 128.55582684278488,
+    "client_egress": 0.10166596621274948,
+    "ttft": 355.2596401423216,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r103-repeat02",
+    "client_dispatch": 0.3958512097597122,
+    "p_side": 228.76162361353636,
+    "handoff": 114.61576633155346,
+    "client_egress": 0.1856572926044464,
+    "ttft": 343.958898447454,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r104-repeat02",
+    "client_dispatch": 0.376308336853981,
+    "p_side": 227.64597181230783,
+    "handoff": 123.48586786538363,
+    "client_egress": 0.14220084995031357,
+    "ttft": 351.65034886449575,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r105-repeat02",
+    "client_dispatch": 0.35179127007722855,
+    "p_side": 232.09983576089144,
+    "handoff": 160.21124459803104,
+    "client_egress": 0.2685151994228363,
+    "ttft": 392.93138682842255,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r106-repeat02",
+    "client_dispatch": 0.37488527595996857,
+    "p_side": 225.79583898186684,
+    "handoff": 108.29697269946337,
+    "client_egress": 0.1679481938481331,
+    "ttft": 334.6356451511383,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r107-repeat02",
+    "client_dispatch": 0.5742134526371956,
+    "p_side": 243.28182730823755,
+    "handoff": 121.2952071800828,
+    "client_egress": 0.09261351078748703,
+    "ttft": 365.24386145174503,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r108-repeat02",
+    "client_dispatch": 0.4007164388895035,
+    "p_side": 227.54906956106424,
+    "handoff": 115.64473994076252,
+    "client_egress": 0.09253248572349548,
+    "ttft": 343.68705842643976,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r109-repeat02",
+    "client_dispatch": 0.38268230855464935,
+    "p_side": 245.6604754552245,
+    "handoff": 152.44590025395155,
+    "client_egress": 0.0798376277089119,
+    "ttft": 398.5688956454396,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r110-repeat02",
+    "client_dispatch": 0.7621552795171738,
+    "p_side": 227.64721233397722,
+    "handoff": 143.34904681891203,
+    "client_egress": 0.30899234116077423,
+    "ttft": 372.0674067735672,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r111-repeat02",
+    "client_dispatch": 0.3770114853978157,
+    "p_side": 227.39418875426054,
+    "handoff": 107.69127123057842,
+    "client_egress": 0.06593111902475357,
+    "ttft": 335.52840258926153,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r112-repeat02",
+    "client_dispatch": 0.41910260915756226,
+    "p_side": 227.05905698239803,
+    "handoff": 125.71972515434027,
+    "client_egress": 0.07968395948410034,
+    "ttft": 353.27756870537996,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r113-repeat02",
+    "client_dispatch": 0.42832642793655396,
+    "p_side": 244.03599929064512,
+    "handoff": 117.17981472611427,
+    "client_egress": 0.06619654595851898,
+    "ttft": 361.71033699065447,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r114-repeat02",
+    "client_dispatch": 0.5705738440155983,
+    "p_side": 231.2848838046193,
+    "handoff": 114.58625923842192,
+    "client_egress": 0.41902530938386917,
+    "ttft": 346.8607421964407,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r115-repeat02",
+    "client_dispatch": 0.4149647429585457,
+    "p_side": 243.56592074036598,
+    "handoff": 125.08683651685715,
+    "client_egress": 0.06292760372161865,
+    "ttft": 369.1306496039033,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r116-repeat02",
+    "client_dispatch": 0.33213570713996887,
+    "p_side": 226.66889429092407,
+    "handoff": 118.9509890973568,
+    "client_egress": 0.057437457144260406,
+    "ttft": 346.0094565525651,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r117-repeat02",
+    "client_dispatch": 0.34307222813367844,
+    "p_side": 242.40761902183294,
+    "handoff": 107.4573453515768,
+    "client_egress": 0.08436571806669235,
+    "ttft": 350.2924023196101,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r118-repeat02",
+    "client_dispatch": 0.3701280802488327,
+    "p_side": 229.6629063785076,
+    "handoff": 119.92030311375856,
+    "client_egress": 0.054844655096530914,
+    "ttft": 350.00818222761154,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r119-repeat02",
+    "client_dispatch": 0.3091702237725258,
+    "p_side": 243.34475211799145,
+    "handoff": 152.8984485194087,
+    "client_egress": 0.05826447159051895,
+    "ttft": 396.6106353327632,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r120-repeat02",
+    "client_dispatch": 0.4544369876384735,
+    "p_side": 228.45715284347534,
+    "handoff": 116.78424384444952,
+    "client_egress": 0.08399039506912231,
+    "ttft": 345.77982407063246,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r121-repeat02",
+    "client_dispatch": 0.3442196175456047,
+    "p_side": 246.29959743469954,
+    "handoff": 106.9547738879919,
+    "client_egress": 0.23607630282640457,
+    "ttft": 353.83466724306345,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r122-repeat02",
+    "client_dispatch": 0.33262837678194046,
+    "p_side": 227.23405063152313,
+    "handoff": 107.80342947691679,
+    "client_egress": 0.09417440742254257,
+    "ttft": 335.4642828926444,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r123-repeat02",
+    "client_dispatch": 0.400003045797348,
+    "p_side": 250.43290294706821,
+    "handoff": 113.46545442938805,
+    "client_egress": 0.13258401304483414,
+    "ttft": 364.43094443529844,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r124-repeat02",
+    "client_dispatch": 0.5278615280985832,
+    "p_side": 229.2922893539071,
+    "handoff": 116.58687703311443,
+    "client_egress": 0.2238219603896141,
+    "ttft": 346.63084987550974,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r125-repeat02",
+    "client_dispatch": 0.3929324448108673,
+    "p_side": 226.86136793345213,
+    "handoff": 112.20513470470905,
+    "client_egress": 0.06535649299621582,
+    "ttft": 339.52479157596827,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r126-repeat02",
+    "client_dispatch": 0.3434838727116585,
+    "p_side": 273.6874669790268,
+    "handoff": 127.81626638025045,
+    "client_egress": 0.0647353008389473,
+    "ttft": 401.91195253282785,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r127-repeat02",
+    "client_dispatch": 0.3841770812869072,
+    "p_side": 245.29646523296833,
+    "handoff": 159.93087273091078,
+    "client_egress": 0.06588641554117203,
+    "ttft": 405.6774014607072,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r000-repeat03",
+    "client_dispatch": 0.7669078186154366,
+    "p_side": 300.4118148237467,
+    "handoff": 104.81746960431337,
+    "client_egress": 0.11268910020589828,
+    "ttft": 406.1088813468814,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r001-repeat03",
+    "client_dispatch": 0.6759660318493843,
+    "p_side": 245.59583514928818,
+    "handoff": 175.65408442169428,
+    "client_egress": 0.19112415611743927,
+    "ttft": 422.1170097589493,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r002-repeat03",
+    "client_dispatch": 0.615287572145462,
+    "p_side": 225.82073230296373,
+    "handoff": 114.90385513752699,
+    "client_egress": 0.2227509394288063,
+    "ttft": 341.562625952065,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r003-repeat03",
+    "client_dispatch": 0.7935231551527977,
+    "p_side": 244.81351487338543,
+    "handoff": 106.32882174104452,
+    "client_egress": 0.22840313613414764,
+    "ttft": 352.1642629057169,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r004-repeat03",
+    "client_dispatch": 0.8624615147709846,
+    "p_side": 243.5995414853096,
+    "handoff": 118.44000034034252,
+    "client_egress": 0.06533786654472351,
+    "ttft": 362.96734120696783,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r005-repeat03",
+    "client_dispatch": 0.7180431857705116,
+    "p_side": 229.0869140997529,
+    "handoff": 114.12783246487379,
+    "client_egress": 0.06860867142677307,
+    "ttft": 344.001398421824,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r006-repeat03",
+    "client_dispatch": 0.7179062813520432,
+    "p_side": 244.21443976461887,
+    "handoff": 105.27946334332228,
+    "client_egress": 0.0686040148139,
+    "ttft": 350.2804134041071,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r007-repeat03",
+    "client_dispatch": 0.6881775334477425,
+    "p_side": 249.3514847010374,
+    "handoff": 121.86303827911615,
+    "client_egress": 0.214308500289917,
+    "ttft": 372.1170090138912,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r008-repeat03",
+    "client_dispatch": 0.6821667775511742,
+    "p_side": 245.1576441526413,
+    "handoff": 179.54290471971035,
+    "client_egress": 0.19889790564775467,
+    "ttft": 425.5816135555506,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r009-repeat03",
+    "client_dispatch": 0.7232232019305229,
+    "p_side": 231.54351953417063,
+    "handoff": 113.66275604814291,
+    "client_egress": 0.06730854511260986,
+    "ttft": 345.99680732935667,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r010-repeat03",
+    "client_dispatch": 0.8690841495990753,
+    "p_side": 244.51987817883492,
+    "handoff": 131.20900187641382,
+    "client_egress": 0.06081722676753998,
+    "ttft": 376.65878143161535,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r011-repeat03",
+    "client_dispatch": 0.6599873304367065,
+    "p_side": 226.09299514442682,
+    "handoff": 116.96462333202362,
+    "client_egress": 0.05654245615005493,
+    "ttft": 343.7741482630372,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r012-repeat03",
+    "client_dispatch": 0.6978968158364296,
+    "p_side": 244.6069149300456,
+    "handoff": 117.07568913698196,
+    "client_egress": 0.27022603899240494,
+    "ttft": 362.6507269218564,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r013-repeat03",
+    "client_dispatch": 0.7051052525639534,
+    "p_side": 230.16171995550394,
+    "handoff": 104.12738472223282,
+    "client_egress": 0.22686831653118134,
+    "ttft": 335.2210782468319,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r014-repeat03",
+    "client_dispatch": 0.7216008380055428,
+    "p_side": 250.7262947037816,
+    "handoff": 158.81106071174145,
+    "client_egress": 0.06969552487134933,
+    "ttft": 410.32865177839994,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r015-repeat03",
+    "client_dispatch": 0.6706742569804192,
+    "p_side": 230.48193100839853,
+    "handoff": 111.50470934808254,
+    "client_egress": 0.3651594743132591,
+    "ttft": 343.02247408777475,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r016-repeat03",
+    "client_dispatch": 0.7562544196844101,
+    "p_side": 248.6689081415534,
+    "handoff": 136.44497096538544,
+    "client_egress": 0.07040146738290787,
+    "ttft": 385.94053499400616,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r017-repeat03",
+    "client_dispatch": 1.2582922354340553,
+    "p_side": 227.70180460065603,
+    "handoff": 117.37192794680595,
+    "client_egress": 0.4032924771308899,
+    "ttft": 346.73531726002693,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r018-repeat03",
+    "client_dispatch": 0.7481100037693977,
+    "p_side": 239.5467245951295,
+    "handoff": 167.56637673825026,
+    "client_egress": 0.24724751710891724,
+    "ttft": 408.10845885425806,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r019-repeat03",
+    "client_dispatch": 0.9062653407454491,
+    "p_side": 226.63300577551126,
+    "handoff": 112.13756166398525,
+    "client_egress": 0.061670318245887756,
+    "ttft": 339.73850309848785,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r020-repeat03",
+    "client_dispatch": 0.7434235885739326,
+    "p_side": 230.9704553335905,
+    "handoff": 126.31208077073097,
+    "client_egress": 0.08673500269651413,
+    "ttft": 358.1126946955919,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r021-repeat03",
+    "client_dispatch": 0.3955969586968422,
+    "p_side": 233.30185655504465,
+    "handoff": 159.01401359587908,
+    "client_egress": 0.16762781888246536,
+    "ttft": 392.87909492850304,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r022-repeat03",
+    "client_dispatch": 0.41181687265634537,
+    "p_side": 228.42553071677685,
+    "handoff": 133.73581133782864,
+    "client_egress": 0.12336578220129013,
+    "ttft": 362.6965247094631,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r023-repeat03",
+    "client_dispatch": 0.38468092679977417,
+    "p_side": 228.4909151494503,
+    "handoff": 107.18144569545984,
+    "client_egress": 0.17013680189847946,
+    "ttft": 336.2271785736084,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r024-repeat03",
+    "client_dispatch": 0.377703458070755,
+    "p_side": 226.49125196039677,
+    "handoff": 137.5803528353572,
+    "client_egress": 0.19816681742668152,
+    "ttft": 364.6474750712514,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r025-repeat03",
+    "client_dispatch": 0.4080347716808319,
+    "p_side": 229.82544358819723,
+    "handoff": 124.717952683568,
+    "client_egress": 0.05841907113790512,
+    "ttft": 355.00985011458397,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r026-repeat03",
+    "client_dispatch": 0.39341580122709274,
+    "p_side": 226.93246137350798,
+    "handoff": 114.693533629179,
+    "client_egress": 0.1139836385846138,
+    "ttft": 342.1333944424987,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r027-repeat03",
+    "client_dispatch": 0.3967117518186569,
+    "p_side": 227.2052876651287,
+    "handoff": 123.23955539613962,
+    "client_egress": 0.294392928481102,
+    "ttft": 351.1359477415681,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r028-repeat03",
+    "client_dispatch": 0.5946997553110123,
+    "p_side": 229.95643317699432,
+    "handoff": 128.5212840884924,
+    "client_egress": 0.05755573511123657,
+    "ttft": 359.12997275590897,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r029-repeat03",
+    "client_dispatch": 0.3235256299376488,
+    "p_side": 224.8956123366952,
+    "handoff": 115.24956300854683,
+    "client_egress": 0.11992454528808594,
+    "ttft": 340.58862552046776,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r030-repeat03",
+    "client_dispatch": 0.4062214866280556,
+    "p_side": 228.00550796091557,
+    "handoff": 115.89109152555466,
+    "client_egress": 0.2642134204506874,
+    "ttft": 344.56703439354897,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r031-repeat03",
+    "client_dispatch": 0.35966280847787857,
+    "p_side": 228.9284784346819,
+    "handoff": 173.3324835076928,
+    "client_egress": 0.13209879398345947,
+    "ttft": 402.75272354483604,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r032-repeat03",
+    "client_dispatch": 0.3879144787788391,
+    "p_side": 228.42678986489773,
+    "handoff": 122.76192754507065,
+    "client_egress": 0.06645452231168747,
+    "ttft": 351.6430864110589,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r033-repeat03",
+    "client_dispatch": 0.4195729270577431,
+    "p_side": 240.77889136970043,
+    "handoff": 101.01615078747272,
+    "client_egress": 0.05543045699596405,
+    "ttft": 342.27004554122686,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r034-repeat03",
+    "client_dispatch": 0.3779204562306404,
+    "p_side": 245.78245263546705,
+    "handoff": 110.61582714319229,
+    "client_egress": 0.06087590008974075,
+    "ttft": 356.8370761349797,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r035-repeat03",
+    "client_dispatch": 0.35805534571409225,
+    "p_side": 229.83503714203835,
+    "handoff": 161.04676108807325,
+    "client_egress": 0.05530286580324173,
+    "ttft": 391.29515644162893,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r036-repeat03",
+    "client_dispatch": 0.2970229834318161,
+    "p_side": 226.33497137576342,
+    "handoff": 106.9307392463088,
+    "client_egress": 0.05600694566965103,
+    "ttft": 333.6187405511737,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r037-repeat03",
+    "client_dispatch": 0.3668004646897316,
+    "p_side": 226.343453861773,
+    "handoff": 127.27581709623337,
+    "client_egress": 0.054708682000637054,
+    "ttft": 354.04078010469675,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r038-repeat03",
+    "client_dispatch": 0.34995097666978836,
+    "p_side": 230.7785777375102,
+    "handoff": 117.65631381422281,
+    "client_egress": 0.05456060171127319,
+    "ttft": 348.8394031301141,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r039-repeat03",
+    "client_dispatch": 0.3601880744099617,
+    "p_side": 228.912353515625,
+    "handoff": 103.16408984363079,
+    "client_egress": 0.10784901678562164,
+    "ttft": 332.5444804504514,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r040-repeat03",
+    "client_dispatch": 0.3557708114385605,
+    "p_side": 226.68788582086563,
+    "handoff": 114.43826463073492,
+    "client_egress": 0.101432204246521,
+    "ttft": 341.58335346728563,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r041-repeat03",
+    "client_dispatch": 0.3476059064269066,
+    "p_side": 227.1509664133191,
+    "handoff": 121.07333540916443,
+    "client_egress": 0.30418671667575836,
+    "ttft": 348.8760944455862,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r042-repeat03",
+    "client_dispatch": 0.38697198033332825,
+    "p_side": 224.785671569407,
+    "handoff": 140.28751384466887,
+    "client_egress": 0.06715953350067139,
+    "ttft": 365.52731692790985,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r043-repeat03",
+    "client_dispatch": 0.29127951711416245,
+    "p_side": 226.2044008821249,
+    "handoff": 114.67375792562962,
+    "client_egress": 0.05663000047206879,
+    "ttft": 341.22606832534075,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r044-repeat03",
+    "client_dispatch": 0.35063643008470535,
+    "p_side": 246.5704372152686,
+    "handoff": 116.11358355730772,
+    "client_egress": 0.0582011416554451,
+    "ttft": 363.0928583443165,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r045-repeat03",
+    "client_dispatch": 0.3400854766368866,
+    "p_side": 226.29783395677805,
+    "handoff": 163.8397928327322,
+    "client_egress": 0.33984240144491196,
+    "ttft": 390.81755466759205,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r046-repeat03",
+    "client_dispatch": 0.36001019179821014,
+    "p_side": 226.3713525608182,
+    "handoff": 127.43328232318163,
+    "client_egress": 0.27286913245916367,
+    "ttft": 354.4375142082572,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r047-repeat03",
+    "client_dispatch": 0.43358374387025833,
+    "p_side": 230.17654474824667,
+    "handoff": 131.00566528737545,
+    "client_egress": 0.24323631078004837,
+    "ttft": 361.8590300902724,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r048-repeat03",
+    "client_dispatch": 0.40037836879491806,
+    "p_side": 241.63429159671068,
+    "handoff": 123.1450829654932,
+    "client_egress": 0.23396778851747513,
+    "ttft": 365.4137207195163,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r049-repeat03",
+    "client_dispatch": 0.3602532669901848,
+    "p_side": 257.4510062113404,
+    "handoff": 141.4535166695714,
+    "client_egress": 0.33193081617355347,
+    "ttft": 399.59670696407557,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r050-repeat03",
+    "client_dispatch": 0.3798212856054306,
+    "p_side": 248.5735071823001,
+    "handoff": 108.14059246331453,
+    "client_egress": 0.44092070311307907,
+    "ttft": 357.53484163433313,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r051-repeat03",
+    "client_dispatch": 0.3946516662836075,
+    "p_side": 244.5294512435794,
+    "handoff": 193.125793710351,
+    "client_egress": 0.17833895981311798,
+    "ttft": 438.2282355800271,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r052-repeat03",
+    "client_dispatch": 0.40791649371385574,
+    "p_side": 228.3513080328703,
+    "handoff": 122.18320183455944,
+    "client_egress": 0.05445349961519241,
+    "ttft": 350.9968798607588,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r053-repeat03",
+    "client_dispatch": 0.3580087795853615,
+    "p_side": 245.8930453285575,
+    "handoff": 142.51298923045397,
+    "client_egress": 0.06065052002668381,
+    "ttft": 388.8246938586235,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r054-repeat03",
+    "client_dispatch": 0.4499461501836777,
+    "p_side": 228.21731213480234,
+    "handoff": 124.3309061974287,
+    "client_egress": 0.3553442656993866,
+    "ttft": 353.3535087481141,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r055-repeat03",
+    "client_dispatch": 0.39602071046829224,
+    "p_side": 245.73923088610172,
+    "handoff": 156.6702602431178,
+    "client_egress": 0.18253829330205917,
+    "ttft": 402.9880501329899,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r056-repeat03",
+    "client_dispatch": 0.3726612776517868,
+    "p_side": 227.95110940933228,
+    "handoff": 127.80492845922709,
+    "client_egress": 0.21966267377138138,
+    "ttft": 356.34836181998253,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r057-repeat03",
+    "client_dispatch": 0.38457754999399185,
+    "p_side": 245.9632009267807,
+    "handoff": 125.83125289529562,
+    "client_egress": 0.11814199388027191,
+    "ttft": 372.2971733659506,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r058-repeat03",
+    "client_dispatch": 0.3243926912546158,
+    "p_side": 247.32974730432034,
+    "handoff": 123.79461340606213,
+    "client_egress": 0.0612577423453331,
+    "ttft": 371.5100111439824,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r059-repeat03",
+    "client_dispatch": 0.32959599047899246,
+    "p_side": 245.8501085639,
+    "handoff": 89.83613830059767,
+    "client_egress": 0.06326194852590561,
+    "ttft": 336.07910480350256,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r060-repeat03",
+    "client_dispatch": 0.3586849197745323,
+    "p_side": 227.00110729783773,
+    "handoff": 119.32920478284359,
+    "client_egress": 0.06564520299434662,
+    "ttft": 346.7546422034502,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r061-repeat03",
+    "client_dispatch": 0.380929559469223,
+    "p_side": 225.24545807391405,
+    "handoff": 179.4994669035077,
+    "client_egress": 0.09409710764884949,
+    "ttft": 405.21995164453983,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r062-repeat03",
+    "client_dispatch": 0.33386796712875366,
+    "p_side": 238.9788581058383,
+    "handoff": 126.89375597983599,
+    "client_egress": 0.07420312613248825,
+    "ttft": 366.2806851789355,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r063-repeat03",
+    "client_dispatch": 0.31523220241069794,
+    "p_side": 226.60261765122414,
+    "handoff": 127.03328859061003,
+    "client_egress": 0.05743931978940964,
+    "ttft": 354.00857776403427,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r064-repeat03",
+    "client_dispatch": 0.34821778535842896,
+    "p_side": 227.70108748227358,
+    "handoff": 124.68286231160164,
+    "client_egress": 0.2654353156685829,
+    "ttft": 352.99760289490223,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r065-repeat03",
+    "client_dispatch": 0.33392105251550674,
+    "p_side": 227.97754779458046,
+    "handoff": 164.69494719058275,
+    "client_egress": 0.22849999368190765,
+    "ttft": 393.2349160313606,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r066-repeat03",
+    "client_dispatch": 0.3440342843532562,
+    "p_side": 230.04285618662834,
+    "handoff": 108.71556680649519,
+    "client_egress": 0.0591399148106575,
+    "ttft": 339.16159719228745,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r067-repeat03",
+    "client_dispatch": 0.37917401641607285,
+    "p_side": 226.77835915237665,
+    "handoff": 103.28573174774647,
+    "client_egress": 0.06343238055706024,
+    "ttft": 330.50669729709625,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r068-repeat03",
+    "client_dispatch": 0.3509838134050369,
+    "p_side": 227.7395585551858,
+    "handoff": 134.3500753864646,
+    "client_egress": 0.06921589374542236,
+    "ttft": 362.50983364880085,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r069-repeat03",
+    "client_dispatch": 0.3667110577225685,
+    "p_side": 227.90090087801218,
+    "handoff": 116.89437367022038,
+    "client_egress": 0.29727257788181305,
+    "ttft": 345.45925818383694,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r070-repeat03",
+    "client_dispatch": 0.3083227202296257,
+    "p_side": 226.9705468788743,
+    "handoff": 112.43571899831295,
+    "client_egress": 0.31068921089172363,
+    "ttft": 340.0252778083086,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r071-repeat03",
+    "client_dispatch": 0.32413098961114883,
+    "p_side": 229.88964710384607,
+    "handoff": 121.77370302379131,
+    "client_egress": 0.06446056067943573,
+    "ttft": 352.05194167792797,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r072-repeat03",
+    "client_dispatch": 0.3319131210446358,
+    "p_side": 227.25220955908298,
+    "handoff": 164.01385329663754,
+    "client_egress": 0.2563009038567543,
+    "ttft": 391.8542768806219,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r073-repeat03",
+    "client_dispatch": 0.37714745849370956,
+    "p_side": 225.8652225136757,
+    "handoff": 128.63827031105757,
+    "client_egress": 0.4692133516073227,
+    "ttft": 355.3498536348343,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r074-repeat03",
+    "client_dispatch": 0.376751646399498,
+    "p_side": 244.2606659606099,
+    "handoff": 172.43964411318302,
+    "client_egress": 0.2968423068523407,
+    "ttft": 417.3739040270448,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r075-repeat03",
+    "client_dispatch": 0.3774743527173996,
+    "p_side": 226.20868496596813,
+    "handoff": 111.24837305396795,
+    "client_egress": 0.2526184543967247,
+    "ttft": 338.0871508270502,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r076-repeat03",
+    "client_dispatch": 0.3566145896911621,
+    "p_side": 225.5625920370221,
+    "handoff": 123.31550195813179,
+    "client_egress": 0.2951500937342644,
+    "ttft": 349.52985867857933,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r077-repeat03",
+    "client_dispatch": 0.3752792254090309,
+    "p_side": 243.99560876190662,
+    "handoff": 133.52565187960863,
+    "client_egress": 0.10480079799890518,
+    "ttft": 378.0013406649232,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r078-repeat03",
+    "client_dispatch": 0.3791768103837967,
+    "p_side": 246.23384326696396,
+    "handoff": 106.79804906249046,
+    "client_egress": 0.4379013553261757,
+    "ttft": 353.8489704951644,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r079-repeat03",
+    "client_dispatch": 0.36787521094083786,
+    "p_side": 231.24603275209665,
+    "handoff": 115.75596407055855,
+    "client_egress": 0.37631671875715256,
+    "ttft": 347.7461887523532,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r080-repeat03",
+    "client_dispatch": 0.3860862925648689,
+    "p_side": 243.93632914870977,
+    "handoff": 132.75449443608522,
+    "client_egress": 0.06813835352659225,
+    "ttft": 377.14504823088646,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r081-repeat03",
+    "client_dispatch": 0.3602532669901848,
+    "p_side": 226.58015694469213,
+    "handoff": 126.38962920755148,
+    "client_egress": 0.27308519929647446,
+    "ttft": 353.6031246185303,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r082-repeat03",
+    "client_dispatch": 0.3532553091645241,
+    "p_side": 243.15723776817322,
+    "handoff": 143.84971745312214,
+    "client_egress": 0.08039642125368118,
+    "ttft": 387.44060695171356,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r083-repeat03",
+    "client_dispatch": 0.37104636430740356,
+    "p_side": 228.2339120283723,
+    "handoff": 117.20682866871357,
+    "client_egress": 0.0692540779709816,
+    "ttft": 345.88104113936424,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r084-repeat03",
+    "client_dispatch": 0.38391631096601486,
+    "p_side": 247.76337016373873,
+    "handoff": 141.850795596838,
+    "client_egress": 0.2591889351606369,
+    "ttft": 390.2572710067034,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r085-repeat03",
+    "client_dispatch": 0.387570820748806,
+    "p_side": 228.1571552157402,
+    "handoff": 116.56324192881584,
+    "client_egress": 0.06547383964061737,
+    "ttft": 345.17344180494547,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r086-repeat03",
+    "client_dispatch": 0.38137100636959076,
+    "p_side": 248.18088673055172,
+    "handoff": 123.78939054906368,
+    "client_egress": 0.25307852774858475,
+    "ttft": 372.6047268137336,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r087-repeat03",
+    "client_dispatch": 0.41346438229084015,
+    "p_side": 230.36270216107368,
+    "handoff": 119.7452200576663,
+    "client_egress": 0.35287998616695404,
+    "ttft": 350.8742665871978,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r088-repeat03",
+    "client_dispatch": 0.4233904182910919,
+    "p_side": 243.96292679011822,
+    "handoff": 163.25560957193375,
+    "client_egress": 0.35355519503355026,
+    "ttft": 407.9954819753766,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r089-repeat03",
+    "client_dispatch": 0.3939839079976082,
+    "p_side": 250.3964751958847,
+    "handoff": 117.3295984044671,
+    "client_egress": 0.13574399054050446,
+    "ttft": 368.2558014988899,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r090-repeat03",
+    "client_dispatch": 0.40334276854991913,
+    "p_side": 242.10290051996708,
+    "handoff": 175.74979178607464,
+    "client_egress": 0.24810433387756348,
+    "ttft": 418.5041394084692,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r091-repeat03",
+    "client_dispatch": 0.3746896982192993,
+    "p_side": 227.2350639104843,
+    "handoff": 124.91828110069036,
+    "client_egress": 0.29502250254154205,
+    "ttft": 352.8230572119355,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r092-repeat03",
+    "client_dispatch": 0.47975871711969376,
+    "p_side": 241.48682598024607,
+    "handoff": 121.0389556363225,
+    "client_egress": 0.3985762596130371,
+    "ttft": 363.4041165933013,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r093-repeat03",
+    "client_dispatch": 0.41153375059366226,
+    "p_side": 227.20742970705032,
+    "handoff": 123.32121655344963,
+    "client_egress": 0.09614136070013046,
+    "ttft": 351.03632137179375,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r094-repeat03",
+    "client_dispatch": 0.45395083725452423,
+    "p_side": 241.93102307617664,
+    "handoff": 149.54223576933146,
+    "client_egress": 0.18386542797088623,
+    "ttft": 392.1110751107335,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r095-repeat03",
+    "client_dispatch": 0.42235758155584335,
+    "p_side": 228.8662800565362,
+    "handoff": 116.26058723777533,
+    "client_egress": 0.28854329138994217,
+    "ttft": 345.8377681672573,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r096-repeat03",
+    "client_dispatch": 0.39700139313936234,
+    "p_side": 242.84571129828691,
+    "handoff": 167.69938543438911,
+    "client_egress": 0.33866986632347107,
+    "ttft": 411.28076799213886,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r097-repeat03",
+    "client_dispatch": 0.3645746037364006,
+    "p_side": 227.22389362752438,
+    "handoff": 126.33207999169827,
+    "client_egress": 0.35167112946510315,
+    "ttft": 354.27221935242414,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r098-repeat03",
+    "client_dispatch": 0.364936888217926,
+    "p_side": 246.46479450166225,
+    "handoff": 116.08364060521126,
+    "client_egress": 0.06981659680604935,
+    "ttft": 362.9831885918975,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r099-repeat03",
+    "client_dispatch": 0.3978731110692024,
+    "p_side": 227.73171868175268,
+    "handoff": 122.80210945755243,
+    "client_egress": 0.12359209358692169,
+    "ttft": 351.05529334396124,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r100-repeat03",
+    "client_dispatch": 0.6616152822971344,
+    "p_side": 227.82651335000992,
+    "handoff": 118.6059145256877,
+    "client_egress": 0.05876552313566208,
+    "ttft": 347.1528086811304,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r101-repeat03",
+    "client_dispatch": 0.38739386945962906,
+    "p_side": 245.46924978494644,
+    "handoff": 147.68727961927652,
+    "client_egress": 0.08263345807790756,
+    "ttft": 393.6265567317605,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r102-repeat03",
+    "client_dispatch": 0.3944896161556244,
+    "p_side": 257.2944788262248,
+    "handoff": 121.28324713557959,
+    "client_egress": 0.060529448091983795,
+    "ttft": 379.032745026052,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r103-repeat03",
+    "client_dispatch": 0.36754459142684937,
+    "p_side": 257.68615677952766,
+    "handoff": 105.44147249311209,
+    "client_egress": 0.06040651351213455,
+    "ttft": 363.55558037757874,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r104-repeat03",
+    "client_dispatch": 0.34983642399311066,
+    "p_side": 255.38005866110325,
+    "handoff": 121.23106885701418,
+    "client_egress": 0.061231665313243866,
+    "ttft": 377.0221956074238,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r105-repeat03",
+    "client_dispatch": 0.6778324022889137,
+    "p_side": 245.60973700135946,
+    "handoff": 131.4784698188305,
+    "client_egress": 0.21833833307027817,
+    "ttft": 377.98437755554914,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r106-repeat03",
+    "client_dispatch": 0.435488298535347,
+    "p_side": 246.12384662032127,
+    "handoff": 122.03933950513601,
+    "client_egress": 0.3948276862502098,
+    "ttft": 368.99350211024284,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r107-repeat03",
+    "client_dispatch": 0.4246644675731659,
+    "p_side": 226.973133161664,
+    "handoff": 127.30388529598713,
+    "client_egress": 0.2808365970849991,
+    "ttft": 354.9825195223093,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r108-repeat03",
+    "client_dispatch": 0.43547898530960083,
+    "p_side": 229.35316059738398,
+    "handoff": 140.53923171013594,
+    "client_egress": 0.14002807438373566,
+    "ttft": 370.46789936721325,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r109-repeat03",
+    "client_dispatch": 0.43352413922548294,
+    "p_side": 243.3187710121274,
+    "handoff": 184.35671366751194,
+    "client_egress": 0.2879789099097252,
+    "ttft": 428.39698772877455,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r110-repeat03",
+    "client_dispatch": 0.44837314635515213,
+    "p_side": 226.08972899615765,
+    "handoff": 130.81550132483244,
+    "client_egress": 0.23409631103277206,
+    "ttft": 357.587699778378,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r111-repeat03",
+    "client_dispatch": 0.4162536934018135,
+    "p_side": 242.5848925486207,
+    "handoff": 127.32955440878868,
+    "client_egress": 0.14369655400514603,
+    "ttft": 370.47439720481634,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r112-repeat03",
+    "client_dispatch": 0.4100268706679344,
+    "p_side": 227.0499374717474,
+    "handoff": 113.15637733787298,
+    "client_egress": 0.3687366843223572,
+    "ttft": 340.9850783646107,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r113-repeat03",
+    "client_dispatch": 0.43195951730012894,
+    "p_side": 243.37864574044943,
+    "handoff": 117.95020662248135,
+    "client_egress": 0.1929793506860733,
+    "ttft": 361.953791230917,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r114-repeat03",
+    "client_dispatch": 0.44395215809345245,
+    "p_side": 225.69748759269714,
+    "handoff": 124.9953368678689,
+    "client_egress": 0.28193462640047073,
+    "ttft": 351.41871124505997,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r115-repeat03",
+    "client_dispatch": 0.44366251677274704,
+    "p_side": 241.402349434793,
+    "handoff": 127.8545381501317,
+    "client_egress": 0.3291843459010124,
+    "ttft": 370.02973444759846,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r116-repeat03",
+    "client_dispatch": 0.37644803524017334,
+    "p_side": 226.5411326661706,
+    "handoff": 117.22562927752733,
+    "client_egress": 0.0705355778336525,
+    "ttft": 344.21374555677176,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r117-repeat03",
+    "client_dispatch": 0.41649676859378815,
+    "p_side": 242.99005884677172,
+    "handoff": 188.56022600084543,
+    "client_egress": 0.3420291468501091,
+    "ttft": 432.30881076306105,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r118-repeat03",
+    "client_dispatch": 0.3858627751469612,
+    "p_side": 230.27162812650204,
+    "handoff": 109.95402559638023,
+    "client_egress": 0.06637535989284515,
+    "ttft": 340.6778918579221,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r119-repeat03",
+    "client_dispatch": 0.3372682258486748,
+    "p_side": 242.00743716210127,
+    "handoff": 114.75949920713902,
+    "client_egress": 0.05699601024389267,
+    "ttft": 357.16120060533285,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r120-repeat03",
+    "client_dispatch": 0.4083719104528427,
+    "p_side": 225.48504266887903,
+    "handoff": 126.1582002043724,
+    "client_egress": 0.05597621202468872,
+    "ttft": 352.10759099572897,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r121-repeat03",
+    "client_dispatch": 0.3754179924726486,
+    "p_side": 240.42953737080097,
+    "handoff": 117.98702832311392,
+    "client_egress": 0.3125052899122238,
+    "ttft": 359.10448897629976,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r122-repeat03",
+    "client_dispatch": 0.4190979525446892,
+    "p_side": 230.57900834828615,
+    "handoff": 119.55502163618803,
+    "client_egress": 0.15946850180625916,
+    "ttft": 350.71259643882513,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r123-repeat03",
+    "client_dispatch": 0.4641544073820114,
+    "p_side": 243.41230560094118,
+    "handoff": 139.6497879177332,
+    "client_egress": 0.0611012801527977,
+    "ttft": 383.5873492062092,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r124-repeat03",
+    "client_dispatch": 0.3751516342163086,
+    "p_side": 247.1451535820961,
+    "handoff": 109.40168239176273,
+    "client_egress": 0.22505037486553192,
+    "ttft": 357.1470379829407,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r125-repeat03",
+    "client_dispatch": 0.3535086289048195,
+    "p_side": 244.08730305731297,
+    "handoff": 110.52681040018797,
+    "client_egress": 0.06453320384025574,
+    "ttft": 355.032155290246,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r126-repeat03",
+    "client_dispatch": 0.3504883497953415,
+    "p_side": 230.61914276331663,
+    "handoff": 110.99275480955839,
+    "client_egress": 0.0764988362789154,
+    "ttft": 342.0388847589493,
+    "excluded_first_contact": false
+  },
+  {
+    "request": "fixed-6144-1024-req128-qps1-formal-r127-repeat03",
+    "client_dispatch": 0.36604143679142,
+    "p_side": 247.8156602010131,
+    "handoff": 151.3166856020689,
+    "client_egress": 0.3757346421480179,
+    "ttft": 399.8741218820214,
+    "excluded_first_contact": false
+  }
+]

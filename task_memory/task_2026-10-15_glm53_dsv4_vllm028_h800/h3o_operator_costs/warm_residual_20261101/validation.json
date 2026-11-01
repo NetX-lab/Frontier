@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "checks": [
+    "p2_64/B29: population, spans, first-decode split and FIFO <=0.11 ms PASS",
+    "p2_64/pass1_all: population, spans, first-decode split and FIFO <=0.11 ms PASS",
+    "p2_64/pass2_all: population, spans, first-decode split and FIFO <=0.11 ms PASS",
+    "p2_32/B29: population, spans, first-decode split and FIFO <=0.11 ms PASS",
+    "p2_32/pass1_all: population, spans, first-decode split and FIFO <=0.11 ms PASS",
+    "p2_32/pass2_all: population, spans, first-decode split and FIFO <=0.11 ms PASS",
+    "B29: scratch-compatible price-neighborhood TTFT 688.881597 ms PASS",
+    "pass1_all: scratch-compatible price-neighborhood TTFT 689.523765 ms PASS",
+    "pass2_all: scratch-compatible price-neighborhood TTFT 688.997023 ms PASS"
+  ],
+  "script_sha256": {
+    "fifo_model.py": "1d109fd0959031b6543abf7863662993c5d4d288c781d1b27c541a88b2f159af",
+    "analyze.py": "5052fd15e181e6693a8138b236e0c7788f8eba5b627f4a04fd6d0f7d1e78cf7f",
+    "sweep.py": "408b6ff6bc9d122e6ea73249b8b906dc3a888be0e1587125df8dd0603760eada",
+    "validate.py": "fdaf9e40073f9c2eab04d1ef287fb8df5d9950edb56083bd54dc238bd00eb599"
+  }
+}

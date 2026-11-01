@@ -1,0 +1,64 @@
+{
+  "python": "3.10.6",
+  "pass_count": 7,
+  "checks": [
+    {
+      "status": "PASS",
+      "description": "inspected native files match every supplied expected_source_hash"
+    },
+    {
+      "status": "PASS",
+      "description": "source capacity/payload calculation reproduces ledger and native packed bytes"
+    },
+    {
+      "status": "PASS",
+      "description": "wave64 has127 eight-sample windows and one ambiguous16-sample aggregate window; lifecycle32 has384 eight-sample windows; every sample has46,103,040B"
+    },
+    {
+      "status": "PASS",
+      "description": "six current replay byte prices agree; packed minus component rate arithmetic = 0.417203 ms"
+    },
+    {
+      "status": "PASS",
+      "description": "selected runner preparation row has 67 kernels / 9 copies and sampling rows have 9 kernels; native kernel-only preparation/post counts are checked separately"
+    },
+    {
+      "status": "PASS",
+      "description": "three native real forwards witness EP dispatch 129=43x3; SP executed scopes are 43, not 44 price queries"
+    },
+    {
+      "status": "PASS",
+      "description": "isolated actual _operator_gaps ignores per-layer count3 and uses registry1; registry3 fixture adds 0.046836 ms/forward"
+    }
+  ],
+  "native_source_hashes": {
+    "vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py": {
+      "actual": "4860f51b6ac3301c243794b7626b5536f6b0ec41204e426ee6b61bc0e1d0bdb7",
+      "expected": "4860f51b6ac3301c243794b7626b5536f6b0ec41204e426ee6b61bc0e1d0bdb7"
+    },
+    "vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py": {
+      "actual": "507fe6bfd994b4b75a624397ffe198adbec18a6a8295f03612fb47bb55a7bf23",
+      "expected": "507fe6bfd994b4b75a624397ffe198adbec18a6a8295f03612fb47bb55a7bf23"
+    },
+    "vllm/v1/worker/kv_connector_model_runner_mixin.py": {
+      "actual": "4b3d86125114857a6af0e60b2f37a338f75df497967b8416b719bb0a2af24c09",
+      "expected": "4b3d86125114857a6af0e60b2f37a338f75df497967b8416b719bb0a2af24c09"
+    },
+    "vllm/models/deepseek_v4/attention.py": {
+      "actual": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a",
+      "expected": "51add6614dc2835e4b714b58e784bd607375efa94ed44dcbae6361a08c3e073a"
+    },
+    "vllm/utils/multi_stream_utils.py": {
+      "actual": "3ee8bba03950f586175e718bdbab4a25bc51051a1a4c81bf58ce60ab723dc86f",
+      "expected": null
+    },
+    "vllm/distributed/device_communicators/all2all.py": {
+      "actual": "82d520aa92d7696aee9385d58023dedba6d7eff9ea493c75f7c62da2cc2d22aa",
+      "expected": null
+    },
+    "vllm/distributed/device_communicators/cuda_communicator.py": {
+      "actual": "a9a0242175c3d3e0d46d586a38cb76139e6e4e92d15032d5b1e33237af2f6757",
+      "expected": null
+    }
+  }
+}

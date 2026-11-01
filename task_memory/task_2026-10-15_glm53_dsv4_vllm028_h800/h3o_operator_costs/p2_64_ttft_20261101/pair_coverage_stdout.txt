@@ -1,0 +1,17 @@
+== dsv4-h200-p2-lifecycle-20261025-01: P lanes [0, 1] D lanes [0, 1] pairs used 4
+   decode adds by (kind, repeat): {('formal', 'repeat01'): 128, ('formal', 'repeat02'): 128, ('formal', 'repeat03'): 128, ('warmup', 'repeat01'): 16, ('warmup', 'repeat02'): 16, ('warmup', 'repeat03'): 16}
+   pairs opened by (kind, repeat): {('warmup', 'repeat01'): 4}
+== dsv4-h200-p2-64-lifecycle-20261026-01: P lanes [0, 1, 2, 3] D lanes [0, 1, 2, 3] pairs used 16
+   decode adds by (kind, repeat): {('formal', 'repeat01'): 128, ('formal', 'repeat02'): 128, ('formal', 'repeat03'): 128, ('warmup', 'repeat01'): 16, ('warmup', 'repeat02'): 16, ('warmup', 'repeat03'): 16}
+   pairs opened by (kind, repeat): {('formal', 'repeat01'): 5, ('warmup', 'repeat01'): 11}
+   formal opener fixed-6144-1024-req128-qps1-formal-r002-repeat01 pair (3, 0)
+   formal opener fixed-6144-1024-req128-qps1-formal-r004-repeat01 pair (1, 3)
+   formal opener fixed-6144-1024-req128-qps1-formal-r006-repeat01 pair (3, 1)
+   formal opener fixed-6144-1024-req128-qps1-formal-r009-repeat01 pair (2, 0)
+   formal opener fixed-6144-1024-req128-qps1-formal-r053-repeat01 pair (1, 2)
+== dsv4-h200-p2-64-wave-20261030-01: P lanes [0, 1, 2, 3] D lanes [0, 1, 2, 3] pairs used 16
+   decode adds by (kind, repeat): {('formal', 'repeat01'): 128, ('warmup', 'repeat01'): 16}
+   pairs opened by (kind, repeat): {('formal', 'repeat01'): 3, ('warmup', 'repeat01'): 13}
+   formal opener fixed-6144-1024-req128-qps1-formal-r005-repeat01 pair (0, 1)
+   formal opener fixed-6144-1024-req128-qps1-formal-r017-repeat01 pair (2, 3)
+   formal opener fixed-6144-1024-req128-qps1-formal-r037-repeat01 pair (3, 2)

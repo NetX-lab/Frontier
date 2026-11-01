@@ -1,0 +1,8 @@
+ .../plan.md                                        | 32 +++++++++++----
+ .../progress.md                                    | 48 ++++++++++++++++++----
+ .../requirements.md                                | 19 +++++++++
+ .../summary.md                                     | 21 +++++++++-
+ .../tickets/05-dsv4-flash-family.md                | 21 ++++++++--
+ .../tickets/09-predictor-bundle.md                 | 21 ++++++++--
+ .../tickets/19-comparison-and-acceptance.md        | 21 +++++++---
+ 7 files changed, 156 insertions(+), 27 deletions(-)

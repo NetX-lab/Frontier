@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_warm_reading.json",
+      "sha256": "3e3a3501f1ae0c662ddf527832faf323f058937911882d003b9dc2a8b9e8eb5e",
+      "paired_exclusion": "PASS",
+      "pooled_totals": "PASS",
+      "unchanged_sources": "PASS",
+      "verbatim_harness_bytes": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_warm_reading.json",
+      "sha256": "8b222423a5a2b3288595a35a7ba6b72e8ad2f64ce3b0b801ed402138fa6690fd",
+      "paired_exclusion": "PASS",
+      "pooled_totals": "PASS",
+      "unchanged_sources": "PASS",
+      "verbatim_harness_bytes": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_32_warm_reading.json",
+      "sha256": "efa9460b8f2d6e10ede1191d84db695ec7d5f0564e9f26d7b814bb60109c5798",
+      "paired_exclusion": "PASS",
+      "pooled_totals": "PASS",
+      "unchanged_sources": "PASS",
+      "verbatim_harness_bytes": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass1_all_p2_64_warm_reading.json",
+      "sha256": "9721c68b7240a74effd76e9b598109968700bbf304ceb3ba15eaae25e83e74c4",
+      "paired_exclusion": "PASS",
+      "pooled_totals": "PASS",
+      "unchanged_sources": "PASS",
+      "verbatim_harness_bytes": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_32_warm_reading.json",
+      "sha256": "a9c4b245dd0f91f28b92e288874fc4684948c18adc378a938f7910d02c057176",
+      "paired_exclusion": "PASS",
+      "pooled_totals": "PASS",
+      "unchanged_sources": "PASS",
+      "verbatim_harness_bytes": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/pass2_all_p2_64_warm_reading.json",
+      "sha256": "34ebd2d5aefea148cb93c199329a29b6e098e037d3c819021baf2b0245ede00a",
+      "paired_exclusion": "PASS",
+      "pooled_totals": "PASS",
+      "unchanged_sources": "PASS",
+      "verbatim_harness_bytes": "PASS"
+    }
+  ],
+  "metric_rows": 192,
+  "warm_metric_pass": 96,
+  "original_metric_fail": 3
+}

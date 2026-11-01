@@ -1,0 +1,11 @@
+{
+  "current_registry_kernel_count": 1,
+  "witnessed_kernels_per_dispatch": 3,
+  "layers": 43,
+  "missing_gaps_per_forward": 86,
+  "gap_eager_ms": 0.0005446049595929223,
+  "direct_device_delta_ms": 0.04683602652499133,
+  "before_per_layer_ms": 0.0005446049595929223,
+  "after_per_layer_ms": 0.0016338148787787671,
+  "expected_effect_limit": "Both P-step NONE forwards gain 0.046836 ms in direct device pricing. P2-64 FIFO and decode READ phase can change TTFT discontinuously; TTFT mean is not estimated without an authorized replay."
+}

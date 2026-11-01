@@ -1,0 +1,564 @@
+{
+  "p2_64": {
+    "native": {
+      "root": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/run",
+      "all_n": 384,
+      "warm_n": 379,
+      "warm": {
+        "client_dispatch": 0.6302366165891486,
+        "p_side": 552.0079208975338,
+        "handoff": 167.81300380039656,
+        "client_egress": 0.1885190072879785,
+        "ttft": 720.6396803218075,
+        "excluded_first_contact": 0
+      },
+      "per_repeat": {
+        "repeat01": {
+          "client_dispatch": 0.7207641393188539,
+          "p_side": 556.5480705865515,
+          "handoff": 160.61542670780082,
+          "client_egress": 0.1736004019110668,
+          "ttft": 718.0578618355822,
+          "excluded_first_contact": 0
+        },
+        "repeat02": {
+          "client_dispatch": 0.5600698495982215,
+          "p_side": 552.4102689050778,
+          "handoff": 172.35079296006006,
+          "client_egress": 0.1711482364044059,
+          "ttft": 725.4922799511405,
+          "excluded_first_contact": 0
+        },
+        "repeat03": {
+          "client_dispatch": 0.6134120922069997,
+          "p_side": 547.2427727981994,
+          "handoff": 170.19163637814927,
+          "client_egress": 0.22022562552592717,
+          "ttft": 718.2680468940816,
+          "excluded_first_contact": 0
+        }
+      }
+    },
+    "frontier": {
+      "B29": {
+        "root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29",
+        "means": {
+          "request": 63.5,
+          "ttft": 684.313826604259,
+          "p_side": 530.3947831252551,
+          "client_dispatch": 0.6,
+          "prefill_ingress": 9.700000000000001,
+          "prefill_queue": 240.22804467598522,
+          "prefill_step": 279.86673844926986,
+          "prefill_response": 2.3,
+          "decode_ingress": 9.100000000000001,
+          "kv": 87.29384183986485,
+          "first_decode": 55.22520163914147,
+          "first_decode_queue": 29.29869490028227,
+          "first_decode_compute": 25.9265067388592,
+          "egress": 0.0,
+          "queued_ahead": 10.21875,
+          "first_decode_without_request0": 51.8075608062522,
+          "matched_warm_ttft": 684.5457829709277
+        },
+        "fifo": {
+          "g": 24.380075962793015,
+          "p": 279.86673844926986,
+          "wait": 240.22165916525825,
+          "observed_wait": 240.22804467598522,
+          "phase_wait": 247.9834168812808,
+          "ahead_hist": {
+            "0": 9,
+            "2": 9,
+            "3": 9,
+            "5": 9,
+            "6": 9,
+            "8": 9,
+            "9": 9,
+            "11": 9,
+            "12": 8,
+            "14": 8,
+            "15": 8,
+            "17": 8,
+            "18": 8,
+            "19": 16
+          },
+          "wait_error_ms": -0.006385510726971688,
+          "phase_ttft": 692.0691988095546,
+          "sensitivity": {
+            "1": {
+              "finite": 5.257495252336724,
+              "phase": 5.375312390200094
+            },
+            "2.7": {
+              "finite": 3.7379956705766517,
+              "phase": -0.45574447456499456
+            },
+            "7.5": {
+              "finite": 11.536327222829755,
+              "phase": 7.156175818824067
+            },
+            "9.7": {
+              "finite": 1.6250238656773774,
+              "phase": -0.5950767680353977
+            },
+            "10": {
+              "finite": 3.2375238657055263,
+              "phase": 1.0549232312985453
+            },
+            "12": {
+              "finite": 12.082830431103247,
+              "phase": 10.023250235421017
+            }
+          },
+          "native_dummy_23.81": {
+            "finite_wait": 228.45935272751152,
+            "phase_wait": 241.83561186786352
+          }
+        }
+      },
+      "pass1_all": {
+        "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64",
+        "means": {
+          "request": 63.5,
+          "ttft": 700.5815874842065,
+          "p_side": 545.616975302508,
+          "client_dispatch": 0.6,
+          "prefill_ingress": 9.700000000000001,
+          "prefill_queue": 255.88995487087752,
+          "prefill_step": 279.42702043163047,
+          "prefill_response": 2.3,
+          "decode_ingress": 9.100000000000001,
+          "kv": 88.4044780218695,
+          "first_decode": 55.16013415983139,
+          "first_decode_queue": 29.26580493394327,
+          "first_decode_compute": 25.894329225888118,
+          "egress": 0.0,
+          "queued_ahead": 10.875,
+          "first_decode_without_request0": 51.74628570668787,
+          "matched_warm_ttft": 701.6622035597492
+        },
+        "fifo": {
+          "g": 24.357547642459256,
+          "p": 279.42702043163047,
+          "wait": 255.78778665292882,
+          "observed_wait": 255.88995487087752,
+          "phase_wait": 255.78778665441502,
+          "ahead_hist": {
+            "0": 8,
+            "2": 8,
+            "3": 8,
+            "5": 8,
+            "6": 8,
+            "8": 8,
+            "9": 8,
+            "10": 8,
+            "12": 8,
+            "13": 8,
+            "15": 8,
+            "16": 8,
+            "18": 8,
+            "19": 24
+          },
+          "wait_error_ms": -0.10216821794870157,
+          "phase_ttft": 700.4794192677439,
+          "sensitivity": {
+            "1": {
+              "finite": -16.501182615980895,
+              "phase": -8.76979525705292
+            },
+            "2.7": {
+              "finite": -6.49540434363675,
+              "phase": 1.5083222237271343
+            },
+            "7.5": {
+              "finite": -9.04476271948343,
+              "phase": -5.597551211802539
+            },
+            "9.7": {
+              "finite": 2.2535347119064966,
+              "phase": 5.7267001417642405
+            },
+            "10": {
+              "finite": -18.44410931820977,
+              "phase": -13.007096877223717
+            },
+            "12": {
+              "finite": -9.59704272778606,
+              "phase": -4.036892513032683
+            }
+          },
+          "native_dummy_23.81": {
+            "finite_wait": 230.79941038562973,
+            "phase_wait": 244.69093094095055
+          }
+        }
+      },
+      "pass2_all": {
+        "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64",
+        "means": {
+          "request": 63.5,
+          "ttft": 699.7338154748124,
+          "p_side": 545.5337257296547,
+          "client_dispatch": 0.6,
+          "prefill_ingress": 9.700000000000001,
+          "prefill_queue": 255.4674830080245,
+          "prefill_step": 279.76624272163025,
+          "prefill_response": 2.3,
+          "decode_ingress": 9.100000000000001,
+          "kv": 87.59099329453856,
+          "first_decode": 55.209096450621544,
+          "first_decode_queue": 29.292721735070412,
+          "first_decode_compute": 25.916374715551132,
+          "egress": 0.0,
+          "queued_ahead": 10.8125,
+          "first_decode_without_request0": 51.79702128607749,
+          "matched_warm_ttft": 700.8655081190922
+        },
+        "fifo": {
+          "g": 24.344781040898027,
+          "p": 279.76624272163025,
+          "wait": 255.36531479045613,
+          "observed_wait": 255.4674830080245,
+          "phase_wait": 255.36531477460034,
+          "ahead_hist": {
+            "0": 8,
+            "2": 8,
+            "3": 8,
+            "5": 8,
+            "6": 8,
+            "8": 8,
+            "9": 8,
+            "10": 8,
+            "12": 8,
+            "13": 8,
+            "15": 8,
+            "16": 8,
+            "17": 8,
+            "19": 24
+          },
+          "wait_error_ms": -0.10216821756836225,
+          "phase_ttft": 699.6316472413882,
+          "sensitivity": {
+            "1": {
+              "finite": -16.461340708590285,
+              "phase": -8.742373339791328
+            },
+            "2.7": {
+              "finite": -6.45476452364889,
+              "phase": 1.536595883643713
+            },
+            "7.5": {
+              "finite": -8.955788246591624,
+              "phase": -5.513350355748798
+            },
+            "9.7": {
+              "finite": 2.3434068364773566,
+              "phase": 5.811884139436643
+            },
+            "10": {
+              "finite": -18.32455524120371,
+              "phase": -12.894544099507556
+            },
+            "12": {
+              "finite": -7.574555241186744,
+              "phase": -1.8945440984465165
+            }
+          },
+          "native_dummy_23.81": {
+            "finite_wait": 227.17803220011245,
+            "phase_wait": 240.47891954558847
+          }
+        }
+      }
+    }
+  },
+  "p2_32": {
+    "native": {
+      "root": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_32r/run",
+      "all_n": 384,
+      "warm_n": 384,
+      "warm": {
+        "client_dispatch": 0.45843469706596807,
+        "p_side": 235.4968879299122,
+        "handoff": 127.92133244026142,
+        "client_egress": 0.15299446386052296,
+        "ttft": 364.0296495311001,
+        "excluded_first_contact": 0
+      },
+      "per_repeat": {
+        "repeat01": {
+          "client_dispatch": 0.4878020044998266,
+          "p_side": 234.3701843492454,
+          "handoff": 126.95997392438585,
+          "client_egress": 0.15680370415793732,
+          "ttft": 361.974763982289,
+          "excluded_first_contact": 0
+        },
+        "repeat02": {
+          "client_dispatch": 0.43769563490059227,
+          "p_side": 236.01901422080118,
+          "handoff": 128.16787417250453,
+          "client_egress": 0.12391195195959881,
+          "ttft": 364.7484959801659,
+          "excluded_first_contact": 0
+        },
+        "repeat03": {
+          "client_dispatch": 0.44980645179748535,
+          "p_side": 236.10146521969,
+          "handoff": 128.63614922389388,
+          "client_egress": 0.17826773546403274,
+          "ttft": 365.3656886308454,
+          "excluded_first_contact": 0
+        }
+      }
+    },
+    "frontier": {
+      "B29": {
+        "root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29",
+        "means": {
+          "request": 63.5,
+          "ttft": 344.8789913386803,
+          "p_side": 220.2549953882265,
+          "client_dispatch": 0.6,
+          "prefill_ingress": 9.700000000000001,
+          "prefill_queue": 8.079925617465733e-13,
+          "prefill_step": 209.95499538822568,
+          "prefill_response": 2.3,
+          "decode_ingress": 9.100000000000001,
+          "kv": 69.96089448965344,
+          "first_decode": 43.26310146080271,
+          "first_decode_queue": 22.68055954370164,
+          "first_decode_compute": 20.582541917101068,
+          "egress": 0.0,
+          "queued_ahead": 0,
+          "first_decode_without_request0": 40.641839466907506,
+          "matched_warm_ttft": 344.8789913386803
+        },
+        "fifo": {
+          "g": 18.72496532641163,
+          "p": 209.95499538822568,
+          "wait": 0.0,
+          "observed_wait": 8.079925617465733e-13,
+          "phase_wait": 0.0,
+          "ahead_hist": {
+            "0": 128
+          },
+          "wait_error_ms": -8.079925617465733e-13,
+          "phase_ttft": 344.8789913386795,
+          "sensitivity": {
+            "1": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "2.7": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "7.5": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "9.7": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "10": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "12": {
+              "finite": 0.0,
+              "phase": 0.0
+            }
+          },
+          "native_dummy_23.81": {
+            "finite_wait": 0.0,
+            "phase_wait": 0.0
+          }
+        }
+      },
+      "pass1_all": {
+        "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32",
+        "means": {
+          "request": 63.5,
+          "ttft": 343.68827541162796,
+          "p_side": 219.81527737058707,
+          "client_dispatch": 0.6,
+          "prefill_ingress": 9.700000000000001,
+          "prefill_queue": 8.079925617465733e-13,
+          "prefill_step": 209.51527737058626,
+          "prefill_response": 2.3,
+          "decode_ingress": 9.100000000000001,
+          "kv": 69.27691434171912,
+          "first_decode": 43.19608369932416,
+          "first_decode_queue": 22.66330116327331,
+          "first_decode_compute": 20.532782536050856,
+          "egress": 0.0,
+          "queued_ahead": 0,
+          "first_decode_without_request0": 40.57859872862227,
+          "matched_warm_ttft": 343.68827541162796
+        },
+        "fifo": {
+          "g": 18.702437006078355,
+          "p": 209.51527737058626,
+          "wait": 0.0,
+          "observed_wait": 8.079925617465733e-13,
+          "phase_wait": 0.0,
+          "ahead_hist": {
+            "0": 128
+          },
+          "wait_error_ms": -8.079925617465733e-13,
+          "phase_ttft": 343.68827541162716,
+          "sensitivity": {
+            "1": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "2.7": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "7.5": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "9.7": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "10": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "12": {
+              "finite": 0.0,
+              "phase": 0.0
+            }
+          },
+          "native_dummy_23.81": {
+            "finite_wait": 0.0,
+            "phase_wait": 0.0
+          }
+        }
+      },
+      "pass2_all": {
+        "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32",
+        "means": {
+          "request": 63.5,
+          "ttft": 343.6166778874168,
+          "p_side": 220.15449966058688,
+          "client_dispatch": 0.6,
+          "prefill_ingress": 9.700000000000001,
+          "prefill_queue": 8.079925617465733e-13,
+          "prefill_step": 209.85449966058604,
+          "prefill_response": 2.3,
+          "decode_ingress": 9.100000000000001,
+          "kv": 68.81084323335122,
+          "first_decode": 43.251334993481095,
+          "first_decode_queue": 22.681254413891587,
+          "first_decode_compute": 20.570080579589508,
+          "egress": 0.0,
+          "queued_ahead": 0,
+          "first_decode_without_request0": 40.635672831090154,
+          "matched_warm_ttft": 343.6166778874168
+        },
+        "fifo": {
+          "g": 18.689670404517138,
+          "p": 209.85449966058604,
+          "wait": 0.0,
+          "observed_wait": 8.079925617465733e-13,
+          "phase_wait": 0.0,
+          "ahead_hist": {
+            "0": 128
+          },
+          "wait_error_ms": -8.079925617465733e-13,
+          "phase_ttft": 343.616677887416,
+          "sensitivity": {
+            "1": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "2.7": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "7.5": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "9.7": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "10": {
+              "finite": 0.0,
+              "phase": 0.0
+            },
+            "12": {
+              "finite": 0.0,
+              "phase": 0.0
+            }
+          },
+          "native_dummy_23.81": {
+            "finite_wait": 0.0,
+            "phase_wait": 0.0
+          }
+        }
+      }
+    }
+  },
+  "native_diagnostics": {
+    "wave64": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/remainder/remainder_out.json",
+      "n": 125,
+      "parts": {
+        "proxy_arrival->p_add": 11.37093734741211,
+        "p_add->p_schedule": 0.18342208862304688,
+        "p_schedule->p_update": 537.6119766235352,
+        "p_update->prefill_response": 2.320558547973633,
+        "prefill_response->d_add": 19.34366798400879,
+        "d_add->d_recv_done": 86.9171085357666,
+        "d_recv_done->d_schedule": 0.8650245666503906,
+        "d_schedule->d_update": 54.31752967834473,
+        "d_update->decode_first_byte": 0.7397422790527344,
+        "decode_first_byte->client_first": 0.15935707092285156
+      },
+      "ttft": 714.3671939074993
+    },
+    "lifecycle64": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/remainder/lifecycle/remainder_out.json",
+      "n": 379,
+      "parts": {
+        "proxy_arrival->p_add": 9.086025736262743,
+        "p_add->p_schedule": 0.3457704760468415,
+        "p_schedule->p_update": 561.6428707394563,
+        "p_update->prefill_response": 4.299572715658626,
+        "prefill_response->d_add": 18.377991653683946,
+        "d_add->d_recv_done": 84.77510562987315,
+        "d_recv_done->d_schedule": 0.7971232673423586,
+        "d_schedule->d_update": 52.18540269655414,
+        "d_update->decode_first_byte": 4.169630186538898,
+        "decode_first_byte->client_first": 0.15636987610668496
+      },
+      "ttft": 736.2666445167484
+    },
+    "lifecycle32": {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_residual_20261101/native32_remainder.json",
+      "n": 384,
+      "parts": {
+        "proxy_arrival->p_add": 7.8141943862040835,
+        "p_add->p_schedule": 0.21668833990891775,
+        "p_schedule->p_update": 244.64623195429644,
+        "p_update->prefill_response": 4.8316046595573425,
+        "prefill_response->d_add": 14.501258730888367,
+        "d_add->d_recv_done": 77.5750894099474,
+        "d_recv_done->d_schedule": 0.3653249392906825,
+        "d_schedule->d_update": 42.39709426959356,
+        "d_update->decode_first_byte": 4.145066564281781,
+        "decode_first_byte->client_first": 0.1461313416560491
+      },
+      "ttft": 397.1226793194849
+    }
+  }
+}

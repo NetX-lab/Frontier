@@ -1,0 +1,61 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "generation": "B29",
+      "case": "p2_32",
+      "original_reproduction": "PASS_EXACT",
+      "empty_set_reproduction": "PASS_EXACT",
+      "unchanged_sources": "PASS_SHA256",
+      "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_32_warm_reading.json"
+    },
+    {
+      "generation": "B29",
+      "case": "p2_64",
+      "original_reproduction": "PASS_EXACT",
+      "empty_set_reproduction": "PASS_EXACT",
+      "unchanged_sources": "PASS_SHA256",
+      "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/B29_p2_64_warm_reading.json"
+    },
+    {
+      "generation": "pass1_all",
+      "case": "p2_32",
+      "original_reproduction": "PASS_EXACT",
+      "empty_set_reproduction": "PASS_EXACT",
+      "unchanged_sources": "PASS_SHA256",
+      "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_32_warm_reading.json"
+    },
+    {
+      "generation": "pass1_all",
+      "case": "p2_64",
+      "original_reproduction": "PASS_EXACT",
+      "empty_set_reproduction": "PASS_EXACT",
+      "unchanged_sources": "PASS_SHA256",
+      "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass1_all_p2_64_warm_reading.json"
+    },
+    {
+      "generation": "pass2_all",
+      "case": "p2_32",
+      "original_reproduction": "PASS_EXACT",
+      "empty_set_reproduction": "PASS_EXACT",
+      "unchanged_sources": "PASS_SHA256",
+      "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_32_warm_reading.json"
+    },
+    {
+      "generation": "pass2_all",
+      "case": "p2_64",
+      "original_reproduction": "PASS_EXACT",
+      "empty_set_reproduction": "PASS_EXACT",
+      "unchanged_sources": "PASS_SHA256",
+      "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/pass2_all_p2_64_warm_reading.json"
+    }
+  ],
+  "metric_rows": 192,
+  "csv_sha256": "52d1a7b3f070999f124f82249516489104b1d03fc34dec77b6f25d4f8fb55ba7",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "env": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis"
+  }
+}

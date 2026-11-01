@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | YC approved D-WARM-TARGET: compare and calibrate the warm steady state; one-time warmup costs are not modeled; update the calibration skill. |
 | 2026-11-01 | YC approved D-A6-FORWARD-ATTENTION and D-A6-PASS-REPLAYS: forward-level attention qualification and four CPU P2 replays using independent pass tables. |
 | 2026-11-01 | Recorded YC's request to judge the A6 CSA FULL correction from the simulator user's side (a same-configuration vLLM comparison); discussion only, no correction decided. |
 | 2026-11-01 | Recorded YC's three A6 noise-floor decisions: three-run attention targets, CSA FULL decode cause investigation, and the exact-point collective repeatability rule. |
@@ -144,6 +145,24 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-01 — warm steady-state comparison target (D-WARM-TARGET)
+
+Basis: the P2-64 TTFT decomposition after the four pass replays. Repeat01's failure comes from five first-contact NIXL handshakes (1.3–1.9 s each) on (prefill lane, decode lane) pairs that the 16 warmups did not open; P2-32's four pairs were all opened by warmup.
+
+[Original Request]
+> 探讨上述问题。对于握手部分，实际是否属于warmup范畴？如果运行过程中完成了对这几个握手的warmup，该误差即可消除？
+
+The lead answered: yes, a lazy one-time connection per (P lane, D lane) pair; full pair warmup removes the FAIL, but a 2.4–5.7% underprediction remains. Options: (1) define the comparison target by mechanism as a warmed service, counting each pair's first-connection request as a start-up event for every case while keeping the all-request reading; (2) warm future native runs until every P x D pair is opened, verified from lifecycle logs; (3) do not model the handshake in Frontier.
+
+[Original Request — approval]
+> 采纳你的方案，继续下一步；并请你修正完善skill： /data/ycfeng/Frontier/skills/frontier-calibration，确保比较、校准范畴为充分warmup条件下的（对于kernel编译、通信握手等warmup开销，不建模）
+
+- **D-WARM-TARGET.** Comparison and calibration target the warm steady state of the serving path. Frontier does not model one-time warmup costs: kernel/JIT compilation, graph capture, communication handshakes and similar first-use setup.
+  - A formal request that carries an evidenced one-time warmup event (mechanism shown in source and in that run's event records, applied by one rule to every case and repeat) leaves the warm reading on both sides of that repeat. The unchanged all-request harness reading stays on record beside it. Requests are never removed for being slow.
+  - Future native runs warm every lazily connected communication pair before the formal window and prove coverage from lifecycle/server records; a fixed warmup count is not evidence of coverage.
+  - No Frontier handshake or warmup modeling. Update `skills/frontier-calibration` to state this scope.
+  - Supersedes D-H4B-K1-REPRICE item 4 only in which reading decides the comparison; the repeats 2–3 diagnostic reading is replaced by the warm reading.
 
 ## [Original Request] 2026-11-01 — A6 CSA FULL correction viewed from the simulator's user (D-A6-CSA-FULL-CAUSE follow-up)
 

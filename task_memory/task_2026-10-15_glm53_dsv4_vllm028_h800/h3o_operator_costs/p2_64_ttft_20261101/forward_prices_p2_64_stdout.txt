@@ -1,0 +1,92 @@
+role/class/mode/tokens | count per gen | mean composed_ms per gen | delta vs B29
+('decode', 'decode', 'FULL', '*') [23202, 23264, 23244] [25.2839, 25.2569, 25.2821] [-0.0271, -0.0018]
+('decode', 'decode', 'PIECEWISE', '*') [378, 378, 378] [25.9246, 25.8938, 25.9152] [-0.0308, -0.0095]
+('decode', 'dummy', 'FULL', '*') [606, 544, 564] [24.9737, 24.9969, 25.002] [0.0232, 0.0283]
+('decode', 'dummy', 'PIECEWISE', '*') [6, 6, 6] [26.0441, 25.9255, 25.9918] [-0.1187, -0.0523]
+('decode', 'first_tail_alone', 'PIECEWISE', '*') [4, 4, 4] [26.0441, 25.9255, 25.9918] [-0.1187, -0.0523]
+('decode', 'first_tail_with_decodes', 'PIECEWISE', '*') [124, 124, 124] [25.9227, 25.8933, 25.9139] [-0.0294, -0.0088]
+('prefill', 'dummy', 'FULL', '*') [14848, 14848, 14848] [24.3801, 24.3575, 24.3448] [-0.0225, -0.0353]
+('prefill', 'dummy', 'NONE', '*') [384, 384, 384] [279.8667, 279.427, 279.7662] [-0.4397, -0.1005]
+('prefill', 'prefill', 'NONE', 6144) [128, 128, 128] [279.8667, 279.427, 279.7662] [-0.4397, -0.1005]
+
+('decode', 'decode', 'FULL', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_compressor_fused_compress_store 0.4074 -0.0494 -0.0569
+    dsv4_index_compressor_fused_compress_store 0.1714 -0.0195 -0.0259
+    dsv4_sparse_attention 1.1296 -0.0034 0.0043
+    dsv4_index_weights_projection 0.1882 -0.0031 -0.0039
+    dsv4_fused_qkv_projection 0.5217 0.0034 0.0008
+    dsv4_q_projection 0.3277 0.0025 0.0028
+    dsv4_index_compressor_projection 0.1866 0.0023 0.0009
+    dsv4_compressor_projection 0.365 0.0023 0.0006
+('decode', 'decode', 'PIECEWISE', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_compressor_fused_compress_store 0.4316 -0.063 -0.0788
+    dsv4_index_compressor_fused_compress_store 0.1035 -0.0136 -0.0191
+    dsv4_q_projection 0.2897 -0.0076 -0.0098
+    dsv4_sparse_attention 1.1235 -0.0076 0.0045
+    dsv4_index_weights_projection 0.1935 0.0001 -0.0029
+    dsv4_compressor_projection 0.3625 0.0024 0.0012
+    dsv4_fused_qkv_projection 0.5395 -0.0007 -0.0023
+    dsv4_index_query_projection 0.1523 -0.002 -0.0022
+('decode', 'dummy', 'FULL', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_compressor_fused_compress_store 0.1237 0.0141 0.0067
+    dsv4_q_projection 0.3437 -0.0016 -0.0136
+    dsv4_fused_qkv_projection 0.4914 0.0058 0.0121
+    dsv4_fused_q_kv_prepare 0.1071 -0.0082 -0.0088
+    dsv4_index_weights_projection 0.1717 0.0017 0.0071
+    dsv4_grouped_output_projection 0.3106 0.006 0.002
+    dsv4_compressor_projection 0.3482 0.0059 0.005
+    dsv4_compressor_save_partial_states 0.0434 0.0057 0.0044
+('decode', 'dummy', 'PIECEWISE', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_index_query_projection 0.1809 0.0353 0.0079
+    dsv4_index_weights_projection 0.184 0.0257 0.0076
+    dsv4_q_projection 0.324 -0.014 -0.0222
+    dsv4_compressor_projection 0.3497 0.016 0.0071
+    dsv4_index_compressor_projection 0.1895 0.0156 0.0109
+    dsv4_compressor_fused_compress_store 0.115 -0.0119 0.0143
+    dsv4_fused_q_kv_prepare 0.104 0.0087 0.0012
+    dsv4_sparse_attention 0.6683 -0.0042 -0.0061
+('decode', 'first_tail_alone', 'PIECEWISE', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_compressor_fused_compress_store 0.4615 -0.1007 -0.0381
+    dsv4_fused_qkv_projection 0.5672 -0.0172 -0.0519
+    dsv4_sparse_attention 1.112 0.0025 0.0136
+    dsv4_q_projection 0.3034 0.0133 0.0039
+    dsv4_compressor_projection 0.3582 -0.0097 -0.0002
+    dsv4_index_compressor_fused_compress_store 0.1139 0.0032 0.0091
+    dsv4_index_weights_projection 0.1846 0.008 -0.001
+    dsv4_grouped_output_projection 0.2991 -0.0074 -0.003
+('decode', 'first_tail_with_decodes', 'PIECEWISE', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_compressor_fused_compress_store 0.533 -0.0177 -0.0139
+    dsv4_q_projection 0.2895 -0.0079 -0.0085
+    dsv4_sparse_attention 1.1214 0.0019 0.006
+    dsv4_index_weights_projection 0.1944 -0.0019 -0.004
+    dsv4_index_query_projection 0.1522 -0.0023 -0.0019
+    dsv4_compressor_projection 0.3632 0.0017 0.0005
+    dsv4_index_compressor_projection 0.2015 0.0017 0.0
+    dsv4_compressor_save_partial_states 0.0915 -0.0016 0.0011
+('prefill', 'dummy', 'FULL', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_compressor_fused_compress_store 0.1237 0.0141 0.0067
+    dsv4_q_projection 0.3437 -0.0016 -0.0136
+    dsv4_fused_qkv_projection 0.4914 0.0058 0.0121
+    dsv4_fused_q_kv_prepare 0.1071 -0.0082 -0.0088
+    dsv4_index_weights_projection 0.1717 0.0017 0.0071
+    dsv4_grouped_output_projection 0.3106 0.006 0.002
+    dsv4_compressor_projection 0.3482 0.0059 0.005
+    dsv4_compressor_save_partial_states 0.0434 0.0057 0.0044
+('prefill', 'dummy', 'NONE', '*') top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_index_weights_projection 0.2016 0.0018 -0.0213
+    dsv4_fused_qkv_projection 0.4419 0.0131 0.0114
+    dsv4_index_compressor_projection 0.2063 -0.0113 0.001
+    dsv4_compressor_projection 0.3269 0.01 0.0002
+    dsv4_grouped_output_projection 0.3457 -0.0052 0.0072
+    dsv4_sparse_attention 0.6851 -0.0061 -0.0041
+    dsv4_q_projection 0.2432 0.0051 -0.0032
+    dsv4_index_short_context_fill 0.0255 -0.005 -0.0022
+('prefill', 'prefill', 'NONE', 6144) top scope deltas (B29 ms, pass1-B29, pass2-B29):
+    dsv4_sparse_attention 30.8005 -0.2022 -0.1104
+    dsv4_index_compressor_fused_compress_store 0.5885 -0.0623 0.1082
+    dsv4_fused_q_kv_prepare 6.0018 -0.0657 0.0123
+    dsv4_index_query_projection 2.2907 -0.0079 0.0608
+    dsv4_index_compressor_save_partial_states 0.314 -0.0402 0.0265
+    dsv4_compressor_save_partial_states 0.9777 -0.0357 -0.0113
+    dsv4_compressor_fused_compress_store 3.2826 -0.0205 0.0335
+    dsv4_fused_qkv_projection 4.8074 0.0054 0.0267

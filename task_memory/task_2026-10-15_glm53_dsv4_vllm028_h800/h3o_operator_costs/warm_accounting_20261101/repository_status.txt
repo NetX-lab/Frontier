@@ -1,0 +1,11 @@
+ M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md
+ M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md
+ M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md
+ M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md
+ M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md
+ M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md
+ M task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md
+?? .cortexkit/
+?? .pi/
+?? remaining_measurements/
+?? tests/analysis/e2e_warm_reading.py

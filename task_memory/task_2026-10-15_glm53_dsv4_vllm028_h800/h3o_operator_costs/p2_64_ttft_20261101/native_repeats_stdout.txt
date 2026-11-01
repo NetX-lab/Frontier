@@ -1,0 +1,36 @@
+{
+ "repeat01": {
+  "mean_all": 779.8887274002482,
+  "n_all": 128,
+  "mean_without_first_contact": 718.0578618355822,
+  "n_kept": 123,
+  "first_contact_ttft": [
+   2224.8,
+   2414.7,
+   2154.2,
+   2519.7,
+   2191.3
+  ],
+  "median": 756.5275600645691
+ },
+ "repeat02": {
+  "mean_all": 725.4922799511405,
+  "n_all": 128,
+  "mean_without_first_contact": 725.4922799511405,
+  "n_kept": 128,
+  "first_contact_ttft": [],
+  "median": 727.1423779893667
+ },
+ "repeat03": {
+  "mean_all": 718.2680468940816,
+  "n_all": 128,
+  "mean_without_first_contact": 718.2680468940816,
+  "n_kept": 128,
+  "first_contact_ttft": [],
+  "median": 715.835336362943
+ }
+}
+repeat01 first-contact excess over same request mean in repeats02/03: [1447.7, 1692.5, 1327.5, 1946.6, 1568.8]
+repeat01 non-first-contact mean minus repeats02/03 same requests: -4.54
+pass1_all pred 700.582 {'repeat01': -10.169, 'repeat02': -3.434, 'repeat03': -2.462} repeat01 without first contact: -2.434
+pass2_all pred 699.734 {'repeat01': -10.278, 'repeat02': -3.55, 'repeat03': -2.58} repeat01 without first contact: -2.552

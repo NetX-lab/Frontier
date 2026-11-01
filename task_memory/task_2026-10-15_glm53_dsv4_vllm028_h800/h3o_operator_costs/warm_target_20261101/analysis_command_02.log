@@ -1,0 +1,13 @@
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=379
+PASS_EXACT original; warm=FAIL retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=379
+PASS_EXACT original; warm=FAIL retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=384
+PASS_EXACT original; warm=PASS retained=379
+PASS_EXACT original; warm=FAIL retained=384
+PASS six original/empty-set reproductions; 192 metric rows; canonical source hashes unchanged

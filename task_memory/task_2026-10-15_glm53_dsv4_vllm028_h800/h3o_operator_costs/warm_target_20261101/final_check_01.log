@@ -1,0 +1,15 @@
+usage: e2e_warm_reading.py [-h] --rows ROWS --reading READING --openers
+                           OPENERS --output OUTPUT
+
+Retain the client harness reading beside a mechanism-evidenced warm reading.
+Usage: e2e_warm_reading.py --rows ROWS --reading JSON --openers JSON --output
+NEW_JSON Openers map every native repeat side to normalized formal request
+IDs. This tool does not identify warmup events or choose exclusions from
+request latency.
+
+options:
+  -h, --help         show this help message and exit
+  --rows ROWS
+  --reading READING
+  --openers OPENERS
+  --output OUTPUT
