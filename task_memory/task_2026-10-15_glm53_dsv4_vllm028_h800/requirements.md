@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recorded YC's three A6 noise-floor decisions: three-run attention targets, CSA FULL decode cause investigation, and the exact-point collective repeatability rule. |
 | 2026-10-31 | Recorded the original Codex CLI continuation request and D-CODEX-DIRECT-RJOB; retained decision 46 and formal input/admission boundaries. |
 | 2026-10-31 | Recorded YC's ruling on the ex-situ audit: measured communication data is allowed, so F1 is not a failure; the F1-F4 repairs run as comparison tests, and ingress option A is approved with its two delay fields (D-COMM-MEASURED-ALLOWED, item 46). |
 | 2026-10-31 | Recorded YC's request for an audit of the A10 inputs for shortcuts and dependence on large-cluster data before ingress option A (D-EX-SITU-AUDIT, item 44), and the cleanup approval (item 45). |
@@ -141,6 +142,16 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-01 — A6 noise-floor decisions (D-A6-THREE-RUN, D-A6-CSA-FULL-CAUSE, D-COLLECTIVE-EXACT-REPEATABILITY)
+
+> continue. review the last step first and continue: 已完成本轮 F1–F4 比较收尾，提交为 9fd97c1b。…正式验收仍未通过。保持 measured CC、K19 和已实现的 ingress 方案 A。后续顺序已记录：1. 处理 A6 测量重复性和 collective 曲线资格问题；未选定的 16 次全量重测方案不执行。2. 满足 NIXL、memory 等输入资格条件后复核 P2，再继续 H800。Tickets 05/09/11/19 保持 open
+
+Basis: [noise-floor report](test_report_2026-11-01_a6_noise_floor.md). YC answered three questions on 2026-11-01, each with the recommended option:
+
+- **D-A6-THREE-RUN** (question A, "执行补测"): measure the 432 supplement-only workloads twice more (planned 1 H200, non-preemptible, about 0.93 GPUh, drawn from the remaining approximate 2.160175 GPUh), build a median-of-three attention table for all 1,421 workloads from G1h, G2h-01/04 and the two new passes, and rerun A6 with unchanged folds (KFold 5, seed 1234) and thresholds. The result is diagnostic; promoting the new table to the formal input needs a further YC decision after the result. Every workload and original measurement is kept; no pass is selected by outcome.
+- **D-A6-CSA-FULL-CAUSE** (question B, "先查原因，暂保持 FAIL"): investigate the CSA FULL decode variation of `dsv4_index_compressor_fused_compress_store` with CPU analysis of the retained 16-repeat traces, then propose a measurement correction. The scope stays FAIL until then; no exception is granted.
+- **D-COLLECTIVE-EXACT-REPEATABILITY** (question C, "实测点准入 + 重复性"): for consumers that use exact measured collective points only, a collective input qualifies when (1) the A8 census admits every call at an exact measured point with zero interpolation and zero violations, and (2) the points the replay uses are repeatable across the measured passes, with a time-weighted maximum pass deviation from the pooled median of at most 10%. This replaces the leave-one-out interpolation unit of D-A6-COLLECTIVE-UNIT for such consumers; the leave-one-out rule still applies to any consumer that interpolates.
 
 ## [Original Request / Decision] 2026-10-31 — Codex CLI continuation
 
