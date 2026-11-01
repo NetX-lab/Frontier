@@ -22,7 +22,8 @@ def get_grouped_nixl_payload(cache_capacity, prompt_tokens, source_groups, targe
     Source: pinned NIXL get_exchange_clipped_blocks and _apply_prefix_caching.
     V4 compressor states use SlidingWindowMLASpec, not Mamba single-state slots.
     Page bytes describe structural component payloads on one worker/lane, not
-    wire descriptors, backing-slab padding, or a sum over TP ranks.
+    wire descriptors, backing-slab padding, or a sum over TP ranks; the wire
+    size of the selected pages is get_grouped_nixl_wire_bytes.
     """
     if not cache_capacity.is_grouped or cache_capacity.family_id != "deepseek_v4_attention":
         raise ValueError("Grouped NIXL requires the V4 component capacity")
@@ -61,6 +62,16 @@ def get_grouped_nixl_payload(cache_capacity, prompt_tokens, source_groups, targe
         transferred[group.group_id] = selected
         payload_bytes += len(selected) * cache_capacity.get_group_size_bytes(group)
     return transferred, payload_bytes
+
+
+def get_grouped_nixl_wire_bytes(cache_capacity, transferred):
+    """Bytes one worker/lane reads for the selected pages of every group.
+
+    Source: pinned NIXL base_worker._register_packed_kv_cache registers the
+    packed cache as one region with one block_stride descriptor per physical
+    block, so each selected page moves the full physical block.
+    """
+    return sum(map(len, transferred.values())) * cache_capacity.physical_block_size_bytes
 
 
 class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
@@ -117,9 +128,10 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
     ) -> tuple[int, float]:
         """Price source-backed component pages after a real D reservation.
 
-        This is a structural whole-page payload per worker/lane. It is
-        neither a native NIXL wire byte count nor an aggregate across ranks.
-        Empty lookahead capacity reserved by D is deliberately excluded.
+        The returned size is a structural whole-page payload per worker/lane,
+        not an aggregate across ranks. Grouped V4 prices the wire time on the
+        physical blocks of the selected pages instead. Empty lookahead
+        capacity reserved by D is deliberately excluded.
         """
         if self._config.kv_connector != "nixl":
             raise ValueError("Structural NIXL sizing requires kv_connector='nixl'")
@@ -127,12 +139,13 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
             families = {spec.family_id for spec in replica_config.model_config.get_layer_attention_specs()}
             if families != {cache_capacity.family_id}:
                 raise ValueError("V4 NIXL capacity does not match the model")
-            _, payload_bytes = get_grouped_nixl_payload(
+            transferred, payload_bytes = get_grouped_nixl_payload(
                 cache_capacity, request.num_prefill_tokens,
                 source_group_block_ids, target_group_block_ids,
             )
             return payload_bytes, self.get_transfer_time(
-                ClusterType.PREFILL, ClusterType.DECODE, None, payload_bytes,
+                ClusterType.PREFILL, ClusterType.DECODE, None,
+                get_grouped_nixl_wire_bytes(cache_capacity, transferred),
             )
         family = bind_attention_family(replica_config.model_config).family
         if family.family_id != "dsa_attention":

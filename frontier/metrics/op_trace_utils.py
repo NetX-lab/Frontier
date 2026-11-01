@@ -823,7 +823,7 @@ def _build_grouped_kv_cache_transfer_meta(
 ) -> Dict[str, Any]:
     """Describe the reserved component pages, not a scalar attention tensor."""
     from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
-        get_grouped_nixl_payload,
+        get_grouped_nixl_payload, get_grouped_nixl_wire_bytes,
     )
 
     if transfer_info.kv_connector != "nixl" or len(batch.requests) != 1:
@@ -891,7 +891,8 @@ def _build_grouped_kv_cache_transfer_meta(
         "source_group_block_ids": {key: list(value) for key, value in transfer_info.source_group_block_ids.items()},
         "target_group_block_ids": {key: list(value) for key, value in transfer_info.target_group_block_ids.items()},
         "transferred_group_block_ids": {key: list(value) for key, value in transferred.items()},
-        "native_wire_bytes_known": False,
+        "wire_bytes": get_grouped_nixl_wire_bytes(capacity, transferred),
+        "native_wire_bytes_known": True,
     }
 
 

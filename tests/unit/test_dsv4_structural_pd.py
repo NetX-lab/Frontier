@@ -10,7 +10,7 @@ from frontier.config import AnalyticalKVCacheTransferConfig, ReplicaConfig, Synt
 from frontier.config import global_vars
 from frontier.entities import Replica, Request
 from frontier.execution_time_predictor.deepseek_v4 import serving_context
-from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import AnalyticalKVCacheTransferPredictor, get_grouped_nixl_payload
+from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import AnalyticalKVCacheTransferPredictor, get_grouped_nixl_payload, get_grouped_nixl_wire_bytes
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import VLLMv1EngineReplicaScheduler
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import StageExecutionContext
 from frontier.types import ClusterType
@@ -90,9 +90,9 @@ def _conserves(lane):
     assert [block.ref_cnt for block in pool.blocks] == [int(i in ids) for i in range(lane._config.num_blocks)]
 
 
-@pytest.mark.parametrize(("prompt", "real_metrics"), [(191, False), (6144, False), (6145, False), (6144, True)])
+@pytest.mark.parametrize(("prompt", "real_metrics"), [(191, False), (256, False), (257, False), (6143, False), (6144, False), (6145, False), (6144, True)])
 def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, record_property, tmp_path):
-    source, target, scheduler, _ = _harness()
+    source, target, scheduler, predictor = _harness()
     request, initial = _prefill(source, prompt)
     if prompt == 6144:
         assert list(map(len, initial.values())) == [24, 96, 96, 1536, 768]
@@ -127,9 +127,17 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, rec
         assert list(map(len, info.transferred_group_block_ids.values())) == [24, 2, 2, 2, 16]
         assert [source._kv_cache_capacity.get_group_size_bytes(group) for group in source._kv_cache_capacity.groups] == [1_002_240, 823_680, 786_240, 870_912, 656_640]
         assert info.kv_cache_size_bytes == 39_521_664
+        # Native wave64 scheduler stats record 46,103,040 bytes per handle.
+        assert get_grouped_nixl_wire_bytes(source._kv_cache_capacity, info.transferred_group_block_ids) == 46_103_040
     assert info.kv_cache_size_bytes == sum(
         len(info.transferred_group_block_ids[group.group_id]) * source._kv_cache_capacity.get_group_size_bytes(group)
         for group in source._kv_cache_capacity.groups
+    )
+    assert source._kv_cache_capacity.physical_block_size_bytes == 1_002_240
+    wire_bytes = sum(map(len, info.transferred_group_block_ids.values())) * 1_002_240
+    config = predictor._config
+    assert info.transfer_time_ms == pytest.approx(
+        config.network_latency_ms + wire_bytes * 8 / (config.network_bandwidth_gbps * 1e9) * 1000, rel=1e-12,
     )
     assert info.source_prompt_common_blocks is info.target_reserved_common_blocks is None
     assert target._get_scheduler_num_computed_tokens(request) == prompt - 1
@@ -180,7 +188,8 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, rec
         assert trace.meta["source_group_block_ids"] == {key: list(value) for key, value in info.source_group_block_ids.items()}
         assert trace.meta["target_group_block_ids"] == {key: list(value) for key, value in info.target_group_block_ids.items()}
         assert trace.meta["transferred_group_block_ids"] == {key: list(value) for key, value in info.transferred_group_block_ids.items()}
-        assert trace.meta["native_wire_bytes_known"] is False
+        assert trace.meta["wire_bytes"] == 46_103_040
+        assert trace.meta["native_wire_bytes_known"] is True
         traces.close()
         written = [json.loads(line) for line in (tmp_path / "op_traces.jsonl").read_text().splitlines()]
         assert len(written) == 2 and written[1]["meta"] == trace.meta
@@ -199,7 +208,9 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, rec
         "source_free_blocks": source._kv_cache_manager.block_pool.get_num_free_blocks(),
         "target_free_blocks": target._kv_cache_manager.block_pool.get_num_free_blocks(),
         "pool_blocks": target._config.num_blocks, "reserved_null_blocks": 1,
-        "native_wire_bytes_known": False,
+        "wire_bytes_per_worker_lane": get_grouped_nixl_wire_bytes(source._kv_cache_capacity, info.transferred_group_block_ids),
+        "transfer_time_ms": info.transfer_time_ms,
+        "native_wire_bytes_known": True,
         "real_metrics_callback": real_metrics,
     }))
 
