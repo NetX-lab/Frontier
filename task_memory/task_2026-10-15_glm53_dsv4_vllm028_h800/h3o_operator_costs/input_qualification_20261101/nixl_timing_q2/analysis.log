@@ -1,0 +1,12 @@
+Integrity: {'records': 90, 'cases': 30, 'passes': [0, 1, 2], 'reader_trials': 12150, 'critical_path_trials': 2700, 'notifications': 80352, 'max_pass_spread_pct': 0.8821683516111533, 'median_pass_spread_pct': 0.09039851483548794, 'max_equal_byte_pass_difference_pct': 0.8361410160462586, 'raw_sha256': 'c2739c0af5a4c12fb57376b252f16bbf493402e05d87b73ce4f32a0cc825eabb'}
+Affine: {'intercept_ms': 0.0236521842818856, 'slope_ms_per_MB': 0.020492144502155214, 'bandwidth_gbps': 390.39349928254796} point6144: 0.9684023419505275
+point_median_rule_pass 90 / 90 failures: []
+point_trial_rule_pass 83 / 90 failures: [('t6143_pairs8_inflight1', 0), ('t6143_pairs8_inflight4', 1), ('t6144_pairs1_inflight1', 0), ('t6144_pairs8_inflight16', 1), ('t6145_pairs8_inflight1', 1), ('t6145_pairs8_inflight8', 1), ('t6145_pairs8_inflight16', 1)]
+affine_median_rule_pass 90 / 90 failures: []
+affine_trial_rule_pass 82 / 90 failures: [('t6143_pairs8_inflight1', 0), ('t6143_pairs8_inflight4', 1), ('t6144_pairs1_inflight1', 0), ('t6144_pairs8_inflight4', 0), ('t6144_pairs8_inflight16', 1), ('t6145_pairs8_inflight1', 1), ('t6145_pairs8_inflight8', 1), ('t6145_pairs8_inflight16', 1)]
+bound32_tail_pass 79 / 90 failures: [('t6143_pairs8_inflight8', 1), ('t6143_pairs8_inflight16', 0), ('t6143_pairs8_inflight16', 1), ('t6143_pairs8_inflight16', 2), ('t6144_pairs8_inflight2', 2), ('t6144_pairs8_inflight16', 0), ('t6144_pairs8_inflight16', 1), ('t6145_pairs1_inflight16', 1), ('t6145_pairs8_inflight16', 0), ('t6145_pairs8_inflight16', 1), ('t6145_pairs8_inflight16', 2)]
+bound64_tail_pass 86 / 90 failures: [('t6143_pairs8_inflight16', 0), ('t6143_pairs8_inflight16', 2), ('t6144_pairs8_inflight16', 1), ('t6145_pairs8_inflight16', 1)]
+p2_32_b29 requests/pairs peaks 1 8 checked 510 min_gap_ms 18.72496532622958 crossings 0
+p2_32_two_fix requests/pairs peaks 1 8 checked 510 min_gap_ms 18.72496532622958 crossings 0
+p2_64_b29 requests/pairs peaks 1 8 checked 507 min_gap_ms 24.380075962758763 crossings 0
+p2_64_two_fix requests/pairs peaks 1 8 checked 507 min_gap_ms 24.380075962758763 crossings 0

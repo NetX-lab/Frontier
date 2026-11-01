@@ -1,0 +1,93 @@
+{
+  "classification": "EXECUTED_Q2_CHECKS",
+  "python_executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "python_version": "3.10.6",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/scratch",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/scratch"
+  },
+  "commands": [
+    {
+      "name": "lead_retained_download_check",
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl6144_run/lead_check_nixl6144.py"
+      ],
+      "log": "lead_retained_check.log",
+      "expected": "23 hashes/sizes equal;90 unique records;12150 trials;80352 notifications;zero CSV mismatches",
+      "started_utc": "2026-11-01T23:03:51.900490+00:00",
+      "exit_code": 0,
+      "status": "PASS",
+      "observed_log": "manifest entry keys: ['bytes', 'path', 'sha256']\nmanifest files 23 local files 23 hash/size mismatches []\nrecords 90 distinct case/pass 90 max dup 1 cases 30 passes [0, 1, 2]\ntrials 12150 notifications recv/exp (80352, 80352) blocks {6143: [46], 6144: [46], 6145: [51]} bytes_ok True data_verified True all complete>0 True\ncsv rows 90 rebuild mismatches 0 copy identical True\ncase_summary rows 90 max abs diff vs lead recompute (ms) 4.944458007472008e-07\nall reader trials: min 0.9603 median 3.8026 max 27.4970 ms\nverification PASS [('download_hashes', True), ('two_distinct_h200_nodes_16_ranks', True), ('phase_exits_zero', True), ('tp_pair_placement', True), ('runtime_checks', True), ('plan_config', True), ('case_pass_matrix', True), ('geometry_and_trials', True), ('notifications', True), ('csv_matches_raw', True), ('native_registration_stride', True)]\n"
+    },
+    {
+      "name": "existing_nixl_completion_regression",
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-m",
+        "pytest",
+        "tests/unit/test_nixl_read_completion.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/scratch/pytest"
+      ],
+      "log": "lifecycle_regression.log",
+      "expected": "all existing NIXL engine-step lifecycle tests pass",
+      "started_utc": "2026-11-01T23:03:52.205525+00:00",
+      "exit_code": 0,
+      "status": "PASS",
+      "observed_log": ".........                                                                [100%]\n9 passed in 0.93s\n"
+    },
+    {
+      "name": "existing_configuration_proposed_price",
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import json\nfrom pathlib import Path\nfrom frontier.config.kv_cache_transfer_config import AnalyticalKVCacheTransferConfig\nfrom frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import AnalyticalKVCacheTransferPredictor\nfrom frontier.types import ClusterType\np=json.loads(Path(__import__('sys').argv[1]).read_text())\nm=p['model']\nc=AnalyticalKVCacheTransferConfig(network_bandwidth_gbps=m['bandwidth_gbps'],network_latency_ms=m['intercept_ms'],kv_connector='nixl',nixl_read_completion='engine_step',enable_compression=False)\nactual=AnalyticalKVCacheTransferPredictor(c).get_transfer_time(ClusterType.PREFILL,ClusterType.DECODE,None,46103040)\nexpected=m['intercept_ms']+m['slope_ms_per_MB']*46.10304\nassert abs(actual-expected)<1e-12, (actual,expected)\nassert 0<actual<18.72496532622958\nprint(json.dumps(dict(bytes_per_READ=46103040,expected_ms=expected,production_ms=actual,absolute_difference_ms=abs(actual-expected),result='PASS')))\n",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/proposed_input.json"
+      ],
+      "log": "production_price.log",
+      "expected": "production predictor agrees to <1e-12ms; positive0.968402341951ms; below both minimum gaps",
+      "started_utc": "2026-11-01T23:03:53.504652+00:00",
+      "exit_code": 0,
+      "status": "PASS",
+      "observed_log": "{\"bytes_per_READ\": 46103040, \"expected_ms\": 0.9684023419505275, \"production_ms\": 0.9684023419505275, \"absolute_difference_ms\": 0.0, \"result\": \"PASS\"}\n"
+    }
+  ],
+  "analysis": {
+    "command": "/data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/analyze.py",
+    "status": "PASS",
+    "log": "analysis.log",
+    "expected": "every integrity/concurrency/event assertion passes",
+    "observed": "Integrity: {'records': 90, 'cases': 30, 'passes': [0, 1, 2], 'reader_trials': 12150, 'critical_path_trials': 2700, 'notifications': 80352, 'max_pass_spread_pct': 0.8821683516111533, 'median_pass_spread_pct': 0.09039851483548794, 'max_equal_byte_pass_difference_pct': 0.8361410160462586, 'raw_sha256': 'c2739c0af5a4c12fb57376b252f16bbf493402e05d87b73ce4f32a0cc825eabb'}\nAffine: {'intercept_ms': 0.0236521842818856, 'slope_ms_per_MB': 0.020492144502155214, 'bandwidth_gbps': 390.39349928254796} point6144: 0.9684023419505275\npoint_median_rule_pass 90 / 90 failures: []\npoint_trial_rule_pass 83 / 90 failures: [('t6143_pairs8_inflight1', 0), ('t6143_pairs8_inflight4', 1), ('t6144_pairs1_inflight1', 0), ('t6144_pairs8_inflight16', 1), ('t6145_pairs8_inflight1', 1), ('t6145_pairs8_inflight8', 1), ('t6145_pairs8_inflight16', 1)]\naffine_median_rule_pass 90 / 90 failures: []\naffine_trial_rule_pass 82 / 90 failures: [('t6143_pairs8_inflight1', 0), ('t6143_pairs8_inflight4', 1), ('t6144_pairs1_inflight1', 0), ('t6144_pairs8_inflight4', 0), ('t6144_pairs8_inflight16', 1), ('t6145_pairs8_inflight1', 1), ('t6145_pairs8_inflight8', 1), ('t6145_pairs8_inflight16', 1)]\nbound32_tail_pass 79 / 90 failures: [('t6143_pairs8_inflight8', 1), ('t6143_pairs8_inflight16', 0), ('t6143_pairs8_inflight16', 1), ('t6143_pairs8_inflight16', 2), ('t6144_pairs8_inflight2', 2), ('t6144_pairs8_inflight16', 0), ('t6144_pairs8_inflight16', 1), ('t6145_pairs1_inflight16', 1), ('t6145_pairs8_inflight16', 0), ('t6145_pairs8_inflight16', 1), ('t6145_pairs8_inflight16', 2)]\nbound64_tail_pass 86 / 90 failures: [('t6143_pairs8_inflight16', 0), ('t6143_pairs8_inflight16', 2), ('t6144_pairs8_inflight16', 1), ('t6145_pairs8_inflight16', 1)]\np2_32_b29 requests/pairs peaks 1 8 checked 510 min_gap_ms 18.72496532622958 crossings 0\np2_32_two_fix requests/pairs peaks 1 8 checked 510 min_gap_ms 18.72496532622958 crossings 0\np2_64_b29 requests/pairs peaks 1 8 checked 507 min_gap_ms 24.380075962758763 crossings 0\np2_64_two_fix requests/pairs peaks 1 8 checked 507 min_gap_ms 24.380075962758763 crossings 0\n"
+  },
+  "focused_checks": {
+    "command": "/data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py",
+    "status": "PASS",
+    "log": "checks.log",
+    "expected": "12 tests pass",
+    "observed": "test_all_artifact_rows_present_and_failed_rules_preserved (__main__.AnalysisChecks) ... /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:59: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/reader_summary.csv' mode='r' encoding='UTF-8'>\n  self.assertEqual(len(list(csv.DictReader((HERE / 'reader_summary.csv').open()))), 405)\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:60: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/scratch/reader_trials.csv' mode='r' encoding='UTF-8'>\n  trials = list(csv.DictReader((HERE / 'scratch/reader_trials.csv').open()))\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nok\ntest_fit_independent_closed_form_and_every_holdout_pass (__main__.AnalysisChecks) ... ok\ntest_negative_intercept_rejected_without_clamp (__main__.AnalysisChecks) ... ok\ntest_negative_slope_rejected (__main__.AnalysisChecks) ... ok\ntest_nonpositive_window_rejected (__main__.AnalysisChecks) ... ok\ntest_overlapping_lanes_count_separately (__main__.AnalysisChecks) ... ok\ntest_physical_affine_has_positive_intercept (__main__.AnalysisChecks) ... ok\ntest_producer_p90_convention (__main__.AnalysisChecks) ... ok\ntest_retained_input_hashes_unchanged (__main__.AnalysisChecks) ... ok\ntest_same_lane_parallel_reads (__main__.AnalysisChecks) ... ok\ntest_window_end_precedes_equal_time_start (__main__.AnalysisChecks) ... ok\ntest_window_proof_and_empirical_bound (__main__.AnalysisChecks) ... /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:89: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/transfer_windows.csv' mode='r' encoding='UTF-8'>\n  self.assertEqual(len(list(csv.DictReader((HERE / 'transfer_windows.csv').open()))), 512)\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:90: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/possible_post_windows.csv' mode='r' encoding='UTF-8'>\n  proof = list(csv.DictReader((HERE / 'possible_post_windows.csv').open()))\nResourceWarning: Enable tracemalloc to get the object allocation traceback\nok\n\n----------------------------------------------------------------------\nRan 12 tests in 0.089s\n\nOK\n"
+  },
+  "fresh_CPU_replays": {
+    "status": "NOT_RUN",
+    "reason": "Proposed prices cannot move a completion in any retained B29/two-fix posting window;proof contains2034 zero-crossing rows"
+  },
+  "platform_or_GPU": {
+    "status": "NOT_RUN",
+    "reason": "Outside assignment; inspected retained receipts only"
+  }
+}

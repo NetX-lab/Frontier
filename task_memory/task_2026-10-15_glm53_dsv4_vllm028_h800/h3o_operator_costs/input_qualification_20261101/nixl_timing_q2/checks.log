@@ -1,0 +1,29 @@
+test_all_artifact_rows_present_and_failed_rules_preserved (__main__.AnalysisChecks) ... /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:59: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/reader_summary.csv' mode='r' encoding='UTF-8'>
+  self.assertEqual(len(list(csv.DictReader((HERE / 'reader_summary.csv').open()))), 405)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:60: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/scratch/reader_trials.csv' mode='r' encoding='UTF-8'>
+  trials = list(csv.DictReader((HERE / 'scratch/reader_trials.csv').open()))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_fit_independent_closed_form_and_every_holdout_pass (__main__.AnalysisChecks) ... ok
+test_negative_intercept_rejected_without_clamp (__main__.AnalysisChecks) ... ok
+test_negative_slope_rejected (__main__.AnalysisChecks) ... ok
+test_nonpositive_window_rejected (__main__.AnalysisChecks) ... ok
+test_overlapping_lanes_count_separately (__main__.AnalysisChecks) ... ok
+test_physical_affine_has_positive_intercept (__main__.AnalysisChecks) ... ok
+test_producer_p90_convention (__main__.AnalysisChecks) ... ok
+test_retained_input_hashes_unchanged (__main__.AnalysisChecks) ... ok
+test_same_lane_parallel_reads (__main__.AnalysisChecks) ... ok
+test_window_end_precedes_equal_time_start (__main__.AnalysisChecks) ... ok
+test_window_proof_and_empirical_bound (__main__.AnalysisChecks) ... /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:89: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/transfer_windows.csv' mode='r' encoding='UTF-8'>
+  self.assertEqual(len(list(csv.DictReader((HERE / 'transfer_windows.csv').open()))), 512)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/checks.py:90: ResourceWarning: unclosed file <_io.TextIOWrapper name='/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/possible_post_windows.csv' mode='r' encoding='UTF-8'>
+  proof = list(csv.DictReader((HERE / 'possible_post_windows.csv').open()))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.089s
+
+OK

@@ -1,0 +1,8 @@
+manifest entry keys: ['bytes', 'path', 'sha256']
+manifest files 23 local files 23 hash/size mismatches []
+records 90 distinct case/pass 90 max dup 1 cases 30 passes [0, 1, 2]
+trials 12150 notifications recv/exp (80352, 80352) blocks {6143: [46], 6144: [46], 6145: [51]} bytes_ok True data_verified True all complete>0 True
+csv rows 90 rebuild mismatches 0 copy identical True
+case_summary rows 90 max abs diff vs lead recompute (ms) 4.944458007472008e-07
+all reader trials: min 0.9603 median 3.8026 max 27.4970 ms
+verification PASS [('download_hashes', True), ('two_distinct_h200_nodes_16_ranks', True), ('phase_exits_zero', True), ('tp_pair_placement', True), ('runtime_checks', True), ('plan_config', True), ('case_pass_matrix', True), ('geometry_and_trials', True), ('notifications', True), ('csv_matches_raw', True), ('native_registration_stride', True)]
