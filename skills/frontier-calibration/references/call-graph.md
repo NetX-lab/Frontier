@@ -22,15 +22,47 @@ checkout, mode predicate, and fresh output paths; after the run it checks the
 run's evidence, and only a passing run reaches any analysis. Clean,
 diagnostic, CPU, and Frontier outputs stay in separate run directories.
 
+## Optional Workflow Calibration
+
+Select this branch for a new model or when timing-estimation error obscures a
+workflow check. `layer-timing-calibration.md` owns its prerequisites, timing
+boundaries, diagnostic acceptance, and return to finer timing estimates.
+
+```text
+workflow-gap-analysis (optional measured-layer path)
+  -> semantic-alignment-check
+  -> groundtruth-run-check (preflight)
+  -> groundtruth-run (clean and required timing observations)
+  -> groundtruth-run-check (post-run, every run tag)
+  -> [DP x PP cell or online dispatch skew] dispatch-align-trace
+  -> measure/admit full-model layer and stage timing coverage
+  -> diagnostic simulator run with measured times and native workflow
+  -> compare key metrics and workflow events
+  -> [timings admitted, reproducible workflow mismatch] workflow-repair (decided only)
+  -> [workflow check passes] operator/kernel and CPU timing refinement
+  -> simulator-run (native prediction) -> e2e-metrics-gap
+```
+
+Reuse passing runs of the same case generation. This branch may precede the
+native `simulator-run` and fine-grained profiling; missing operator tables do
+not by themselves block it. An unavailable target allocation or timing adapter
+leaves this optional check unperformed and returns to the ordinary path. A
+coverage or measurement-admission failure leaves its conclusion
+`INSUFFICIENT_EVIDENCE`; it is not evidence of a workflow defect.
+
 ## Find an Error Source
 
 ```text
 error-analysis
-  -> e2e-metrics-gap
-  -> [every gated metric PASS] stop, unless the user asked for diagnostics
+  -> e2e-metrics-gap (arithmetic and clean-reference sufficiency)
+  -> [insufficient repetitions] collect approved clean repeats; reassess
+       before attributing modeling error
+  -> [sufficient reference, every gated metric PASS] stop, unless the user asked for diagnostics
   -> [a metric FAIL or INSUFFICIENT_EVIDENCE]
        -> semantic-alignment-check (settings, routing, prefix state, windows)
        -> [mismatch] stop for a decided semantic-alignment-repair
+       -> [semantic PASS, optional workflow check selected]
+            workflow-gap-analysis (measured-layer path above)
        -> [semantic PASS] error budget (internal phase of error-analysis)
        -> analyses chosen by the budget's largest parts:
             queue or step mix   -> workflow-gap-analysis
@@ -54,6 +86,8 @@ intermediate artifact.
 
 ```text
 error-correction
+  -> representative-behavior rationale and fresh-evidence validation plan
+       (contract.md, Calibration Objective; repair-approval.md)
   -> one decided domain change (one ticket, one commit)
   -> focused tests and the regression set (repair-approval.md)
   -> rerun the affected cells

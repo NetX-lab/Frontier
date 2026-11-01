@@ -35,7 +35,7 @@
       "outputs": ["analysis/run_check_status.groundtruth_<mode>.json", "analysis/run_check_summary.groundtruth_<mode>.md"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
-      "validation": "Before launch, verify the checkout tuple, mode predicate, inputs, and fresh paths; after the run, verify every check of the run and record PASS only when all pass."
+      "validation": "Before launch, verify the checkout tuple, mode predicate, inputs, and fresh paths; after the run, verify every run check. A valid individual run does not establish case-level reference sufficiency."
     },
     {
       "name": "groundtruth-run",
@@ -90,7 +90,7 @@
       "outputs": ["analysis/e2e_gap_<label>/sample.json", "analysis/e2e_gap_<label>/reading.json", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
-      "validation": "Normalize the rows, apply the cell's gate kind over every admissible reference run, and report absolute values beside each relative error."
+      "validation": "Assess repeated-clean reference sufficiency, normalize the rows, and apply the gate kind over every admissible run. Preserve the arithmetic reading and report reference uncertainty beside absolute values and relative errors."
     },
     {
       "name": "dispatch-align-trace",
@@ -107,12 +107,12 @@
       "name": "workflow-gap-analysis",
       "kind": "atomic",
       "owner": "workflow-gap-analysis",
-      "trigger": "Request queueing, step membership, batch formation, or DP x PP lane behavior differs and the control flow must be explained.",
-      "inputs": ["schedule_timing run", "placement extraction", "Frontier stage and event traces", "formal request set", "error budget"],
+      "trigger": "Workflow needs a check with measured layer timings before operator/kernel calibration, or queueing, step mix, batching, or lane behavior differs.",
+      "inputs": ["case manifest and passed semantic check", "formal request set", "passing clean and diagnostic runs", "Frontier stage and event traces", "ordinary path: schedule_timing run, error budget, and placement extraction", "optional path: target GPU availability and authorization, admitted full-model layer/stage timings, verified timing substitution support"],
       "outputs": ["analysis/workflow_gap_table.csv", "analysis/workflow_gap_summary.md", "analysis/workflow_gap_status.json"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
-      "validation": "Compare the first formal batch, all declared phases, step classes per request, and lane modes with source anchors."
+      "validation": "For the optional path, follow layer-timing-calibration.md and compare metrics plus native workflow events without changing scheduling decisions. For an ordinary gap, compare the first formal batch, declared phases, step classes, and lane modes with source anchors."
     },
     {
       "name": "workflow-repair",
@@ -222,7 +222,7 @@
       "outputs": ["manifest.yaml", "case_init.md", "runs/groundtruth_<mode>/*", "Frontier label runs", "run checks"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
-      "validation": "Call the semantic check, the ground-truth preflight, runs and post-run checks, then the simulator runs, in call-graph order.",
+      "validation": "Call the semantic check, ground-truth preflight, repeated clean runs and post-run checks, then simulator runs in call-graph order; assess reference sufficiency by the contract.",
       "calls": ["semantic-alignment-check", "groundtruth-run-check", "groundtruth-run", "dispatch-align-trace", "simulator-run"]
     },
     {
@@ -234,7 +234,7 @@
       "outputs": ["analysis/error_budget/*", "reports/error_analysis_summary.md", "linked atomic analysis artifacts"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
-      "validation": "Run the E2E gate, the semantic check, the error budget, and the analyses the budget selects, then classify every attributed part.",
+      "validation": "Run the E2E gate and reference-sufficiency assessment, then the semantic check, error budget, and selected analyses; classify representative causes and investigate consequential missing behavior.",
       "calls": ["e2e-metrics-gap", "semantic-alignment-check", "dispatch-align-trace", "workflow-gap-analysis", "op-gap-analysis", "op-supplement", "residual-lane-classification", "cpu-overhead-analysis"]
     },
     {
@@ -246,7 +246,7 @@
       "outputs": ["repairs/repair_plan.md", "repairs/rerun_gate_table.csv", "repairs/rerun_gate_summary.md", "domain repair receipts", "republished readings"],
       "allows_code_change": false,
       "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
-      "validation": "Run one decided domain change at a time, obtain fresh analysis, finish with the E2E gate, and republish the readings.",
+      "validation": "Require a representative-behavior rationale, run one decided domain change at a time, validate on fresh evidence, then finish with sufficient clean references, the E2E gate, and republished readings.",
       "calls": ["semantic-alignment-repair", "workflow-repair", "op-repair", "residual-repair", "cpu-overhead-repair", "parity-run", "e2e-metrics-gap"]
     }
   ]

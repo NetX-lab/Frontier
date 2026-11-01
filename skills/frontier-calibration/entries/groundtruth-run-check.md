@@ -49,4 +49,6 @@ the gate. CPU-probe admission into a table is a separate rule owned by
 `cpu-overhead-supplement`.
 
 This entry changes no code or data. A PASS admits the run as evidence; it says
-nothing about numeric parity.
+nothing about numeric parity or whether enough independent clean runs exist.
+The case-level reference-sufficiency check follows `contract.md`, Calibration
+Objective; it does not discard ordinary slow runs that passed this check.

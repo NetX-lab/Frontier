@@ -1,9 +1,23 @@
 # Workflow Gap Analysis
 
-**When to use:** Use when the error budget attributes a gap to queueing or step mix, or Frontier and vLLM batches, lane modes, or timing paths diverge and the control flow must be explained.
+**When to use:** Use when checking simulator workflow with measured layer timings before operator/kernel calibration, or when queueing, step mix, batches, or lane behavior diverge.
 
 Read `../references/contract.md`, `../references/evidence-tiers.md`, and
 `../references/pitfalls.md` (Reading the Gate, Analysis and Correction).
+
+## Optional: Check Workflow with Measured Layer Timings
+
+For a new model or a workflow-first investigation, use
+[the layer timing procedure](../references/layer-timing-calibration.md) when
+the target GPU scale is available and collection is authorized. It substitutes
+measured service times while Frontier still decides topology, scheduling, KV
+state, and preemption. This branch needs the procedure's clean reference and
+coverage checks, not an existing operator error budget or native-predictor run.
+If its prerequisites are unavailable, record why it was not run and continue
+the ordinary calibration path without claiming workflow isolation.
+
+## Analyze a Collected Gap
+
 Require formal ids, a passing `schedule_timing` run of the same cell and node
 group as the clean reference, Frontier stage and event traces of the gated
 label, and the error budget.

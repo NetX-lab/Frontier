@@ -17,9 +17,10 @@ Read `../references/contract.md`, `../references/evidence-tiers.md`,
    `tests/comparison/dp_placement_pp/make_trace.py`: at least three warmups per
    prompt-length class, drained before the formal window.
 3. Size load levels from measured capacity. A low, medium, and high cell per
-   case is the published pattern; DP x PP cells take three clean runs each
-   because their lane mode varies between runs. Choose a medium load that keeps
-   a small TPOT error from compounding into TTFT queueing.
+   case is the published pattern. Plan independent clean repetitions for each
+   cell using the contract's reference-sufficiency rule; DP x PP lane changes
+   are part of the variability to capture. Cover the load levels users need,
+   including queueing sensitivity, and retain all admissible repeats.
 
 ## Collect
 
@@ -33,7 +34,9 @@ stops for a decided semantic repair and a fresh check.
 Keep clean, diagnostic, CPU, and Frontier outputs in separate run directories
 and retain every command receipt. The case is ready for `e2e-metrics-gap` when
 each cell has passing clean runs and a Frontier label on the current settings
-generation.
+generation. Assess the reference population's sufficiency separately from each
+run's validity; insufficient repeats require more collection within the approved
+budget before a calibration conclusion.
 
 This composite launches and records a case. It neither diagnoses a gap nor
 applies a code change.

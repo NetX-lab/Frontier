@@ -1,6 +1,6 @@
 ---
 name: frontier-calibration
-description: Use when Frontier simulator results must be compared with vLLM-BS ground truth, to collect a reproducible case, gate E2E metrics against the 10% threshold, find the source of an error, or apply and republish a decided Frontier correction.
+description: Use when calibrating Frontier against vLLM-BS ground truth, checking simulator workflow with measured layer timings, collecting reproducible cases, gating E2E metrics at 10%, or diagnosing and correcting simulation errors.
 ---
 
 # Frontier Calibration
@@ -10,6 +10,12 @@ the same request trace, gates the clean E2E metrics, and traces each gap to a
 source. The repository harness `tests/comparison/e2e_gate/` decides the gate;
 this skill routes the work around it and constrains what may change.
 
+Model representative vLLM behavior under the user's configuration. Establish a
+sufficient repeated clean-run reference before attributing error or claiming
+accuracy. Fine-grained traces explain causes; ordinary users must be able to
+assess predictions with clean runs. Follow `references/contract.md`,
+"Calibration Objective", before collecting evidence or proposing a correction.
+
 If `site.local.md` exists beside this file, read it first. It binds the
 placeholders used here (`<vLLM-BS checkout>`, the artifacts root given as
 `--artifacts-root`, `$FRONTIER_TMP_ROOT`, the GPU platform) to this host and is
@@ -17,8 +23,9 @@ not tracked. Without it, ask the user for those values.
 
 ## Read Before a Case
 
-1. `references/contract.md`: case layout and binding, ground-truth checkout,
-   run modes, the E2E gate, error-source classes, decisions.
+1. `references/contract.md`: calibration objective and reference sufficiency,
+   case binding, ground-truth checkout, run modes, the E2E gate, error-source
+   classes, decisions.
 2. `references/call-graph.md`: execution order, predicates, stops, and return
    edges. It overrides any order implied elsewhere.
 3. `references/pitfalls.md`: failures that earlier calibration tasks hit.
@@ -26,6 +33,8 @@ not tracked. Without it, ask the user for those values.
 
 Read on demand:
 
+- `references/layer-timing-calibration.md` for the optional workflow check
+  using full-model layer timings, before operator/kernel calibration;
 - `references/tool-boundaries.md` before launching or writing a tool;
 - `references/repair-approval.md` before any code change;
 - `references/registry.json` for an entry's inputs, outputs, and stop statuses
@@ -46,7 +55,7 @@ no exception. Entry documents refer to shared material as
 | Collect a reproducible case or new cells | `parity-run` |
 | Gate a cell's clean E2E metrics | `e2e-metrics-gap` |
 | Check that both sides mean the same settings | `semantic-alignment-check` |
-| Explain scheduling, batching, or lane differences | `workflow-gap-analysis` |
+| Check workflow with measured layer timings, or explain scheduling, batching, or lane differences | `workflow-gap-analysis` |
 | Compare matched operators or kernels | `op-gap-analysis` |
 | Fill profiling coverage | `op-supplement` |
 | Classify PP, collective, KV, or M2N time | `residual-lane-classification` |
