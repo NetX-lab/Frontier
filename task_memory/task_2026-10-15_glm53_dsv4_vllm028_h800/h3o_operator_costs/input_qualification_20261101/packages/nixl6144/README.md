@@ -1,0 +1,25 @@
+# Targeted H200 NIXL exact-prompt package
+
+**PASS_CPU_PACKAGE_CHECKS; not submitted.** Measurement target: fill NIXL02's missing exact6144-token payload, compare6143's equal bytes and6145's descriptor-count change, and distinguish payload-only timing from concurrency/order-dependent completion. No failed collective phase is included. No latency parameters are emitted or promoted.
+
+Entry points: [stage_nixl6144.json](stage_nixl6144.json), existing `h3o_operator_costs/b30b/phase_runner.py`, `g5h/launch/runtime_check.py`, and `frontier.profiling.collectives.nixl_kv_read_benchmark`. [Builder](../../build_nixl_package.py) uses the existing B30b planner and the producer's actual `--list-cases` CLI. [CPU receipt](cpu_check.json) binds all sources, native packed registration evidence, config, placement, geometry and budget proxies. [Worker command](worker_command.txt) is review-only and references a **not-yet-built** `submission_lock.json`; it must not be run as-is.
+
+Resources:2nodes x8H200 =16GPUs,64CPUs and512GiB per node, pinned vLLM image from B30b, TP8 P/D READ pairs,4UCX threads. The package explicitly plans `preemptible=true` for the entire16-GPU job because no reservation query is authorized here. The lead may choose non-preemptible only if personal reserved/queued non-preemptible H200 including this job stays <=32, then rebuild the config/check/lock. Any allocation beyond that ceiling is wholly preemptible. No platform query was made. Cloud outputs stay under `/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/p2_nixl6144_q1_20261102/`.
+
+Grid: prompt6143/6144/6145 x active pairs1/8 x inflight1/2/4/8/16,30cases,3independently shuffled passes, warmup2 and30timed repeats. Expected90raw/CSV records,12,150reader timing trials,80,352notifications. Prompt6143/6144 selects46packed pages (46,103,040 B/request/reader);6145 selects51 (51,114,240 B). At most816packed blocks fit the1024block scratch pool; no formal measured capacity is a timing input.
+
+Estimated wall463.376235s, **2.059449933 container GPUh**, with startup180s, process45s, safety factor1.5. The existing planner uses G5h/K5 timing envelopes as budget proxies only, not fitting samples. Phase timeout1200s; job timeout1800s; **8.0GPUh maximum allocation timeout**. [List cases](list_cases.txt) confirms30cases/3passes/90measurements. Hardware, fabric and GPU execution remain NOT_RUN.
+
+CPU checks executed by the builder: exact native source/log hashes and layout consistency; physical GPU indices0..7 on both nodes; all30unique cases; exact46/51pages and wire-byte arithmetic; planner budget below both timeouts; actual producer CLI count; syntax compilation of included Python sources; pinned local overlay/source manifests; worker command generation. All PASS. The submission lock intentionally awaits Claude's review/commit: existing `build_lock` requires committed sources; this task forbids committing. This prerequisite was not bypassed.
+
+Expected outputs: per-node runtime/placement inventories and worker/torchrun logs, phase result/exit status and completion files, plus `C_nixl/{nixl_plan.json,nixl_reads.jsonl,nixl_summary.csv}`. Preserve all raw trials and pass ordering, actual GPU identities, UCX devices/threads, source/binary mismatches and failed/unfinished cases. A soft runtime check preserves measurements; mismatched required identities cannot qualify them.
+
+Post-GPU acceptance:
+
+1. Both distinct H200 nodes, all16ranks and intended TP pairing/placement, required pinned source/runtime identities, phase exits0. A job-level success alone is insufficient.
+2. Complete30-case x3-pass Cartesian matrix with no duplicate/missing key; all recorded data checks true;12,150reader trials;80,352expected/received notifications. Data verification in this producer occurs once per case/reader, not on every timing trial.
+3. Rebuild all90CSV rows from raw with the producer's `summarize_case`; byte geometry, all ranks, finite positive timings and raw-file hashes agree. Verify native observed registration stride1,002,240 separately from synthetic selected block IDs.
+4. Report every pass/case/reader and full-batch tail. Compare equal-byte6143/6144 cases and inflight/active-pair strata without discarding slow trials or fitting to native E2E. Report pass spread and residuals; preserve original negative-intercept affine FAIL. No model is automatically accepted by this integrity check.
+5. Return the result for the YC timing choice in [decisions.md](../../decisions.md). A bounded-timing rule needs independently justified serving-tail/concurrency coverage and boundary proof; an exact/concurrency model needs a physical definition, independent validation and explicit out-of-domain behavior. Neither criterion currently exists. This synthetic package **does not witness native serving request wire bytes**.
+
+Lead handoff: review package/config/source pins; commit if accepted; build the existing committed-source lock; check current personal reservations through `/ds4-exec`; set whole-job preemptibility accordingly; submit only after YC's selected measurement route. No RJob/platform/cloud action was taken by Codex.

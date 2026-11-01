@@ -1,0 +1,488 @@
+{
+  "status": "PASS_RETAINED_CPU_CHECKS_NOT_FORMAL_ACCEPTANCE",
+  "nixl_integrity": {
+    "status": "PASS_INTEGRITY_NOT_TIMING_QUALIFICATION",
+    "sources": [
+      {
+        "cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl/nixl_reads.jsonl",
+        "local_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_nixl02_20261101/nixl_reads.jsonl",
+        "bytes": 3299110,
+        "sha256": "ac93b4fd5e43d3b87e700104418c8d8c9bf9d2608ce2e9b467dabd2a383ed123"
+      },
+      {
+        "cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl/nixl_summary.csv",
+        "local_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_nixl02_20261101/nixl_summary.csv",
+        "bytes": 46172,
+        "sha256": "85e2507325479453a534a61ee2d80afc8773e86e2d4a81fce42d00a64af16dc8"
+      },
+      {
+        "cloud_path": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/b30b_links_kv_02/C_nixl/nixl_plan.json",
+        "local_path": "/data/ycfeng/tmp/glm53_dsv4/b30b_nixl02_20261101/nixl_plan.json",
+        "bytes": 2124,
+        "sha256": "faa19238caa8bd4e962f439a49c063c0a1b57360525a7e43e8d5e55de041fb45"
+      }
+    ],
+    "cases": 80,
+    "passes": 3,
+    "raw_records": 240,
+    "reader_trials": 32400,
+    "notifications": 214272,
+    "csv_exactly_rebuilt": true,
+    "exact_formal_prompt_present": false,
+    "complete_batch_tail_ms": [
+      {
+        "active_pairs": 1,
+        "requests_in_flight": 1,
+        "count": 720,
+        "minimum": 0.2848540898412466,
+        "maximum": 1.2124839704483747
+      },
+      {
+        "active_pairs": 1,
+        "requests_in_flight": 2,
+        "count": 720,
+        "minimum": 0.5518689285963774,
+        "maximum": 9.863774990662932
+      },
+      {
+        "active_pairs": 1,
+        "requests_in_flight": 4,
+        "count": 720,
+        "minimum": 1.087632030248642,
+        "maximum": 8.572858991101384
+      },
+      {
+        "active_pairs": 1,
+        "requests_in_flight": 8,
+        "count": 720,
+        "minimum": 2.1572469267994165,
+        "maximum": 12.014143168926239
+      },
+      {
+        "active_pairs": 1,
+        "requests_in_flight": 16,
+        "count": 720,
+        "minimum": 4.300425061956048,
+        "maximum": 38.81415002979338
+      },
+      {
+        "active_pairs": 8,
+        "requests_in_flight": 1,
+        "count": 5760,
+        "minimum": 0.2839218359440565,
+        "maximum": 16.29088190384209
+      },
+      {
+        "active_pairs": 8,
+        "requests_in_flight": 2,
+        "count": 5760,
+        "minimum": 0.5518558900803328,
+        "maximum": 16.28362201154232
+      },
+      {
+        "active_pairs": 8,
+        "requests_in_flight": 4,
+        "count": 5760,
+        "minimum": 1.0871849954128265,
+        "maximum": 19.25420295447111
+      },
+      {
+        "active_pairs": 8,
+        "requests_in_flight": 8,
+        "count": 5760,
+        "minimum": 2.15786206535995,
+        "maximum": 18.87163403443992
+      },
+      {
+        "active_pairs": 8,
+        "requests_in_flight": 16,
+        "count": 5760,
+        "minimum": 4.299615044146776,
+        "maximum": 38.552356883883476
+      }
+    ],
+    "tail_limit": "Observed full in-flight batch completion maxima, not per-request service bounds or serving-fabric guarantees."
+  },
+  "nixl_completion_windows": [
+    {
+      "run_root": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32",
+      "source_commit": "0fb8955d95469c49824676831a814bc3afc08042",
+      "link": {
+        "network_bandwidth_gbps": 126.2,
+        "network_latency_ms": 0.0647,
+        "request_handoff_delay_ms": 11.4,
+        "enable_compression": false,
+        "compression_ratio": 1.0,
+        "enable_latency_hiding": false,
+        "enable_request_transfer": false,
+        "transfer_protocol": "rdma",
+        "kv_connector": "nixl",
+        "kv_send_slowdown_per_layer_ms": 0.0,
+        "nixl_read_completion": "engine_step",
+        "kv_cache_dtype_size_bytes": 2,
+        "override_num_layers": null,
+        "override_num_heads": null,
+        "override_head_dim": null,
+        "name": "analytical"
+      },
+      "transfer_ms": {
+        "structural_bytes": 39521664,
+        "wire_bytes": 46103040,
+        "old_ms": 2.5700352773375594,
+        "new_ms": 2.9872381933438987
+      },
+      "kv_transfers": 128,
+      "step_starts_checked": 510,
+      "min_positive_step_start_gap_ms": 18.72496532622958,
+      "step_start_gaps_below_new_wire_ms": 0,
+      "window_hits": [],
+      "status": "NO_COMPLETION_CAN_MOVE"
+    },
+    {
+      "run_root": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64",
+      "source_commit": "0fb8955d95469c49824676831a814bc3afc08042",
+      "link": {
+        "network_bandwidth_gbps": 126.2,
+        "network_latency_ms": 0.0647,
+        "request_handoff_delay_ms": 11.4,
+        "enable_compression": false,
+        "compression_ratio": 1.0,
+        "enable_latency_hiding": false,
+        "enable_request_transfer": false,
+        "transfer_protocol": "rdma",
+        "kv_connector": "nixl",
+        "kv_send_slowdown_per_layer_ms": 0.0,
+        "nixl_read_completion": "engine_step",
+        "kv_cache_dtype_size_bytes": 2,
+        "override_num_layers": null,
+        "override_num_heads": null,
+        "override_head_dim": null,
+        "name": "analytical"
+      },
+      "transfer_ms": {
+        "structural_bytes": 39521664,
+        "wire_bytes": 46103040,
+        "old_ms": 2.5700352773375594,
+        "new_ms": 2.9872381933438987
+      },
+      "kv_transfers": 128,
+      "step_starts_checked": 507,
+      "min_positive_step_start_gap_ms": 24.380075962758763,
+      "step_start_gaps_below_new_wire_ms": 0,
+      "window_hits": [],
+      "status": "NO_COMPLETION_CAN_MOVE"
+    }
+  ],
+  "collectives": {
+    "p2_32": {
+      "admission": {
+        "exit_code": 0,
+        "calls": 6310733,
+        "exact_calls": 6310733,
+        "violations": 0,
+        "census_rows_exact": true,
+        "pass": true
+      },
+      "repeatability": {
+        "points": 44,
+        "predicted_total_ms": 351008.8496766843,
+        "single_pass_points": 0,
+        "single_pass_predicted_ms": 0,
+        "weighted_max_pass_deviation": 0.05462298770944553,
+        "weighted_max_pass_deviation_of_repeated_points": 0.05462298770944553,
+        "limit": 0.1,
+        "pass": true
+      },
+      "verdict": "PASS",
+      "sources": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_collectives.json",
+          "sha256": "13c7fde576445e6ae4267fdbad08b1a160cdd6b25a6c685551cc721785465359"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_a8.json",
+          "sha256": "a2c83c6a8a9d5cb03d0a7e25ffe34fc5cc96e2602f7e8c754efb8afc6f49045f"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+          "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65"
+        }
+      ]
+    },
+    "p2_64": {
+      "admission": {
+        "exit_code": 0,
+        "calls": 9003672,
+        "exact_calls": 9003672,
+        "violations": 0,
+        "census_rows_exact": true,
+        "pass": true
+      },
+      "repeatability": {
+        "points": 38,
+        "predicted_total_ms": 764470.7790421594,
+        "single_pass_points": 0,
+        "single_pass_predicted_ms": 0,
+        "weighted_max_pass_deviation": 0.00783290838056329,
+        "weighted_max_pass_deviation_of_repeated_points": 0.00783290838056329,
+        "limit": 0.1,
+        "pass": true
+      },
+      "verdict": "PASS",
+      "sources": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_collectives.json",
+          "sha256": "5ff7bed621a8467b2cb99e1e1815431b1db70520adc1cb6006169f70501c2976"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_a8.json",
+          "sha256": "86311e5566c07e71192a9f2ee85f7eedd59bcfd25b1ca6256cba901fe924bee5"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+          "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65"
+        }
+      ]
+    }
+  },
+  "measured_capacity_f4": [
+    {
+      "case": "p2_32",
+      "status": "PASS_BYTE_IDENTICAL_F4_B28",
+      "metrics": [
+        {
+          "name": "request_metrics.csv",
+          "sha256": "b2837031af52d31063b7767eb9d5062ac35e825608166ea73089b960dc32d7d1",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/request_metrics.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/request_metrics.csv"
+          ]
+        },
+        {
+          "name": "system_metrics.json",
+          "sha256": "1c040a2231d117fa7bf8e8bde5325af4e56b4506e6a14d5df95b72e5fa73d243",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/system_metrics.json",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/system_metrics.json"
+          ]
+        },
+        {
+          "name": "metrics_ground_truth.jsonl",
+          "sha256": "09c3e229c08c8b6fb49d87ebe2903cee23f1970b7e016757e2fcbce9fad41240",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/metrics_ground_truth.jsonl",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/metrics_ground_truth.jsonl"
+          ]
+        },
+        {
+          "name": "frontier_transfer_ledger.jsonl",
+          "sha256": "20fe12512cc361759a00778677b8a51118a7cfd27509657442f0bcefc52d6bd8",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/frontier_transfer_ledger.jsonl",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/frontier_transfer_ledger.jsonl"
+          ]
+        },
+        {
+          "name": "op_precision_metadata.csv",
+          "sha256": "8a9920ba74e5d067fbfe29eea7372c8fd2ed6e695264a93a7c1132555941ee87",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/op_precision_metadata.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/op_precision_metadata.csv"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "p2_64",
+      "status": "PASS_BYTE_IDENTICAL_F4_B28",
+      "metrics": [
+        {
+          "name": "request_metrics.csv",
+          "sha256": "de9b71a15598427c95cafea1c04d2368a1ad15d4bed0599f9499d820758b6d3c",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/request_metrics.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/request_metrics.csv"
+          ]
+        },
+        {
+          "name": "system_metrics.json",
+          "sha256": "b61c7570138f0c3f57f760e9fbff780c199e1af0b7e32e3f7606e57b916d580b",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/system_metrics.json",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/system_metrics.json"
+          ]
+        },
+        {
+          "name": "metrics_ground_truth.jsonl",
+          "sha256": "982643836dfeb4a1906ce0197e290ba78df0cdf8c42311ecce1873f974597358",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/metrics_ground_truth.jsonl",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/metrics_ground_truth.jsonl"
+          ]
+        },
+        {
+          "name": "frontier_transfer_ledger.jsonl",
+          "sha256": "396d096f7c77155682081db0b5df39bca61c19a74c9e60d671dd435485cc12cd",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/frontier_transfer_ledger.jsonl",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/frontier_transfer_ledger.jsonl"
+          ]
+        },
+        {
+          "name": "op_precision_metadata.csv",
+          "sha256": "8a9920ba74e5d067fbfe29eea7372c8fd2ed6e695264a93a7c1132555941ee87",
+          "paths": [
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/op_precision_metadata.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/op_precision_metadata.csv"
+          ]
+        }
+      ]
+    }
+  ],
+  "warm_readings": {
+    "p2_32": {
+      "status": "PASS_RETAINED_WARM_READING",
+      "metric_checks": 16,
+      "max_absolute_relative_error": 0.05607176023817675,
+      "excluded_by_event": 0,
+      "openers": {
+        "vllm/dsv4-h200-p2-canonical-20261025-01-repeat01": [],
+        "vllm/dsv4-h200-p2-canonical-20261025-01-repeat02": [],
+        "vllm/dsv4-h200-p2-canonical-20261025-01-repeat03": []
+      },
+      "retained_request_repeat_count": 384,
+      "all_request_verdict": {
+        "b29": "PASS",
+        "new": "PASS"
+      },
+      "sources": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_warm_reading.json",
+          "sha256": "3e3a3501f1ae0c662ddf527832faf323f058937911882d003b9dc2a8b9e8eb5e"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_32_warm_reading.json",
+          "sha256": "3a766e2ab7af0c5637e6237fbfe823b6f3c9cf8c5f9b1d08b687ef8c4148d4a1"
+        }
+      ]
+    },
+    "p2_64": {
+      "status": "PASS_RETAINED_WARM_READING",
+      "metric_checks": 16,
+      "max_absolute_relative_error": 0.05675932671489589,
+      "excluded_by_event": 5,
+      "openers": {
+        "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01": [
+          "fixed-6144-1024-req128-qps1-formal-r006",
+          "fixed-6144-1024-req128-qps1-formal-r017",
+          "fixed-6144-1024-req128-qps1-formal-r027",
+          "fixed-6144-1024-req128-qps1-formal-r035",
+          "fixed-6144-1024-req128-qps1-formal-r036"
+        ],
+        "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02": [],
+        "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03": []
+      },
+      "retained_request_repeat_count": 379,
+      "all_request_verdict": {
+        "b29": "FAIL",
+        "new": "FAIL"
+      },
+      "sources": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_warm_reading.json",
+          "sha256": "8b222423a5a2b3288595a35a7ba6b72e8ad2f64ce3b0b801ed402138fa6690fd"
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_64_warm_reading.json",
+          "sha256": "fded3090b6075d68c4506a0ed8038867930472285395cfba5a0118df9101ee37"
+        }
+      ]
+    }
+  },
+  "original_native_reference_receipts": [
+    {
+      "case": "p2_32",
+      "status": "PASS_ORIGINAL_H200_R4_RECEIPT_BINDING",
+      "original_job": "exp-1025-152327-225209",
+      "gpus": 32,
+      "nodes": 4,
+      "r4_checks": 8,
+      "groundtruth_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+      "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "container_gpu_hours": 11.311111111111112,
+      "original_authorization": "YC approved D-H200-TEMP-MAINLINE on 2026-10-25: DSV4 H200-32/64 temporary mainline, at most 64 H200 step_main non-preemptible for this session until 03:00 UTC 2026-10-26; P2-32r clean native reference, 32 H200",
+      "source_records": {
+        "run_manifest": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_32r/run_manifest.json",
+          "bytes": 10839,
+          "sha256": "d447e75be5cef3f56858b203854ed52c3043beebbb618fa22e3d0707ab87bbbd",
+          "pointers": [
+            "/"
+          ],
+          "excerpts": []
+        },
+        "platform_terminal_receipt": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_32r/platform_terminal_receipt.json",
+          "bytes": 3384,
+          "sha256": "c20be8b90d1069222ef54678b32ff4d0c2af35179a9428f486efc091f95e184b",
+          "pointers": [
+            "/"
+          ],
+          "excerpts": []
+        },
+        "run_check_status.groundtruth_clean": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_32r/run_check_status.groundtruth_clean.json",
+          "bytes": 15609,
+          "sha256": "8cc662e69a6f10c093e703e9280b6336fe910374e44953b48f2f8d1a119204a1",
+          "pointers": [
+            "/"
+          ],
+          "excerpts": []
+        }
+      },
+      "limitation": "Historical clean-reference/basic scope; not a future prelaunch promotion receipt."
+    },
+    {
+      "case": "p2_64",
+      "status": "PASS_ORIGINAL_H200_R4_RECEIPT_BINDING",
+      "original_job": "exp-1025-155441-668927",
+      "gpus": 64,
+      "nodes": 8,
+      "r4_checks": 8,
+      "groundtruth_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+      "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "container_gpu_hours": 24.322222222222223,
+      "original_authorization": "YC approved D-H200-TEMP-MAINLINE on 2026-10-25: DSV4 H200-32/64 temporary mainline, at most 64 H200 step_main non-preemptible for this session until 03:00 UTC 2026-10-26; P2-64r clean native reference and basic validation, 64 H200",
+      "source_records": {
+        "run_manifest": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/run_manifest.json",
+          "bytes": 10869,
+          "sha256": "ea61cc2690dcb32eddbd79e5d9756ae8d1e791dd6ac530892c1887079a71678b",
+          "pointers": [
+            "/"
+          ],
+          "excerpts": []
+        },
+        "platform_terminal_receipt": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/platform_terminal_receipt.json",
+          "bytes": 6076,
+          "sha256": "634a6e7380909a0992876407a067da1fb96506dd88f6f7f17a12b3094040256a",
+          "pointers": [
+            "/"
+          ],
+          "excerpts": []
+        },
+        "run_check_status.groundtruth_clean": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/run_check_status.groundtruth_clean.json",
+          "bytes": 28908,
+          "sha256": "e1da1a98b36aa051b062ac902217238069ab083162d6440122c913e848ce3b00",
+          "pointers": [
+            "/"
+          ],
+          "excerpts": []
+        }
+      },
+      "limitation": "Historical clean-reference/basic scope; not a future prelaunch promotion receipt."
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "workspace": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "cpu": 64,
+  "gpu": 8,
+  "mem_gb": 512,
+  "gpu_type": "H200",
+  "charged_group": "step_main",
+  "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+  "peer_wait_seconds": 1200,
+  "final_wait_seconds": 600,
+  "p2_overlay": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/overlay.json",
+  "native_checkout": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm",
+  "runtime_check_gate": "soft",
+  "node_entry": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/phase_runner.py",
+  "k5_node_entry": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/w5_glm_comm_20261020/launch/node_entry.py",
+  "envs": {
+    "NCCL_DEBUG": "INFO",
+    "NCCL_DEBUG_SUBSYS": "INIT,NET"
+  },
+  "lock_sources": [
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/phase_runner.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/planner.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_links_kv.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/stage_b30b_launch_depth.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/kv_layout_evidence.json",
+    "frontier/profiling/collectives/cuda_launch_depth.py",
+    "frontier/profiling/collectives/rank_placement.py",
+    "frontier/profiling/collectives/nixl_kv_read_benchmark.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/runtime_lock/probe_nixl_read.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/runtime_lock/probe_runtime_inventory.py",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/packages/nixl6144/stage_nixl6144.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/build_nixl_package.py"
+  ],
+  "stage": "p2_nixl6144_qualification",
+  "job_tag": "dsv4-h200-nixl6144-q1-20261102",
+  "replica": 2,
+  "timeout_seconds": 1800,
+  "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/p2_nixl6144_q1_20261102",
+  "kv_layout_evidence": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/kv_layout_evidence.json",
+  "phases": [
+    {
+      "name": "C_nixl",
+      "benchmark_module": "frontier.profiling.collectives.nixl_kv_read_benchmark",
+      "gpu_indices": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      ],
+      "set_ucx_net_devices": true,
+      "timeout_seconds": 1200,
+      "config": {
+        "stage": "C_nixl",
+        "tensor_parallel_size": 8,
+        "kv_cache": {
+          "source": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/kv_layout_evidence.json",
+          "regions": [
+            {
+              "name": "packed_v4",
+              "count": 1,
+              "block_bytes": 1002240
+            }
+          ],
+          "block_size": 256,
+          "num_gpu_blocks": 1024,
+          "resident_bytes_per_block": 1002240,
+          "logical_groups": [
+            {
+              "name": "compressed",
+              "block_size": 256,
+              "window_tokens": null
+            },
+            {
+              "name": "swa_0",
+              "block_size": 64,
+              "window_tokens": 128
+            },
+            {
+              "name": "swa_1",
+              "block_size": 64,
+              "window_tokens": 128
+            },
+            {
+              "name": "csa_state_0",
+              "block_size": 4,
+              "window_tokens": 8
+            },
+            {
+              "name": "hca_state_0",
+              "block_size": 8,
+              "window_tokens": 128
+            }
+          ],
+          "pool_scope": "benchmark scratch, 1024 physical packed blocks; native capacity is not a fit input"
+        },
+        "nixl_num_threads": 4,
+        "process_group_timeout_seconds": 600,
+        "warmup": 2,
+        "repeats": 30,
+        "passes": 3,
+        "shuffle_seed": 20261102,
+        "notification_wait_seconds": 30,
+        "grid": [
+          {
+            "prompt_tokens": [
+              6143,
+              6144,
+              6145
+            ],
+            "active_pairs": [
+              1,
+              8
+            ],
+            "requests_in_flight": [
+              1,
+              2,
+              4,
+              8,
+              16
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "estimate": {
+    "startup_seconds": 180,
+    "process_startup_seconds": 45,
+    "collective_case_overhead_seconds": 0.3,
+    "nixl_case_overhead_seconds": 0.2,
+    "safety_factor": 1.5
+  },
+  "runtime_check": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/runtime_check.py",
+  "preemptible": true
+}

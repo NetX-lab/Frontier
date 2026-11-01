@@ -1,0 +1,183 @@
+WARNING 02:43:42 model_architectures.py:1314] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: trained operator execution supports MONOLITHIC, PREFILL and unified DECODE on measured H200 coordinates; dsv4_step_cost.json is diagnostic only; PD-AF, prefix caching, speculative decoding / MTP and CPU-overhead modeling are unsupported; sampling measures MONOLITHIC and unified DECODE requests with min_tokens=max_tokens (logits processing on) and PREFILL requests from the vLLM 0.28 PD proxy without min_tokens (logits processing off); other sampling parameters are unmeasured
+WARNING 02:43:52 cluster_config.py:1575] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/dsv4_predictor.py:56: DtypeWarning: Columns (49,50) have mixed types. Specify dtype option on import or set low_memory=False.
+  rows = pd.read_csv(file_path, float_precision=float_precision)
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+{
+  "status": "PASS_EVIDENCE_CHECKS_NOT_FORMAL_ACCEPTANCE",
+  "checks": [
+    {
+      "name": "frozen_forward_reaggregation",
+      "status": "PASS",
+      "rows": 6923
+    },
+    {
+      "name": "p2_32_formal_input_hashes_and_query_equality",
+      "status": "PASS",
+      "tables": 7,
+      "requests": 128,
+      "tokens_per_request": 1024
+    },
+    {
+      "name": "p2_64_formal_input_hashes_and_query_equality",
+      "status": "PASS",
+      "tables": 7,
+      "requests": 128,
+      "tokens_per_request": 1024
+    },
+    {
+      "name": "native_inventory_and_memory_identity",
+      "status": "PASS",
+      "hashed_node_rank_files": 108,
+      "memory_identities": 96
+    }
+  ],
+  "queried_omissions": {
+    "p2_32": 7,
+    "p2_64": 7
+  },
+  "cross_pass_classes": [
+    {
+      "class": [
+        "FULL",
+        "decode"
+      ],
+      "count": 32,
+      "undefined_relative_error_count": 0,
+      "median_absolute_relative_error": 0.009336635575703169,
+      "p90_absolute_relative_error": 0.021585086937959255,
+      "rows_above_10_percent": 0,
+      "signed_median_relative_error": -0.0020589936253930744,
+      "signed_mean_relative_error": 0.00036871418620465176,
+      "within_a6_limits": true,
+      "verdict": "PASS",
+      "maximum_absolute_error": 0.023628602903153047
+    },
+    {
+      "class": [
+        "FULL",
+        "dummy"
+      ],
+      "count": 12,
+      "undefined_relative_error_count": 0,
+      "median_absolute_relative_error": 0.013625899834436865,
+      "p90_absolute_relative_error": 0.019813105509625433,
+      "rows_above_10_percent": 0,
+      "signed_median_relative_error": 0.009026670564451292,
+      "signed_mean_relative_error": 0.007367606474221828,
+      "within_a6_limits": true,
+      "verdict": "PASS",
+      "maximum_absolute_error": 0.036631508936941504
+    },
+    {
+      "class": [
+        "NONE",
+        "dummy"
+      ],
+      "count": 2,
+      "undefined_relative_error_count": 0,
+      "median_absolute_relative_error": 0.022467508189708336,
+      "p90_absolute_relative_error": 0.022619246206173393,
+      "rows_above_10_percent": 0,
+      "signed_median_relative_error": -0.022467508189708336,
+      "signed_mean_relative_error": -0.022467508189708336,
+      "within_a6_limits": true,
+      "verdict": "PASS",
+      "maximum_absolute_error": 0.022657180710289656
+    },
+    {
+      "class": [
+        "NONE",
+        "prefill"
+      ],
+      "count": 2,
+      "undefined_relative_error_count": 0,
+      "median_absolute_relative_error": 0.008200005071006888,
+      "p90_absolute_relative_error": 0.009412698279270638,
+      "rows_above_10_percent": 0,
+      "signed_median_relative_error": 0.008200005071006888,
+      "signed_mean_relative_error": 0.008200005071006888,
+      "within_a6_limits": true,
+      "verdict": "PASS",
+      "maximum_absolute_error": 0.009715871581336577
+    },
+    {
+      "class": [
+        "PIECEWISE",
+        "decode"
+      ],
+      "count": 22,
+      "undefined_relative_error_count": 0,
+      "median_absolute_relative_error": 0.010466010383879537,
+      "p90_absolute_relative_error": 0.02141006847731505,
+      "rows_above_10_percent": 0,
+      "signed_median_relative_error": -0.00846755609124103,
+      "signed_mean_relative_error": -0.00802264562229245,
+      "within_a6_limits": true,
+      "verdict": "PASS",
+      "maximum_absolute_error": 0.0260993728888293
+    },
+    {
+      "class": [
+        "PIECEWISE",
+        "dummy"
+      ],
+      "count": 12,
+      "undefined_relative_error_count": 0,
+      "median_absolute_relative_error": 0.007549837901379036,
+      "p90_absolute_relative_error": 0.015013810150912762,
+      "rows_above_10_percent": 0,
+      "signed_median_relative_error": 0.0032020160873933393,
+      "signed_mean_relative_error": 0.005171168080105212,
+      "within_a6_limits": true,
+      "verdict": "PASS",
+      "maximum_absolute_error": 0.02592715661259465
+    },
+    {
+      "class": [
+        "PIECEWISE",
+        "first_tail"
+      ],
+      "count": 14,
+      "undefined_relative_error_count": 0,
+      "median_absolute_relative_error": 0.013916809141056561,
+      "p90_absolute_relative_error": 0.03003967652732035,
+      "rows_above_10_percent": 0,
+      "signed_median_relative_error": -0.007232081606447008,
+      "signed_mean_relative_error": -0.004850732498211175,
+      "within_a6_limits": true,
+      "verdict": "PASS",
+      "maximum_absolute_error": 0.03513093488298318
+    }
+  ]
+}

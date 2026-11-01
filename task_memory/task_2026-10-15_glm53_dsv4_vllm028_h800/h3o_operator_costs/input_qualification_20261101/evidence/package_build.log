@@ -1,0 +1,10 @@
+{
+  "status": "PASS_CPU_PACKAGE_CHECKS",
+  "total_cases": 30,
+  "expected_raw_records": 90,
+  "expected_reader_trials": 12150,
+  "expected_notifications": 80352,
+  "wall_seconds": 463.37623493929937,
+  "gpu_hours": 2.059449933063553,
+  "timeout_gpu_hours": 8.0
+}

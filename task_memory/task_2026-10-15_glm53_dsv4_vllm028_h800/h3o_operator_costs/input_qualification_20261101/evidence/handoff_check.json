@@ -1,0 +1,40 @@
+{
+  "status": "PASS_HANDOFF_INTEGRITY_NOT_FORMAL_ACCEPTANCE",
+  "links_checked": 123,
+  "input_rows": 27,
+  "attention_omissions": 48,
+  "queried_omissions": 7,
+  "previous_audit_edges": 14,
+  "status_counts": {
+    "QUALIFIED": 19,
+    "OPEN": 6,
+    "NEEDS_DECISION": 2
+  },
+  "package_source_digests_checked": 17,
+  "files": {
+    "audit_inputs.py": "d162f324efebb06a3a884064d752ef74e8a35d0a56846391ddff5b3afb03331b",
+    "build_nixl_package.py": "4a7d70b696e6609d9be3fac53458590107ced4941bab77c0f3f1436727ae90f8",
+    "check_handoff.py": "eb9d365b92d8245e213a2c477deabdf92b3a5fe8c39edeae17a1395fc2b1dce7",
+    "decisions.md": "4509c895f87a04bc5ab13773643f402454413aa3f2f528e482d6ef501969ddda",
+    "evidence/audit.json": "40088e3f0ba272c8073a590863594083c9452ba66f39ea81d31daf1df8743aa4",
+    "evidence/audit.log": "c9f0f79baa75ac689c44834a7aaddb81aa126426d7a969c7564d7a7adaad575e",
+    "evidence/configurations.json": "326c4c8da8889f86fdfbf9ffb8ae66c6438e00cc946db47847cbb55a2a98a3ed",
+    "evidence/package_build.log": "94158f4a3c0b3e5d9e82e428785abfa557c6c9494faa80c8bb17d7cc7e939052",
+    "evidence/retained_checks.json": "fdf24470895a4101a03d034a4f8803aba942253dd5c6c12236fc2455c7d1a9c0",
+    "evidence/retained_checks.log": "0a0c3bbc25abf2a81b4f4d6777529f834b5f00a837fd7008d0feed46254d396c",
+    "evidence/retained_checks_initial_failure.log": "8c51be66dbe144f657493d06ff27bcba95e21794a5959c92fd2d3b198eba1048",
+    "evidence/unit.log": "f50ba8b7f6a3d95a43d580422e49c56f7a02f2710de3a321bd99fe4eb177642e",
+    "ledger.json": "5851a9fd0b4ef6989d50c79c5ea26bd4d8e45150b84b020ba1c2b587f1aef97f",
+    "ledger.md": "fb82c43a022f9a6c0e3fc90d1262e3e0a48f65467a732212b6c3cc9b67f042cd",
+    "packages/nixl6144/README.md": "eaf8a9fd4904e9584e727748def7d354b1b9fddbdf72675eb3fd2bee9b135095",
+    "packages/nixl6144/cpu_check.json": "d525018bb604cb116be745d7195d0a69028d31890439c03763cb7bfe1712d8e0",
+    "packages/nixl6144/list_cases.txt": "7711a8595587c1d50d2685fc8d418608ce8817273d2bd70ec87390ba84206aa6",
+    "packages/nixl6144/nixl_leaf.json": "62c93cf63f5a7ec9035e2e701803a43aeefb055c6e6e6e1699a12e27b03ba796",
+    "packages/nixl6144/stage_nixl6144.json": "7996df1fb79e5ea04d9a622e2dcb86df0863d199645c5c44bb8fcebb6704e3a0",
+    "packages/nixl6144/worker_command.txt": "92b9b96025ef1796d646a112ca057833c9faebb29f0c9ba9bf9d7866d7d28a3d",
+    "payload_observation_contract.md": "7e0e6c4b0e8cad57a817a5bb783b9656cf951be9352e9348a3d6735bf8443383",
+    "verification.md": "7d79dba1e80a28c1294c239d86f8c105fe4c68a07119358e0df28ebecc977b2e",
+    "verify_retained.py": "56df29a8b53e11b8ae51cdab913479153104a033d43c5db5eb070494b8e715fb",
+    "write_ledger.py": "926ccd265fc80f53314432bb8a235e37bab2c1170875417533f21059d73acd9a"
+  }
+}

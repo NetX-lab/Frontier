@@ -1,0 +1,14 @@
+{
+  "status": "PASS_HANDOFF_INTEGRITY_NOT_FORMAL_ACCEPTANCE",
+  "links_checked": 123,
+  "input_rows": 27,
+  "attention_omissions": 48,
+  "queried_omissions": 7,
+  "previous_audit_edges": 14,
+  "status_counts": {
+    "QUALIFIED": 19,
+    "OPEN": 6,
+    "NEEDS_DECISION": 2
+  },
+  "package_source_digests_checked": 17
+}

@@ -5,6 +5,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Q1 complete (Codex `65c06d69`, outcome partial): ledger 27 inputs, 19 QUALIFIED / 6 OPEN / 2 NEEDS_DECISION; lead reran the 6 unit tests and the handoff check (PASS) and spot-checked the attention and collective values. |
+| 2026-11-01 | D-P2-INPUT-QUALIFICATION: recorded YC's `/codex-implement` continuation and the lead's choice; Q1 assignment committed at facf8f5d and running in Codex `65c06d69`. |
 | 2026-11-01 | D-WARM-TWO-FIX complete: both CPU replays finished and are bit-identical to B29 (P2-32 gate PASS, P2-64 gate FAIL on the preserved repeat01 TTFT, warm 32/32 PASS); the step-window check explains why the NIXL fix moved nothing; report written. |
 | 2026-11-01 | D-WARM-TWO-FIX: NIXL wire-pricing fix committed at 0fb8955d with unit regressions; EP count deferred (D-WARM-EP-DEFER) on held-out evidence; both fresh-cache CPU replays started 14:46:39 UTC. |
 | 2026-11-01 | Integration complete atf31b2b2d/previously approved README24ddbbb6 with prerequisites/34-file equality/validators PASS; prior explicit approval resolves old-README pressure failure. Only human fix/replay approval pending. |
@@ -361,6 +363,19 @@
 | 2026-10-18 | Completed fixture, local engine-update and parallel preparations; reviewed the remaining evidence proposals without adding optional W31/parity/inner-cubin gates. |
 | 2026-10-18 | Started approved controlled fixture checks/review beside dependency-aware ticket02 coverage and ticket03 cache preparation. |
 
+
+### P2 input qualification (Q1) — 2026-11-01
+
+Authority: requirements D-P2-INPUT-QUALIFICATION. Assignment: [Q1](h3o_operator_costs/input_qualification_20261101/codex_assignment_Q1_p2_input_qualification.md); evidence directory `h3o_operator_costs/input_qualification_20261101/`.
+
+- completed: decision and assignment recorded (`facf8f5d`). Reason for the choice: warm readings already pass every metric in every repeat, so input qualification is the only open main-route edge before formal P2 and H800.
+- completed: Codex `65c06d69-e1a5-43c1-836f-440fe3bd1713` (gpt-6.1-sol-sys-paygo / ultra; report `h3o_operator_costs/codex-implement-65c06d69-e1a5-43c1-836f-440fe3bd1713/implementation.md`, outcome `partial`). Deliverables: [ledger.md](h3o_operator_costs/input_qualification_20261101/ledger.md) with `ledger.json`, [decisions.md](h3o_operator_costs/input_qualification_20261101/decisions.md), [verification.md](h3o_operator_costs/input_qualification_20261101/verification.md), [payload_observation_contract.md](h3o_operator_costs/input_qualification_20261101/payload_observation_contract.md), the package `packages/nixl6144/`, scripts `audit_inputs.py`, `verify_retained.py`, `build_nixl_package.py`, `write_ledger.py`, `check_handoff.py`, and `tests/unit/test_p2_input_qualification.py`. No `frontier/` edit, no platform or cloud action.
+  - Ledger: 27 inputs; 19 QUALIFIED, 6 OPEN, 2 NEEDS_DECISION. QUALIFIED includes hardware identity (4/8 nodes, 96 rank memory identities), case-bound measured KV capacity 109,934 / 112,914 blocks under Spec 10.4, the exact-point collective input (weighted maximum pass deviation 5.462299% / 0.783291%) and the warm readings (32/32 PASS, maximum 5.675932671%; P2-64 repeat01 all-request TTFT 12.254940665% FAIL preserved).
+  - Attention: the 48 omitted workloads all have measured positive layer windows; they fail heldout admission (padded width, phase/model key or joint geometry removed with the held-out workload). Seven omitted geometries are queried by the replays, including NONE/prefill 6144/C0 (128 forwards per scale). Predicting all 48 with the original table's exact lookup against the two independent measurement passes gives a maximum error of 3.663151% over 96 comparisons; NONE/prefill maximum 0.971587%.
+  - OPEN: H200 NIXL timing (formal input is still the H800 fit; NIXL02 has no T6144 and its affine fit is rejected), native request payload (46 pages x 1,002,240 B = 46,103,040 B per TP handle is source-derived; Spec 5.5 asks for observed descriptor ranges), independent memory peaks and planner agreement (deferred by measured-capacity isolation), the future 32-to-64 promotion receipt, and aggregate tickets 05/09/11/19 coverage.
+  - Lead review: reran `pytest tests/unit/test_p2_input_qualification.py` (6 passed) and `check_handoff.py` (`PASS_HANDOFF_INTEGRITY_NOT_FORMAL_ACCEPTANCE`, 123 links, 17 package source digests, status counts 19/6/2); compared `evidence/audit.json` `independent_attention.by_class` with the ledger class table (match); checked 46 x 1,002,240 = 46,103,040 and 51 x 1,002,240 = 51,114,240.
+- in-progress: record the lead's choices for the proposals, build the nixl6144 submission lock and submit it through `/ds4-exec`.
+- pending: native payload route (needs YC; see decisions.md payload options).
 
 ### Two-fix continuation evidence — 2026-11-01
 

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/verify_retained.py", line 140, in <module>
+    main(parser.parse_args().output)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/verify_retained.py", line 131, in main
+    nixl_integrity=check_nixl(), nixl_completion_windows=windows,
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/verify_retained.py", line 56, in check_nixl
+    assert (float(stored) == value if isinstance(value, (int, float)) else stored == str(value)), (key, column)
+ValueError: could not convert string to float: 'True'
