@@ -1,0 +1,31 @@
+{
+  "command": [
+    "env",
+    "PYTHONPATH=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "OMP_NUM_THREADS=1",
+    "TMPDIR=/data/ycfeng/tmp",
+    "timeout",
+    "7200s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "tests/analysis/v4_attention_phase_heldout.py",
+    "--result",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+    "--scratch-dir",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_phase_heldout_scratch",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_csa_full_cause_20261101/phase_heldout.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "3.10.6",
+  "source_commit": "384d15521309979fdfd53f17e079da7475122338",
+  "source_dirty_paths": [],
+  "script_sha256": "ae515b8dccc9a630a1e4b1af6bd4c7c5af861cf2a69b066c0f1d6c19db7ac20b",
+  "started_utc": "2026-11-01T05:36:16.535175+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 2698.1404727338813,
+  "finished_utc": "2026-11-01T06:21:14.675693+00:00",
+  "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_csa_full_cause_20261101/phase_heldout.json",
+  "output_sha256": "36285b1db61d5d4ada54ed40b96cec63ead02fdcdaf75c731e827079d5fb6f7e"
+}

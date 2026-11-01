@@ -1,0 +1,1751 @@
+{
+  "classification": "D_COLLECTIVE_EXACT_REPEATABILITY",
+  "summary": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+    "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65"
+  },
+  "replays": {
+    "p2_32": {
+      "census": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_collectives.json",
+      "a8": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_a8.json",
+      "admission": {
+        "exit_code": 0,
+        "calls": 6310733,
+        "exact_calls": 6310733,
+        "violations": 0,
+        "census_rows_exact": true,
+        "pass": true
+      },
+      "repeatability": {
+        "points": 44,
+        "predicted_total_ms": 351008.8496766843,
+        "single_pass_points": 0,
+        "single_pass_predicted_ms": 0,
+        "weighted_max_pass_deviation": 0.05462298770944553,
+        "weighted_max_pass_deviation_of_repeated_points": 0.05462298770944553,
+        "limit": 0.1,
+        "pass": true
+      },
+      "verdict": "PASS",
+      "points": [
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "unequal_rows": null,
+          "bytes": 16528,
+          "call_count": 745749,
+          "predicted_total_ms": 105604.02424407005,
+          "pooled_median_us": 141.60799980163574,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 152.05280184745789,
+            "1": 141.25120043754578,
+            "2": 141.60799980163574
+          },
+          "max_pass_deviation": 0.073758559265389
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "unequal_rows": null,
+          "bytes": 8264,
+          "call_count": 511872,
+          "predicted_total_ms": 72074.85397817408,
+          "pooled_median_us": 140.80640077590942,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 141.0368025302887,
+            "1": 141.40000343322754,
+            "2": 139.07999992370605
+          },
+          "max_pass_deviation": 0.012260812311727941
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "unequal_rows": null,
+          "bytes": 262144,
+          "call_count": 745749,
+          "predicted_total_ms": 47180.25630823562,
+          "pooled_median_us": 63.26559782028198,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 74.17919933795929,
+            "1": 63.26559782028198,
+            "2": 61.9488000869751
+          },
+          "max_pass_deviation": 0.17250451894376273
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "unequal_rows": null,
+          "bytes": 131072,
+          "call_count": 511872,
+          "predicted_total_ms": 31335.575402355775,
+          "pooled_median_us": 61.21760010719299,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 62.456002831459045,
+            "1": 60.90880036354065,
+            "2": 61.3679975271225
+          },
+          "max_pass_deviation": 0.020229520956352248
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "unequal_rows": null,
+          "bytes": 8264,
+          "call_count": 211947,
+          "predicted_total_ms": 29843.494225360893,
+          "pooled_median_us": 140.80640077590942,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 141.0368025302887,
+            "1": 141.40000343322754,
+            "2": 139.07999992370605
+          },
+          "max_pass_deviation": 0.012260812311727941
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "unequal_rows": null,
+          "bytes": 131072,
+          "call_count": 211947,
+          "predicted_total_ms": 12974.886689870764,
+          "pooled_median_us": 61.21760010719299,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 62.456002831459045,
+            "1": 60.90880036354065,
+            "2": 61.3679975271225
+          },
+          "max_pass_deviation": 0.020229520956352248
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 131072,
+          "call_count": 994332,
+          "predicted_total_ms": 8594.210589312552,
+          "pooled_median_us": 8.643200248479843,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 8.643200248479843,
+            "1": 8.755200356245041,
+            "2": 8.526400104165077
+          },
+          "max_pass_deviation": 0.013513529821932404
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 16384,
+          "call_count": 994332,
+          "predicted_total_ms": 7459.876525974013,
+          "pooled_median_us": 7.502400130033493,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 7.631999999284744,
+            "1": 7.502400130033493,
+            "2": 7.465600222349167
+          },
+          "max_pass_deviation": 0.017274454441911065
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "unequal_rows": [
+            768,
+            1
+          ],
+          "bytes": 50397184,
+          "call_count": 8256,
+          "predicted_total_ms": 6064.65934753418,
+          "pooled_median_us": 734.5759868621826,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 733.7760031223297,
+            "1": 734.5759868621826,
+            "2": 734.7519993782043
+          },
+          "max_pass_deviation": 0.0010890415071558746
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            16
+          ],
+          "unequal_rows": [
+            1,
+            768
+          ],
+          "bytes": 50397184,
+          "call_count": 8256,
+          "predicted_total_ms": 6012.745685577393,
+          "pooled_median_us": 728.2879948616028,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 725.519984960556,
+            "1": 735.0240051746368,
+            "2": 728.2879948616028
+          },
+          "max_pass_deviation": 0.009249102498681319
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "unequal_rows": [
+            1,
+            768
+          ],
+          "bytes": 6346752,
+          "call_count": 8256,
+          "predicted_total_ms": 4689.540035247803,
+          "pooled_median_us": 568.015992641449,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 568.015992641449,
+            "1": 567.6960051059723,
+            "2": 571.0560083389282
+          },
+          "max_pass_deviation": 0.005351989621528507
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            16
+          ],
+          "unequal_rows": [
+            768,
+            1
+          ],
+          "bytes": 6346752,
+          "call_count": 8256,
+          "predicted_total_ms": 4624.945306777954,
+          "pooled_median_us": 560.1920187473297,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 560.1920187473297,
+            "1": 567.8240060806274,
+            "2": 549.8239994049072
+          },
+          "max_pass_deviation": 0.018507974043626817
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 346752,
+          "predicted_total_ms": 4143.270327738222,
+          "pooled_median_us": 11.948800086975098,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 11.151999980211258,
+            "1": 11.288799904286861,
+            "2": 11.979199945926666
+          },
+          "max_pass_deviation": 0.06668452907103192
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 346752,
+          "predicted_total_ms": 2531.0122236563407,
+          "pooled_median_us": 7.29920007288456,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 7.190399989485741,
+            "1": 7.32479989528656,
+            "2": 7.396799698472023
+          },
+          "max_pass_deviation": 0.01490575437204346
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 275329,
+          "predicted_total_ms": 2009.6814568572026,
+          "pooled_median_us": 7.29920007288456,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 7.190399989485741,
+            "1": 7.32479989528656,
+            "2": 7.396799698472023
+          },
+          "max_pass_deviation": 0.01490575437204346
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 65536,
+          "call_count": 138976,
+          "predicted_total_ms": 1126.0391223660222,
+          "pooled_median_us": 8.102399855852127,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 8.17280001938343,
+            "1": 8.007999882102013,
+            "2": 8.102399855852127
+          },
+          "max_pass_deviation": 0.011650865845868134
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 6291456,
+          "call_count": 5632,
+          "predicted_total_ms": 910.1852783203991,
+          "pooled_median_us": 161.6096019744873,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 161.2384021282196,
+            "1": 161.6096019744873,
+            "2": 162.1776044368744
+          },
+          "max_pass_deviation": 0.0035146578881912805
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 50331648,
+          "call_count": 5632,
+          "predicted_total_ms": 882.1063751221516,
+          "pooled_median_us": 156.62400126457214,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 155.74080348014832,
+            "1": 156.68479800224304,
+            "2": 156.62400126457214
+          },
+          "max_pass_deviation": 0.0056389683400560955
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 69488,
+          "predicted_total_ms": 618.0540620624216,
+          "pooled_median_us": 8.894399926066399,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 8.657600358128548,
+            "1": 8.894399926066399,
+            "2": 10.787199810147285
+          },
+          "max_pass_deviation": 0.2128080477395386
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 323200,
+          "call_count": 13088,
+          "predicted_total_ms": 470.64447035799606,
+          "pooled_median_us": 35.95999926328659,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 36.238400638103485,
+            "1": 35.95999926328659,
+            "2": 35.683201253414154
+          },
+          "max_pass_deviation": 0.007741973874318979
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 32121,
+          "predicted_total_ms": 383.80740759388436,
+          "pooled_median_us": 11.948800086975098,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 11.151999980211258,
+            "1": 11.288799904286861,
+            "2": 11.979199945926666
+          },
+          "max_pass_deviation": 0.06668452907103192
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 16384,
+          "call_count": 34744,
+          "predicted_total_ms": 369.2314396473124,
+          "pooled_median_us": 10.627200081944466,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 10.627200081944466,
+            "1": 8.991999924182892,
+            "2": 10.843199864029884
+          },
+          "max_pass_deviation": 0.15386933012955753
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 131072,
+          "call_count": 23124,
+          "predicted_total_ms": 229.7230661093283,
+          "pooled_median_us": 9.934400022029877,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 11.878399923443794,
+            "1": 9.902400150895119,
+            "2": 9.934400022029877
+          },
+          "max_pass_deviation": 0.19568367461578257
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 65536,
+          "call_count": 17343,
+          "predicted_total_ms": 168.24097623711245,
+          "pooled_median_us": 9.700800105929375,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 8.046400174498558,
+            "1": 9.700800105929375,
+            "2": 10.020799934864044
+          },
+          "max_pass_deviation": 0.17054262672824333
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 355520,
+          "call_count": 3502,
+          "predicted_total_ms": 133.70916083753977,
+          "pooled_median_us": 38.180799782276154,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 36.451199650764465,
+            "1": 38.24959993362427,
+            "2": 38.180799782276154
+          },
+          "max_pass_deviation": 0.04530025932863206
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 25165824,
+          "call_count": 192,
+          "predicted_total_ms": 106.50347442626921,
+          "pooled_median_us": 554.7055959701538,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 554.7055959701538,
+            "1": 552.9280185699463,
+            "2": 555.950403213501
+          },
+          "max_pass_deviation": 0.0032045420365709866
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 12096,
+          "predicted_total_ms": 101.24835655687477,
+          "pooled_median_us": 8.370399847626686,
+          "samples": 18,
+          "pass_medians_us": {
+            "0": 8.370399847626686,
+            "1": 8.339200168848038,
+            "2": 8.153600245714188
+          },
+          "max_pass_deviation": 0.025900746184063007
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 8064,
+          "predicted_total_ms": 79.31750414371723,
+          "pooled_median_us": 9.836000017821789,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 10.615200363099575,
+            "1": 9.654400125145912,
+            "2": 9.836000017821789
+          },
+          "max_pass_deviation": 0.07921922975457074
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 4929,
+          "predicted_total_ms": 41.25770084895574,
+          "pooled_median_us": 8.370399847626686,
+          "samples": 18,
+          "pass_medians_us": {
+            "0": 8.370399847626686,
+            "1": 8.339200168848038,
+            "2": 8.153600245714188
+          },
+          "max_pass_deviation": 0.025900746184063007
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 65536,
+          "call_count": 3232,
+          "predicted_total_ms": 33.26115882396698,
+          "pooled_median_us": 10.291200131177902,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 10.427200049161911,
+            "1": 10.291200131177902,
+            "2": 10.284800082445145
+          },
+          "max_pass_deviation": 0.013215165991378171
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 50331648,
+          "call_count": 128,
+          "predicted_total_ms": 32.222412109375,
+          "pooled_median_us": 251.7375946044922,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 251.7375946044922,
+            "1": 253.50720882415771,
+            "2": 251.59839391708374
+          },
+          "max_pass_deviation": 0.007029598508898873
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 290880,
+          "call_count": 601,
+          "predicted_total_ms": 20.336878547072345,
+          "pooled_median_us": 33.83840024471283,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 34.1264009475708,
+            "1": 33.83840024471283,
+            "2": 33.823999762535095
+          },
+          "max_pass_deviation": 0.008511061420611058
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 226240,
+          "call_count": 605,
+          "predicted_total_ms": 18.804368294775486,
+          "pooled_median_us": 31.08160048723221,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 31.331199407577515,
+            "1": 31.08160048723221,
+            "2": 29.134400188922882
+          },
+          "max_pass_deviation": 0.06264800614463863
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 258560,
+          "call_count": 605,
+          "predicted_total_ms": 18.729831501841545,
+          "pooled_median_us": 30.958399176597595,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 31.09920024871826,
+            "1": 30.958399176597595,
+            "2": 30.73440045118332
+          },
+          "max_pass_deviation": 0.007235475068866081
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 193920,
+          "call_count": 607,
+          "predicted_total_ms": 16.373461332917085,
+          "pooled_median_us": 26.974400877952576,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 26.974400877952576,
+            "1": 25.180798768997192,
+            "2": 27.140799164772034
+          },
+          "max_pass_deviation": 0.06649275055526357
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 161600,
+          "call_count": 608,
+          "predicted_total_ms": 16.256460237502914,
+          "pooled_median_us": 26.737599074840546,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 26.904000341892242,
+            "1": 26.680000126361847,
+            "2": 26.737599074840546
+          },
+          "max_pass_deviation": 0.0062234932383392816
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 96960,
+          "call_count": 606,
+          "predicted_total_ms": 15.273139008879811,
+          "pooled_median_us": 25.203199684619904,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 25.203199684619904,
+            "1": 24.779199808835983,
+            "2": 25.24000108242035
+          },
+          "max_pass_deviation": 0.01682325582027839
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 129280,
+          "call_count": 606,
+          "predicted_total_ms": 15.245021072029903,
+          "pooled_median_us": 25.1568004488945,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 25.13439953327179,
+            "1": 25.203201174736023,
+            "2": 25.1568004488945
+          },
+          "max_pass_deviation": 0.0018444605440101293
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 1616,
+          "predicted_total_ms": 15.125759589672523,
+          "pooled_median_us": 9.359999746084213,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 9.569599851965904,
+            "1": 8.17440003156662,
+            "2": 9.359999746084213
+          },
+          "max_pass_deviation": 0.1266666396025911
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 64640,
+          "call_count": 606,
+          "predicted_total_ms": 14.728223723172986,
+          "pooled_median_us": 24.303999543190002,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 22.87519946694374,
+            "1": 24.404799938201904,
+            "2": 24.303999543190002
+          },
+          "max_pass_deviation": 0.05878868100318955
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32320,
+          "call_count": 578,
+          "predicted_total_ms": 11.09205082356918,
+          "pooled_median_us": 19.19039934873581,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 19.145599752664566,
+            "1": 20.931199938058853,
+            "2": 19.19039934873581
+          },
+          "max_pass_deviation": 0.09071205646576194
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 747,
+          "predicted_total_ms": 7.347492013312972,
+          "pooled_median_us": 9.836000017821789,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 10.615200363099575,
+            "1": 9.654400125145912,
+            "2": 9.836000017821789
+          },
+          "max_pass_deviation": 0.07921922975457074
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 16384,
+          "call_count": 808,
+          "predicted_total_ms": 7.268121558427709,
+          "pooled_median_us": 8.99519994854927,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 9.020800143480301,
+            "1": 8.99519994854927,
+            "2": 8.932800218462944
+          },
+          "max_pass_deviation": 0.006937003117578316
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32320,
+          "call_count": 192,
+          "predicted_total_ms": 3.6845566749572867,
+          "pooled_median_us": 19.19039934873581,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 19.145599752664566,
+            "1": 20.931199938058853,
+            "2": 19.19039934873581
+          },
+          "max_pass_deviation": 0.09071205646576194
+        }
+      ]
+    },
+    "p2_64": {
+      "census": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_collectives.json",
+      "a8": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_a8.json",
+      "admission": {
+        "exit_code": 0,
+        "calls": 9003672,
+        "exact_calls": 9003672,
+        "violations": 0,
+        "census_rows_exact": true,
+        "pass": true
+      },
+      "repeatability": {
+        "points": 38,
+        "predicted_total_ms": 764470.7790421594,
+        "single_pass_points": 0,
+        "single_pass_predicted_ms": 0,
+        "weighted_max_pass_deviation": 0.00783290838056329,
+        "weighted_max_pass_deviation_of_repeated_points": 0.00783290838056329,
+        "limit": 0.1,
+        "pass": true
+      },
+      "verdict": "PASS",
+      "points": [
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "unequal_rows": null,
+          "bytes": 8264,
+          "call_count": 1045760,
+          "predicted_total_ms": 267865.148503701,
+          "pooled_median_us": 256.14399909973145,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 256.1024069786072,
+            "1": 256.14399909973145,
+            "2": 257.6319932937622
+          },
+          "max_pass_deviation": 0.005809209660427769
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "unequal_rows": null,
+          "bytes": 8264,
+          "call_count": 638464,
+          "predicted_total_ms": 163538.72224163526,
+          "pooled_median_us": 256.14399909973145,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 256.1024069786072,
+            "1": 256.14399909973145,
+            "2": 257.6319932937622
+          },
+          "max_pass_deviation": 0.005809209660427769
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "unequal_rows": null,
+          "bytes": 262144,
+          "call_count": 1045760,
+          "predicted_total_ms": 121411.90214316417,
+          "pooled_median_us": 116.09920263290405,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 116.72639846801758,
+            "1": 115.38880467414856,
+            "2": 116.83520078659058
+          },
+          "max_pass_deviation": 0.006339390254157799
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "unequal_rows": null,
+          "bytes": 262144,
+          "call_count": 638464,
+          "predicted_total_ms": 74125.16130996366,
+          "pooled_median_us": 116.09920263290405,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 116.72639846801758,
+            "1": 115.38880467414856,
+            "2": 116.83520078659058
+          },
+          "max_pass_deviation": 0.006339390254157799
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            1,
+            1,
+            768,
+            1
+          ],
+          "bytes": 50528256,
+          "call_count": 6880,
+          "predicted_total_ms": 15109.69123840332,
+          "pooled_median_us": 2196.176052093506,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 2199.24795627594,
+            "1": 2194.4799423217773,
+            "2": 2196.176052093506
+          },
+          "max_pass_deviation": 0.0013987513339405499
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 2065935,
+          "predicted_total_ms": 15079.672903086172,
+          "pooled_median_us": 7.29920007288456,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 7.190399989485741,
+            "1": 7.32479989528656,
+            "2": 7.396799698472023
+          },
+          "max_pass_deviation": 0.01490575437204346
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            1,
+            768,
+            1,
+            1
+          ],
+          "bytes": 50528256,
+          "call_count": 6880,
+          "predicted_total_ms": 14976.054382324219,
+          "pooled_median_us": 2176.7520904541016,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 2176.7520904541016,
+            "1": 2173.4399795532227,
+            "2": 2189.679980278015
+          },
+          "max_pass_deviation": 0.005939073117516396
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            768,
+            1,
+            1,
+            1
+          ],
+          "bytes": 50528256,
+          "call_count": 6880,
+          "predicted_total_ms": 14943.35952758789,
+          "pooled_median_us": 2171.999931335449,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 2171.999931335449,
+            "1": 2181.2639236450195,
+            "2": 2169.0560579299927
+          },
+          "max_pass_deviation": 0.004265189964289901
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "reduce_scatterv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            1,
+            1,
+            1,
+            768
+          ],
+          "bytes": 50528256,
+          "call_count": 6880,
+          "predicted_total_ms": 14760.29655456543,
+          "pooled_median_us": 2145.3919410705566,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 2145.807981491089,
+            "1": 2140.3039693832397,
+            "2": 2145.3919410705566
+          },
+          "max_pass_deviation": 0.0023715814299078526
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 65536,
+          "call_count": 1647760,
+          "predicted_total_ms": 13350.810386095814,
+          "pooled_median_us": 8.102399855852127,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 8.17280001938343,
+            "1": 8.007999882102013,
+            "2": 8.102399855852127
+          },
+          "max_pass_deviation": 0.011650865845868134
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 654976,
+          "predicted_total_ms": 7826.177285858165,
+          "pooled_median_us": 11.948800086975098,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 11.151999980211258,
+            "1": 11.288799904286861,
+            "2": 11.979199945926666
+          },
+          "max_pass_deviation": 0.06668452907103192
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            1,
+            1,
+            1,
+            768
+          ],
+          "bytes": 6346752,
+          "call_count": 6880,
+          "predicted_total_ms": 7293.240032196045,
+          "pooled_median_us": 1060.0639581680298,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 1060.0639581680298,
+            "1": 1046.2719798088074,
+            "2": 1068.0959820747375
+          },
+          "max_pass_deviation": 0.013010515311790516
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            1,
+            768,
+            1,
+            1
+          ],
+          "bytes": 6346752,
+          "call_count": 6880,
+          "predicted_total_ms": 7279.920635223389,
+          "pooled_median_us": 1058.127999305725,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 1046.447992324829,
+            "1": 1064.0000104904175,
+            "2": 1058.127999305725
+          },
+          "max_pass_deviation": 0.011038368693163454
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            1,
+            1,
+            768,
+            1
+          ],
+          "bytes": 6346752,
+          "call_count": 6880,
+          "predicted_total_ms": 7212.661781311035,
+          "pooled_median_us": 1048.3520030975342,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 1041.711986064911,
+            "1": 1057.055950164795,
+            "2": 1048.3520030975342
+          },
+          "max_pass_deviation": 0.00830250435115634
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_gatherv",
+            "ep",
+            32
+          ],
+          "unequal_rows": [
+            768,
+            1,
+            1,
+            1
+          ],
+          "bytes": 6346752,
+          "call_count": 6880,
+          "predicted_total_ms": 7175.894832611084,
+          "pooled_median_us": 1043.0079698562622,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 1043.0079698562622,
+            "1": 1055.616021156311,
+            "2": 1033.519983291626
+          },
+          "max_pass_deviation": 0.01208816391094917
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 654976,
+          "predicted_total_ms": 4780.800866935742,
+          "pooled_median_us": 7.29920007288456,
+          "samples": 15,
+          "pass_medians_us": {
+            "0": 7.190399989485741,
+            "1": 7.32479989528656,
+            "2": 7.396799698472023
+          },
+          "max_pass_deviation": 0.01490575437204346
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 210872,
+          "predicted_total_ms": 1875.579901202964,
+          "pooled_median_us": 8.894399926066399,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 8.657600358128548,
+            "1": 8.894399926066399,
+            "2": 10.787199810147285
+          },
+          "max_pass_deviation": 0.2128080477395386
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 16384,
+          "call_count": 112488,
+          "predicted_total_ms": 1195.4324828152312,
+          "pooled_median_us": 10.627200081944466,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 10.627200081944466,
+            "1": 8.991999924182892,
+            "2": 10.843199864029884
+          },
+          "max_pass_deviation": 0.15386933012955753
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 94815,
+          "predicted_total_ms": 1132.9254802470903,
+          "pooled_median_us": 11.948800086975098,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 11.151999980211258,
+            "1": 11.288799904286861,
+            "2": 11.979199945926666
+          },
+          "max_pass_deviation": 0.06668452907103192
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 6291456,
+          "call_count": 5632,
+          "predicted_total_ms": 910.1852783203991,
+          "pooled_median_us": 161.6096019744873,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 161.2384021282196,
+            "1": 161.6096019744873,
+            "2": 162.1776044368744
+          },
+          "max_pass_deviation": 0.0035146578881912805
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_reduce_scatter",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 50331648,
+          "call_count": 5632,
+          "predicted_total_ms": 882.1063751221516,
+          "pooled_median_us": 156.62400126457214,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 155.74080348014832,
+            "1": 156.68479800224304,
+            "2": 156.62400126457214
+          },
+          "max_pass_deviation": 0.0056389683400560955
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 65536,
+          "call_count": 38320,
+          "predicted_total_ms": 394.3587890267372,
+          "pooled_median_us": 10.291200131177902,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 10.427200049161911,
+            "1": 10.291200131177902,
+            "2": 10.284800082445145
+          },
+          "max_pass_deviation": 0.013215165991378171
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 193920,
+          "call_count": 9537,
+          "predicted_total_ms": 257.2548611729967,
+          "pooled_median_us": 26.974400877952576,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 26.974400877952576,
+            "1": 25.180798768997192,
+            "2": 27.140799164772034
+          },
+          "max_pass_deviation": 0.06649275055526357
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 226240,
+          "call_count": 7819,
+          "predicted_total_ms": 243.02703420963797,
+          "pooled_median_us": 31.08160048723221,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 31.331199407577515,
+            "1": 31.08160048723221,
+            "2": 29.134400188922882
+          },
+          "max_pass_deviation": 0.06264800614463863
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 24320,
+          "predicted_total_ms": 203.5681242941939,
+          "pooled_median_us": 8.370399847626686,
+          "samples": 18,
+          "pass_medians_us": {
+            "0": 8.370399847626686,
+            "1": 8.339200168848038,
+            "2": 8.153600245714188
+          },
+          "max_pass_deviation": 0.025900746184063007
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 15232,
+          "predicted_total_ms": 149.82195227150456,
+          "pooled_median_us": 9.836000017821789,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 10.615200363099575,
+            "1": 9.654400125145912,
+            "2": 9.836000017821789
+          },
+          "max_pass_deviation": 0.07921922975457074
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 15328,
+          "predicted_total_ms": 128.30148886438585,
+          "pooled_median_us": 8.370399847626686,
+          "samples": 18,
+          "pass_medians_us": {
+            "0": 8.370399847626686,
+            "1": 8.339200168848038,
+            "2": 8.153600245714188
+          },
+          "max_pass_deviation": 0.025900746184063007
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "sp_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 25165824,
+          "call_count": 160,
+          "predicted_total_ms": 88.75289535522447,
+          "pooled_median_us": 554.7055959701538,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 554.7055959701538,
+            "1": 552.9280185699463,
+            "2": 555.950403213501
+          },
+          "max_pass_deviation": 0.0032045420365709866
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32768,
+          "call_count": 4904,
+          "predicted_total_ms": 45.901438754794476,
+          "pooled_median_us": 9.359999746084213,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 9.569599851965904,
+            "1": 8.17440003156662,
+            "2": 9.359999746084213
+          },
+          "max_pass_deviation": 0.1266666396025911
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 161600,
+          "call_count": 1312,
+          "predicted_total_ms": 35.07972998619166,
+          "pooled_median_us": 26.737599074840546,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 26.904000341892242,
+            "1": 26.680000126361847,
+            "2": 26.737599074840546
+          },
+          "max_pass_deviation": 0.0062234932383392816
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 50331648,
+          "call_count": 128,
+          "predicted_total_ms": 32.222412109375,
+          "pooled_median_us": 251.7375946044922,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 251.7375946044922,
+            "1": 253.50720882415771,
+            "2": 251.59839391708374
+          },
+          "max_pass_deviation": 0.007029598508898873
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 129280,
+          "call_count": 1248,
+          "predicted_total_ms": 31.395686960219717,
+          "pooled_median_us": 25.1568004488945,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 25.13439953327179,
+            "1": 25.203201174736023,
+            "2": 25.1568004488945
+          },
+          "max_pass_deviation": 0.0018444605440101293
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 96960,
+          "call_count": 1244,
+          "predicted_total_ms": 31.352780407666454,
+          "pooled_median_us": 25.203199684619904,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 25.203199684619904,
+            "1": 24.779199808835983,
+            "2": 25.24000108242035
+          },
+          "max_pass_deviation": 0.01682325582027839
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 64640,
+          "call_count": 1268,
+          "predicted_total_ms": 30.8174714207643,
+          "pooled_median_us": 24.303999543190002,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 22.87519946694374,
+            "1": 24.404799938201904,
+            "2": 24.303999543190002
+          },
+          "max_pass_deviation": 0.05878868100318955
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32320,
+          "call_count": 1297,
+          "predicted_total_ms": 24.889947955310795,
+          "pooled_median_us": 19.19039934873581,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 19.145599752664566,
+            "1": 20.931199938058853,
+            "2": 19.19039934873581
+          },
+          "max_pass_deviation": 0.09071205646576194
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 16384,
+          "call_count": 2616,
+          "predicted_total_ms": 23.531443065405636,
+          "pooled_median_us": 8.99519994854927,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 9.020800143480301,
+            "1": 8.99519994854927,
+            "2": 8.932800218462944
+          },
+          "max_pass_deviation": 0.006937003117578316
+        },
+        {
+          "role": "decode",
+          "curve_key": [
+            "all_reduce",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 8192,
+          "call_count": 2205,
+          "predicted_total_ms": 21.68838003929663,
+          "pooled_median_us": 9.836000017821789,
+          "samples": 6,
+          "pass_medians_us": {
+            "0": 10.615200363099575,
+            "1": 9.654400125145912,
+            "2": 9.836000017821789
+          },
+          "max_pass_deviation": 0.07921922975457074
+        },
+        {
+          "role": "prefill",
+          "curve_key": [
+            "logits_all_gather",
+            "tp",
+            8
+          ],
+          "unequal_rows": null,
+          "bytes": 32320,
+          "call_count": 160,
+          "predicted_total_ms": 3.070463895797738,
+          "pooled_median_us": 19.19039934873581,
+          "samples": 3,
+          "pass_medians_us": {
+            "0": 19.145599752664566,
+            "1": 20.931199938058853,
+            "2": 19.19039934873581
+          },
+          "max_pass_deviation": 0.09071205646576194
+        }
+      ]
+    }
+  }
+}

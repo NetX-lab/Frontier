@@ -1,0 +1,33 @@
+WARNING 05:35:07 model_architectures.py:1314] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: trained operator execution supports MONOLITHIC, PREFILL and unified DECODE on measured H200 coordinates; dsv4_step_cost.json is diagnostic only; PD-AF, prefix caching, speculative decoding / MTP and CPU-overhead modeling are unsupported; sampling measures MONOLITHIC and unified DECODE requests with min_tokens=max_tokens (logits processing on) and PREFILL requests from the vLLM 0.28 PD proxy without min_tokens (logits processing off); other sampling parameters are unmeasured
+g1-e0-0262-full            first_csa_layer  n= 16 co_start=0.50 index_store cv=0.200 by_start={'co_start': 11.06, 'staggered': 7.55} last={'dsv4_compressor_fused_compress_store': 16}
+g1-e0-0262-full            reuse_csa_layers n= 64 co_start=0.42 index_store cv=0.184 by_start={'co_start': 11.33, 'staggered': 7.87} last={'dsv4_compressor_fused_compress_store': 63, 'dsv4_index_compressor_fused_compress_store': 1}
+g1-e0-0263-full            first_csa_layer  n= 16 co_start=0.38 index_store cv=0.191 by_start={'co_start': 11.2, 'staggered': 7.81} last={'dsv4_compressor_fused_compress_store': 16}
+g1-e0-0263-full            reuse_csa_layers n= 64 co_start=0.52 index_store cv=0.179 by_start={'co_start': 11.3, 'staggered': 7.97} last={'dsv4_compressor_fused_compress_store': 64}
+g1-e1-0729-first_tail      first_csa_layer  n= 16 co_start=0.00 index_store cv=0.024 by_start={'staggered': 5.5} last={'dsv4_compressor_fused_compress_store': 16}
+g1-e1-0729-first_tail      reuse_csa_layers n= 64 co_start=0.00 index_store cv=0.040 by_start={'staggered': 5.31} last={'dsv4_compressor_fused_compress_store': 61, 'dsv4_index_compressor_fused_compress_store': 3}
+g1-e1-0730-first_tail      first_csa_layer  n= 16 co_start=0.00 index_store cv=0.029 by_start={'staggered': 5.47} last={'dsv4_compressor_fused_compress_store': 15, 'dsv4_index_compressor_fused_compress_store': 1}
+g1-e1-0730-first_tail      reuse_csa_layers n= 64 co_start=0.00 index_store cv=0.078 by_start={'staggered': 5.5} last={'dsv4_compressor_fused_compress_store': 59, 'dsv4_index_compressor_fused_compress_store': 5}
+g1hs-e0-0100-full          first_csa_layer  n= 16 co_start=0.12 index_store cv=0.138 by_start={'co_start': 13.42, 'staggered': 9.52} last={'dsv4_compressor_fused_compress_store': 16}
+g1hs-e0-0100-full          reuse_csa_layers n= 64 co_start=0.28 index_store cv=0.109 by_start={'co_start': 12.06, 'staggered': 9.76} last={'dsv4_compressor_fused_compress_store': 64}
+g1hs-e0-0101-full          first_csa_layer  n= 16 co_start=0.31 index_store cv=0.126 by_start={'co_start': 12.45, 'staggered': 9.22} last={'dsv4_compressor_fused_compress_store': 16}
+g1hs-e0-0101-full          reuse_csa_layers n= 64 co_start=0.34 index_store cv=0.131 by_start={'co_start': 12.05, 'staggered': 9.42} last={'dsv4_compressor_fused_compress_store': 64}
+g1hs-e0-0253-piecewise     first_csa_layer  n= 16 co_start=0.00 index_store cv=0.161 by_start={'staggered': 5.62} last={'dsv4_compressor_fused_compress_store': 16}
+g1hs-e0-0253-piecewise     reuse_csa_layers n= 64 co_start=0.00 index_store cv=0.039 by_start={'staggered': 5.57} last={'dsv4_compressor_fused_compress_store': 63, 'dsv4_index_compressor_fused_compress_store': 1}
+g1hs-e0-0254-piecewise     first_csa_layer  n= 16 co_start=0.00 index_store cv=0.060 by_start={'staggered': 5.58} last={'dsv4_compressor_fused_compress_store': 16}
+g1hs-e0-0254-piecewise     reuse_csa_layers n= 64 co_start=0.00 index_store cv=0.038 by_start={'staggered': 5.54} last={'dsv4_compressor_fused_compress_store': 64}
+g1-e0-0262-full            FULL      first=False composed cv=0.012 split=0.002 | window cv=0.010 | index_store cv=0.133 split=0.098 | q_projection cv=0.112
+g1-e0-0262-full            FULL      first=True  composed cv=0.020 split=0.002 | window cv=0.020 | index_store cv=0.200 split=0.205 | q_projection cv=0.159
+g1-e0-0263-full            FULL      first=False composed cv=0.006 split=0.000 | window cv=0.005 | index_store cv=0.127 split=0.029 | q_projection cv=0.137
+g1-e0-0263-full            FULL      first=True  composed cv=0.015 split=0.005 | window cv=0.015 | index_store cv=0.191 split=0.055 | q_projection cv=0.173
+g1-e1-0729-first_tail      PIECEWISE first=False composed cv=0.019 split=0.010 | window cv=0.017 | index_store cv=0.016 split=0.002 | q_projection cv=0.022
+g1-e1-0729-first_tail      PIECEWISE first=True  composed cv=0.014 split=0.015 | window cv=0.014 | index_store cv=0.024 split=0.018 | q_projection cv=0.029
+g1-e1-0730-first_tail      PIECEWISE first=False composed cv=0.016 split=0.001 | window cv=0.014 | index_store cv=0.018 split=0.017 | q_projection cv=0.047
+g1-e1-0730-first_tail      PIECEWISE first=True  composed cv=0.020 split=0.001 | window cv=0.020 | index_store cv=0.029 split=0.006 | q_projection cv=0.057
+g1hs-e0-0100-full          FULL      first=False composed cv=0.010 split=0.000 | window cv=0.010 | index_store cv=0.064 split=0.011 | q_projection cv=0.055
+g1hs-e0-0100-full          FULL      first=True  composed cv=0.012 split=0.004 | window cv=0.012 | index_store cv=0.138 split=0.000 | q_projection cv=0.064
+g1hs-e0-0101-full          FULL      first=False composed cv=0.007 split=0.000 | window cv=0.008 | index_store cv=0.066 split=0.033 | q_projection cv=0.042
+g1hs-e0-0101-full          FULL      first=True  composed cv=0.009 split=0.002 | window cv=0.009 | index_store cv=0.126 split=0.073 | q_projection cv=0.060
+g1hs-e0-0253-piecewise     PIECEWISE first=False composed cv=0.005 split=0.000 | window cv=0.004 | index_store cv=0.021 split=0.006 | q_projection cv=0.012
+g1hs-e0-0253-piecewise     PIECEWISE first=True  composed cv=0.006 split=0.002 | window cv=0.006 | index_store cv=0.161 split=0.039 | q_projection cv=0.022
+g1hs-e0-0254-piecewise     PIECEWISE first=False composed cv=0.009 split=0.001 | window cv=0.009 | index_store cv=0.021 split=0.001 | q_projection cv=0.011
+g1hs-e0-0254-piecewise     PIECEWISE first=True  composed cv=0.010 split=0.003 | window cv=0.010 | index_store cv=0.060 split=0.011 | q_projection cv=0.027

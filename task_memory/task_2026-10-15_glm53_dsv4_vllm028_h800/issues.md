@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | I-009 rechecked at 06:28 UTC: name resolution still fails; nothing submitted. |
+| 2026-11-01 | I-009 opened: this session's runtime has no DNS resolution, so the approved A6 supplement passes (D-A6-THREE-RUN) cannot be submitted from it; the package is verified and waits for a networked launch. |
 | 2026-10-31 | I-008 resolved: A10 replays of B28 finished; the EP prices of the 6,144-token prefill now match the native critical paths, and both cases fail on TTFT for reasons outside I-008. |
 | 2026-10-31 | I-008: B28 merged (`ee29d548`); check of the uniform eager EP rows that B28 also replaced, against the nine uniform forwards of the native P2-64 profile. |
 | 2026-10-30 | I-008 measured: the isolated G5h-32 run (`exp-1030-234535-245357`, 8.01 GPU-hours) and the native critical paths show that a single aligned call reproduces the eager EP calls on EP32 and EP16 (within 1-18 µs), while back-to-back timing fits the decode-graph and TP calls. Repair assigned as B28. |
@@ -186,3 +188,16 @@ The isolated mode is 43-93 µs above back-to-back for the decode-graph EP calls 
 One rank's kernel durations are not critical paths, so these readings check consistency only. For EP16 the support is an inference from scaling: the EP32 uniform call moves twice the data of the EP16 one, and the isolated rows scale by 1.97 (combine) and 2.01 (dispatch), while the old back-to-back rows scale by 1.13 and 1.34. That fits the old EP16 uniform rows carrying the back-to-back queueing that I-008 describes. Evidence: `h3o_operator_costs/b28/lead/uniform/` (`uniform_ep.py` → `uniform_ep_p2_64.txt`, `uniform_ep_ranks.py` → `uniform_ep_ranks.txt`, forward lists `forwards_p2_{32,64}.txt`).
 
 **A10 replays (2026-10-31).** The warm K=19 replays on `ee29d548` (A10 report section 5.7) change each 6,144-token prefill forward by a fixed amount for each DP lane of the prefill. On dp0 the change equals the price check: P2-32 −11.642 ms, P2-64 +5.498 ms. The means over all waves are −12.359 and +4.644 ms. On dp0, the EP prices are now 1.55 ms (P2-32) and within 0.2 ms (P2-64) per forward from the native critical paths. TTFT: P2-32 −11.22% (B24 −7.94%), P2-64 −10.60% (B24 −11.62%); both FAIL. The other metrics stay within 2.45%. The remaining gap is outside I-008: the unmodeled path outside the engine (about 22 ms per request) and the V4 host part of the step. Evidence: `h3o_operator_costs/a10/k19/*_k19b28*`, `h3o_operator_costs/a10/k19/b28/`.
+
+## I-009: no DNS in the session runtime blocks the A6 supplement submission (2026-11-01)
+
+Status: open. Owner: lead; needs YC to launch from a networked runtime or to restore network access here.
+
+**Observed.** `socket.getaddrinfo` fails with `gaierror [Errno -3] Temporary failure in name resolution` for `deploy.i.shaipower.com`, `oss.i.shaipower.com`, `artifactory.stepfun-inc.com` and `github.com` (checked 2026-11-01 05:44 UTC, after an earlier failure of the read-only quota inspection `h3o_operator_costs/a6_three_run_20261101/inspect_quota.py`). The proxy recipe, the StepMind RJob API and `ssh shai-ycfeng` all need name resolution. No platform operation was attempted or performed; `quota.json` does not exist. A recheck at 06:28 UTC still failed for `oss.i.shaipower.com` and `deploy.i.shaipower.com`.
+
+**Impact.** D-A6-THREE-RUN is approved but cannot start: the package `/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01` passes its geometry/source check (`verification.json`, 432 workloads × 2 passes = 864 cases, estimated 3,332 s = 0.9255 GPUh) and its ResourceConfig dry run (`payload_check.json`: 1 H200, step_main, non-preemptible, 5,400 s payload timeout). CPU-only work (C and B of the same decision set) continued.
+
+**Launch once the network works** (bash, from the build worktree; the launcher process must stay alive for the whole job):
+
+1. Read-only quota and personal-reservation check: run `h3o_operator_costs/a6_three_run_20261101/inspect_quota.py` from the main worktree after the handbook proxy recipe, with the StepMind environment Python; it writes `quota.json` next to itself. Submit only if personal non-preemptible H200 reservations stay at most 32 with this job.
+2. `bash /data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01/launch/launch_glm_producers.sh /data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01/jobs/A6_SUPPLEMENT_PASSES.json`

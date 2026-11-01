@@ -1,0 +1,45 @@
+{
+  "command": [
+    "env",
+    "PYTHONPATH=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "timeout",
+    "300s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "tests/analysis/v4_collective_exact_repeatability.py",
+    "--summary",
+    "data/profiling/network/h200_dgx/summary.csv",
+    "--replay",
+    "p2_32",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_collectives.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_a8.json",
+    "--replay",
+    "p2_64",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_collectives.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_a8.json",
+    "--output",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/collective_repeatability_20261101/result.json"
+  ],
+  "stdout": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/collective_repeatability_20261101/result.log",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "3.10.6",
+  "source_base": "5fbee636",
+  "script_sha256": "1e6281fe7f40774b370e586a772d056b11c3ec79d5cebae4850020c018b8800c",
+  "script_committed_in": "384d1552 (identical content; the run used the same file before it was committed)",
+  "exit_code": 0,
+  "input_sha256": {
+    "data/profiling/network/h200_dgx/summary.csv": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_collectives.json": "13c7fde576445e6ae4267fdbad08b1a160cdd6b25a6c685551cc721785465359",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_32_a8.json": "a2c83c6a8a9d5cb03d0a7e25ffe34fc5cc96e2602f7e8c754efb8afc6f49045f",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_collectives.json": "5ff7bed621a8467b2cb99e1e1815431b1db70520adc1cb6006169f70501c2976",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/f_comparisons_20261101/f2_p2_64_a8.json": "86311e5566c07e71192a9f2ee85f7eedd59bcfd25b1ca6256cba901fe924bee5"
+  },
+  "outputs_sha256": {
+    "result.json": "2becc838090252b59938279500b7854362c4cff014964301008defcadaae43dc",
+    "result.log": "78b4891515d7dc2e627f3c7131a8ee1fc440b08850b6f2605c4734704a399f18"
+  },
+  "expected": "Both replays: A8 exact admission (calls == exact_calls, 0 violations, all census rows exact); every rebuilt pooled median equals the census price; time-weighted maximum pass deviation <= 10% with no single-pass point.",
+  "actual": "PASS for p2_32 (44 points, 351,009 ms, weighted max pass deviation 5.46%) and p2_64 (38 points, 764,471 ms, 0.78%).",
+  "recorded_utc": "2026-11-01T05:36:39.223458+00:00",
+  "timing_note": "Execution start/end timestamps were not captured; recorded_utc is receipt creation time."
+}

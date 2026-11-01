@@ -1,0 +1,22 @@
+{
+  "cloned_cases": 864,
+  "elapsed_seconds": 8.803611714858562,
+  "estimated_engine_steps": 10668,
+  "estimated_gpu_hours": 0.9255411111111111,
+  "estimated_seconds": 3331.9480000000003,
+  "finished_utc": "2026-11-01T05:16:32.660144+00:00",
+  "limits": "Geometry and source check only; prompt contents and persistent GPU cache/clock state are not fixed. No native run yet.",
+  "manifest_sha256": "423a2863aa3099e8e19119f869232123626097eb52df535b97129fee8b0d06f5",
+  "measured_steps": 864,
+  "original_cases": 432,
+  "package": "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "remaining_after_timeout_exposure_approximate": 0.6601750000000002,
+  "remaining_gpu_hours_before_run_approximate": 2.160175,
+  "source_revision": "a689ed05f462eb269b9dffe640da151e6614a5ef",
+  "started_utc": "2026-11-01T05:16:23.856540+00:00",
+  "status": "PASS",
+  "timeout_exposure_gpu_hours": 1.5,
+  "verified_manifest_files": 546,
+  "verified_snapshot_files": 527
+}

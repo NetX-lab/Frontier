@@ -1,0 +1,84 @@
+p2_32 PASS {"exit_code": 0, "calls": 6310733, "exact_calls": 6310733, "violations": 0, "census_rows_exact": true, "pass": true} {"points": 44, "predicted_total_ms": 351008.8496766843, "single_pass_points": 0, "single_pass_predicted_ms": 0, "weighted_max_pass_deviation": 0.05462298770944553, "weighted_max_pass_deviation_of_repeated_points": 0.05462298770944553, "limit": 0.1, "pass": true}
+  decode   all_gatherv/ep/16                          16528    105604.0 ms passes 3 max dev   7.38%
+  prefill  all_gatherv/ep/16                           8264     72074.9 ms passes 3 max dev   1.23%
+  decode   reduce_scatterv/ep/16                     262144     47180.3 ms passes 3 max dev  17.25%
+  prefill  reduce_scatterv/ep/16                     131072     31335.6 ms passes 3 max dev   2.02%
+  decode   all_gatherv/ep/16                           8264     29843.5 ms passes 3 max dev   1.23%
+  decode   reduce_scatterv/ep/16                     131072     12974.9 ms passes 3 max dev   2.02%
+  decode   sp_reduce_scatter/tp/8                    131072      8594.2 ms passes 3 max dev   1.35%
+  decode   sp_all_gather/tp/8                         16384      7459.9 ms passes 3 max dev   1.73%
+  prefill  reduce_scatterv/ep/16    [768, 1]       50397184      6064.7 ms passes 3 max dev   0.11%
+  prefill  reduce_scatterv/ep/16    [1, 768]       50397184      6012.7 ms passes 3 max dev   0.92%
+  prefill  all_gatherv/ep/16        [1, 768]        6346752      4689.5 ms passes 3 max dev   0.54%
+  prefill  all_gatherv/ep/16        [768, 1]        6346752      4624.9 ms passes 3 max dev   1.85%
+  prefill  sp_reduce_scatter/tp/8                      8192      4143.3 ms passes 3 max dev   6.67%
+  prefill  sp_all_gather/tp/8                          8192      2531.0 ms passes 3 max dev   1.49%
+  decode   sp_all_gather/tp/8                          8192      2009.7 ms passes 3 max dev   1.49%
+  decode   sp_reduce_scatter/tp/8                     65536      1126.0 ms passes 3 max dev   1.17%
+  prefill  sp_all_gather/tp/8                       6291456       910.2 ms passes 3 max dev   0.35%
+  prefill  sp_reduce_scatter/tp/8                  50331648       882.1 ms passes 3 max dev   0.56%
+  decode   sp_reduce_scatter/tp/8                     32768       618.1 ms passes 3 max dev  21.28%
+  decode   logits_all_gather/tp/8                    323200       470.6 ms passes 3 max dev   0.77%
+  decode   sp_reduce_scatter/tp/8                      8192       383.8 ms passes 3 max dev   6.67%
+  decode   sp_reduce_scatter/tp/8                     16384       369.2 ms passes 3 max dev  15.39%
+  decode   all_reduce/tp/8                           131072       229.7 ms passes 3 max dev  19.57%
+  decode   sp_all_gather/tp/8                         65536       168.2 ms passes 3 max dev  17.05%
+  decode   logits_all_gather/tp/8                    355520       133.7 ms passes 3 max dev   4.53%
+  prefill  sp_all_gather/tp/8                      25165824       106.5 ms passes 3 max dev   0.32%
+  prefill  sp_all_gather/tp/8                         32768       101.2 ms passes 3 max dev   2.59%
+  prefill  all_reduce/tp/8                             8192        79.3 ms passes 3 max dev   7.92%
+  decode   sp_all_gather/tp/8                         32768        41.3 ms passes 3 max dev   2.59%
+  decode   all_reduce/tp/8                            65536        33.3 ms passes 3 max dev   1.32%
+  prefill  all_reduce/tp/8                         50331648        32.2 ms passes 3 max dev   0.70%
+  decode   logits_all_gather/tp/8                    290880        20.3 ms passes 3 max dev   0.85%
+  decode   logits_all_gather/tp/8                    226240        18.8 ms passes 3 max dev   6.26%
+  decode   logits_all_gather/tp/8                    258560        18.7 ms passes 3 max dev   0.72%
+  decode   logits_all_gather/tp/8                    193920        16.4 ms passes 3 max dev   6.65%
+  decode   logits_all_gather/tp/8                    161600        16.3 ms passes 3 max dev   0.62%
+  decode   logits_all_gather/tp/8                     96960        15.3 ms passes 3 max dev   1.68%
+  decode   logits_all_gather/tp/8                    129280        15.2 ms passes 3 max dev   0.18%
+  decode   all_reduce/tp/8                            32768        15.1 ms passes 3 max dev  12.67%
+  decode   logits_all_gather/tp/8                     64640        14.7 ms passes 3 max dev   5.88%
+  decode   logits_all_gather/tp/8                     32320        11.1 ms passes 3 max dev   9.07%
+  decode   all_reduce/tp/8                             8192         7.3 ms passes 3 max dev   7.92%
+  decode   all_reduce/tp/8                            16384         7.3 ms passes 3 max dev   0.69%
+  prefill  logits_all_gather/tp/8                     32320         3.7 ms passes 3 max dev   9.07%
+p2_64 PASS {"exit_code": 0, "calls": 9003672, "exact_calls": 9003672, "violations": 0, "census_rows_exact": true, "pass": true} {"points": 38, "predicted_total_ms": 764470.7790421594, "single_pass_points": 0, "single_pass_predicted_ms": 0, "weighted_max_pass_deviation": 0.00783290838056329, "weighted_max_pass_deviation_of_repeated_points": 0.00783290838056329, "limit": 0.1, "pass": true}
+  decode   all_gatherv/ep/32                           8264    267865.1 ms passes 3 max dev   0.58%
+  prefill  all_gatherv/ep/32                           8264    163538.7 ms passes 3 max dev   0.58%
+  decode   reduce_scatterv/ep/32                     262144    121411.9 ms passes 3 max dev   0.63%
+  prefill  reduce_scatterv/ep/32                     262144     74125.2 ms passes 3 max dev   0.63%
+  prefill  reduce_scatterv/ep/32    [1, 1, 768, 1]   50528256     15109.7 ms passes 3 max dev   0.14%
+  decode   sp_all_gather/tp/8                          8192     15079.7 ms passes 3 max dev   1.49%
+  prefill  reduce_scatterv/ep/32    [1, 768, 1, 1]   50528256     14976.1 ms passes 3 max dev   0.59%
+  prefill  reduce_scatterv/ep/32    [768, 1, 1, 1]   50528256     14943.4 ms passes 3 max dev   0.43%
+  prefill  reduce_scatterv/ep/32    [1, 1, 1, 768]   50528256     14760.3 ms passes 3 max dev   0.24%
+  decode   sp_reduce_scatter/tp/8                     65536     13350.8 ms passes 3 max dev   1.17%
+  prefill  sp_reduce_scatter/tp/8                      8192      7826.2 ms passes 3 max dev   6.67%
+  prefill  all_gatherv/ep/32        [1, 1, 1, 768]    6346752      7293.2 ms passes 3 max dev   1.30%
+  prefill  all_gatherv/ep/32        [1, 768, 1, 1]    6346752      7279.9 ms passes 3 max dev   1.10%
+  prefill  all_gatherv/ep/32        [1, 1, 768, 1]    6346752      7212.7 ms passes 3 max dev   0.83%
+  prefill  all_gatherv/ep/32        [768, 1, 1, 1]    6346752      7175.9 ms passes 3 max dev   1.21%
+  prefill  sp_all_gather/tp/8                          8192      4780.8 ms passes 3 max dev   1.49%
+  decode   sp_reduce_scatter/tp/8                     32768      1875.6 ms passes 3 max dev  21.28%
+  decode   sp_reduce_scatter/tp/8                     16384      1195.4 ms passes 3 max dev  15.39%
+  decode   sp_reduce_scatter/tp/8                      8192      1132.9 ms passes 3 max dev   6.67%
+  prefill  sp_all_gather/tp/8                       6291456       910.2 ms passes 3 max dev   0.35%
+  prefill  sp_reduce_scatter/tp/8                  50331648       882.1 ms passes 3 max dev   0.56%
+  decode   all_reduce/tp/8                            65536       394.4 ms passes 3 max dev   1.32%
+  decode   logits_all_gather/tp/8                    193920       257.3 ms passes 3 max dev   6.65%
+  decode   logits_all_gather/tp/8                    226240       243.0 ms passes 3 max dev   6.26%
+  decode   sp_all_gather/tp/8                         32768       203.6 ms passes 3 max dev   2.59%
+  prefill  all_reduce/tp/8                             8192       149.8 ms passes 3 max dev   7.92%
+  prefill  sp_all_gather/tp/8                         32768       128.3 ms passes 3 max dev   2.59%
+  prefill  sp_all_gather/tp/8                      25165824        88.8 ms passes 3 max dev   0.32%
+  decode   all_reduce/tp/8                            32768        45.9 ms passes 3 max dev  12.67%
+  decode   logits_all_gather/tp/8                    161600        35.1 ms passes 3 max dev   0.62%
+  prefill  all_reduce/tp/8                         50331648        32.2 ms passes 3 max dev   0.70%
+  decode   logits_all_gather/tp/8                    129280        31.4 ms passes 3 max dev   0.18%
+  decode   logits_all_gather/tp/8                     96960        31.4 ms passes 3 max dev   1.68%
+  decode   logits_all_gather/tp/8                     64640        30.8 ms passes 3 max dev   5.88%
+  decode   logits_all_gather/tp/8                     32320        24.9 ms passes 3 max dev   9.07%
+  decode   all_reduce/tp/8                            16384        23.5 ms passes 3 max dev   0.69%
+  decode   all_reduce/tp/8                             8192        21.7 ms passes 3 max dev   7.92%
+  prefill  logits_all_gather/tp/8                     32320         3.1 ms passes 3 max dev   9.07%
