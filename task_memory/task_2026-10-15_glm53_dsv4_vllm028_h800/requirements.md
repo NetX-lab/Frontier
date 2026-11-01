@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recorded YC's `/codex-implement` continuation request (Codex implements; RJobs go through `/ds4-exec`) and the lead's choice under D-NO-INTERRUPT: P2 formal input qualification next (D-P2-INPUT-QUALIFICATION). |
 | 2026-11-01 | YC deferred the EP dispatch count correction (D-WARM-EP-DEFER) after held-out traces showed one fused kernel when DP lanes are equal; the NIXL correction and both replays proceed. |
 | 2026-11-01 | YC approved D-WARM-TWO-FIX: the two existing-path corrections (NIXL wire bytes, EP dispatch kernel count) and the P2-32/P2-64 CPU replays. |
 | 2026-11-01 | YC approved D-WARM-TARGET: compare and calibrate the warm steady state; one-time warmup costs are not modeled; update the calibration skill. |
@@ -147,6 +148,20 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-01 — Codex continuation of P2 input qualification (D-P2-INPUT-QUALIFICATION)
+
+The lead's D-WARM-TWO-FIX completion report listed three options, none approved: a lane-dependent EP dispatch count, the remaining TTFT under-prediction, and formal input qualification followed by H800.
+
+[Original Request]
+> /codex-implement youare in the claud code, so let codex help you, when you submmit rjob, plz use skill dsv4-exec
+
+- **Execution route.** Codex implements and verifies delegated work through `/codex-implement`. Codex does not submit, stop or inspect RJobs. The lead submits, monitors and stops RJobs through the `/ds4-exec` skill (the request's "dsv4-exec"), under the standing resource rule: at most 32 non-preemptible H200 GPUs across all personal reservations, queued jobs included; any further H200 job is wholly preemptible. This supersedes D-CODEX-DIRECT-RJOB's direct Codex submission.
+- **D-P2-INPUT-QUALIFICATION** (lead's choice under D-NO-INTERRUPT; the request named no option). Next work is the formal input qualification that the plan places before formal P2 acceptance and H800: attention (48 omitted workloads, four unevaluable forward classes), H200 NIXL timing (the formal input is still the H800 fit), NIXL payload, memory, hardware identity and coverage. Reasons: the warm readings already pass every metric in every repeat, so qualification is the only open edge on the main route; the EP count changes at most 0.0468 ms per unequal-lane step; the TTFT residual is inside the 10% limit and its investigation was stopped.
+  - Closing an edge from retained evidence and CPU work proceeds directly.
+  - An edge that needs a GPU measurement gets a CPU-verified package. The lead reports its GPUs and GPU-hours to YC, then submits through `/ds4-exec`.
+  - A new qualification criterion, such as accepting an input because the metrics do not depend on it, a table promotion or a CSA FULL correction, is returned as a proposal. The lead records the choice and reports it.
+  - Unchanged: D-WARM-TARGET, D-WARM-EP-DEFER, the measured CC backend as formal input, all thresholds and references. No host-zero change, READ timing model, offset or `frontier/` source change without a further decision.
 
 ## [Original Request / Decision] 2026-11-01 — two existing-path corrections and two CPU replays (D-WARM-TWO-FIX)
 
