@@ -1,0 +1,85 @@
+{
+  "observed_utc": "2026-11-01T07:33:49.107512+00:00",
+  "name": "exp-1101-143721-849401",
+  "uid": "34faddc4-bec4-4bf6-b65c-be6ec9a05d3e",
+  "creator": "i-fengyicheng",
+  "labels": {
+    "quotagroup.brainpp.cn/preemptible": "no",
+    "quotagroup.brainpp.cn/quotagroup": "step_main"
+  },
+  "queue": "step-main-default",
+  "stop_annotations": {},
+  "status": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-11-01T07:33:35Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "tasks": {
+    "default": {
+      "replicas": 1,
+      "nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/g1h-supplement-build:/data/ycfeng/Frontier/.worktrees/g1h-supplement-build",
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "16",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "16",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "replicas": [
+    {
+      "name": "exp-1101-143721-849401-cfcd2084",
+      "uid": "47720700-2689-4e4a-a7ae-fe6796c4a4d1",
+      "owner_references": [
+        {
+          "apiVersion": "rjob.brainpp.cn/v1alpha1",
+          "kind": "RJob",
+          "name": "exp-1101-143721-849401",
+          "uid": "34faddc4-bec4-4bf6-b65c-be6ec9a05d3e",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "node": "gpu-h200-1080.lgcm.sh.istep.fun",
+      "phase": "Succeeded",
+      "container_statuses": [
+        {
+          "name": "default",
+          "image": "sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca",
+          "restart_count": 0,
+          "state": {
+            "terminated": {
+              "exitCode": 0,
+              "reason": "Completed",
+              "startedAt": "2026-11-01T06:37:43Z",
+              "finishedAt": "2026-11-01T07:33:32Z",
+              "containerID": "containerd://7f12cd1a1bb4232187defcd20bc1c61413e42749b6561f342228b302fa6275f2"
+            }
+          },
+          "last_state": {}
+        }
+      ]
+    }
+  ]
+}

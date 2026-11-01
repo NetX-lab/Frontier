@@ -1,0 +1,15 @@
+{
+  "classification": "RECONSTRUCTED_LAUNCHER_LOG_RECEIPT",
+  "job": "exp-1101-143721-849401",
+  "final_status": "succeeded",
+  "launcher_entry": [
+    "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01/launch/launch_glm_producers.sh",
+    "/data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01/jobs/A6_SUPPLEMENT_PASSES.json"
+  ],
+  "launcher_log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/launcher.log",
+  "launcher_log_sha256": "e0e55edb93fefd3f7ef7d976b8e3d70c803c376c3dce87390747cc5158ec9228",
+  "job_create_utc": "2026-11-01T06:37:22.051000+00:00",
+  "succeeded_utc": "2026-11-01T07:33:37.700000+00:00",
+  "elapsed_seconds": 3375.649,
+  "limits": "Elapsed is the log create-to-success window, not the original shell execution duration; detached invocation and process exit code were not captured."
+}

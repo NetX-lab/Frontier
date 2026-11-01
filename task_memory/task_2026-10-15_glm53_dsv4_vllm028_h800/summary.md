@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Supplement business/integrity and full three-run tables PASS; reviewed forward code/current output and 31 tests complete; median3 qualification and four CPU replays running, overall qualification still open. |
 | 2026-11-01 | Archived C PASS, the B cause and phase-level held-out, and the A blocker. |
 | 2026-11-01 | Archived the A6 noise-floor result and the three pending YC decisions. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
@@ -98,7 +99,7 @@ Decision 46's ingress option A is implemented at `a69a5213`: driver inputs 10.3 
 
 The F1–F4 diagnostic experiment series now has terminal outcomes. F1a fails latency metrics at both scales. F1b's measured link model fails held-out validation and both replays stop with COVERAGE_MISS; no complete E2E metrics exist. F2 local K18 passes P2-32 but fails P2-64 repeat01 TTFT at 12.792204607% (779.888727400 ms native, 680.123765687 ms predicted); the other 11 P2-64 per-repeat metrics pass. F3's complete H200 NIXL data has an invalid affine fit and no replay. F4's five metric artifacts equal B28 at both scales; its zero delays differ from B29, so that difference cannot be attributed to the planner. No variant is promoted.
 
-The final P2-64 run has 128 complete requests, 917,504 tokens, 39,680 matching forward/stage-end records, zero stale events and 9,003,672/9,003,672 exact collective calls with zero violations. All three reference CSVs and six compute hashes match B29. The original launcher and watcher completed successfully; no comparison remains running. The unchanged collector reports PASS_EVIDENCE_CHECKS for 8 readings, 128 metric entries and 3 unavailable results. This verifies evidence, not formal qualification.
+The final F2 P2-64 run has 128 complete requests, 917,504 tokens, 39,680 matching forward/stage-end records, zero stale events and 9,003,672/9,003,672 exact collective calls with zero violations. All three reference CSVs and six compute hashes match B29. The original launcher and watcher completed successfully; no F1–F4 comparison remains running. The unchanged collector reports PASS_EVIDENCE_CHECKS for 8 readings, 128 metric entries and 3 unavailable results. This verifies evidence, not formal qualification.
 
 Deliverables, relative to this task directory:
 
@@ -107,6 +108,20 @@ Deliverables, relative to this task directory:
 - `h3o_operator_costs/f_comparisons_20261101/f2_p2_64/`: last reading and normalized rows; adjacent `f2_p2_64_{receipt,verification,collectives,a8}.json` and `f2_p2_64_a8_stdout.txt` retain verification.
 - `h3o_operator_costs/f_comparisons_20261101/complete_command.json` and `finish_comparison_command.py`: exact closeout commands, environment and results.
 - `h3o_operator_costs/codex_resume_20261031/`: earlier B29/F4 commands and identities, and the updated check-progress checkpoint.
+
+### Approved forward-attention continuation — 2026-11-01
+
+YC approved D-A6-FORWARD-ATTENTION and D-A6-PASS-REPLAYS: full-model attention qualification against measured layer windows, unchanged folds/5%/10% thresholds, all scope/phase errors diagnostic, and four independent-pass CPU P2 replays with fixed non-attention inputs and clean references. The simulator, predictor, formal tables and E2E gates remain unchanged.
+
+The already-approved supplement `exp-1101-143721-849401` has platform/replica/container/launcher success (exit 0, restart 0; observed container 3,349 seconds / 0.9302778 GPUh), selected 11-file SHA checks and business/repeatability PASS. All 864 steps match identity/geometry/counts; 29,376 original supplement medians reproduce the published input, and all 1,421 workloads now have three measured runs. Median3 and both independent-pass tables retain 7,105 rows; complete per-field and resolved-input checks PASS.
+
+Forward code and current all-scope invocation are complete: primary 31 tests PASS, phase review No actionable findings. FULL/decode, PIECEWISE/decode and PIECEWISE/first_tail p90 errors are 1.667818%, 1.646428%, 1.886652% on 464/469/440 complete workloads. Four other classes have no complete evaluable workload. The 1,373 complete / 48 omitted population keeps overall attention NOT_EVALUABLE and E2E NOT_ASSESSED; omitted coverage is not qualified.
+
+Verified code commits: `21ab3b31` for configured full-model qualification, `fb8670ac` for coherent independent-pass tables. The phase checkpoint is `check_progress_2026-11-01_forward_attention.md`; its 4 PASS / 2 TODO result does not close tickets or formal acceptance.
+
+Four original independent-pass P2 CPU replays started once at 07:53:42 UTC (supervisor 223761), followed independently by same-fold median3 A6/forward qualification at 07:54:32 UTC (supervisor 236919). Run/cache/log roots are `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/`; exact commands/PIDs, source/input hashes and later gate results are retained under `h3o_operator_costs/{a6_pass_replays_20261101,a6_forward_attention_20261101}/`. They remain unfinished. See `test_report_2026-11-01_forward_attention_continuation.md` for paths, commands, actual values, resolved execution errors and limits. No new GPU allocation or formal publication is authorized; full 05/09/11/19 acceptance remains OPEN.
+
+### Retained checkpoint before forward-attention approval and supplement completion
 
 B30b code and retained outcomes are integrated on the current mainline. Tickets 05/09/11/19 and all other unfinished active DSV4 criteria remain open. A6 fails four attention scopes and seven of eight collective curves. The completed 128-step repeatability diagnostic preserves identities/counts but does not qualify a repetition count or identify the cause of variation. The remaining approximate G1h–G4h budget is 2.160175 GPUh. The scratch 16-repeat full-grid proposal is not selected or approved; it has no package, adapter or new measurement generation. The A6 noise-floor analysis (`test_report_2026-11-01_a6_noise_floor.md`, evidence `h3o_operator_costs/a6_noise_20261101/`) shows the four attention failures at the noise of their single-run targets; median-of-three targets on the 989 three-run workloads make three of them pass, while index_compressor_fused_compress_store still fails from CSA FULL decode. P2 uses exact collective points only. YC then decided all three. Under the exact-point collective rule both P2 replays PASS (`test_report_2026-11-01_collective_exact_repeatability.md`, evidence `h3o_operator_costs/collective_repeatability_20261101/`). The CSA FULL decode variation comes from the start order of the two concurrent compress-store kernels in FULL graph replay; the composed attention phase repeats within 2% and passes the A6 limits on all 15 keys on the recorded folds, while the scopes stay FAIL until YC chooses a correction (`test_report_2026-11-01_a6_csa_full_cause.md`, evidence `h3o_operator_costs/a6_csa_full_cause_20261101/`). The approved supplement passes (about 0.93 GPUh) are verified but not submitted: this session's runtime has no DNS (issues.md I-009). A supported uniform measurement correction and qualified hardware/NIXL/memory coverage precede formal acceptance, followed by H800 continuation. B30a remains on its diagnostic branch pending YC's decision; historical native admission is preserved.
 

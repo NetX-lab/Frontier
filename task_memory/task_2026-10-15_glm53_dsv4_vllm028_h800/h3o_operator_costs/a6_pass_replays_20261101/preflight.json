@@ -1,0 +1,1071 @@
+{
+  "status": "PASS",
+  "observed_utc": "2026-11-01T07:51:36.553763+00:00",
+  "python": "3.10.6",
+  "table_checks": [
+    {
+      "table": "pass1_all",
+      "rows": 7105,
+      "same_pass_statistics": 1298690,
+      "unchanged_counts": 296965,
+      "unchanged_non_timing_fields": 760235
+    },
+    {
+      "table": "pass2_all",
+      "rows": 7105,
+      "same_pass_statistics": 1298690,
+      "unchanged_counts": 296965,
+      "unchanged_non_timing_fields": 760235
+    }
+  ],
+  "bindings": [
+    {
+      "case": "p2_32",
+      "pass": "pass1_all",
+      "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32",
+      "field": "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file",
+      "table": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+      "profiling_tables": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+          "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+          "rows": 4,
+          "consumers": [
+            "PREFILL/kernel_gap",
+            "DECODE/kernel_gap"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+          "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+          "rows": 41,
+          "consumers": [
+            "PREFILL/compute",
+            "DECODE/compute"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+          "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f",
+          "rows": 33,
+          "consumers": [
+            "PREFILL/moe",
+            "DECODE/moe"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+          "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+          "rows": 384,
+          "consumers": [
+            "PREFILL/collectives",
+            "DECODE/collectives"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+          "sha256": "7c54e9d12743ffe1f218d019a5fc33aa34eb738850585cd1a7477249416709f6",
+          "rows": 7105,
+          "consumers": [
+            "PREFILL/attention",
+            "DECODE/attention"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_block_kernel_only.csv",
+          "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+          "rows": 197,
+          "consumers": [
+            "PREFILL/runner_block",
+            "DECODE/runner_block"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_replay_kernel_only.csv",
+          "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+          "rows": 2941,
+          "consumers": [
+            "PREFILL/runner_replay",
+            "DECODE/runner_replay"
+          ]
+        }
+      ],
+      "a1": {
+        "enable_dummy_mode": {
+          "PREFILL": false,
+          "DECODE": false
+        },
+        "cc_backend_types": {
+          "PREFILL": "measured",
+          "DECODE": "measured"
+        },
+        "resolved_inputs": {
+          "PREFILL": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_replay_kernel_only.csv"
+          ],
+          "DECODE": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_replay_kernel_only.csv"
+          ]
+        },
+        "step_cost_files_beside_inputs": [],
+        "no_step_cost_file_beside_inputs": true
+      },
+      "baseline_receipt": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/receipt.json",
+      "baseline_sha256": "a6bbc64ad0cfd83af52a1359fe959c980fa89e0cfc1e366dfdbccde27a5d0813",
+      "changes": {
+        "added_fields": {
+          "analytical_kv_cache_transfer_config_nixl_read_completion": "transfer_end",
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": 0.0,
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": null,
+          "request_ingress_delay_ms": 0.0,
+          "sglang_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_bounded_carryover_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_fastserve_lite_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_penalty_only_scheduler_config_max_forwards_in_flight": null,
+          "vllm_v1_scheduler_config_max_forwards_in_flight": null
+        },
+        "override_diff": {
+          "vllm_v1_scheduler_config_num_blocks_mode": {
+            "input": "memory_planner_profiled",
+            "h4a4": "explicit"
+          },
+          "replica_config_attention_backend": {
+            "input": null,
+            "h4a4": "FLASHMLA_SPARSE_DSV4"
+          },
+          "replica_config_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "replica_config_indexer_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "metrics_config_store_frontier_stage_batch_ledger": {
+            "input": true,
+            "h4a4": false
+          },
+          "decode_cuda_graph_mode": {
+            "input": "full_decode_only",
+            "h4a4": "full_and_piecewise"
+          },
+          "vllm_v1_scheduler_config_num_blocks": {
+            "input": 0,
+            "h4a4": 109934
+          },
+          "metrics_config_output_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/metrics",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/metrics"
+          },
+          "metrics_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/cache"
+          },
+          "metrics_config_run_id": {
+            "input": "v4_balanced_native06",
+            "h4a4": "a10_p2_32_operator_path"
+          },
+          "measured_cc_backend_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/frontier_p0_probe_20261021/cc_cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/cc_cache"
+          },
+          "request_ingress_delay_ms": {
+            "input": 0.0,
+            "h4a4": 10.3
+          },
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": {
+            "input": 0.0,
+            "h4a4": 11.4
+          },
+          "vllm_v1_scheduler_config_max_forwards_in_flight": {
+            "input": null,
+            "h4a4": 19
+          },
+          "replica_config_network_device": {
+            "input": "h800_dgx",
+            "h4a4": "h200_dgx"
+          },
+          "analytical_kv_cache_transfer_config_nixl_read_completion": {
+            "input": "transfer_end",
+            "h4a4": "engine_step"
+          },
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": {
+            "input": null,
+            "h4a4": 2
+          },
+          "cudagraph_capture_sizes": {
+            "input": null,
+            "h4a4": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192,
+              200,
+              208,
+              216,
+              224,
+              232,
+              240,
+              248,
+              256
+            ]
+          },
+          "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file": {
+            "input": "./data/profiling/compute/{DEVICE}/{MODEL}/attention_kernel_only.csv",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv"
+          }
+        }
+      },
+      "status": "PASS_ONLY_ATTENTION_INPUT_CHANGED"
+    },
+    {
+      "case": "p2_64",
+      "pass": "pass1_all",
+      "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64",
+      "field": "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file",
+      "table": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+      "profiling_tables": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+          "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+          "rows": 4,
+          "consumers": [
+            "PREFILL/kernel_gap",
+            "DECODE/kernel_gap"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+          "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+          "rows": 41,
+          "consumers": [
+            "PREFILL/compute",
+            "DECODE/compute"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+          "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f",
+          "rows": 33,
+          "consumers": [
+            "PREFILL/moe",
+            "DECODE/moe"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+          "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+          "rows": 384,
+          "consumers": [
+            "PREFILL/collectives",
+            "DECODE/collectives"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+          "sha256": "7c54e9d12743ffe1f218d019a5fc33aa34eb738850585cd1a7477249416709f6",
+          "rows": 7105,
+          "consumers": [
+            "PREFILL/attention",
+            "DECODE/attention"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_block_kernel_only.csv",
+          "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+          "rows": 197,
+          "consumers": [
+            "PREFILL/runner_block",
+            "DECODE/runner_block"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_replay_kernel_only.csv",
+          "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+          "rows": 2941,
+          "consumers": [
+            "PREFILL/runner_replay",
+            "DECODE/runner_replay"
+          ]
+        }
+      ],
+      "a1": {
+        "enable_dummy_mode": {
+          "PREFILL": false,
+          "DECODE": false
+        },
+        "cc_backend_types": {
+          "PREFILL": "measured",
+          "DECODE": "measured"
+        },
+        "resolved_inputs": {
+          "PREFILL": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_replay_kernel_only.csv"
+          ],
+          "DECODE": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/model_runner_replay_kernel_only.csv"
+          ]
+        },
+        "step_cost_files_beside_inputs": [],
+        "no_step_cost_file_beside_inputs": true
+      },
+      "baseline_receipt": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/receipt.json",
+      "baseline_sha256": "f9c4c493d8fe0b04627c76ef992c34d480edcf70bd9f7882530394a145406366",
+      "changes": {
+        "added_fields": {
+          "analytical_kv_cache_transfer_config_nixl_read_completion": "transfer_end",
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": 0.0,
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": null,
+          "request_ingress_delay_ms": 0.0,
+          "sglang_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_bounded_carryover_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_fastserve_lite_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_penalty_only_scheduler_config_max_forwards_in_flight": null,
+          "vllm_v1_scheduler_config_max_forwards_in_flight": null
+        },
+        "override_diff": {
+          "vllm_v1_scheduler_config_num_blocks_mode": {
+            "input": "memory_planner_profiled",
+            "h4a4": "explicit"
+          },
+          "replica_config_attention_backend": {
+            "input": null,
+            "h4a4": "FLASHMLA_SPARSE_DSV4"
+          },
+          "replica_config_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "replica_config_indexer_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "metrics_config_store_frontier_stage_batch_ledger": {
+            "input": true,
+            "h4a4": false
+          },
+          "decode_cuda_graph_mode": {
+            "input": "full_decode_only",
+            "h4a4": "full_and_piecewise"
+          },
+          "vllm_v1_scheduler_config_num_blocks": {
+            "input": 0,
+            "h4a4": 112914
+          },
+          "metrics_config_output_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/metrics",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64/metrics"
+          },
+          "metrics_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64/cache"
+          },
+          "metrics_config_run_id": {
+            "input": "v4_balanced_native06",
+            "h4a4": "a10_p2_64_operator_path"
+          },
+          "measured_cc_backend_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/frontier_p0_probe_20261021/cc_cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64/cc_cache"
+          },
+          "request_ingress_delay_ms": {
+            "input": 0.0,
+            "h4a4": 10.3
+          },
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": {
+            "input": 0.0,
+            "h4a4": 11.4
+          },
+          "vllm_v1_scheduler_config_max_forwards_in_flight": {
+            "input": null,
+            "h4a4": 19
+          },
+          "replica_config_network_device": {
+            "input": "h800_dgx",
+            "h4a4": "h200_dgx"
+          },
+          "analytical_kv_cache_transfer_config_nixl_read_completion": {
+            "input": "transfer_end",
+            "h4a4": "engine_step"
+          },
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": {
+            "input": null,
+            "h4a4": 2
+          },
+          "cudagraph_capture_sizes": {
+            "input": null,
+            "h4a4": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192,
+              200,
+              208,
+              216,
+              224,
+              232,
+              240,
+              248,
+              256
+            ]
+          },
+          "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file": {
+            "input": "./data/profiling/compute/{DEVICE}/{MODEL}/attention_kernel_only.csv",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv"
+          }
+        }
+      },
+      "status": "PASS_ONLY_ATTENTION_INPUT_CHANGED"
+    },
+    {
+      "case": "p2_32",
+      "pass": "pass2_all",
+      "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32",
+      "field": "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file",
+      "table": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+      "profiling_tables": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+          "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+          "rows": 4,
+          "consumers": [
+            "PREFILL/kernel_gap",
+            "DECODE/kernel_gap"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+          "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+          "rows": 41,
+          "consumers": [
+            "PREFILL/compute",
+            "DECODE/compute"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+          "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f",
+          "rows": 33,
+          "consumers": [
+            "PREFILL/moe",
+            "DECODE/moe"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+          "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+          "rows": 384,
+          "consumers": [
+            "PREFILL/collectives",
+            "DECODE/collectives"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+          "sha256": "6d10a6996c07613a02ea9aa5577fe30ac3ad65397ceda0572843b02f2efc68ef",
+          "rows": 7105,
+          "consumers": [
+            "PREFILL/attention",
+            "DECODE/attention"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_block_kernel_only.csv",
+          "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+          "rows": 197,
+          "consumers": [
+            "PREFILL/runner_block",
+            "DECODE/runner_block"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_replay_kernel_only.csv",
+          "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+          "rows": 2941,
+          "consumers": [
+            "PREFILL/runner_replay",
+            "DECODE/runner_replay"
+          ]
+        }
+      ],
+      "a1": {
+        "enable_dummy_mode": {
+          "PREFILL": false,
+          "DECODE": false
+        },
+        "cc_backend_types": {
+          "PREFILL": "measured",
+          "DECODE": "measured"
+        },
+        "resolved_inputs": {
+          "PREFILL": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_replay_kernel_only.csv"
+          ],
+          "DECODE": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_replay_kernel_only.csv"
+          ]
+        },
+        "step_cost_files_beside_inputs": [],
+        "no_step_cost_file_beside_inputs": true
+      },
+      "baseline_receipt": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/receipt.json",
+      "baseline_sha256": "a6bbc64ad0cfd83af52a1359fe959c980fa89e0cfc1e366dfdbccde27a5d0813",
+      "changes": {
+        "added_fields": {
+          "analytical_kv_cache_transfer_config_nixl_read_completion": "transfer_end",
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": 0.0,
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": null,
+          "request_ingress_delay_ms": 0.0,
+          "sglang_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_bounded_carryover_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_fastserve_lite_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_penalty_only_scheduler_config_max_forwards_in_flight": null,
+          "vllm_v1_scheduler_config_max_forwards_in_flight": null
+        },
+        "override_diff": {
+          "vllm_v1_scheduler_config_num_blocks_mode": {
+            "input": "memory_planner_profiled",
+            "h4a4": "explicit"
+          },
+          "replica_config_attention_backend": {
+            "input": null,
+            "h4a4": "FLASHMLA_SPARSE_DSV4"
+          },
+          "replica_config_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "replica_config_indexer_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "metrics_config_store_frontier_stage_batch_ledger": {
+            "input": true,
+            "h4a4": false
+          },
+          "decode_cuda_graph_mode": {
+            "input": "full_decode_only",
+            "h4a4": "full_and_piecewise"
+          },
+          "vllm_v1_scheduler_config_num_blocks": {
+            "input": 0,
+            "h4a4": 109934
+          },
+          "metrics_config_output_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/metrics",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32/metrics"
+          },
+          "metrics_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32/cache"
+          },
+          "metrics_config_run_id": {
+            "input": "v4_balanced_native06",
+            "h4a4": "a10_p2_32_operator_path"
+          },
+          "measured_cc_backend_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/frontier_p0_probe_20261021/cc_cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32/cc_cache"
+          },
+          "request_ingress_delay_ms": {
+            "input": 0.0,
+            "h4a4": 10.3
+          },
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": {
+            "input": 0.0,
+            "h4a4": 11.4
+          },
+          "vllm_v1_scheduler_config_max_forwards_in_flight": {
+            "input": null,
+            "h4a4": 19
+          },
+          "replica_config_network_device": {
+            "input": "h800_dgx",
+            "h4a4": "h200_dgx"
+          },
+          "analytical_kv_cache_transfer_config_nixl_read_completion": {
+            "input": "transfer_end",
+            "h4a4": "engine_step"
+          },
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": {
+            "input": null,
+            "h4a4": 2
+          },
+          "cudagraph_capture_sizes": {
+            "input": null,
+            "h4a4": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192,
+              200,
+              208,
+              216,
+              224,
+              232,
+              240,
+              248,
+              256
+            ]
+          },
+          "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file": {
+            "input": "./data/profiling/compute/{DEVICE}/{MODEL}/attention_kernel_only.csv",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv"
+          }
+        }
+      },
+      "status": "PASS_ONLY_ATTENTION_INPUT_CHANGED"
+    },
+    {
+      "case": "p2_64",
+      "pass": "pass2_all",
+      "root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64",
+      "field": "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file",
+      "table": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+      "profiling_tables": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+          "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+          "rows": 4,
+          "consumers": [
+            "PREFILL/kernel_gap",
+            "DECODE/kernel_gap"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+          "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+          "rows": 41,
+          "consumers": [
+            "PREFILL/compute",
+            "DECODE/compute"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+          "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f",
+          "rows": 33,
+          "consumers": [
+            "PREFILL/moe",
+            "DECODE/moe"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+          "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+          "rows": 384,
+          "consumers": [
+            "PREFILL/collectives",
+            "DECODE/collectives"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+          "sha256": "6d10a6996c07613a02ea9aa5577fe30ac3ad65397ceda0572843b02f2efc68ef",
+          "rows": 7105,
+          "consumers": [
+            "PREFILL/attention",
+            "DECODE/attention"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_block_kernel_only.csv",
+          "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+          "rows": 197,
+          "consumers": [
+            "PREFILL/runner_block",
+            "DECODE/runner_block"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_replay_kernel_only.csv",
+          "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+          "rows": 2941,
+          "consumers": [
+            "PREFILL/runner_replay",
+            "DECODE/runner_replay"
+          ]
+        }
+      ],
+      "a1": {
+        "enable_dummy_mode": {
+          "PREFILL": false,
+          "DECODE": false
+        },
+        "cc_backend_types": {
+          "PREFILL": "measured",
+          "DECODE": "measured"
+        },
+        "resolved_inputs": {
+          "PREFILL": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_replay_kernel_only.csv"
+          ],
+          "DECODE": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_device_event.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/cpu_overhead/h200_dgx/deepseek-ai/DeepSeek-V4-Flash/cpu_overheads_kernel_only.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/all_reduce.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/send_recv.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_prefill_consumer_active.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_producer_send_path.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_receiver_head.csv",
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/other_overhead/h200/deepseek-ai/DeepSeek-V4-Flash/pp_stage_boundary.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_block_kernel_only.csv",
+            "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/model_runner_replay_kernel_only.csv"
+          ]
+        },
+        "step_cost_files_beside_inputs": [],
+        "no_step_cost_file_beside_inputs": true
+      },
+      "baseline_receipt": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/receipt.json",
+      "baseline_sha256": "f9c4c493d8fe0b04627c76ef992c34d480edcf70bd9f7882530394a145406366",
+      "changes": {
+        "added_fields": {
+          "analytical_kv_cache_transfer_config_nixl_read_completion": "transfer_end",
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": 0.0,
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": null,
+          "request_ingress_delay_ms": 0.0,
+          "sglang_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_bounded_carryover_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_fastserve_lite_scheduler_config_max_forwards_in_flight": null,
+          "sj2q_penalty_only_scheduler_config_max_forwards_in_flight": null,
+          "vllm_v1_scheduler_config_max_forwards_in_flight": null
+        },
+        "override_diff": {
+          "vllm_v1_scheduler_config_num_blocks_mode": {
+            "input": "memory_planner_profiled",
+            "h4a4": "explicit"
+          },
+          "replica_config_attention_backend": {
+            "input": null,
+            "h4a4": "FLASHMLA_SPARSE_DSV4"
+          },
+          "replica_config_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "replica_config_indexer_kv_cache_dtype": {
+            "input": null,
+            "h4a4": "fp8"
+          },
+          "metrics_config_store_frontier_stage_batch_ledger": {
+            "input": true,
+            "h4a4": false
+          },
+          "decode_cuda_graph_mode": {
+            "input": "full_decode_only",
+            "h4a4": "full_and_piecewise"
+          },
+          "vllm_v1_scheduler_config_num_blocks": {
+            "input": 0,
+            "h4a4": 112914
+          },
+          "metrics_config_output_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/metrics",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64/metrics"
+          },
+          "metrics_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64/cache"
+          },
+          "metrics_config_run_id": {
+            "input": "v4_balanced_native06",
+            "h4a4": "a10_p2_64_operator_path"
+          },
+          "measured_cc_backend_config_cache_dir": {
+            "input": "/data/ycfeng/tmp/glm53_dsv4/frontier_p0_probe_20261021/cc_cache",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64/cc_cache"
+          },
+          "request_ingress_delay_ms": {
+            "input": 0.0,
+            "h4a4": 10.3
+          },
+          "analytical_kv_cache_transfer_config_request_handoff_delay_ms": {
+            "input": 0.0,
+            "h4a4": 11.4
+          },
+          "vllm_v1_scheduler_config_max_forwards_in_flight": {
+            "input": null,
+            "h4a4": 19
+          },
+          "replica_config_network_device": {
+            "input": "h800_dgx",
+            "h4a4": "h200_dgx"
+          },
+          "analytical_kv_cache_transfer_config_nixl_read_completion": {
+            "input": "transfer_end",
+            "h4a4": "engine_step"
+          },
+          "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": {
+            "input": null,
+            "h4a4": 2
+          },
+          "cudagraph_capture_sizes": {
+            "input": null,
+            "h4a4": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192,
+              200,
+              208,
+              216,
+              224,
+              232,
+              240,
+              248,
+              256
+            ]
+          },
+          "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file": {
+            "input": "./data/profiling/compute/{DEVICE}/{MODEL}/attention_kernel_only.csv",
+            "h4a4": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv"
+          }
+        }
+      },
+      "status": "PASS_ONLY_ATTENTION_INPUT_CHANGED"
+    }
+  ]
+}

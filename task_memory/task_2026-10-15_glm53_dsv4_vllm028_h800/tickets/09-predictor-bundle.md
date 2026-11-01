@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Applied forward-attention approval; supplement verification/full tables PASS, reviewed current forward code and 31 tests complete; median3 qualification and four CPU replays running. |
 | 2026-11-01 | Added the decision follow-up: collective rule PASS, CSA FULL decode cause and phase-level held-out, supplement blocked by I-009; qualification remains open. |
 | 2026-11-01 | Added the A6 noise-floor and three-run-target follow-up; qualification remains open pending YC decisions. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
@@ -73,6 +74,12 @@ Collective follow-up (2026-11-01): all eight curve summaries and source medians 
 Noise-floor follow-up (2026-11-01): the four failing attention scopes fail at the noise floor of their single-run targets. On the 989 workloads with three independent runs, median-of-three targets make three of the four pass with unchanged folds and thresholds; index_compressor_fused_compress_store stays FAIL (p90 13.86%), driven by CSA FULL decode (21.64% p90 on that key). P2 uses exact collective points only; pass-to-pass deviation of those points is 0.81% (P2-64) and 5.76% (P2-32) time-weighted. Nothing is promoted; the next step waits on three YC decisions (attention three-run recipe, CSA FULL decode index compression, collective qualification rule). See [noise-floor report](../test_report_2026-11-01_a6_noise_floor.md).
 
 Decision follow-up (2026-11-01): YC decided D-A6-THREE-RUN, D-A6-CSA-FULL-CAUSE and D-COLLECTIVE-EXACT-REPEATABILITY. The collective input qualifies for both P2 replays under the exact-point rule (time-weighted maximum pass deviation 5.46% for P2-32 and 0.78% for P2-64). The CSA FULL decode variation comes from the start order of the two concurrent fused compress-store kernels in FULL graph replay. The composed attention phase repeats within 2%; on the recorded A6 folds it is within 0.69/2.07% median/p90 overall and within 3.70% p90 in every key. The four attention scopes stay FAIL until YC chooses a correction (recommended: judge concurrent scopes on the composed phase). The approved supplement passes are blocked by I-009 (no DNS). See [cause report](../test_report_2026-11-01_a6_csa_full_cause.md) and [collective rule report](../test_report_2026-11-01_collective_exact_repeatability.md).
+
+### Approved forward-attention continuation — 2026-11-01
+
+Requirements D-A6-FORWARD-ATTENTION supersedes the pending scope-versus-phase decision above. This ticket and 05 require full-model attention qualification per complete workload and forward class against measured layer windows, with unchanged folds and 5%/10% limits. Per-scope and per-key phase errors are diagnostics for every scope; coverage omissions remain explicit. The simulator, predictor and four clean E2E gates are unchanged.
+
+D-A6-PASS-REPLAYS approves four CPU comparisons using two independent attention generations, keeping measured CC/K19/ingress/workload/reference inputs fixed. B29 is the reference-table baseline. Supplement `exp-1101-143721-849401` and selected-copy/workload/business checks PASS; all 1,421 workloads now have three runs, and full table-field/input bindings PASS. Forward code/current-table execution and 31 tests are complete, with no phase-review findings: three complete forward classes PASS, but 48 omitted workloads keep overall attention NOT_EVALUABLE. The original median3 qualification and four CPU P2 replays are running; exact commands/PIDs are in the root continuation report. No formal table promotion or new GPU allocation is approved. Full ticket remains OPEN.
 
 ## Historical route — DSV4 H800 mainline (2026-10-25)
 

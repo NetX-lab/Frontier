@@ -1,0 +1,45 @@
+{
+  "classification": "D-A6-PASS-REPLAYS_DIAGNOSTIC",
+  "status": "RUNNING",
+  "command": [
+    "timeout",
+    "86400s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py",
+    "p2_32",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32",
+    "--field",
+    "random_forrest_execution_time_predictor_config_atten_kernel_only_input_file=/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "source_commit": "0ceb45e4bca58e5cd660a8a944930d39113b92ef",
+  "driver_sha256": "3172d0d0a326382c59e3c9637fc1f1b756059064087f70e555b14700c2a8b527",
+  "python": "3.10.6",
+  "started_utc": "2026-11-01T07:53:42.693112+00:00",
+  "run_root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/logs/pass1_all_p2_32.log",
+  "gate_root": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32",
+  "supervisor_pid": 223761,
+  "as_limit_bytes": 64424509440,
+  "preflight": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_pass_replays_20261101/preflight.json",
+  "existing_config": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/config.json",
+    "sha256": "6e01b504a9079141d35839cebc03ea6c5fd33cd1f5db58aa93d9dd4039972606",
+    "reason": "SimulationConfig preflight wrote only config.json; no model cache, simulator receipt or run output exists."
+  },
+  "baseline_receipt": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/receipt.json",
+  "pid": 223796,
+  "process_session_id": 223796
+}

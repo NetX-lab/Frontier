@@ -1,0 +1,161 @@
+{
+  "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_forward_attention_20261101/current_phase_heldout.json",
+  "sha256": "d17258d6f5cec99a8042b76aae6e89a7dfbaba779173e75465cca3eae9ca0274",
+  "source_top_keys": [
+    "classification",
+    "attention_verdict",
+    "e2e_acceptance",
+    "input_result",
+    "input_result_sha256",
+    "input_table",
+    "folds",
+    "limits",
+    "evaluated_rows",
+    "total_rows",
+    "coverage_skipped_rows",
+    "coverage_skips",
+    "attention",
+    "layer_phase_classification",
+    "overall",
+    "by_key",
+    "rows"
+  ],
+  "attention": {
+    "attention_verdict": "NOT_EVALUABLE",
+    "complete_workloads": 1373,
+    "omitted_workloads": 48,
+    "partially_evaluable_workloads": 24,
+    "fully_unevaluable_workloads": 24,
+    "by_group": [
+      {
+        "key": [
+          "FULL",
+          "decode"
+        ],
+        "count": 464,
+        "undefined_relative_error_count": 0,
+        "median_absolute_relative_error": 0.006296240656761721,
+        "p90_absolute_relative_error": 0.016678181842510895,
+        "rows_above_10_percent": 0,
+        "signed_median_relative_error": -0.003398305401314582,
+        "signed_mean_relative_error": -0.002763471968386554,
+        "within_a6_limits": true,
+        "verdict": "PASS",
+        "total_workloads": 480,
+        "omitted_workloads": 16
+      },
+      {
+        "key": [
+          "FULL",
+          "dummy"
+        ],
+        "count": 0,
+        "undefined_relative_error_count": 0,
+        "median_absolute_relative_error": null,
+        "p90_absolute_relative_error": null,
+        "rows_above_10_percent": 0,
+        "signed_median_relative_error": null,
+        "signed_mean_relative_error": null,
+        "within_a6_limits": false,
+        "verdict": "NOT_EVALUABLE",
+        "total_workloads": 6,
+        "omitted_workloads": 6
+      },
+      {
+        "key": [
+          "NONE",
+          "dummy"
+        ],
+        "count": 0,
+        "undefined_relative_error_count": 0,
+        "median_absolute_relative_error": null,
+        "p90_absolute_relative_error": null,
+        "rows_above_10_percent": 0,
+        "signed_median_relative_error": null,
+        "signed_mean_relative_error": null,
+        "within_a6_limits": false,
+        "verdict": "NOT_EVALUABLE",
+        "total_workloads": 1,
+        "omitted_workloads": 1
+      },
+      {
+        "key": [
+          "NONE",
+          "prefill"
+        ],
+        "count": 0,
+        "undefined_relative_error_count": 0,
+        "median_absolute_relative_error": null,
+        "p90_absolute_relative_error": null,
+        "rows_above_10_percent": 0,
+        "signed_median_relative_error": null,
+        "signed_mean_relative_error": null,
+        "within_a6_limits": false,
+        "verdict": "NOT_EVALUABLE",
+        "total_workloads": 1,
+        "omitted_workloads": 1
+      },
+      {
+        "key": [
+          "PIECEWISE",
+          "decode"
+        ],
+        "count": 469,
+        "undefined_relative_error_count": 0,
+        "median_absolute_relative_error": 0.005771787906713109,
+        "p90_absolute_relative_error": 0.016464283972151217,
+        "rows_above_10_percent": 0,
+        "signed_median_relative_error": -0.001857097019514435,
+        "signed_mean_relative_error": -0.0019986095767066414,
+        "within_a6_limits": true,
+        "verdict": "PASS",
+        "total_workloads": 480,
+        "omitted_workloads": 11
+      },
+      {
+        "key": [
+          "PIECEWISE",
+          "dummy"
+        ],
+        "count": 0,
+        "undefined_relative_error_count": 0,
+        "median_absolute_relative_error": null,
+        "p90_absolute_relative_error": null,
+        "rows_above_10_percent": 0,
+        "signed_median_relative_error": null,
+        "signed_mean_relative_error": null,
+        "within_a6_limits": false,
+        "verdict": "NOT_EVALUABLE",
+        "total_workloads": 6,
+        "omitted_workloads": 6
+      },
+      {
+        "key": [
+          "PIECEWISE",
+          "first_tail"
+        ],
+        "count": 440,
+        "undefined_relative_error_count": 0,
+        "median_absolute_relative_error": 0.0065352885688717,
+        "p90_absolute_relative_error": 0.018866524387944825,
+        "rows_above_10_percent": 0,
+        "signed_median_relative_error": -0.0034165619114384206,
+        "signed_mean_relative_error": -0.003454856907663667,
+        "within_a6_limits": true,
+        "verdict": "PASS",
+        "total_workloads": 447,
+        "omitted_workloads": 7
+      }
+    ]
+  },
+  "diagnostic_section_sizes": {
+    "input_table": 2,
+    "folds": 2,
+    "limits": 2,
+    "coverage_skipped_rows": 35,
+    "coverage_skips": 182,
+    "overall": 4,
+    "by_key": 35,
+    "rows": 6923
+  }
+}

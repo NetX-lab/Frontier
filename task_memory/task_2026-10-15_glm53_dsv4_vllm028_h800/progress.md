@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Approved A6 continuation: supplement business/integrity and complete tables PASS; reviewed forward code/current output complete, 31 tests PASS; four CPU replays and median3 qualification started once. |
 | 2026-11-01 | YC asked to judge the A6 CSA FULL correction from the user's side; added user-impact analysis and report section 6 with a revised recommendation; awaiting decision. |
 | 2026-11-01 | I-009 resolved; A6 supplement job `exp-1101-143721-849401` submitted once and Running. |
 | 2026-11-01 | Completed YC decisions C (exact-point collective rule: P2-32 and P2-64 PASS) and B (CSA FULL decode cause; phase-level held-out within A6 limits on all 15 keys); A is blocked by I-009 (no DNS). Next actions wait on a networked launch and YC's choice of the B correction. |
@@ -352,6 +353,25 @@
 
 
 <a id="current-session-handoff--2026-10-25-mainline-correction"></a>
+### Forward-attention continuation evidence — 2026-11-01
+
+- **completed**: approved decisions recorded in requirements/plan/tickets 05/09. A ended Succeeded (container exit 0/restart 0, 3,349 seconds / 0.9302778 GPUh); launcher log says `FINAL_STATUS succeeded`.
+- **completed**: 11 selected files / 440,302,960 bytes with matching remote/local SHA-256. The first phase-status read returned `running`; a later directory enumeration/read returned `succeeded`, and the unchanged collector passed. No GPU/worker/collector change or retry allocation occurred.
+- **completed**: repeatability PASS_IDENTITY_AND_GEOMETRY (864 steps/4,320 new rows, zero identity/count/geometry mismatches; 29,376 reference medians reproduced) -> unchanged business verifier PASS. Frozen graph-mode counts and 864 nonempty archived traces verified.
+- **completed**: all 1,421 workloads now have three measured runs. Median3 replaces 96,620 kernel-time targets; independent passes replace all same-pass timing statistics. Two 7,105-row pass tables each pass 1,298,690 timing-field, 296,965 count-field and 760,235 non-timing-field assertions. All four resolved configs differ from B29 only in the attention generation; runner siblings and all six other inputs match. Receipts: `a6_pass_replays_20261101/{rows_manifest.json,tables_manifest.json,preflight.json}`.
+- **completed**: B-FORWARD-GATE implementation and primary 31-test suite; full current-table invocation exit 0/322.008842s. Three complete forward classes PASS, but 48 workload omissions/four unevaluable classes keep overall attention NOT_EVALUABLE. B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) reports No actionable findings. Input exploration (`ses_e69f9250effeJF2Iqsv5BW073s`) is complete.
+- **completed**: scoped source commits `21ab3b31` (forward qualification), `fb8670ac` (coherent independent-pass tables), `e033c2cc` (already-executed supplement completion scripts); no `frontier/` or published data change. [Phase checkpoint](check_progress_2026-11-01_forward_attention.md): 4 PASS / 2 TODO, stale current-route/Next-actions corrected, original qualification/replay runs preserved.
+- **in-progress**: four actual CPU P2 replays started at 07:53:42 UTC; supervisor 223761, original timeout PIDs pass1/P2-32 223796, pass1/P2-64 223794, pass2/P2-32 223800, pass2/P2-64 223798. Original supervisor runs each gate once after success. Exact `*_command.json` files under `a6_pass_replays_20261101`; run/log/gate roots `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/`.
+- **in-progress**: same-fold median3 A6/forward pipeline started at 07:54:32 UTC; supervisor 236919, timeout PID 237030, `a6_forward_attention_20261101/median3_a6_command.json`. After A6 fits finish, the supervisor runs the approved forward qualification. No source/runtime/table-promotion change.
+- Evidence and exact commands: [continuation test report](test_report_2026-11-01_forward_attention_continuation.md). No new formal-table publication, GPU run, prefill expansion or E2E closure.
+
+### Historical restart continuation — before completed integrity/table generation
+
+- **completed before restart, not repeated**: primary phase/heldout/multipass suite 31 PASS (3.85s), code implementation, selected 11-file copy, current-table fold/aggregation verification. Retained `a6_forward_attention_20261101/current_aggregation.json` records 1,373 complete / 48 omitted workload units and three main forward classes PASS. Four other classes remain NOT_EVALUABLE, so overall attention is NOT_EVALUABLE; no broad accuracy claim.
+- **in-progress**: fresh all-scope current-table invocation (background shell `sh_196119829001zIT8h1deHASn6x`), receipt `a6_forward_attention_20261101/current_command.json`, identical-input/fold cache reuse, output `current_phase_heldout.json`. This finishes diagnostics absent from the earlier retained selected-scope output; no GPU or P2 replay has started.
+- **in-progress, resumed same IDs only**: PASS-REPLAY-INPUTS needs the exact retained source-row/raw/config/cache paths; B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) needs phase-level findings. No duplicate agents or completed checks were restarted.
+- **pending**: repeatability producer -> business verification -> complete three-run rows/tables -> four CPU P2 replays and median3 held-out run. Unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched; changes are not yet committed.
+
 ## Current session handoff — Codex CLI (2026-10-31)
 
 **State: in-progress; refreshed2026-11-01.** Decision46 and D-CODEX-DIRECT-RJOB control DSV4 H200 P2-32/P2-64, then H800; GLM stays paused. Measured CC and formalK19 remain unchanged. Numerical P2-32 PASS is not full qualification; B29 P2-64 repeat1 TTFT remains12.254940665% FAIL.
@@ -394,9 +414,9 @@
 - in-progress (2026-11-01 06:37 UTC, D-A6-THREE-RUN): name resolution works again (I-009 resolved). Quota check: no personal non-preemptible H200 job before this one. Submitted once: `exp-1101-143721-849401`, creator `i-fengyicheng`, non-preemptible, `step_main`, 1 H200, NFS source the build worktree on this host, Running at 06:38 UTC; launcher pid 3087410 under `setsid nohup`, log `/data/ycfeng/tmp/a6_supplement_passes_20261101_01/launcher.log`. Details in issues.md I-009.
 
 Next actions:
-1. A — launch the approved supplement passes from a networked runtime with the two I-009 steps (quota check, then launcher; keep the launcher alive). Afterwards collect and verify the passes, build the median-of-three table for all 1,421 workloads, rerun A6 with the same folds and thresholds (diagnostic), and record GPUh against the remaining approximate 2.160175 GPUh.
-2. B — YC chooses the correction for the concurrent attention scopes. Recommended option 1: judge them on the composed attention phase per key (all 15 keys pass now; no GPU time). Option 2 (more samples per row and a mean target) needs GPU time and a predictor-target change; option 3 (serialized measurement) is not recommended. If YC adopts option 1, the A result becomes a robustness check, not a qualification prerequisite.
-3. Then NIXL and memory input qualification, the formal P2 recheck, then H800. Tickets 05/09/11/19 remain open, GLM paused. All comparison runs are terminal; do not regenerate their gates. The unselected 16-repeat draft stays unexecuted. Unrelated `.cortexkit/`, `.pi/`, and `remaining_measurements/` remain preserved.
+1. Finish the original same-fold median3 A6/forward pipeline; preserve omissions and report complete-forward errors. A's GPU supplement, business checks and complete three-run table generation already passed; do not submit again.
+2. Finish the four original independent-pass P2 CPU replays and once-run gates; compare all four metrics against B29 and every admitted clean repeat. Restart recovery reads original PIDs/receipts and never duplicates a live/completed run.
+3. Record the results before any further table-promotion decision. NIXL/memory input qualification, formal P2 acceptance and then H800 remain separate unfinished work; tickets 05/09/11/19 stay open, GLM paused. F1–F4 comparisons are terminal; new pass replays are running. The unselected 16-repeat draft and unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched.
 
 ## Historical session handoff — 2026-10-25 mainline correction
 

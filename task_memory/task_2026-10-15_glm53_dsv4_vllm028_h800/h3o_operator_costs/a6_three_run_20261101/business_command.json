@@ -1,0 +1,25 @@
+{
+  "command": [
+    "timeout",
+    "1200s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/verify_business.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "python": "3.10.6",
+  "script_sha256": "9e11bc1c5f9deb785e7a549a0ea85ea8462ce05f92270a021b134a0fc6ce8c04",
+  "started_utc": "2026-11-01T07:48:13.082873+00:00",
+  "status": "FINISHED",
+  "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/business_verification.json",
+  "log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/verify_business_final.log",
+  "exit_code": 0,
+  "elapsed_seconds": 11.878026741091162,
+  "finished_utc": "2026-11-01T07:48:24.961120+00:00",
+  "output_sha256": "6328d390243cd2443c550e9887beee511d50c08d7abcef60e806ffd1bffad47b"
+}

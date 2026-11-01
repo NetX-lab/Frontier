@@ -1,0 +1,109 @@
+{
+  "classification": "DIAGNOSTIC_THREE_RUN_ROWS",
+  "inputs": {
+    "reference_raw": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+        "sha256": "1c516e7aea195742ba31208a033e6ff6352ff601393623786a9e9dbe8b222ca2",
+        "selected_records": {
+          "engine": 1,
+          "step": 288,
+          "call": 44640,
+          "interval": 170178
+        }
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+        "sha256": "6bb1a615d4492e78907bcf5af2733053e9c8b3944a2889c0062e32166ddaa590",
+        "selected_records": {
+          "engine": 1,
+          "step": 144,
+          "call": 22320,
+          "interval": 84846
+        }
+      }
+    ],
+    "raw": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/a6_supplement_passes_20261101_download/A6_SUPPLEMENT_PASSES/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+        "sha256": "f5dbe26175045aad70f55806829277c8c5dd280fb06af3b3cf30d58ba80e5ca0",
+        "selected_records": {
+          "engine": 1,
+          "step": 576,
+          "call": 89280,
+          "interval": 340356
+        }
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/a6_supplement_passes_20261101_download/A6_SUPPLEMENT_PASSES/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+        "sha256": "d6c9f1482bd258542e0c6d8b1d76623a54ad9ad163b041a8c5ad11939b5af734",
+        "selected_records": {
+          "engine": 1,
+          "step": 288,
+          "call": 44640,
+          "interval": 169692
+        }
+      }
+    ],
+    "shared_rows": [
+      {
+        "path": "/data/ycfeng/tmp/b13r_accept/after/rows.json",
+        "sha256": "ba1ad088898dbe611323d3b86a9becd67c71486402d5ac428697a1b117eda575",
+        "rows": 4945
+      },
+      {
+        "path": "/data/ycfeng/tmp/g2h_accept/rows_01/rows.json",
+        "sha256": "ad8cd954a2bf7f1a02b2f660895ef61b88e06792177f84f1bcfe6ee04b22b1a8",
+        "rows": 4945
+      },
+      {
+        "path": "/data/ycfeng/tmp/g2h_accept/rows_04/rows.json",
+        "sha256": "9006bbabd8146dd2f327c1464c3acef522febbad1df1282e7c6ce58cd311a605",
+        "rows": 4945
+      }
+    ]
+  },
+  "package_plan": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_plan.json",
+  "case_mapping": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/case_mapping.json",
+  "supplement_workloads": 432,
+  "supplement_rows": 2160,
+  "shared_workloads": 989,
+  "shared_rows": 4945,
+  "combined_order": [
+    "G1h-02 + G1h-s01",
+    "G2h-01 + supplement pass 1",
+    "G2h-04 + supplement pass 2"
+  ],
+  "outputs": {
+    "supplement_reference": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/supplement_reference/rows.json",
+      "rows": 2160,
+      "sha256": "b4277965765894781492a3f425e638173a8aba4d842c4088451f2fe0da1525de"
+    },
+    "combined_reference": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/combined_reference/rows.json",
+      "rows": 7105,
+      "sha256": "9d5a44b38cf51bbdeacf53db3a6b1d66a89bc6e4ed5efd620d098c547fefc5eb"
+    },
+    "supplement_pass1": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/supplement_pass1/rows.json",
+      "rows": 2160,
+      "sha256": "e1eb538c5b53cc297577507f52405ca3ea47cb27a110fcd1c347e322f07ed93a"
+    },
+    "combined_pass1": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/combined_pass1/rows.json",
+      "rows": 7105,
+      "sha256": "ba08f3999db5d7c472aea5ce6f8b213089b49cb0b180c800cbf847b0d2b42817"
+    },
+    "supplement_pass2": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/supplement_pass2/rows.json",
+      "rows": 2160,
+      "sha256": "3c58a7bd6e95be14d89187faadad179a06da8dc34d501c2205e79cb0cd85a170"
+    },
+    "combined_pass2": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/combined_pass2/rows.json",
+      "rows": 7105,
+      "sha256": "60261c9e9c8a87cfc30d2e2bbdd5b9f4b533deca3e7c41172494962a93601ee5"
+    }
+  }
+}

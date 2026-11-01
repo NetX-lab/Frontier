@@ -1,0 +1,42 @@
+{
+  "command": [
+    "timeout",
+    "1200s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_repeatability.py",
+    "--package-plan",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_plan.json",
+    "--case-mapping",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/case_mapping.json",
+    "--reference-raw",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/download/G1H_SUPPLEMENT/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+    "--raw",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_supplement_passes_20261101_download/A6_SUPPLEMENT_PASSES/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl",
+    "/data/ycfeng/tmp/glm53_dsv4/a6_supplement_passes_20261101_download/A6_SUPPLEMENT_PASSES/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl",
+    "--published-table",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/repeatability_result.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "python": "3.10.6",
+  "source_commit": "0ceb45e4bca58e5cd660a8a944930d39113b92ef",
+  "script_sha256": "cd63ebc8cec7e4bf3dc16448a5aaabc6d4ae8bb6ee0c9f2dcc45383f36e71b94",
+  "started_utc": "2026-11-01T07:46:37.777670+00:00",
+  "status": "FINISHED",
+  "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/repeatability_result.json",
+  "log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/repeatability.log",
+  "exit_code": 0,
+  "elapsed_seconds": 61.11192863015458,
+  "finished_utc": "2026-11-01T07:47:38.903017+00:00",
+  "output_sha256": "7d565417e97152428245843a5ca86f3aa0a824ee7c4064dff7a4d400c02bff65"
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | YC approved D-A6-FORWARD-ATTENTION and D-A6-PASS-REPLAYS: forward-level attention qualification and four CPU P2 replays using independent pass tables. |
 | 2026-11-01 | Recorded YC's request to judge the A6 CSA FULL correction from the simulator user's side (a same-configuration vLLM comparison); discussion only, no correction decided. |
 | 2026-11-01 | Recorded YC's three A6 noise-floor decisions: three-run attention targets, CSA FULL decode cause investigation, and the exact-point collective repeatability rule. |
 | 2026-10-31 | Recorded the original Codex CLI continuation request and D-CODEX-DIRECT-RJOB; retained decision 46 and formal input/admission boundaries. |
@@ -149,7 +150,15 @@
 > 进行b的探讨。我认为当前的方案都只是围绕在 判定层面的解析上，即我们关注的是，如何修正判定，来使得其契合真实系统行为。我认为这一个视角的问题在于，未从user角度来考虑：对于一般使用该simulator的user，其并不会做如此细粒度的判定分析（默认其不会运行如此细粒度的groundtruth），其大概率行为可能包含，运行一个同等运行配置的vllm来对比frontier的预测结果。我们要做的，是让frontier的结果尽可能贴近 一般vllm在运行过程中的表现和性能（不能假设使用simulator的user会去采集vllm本身的细粒度来解释为什么模拟器没达标）。
 > 基于该点和当前simualtor已有的设计，你认为对b的修正方案应该是什么，为什么？
 
-Status: discussion. The lead's answer and evidence are in [the CSA FULL report, section 6](test_report_2026-11-01_a6_csa_full_cause.md). No correction is decided; the scope stays FAIL until YC decides.
+The proposal and evidence are in [the CSA FULL report, section 6](test_report_2026-11-01_a6_csa_full_cause.md). YC approved both questions below on 2026-11-01 UTC.
+
+[Original Request — approval]
+> 批准，继续
+
+The same approval was sent twice; it is one authorization, not a doubled run allocation.
+
+- **D-A6-FORWARD-ATTENTION** (question 1: approve forward-level A6 attention qualification): evaluate each complete workload's full-model attention time, weighting each predicted layer group by the configured model's layer counts, against its measured layer windows. Retain the recorded KFold 5 / seed 1234 assignment and median 5% / p90 10% limits. Per-scope and per-key phase errors remain diagnostics for all scopes, with no concurrent/serial distinction. No simulator, predictor, scope timing, or E2E gate change is authorized. Implement through `tests/analysis/v4_attention_phase_heldout.py`, verify the current input, then the new median-of-three table. Coverage omissions remain explicit and do not become qualified workloads. This supersedes the scope-level attention verdict only; collective qualification is unchanged.
+- **D-A6-PASS-REPLAYS** (question 2: approve independent-pass P2 comparisons): after the approved A6 supplement passes finish and pass integrity checks, build one attention table from each complete independent pass. Reuse B29 as the reference-table replay and execute four new CPU replays: P2-32 and P2-64 for each of the two other passes. Keep measured CC, K19, ingress/handoff delays, requests, clean references, and all non-attention inputs fixed. Compare TTFT, TPOT, E2E, and THPT across all three table generations and against every admitted native repeat. These are diagnostic sensitivity runs, not promotion of new formal tables. No new GPU run or table publication is approved; D-A6-THREE-RUN still requires a further decision before formal promotion.
 
 ## [Original Request / Decision] 2026-11-01 — A6 noise-floor decisions (D-A6-THREE-RUN, D-A6-CSA-FULL-CAUSE, D-COLLECTIVE-EXACT-REPEATABILITY)
 

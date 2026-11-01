@@ -1,0 +1,99 @@
+# Forward-attention qualification and independent-pass replay continuation
+
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-11-01 | Supplement business verification, complete three-run tables, current-table forward qualification and review complete; four CPU replays and median3 qualification running. |
+
+## Scope and expected results
+
+YC approved `D-A6-FORWARD-ATTENTION` and `D-A6-PASS-REPLAYS` in `requirements.md`. Expected: full-model attention qualification against measured layer windows on unchanged KFold 5 / seed 1234 assignments, median absolute error <=5% and p90 <=10%; explicit workload exclusions; all scope/phase diagnostics retained. Four CPU P2 replays vary only the attention table generation and compare TTFT, TPOT, E2E and THPT with B29 and all three clean native repeats. These runs do not authorize table publication, simulator changes, new GPU submissions, or relaxation of E2E gates.
+
+Environment: repository `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`; local verification uses `/data/ycfeng/envs/frontier-py310/bin/python` (Python 3.10.6), `PYTHONPATH=$PWD:$PWD/tests/analysis`, `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR=/data/ycfeng/tmp`. No conda activation is used.
+
+## Supplement terminal and collection
+
+- Job `exp-1101-143721-849401`: personal creator `i-fengyicheng`, one non-preemptible H200, `step_main`, node `gpu-h200-1080.lgcm.sh.istep.fun`, platform and replica Succeeded, container exit 0 / restart 0. Worker Python 3.12.3, vLLM 0.28.0. Exact platform receipt: `h3o_operator_costs/a6_three_run_20261101/platform_final.json`.
+- Container interval: 06:37:43--07:33:32 UTC, 3,349 seconds = 0.9302778 GPUh. Launcher log create-to-success interval: 3,375.649 seconds = 0.9376803 GPUh. These are observed intervals, not a billed-usage reading. `launch_command.json` explicitly records that the original detached wrapper and shell exit code were not captured; its elapsed value is reconstructed from launcher log timestamps.
+- Command: `env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp timeout 900s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/collect_selected.py`.
+- First attempt FAIL: `AssertionError: running` from the cloud phase status, despite platform/container success. No output directory was created. Source inspection confirmed the worker atomically replaces `status.json` after archival. A subsequent directory enumeration and read returned `succeeded` with the complete archive list, without changing the worker, collector, or cloud bytes. A cross-client cached directory entry is an inference; the read transition is observed.
+- Unchanged collector rerun PASS: 11 files / 440,302,960 bytes, each local SHA-256 equals its selected remote SHA-256. Raw/download root: `/data/ycfeng/tmp/glm53_dsv4/a6_supplement_passes_20261101_download`; persistent receipt: `h3o_operator_costs/a6_three_run_20261101/download.json`. Completed profiler traces remain under the approved personal cloud prefix, not downloaded wholesale.
+- Business verifier initial attempt did not test the workload: `FileNotFoundError: repeatability_result.json`. This was a missing execution prerequisite, not a measurement failure; the unchanged verifier passed after its producer completed.
+- Repeatability producer PASS_IDENTITY_AND_GEOMETRY: 864/864 planned steps, 4,320 new layer-group rows, no missing/outside/geometry/identity/count mismatch, and 29,376 original supplement medians reproduce the published input. Exact command/inputs: `h3o_operator_costs/a6_three_run_20261101/repeatability_command.json`; result: `repeatability_result.json`. Exit 0, 61.111929 seconds.
+- Business verification PASS: platform/container/launcher terminal success, graph-mode counts match the frozen prediction (engine 0 FULL 288 + PIECEWISE 288; engine 1 PIECEWISE 288), bridge PASS, all 864 planned traces nonempty and archived. Trace names/sizes are checked remotely; only the 11 selected files have remote/local SHA checks, not every complete trace. Command/result: `business_command.json` / `business_verification.json` in the same directory; exit 0, 11.878027 seconds.
+- The prior approximate remaining budget was 2.160175 GPUh. Subtracting the observed container interval leaves approximately 1.229897 GPUh; conservatively using the larger launcher interval leaves approximately 1.222495 GPUh. Neither value is a platform bill or a new run authorization.
+
+## Independent-pass timing coherence
+
+`tests/analysis/v4_attention_multipass_table.py` now emits `pass1_all` / `pass2_all` in addition to its existing diagnostic median-of-three tables. Each independent pass supplies its kernel, signed gap, and layer-window statistics together; workload identity columns and unrelated tables remain unchanged. This prevents a synthetic combination of one replay's concurrent-kernel timing with another replay's offsets. The manifest reports whether every published row has an independent-pass replacement.
+
+Command: `env PYTHONPATH="$PWD:$PWD/tests/analysis" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_v4_attention_multipass_table.py -q -p no:cacheprovider`.
+
+Expected: coherent kernel/gap/window replacement; unchanged input and unshared rows; incomplete timing schemas rejected. Actual: **3 PASS**, 0 FAIL, 0 SKIP (0.09 seconds).
+
+Full generation and preflight PASS:
+
+- `build_three_run_rows.py` produced three complete 7,105-row generations: the existing 989 workloads plus 432 supplement workloads in each generation. Exit 0, 66.437260 seconds; exact command: `h3o_operator_costs/a6_three_run_20261101/build_rows_command.json`.
+- `v4_attention_multipass_table.py` consumed the combined files, not the 989-workload files alone. All 1,421 workloads / 7,105 rows match in all three inputs; `original_shared` is byte-identical to the published table. The median3 generation replaces 96,620 kernel-time medians, preserving every other column. Exit 0, 20.422085 seconds; exact command: `h3o_operator_costs/a6_pass_replays_20261101/tables_command.json`.
+- Each pass has 1,298,690 timing fields equal to that pass's measured rows, 296,965 count fields equal to the reference, and 760,235 unchanged non-timing fields. The first inline audit failed on a tuple key because JSON represents tile scheduling as a Boolean and CSV as a string; the audit then reused the existing `row_key` normalization, without changing data or the generator.
+- All four P2 config bindings PASS: only the attention table's digest changes from B29. Compute, MoE, kernel gaps, runner block/replay and collectives match every baseline consumer digest/row count. Dummy mode is off and no `dsv4_step_cost.json` sits beside an input. Runner siblings were copied byte-identically.
+- Evidence: `h3o_operator_costs/a6_pass_replays_20261101/{rows_manifest.json,tables_manifest.json,preflight.json}`. Scratch inputs: `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/{rows,tables}`.
+
+| Table | Rows | SHA-256 |
+| --- | ---: | --- |
+| Reference | 7,105 | `01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb` |
+| Median-of-three | 7,105 | `bb240084c1e80742693caa90110079a0ba807fe01d7eba357594cf1463216566` |
+| Independent pass 1 | 7,105 | `7c54e9d12743ffe1f218d019a5fc33aa34eb738850585cd1a7477249416709f6` |
+| Independent pass 2 | 7,105 | `6d10a6996c07613a02ea9aa5577fe30ac3ad65397ceda0572843b02f2efc68ef` |
+
+Method limit: median3 changes only kernel-time targets; its gaps and measured-window reference remain the original generation. This is the approved diagnostic A6 reconstruction, not an independent-pass table or a published replacement. The independent-pass sensitivity tables replace kernel/gap/window statistics together.
+
+## Forward-attention implementation and current input
+
+Changed files: `tests/analysis/v4_attention_phase_heldout.py` and `tests/unit/test_v4_attention_phase_heldout.py`. Layer multiplicities come from the configured model's specs and existing tile-schedule planner owner, not literals. The aggregate joins canonical workload units to their recorded folds, rejects fold/row identity conflicts, and keeps missing/duplicate/unexpected groups NOT_EVALUABLE. Measured `layer_window_stats.median`, not composed scope medians, supplies the qualified reference. Scope and phase diagnostics remain separate from E2E acceptance.
+
+Primary command: `env PYTHONPATH="$PWD:$PWD/tests/analysis" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_v4_attention_phase_heldout.py tests/unit/test_v4_attention_heldout.py tests/unit/test_v4_attention_multipass_table.py -q -p no:cacheprovider`. Actual: **31 PASS**, 0 FAIL, 0 SKIP, 3.85 seconds. Log: `/data/ycfeng/tmp/a6_supplement_passes_20261101_01/forward_attention_primary_tests.log`. This completed before the server restart and was not repeated.
+
+Retained current aggregation: `h3o_operator_costs/a6_forward_attention_20261101/current_aggregation.json`, SHA-256 `4c254346b33fc58e2396507d3697c39c394cd35c84ddf16765ac586e5acd42d3`. It applies the implemented `aggregate_forward_attention` to retained predictions (no retraining), with the unchanged loaded 7,105-row fold assignment validated. Input/provenance hashes are recorded in the JSON.
+
+| Forward class | Complete workloads | Median absolute error | p90 absolute error | Verdict |
+| --- | ---: | ---: | ---: | --- |
+| FULL/decode | 464 | 0.629624% | 1.667818% | PASS |
+| PIECEWISE/decode | 469 | 0.577179% | 1.646428% | PASS |
+| PIECEWISE/first_tail | 440 | 0.653529% | 1.886652% | PASS |
+
+Of 1,421 recorded workload units, 1,373 are complete/evaluable, 24 partially evaluable, and 24 completely skipped. FULL/dummy, NONE/dummy, NONE/prefill and PIECEWISE/dummy have no complete evaluable workload and remain NOT_EVALUABLE. **Overall attention qualification is NOT_EVALUABLE**, not a full-domain PASS. E2E remains NOT_ASSESSED. Absolute predicted/measured attention times and signed errors for each complete workload are in the JSON. These findings do not qualify the omitted workloads.
+
+The retained row JSON had only the earlier selected-scope diagnostics. The full updated main invocation completed after restart: exit 0, 322.008842 seconds, 6,923 evaluated rows and 182 explicit coverage skips. It reuses identical-input/fold trainer scratch and reproduces the three forward-class values above while retaining every scope diagnostic. Command: `h3o_operator_costs/a6_forward_attention_20261101/current_command.json`; full output: `current_phase_heldout.json` (SHA-256 `d17258d6f5cec99a8042b76aae6e89a7dfbaba779173e75465cca3eae9ca0274`); compact record: `current_summary.json`. Its purpose was completing diagnostics absent from the old selected-scope output, not repeating completed aggregation or measurements.
+
+Phase review B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) inspected the four-file source diff, requirements/plan/tickets 05/09, tests, current main output and table manifest: **No actionable findings**. The reviewer did not repeat tests or launch workloads. Primary's full actual table-field and input-binding assertions are additional evidence; final median3/replay results were not yet available to the reviewer.
+
+Verified code commits: `21ab3b31` (forward qualification and focused tests), `fb8670ac` (coherent independent-pass tables and focused tests), `e033c2cc` (the already-executed supplement completion scripts). None changes `frontier/` or published inputs. The current full all-scope JSON and 10 MB supplement repeatability JSON remain local evidence; their output hashes are retained in the committed command receipts, with current aggregation/summary and table/input manifests selected for Git. Root requirements/plan were re-read before this milestone checkpoint.
+
+## Active CPU runs
+
+Four replays started once at 07:53:42 UTC, supervisor PID 223761:
+
+| Pass / case | Original timeout PID | Command receipt |
+| --- | ---: | --- |
+| pass1 / P2-32 | 223796 | `h3o_operator_costs/a6_pass_replays_20261101/pass1_all_p2_32_command.json` |
+| pass1 / P2-64 | 223794 | `h3o_operator_costs/a6_pass_replays_20261101/pass1_all_p2_64_command.json` |
+| pass2 / P2-32 | 223800 | `h3o_operator_costs/a6_pass_replays_20261101/pass2_all_p2_32_command.json` |
+| pass2 / P2-64 | 223798 | `h3o_operator_costs/a6_pass_replays_20261101/pass2_all_p2_64_command.json` |
+
+Each runs the unchanged `a10/a10_driver.py` with exactly one `--field random_forrest_execution_time_predictor_config_atten_kernel_only_input_file=<pass CSV>` override; K19, 10.3/11.4 ms delays and all other bindings remain fixed. Four private empty model-cache roots; 60 GiB address-space limit per process, baseline single-thread BLAS/OpenMP/MKL settings. Preflight had created only `metrics/.../config.json`: the initial launch assertion incorrectly required absent roots and failed before any CLI call. Inspected all four roots, proved no cache/receipt/run output existed, then used the existing driver's supported config-only roots. No original simulation was repeated or deleted.
+
+The existing random-forest factory uses `random_state=0` in `frontier/execution_time_predictor/shared_prediction_model_manager.py` and `random_forrest_execution_time_predictor.py`; the comparison does not introduce a new fitting seed. Completed tests/review and current output were not repeated after committing unchanged bytes.
+
+Run/log/gate roots: `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/{runs,logs,gates}`. The original supervisor waits and invokes the unchanged `a10_gate.py` once after each successful run, against all three pinned native clean repeats. Gate exit success alone does not imply numerical PASS. B29 P2-64 repeat01 TTFT is already FAIL at 12.254940665%; all per-repeat results must remain visible.
+
+Median3 A6 fits/scope diagnostics started at 07:54:32 UTC, supervisor PID 236919 / timeout PID 237030, 30 GiB limit. Exact command: `h3o_operator_costs/a6_forward_attention_20261101/median3_a6_command.json`; same KFold5/seed1234 and 5%/10% thresholds. The same supervisor then records and invokes the updated forward qualification, using the same table/fold cache. Scope errors stay diagnostic, and no new formal table is published. Original processes/receipts must be inspected after any restart; never relaunch live or completed workloads because an exit notification was lost.
+
+## Pending acceptance
+
+1. Same-fold median3 A6/forward result and coverage comparison; originals running.
+2. Four complete CPU P2 replay/gate results, all-repeat metric and cross-pass sensitivity comparison; originals running.
+3. Retain findings, review any new defect and obtain a further decision before formal table promotion; do not close unrelated qualification gaps.
+
+Tickets 05/09/11/19 and formal bundle/E2E acceptance remain OPEN. Attention measurements come from the retained single-H200 graph-replay setup; the CPU sensitivity comparison does not establish an unmeasured real-serving schedule distribution or qualify H800. No prefill, hardware-generalization, or other scope is added here.

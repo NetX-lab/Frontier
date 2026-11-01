@@ -1,0 +1,60 @@
+{
+  "classification": "DIAGNOSTIC_MULTIPASS_TARGET_TABLES",
+  "published_table": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+    "rows": 7105,
+    "rewrite_byte_identical": true
+  },
+  "runs": {
+    "reference": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/combined_reference/rows.json",
+      "sha256": "9d5a44b38cf51bbdeacf53db3a6b1d66a89bc6e4ed5efd620d098c547fefc5eb",
+      "rows": 7105
+    },
+    "comparisons": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/combined_pass1/rows.json",
+        "sha256": "ba08f3999db5d7c472aea5ce6f8b213089b49cb0b180c800cbf847b0d2b42817",
+        "rows": 7105
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/rows/combined_pass2/rows.json",
+        "sha256": "60261c9e9c8a87cfc30d2e2bbdd5b9f4b533deca3e7c41172494962a93601ee5",
+        "rows": 7105
+      }
+    ]
+  },
+  "shared_rows": 7105,
+  "shared_cases": 1421,
+  "replaced_kernel_time_medians": 96620,
+  "unchanged_columns": "median3: all except time_stats.<scope>.median of shared rows; pass1/pass2: all except timing statistics of shared rows",
+  "independent_pass_complete": true,
+  "tables": {
+    "original_shared": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/original_shared/attention_graph_replay_kernel_only.csv",
+      "rows": 7105,
+      "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb"
+    },
+    "median3_shared": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/median3_shared/attention_graph_replay_kernel_only.csv",
+      "rows": 7105,
+      "sha256": "bb240084c1e80742693caa90110079a0ba807fe01d7eba357594cf1463216566"
+    },
+    "median3_all": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/median3_all/attention_graph_replay_kernel_only.csv",
+      "rows": 7105,
+      "sha256": "bb240084c1e80742693caa90110079a0ba807fe01d7eba357594cf1463216566"
+    },
+    "pass1_all": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+      "rows": 7105,
+      "sha256": "7c54e9d12743ffe1f218d019a5fc33aa34eb738850585cd1a7477249416709f6"
+    },
+    "pass2_all": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+      "rows": 7105,
+      "sha256": "6d10a6996c07613a02ea9aa5577fe30ac3ad65397ceda0572843b02f2efc68ef"
+    }
+  }
+}
