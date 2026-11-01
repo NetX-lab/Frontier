@@ -28,7 +28,7 @@ Acceptance: every measured case and pass is reported; the concurrency coverage q
 
 ## Scope and context
 
-- Working root: `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, branch `feat/glm53-dsv4-vllm028`. Tree clean except the untracked `.cortexkit/`, `.pi/` and `remaining_measurements/`, which are not yours.
+- Working root: `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, branch `feat/glm53-dsv4-vllm028`, HEAD `58ce307e` or a later records-only commit. Tree clean except the untracked `.cortexkit/`, `.pi/` and `remaining_measurements/`, which are not yours.
 - Task records: `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/{requirements.md,plan.md,progress.md,summary.md}`; tickets `tickets/05-dsv4-flash-family.md`, `09-predictor-bundle.md`, `11-h200-regression-delivery.md`, `19-comparison-and-acceptance.md`. Read D-P2-Q1-CHOICES, D-P2-INPUT-QUALIFICATION, D-WARM-TARGET, D-WARM-TWO-FIX and D-COLLECTIVE-EXACT-REPEATABILITY in requirements.md.
 - Constraints:
   - Do not change thresholds, references, folds, formal tables, the formal measured CC input or the formal NIXL input. Return the proposed input instead.
@@ -38,7 +38,7 @@ Acceptance: every measured case and pass is reported; the concurrency coverage q
   - Retained evidence, receipts and the raw download are read-only.
 - No RJob, platform or cloud action.
 - Writable paths: put evidence, scripts and the report under `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/`. Reusable analysis scripts may go under `tests/analysis/`, with focused tests under `tests/unit/` when they carry logic worth guarding. Do not commit; the lead reviews and commits.
-- Environment: `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6), `PYTHONPATH=$PWD:$PWD/tests/analysis`, `PYTHONDONTWRITEBYTECODE=1`, `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1`, `TMPDIR=/data/ycfeng/tmp`. Scratch and replay outputs go under `/data/ycfeng/tmp/glm53_dsv4/nixl_timing_q2/`; `/tmp` is memory-backed. A full CPU replay takes about 2.7 h (P2-32) or 3.3 h (P2-64) and needs a 64 GiB address-space limit; use `systemd-run --scope -p MemoryMax=30G` or `timeout` for memory-heavy inspections where available.
+- Environment: `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6), `PYTHONPATH=$PWD:$PWD/tests/analysis`, `PYTHONDONTWRITEBYTECODE=1`, `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1`. Put scratch and replay outputs under `nixl_timing_q2/scratch/` (each replay is about 315 MB; `task_memory/` is ignored by Git, and the lead commits only the small evidence files). `/data/ycfeng/tmp` is outside your writable scope. A full CPU replay takes about 2.7 h (P2-32) or 3.3 h (P2-64) and needs a 64 GiB address-space limit; use `systemd-run --scope -p MemoryMax=30G` or `timeout` for memory-heavy inspections where available.
 
 ## Expected return
 
