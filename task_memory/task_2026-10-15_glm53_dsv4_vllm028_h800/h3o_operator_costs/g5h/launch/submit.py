@@ -33,8 +33,12 @@ def main():
     os.environ["EXP_ID"] = config["job_tag"]
     receipts = LAUNCH / "receipts"
     receipts.mkdir(exist_ok=True)
+    # Stages written before preemptible submission existed omit the field and
+    # keep ResourceConfig's non-preemptible default.
+    preemptible = config.get("preemptible", False)
     status = {"stage": config["stage"], "config": str(config_path), "pid": os.getpid(),
-              "start": time.time(), "gpus": config["gpu"] * config["replica"]}
+              "start": time.time(), "gpus": config["gpu"] * config["replica"],
+              "preemptible": preemptible}
     (receipts / f"{config['job_tag']}_started.json").write_text(json.dumps(status, indent=2))
     lock_path = receipts / f"{config['job_tag']}_lock.json"
     distributed = config["replica"] > 1
@@ -47,7 +51,8 @@ def main():
               "VLLM_CUDA_COMPATIBILITY_PATH": config["cuda_compat_path"],
               **({"DISTRIBUTED_JOB": "true"} if distributed else {}), **config["envs"]},
         task_anti_affinities=["hard/default"] if distributed else [],
-        command="{COMMAND}", task_specs={"default": {"is_critical": True}})
+        command="{COMMAND}", task_specs={"default": {"is_critical": True}},
+        preemptible=preemptible)
     try:
         lock_path.write_text(json.dumps(build_lock(config, config_path), indent=2) + "\n")
         workers = spawn_tasks(resource, command="bash -c " + shlex.quote(

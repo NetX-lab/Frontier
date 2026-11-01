@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Q1 choices under D-P2-INPUT-QUALIFICATION (D-P2-Q1-CHOICES): attention supplement A, original attention table, H200 NIXL timing route B with the 16-H200 preemptible nixl6144 measurement; the native payload route is left to YC. |
 | 2026-11-01 | Recorded YC's `/codex-implement` continuation request (Codex implements; RJobs go through `/ds4-exec`) and the lead's choice under D-NO-INTERRUPT: P2 formal input qualification next (D-P2-INPUT-QUALIFICATION). |
 | 2026-11-01 | YC deferred the EP dispatch count correction (D-WARM-EP-DEFER) after held-out traces showed one fused kernel when DP lanes are equal; the NIXL correction and both replays proceed. |
 | 2026-11-01 | YC approved D-WARM-TWO-FIX: the two existing-path corrections (NIXL wire bytes, EP dispatch kernel count) and the P2-32/P2-64 CPU replays. |
@@ -162,6 +163,17 @@ The lead's D-WARM-TWO-FIX completion report listed three options, none approved:
   - An edge that needs a GPU measurement gets a CPU-verified package. The lead reports its GPUs and GPU-hours to YC, then submits through `/ds4-exec`.
   - A new qualification criterion, such as accepting an input because the metrics do not depend on it, a table promotion or a CSA FULL correction, is returned as a proposal. The lead records the choice and reports it.
   - Unchanged: D-WARM-TARGET, D-WARM-EP-DEFER, the measured CC backend as formal input, all thresholds and references. No host-zero change, READ timing model, offset or `frontier/` source change without a further decision.
+
+## [Decision] 2026-11-01 — lead's choices on the Q1 proposals (D-P2-Q1-CHOICES)
+
+Basis: Q1 [ledger](h3o_operator_costs/input_qualification_20261101/ledger.md) and [proposals](h3o_operator_costs/input_qualification_20261101/decisions.md), reviewed and committed at `f48457d2`. Made by the lead under D-NO-INTERRUPT and D-P2-INPUT-QUALIFICATION; reported to YC.
+
+- **Attention: option A.** Supplement D-A6-FORWARD-ATTENTION for exactly the 48 workloads that the KFold5/seed1234 heldout check omits. For each of the two independent measurement passes separately, the original table's production exact-point full-forward prediction is compared with that pass's measured layer-weighted window. Every omitted workload needs all five layer groups, positive finite windows and exact production admission; each forward class needs median error <= 5% and p90 <= 10% on each pass; an eager singleton class must pass on both passes. The better pass is never selected. The supplement is bound to table SHA256 `01a9d51b...2365eb` and the Q1 workload census. It shows repeatability at retained coordinates, not generalization to unseen geometry. The KFold5 result, including NOT_EVALUABLE, stays on record. Current values: maximum error 3.663151% over 96 comparisons, so all 48 pass.
+  - Reason: all 48 have measured positive windows; the misses come from holding out the only workload carrying a padded width or phase key, which new measurements at the same coordinates cannot fix. P2 uses exact lookup, so repeatability at the queried coordinates is the property it depends on. Cost 0 GPUh, no replay.
+- **Attention table: option A.** Keep the original formal table. Median3 carries the same 48 omissions and would need two new replays.
+- **H200 NIXL timing: option B.** Collect the targeted measurement `packages/nixl6144` (prompts 6143/6144/6145 x active pairs 1/8 x in-flight 1/2/4/8/16, three passes): 2 nodes x 8 H200, `step_main`, wholly preemptible, estimated 2.06 container GPUh, 1800 s job timeout (8.0 GPUh ceiling). Submission goes through `/ds4-exec`. The data then go into a proposal for an H200 timing model and its validation criterion, chosen without reference to E2E outcomes. The formal input stays the H800 pair until a later decision. Options A (bounded-timing criterion) and C (cross-hardware exception) are not taken.
+  - The G5h launcher `g5h/launch/submit.py` previously ignored a stage's `preemptible` field. It now passes it to `ResourceConfig`; stages without the field keep the non-preemptible default.
+- **Native payload: left to YC.** Option B needs a new host observer on the native vLLM READ path and new native serving campaigns (about 35.6 GPUh, including 64 H200 wholly preemptible after a 32-to-64 promotion receipt). Option A waives the Spec 5.5 requirement for observed descriptor ranges. Both go beyond the lead's recorded authority. The payload edge stays OPEN.
 
 ## [Original Request / Decision] 2026-11-01 — two existing-path corrections and two CPU replays (D-WARM-TWO-FIX)
 
