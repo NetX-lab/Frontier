@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | YC deferred the EP dispatch count correction (D-WARM-EP-DEFER) after held-out traces showed one fused kernel when DP lanes are equal; the NIXL correction and both replays proceed. |
+| 2026-11-01 | YC approved D-WARM-TWO-FIX: the two existing-path corrections (NIXL wire bytes, EP dispatch kernel count) and the P2-32/P2-64 CPU replays. |
 | 2026-11-01 | YC approved D-WARM-TARGET: compare and calibrate the warm steady state; one-time warmup costs are not modeled; update the calibration skill. |
 | 2026-11-01 | YC approved D-A6-FORWARD-ATTENTION and D-A6-PASS-REPLAYS: forward-level attention qualification and four CPU P2 replays using independent pass tables. |
 | 2026-11-01 | Recorded YC's request to judge the A6 CSA FULL correction from the simulator user's side (a same-configuration vLLM comparison); discussion only, no correction decided. |
@@ -145,6 +147,35 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-01 — two existing-path corrections and two CPU replays (D-WARM-TWO-FIX)
+
+Basis: [the warm accounting report](h3o_operator_costs/warm_accounting_20261101/test_report_2026-11-01_warm_accounting.md), sections 2.2 and 3.2. The lead's closing message asked for approval of exactly these two corrections and two CPU replays.
+
+[Original Request — approval]
+> 继续执行，以下是最新feedback：本轮已全部归档提交：66790ca0。
+> Skill 六项问题闭环，复审通过，已同步到当前分支。
+> Warm 比较 96/96 PASS，最大误差 *5.95%*；原始 FAIL 完整保留。
+> 完整输入资格仍 OPEN。
+> 下一步仅待批准：两处计价修正，以及 P2-32/P2-64 两次 CPU replay。
+
+- **D-WARM-TWO-FIX.** Approved scope:
+  1. NIXL: in the existing grouped V4 path, price wire time on the selected pages times the existing `physical_block_size_bytes`. The recorded payload keeps its structural component bytes and ownership checks. No hard-coded byte count, TP multiplier, new flag or READ lifecycle change.
+  2. EP dispatch: set `kernel_count=3` on the existing `dsv4_ep_dispatch_allgather` COMM registry entry; the combine entry keeps 1. No caller special case, gap value change or table change.
+  3. CPU checks: held-out native count/geometry checks on retained evidence not used for the finding, affected regressions, then one fresh-cache CPU replay each for P2-32 and P2-64 on the unchanged B29 formal inputs, read with the all-request gate and the D-WARM-TARGET warm reading.
+- Not approved by this decision: host-zero changes, READ timing modeling, offsets, table promotion, new GPU runs, or formal qualification. The two corrections are justified by source and count evidence, not by fitting the TTFT residual.
+
+[Follow-up Q&A — EP dispatch count, 2026-11-01]
+
+Held-out evidence ([heldout_counts.json](h3o_operator_costs/two_fix_20261101/heldout_counts.json) and the per-layer kernel sequence in the two-fix report) showed that native dispatch issues three `AllGatherV` kernels per layer only when the DP lanes carry different token counts. With equal lanes, vLLM calls plain `all_gather` inside one NCCL group and the trace shows one fused `AllGather` kernel per layer. This covers equal-lane eager prefill (P2-64 DP1 forward 98) and every graph-mode decode step. In the B29 replays, equal lanes account for 511,872 of 528,384 (P2-32) and 638,464 of 665,984 (P2-64) prefill dispatch price queries, and for all decode queries. An unconditional count of 3 would therefore add two wrong gaps to most steps. The lead asked:
+
+> EP dispatch 的 kernel 数怎么处理？（NIXL 修正不受影响，照常实施）
+
+Options were: defer the EP correction (recommended); count 3 or 1 depending on whether the lanes are equal, which needs one new optional builder field on `CommOperatorSpec`; or keep the original unconditional 3.
+
+> 暂缓 EP 修正 (Recommended)
+
+- **D-WARM-EP-DEFER.** Supersedes item 2 of D-WARM-TWO-FIX. The registry keeps `kernel_count=1` for the EP dispatch entry, which matches native for equal-lane and graph steps. The unequal-lane eager step undercounts by two eager gaps per layer (at most 0.0468 ms per step) and is recorded as a known limitation, not corrected. The two CPU replays carry only the NIXL correction.
 
 ## [Original Request / Decision] 2026-11-01 — warm steady-state comparison target (D-WARM-TARGET)
 

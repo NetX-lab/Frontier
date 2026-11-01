@@ -1,0 +1,147 @@
+{
+ "source": "tests/unit/test_dsv4_structural_pd.py::test_real_grouped_handoff_and_all_outputs_conserve record_property grouped_nixl_lifecycle",
+ "note": "Harness config: network_bandwidth_gbps=100.0, network_latency_ms=0.1, compression off. The replay configs use 126.2 Gbps and 0.0647 ms, so the 6144-token replay delta is 0.417202916 ms.",
+ "rows": [
+  {
+   "test": "test_real_grouped_handoff_and_all_outputs_conserve[191-False]",
+   "prompt": 191,
+   "transferred_pages": [
+    1,
+    2,
+    2,
+    2,
+    16
+   ],
+   "selected_pages": 23,
+   "structural_bytes": 16470144,
+   "wire_bytes": 23051520,
+   "wire_equals_pages_times_1002240": true,
+   "transfer_time_ms": 1.9441216000000001,
+   "structural_time_ms": 1.4176115200000001,
+   "wire_minus_structural_ms": 0.52651008,
+   "wire_time_ms": 1.9441216000000001,
+   "transfer_time_equals_wire_price": true
+  },
+  {
+   "test": "test_real_grouped_handoff_and_all_outputs_conserve[256-False]",
+   "prompt": 256,
+   "transferred_pages": [
+    1,
+    2,
+    2,
+    2,
+    16
+   ],
+   "selected_pages": 23,
+   "structural_bytes": 16470144,
+   "wire_bytes": 23051520,
+   "wire_equals_pages_times_1002240": true,
+   "transfer_time_ms": 1.9441216000000001,
+   "structural_time_ms": 1.4176115200000001,
+   "wire_minus_structural_ms": 0.52651008,
+   "wire_time_ms": 1.9441216000000001,
+   "transfer_time_equals_wire_price": true
+  },
+  {
+   "test": "test_real_grouped_handoff_and_all_outputs_conserve[257-False]",
+   "prompt": 257,
+   "transferred_pages": [
+    2,
+    3,
+    3,
+    3,
+    17
+   ],
+   "selected_pages": 28,
+   "structural_bytes": 20609856,
+   "wire_bytes": 28062720,
+   "wire_equals_pages_times_1002240": true,
+   "transfer_time_ms": 2.3450176000000003,
+   "structural_time_ms": 1.7487884800000002,
+   "wire_minus_structural_ms": 0.5962291200000001,
+   "wire_time_ms": 2.3450176000000003,
+   "transfer_time_equals_wire_price": true
+  },
+  {
+   "test": "test_real_grouped_handoff_and_all_outputs_conserve[6143-False]",
+   "prompt": 6143,
+   "transferred_pages": [
+    24,
+    2,
+    2,
+    2,
+    16
+   ],
+   "selected_pages": 46,
+   "structural_bytes": 39521664,
+   "wire_bytes": 46103040,
+   "wire_equals_pages_times_1002240": true,
+   "transfer_time_ms": 3.7882432,
+   "structural_time_ms": 3.26173312,
+   "wire_minus_structural_ms": 0.52651008,
+   "wire_time_ms": 3.7882432,
+   "transfer_time_equals_wire_price": true
+  },
+  {
+   "test": "test_real_grouped_handoff_and_all_outputs_conserve[6144-False]",
+   "prompt": 6144,
+   "transferred_pages": [
+    24,
+    2,
+    2,
+    2,
+    16
+   ],
+   "selected_pages": 46,
+   "structural_bytes": 39521664,
+   "wire_bytes": 46103040,
+   "wire_equals_pages_times_1002240": true,
+   "transfer_time_ms": 3.7882432,
+   "structural_time_ms": 3.26173312,
+   "wire_minus_structural_ms": 0.52651008,
+   "wire_time_ms": 3.7882432,
+   "transfer_time_equals_wire_price": true
+  },
+  {
+   "test": "test_real_grouped_handoff_and_all_outputs_conserve[6145-False]",
+   "prompt": 6145,
+   "transferred_pages": [
+    25,
+    3,
+    3,
+    3,
+    17
+   ],
+   "selected_pages": 51,
+   "structural_bytes": 43661376,
+   "wire_bytes": 51114240,
+   "wire_equals_pages_times_1002240": true,
+   "transfer_time_ms": 4.1891392,
+   "structural_time_ms": 3.59291008,
+   "wire_minus_structural_ms": 0.5962291199999998,
+   "wire_time_ms": 4.1891392,
+   "transfer_time_equals_wire_price": true
+  },
+  {
+   "test": "test_real_grouped_handoff_and_all_outputs_conserve[6144-True]",
+   "prompt": 6144,
+   "transferred_pages": [
+    24,
+    2,
+    2,
+    2,
+    16
+   ],
+   "selected_pages": 46,
+   "structural_bytes": 39521664,
+   "wire_bytes": 46103040,
+   "wire_equals_pages_times_1002240": true,
+   "transfer_time_ms": 3.7882432,
+   "structural_time_ms": 3.26173312,
+   "wire_minus_structural_ms": 0.52651008,
+   "wire_time_ms": 3.7882432,
+   "transfer_time_equals_wire_price": true
+  }
+ ],
+ "status": "PASS"
+}

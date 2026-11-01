@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | D-WARM-TWO-FIX 完成：NIXL 修正 0fb8955d、EP 修正暂缓、两次 CPU replay 与 B29 逐位相同。检查点 9 PASS / 0 TODO。 |
 | 2026-11-01 | Closure: integration complete atf31b2b2d/approved README24ddbbb6 with prerequisites/34-file equality/validators PASS. Checkpoint8 PASS; only explicit human two-fix/two-replay approval wait remains TODO. |
 | 2026-11-01 | Final evidence update: warm review accepted/No findings and archive0cd8d5d3 complete; primary exact skill/prerequisites import/final status commit and human two-fix/two-replay decision remain TODO. |
 | 2026-11-01 | Follow-up checkpoint: accepted skill/root main0cc4118a and completed accounting7/7; next frontier is correction decision plus final review, not residual investigations. |
@@ -11,7 +12,7 @@
 
 范围：`requirements.md` D-WARM-TARGET、`plan.md` Approved warm-target continuation 和本次 WARM-DOCS 委派。PASS 仅表示交付已记录完成，不代表质量、正式资格或批准；不是整体 tickets05/09/11/19 完成检查。
 
-**汇总：** PASS 8｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 9｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -20,7 +21,7 @@
 | 当前 residual 归因与限制 | PASS | `warm_residual_20261101/test_report_2026-11-01_warm_ttft_residual.md`、`validation.json`；9/9检查通过，观测/推断/未分配项分别保留。 |
 | Calibration skill 一致性修正 | PASS | 六 findings CLOSED/no actionable findings/四 walkthroughs PASS；root0cc4118a精确导入f31b2b2d，approved README24ddbbb6/依赖已integrated，34文件一致。 |
 | 保留证据READ/payload及P-step accounting | PASS | `warm_accounting_20261101/test_report_2026-11-01_warm_accounting.md`、`validation.json`7/7；主代理接受两个结构缺陷，未批准code corrections。 |
-| 两处existing-path修正与两次CPU replay的具体决定 | TODO | 明确等待human approve/reject/defer，approval NOT received；subagent消息不授权fix/replay。不重开residual调查。 |
+| 两处existing-path修正与两次CPU replay的具体决定 | PASS | YC 批准 D-WARM-TWO-FIX，EP 部分改为暂缓（D-WARM-EP-DEFER）。NIXL 修正 0fb8955d 的边界检查和单元回归都通过；P2-32/P2-64 两次 replay 与 B29 逐位相同，所有判定不变。见 `two_fix_20261101/test_report_2026-11-01_two_fix.md`。 |
 | 父任务当前状态、报告链接和检查点同步 | PASS | `plan.md`、`progress.md`、`summary.md`及 tickets05/09/19；原all-request FAIL保留，完整资格OPEN。 |
 | 主代理最终 warm review/evidence archive | PASS | WARM-FINAL-REVIEW ses_e68dddb1effeH8TbRzOxiHxLPx No findings，独立96/96 PASS最大5.952669%；primary接受diagnostic/warm，archive0cd8d5d3完成。 |
 | 主代理exact skill/prerequisites integration | PASS | f31b2b2d/approved README24ddbbb6、c3ba1712/7077960f/33ff10fd已导入；34文件一致，structure v2_pressure/quick_validate/diff PASS。文档commit不另列open acceptance。 |
@@ -32,9 +33,9 @@
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 前次WARM-DOCS checkpoint至warm review/archive接受及exact integration f31b2b2d/24ddbbb6 closure｜**当前前沿：** 明确等待human两处fix/两次CPU replay批准；停止residual调查。
+**检测窗口：** 前次WARM-DOCS checkpoint至warm review/archive接受及exact integration f31b2b2d/24ddbbb6 closure｜**当前前沿：** D-WARM-TWO-FIX 已完成，没有改变任何 P2 结果；下一步需要 YC 新的决定。
 
-主线：`completed warm diagnostics/review/archive + exact skill/prerequisite integration -> wait for human two-fix/two-CPU-replay approval`；仅human批准后fix→CPU regressions+两次replay。本continuation交付已完成，最终文档commit不是新open acceptance。之后仍需合格输入/每轮四指标/formal P2/H800。本次不改source/evidence，不运行模拟或GPU，不重跑71/60或扩大检查。
+主线：`completed warm diagnostics/review/archive + exact skill/prerequisite integration -> D-WARM-TWO-FIX (NIXL fix + CPU regressions + two replays, done)`。本continuation交付已完成，最终文档commit不是新open acceptance。之后仍需合格输入/每轮四指标/formal P2/H800。本次不改source/evidence，不运行模拟或GPU，不重跑71/60或扩大检查。
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |

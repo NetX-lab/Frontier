@@ -1,0 +1,25 @@
+{
+ "note": "call_count counts price queries (with repeats), not executed forwards; curve key all_gatherv is the EP dispatch.",
+ "cases": {
+  "p2_32": {
+   "source": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/collectives.json",
+   "sha256": "7b38a30294f8586e4f2f9c403ec883ca199624c0c050f208f2c3ca6106215f97",
+   "ep_dispatch_price_queries": {
+    "decode|equal": 957696,
+    "prefill|equal": 511872,
+    "prefill|unequal": 16512
+   },
+   "prefill_equal_fraction": 0.96875
+  },
+  "p2_64": {
+   "source": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/collectives.json",
+   "sha256": "8af0f669bdf3f58c327d02d94e5b4337592a915745a4f40992f4f64500b66a15",
+   "ep_dispatch_price_queries": {
+    "decode|equal": 1045760,
+    "prefill|equal": 638464,
+    "prefill|unequal": 27520
+   },
+   "prefill_equal_fraction": 0.9586776859504132
+  }
+ }
+}

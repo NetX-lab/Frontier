@@ -1,0 +1,284 @@
+{
+ "classification": "D-WARM-TWO-FIX_B29_COMPARISON",
+ "relative_error_limit": 0.1,
+ "cases": {
+  "p2_32": {
+   "source_commit": {
+    "b29": "a69a52132257ca854a8759249bca65b32ffa06bf",
+    "new": "0fb8955d95469c49824676831a814bc3afc08042"
+   },
+   "receipt_sha256": {
+    "b29": "a6bbc64ad0cfd83af52a1359fe959c980fa89e0cfc1e366dfdbccde27a5d0813",
+    "new": "2048e59d03ec3598e843277d30d730efe3eb212d45c4c757c62ecc54a01859bc"
+   },
+   "run_wall_s": {
+    "b29": 9641.412487513851,
+    "new": 9602.948362494353
+   },
+   "input_identity_equal": true,
+   "differing_input_fields": [],
+   "stage_end_events": {
+    "b29": 23040,
+    "new": 23040
+   },
+   "stale_stage_end_events": {
+    "b29": 0,
+    "new": 0
+   },
+   "collective_calls": {
+    "b29": 6310644,
+    "new": 6310644
+   },
+   "collectives_identical": true,
+   "forwards": {
+    "prefill": {
+     "b29_rows": 8192,
+     "new_rows": 8192,
+     "identical": true,
+     "first_difference_index": null
+    },
+    "decode": {
+     "b29_rows": 14848,
+     "new_rows": 14848,
+     "identical": true,
+     "first_difference_index": null
+    }
+   },
+   "kv_transfers": {
+    "transfers": 128,
+    "bytes_equal": true,
+    "bytes": [
+     39521664
+    ],
+    "start_delta_ms": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "end_delta_ms": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "duration_delta_ms": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    }
+   },
+   "requests": {
+    "ttft": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "ttft_kv_transfer": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "transfer_kv_cache": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "tpot": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "request_e2e_time": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    }
+   },
+   "verdicts": {
+    "all_request": {
+     "b29": "PASS",
+     "new": "PASS"
+    },
+    "warm": {
+     "b29": "PASS",
+     "new": "PASS"
+    },
+    "empty": {
+     "b29": "PASS",
+     "new": "PASS"
+    }
+   },
+   "status_recomputation_matches": true,
+   "sources": {
+    "gate": {
+     "b29": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_32_warm_k19b29/reading.json",
+     "new": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/reading.json"
+    },
+    "readings": {
+     "warm": {
+      "b29": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_warm_reading.json",
+      "new": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_32_warm_reading.json"
+     },
+     "empty": {
+      "b29": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_32_empty_reading.json",
+      "new": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_32_empty_reading.json"
+     }
+    }
+   }
+  },
+  "p2_64": {
+   "source_commit": {
+    "b29": "a69a52132257ca854a8759249bca65b32ffa06bf",
+    "new": "0fb8955d95469c49824676831a814bc3afc08042"
+   },
+   "receipt_sha256": {
+    "b29": "f9c4c493d8fe0b04627c76ef992c34d480edcf70bd9f7882530394a145406366",
+    "new": "62cc1b59b29e938fdbe90428a9906503061eb12f37d76d44d25357935e11385e"
+   },
+   "run_wall_s": {
+    "b29": 12043.324303293135,
+    "new": 11811.16088503832
+   },
+   "input_identity_equal": true,
+   "differing_input_fields": [],
+   "stage_end_events": {
+    "b29": 39680,
+    "new": 39680
+   },
+   "stale_stage_end_events": {
+    "b29": 0,
+    "new": 0
+   },
+   "collective_calls": {
+    "b29": 9002176,
+    "new": 9002176
+   },
+   "collectives_identical": true,
+   "forwards": {
+    "prefill": {
+     "b29_rows": 15360,
+     "new_rows": 15360,
+     "identical": true,
+     "first_difference_index": null
+    },
+    "decode": {
+     "b29_rows": 24320,
+     "new_rows": 24320,
+     "identical": true,
+     "first_difference_index": null
+    }
+   },
+   "kv_transfers": {
+    "transfers": 128,
+    "bytes_equal": true,
+    "bytes": [
+     39521664
+    ],
+    "start_delta_ms": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "end_delta_ms": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "duration_delta_ms": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    }
+   },
+   "requests": {
+    "ttft": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "ttft_kv_transfer": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "transfer_kv_cache": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "tpot": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    },
+    "request_e2e_time": {
+     "count": 128,
+     "mean": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "zero": 128
+    }
+   },
+   "verdicts": {
+    "all_request": {
+     "b29": "FAIL",
+     "new": "FAIL"
+    },
+    "warm": {
+     "b29": "PASS",
+     "new": "PASS"
+    },
+    "empty": {
+     "b29": "FAIL",
+     "new": "FAIL"
+    }
+   },
+   "status_recomputation_matches": true,
+   "sources": {
+    "gate": {
+     "b29": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/codex_resume_20261031/p2_64_warm_k19b29/reading.json",
+     "new": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_64/reading.json"
+    },
+    "readings": {
+     "warm": {
+      "b29": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_warm_reading.json",
+      "new": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_64_warm_reading.json"
+     },
+     "empty": {
+      "b29": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/readings/B29_p2_64_empty_reading.json",
+      "new": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_64_empty_reading.json"
+     }
+    }
+   }
+  }
+ }
+}

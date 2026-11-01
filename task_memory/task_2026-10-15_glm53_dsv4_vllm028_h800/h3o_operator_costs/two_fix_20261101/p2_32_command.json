@@ -1,0 +1,92 @@
+{
+  "classification": "D-WARM-TWO-FIX_CPU_REPLAY",
+  "status": "FINISHED",
+  "command": [
+    "timeout",
+    "86400s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py",
+    "p2_32",
+    "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "source_commit": "0fb8955d95469c49824676831a814bc3afc08042",
+  "source_dirty_paths": [],
+  "driver_sha256": "3172d0d0a326382c59e3c9637fc1f1b756059064087f70e555b14700c2a8b527",
+  "python": "3.10.6",
+  "started_utc": "2026-11-01T14:46:39.463640+00:00",
+  "run_root": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32",
+  "gate_root": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/logs/p2_32.log",
+  "baseline_receipt": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/receipt.json",
+  "as_limit_bytes": 68719476736,
+  "supervisor_pid": 38181,
+  "exit_code": 0,
+  "elapsed_seconds": 10242.093498148024,
+  "finished_utc": "2026-11-01T17:37:21.557717+00:00",
+  "simulator_status": "FINISHED",
+  "receipt_sha256": "2048e59d03ec3598e843277d30d730efe3eb212d45c4c757c62ecc54a01859bc",
+  "gate": {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_gate.py",
+      "p2_32",
+      "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32",
+      "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32"
+    ],
+    "log": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/logs/p2_32_gate.log",
+    "started_utc": "2026-11-01T17:37:21.559098+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-11-01T17:37:22.795269+00:00",
+    "reading_sha256": "8406db8443a394648a722e9121bd47e268147454161954e8ed69822cb320fa01",
+    "verdict": "PASS"
+  },
+  "readings": {
+    "warm": {
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+        "--rows",
+        "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/rows",
+        "--reading",
+        "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/reading.json",
+        "--openers",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+        "--output",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_32_warm_reading.json"
+      ],
+      "log": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/logs/p2_32_warm_reading.log",
+      "exit_code": 0,
+      "output_sha256": "3a766e2ab7af0c5637e6237fbfe823b6f3c9cf8c5f9b1d08b687ef8c4148d4a1"
+    },
+    "empty": {
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+        "--rows",
+        "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/rows",
+        "--reading",
+        "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/reading.json",
+        "--openers",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+        "--output",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_32_empty_reading.json"
+      ],
+      "log": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/logs/p2_32_empty_reading.log",
+      "exit_code": 0,
+      "output_sha256": "6530d718f7c44a23bcdf5176b06e893601f6b1e4867b9dbd38f214bb93d8d910"
+    }
+  }
+}

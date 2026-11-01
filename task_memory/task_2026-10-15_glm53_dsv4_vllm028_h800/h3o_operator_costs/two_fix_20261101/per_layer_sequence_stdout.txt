@@ -1,0 +1,69 @@
+('NONE', 'prefill', True) index 0 {'mode': 'NONE', 'real': True, 'sync_host_us': 1094.094, 'host_us': {'prepare': 6005.368896484375, 'dispatch': 347598.9541015625, 'post': 95382.38500976562}, '_dispatch_end': 2089154311920.468, 'step': {'context_requests': 1, 'context_tokens': 6144, 'generation_requests': 0, 'generation_tokens': 0}, 'class': 'prefill'}
+  comm kernel count 418 Counter({'ncclDevKernel_AllGatherV_RING_LL': 129, 'kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidi': 84, 'ncclDevKernel_AllGather_RING_LL': 45, 'void vllm::deepseek_v4_fused_ops::fusedDeepseekV': 43, 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': 43, 'ncclDevKernel_Reduce_Sum_bf16_RING_LL': 43, 'void vllm::cp_gather_indexer_k_quant_cache_kerne': 21, 'void at::native::_scatter_gather_elementwise_ker': 6, '_gather_block_tables_kernel': 1, 'void at::native::vectorized_gather_kernel<16, lo': 1, 'void ': 1, 'void at::native::reduce_kernel<512, 1, at::nativ': 1})
+    _gather_block_tables_kernel                                  dur=    3.23 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.42 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.33 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.20 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.33 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.14 us
+    void at::native::vectorized_gather_kernel<16, long>          dur=   19.39 us
+    void                                                         dur= 2303.56 us
+    ncclDevKernel_AllGather_RING_LL                              dur= 1232.26 us
+    void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKV dur=  134.40 us
+    kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_ dur=    5.28 us
+    ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL                 dur= 2401.83 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=28665.46 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=   97.98 us
+    ... last:
+    ncclDevKernel_AllGatherV_RING_LL                             dur=  102.08 us
+    ncclDevKernel_Reduce_Sum_bf16_RING_LL                        dur= 2159.62 us
+    ncclDevKernel_AllGather_RING_LL                              dur=  542.95 us
+    ncclDevKernel_AllGather_RING_LL                              dur=   18.11 us
+    void at::native::reduce_kernel<512, 1, at::native::ReduceOp< dur=    4.10 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    1.66 us
+('NONE', 'dummy', True) index 64 {'mode': 'NONE', 'real': False, 'sync_host_us': 10770.368, 'host_us': {'prepare': 3028.802978515625, 'dispatch': 417051.1999511719, 'post': 729.96923828125}, '_dispatch_end': 2089156378647.276, 'class': 'dummy'}
+  comm kernel count 343 Counter({'ncclDevKernel_AllGatherV_RING_LL': 129, 'void cublasLt::splitKreduce_kernel<32, 16, int, ': 83, 'void vllm::mnnvl_lamport_all_gather<__nv_bfloat1': 44, 'void vllm::mnnvl_lamport_reduce_scatter_kernel<_': 43, 'ncclDevKernel_Reduce_Sum_bf16_RING_LL': 43, 'void vllm::cross_device_reduce_1stage<__nv_bfloa': 1})
+    void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>      dur=   12.45 us
+    void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>        dur=    4.22 us
+    void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 dur=    8.06 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur= 5095.56 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=  455.84 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=   98.59 us
+    ncclDevKernel_Reduce_Sum_bf16_RING_LL                        dur= 1627.94 us
+    void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>        dur=  136.74 us
+    void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 dur=    5.09 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur= 2194.44 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=  440.58 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=   95.07 us
+    ncclDevKernel_Reduce_Sum_bf16_RING_LL                        dur= 1636.67 us
+    void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>        dur=  138.05 us
+    ... last:
+    void vllm::mnnvl_lamport_reduce_scatter_kernel<__nv_bfloat16 dur=    4.80 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur= 4545.35 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=  434.62 us
+    ncclDevKernel_AllGatherV_RING_LL                             dur=   95.58 us
+    ncclDevKernel_Reduce_Sum_bf16_RING_LL                        dur= 1596.87 us
+    void vllm::mnnvl_lamport_all_gather<__nv_bfloat16, 8>        dur=  133.73 us
+('NONE', 'prefill', False) index 98 {'mode': 'NONE', 'real': True, 'sync_host_us': 807.459, 'host_us': {'prepare': 3565.739013671875, 'dispatch': 321629.455078125, 'post': 4176.39599609375}, '_dispatch_end': 2089196581507.303, 'step': {'context_requests': 1, 'context_tokens': 6144, 'generation_requests': 0, 'generation_tokens': 0}, 'class': 'prefill'}
+  comm kernel count 332 Counter({'ncclDevKernel_AllGather_RING_LL': 88, 'ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL': 86, 'kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidi': 84, 'void vllm::deepseek_v4_fused_ops::fusedDeepseekV': 43, 'void vllm::cp_gather_indexer_k_quant_cache_kerne': 21, 'void at::native::_scatter_gather_elementwise_ker': 6, '_gather_block_tables_kernel': 1, 'void at::native::vectorized_gather_kernel<16, lo': 1, 'void ': 1, 'void at::native::reduce_kernel<512, 1, at::nativ': 1})
+    _gather_block_tables_kernel                                  dur=    5.22 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.42 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.36 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.30 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.20 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    3.07 us
+    void at::native::vectorized_gather_kernel<16, long>          dur=   18.08 us
+    void                                                         dur= 5200.78 us
+    ncclDevKernel_AllGather_RING_LL                              dur=  564.29 us
+    void vllm::deepseek_v4_fused_ops::fusedDeepseekV4QNormRopeKV dur=  135.23 us
+    kernel_cutlass_kernel_vllmmodelsdeepseek_v4nvidiaopsdequant_ dur=    5.38 us
+    ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL                 dur= 1281.63 us
+    ncclDevKernel_AllGather_RING_LL                              dur= 4730.54 us
+    ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL                 dur=  838.69 us
+    ... last:
+    ncclDevKernel_AllGather_RING_LL                              dur= 3919.82 us
+    ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL                 dur= 1174.98 us
+    ncclDevKernel_AllGather_RING_LL                              dur=  548.45 us
+    ncclDevKernel_AllGather_RING_LL                              dur=   17.73 us
+    void at::native::reduce_kernel<512, 1, at::native::ReduceOp< dur=    4.16 us
+    void at::native::_scatter_gather_elementwise_kernel<128, 8,  dur=    1.66 us

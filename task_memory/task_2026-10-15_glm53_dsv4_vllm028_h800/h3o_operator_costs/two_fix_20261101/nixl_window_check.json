@@ -1,0 +1,141 @@
+{
+ "classification": "D-WARM-TWO-FIX_NIXL_STEP_WINDOW_CHECK",
+ "runs": [
+  {
+   "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29",
+   "source_commit": "a69a52132257ca854a8759249bca65b32ffa06bf",
+   "link": {
+    "network_bandwidth_gbps": 126.2,
+    "network_latency_ms": 0.0647,
+    "request_handoff_delay_ms": 11.4,
+    "enable_compression": false,
+    "compression_ratio": 1.0,
+    "enable_latency_hiding": false,
+    "enable_request_transfer": false,
+    "transfer_protocol": "rdma",
+    "kv_connector": "nixl",
+    "kv_send_slowdown_per_layer_ms": 0.0,
+    "nixl_read_completion": "engine_step",
+    "kv_cache_dtype_size_bytes": 2,
+    "override_num_layers": null,
+    "override_num_heads": null,
+    "override_head_dim": null,
+    "name": "analytical"
+   },
+   "transfer_ms": {
+    "structural_bytes": 39521664,
+    "wire_bytes": 46103040,
+    "old_ms": 2.5700352773375594,
+    "new_ms": 2.9872381933438987
+   },
+   "kv_transfers": 128,
+   "step_starts_checked": 510,
+   "min_positive_step_start_gap_ms": 18.72496532622958,
+   "step_start_gaps_below_new_wire_ms": 0,
+   "window_hits": [],
+   "status": "NO_COMPLETION_CAN_MOVE"
+  },
+  {
+   "run_root": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32",
+   "source_commit": "0fb8955d95469c49824676831a814bc3afc08042",
+   "link": {
+    "network_bandwidth_gbps": 126.2,
+    "network_latency_ms": 0.0647,
+    "request_handoff_delay_ms": 11.4,
+    "enable_compression": false,
+    "compression_ratio": 1.0,
+    "enable_latency_hiding": false,
+    "enable_request_transfer": false,
+    "transfer_protocol": "rdma",
+    "kv_connector": "nixl",
+    "kv_send_slowdown_per_layer_ms": 0.0,
+    "nixl_read_completion": "engine_step",
+    "kv_cache_dtype_size_bytes": 2,
+    "override_num_layers": null,
+    "override_num_heads": null,
+    "override_head_dim": null,
+    "name": "analytical"
+   },
+   "transfer_ms": {
+    "structural_bytes": 39521664,
+    "wire_bytes": 46103040,
+    "old_ms": 2.5700352773375594,
+    "new_ms": 2.9872381933438987
+   },
+   "kv_transfers": 128,
+   "step_starts_checked": 510,
+   "min_positive_step_start_gap_ms": 18.72496532622958,
+   "step_start_gaps_below_new_wire_ms": 0,
+   "window_hits": [],
+   "status": "NO_COMPLETION_CAN_MOVE"
+  },
+  {
+   "run_root": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29",
+   "source_commit": "a69a52132257ca854a8759249bca65b32ffa06bf",
+   "link": {
+    "network_bandwidth_gbps": 126.2,
+    "network_latency_ms": 0.0647,
+    "request_handoff_delay_ms": 11.4,
+    "enable_compression": false,
+    "compression_ratio": 1.0,
+    "enable_latency_hiding": false,
+    "enable_request_transfer": false,
+    "transfer_protocol": "rdma",
+    "kv_connector": "nixl",
+    "kv_send_slowdown_per_layer_ms": 0.0,
+    "nixl_read_completion": "engine_step",
+    "kv_cache_dtype_size_bytes": 2,
+    "override_num_layers": null,
+    "override_num_heads": null,
+    "override_head_dim": null,
+    "name": "analytical"
+   },
+   "transfer_ms": {
+    "structural_bytes": 39521664,
+    "wire_bytes": 46103040,
+    "old_ms": 2.5700352773375594,
+    "new_ms": 2.9872381933438987
+   },
+   "kv_transfers": 128,
+   "step_starts_checked": 507,
+   "min_positive_step_start_gap_ms": 24.380075962758763,
+   "step_start_gaps_below_new_wire_ms": 0,
+   "window_hits": [],
+   "status": "NO_COMPLETION_CAN_MOVE"
+  },
+  {
+   "run_root": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64",
+   "source_commit": "0fb8955d95469c49824676831a814bc3afc08042",
+   "link": {
+    "network_bandwidth_gbps": 126.2,
+    "network_latency_ms": 0.0647,
+    "request_handoff_delay_ms": 11.4,
+    "enable_compression": false,
+    "compression_ratio": 1.0,
+    "enable_latency_hiding": false,
+    "enable_request_transfer": false,
+    "transfer_protocol": "rdma",
+    "kv_connector": "nixl",
+    "kv_send_slowdown_per_layer_ms": 0.0,
+    "nixl_read_completion": "engine_step",
+    "kv_cache_dtype_size_bytes": 2,
+    "override_num_layers": null,
+    "override_num_heads": null,
+    "override_head_dim": null,
+    "name": "analytical"
+   },
+   "transfer_ms": {
+    "structural_bytes": 39521664,
+    "wire_bytes": 46103040,
+    "old_ms": 2.5700352773375594,
+    "new_ms": 2.9872381933438987
+   },
+   "kv_transfers": 128,
+   "step_starts_checked": 507,
+   "min_positive_step_start_gap_ms": 24.380075962758763,
+   "step_start_gaps_below_new_wire_ms": 0,
+   "window_hits": [],
+   "status": "NO_COMPLETION_CAN_MOVE"
+  }
+ ]
+}
