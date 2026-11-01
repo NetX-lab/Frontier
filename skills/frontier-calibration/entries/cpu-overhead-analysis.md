@@ -9,8 +9,12 @@ fresh clean E2E status, CPU-probe runs admitted by the rules of
 `cpu-overhead-supplement`, and the CPU-overhead tables and settings the gated
 Frontier label used.
 
-Read host time from the probe's engine and per-stage records (one file per DP
-engine and PP stage) through the terms of the repository producer
+Map admitted engine-native CPU spans to Frontier's host terms, preserving
+launch/preparation overlap and keeping simulator-owned waits out of tables.
+A missing source span cannot be replaced by an unrelated engine's host cost.
+
+For the compatible vLLM profile, read engine and per-stage records through
+the terms of the repository producer
 (`frontier/profiling/cpu_overhead/vllm_cpu_probe.py`, defined in
 `frontier/profiling/README.md`, "From vLLM CPU-probe logs"): `schedule`,
 `prepare_inputs_e2e`, `forward_launch`, `forward_drain`, `sampler_e2e`, and

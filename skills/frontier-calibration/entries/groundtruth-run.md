@@ -1,31 +1,30 @@
 # Ground-Truth Run
 
-**When to use:** Use when a passed preflight permits a vLLM-BS ground-truth run in one declared mode.
+**When to use:** Use when a passed preflight permits a run of the selected reference engine in one declared mode.
 
-Read `../references/contract.md` (Ground-Truth Checkout, Run Modes),
-`../references/tool-boundaries.md`, and `../references/pitfalls.md`
-(Ground-Truth Collection). Require the passed preflight of the same run tag.
+Read `../references/contract.md` (Ground-Truth Engine and Build, Run Modes),
+`../references/engine-integration.md`, `../references/tool-boundaries.md`, and
+`../references/pitfalls.md` (Ground-Truth Collection). Require the passed
+preflight of the same run tag.
 
-Use the repository workers: `tests/comparison/dp_placement_pp/run_vllm_worker.sh`
-with `vllm_replay.py` for co-location and DP x PP cells, and
-`tests/comparison/calibration/run_pd_worker.sh` with `pd_replay.py`,
-`pd_proxy.py`, and `pd_metrics.py` for PDD cells. The engine file selects the
-model, layout, scheduler limits, graph mode, attention backend, and routing
-(`moe_uniform_routing` for MoE references). The worker writes evidence to
-`runs/groundtruth_<mode>/<run_tag>/`.
+Run the collector recorded in `engine_binding` with the pinned engine/build,
+native configuration, workload, and mode. Verify its support before allocation.
+For compatible vLLM builds, use the repository workers described in
+`tool-boundaries.md`, Existing vLLM Collection Profile. Other engines use their
+verified collector; vLLM worker flags, probes, and routing switches do not apply
+by default. Write evidence to `runs/groundtruth_<mode>/<run_tag>/` and retain
+the native outputs alongside any converted records.
 
-Submit GPU jobs through the operator's platform rules: the user's standing
-authorization covers jobs already planned in the current tickets, and any new
-job shape, resource size, or hardware needs a question first. Group the cell's
-clean run with the runs that feed tables or analysis in one job, chained in
-order (warm pass, repeated clean runs, then the diagnostic modes), and keep
-the launcher alive until the worker's terminal status. Choose clean repetition
-counts by `contract.md`, Calibration Objective, and keep each diagnostic paired
-with its clean reference on the same node group.
+Submit GPU jobs through the operator's platform rules and existing resource
+authorization. Group paired clean and diagnostic runs on the same node group,
+with warmup before the formal window, and keep the launcher alive through the
+worker's terminal status. Choose independent clean repetition counts by
+`contract.md`, Calibration Objective. Collect only the diagnostics needed by
+the selected analyses and supported by the engine binding.
 
-After the run, retain the launcher receipt, stdout and stderr, exit code, node
-identity, and output hashes, then hand every run tag to the post-run
-`groundtruth-run-check`. Clean output serves only the E2E gate; each diagnostic
-mode serves only its analysis. This entry changes no Frontier or vLLM source. A new
-probe, a fork fix, or a harness change needs its own decision and lands as a new
-ground-truth or harness commit, which starts a new run generation.
+Retain command receipts, stdout/stderr, exit code, node identity, and output
+hashes; hand every run tag to `groundtruth-run-check`. Clean output supports the
+E2E reference; diagnostic output supports only its declared analysis. This entry
+changes no Frontier or reference-engine source. A new probe, serving change,
+or collector change follows the existing change rules and starts a new run
+generation with its build and tool identities recorded.

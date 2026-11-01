@@ -8,15 +8,17 @@ root.
 ## Gate Evidence
 
 These files decide the E2E gate when their run check passed and their
-provenance is complete:
+provenance is complete. Native filenames and probe formats come from
+`engine_binding`; the vLLM paths below are the existing implementation examples:
 
 | File | Use |
 | --- | --- |
+| Native request records and their conversion receipt, named by the manifest | selected-engine clean rows with traceable IDs, token counts, clocks, and endpoints |
 | `runs/groundtruth_clean/<run_tag>/run/request_metrics.jsonl` | co-location clean vLLM request rows |
 | `runs/groundtruth_clean/<run_tag>/run/pd_request_metrics.jsonl` | PDD clean rows joined by `tests/comparison/calibration/pd_metrics.py` (proxy arrival, prefill first token, decode completion; unjoined requests in `pd_join_report.json`) |
 | `analysis/run_check_status.groundtruth_clean.json` | the run check that admits each clean run |
 | `$FRONTIER_TMP_ROOT/.../<case_id>/<label>/metrics/.../request_metrics.csv` | Frontier request rows of the gated label |
-| `run_gate.py normalize` output: `sample.json`, `vllm/<run_tag>.csv`, `frontier/<label>.csv` | normalized rows and their identity gaps |
+| Verified converter output: `sample.json`, `vllm/<run_tag>.csv`, `frontier/<label>.csv` | normalized rows and identity gaps; `vllm` is the gate's legacy storage key, with actual engine provenance retained |
 | `run_gate.py gate --output` JSON | the cell reading: verdict, each gated metric or mode pool, routing, coverage |
 | `tests/comparison/e2e_gate/cases/published_readings.json` | the published reading of every claimed cell |
 
@@ -28,7 +30,9 @@ reference run.
 
 ## Diagnostic Evidence
 
-These files decide their own analysis and never replace clean E2E values:
+These observations decide their own analysis and never replace clean E2E
+values. Bind the selected engine's equivalent scopes and readers before using
+a tool. Named vLLM modes/files below apply only to that compatible profile:
 
 | File | Analysis |
 | --- | --- |
@@ -41,7 +45,7 @@ These files decide their own analysis and never replace clean E2E values:
 | the error budget per case and metric | which analyses to run |
 | `analysis/workflow_gap_*`, `analysis/op_gap_*`, `analysis/residual_gap_*`, `analysis/cpu_overhead_*` | each entry's table, summary, and status |
 
-Measuring changes behavior: an `op_timing` run serializes scopes and a
+Measuring can change behavior: the existing vLLM `op_timing` run serializes scopes and its
 `kernel_timing` run syncs the device. Record the measurement cost
 (`measurement_cost.csv`) separately from the behavior it changes.
 
@@ -81,12 +85,13 @@ the one-row-per-formal-request join the gate needs. Event, stage, and op traces
 ## Minimal Selection Rules
 
 1. The E2E gate reads only normalized clean rows plus their run checks.
-2. Workflow analysis adds scheduler and placement evidence; DP x PP cells add
-   the mode labels and the dispatch-aligned members.
-3. Operator analysis adds the op/kernel run pair and profiling coverage after
+2. Workflow analysis adds scheduler and placement evidence; a validated
+   `dp_pp_pairs` case also needs mode labels and dispatch-aligned members.
+3. Operator analysis adds admitted op/kernel observations and profiling coverage after
    the first-batch and three-aligned-batch predicates pass.
 4. Residual analysis adds only the lane evidence its classifier names.
 5. CPU analysis adds CPU-probe rows only after its entry predicate.
 
-The case report names the tier each decision used and lists retained files it
+An absent optional diagnostic limits that analysis, not valid clean E2E
+evidence. The case report names the tier each decision used and lists retained files it
 did not consult.

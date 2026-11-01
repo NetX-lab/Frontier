@@ -9,31 +9,34 @@ predicate in `../references/call-graph.md`, and the user's recorded approval.
 Plan each tuple as `model, batch, TP, prefill tokens, decode tokens, scheduling
 mode, precision, phase`.
 
-Collect `cpu` mode runs in the same job and node as their paired clean run,
-after the warm pass, with probes isolated from E2E and operator
-instrumentation. Admit each probe run with `tests/comparison/e2e_gate/run_gate.py
-admit --rule <rule> --probe <run> --reference <clean run> ...`; the ratio must
-lie in 0.97-1.03:
+Collect the bound engine's host observations on the same node group as paired
+clean runs. Validate probe cost and host-speed comparability under a declared
+admission method before creating tables. Keep diagnostic probes isolated and
+preserve all valid clean runs for the E2E population. Missing native host spans
+or an incompatible table producer require a scoped capability change; no rows
+may be invented to satisfy a vLLM schema.
 
-| Rule | Cells | Probe measurement | Reference |
-| --- | --- | --- | --- |
-| `client_e2e` | all cells | mean client E2E | the cell's clean run in the same job |
-| `send_span` | PDD prefill, with `client_e2e` | median summed per-layer KV-send span of isolated prefills | mean over the job's clean runs |
-| `isolated_prefill` | DP x PP cells | the first formal request's isolated prefill step | median of the job's CPU-probe cohort |
+For the existing vLLM profile, use the `cpu` mode and admission rules in
+`../references/tool-boundaries.md`, Existing vLLM Collection Profile. The
+`run_gate.py admit` rules are `client_e2e`, plus `send_span` for the relevant
+PDD observations or `isolated_prefill` for the recorded DP x PP cohort. Read
+its `--help` and the producer before applying a rule. A rejected probe requires
+new evidence or an explicitly recorded, justified deviation; it never enters
+silently.
 
-A run that misses its rule is rejected, or published only with an
-`accepted_deviation` the user decided; it never enters silently.
+That profile produces tables with
+`python -m frontier.profiling.cpu_overhead.vllm_cpu_probe`; complete pinned
+recipes are in `tests/comparison/e2e_gate/artifacts.json`. Other engines need
+a verified mapping of their spans to the actual Frontier table fields. Preserve
+measurement families, step/stage ownership, overlap, and units in that mapping.
 
-Produce the tables with `python -m frontier.profiling.cpu_overhead.vllm_cpu_probe`
-(one `--cpu_probe_logs` per serving instance, `--num_pipeline_stages`,
-`--engine_idle_edges_ms 0 100 500`; the published recipes in
-`tests/comparison/e2e_gate/artifacts.json` show complete argument lists) into a new
-`inputs/cpu_overhead_<generation>/` directory with `provenance.json`: producer
-commit and arguments, every input log's SHA-256 with its run check and
-admission result, and the output SHA-256. Logs from vLLM-BS commits that lack
-the request-phase and KV-load fields are rejected by the producer; rebuild old
-tables with `run_gate.py cpu-table --producer-tree`. Never edit a published
-table.
+Publish into a new `inputs/cpu_overhead_<generation>/` with `provenance.json`:
+engine/build identity, producer commit and arguments, input hashes and run
+checks, admission evidence, and output hashes. The existing vLLM producer
+rejects logs missing its request-phase and KV-load fields; this is its input
+contract, not a requirement that another engine implement those exact probes.
+Never edit a published table. The existing pinned rebuild path remains
+`run_gate.py cpu-table --producer-tree` for compatible published recipes.
 
 Return to `cpu-overhead-analysis` with a new settings generation and fresh
 Frontier runs. This entry changes data only and never authorizes a code change.

@@ -12,7 +12,9 @@ Plan the tuples from the formal batches: first formal batch, active phases,
 in-flight endpoints, and the dense default grid of each profiler
 (`docs/profiling/README.md`). Filter the attention grid against device memory
 on the CPU first. Profile on the case's device generation, TP size, dtype, and
-measurement family; label analytical rows instead of borrowing a neighboring
+measurement family, using the implementation and backend the reference engine
+executes; a different fused kernel needs its own supported profiling path.
+Label analytical rows instead of borrowing a neighboring
 shape. Include `python -m frontier.profiling.kernel_gap.main` for graph-replayed
 steps and the collective or KV benchmarks when the plan needs fits.
 

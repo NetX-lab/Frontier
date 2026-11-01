@@ -1,6 +1,6 @@
 # Error Correction
 
-**When to use:** Use when decided Frontier-vLLM analysis artifacts identify corrections that must be applied, revalidated, and republished.
+**When to use:** Use when decided Frontier/reference-engine analysis artifacts identify corrections that must be applied, revalidated, and republished.
 
 Read `../references/contract.md`, `../references/repair-approval.md`, and
 `../references/call-graph.md`. This is the only composite that coordinates code
@@ -14,7 +14,7 @@ code-change marker, lands one commit, and runs the regression set; rerun the
 affected cells; refresh the domain analysis; and obtain a fresh decision before
 the next domain. Run workflow and operator corrections before any CPU
 correction of the same metric. A `groundtruth_defect` returns to `parity-run`
-with the new ground-truth commit and a new run generation.
+with the new ground-truth build identity and a new run generation.
 
 Close with the gate:
 

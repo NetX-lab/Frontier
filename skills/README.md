@@ -1,13 +1,14 @@
 # Frontier calibration skill
 
 [`frontier-calibration`](frontier-calibration/SKILL.md) guides an agent through
-comparing Frontier with vLLM-BS, finding the causes of prediction errors, and
-correcting the simulator. It covers time to first token (TTFT), time per output
-token (TPOT), request latency, and throughput. vLLM-BS is the instrumented vLLM
-fork used to collect ground truth.
+comparing Frontier with a chosen inference engine, finding the causes of
+prediction errors, and correcting the simulator. It covers time to first token
+(TTFT), time per output token (TPOT), request latency, and throughput. The reference can be vLLM, your
+own fork, SGLang, TensorRT-LLM, or another engine whose behavior you want to
+model in Frontier.
 
-The goal is to predict the behavior users normally see when they run vLLM with
-the same configuration. Calibration starts with enough independent clean runs
+The goal is to predict the behavior users normally see when they run the
+selected engine with the same configuration. Calibration starts with enough independent clean runs
 to establish a useful reference, including normal variation between runs.
 Detailed traces help explain errors; users should be able to assess prediction
 accuracy through ordinary repeated runs. Modeling changes need evidence that
@@ -15,12 +16,19 @@ they address recurring behavior and improve predictions on fresh runs.
 
 ## How calibration is organized
 
+For a new engine or build, the [engine integration procedure](frontier-calibration/references/engine-integration.md)
+first checks collection tools, metric conversion, and the Frontier behavior
+needed by the case. Existing vLLM collectors are available for compatible
+builds; other engines may need a reader, probe, or simulator capability added.
+Missing optional probes limit those diagnostics while supported E2E comparison
+can proceed.
+
 The skill has three main entry points. An agent can start with a new case or
 continue from evidence you already have.
 
 | Entry | Responsibility |
 | --- | --- |
-| [`parity-run`](frontier-calibration/entries/parity-run.md) | Match the model, workload, and runtime settings; collect and validate vLLM-BS runs; run Frontier on the same case. |
+| [`parity-run`](frontier-calibration/entries/parity-run.md) | Match the model, workload, and runtime settings; collect and validate reference-engine runs; run Frontier on the same case. |
 | [`error-analysis`](frontier-calibration/entries/error-analysis.md) | Compare E2E metrics, assess whether the clean reference is sufficient, and trace errors to configuration semantics, workflow, operators, communication, or CPU overhead. |
 | [`error-correction`](frontier-calibration/entries/error-correction.md) | Apply agreed corrections, run regressions, and collect fresh evidence before comparing metrics again. |
 
@@ -78,11 +86,13 @@ configuration directory, use its skills directory in place of the defaults
 above. If the agent already discovers this skill through another directory,
 keep that installation to avoid duplicate names.
 
-Before running a calibration, create `site.local.md` beside the skill's
-`SKILL.md`. Record the vLLM-BS checkout, calibration artifacts root, scratch
-root (`FRONTIER_TMP_ROOT`), Python command, GPU platform and device generation,
+Keep reusable local settings in `site.local.md` beside the skill's `SKILL.md`,
+or provide them with the case. Record the reference engine and its source
+checkout or installed build, calibration artifacts root, scratch root
+(`FRONTIER_TMP_ROOT`), Python command, GPU platform and device generation,
 and the local rules for submitting jobs. Git ignores this file so each machine
-can keep its own settings. Running the tools requires access to the Frontier
+can keep its own settings. Case-specific engine choices take precedence over
+these local defaults. Running the tools requires access to the Frontier
 checkout and the appropriate Python environments. Collecting new ground truth
 also requires the GPU resources specified by the case.
 
@@ -93,10 +103,11 @@ model, workload, and GPU layout for a new case. For an existing case, a request
 can be as simple as:
 
 ```text
-Use frontier-calibration to analyze the case in <case-directory>.
-Check that Frontier and vLLM-BS use the same settings and that the clean runs
-provide a sufficient reference. Compare TTFT, TPOT, request latency, and
-throughput. Investigate any metric outside the 10% gate and propose a correction.
+Use frontier-calibration to calibrate Frontier against my SGLang build.
+The engine configuration, workload, and clean runs are in <case-directory>.
+Verify the engine integration and that the clean runs provide a sufficient
+reference. Compare TTFT, TPOT, request latency, and throughput. Investigate any
+metric outside the 10% gate and propose a correction.
 ```
 
 Replace `<case-directory>` with the path to your case. To invoke the skill

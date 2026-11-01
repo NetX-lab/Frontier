@@ -5,7 +5,8 @@
 Read `../references/contract.md` (Error-Source Classes) and
 `../references/evidence-tiers.md`. Require the latest clean E2E status, the
 error budget, the workflow and operator statuses, and native evidence for each
-lane under test:
+lane under test. Use engine-native observations with verified boundaries; the
+following file names describe the existing vLLM profile:
 
 - PP: stage hand-off stamps from the `cpu` probe stage records and the
   `op_timing` run's `pp_boundary.jsonl`;

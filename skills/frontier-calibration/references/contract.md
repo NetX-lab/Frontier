@@ -4,13 +4,14 @@ This is the shared contract for every entry. `registry.json` is the entry
 catalog, `call-graph.md` owns execution order, and this file owns the evidence,
 decision, and approval rules. Gate arithmetic lives in the repository harness,
 `tests/comparison/e2e_gate/` (`README.md`, `gate.py`); this contract summarizes
-it and never overrides it.
+it and never overrides it. Engine-specific collection and conversion must first
+pass `engine-integration.md`; tool availability is not implied by this contract.
 
 ## Calibration Objective
 
-Frontier should predict the representative behavior and performance of vLLM
-under the same user-visible configuration and workload. An ordinary user may
-run that configuration repeatedly and compare a mean or a tail statistic;
+Frontier should predict the representative behavior and performance of the
+selected reference engine and build under the same user-visible configuration
+and workload. An ordinary user may run that configuration repeatedly and compare a mean or a tail statistic;
 they should not need internal scheduler, kernel, or routing traces to explain
 away a prediction error. Calibration uses those traces to find causes and
 improve the model, while its accuracy claim rests on ordinary clean runs.
@@ -67,9 +68,9 @@ speculative patch nor a narrower accuracy claim fixes the missing model.
 
 ## Case Layout
 
-A calibration task keeps one artifacts bundle, the directory every harness
-receives as `--artifacts-root`. The bundle is task-local and stays out of the
-repository; the repository pins its files by SHA-256 in
+A calibration task keeps one artifacts bundle. Record how each collector reads
+and writes that bundle; repository harnesses use `--artifacts-root`. The bundle
+is task-local and stays out of the repository; the repository pins its files by SHA-256 in
 `tests/comparison/e2e_gate/artifacts.json` and `cases/scenario_matrix.json`.
 
 ```text
@@ -78,11 +79,11 @@ repository; the repository pins its files by SHA-256 in
     manifest.yaml                      case binding (see Case Binding)
     case_init.md                       purpose and the decisions that created the case
     inputs/
-      engine*.json                     vLLM engine files, one per mode when they differ
+      engine_config.*                  native engine configuration, per mode when needed
       frontier_<generation>.json       Frontier settings, one file per table generation
       workload.json, trace/, cells/<cell>/trace/
       cpu_overhead*/                   published CPU-overhead tables with provenance.json
-      groundtruth_overlay.patch, fork_changed_files.txt
+      groundtruth_overlay.patch, fork_changed_files.txt  when source changes apply
     runs/groundtruth_<mode>/<run_tag>/ run_manifest.json, launcher receipt, run/, worker evidence
     analysis/                          run checks, gate readings, analysis tables and status files
     reports/                           review-ready summaries
@@ -107,83 +108,80 @@ keeps the earlier values in a history field. Required content:
 - `selected_checkout`: Frontier worktree, branch, commit, dirty paths (empty
   for a gate run), the commit under test when it differs, and the A/B reference
   revision when one is used;
-- the ground-truth checkout tuple (next section);
-- model and dtype, architecture, the vLLM parallel layout and its Frontier
-  mapping (repository `AGENTS.md`, "vLLM Parallel Semantics and Frontier
-  Mapping"), scheduler limits (`max_num_seqs`, `max_num_batched_tokens`,
-  `max_model_len`, block size), chunked prefill, prefix caching, graph mode and
-  capture sizes, attention backend, KV budget and its source, KV transfer,
-  routing status and method, weight mode, measurement families;
+- the ground-truth engine/build identity (next section) and `engine_binding`
+  from `engine-integration.md`;
+- model/tokenizer and dtype, architecture, native parallel layout and its
+  verified Frontier mapping, scheduler limits in the engine's own terms,
+  chunked prefill, prefix caching, graph mode and capture sizes, attention
+  backend, KV budget and its source, KV transfer, routing status and method,
+  weight mode, and measurement families;
 - the Frontier settings file of the current table generation;
 - cells: trace path, `formal_request_ids` and `warmup_request_ids` (from the
   trace's `request_ids.json`), load level, ground-truth run tags;
 - the decision IDs that set any of the above.
 
-A field the user has not decided is written `BLOCKED` or `PENDING`. Runners
-stop on such a field; they never substitute a default. The same holds for a
-null value in a settings file.
+An unresolved required field is written `BLOCKED` or `PENDING`; the affected
+runner stops instead of substituting a default. Record `not_applicable` with a
+reason for concepts the engine does not use. Native defaults may be used only
+when their effective values and source are verified and bound to the case.
 
-## Ground-Truth Checkout
+## Ground-Truth Engine and Build
 
-The ground truth is vLLM-BS, `https://github.com/fwyc0573/vLLM-BS.git`, branch
-`feature/frontier-comparison-instrumentation`, ref
-`refs/heads/feature/frontier-comparison-instrumentation`, a Python-only
-instrumentation fork of vLLM v0.10.2. The manifest and each run manifest record
-`groundtruth_checkout_path`, `groundtruth_branch`, `groundtruth_ref`,
-`groundtruth_commit`, `groundtruth_tree_dirty`, `groundtruth_remote_url`,
-`groundtruth_remote_tip`, `groundtruth_diff_artifact`,
-`groundtruth_dirty_patch_sha256`, and `groundtruth_overlay_patch_applied`.
+The user selects the reference engine and build. No repository URL, branch,
+upstream version, or private fork is mandatory. Record `groundtruth_engine`,
+`groundtruth_version`, the runtime environment, and one reproducible build
+identity in the manifest and every run manifest:
 
-- The tree is clean at the recorded commit (`groundtruth_tree_dirty=false`).
-- The commit may be local and ahead of `groundtruth_remote_tip`. Record the
-  ahead count, save `groundtruth_instrumentation_<sha>.diff` and the changed
-  file list in the bundle, and record the diff SHA-256. Pushing the fork is an
-  external action that needs the user's approval.
-- Probes are off by default, so a clean run on a probe commit measures the same
-  serving path. All modes of one case use one commit; a new commit starts a new
-  run generation.
-- Before claiming vLLM behavior, check the fork diff against upstream v0.10.2:
-  the fork changes some scheduling details.
+- For source-based runs: `groundtruth_checkout_path`, `groundtruth_commit`,
+  `groundtruth_tree_dirty`, and any applied instrumentation or overlay with
+  its diff artifact and hash. A detached checkout at the recorded commit is
+  valid. Record `groundtruth_branch`, `groundtruth_ref`,
+  `groundtruth_remote_url`, and `groundtruth_remote_tip` when present; a local
+  fork does not need a remote or a particular branch.
+- For installed or compiled runtimes: package/build version and an immutable
+  executable, package, or container digest. Pin compiled model artifacts,
+  build options, and plugins when they affect execution. Mark source-checkout
+  fields not applicable when source is unavailable; do not invent a commit.
 
-A detached, dirty, wrong-branch, or unrecorded checkout is `FAIL`.
+Use a clean pinned source commit or an immutable recorded source/build snapshot.
+Record `groundtruth_diff_artifact`, `groundtruth_dirty_patch_sha256`, and
+`groundtruth_overlay_patch_applied` when an overlay exists. All modes of one
+case use the same serving build; probes change only the declared observations.
+A build, source, or instrumentation change starts a new run generation.
+Unrecorded changes or a run that differs from its pinned identity fail admission.
+
+Inspect a fork's serving changes against its declared base when needed to
+understand behavior. An intentional fork difference is part of the selected
+target, not a `groundtruth_defect` merely because upstream behaves differently.
+A release claim must name the engine/build actually measured. Publishing a
+fork or its artifacts remains an external action requiring authorization.
 
 ## Run Modes
 
-`tests/comparison/dp_placement_pp/vllm_replay.py` (`MODES`, `server_env`) is
-the source of truth for each mode's switches. Modes are mutually exclusive in
-one server run.
+Modes name evidence purposes. `clean` runs preserve the selected serving path
+without timing-distorting diagnostic probes; normal production telemetry stays
+as configured. They provide the E2E reference. Separate diagnostic runs collect
+workflow, layer, operator/kernel, CPU, communication, or routing observations
+as the case needs. Their native flags and combinations come from the verified
+`engine_binding`, not from another engine's mode names. Diagnostic request
+metrics, if emitted, remain diagnostic.
 
-| Mode | Records | Use |
-| --- | --- | --- |
-| `clean` | request metrics only | the only rows that decide the E2E gate |
-| `schedule_timing` | scheduler step log | step membership, queueing, step periods |
-| `op_timing` | CUDA-event operator scopes, batch and PP-boundary logs | operator gap; launch gaps inside scopes included |
-| `kernel_timing` | the same with device sync per scope | kernel-only scope times; its step times are distorted and never read |
-| `instrumented` | MoE routing records | routing audit; not operator timing |
-| `cpu` | CPU probe (engine and per DP/PP stage logs) | host-time attribution and CPU-overhead tables |
-| `device_timeline` | CPU probe and torch profiler traces | device busy and idle per forward, collective waits |
-| `kv_save_timing`, `kv_save_device_ids` | CPU probe and KV-save probe | PD KV-send diagnosis |
+Before collection, warm the relevant prompt/context shapes and compilation or
+graph paths, and drain warmups before the formal window. Record the warmup
+policy and evidence of readiness. Pair timing observations with clean runs on
+the same node group and topology; record each run separately and assess repeat
+counts under Calibration Objective. Isolate conflicting ports and resources.
+The existing vLLM mode names, switches, and published warmup recipe live in
+`tool-boundaries.md`, Existing vLLM Collection Profile.
 
-Collection rules:
+### Weights and routing
 
-- At least three warmups, and warmups cover every prompt-length class of the
-  formal trace. The formal window starts after the warmups have drained.
-- Eager MoE runs follow an unmeasured warm pass over the cell's prompt lengths
-  in the same job, so compile caches are warm before measurement.
-- The clean run and the `cpu` / `schedule_timing` runs that feed tables or
-  analysis run in one job on one node. The KV block count comes from that cell's
-  own clean run.
-- MoE references run with vLLM-BS round-robin routing (engine key
-  `moe_uniform_routing`), which matches Frontier's `balanced` split.
-- Jobs with static ports run one at a time.
-
-### Weight policy
-
-Clean ground truth uses `groundtruth_weight_mode=dummy` and
-`real_weight_download=false`. The gate compares runtime timing and throughput,
-never generated text or accuracy. Dummy loading keeps the architecture, dtype,
-request shapes, scheduler, parallel domains, backend, graph mode, and KV budget.
-A loading mode that changes the measured path makes the run diagnostic-only.
+Use the selected workload's model weights, tokenizer, generation policy, and
+native routing behavior. Record weight identity and any loading substitution.
+Dummy weights or forced routing are valid only for an explicitly selected
+synthetic case whose measured path and limits are established. Its result
+supports that synthetic target, not ordinary native-model performance. Neither
+substitution is a default way to make an unsupported case pass.
 
 ## Status and Evidence
 
@@ -198,8 +196,8 @@ workflow or operator attempt.
 
 ## E2E Gate
 
-The gate compares clean Frontier rows with clean vLLM rows for the formal
-requests of one cell. Each metric is decided on its own and passes when
+The gate compares clean Frontier rows with clean reference-engine rows for the
+formal requests of one cell. Each metric is decided on its own and passes when
 `abs(frontier - groundtruth) / abs(groundtruth) <= 0.10`; a cell passes only
 when every gated metric passes.
 
@@ -213,25 +211,27 @@ when every gated metric passes.
 
 The formal window is `last_formal_completion_s - first_formal_arrival_s` on each
 side's own clock. Latency rows record `metric_statistic=mean`; median and p95
-are diagnostic. A vLLM value of zero, or a missing, zero, or non-finite
+are diagnostic. A reference value of zero, or a missing, zero, or non-finite
 denominator, is `INSUFFICIENT_EVIDENCE`.
 
 Admission comes before any number: each side holds every formal request exactly
-once, Frontier rows carry the vLLM token counts, and
+once, Frontier rows carry the reference token counts, and
 `request_e2e_time_ms = 1000 * (completion_s - arrival_s)` within 1e-3 ms with
 `0 <= ttft_ms <= request_e2e_time_ms`. A failed admission makes every metric
 `INSUFFICIENT_EVIDENCE`.
 
-Gate kinds (definitions in the harness README):
+Gate kinds (definitions in the harness README): select by validated metric
+semantics and evidence in `engine_binding`, not architecture labels alone.
+The specialized vLLM studies below do not automatically apply to other engines.
 
-- `single` (co-location): one Frontier run against every admissible clean run
-  of the cell, numerators and denominators summed over the runs.
-- `pd_s33` (PDD): `single` with each vLLM run's TTFT reduced by that run's
-  minimum endpoint offset (proxy hop plus prefill API-server time), the
-  declared bound of the S33 abstraction.
-- `dp_pp_pairs` (DP x PP): each request is labeled with the DP-lane mode of its
-  window (`in_phase`, `anti_phase`, `split`, `double_split`); every reference
-  run pairs with every Frontier ensemble member; a mode pool is gated once 20
+- `single` (ordinary pooled comparison): one Frontier run against every
+  admissible clean run of the cell, numerators and denominators summed over the runs.
+- `pd_s33` (the existing vLLM PDD study): `single` with each reference run's
+  TTFT reduced by that run's minimum endpoint offset (proxy hop plus prefill
+  API-server time), the declared bound of the S33 abstraction.
+- `dp_pp_pairs` (the existing vLLM DP x PP study): each request is labeled
+  with the DP-lane mode of its window (`in_phase`, `anti_phase`, `split`,
+  `double_split`); every reference run pairs with every Frontier ensemble member; a mode pool is gated once 20
   distinct requests reach it; no gated pool means `INSUFFICIENT_EVIDENCE`.
 
 Coverage: a cell whose formal batches leave the profiled ranges or grid spacing
@@ -243,22 +243,27 @@ system, plot, and trace files never close the gate.
 
 ### MoE routing gate
 
-Ground-truth routing is the reference. A MoE case records, for both sides, the
-router path, scoring function, `top_k`, weight renormalization, expert count, EP
-participant scope, and the load distribution. The current practice runs the
-reference with round-robin routing and audits an `instrumented` run against
-Frontier's `balanced` split per formal request, logical batch, layer, and
-phase:
+The selected engine's routing is the reference. Record both sides' router
+semantics, scoring function, `top_k`, weight renormalization, expert count, EP
+participant scope, and representative expert-load distribution. Choose the
+comparison criterion before observing the gap. Source inspection and diagnostic
+samples establish the mapping; ordinary accuracy claims still use clean runs.
+
+A deterministic forced-routing case can compare per-request, logical-batch,
+layer, and phase counts exactly:
 
 ```text
 count_abs_error = sum_i(abs(frontier_count_i - groundtruth_count_i))
 ```
 
-`MATCH` needs the same router semantics and participant scope and
-`count_abs_error = 0`. A routing path or scope difference is `MISMATCH` (cell
-`FAIL`); missing records are `UNSET` (cell `INSUFFICIENT_EVIDENCE`). A native
-router reference stays outside the gate until Frontier models its load
-distribution and the user accepts the bound.
+The existing vLLM round-robin profile requires the same semantics and scope
+with `count_abs_error = 0`. A native or stochastic router instead needs a
+Frontier model and evidence that represent its distribution and dependencies;
+matching engine names or replacing it with a balanced split proves nothing.
+Record `MATCH` only when the declared criterion is met, `MISMATCH` for a
+supported comparison that fails, and `UNSET` for missing evidence. Unsupported
+routing remains an explicit semantic limitation. These statuses feed the
+existing routing gate without changing its arithmetic.
 
 ## Operator Comparability Predicate
 
@@ -277,9 +282,9 @@ the owner.
 
 | Class | Meaning | Owner |
 | --- | --- | --- |
-| `simulation_logic` | Frontier's scheduling, execution, or pricing logic disagrees with vLLM | a Frontier repair entry |
+| `simulation_logic` | Frontier's scheduling, execution, or pricing logic disagrees with the selected engine | a Frontier repair entry |
 | `measurement_input` | a profiling table, CPU-overhead table, kernel gap, collective fit, or coverage gap | a supplement entry and a new table generation |
-| `groundtruth_defect` | the fork, harness, or a probe departs from upstream vLLM or distorts timing | a ground-truth fix: new commit, new run generation |
+| `groundtruth_defect` | reference collection fails to represent the selected build, or a harness/probe corrupts its measurements | a reference fix: new build/tool identity and run generation |
 | `reference_instability` | between-run variation whose cause and representative effect need evidence | repeated clean collection and causal attribution under Calibration Objective; exclusion only for evidenced invalid runs |
 | `declared_abstraction` | a boundary term Frontier deliberately leaves out, with a recorded bound | the gate kind that removes the bound |
 
@@ -287,13 +292,15 @@ Value rule: the highest-value corrections fix `simulation_logic`. Measurement
 engineering (re-collecting or tuning tables, probe rules, pooling rules) runs
 only when the user approves it for the task. A Frontier change never models a
 `groundtruth_defect`. A change that adds configuration surface needs a measured
-fidelity effect; the user has declined knobs worth less than 0.5% of a gate
-metric.
+fidelity effect and a benefit that justifies its implementation and maintenance
+cost for the case. An intentional engine or fork behavior belongs to the
+modeling target even when it differs from another engine.
 
 ## Decisions and Approval
 
 A decision changes topology, scheduling, metric meaning, gate rules, the
-ground-truth commit, a table generation, or Frontier numbers. For each one:
+ground-truth build identity, a table generation, or Frontier numbers. For each
+one:
 
 1. Gather the evidence and prepare options, each with its cost and expected
    effect, the recommended option first.
@@ -331,8 +338,8 @@ readings.
 `exec capture: UNKNOWN`. No platform hook records every shell call, so each
 entry writes a receipt for each command it launches: the command, working
 directory, declared environment, UTC start and end, exit code, Frontier commit
-and dirty state, ground-truth commit, and expected output paths. The receipt
-covers that entry's own calls only.
+and dirty state, ground-truth build identity, and expected output paths. The
+receipt covers that entry's own calls only.
 
 ## Compatibility
 

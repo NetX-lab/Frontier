@@ -1,6 +1,6 @@
 # Error Analysis
 
-**When to use:** Use when a completed Frontier-vLLM case needs a read-only explanation of its E2E gap and its error sources.
+**When to use:** Use when a completed Frontier/reference-engine case needs a read-only explanation of its E2E gap and its error sources.
 
 Read `../references/contract.md` (Error-Source Classes),
 `../references/evidence-tiers.md`, `../references/call-graph.md`, and
@@ -17,13 +17,14 @@ Read `../references/contract.md` (Error-Source Classes),
    `workflow-gap-analysis` now (`../references/layer-timing-calibration.md`).
    Its evidence stays diagnostic; the native run still needs the budget below.
 3. Build the error budget per case and failing metric: from the
-   `schedule_timing` run (step membership and periods), the admitted `cpu` run
-   (device and host split per step shape), the clean run (gate values), and the
-   Frontier label's stage ledgers, split each request's Frontier-minus-vLLM
+   bound workflow observations (step membership and periods), admitted host
+   and device spans, the clean run (gate values), and the Frontier label's
+   stage ledgers, split each request's Frontier-minus-reference
    gap into queue (TTFT only), step mix, device price, host price, and
    declared boundary terms. The budget closes when its parts add up to the gap
    within a stated residual; an open budget is `INSUFFICIENT_EVIDENCE`. Write it
-   under `analysis/error_budget/`.
+   under `analysis/error_budget/`. Missing diagnostic capabilities limit
+   attribution; they do not retroactively invalidate admitted clean metrics.
 4. Run the analyses the budget's largest parts select (call-graph.md); route
    missing coverage to the owning supplement and return to a fresh analysis.
 5. Assign every attributed part an error-source class, and rank the

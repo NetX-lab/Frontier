@@ -6,13 +6,14 @@ Read `../references/contract.md` (Case Binding, Command Receipts) and
 `../references/pitfalls.md` (Frontier Runs). Require the same manifest and a
 passed semantic check.
 
-Build one `python -m frontier.main` command from the case's engine file and
+Build one `python -m frontier.main` command from the case's native engine configuration and verified mapping and
 its current-generation Frontier settings file, passed by explicit argument.
 Bind:
 
 - the cell trace, or the dispatch-aligned member trace named by the manifest
   for a DP x PP or dispatch study;
-- the KV block count from the cell's own passing clean run;
+- the KV capacity and lifecycle mapping from the cell's passing clean run,
+  including a block count when applicable;
 - every profiling table path, the CPU-overhead tables, and `kernel_gap.csv`
   when the settings name them, so the checked-in default tables never load;
 - non-dummy prediction and a predictor cache shared by the runs on the same
@@ -30,4 +31,4 @@ seed) before launch. Verify the exit code, a log free of fallback warnings
 and every declared metric. An `--op-trace` run is diagnostic and gets its own
 label.
 
-This entry executes a case only; it never changes Frontier or vLLM source.
+This entry executes a case only; it never changes Frontier or reference-engine source.
