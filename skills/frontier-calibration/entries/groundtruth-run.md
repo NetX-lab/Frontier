@@ -18,8 +18,10 @@ Submit GPU jobs through the operator's platform rules: the user's standing
 authorization covers jobs already planned in the current tickets, and any new
 job shape, resource size, or hardware needs a question first. Group the cell's
 clean run with the runs that feed tables or analysis in one job, chained in
-order (warm pass, clean, then the diagnostic modes), and keep the launcher
-alive until the worker's terminal status.
+order (warm pass, repeated clean runs, then the diagnostic modes), and keep
+the launcher alive until the worker's terminal status. Choose clean repetition
+counts by `contract.md`, Calibration Objective, and keep each diagnostic paired
+with its clean reference on the same node group.
 
 After the run, retain the launcher receipt, stdout and stderr, exit code, node
 identity, and output hashes, then hand every run tag to the post-run

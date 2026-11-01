@@ -2,7 +2,7 @@
 
 **When to use:** Use when clean Frontier and vLLM request rows of a cell need the five independent E2E metric decisions.
 
-Read `../references/contract.md` (E2E Gate, MoE routing gate),
+Read `../references/contract.md` (Calibration Objective, E2E Gate, MoE routing gate),
 `../references/evidence-tiers.md`, and `tests/comparison/e2e_gate/README.md`.
 Require passing post-run checks for every clean reference run, a Frontier label
 run on the current settings generation, and the case routing status.
@@ -45,6 +45,12 @@ metric keeps the cell outside the gate. A routing status of `UNSET` or
 
 Write `analysis/e2e_metrics_summary.md` and `analysis/e2e_metrics_status.json`.
 The summary gives each metric's two absolute values with units, the relative
-error, the gate kind, the reference runs, the coverage class, and, for DP x PP
-cells, the gated mode pools and the reference modes without gated pairs. This
-entry is read-only and never proposes a scaling factor or code change.
+error, the gate kind, the independent clean-run count, between-run variability,
+statistic uncertainty, the reference-sufficiency assessment, the coverage
+class, and, for DP x PP cells, the gated mode pools and the reference modes
+without gated pairs. Report the ordinary clean-run comparison alongside any
+conditioned gate, with its stated boundary. Preserve `reading.json` as the
+harness's arithmetic verdict; when reference evidence is insufficient, the
+analysis status is `INSUFFICIENT_EVIDENCE` and calibration remains open even if
+that reading says PASS. This entry is read-only and never proposes a scaling
+factor or code change.

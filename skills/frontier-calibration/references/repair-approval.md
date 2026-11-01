@@ -3,6 +3,15 @@
 Every repair entry reads this file. It owns permission and order; the repair
 entry owns the domain evidence and its focused checks.
 
+## Modeling Rationale
+
+Before proposing a repair, apply `contract.md`, Calibration Objective. The
+proposal must show a representative clean-run gap, causal evidence for the
+behavior, ordinary-user inputs, expected metric benefit and implementation
+cost, and validation on fresh runs or cases. For an unmodeled mechanism, make
+its frequency and affected configurations explicit. A gate-specific assumption
+or a favorable subset of observations cannot supply this rationale.
+
 ## Required Order
 
 ```text

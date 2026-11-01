@@ -37,6 +37,7 @@ These files decide their own analysis and never replace clean E2E values:
 | `op_gap_analysis.py` outputs from one clean, one `op_timing`, and one `kernel_timing` run of the same trace | operator: scope times, uncovered window, host gaps, measurement cost |
 | `run/device_timeline.json` from `forward_device_timeline.py` | operator and residual: device busy and idle, all-reduce wait |
 | `instrumented` routing records and the routing audit | MoE routing status |
+| admitted full-model layer/stage timings and the simulator run that substitutes them | optional workflow check (`layer-timing-calibration.md`); validates only the exercised workflow with those timings, never native predictor accuracy |
 | the error budget per case and metric | which analyses to run |
 | `analysis/workflow_gap_*`, `analysis/op_gap_*`, `analysis/residual_gap_*`, `analysis/cpu_overhead_*` | each entry's table, summary, and status |
 

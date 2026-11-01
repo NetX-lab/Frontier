@@ -19,8 +19,10 @@ that avoids it. Read the section of the phase you are in.
   the warmup batches.
 - Collect the clean run and every run that feeds a table or analysis in one job
   on one node. Device lots differ in KV block count and eager speed, and the
-  first clean run on a node can still run slow; a second clean run within
-  0.97-1.03 of the first confirms the host state.
+  first clean run on a node can still run slow. A paired host-speed check
+  supports probe admission; it does not establish reference sufficiency or
+  authorize discarding otherwise valid slow clean runs (contract.md,
+  Calibration Objective).
 - Give DP x PP replays a heartbeat; after an idle period the client can
   dispatch late by tens of milliseconds, and the DP lane mode then follows
   client jitter.

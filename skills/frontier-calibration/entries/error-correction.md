@@ -30,6 +30,7 @@ Close with the gate:
 Readings pin the Frontier commit that produced them, so a calibration branch is
 merged, never rebased, and its readings stay separate from the PR stack under
 test. The case closes when every applicable metric of every claimed cell is
-within `0.10` and the diagnostic evidence is valid; a remaining failure is
+within `0.10`, repeated clean references are sufficient, the claimed scope
+matches ordinary-user evidence, and the diagnostic evidence is valid; a remaining failure is
 reported with its class and the user's decision to defer it. This composite
 never uses a result artifact as its own permission to change code.

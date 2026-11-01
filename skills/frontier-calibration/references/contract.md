@@ -6,6 +6,65 @@ decision, and approval rules. Gate arithmetic lives in the repository harness,
 `tests/comparison/e2e_gate/` (`README.md`, `gate.py`); this contract summarizes
 it and never overrides it.
 
+## Calibration Objective
+
+Frontier should predict the representative behavior and performance of vLLM
+under the same user-visible configuration and workload. An ordinary user may
+run that configuration repeatedly and compare a mean or a tail statistic;
+they should not need internal scheduler, kernel, or routing traces to explain
+away a prediction error. Calibration uses those traces to find causes and
+improve the model, while its accuracy claim rests on ordinary clean runs.
+
+### Establish a sufficient clean reference
+
+Declare the comparison statistic and its aggregation level before collection:
+a percentile of per-request latency differs from a percentile of run-level
+means. Record the independent clean-run count, per-run values, variability,
+and uncertainty of the claimed statistic. Warmups and many requests within one
+run do not substitute for independent run repetitions. Choose repeat counts
+from observed variability and the precision needed to distinguish a modeling
+effect or a gate verdict. Ten runs is an example, not a universal sufficient
+sample size; a tail estimate may require more evidence than a mean.
+
+Collect additional independent clean runs within the approved resources until
+the conclusion is stable at that precision. If uncertainty could change the
+conclusion, report `INSUFFICIENT_EVIDENCE` and the collection needed; a numeric
+gate pass does not resolve it. Record this assessment in the existing E2E
+summary, preserving the harness reading. Budget exhaustion leaves an explicit
+limit, never an assumed stable reference. The existing gate keeps its defined
+means, pooling, and 10% rule; a requested p90 comparison is reported separately
+unless a gate change is explicitly decided. A mean prediction alone does not
+establish tail accuracy.
+
+Keep all admissible clean runs of the declared population, including ordinary
+slow runs and recurrent mode changes. Exclude a run only for an evidenced
+validity failure under the collection rules, with its reason recorded
+independently of whether exclusion improves agreement. A probe's host-speed
+admission check does not select which otherwise valid clean runs count.
+Mode-conditioned analysis and declared abstractions retain their diagnostic
+value, but report their scope alongside the ordinary clean-run comparison;
+a restricted gate pass supports only that restricted claim.
+
+### Correct general behavior
+
+Base a repair on a causal behavior that recurs across independent runs or
+representative workloads. Its normal inputs must be available from the user's
+configuration/workload and supported profiling inputs, without per-run
+fine-grained ground-truth traces. Validate the proposed effect on fresh runs
+or cases that were not used to choose the correction. A run-specific offset,
+a temporary assumed behavior, selected mode replay, or a changed metric window
+introduced to pass the gate is not a modeling correction.
+
+When missing modeling causes a material gap, keep that gap explicit. Gather
+repeated clean-run evidence, source/event evidence of the mechanism, its
+frequency and contribution to the user-visible metric, and the affected
+configurations. Propose the smallest causal model with expected benefit,
+implementation cost, and validation on fresh evidence for the user's decision
+under `repair-approval.md`. Normal variability is not automatically an external
+fault or a reason to exclude behavior. If evidence or value remains unclear,
+record an unresolved limitation and the next evidence needed; neither a
+speculative patch nor a narrower accuracy claim fixes the missing model.
+
 ## Case Layout
 
 A calibration task keeps one artifacts bundle, the directory every harness
@@ -221,7 +280,7 @@ the owner.
 | `simulation_logic` | Frontier's scheduling, execution, or pricing logic disagrees with vLLM | a Frontier repair entry |
 | `measurement_input` | a profiling table, CPU-overhead table, kernel gap, collective fit, or coverage gap | a supplement entry and a new table generation |
 | `groundtruth_defect` | the fork, harness, or a probe departs from upstream vLLM or distorts timing | a ground-truth fix: new commit, new run generation |
-| `reference_instability` | the reference varies by node, host state, DP x PP mode, API stalls, or compile caches | collection and admission rules, reruns, or a declared exclusion |
+| `reference_instability` | between-run variation whose cause and representative effect need evidence | repeated clean collection and causal attribution under Calibration Objective; exclusion only for evidenced invalid runs |
 | `declared_abstraction` | a boundary term Frontier deliberately leaves out, with a recorded bound | the gate kind that removes the bound |
 
 Value rule: the highest-value corrections fix `simulation_logic`. Measurement
