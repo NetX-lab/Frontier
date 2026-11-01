@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Recovered the verification command receipt after a shared-exec variable collision; numerical output hashes unchanged, original start timestamp explicitly not retained. |
 | 2026-11-01 | Median3 A6/forward completed and verified against original folds, references and omissions; three complete classes PASS, four P2 outcomes pending. |
 | 2026-11-01 | Supplement business verification, complete three-run tables, current-table forward qualification and review complete; four CPU replays and median3 qualification running. |
 
@@ -108,6 +109,8 @@ Exact verification body/environment: `median3_verification_command.json` in the 
 The existing median3 generator replaces kernel-time medians only; gap/window reference remains original. The independent pass1/pass2 replay tables replace all timing statistics together. This difference is retained in the comparison record and cannot be hidden by a phase PASS.
 
 Record-format check: ordinary `git diff --check` passed before adding new artifacts. `git diff --cached --check` then reported the standard Python CSV writer's CRLF endings as trailing whitespace (exit 2). The CSV bytes and recorded hash were preserved. `git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check` passed (exit 0), retaining the default whitespace checks and recognizing CRLF. No source/config file or numerical evidence was changed for this format check.
+
+Verification-receipt RCA: the original inline `exec` shared the parent namespace. Its `for label,r` loop replaced the parent `r` command record with the median3 A6 result, making the final receipt a 2,924,993-byte result dump. The original retained invocation and surviving exit/elapsed/finish/output hashes recovered a correct 8,276-byte command receipt; the wrong prior bytes remain in Git commit `b568dc67` and their SHA is in the recovery block. The verifier took 0.872703 seconds and finished at 08:41:09 UTC; its original start timestamp was lost and is explicitly `null`, not reconstructed. All three numeric output hashes match before/after recovery. No qualification, data generation or P2 process was rerun, and no source/published input changed.
 
 ## Pending acceptance
 

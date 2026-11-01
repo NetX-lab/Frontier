@@ -26,7 +26,7 @@
 | 偏离模式 | 判定 | 证据与例外 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | 864 步业务、完整表和 current forward output 已交付，CPU 比较已启动；所需最小 preflight 已结束，不继续扩建 validator。 |
-| D2 细节反复重试 | CLEAR | running 读数、缺失 prerequisite、Boolean key 和 config-only 目录都有具体原因及最小修正；无 GPU 重跑或反复变参。 |
+| D2 细节反复重试 | CLEAR | running 读数、缺失 prerequisite、Boolean key、config-only 目录及内联 exec 的 receipt 变量冲突均有具体原因及修正；命令记录已恢复，数值 SHA 不变，无 GPU/资格/replay 重跑或反复变参。 |
 | D3 支线问题修补 | CLEAR | 修改限于 approved forward 判定、独立表和实际执行 prerequisite；未修补无关 source/GLM/prefill 问题。 |
 | D4 可并行任务停滞 | CLEAR | 代码、A 取数/表、输入探索和 review 并行完成；median3 在原四次 replay 运行期间完成，没有等待它们才复核。 |
 | D5 超范围镀金 | CLEAR | 四个代码文件均由 approved code/table 接受条件覆盖；没有新 simulator feature、GPU campaign、prefill 数据或 formal table。 |
