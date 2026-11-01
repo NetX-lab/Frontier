@@ -5,6 +5,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Final WARM-FINAL-REVIEW accepted/No findings; archive0cd8d5d3 complete. Primary exact skill/prerequisites import/final status commit remains integration TODO; two-fix/two-CPU-replay human approval not granted. |
+| 2026-11-01 | WARM-DOCS follow-up: recorded accepted skill review/root main 0cc4118a and accounting 7/7; moved current frontier from investigations to the two-fix decision, preserving pending final review and primary integration/archive. |
+| 2026-11-01 | WARM-DOCS: synchronized D-WARM-TARGET paired numerical PASS and residual reports; kept original all-request failures and formal qualification OPEN, skill consistency and primary review/integration TODO. |
 | 2026-11-01 | Final A6 actual-evidence review completed with no actionable evidence defect; retained diagnostic-only acceptance, review limits and material near-threshold P2-64 TTFT sensitivity. |
 | 2026-11-01 | A6-FINAL-DOCS: all four original CPU replays and final six-reading/96-metric collector terminal; continuation 6 PASS / 0 TODO, retained P2-64 repeat01 TTFT failures and full qualification OPEN. |
 | 2026-11-01 | Both independent-pass P2-32 replay/gates finished with all-repeat numerical PASS; P2-64 originals continue. Final collector is queued on original supervisor exit without polling. |
@@ -356,8 +359,43 @@
 | 2026-10-18 | Started approved controlled fixture checks/review beside dependency-aware ticket02 coverage and ticket03 cache preparation. |
 
 
-<a id="current-session-handoff--2026-10-25-mainline-correction"></a>
-### Forward-attention continuation evidence — 2026-11-01
+### Warm-target continuation evidence — 2026-11-01
+
+- **completed**: D-WARM-TARGET in requirements defines a warmed serving-path comparison, not a slow-request filter. Five canonical P2-64 repeat01 openers r006/r017/r027/r035/r036 bind uniquely through all eight TP-worker log cohorts, DP ownership and proxy remote-engine identity. The same rule finds no formal openers at P2-32 or repeats02/03. Future native warmup must prove complete lazy-pair coverage; fixed request count is insufficient. One-time compile/capture/handshake costs are not modeled.
+- **completed**: WARM-READING final `h3o_operator_costs/warm_target_20261101/readings/` contains six paired readings and 96/96 warm metric PASS across all repeats and pooled values. P2-64 retains 379 request-repeat rows (123/128/128); P2-32 retains all 384. Six empty-exclusion checks reproduce unchanged all-request values/verdicts exactly; original JSON bytes and SHA-256 remain retained. Root-level first-iteration readings remain historical, not current outputs.
+- **completed (warm numerical findings)**: P2-64 B29/pass1/pass2 pooled TTFT 684.545783/701.662204/700.865508 ms versus native720.639680 ms, signed errors -5.008591%/-2.633421%/-2.743975%. Repeat01 errors -4.599811%/-1.970116%/-2.066263%; repeats02/03 intact. Original all-request repeat01 FAIL 12.254940665%/10.169032726%/10.277736953% is preserved, not overwritten. Both scales PASS numerically under the warm rule; no qualified formal PASS is claimed.
+- **completed**: WARM-RESIDUAL retained-data report and 9/9 validation checks; no simulation rerun. P2-32 directly observed coarse P-side shortfall13.4–13.8 ms and post-P5.8–6.9 ms remain unallocated causes. P2-64 P-step9.7–10.2 ms and warm READ8.8–9.9 ms use partly probe/inferred allocations. The ~31 ms estimate is a price-neighborhood proxy, not a same-price long-term average. No TTFT offset or behavior correction is authorized.
+- **completed / accepted (skill only)**: SKILL-WARM-REVIEW (`ses_e68fa9…`), six findings CLOSED, no actionable findings, four workflow walkthroughs PASS. Requested `/data/ycfeng/Frontier/skills/frontier-calibration` is complete at root main commit `0cc4118a`; primary cross-worktree integration remains TODO.
+- **completed (accounting investigation)**: [WARM-ACCOUNTING report](h3o_operator_costs/warm_accounting_20261101/test_report_2026-11-01_warm_accounting.md) and [validation](h3o_operator_costs/warm_accounting_20261101/validation.json), 7/7 PASS. NIXL wire price uses 39,521,664 component B versus 46,103,040 packed B per TP handle; smallest proposal derives selected pages times existing physical stride for wire pricing only, preserving ownership/component semantics. +0.417203 ms is wire time, not TTFT. Native EP dispatch129/43 means three kernels/layer versus COMM registry default1; proposed dispatch3/combine1 adds +0.046836 ms direct eager P-step, not a TTFT promise. Primary inspected actual source/validation and accepted both structural findings; code corrections are NOT approved.
+- **completed / accepted (warm review/archive)**: WARM-FINAL-REVIEW `ses_e68dddb1effeH8TbRzOxiHxLPx`, No findings; independent96/96 warm metrics PASS, maximum5.952669%. Event identities/retained windows/all repeats/residual-proxy limits inspected; no separate row/hash verifier rerun. Primary accepted diagnostic/warm scope and archived helper, requirements, all four evidence directories and `test_report_2026-11-01_warm_target_integration.md` at current-branch `0cd8d5d3`.
+- **TODO (integration only)**: primary imports exact accepted skill/root main0cc4118a plus prerequisites into this branch and makes the final status commit after WARM-DOCS edits. Human approval for two existing-path fixes plus two CPU replays has been requested, NOT granted; subagent messages grant no implementation/replay authority. READ per-worker timing/host-zero stays insufficient; stop residual investigations, with no new GPU/host observation or READ mechanism.
+- **completed**: WARM-DOCS current-pointer correction and scoped [check-progress](check_progress_2026-11-01_warm_target.md); broader tickets05/09/11/19 remain OPEN. Exact commands/results/limits: [warm-reading report](h3o_operator_costs/warm_target_20261101/test_report_2026-11-01_warm_reading.md) and [warm-residual report](h3o_operator_costs/warm_residual_20261101/test_report_2026-11-01_warm_ttft_residual.md). No source/evidence edits or commit in this documentation slice.
+- **completed (WARM-DOCS verification)**: Python3.10.6 read-only inline document checks71/71 PASS, current report/checkpoint links resolve, all seven D-patterns and six S-patterns present, five historical tails byte-identical to HEAD. CSV has192 rows, warm96/96 PASS, original3/3 FAILs retained;12/12 displayed TTFT values/errors match within1e-6 rounding. Initial metric-validator `<stdin>:8 AssertionError` was its bare `repeat01` assumption: CSV uses producer-prefixed canonical IDs. Suffix matching corrected only the checker; no source, evidence or replay changed. No unresolved check failure. Scoped `git diff --check` exits0; the untracked checkpoint also has no trailing whitespace. This checks documentation and retained metrics, not event identity independently or final review approval.
+- **completed (follow-up documentation verification)**: before the final evidence update, Python3.10.6 read-only checks60/60 PASS, accounting receipt7/7 PASS, five retained historical bodies unchanged and ticket19 retained-population throughput rule byte-identical. Final update adopts the primary's explicit warm-review acceptance/archive receipts without another row/hash verifier or expanded investigation. Final scoped command exits0 (cwd=this task directory): `git diff --check -- plan.md progress.md summary.md tickets/05-dsv4-flash-family.md tickets/09-predictor-bundle.md tickets/19-comparison-and-acceptance.md check_progress_2026-11-01_warm_target.md`. Current checkpoint is7 PASS/2 TODO: primary exact skill/prerequisites import/final status commit and human two-fix/two-CPU-replay decision. No source/evidence edits or commit by WARM-DOCS.
+
+Verification commands (Git command cwd=this task directory; Python command cwd=worktree root; no GPU/imported simulator):
+
+```bash
+git diff --check -- plan.md progress.md summary.md tickets/05-dsv4-flash-family.md tickets/09-predictor-bundle.md tickets/19-comparison-and-acceptance.md
+/data/ycfeng/envs/frontier-py310/bin/python -c '
+from pathlib import Path
+import csv
+p = Path("task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800")
+names = ["plan.md", "progress.md", "summary.md", "tickets/05-dsv4-flash-family.md", "tickets/09-predictor-bundle.md", "tickets/19-comparison-and-acceptance.md"]
+tokens = ["D-WARM-TARGET", "TODO", "720.639680", "12.254940665", "test_report_2026-11-01_warm_reading.md", "test_report_2026-11-01_warm_ttft_residual.md"]
+assert all(t in (p / n).read_text() for n in names for t in tokens)
+r = list(csv.DictReader((p / "h3o_operator_costs/warm_target_20261101/readings/metrics.csv").open()))
+w = [x for x in r if x["reading"] == "warm"]
+f = [x for x in r if x["status"] == "FAIL"]
+assert len(w) == 96 and all(x["status"] == "PASS" for x in w)
+assert len(f) == 3 and all(x["repeat"].endswith("repeat01") and x["case"] == "p2_64" and x["metric"] == "ttft_ms" for x in f)
+print("PASS: 36 current-document assertions; 96/96 warm metrics; 3 preserved original FAILs")
+'
+```
+
+### Retained forward-attention continuation evidence — 2026-11-01, all-request reading
+
+The following completed A6 history retains its original all-request verdicts. D-WARM-TARGET supersedes the comparison reading only; it does not change recorded runs, references, omissions or A6 review scope.
 
 - **completed**: approved decisions recorded in requirements/plan/tickets 05/09. A ended Succeeded (container exit 0/restart 0, 3,349 seconds / 0.9302778 GPUh); launcher log says `FINAL_STATUS succeeded`.
 - **completed**: 11 selected files / 440,302,960 bytes with matching remote/local SHA-256. The first phase-status read returned `running`; a later directory enumeration/read returned `succeeded`, and the unchanged collector passed. No GPU/worker/collector change or retry allocation occurred.
@@ -389,9 +427,11 @@
 
 ## Current session handoff — Codex CLI (2026-10-31)
 
-**State: in-progress; refreshed2026-11-01.** Decision46 and D-CODEX-DIRECT-RJOB control DSV4 H200 P2-32/P2-64, then H800; GLM stays paused. Measured CC and formalK19 remain unchanged. Numerical P2-32 PASS is not full qualification; B29 P2-64 repeat1 TTFT remains12.254940665% FAIL.
+<a id="current-session-handoff--2026-10-25-mainline-correction"></a>
 
-Approved A6 forward-attention/independent-pass continuation above is complete (6 PASS / 0 TODO); no original replay, gate or collector remains active. All three P2-64 generations fail repeat01 TTFT. The dated evidence below retains prior measurements, decisions and then-active actions; the completed continuation supersedes its launch/measurement/pending-decision pointers without changing qualification requirements.
+**State: in-progress; refreshed2026-11-01 under D-WARM-TARGET.** Decision46 and D-CODEX-DIRECT-RJOB retain DSV4 H200 P2-32/P2-64, then H800; GLM stays paused. Measured CC, K19 and10.3/11.4 ms delays stay unchanged. Six event-bound paired readings now PASS all96 warm metrics/all repeats. Original all-request P2-64 repeat01 TTFT FAILs remain historical evidence, not the current deciding reading. Numerical warm PASS does not close attention omissions, hardware, NIXL/payload, memory or formal qualification.
+
+Current dependency: `completed {readings || residual attribution || skill consistency || accounting} -> accepted warm review/evidence archive -> {primary exact skill/prerequisites import + final status commit || human two-fix/two-CPU-replay decision}`. Skill is accepted at root main `0cc4118a`; accounting7/7 and two structural findings are accepted, not code corrections. WARM-FINAL-REVIEW No findings/96 warm PASS maximum5.952669% is accepted; archive `0cd8d5d3` is complete. Only primary integration remains TODO. Stop residual investigations; human approval for fixes/replays is requested but NOT granted. No new GPU/host or READ mechanism. A6 remains complete (6 PASS / 0 TODO); original replay/gate/collector runs stay terminal. Dated records retain prior comparisons/actions.
 
 - completed: B29 A8 census6,310,644/6,310,644 and9,002,176/9,002,176 exact calls, zero violations/stale stage ends. F4 five metric artifacts equal B28 at each scale. Retained readings and commands: `h3o_operator_costs/codex_resume_20261031/`.
 - completed: F1a P2-64, session50972/workload EXIT0, clean source9f5f8b61;128 complete rows/917,504tokens,53,248forward/stage-end records,zero stale events. Six compute hashes and allthree native CSVs equal B29. Init72.455524s/run12,215.365581s. Watcher23683 generated one reading at2026-11-01 02:22:44+08:00: pooled TTFT741.216351→463.897052ms(error37.41408%),TPOT25.870531→15.565031ms(39.83490%),E2E27,206.769532→16,386.923646ms(39.76895%),THPT5,963.206318→6,404.273989tok/s(7.39649%). Allthree repeats FAIL allthree latency metrics; THPTPASS. P2-32 F1a already failed TPOT/E2E. This completes F1a diagnostic comparison; B30a/backend stay off formal inputs. Report `test_report_2026-10-31_f_variant_comparison.md`; evidence `h3o_operator_costs/f_comparisons_20261101/f1a_p2_64/`.
@@ -431,9 +471,9 @@ Approved A6 forward-attention/independent-pass continuation above is complete (6
 - in-progress (2026-11-01 06:37 UTC, D-A6-THREE-RUN): name resolution works again (I-009 resolved). Quota check: no personal non-preemptible H200 job before this one. Submitted once: `exp-1101-143721-849401`, creator `i-fengyicheng`, non-preemptible, `step_main`, 1 H200, NFS source the build worktree on this host, Running at 06:38 UTC; launcher pid 3087410 under `setsid nohup`, log `/data/ycfeng/tmp/a6_supplement_passes_20261101_01/launcher.log`. Details in issues.md I-009.
 
 Next actions:
-1. Approved continuation and final actual-evidence review are completed with no actionable evidence defect; review scope/limits are recorded in the continuation report. A, median3, all four original P2 replays/gates and the final comparison remain completed; do not repeat them or infer formal qualification.
-2. Obtain a further YC decision before formal table promotion. Preserve all per-repeat failures, 48 workload omissions, median3's original gap/window reference limitation and fixed-case sensitivity limits; small spread is not proof of reference sufficiency or residual causality.
-3. NIXL/memory/coverage input qualification, formal P2 acceptance and then H800 remain separate unfinished work under the current plan; tickets 05/09/11/19 stay open, GLM paused. No new GPU run or formal table promotion is approved by this continuation. F1–F4 and independent-pass comparisons are terminal. The unselected 16-repeat draft and unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched.
+1. Primary imports exact skill/root main0cc4118a and prerequisites into this branch, then makes the final status commit. Done: import/final status receipts recorded. Warm review/archive are already accepted/complete at0cd8d5d3; do not restart review or expand checks.
+2. In parallel, await the requested human decision on two existing-path fixes (NIXL selected pages × existing physical stride for wire pricing only; COMM EP dispatch3/combine1) plus two CPU replays. Done: approve/reject/defer recorded; NOT yet granted by human or subagent messages. Only if approved: affected CPU geometry/ownership and NONE/PIECEWISE/FULL gap-count regressions plus the two CPU replays. Accounting7/7 is complete; stop residual investigations, with no new GPU/host or READ mechanism. Original runs stay terminal; ~31 ms remains a price-neighborhood proxy.
+3. Obtain decisions before any behavior/host-zero change, formal table promotion or new GPU run. Warm numerical PASS does not close 48 omissions, median3 gap/window limitations, hardware/NIXL/memory/coverage or promotion receipts; tickets05/09/11/19 stay OPEN before formal P2 and H800. GLM, the unselected16-repeat draft and unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched.
 
 ## Historical session handoff — 2026-10-25 mainline correction
 

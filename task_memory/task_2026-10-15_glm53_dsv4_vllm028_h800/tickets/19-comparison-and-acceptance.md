@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Final warm review/archive accepted and complete at0cd8d5d3; only primary exact skill/prerequisites import/final status commit remains integration TODO, human two-fix/two-replay approval pending. Retained-population THPT rule unchanged. |
+| 2026-11-01 | WARM-DOCS follow-up: skill accepted/root main0cc4118a and accounting7/7; correction decision/final review/integration/archive pending, retained-population throughput rule unchanged. |
+| 2026-11-01 | Applied D-WARM-TARGET paired-reading contract and completed warm/residual status; preserved all-request FAILs and exact completion/window evidence, formal qualification and review/integration remain unfinished. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
 | 2026-11-01 | F2 P2-32 completed with all-repeat numerical PASS and exact collective coverage; only F2 P2-64 remains active. |
 | 2026-11-01 | Completed F1a at both scales with failed latency readings; both F2K18 replays and formal qualification remain open. |
@@ -27,7 +30,17 @@
 
 ## Current Codex checkpoint — 2026-10-31
 
-Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE, decision46 and D-WARM-TARGET apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+Current deciding comparison: six B29/pass1/pass2 paired warm readings at P2-32/P2-64, all96 metrics/all repeats PASS. Canonical P2-64 repeat01 openers r006/r017/r027/r035/r036 bind uniquely through all eight TP-worker log cohorts, DP ownership and proxy identity; only those five paired requests leave repeat01 on both sides. P2-32 and repeats02/03 exclude none. Original all-request repeat01 TTFT FAIL12.254940665%/10.169032726%/10.277736953% remains unchanged beside the warm reading. P2-64 pooled TTFT684.545783/701.662204/700.865508 ms versus native720.639680 ms (signed errors -5.008591%/-2.633421%/-2.743975%); repeat01 -4.599811%/-1.970116%/-2.066263%. No latency-based selection or input promotion.
+
+WARM-READING and retained-data WARM-RESIDUAL are complete: [reading report](../h3o_operator_costs/warm_target_20261101/test_report_2026-11-01_warm_reading.md), [residual report](../h3o_operator_costs/warm_residual_20261101/test_report_2026-11-01_warm_ttft_residual.md). Authoritative readings are `../h3o_operator_costs/warm_target_20261101/readings/`, not the retained root-level first iteration. P2-32 coarse13.4–13.8 ms P-side/5.8–6.9 ms post-P shortfalls remain unexplained; P2-64 P-step9.7–10.2 ms and warm READ8.8–9.9 ms partly use probe/inferred evidence. Its ~31 ms residual is a price-neighborhood proxy, not a same-price long-term average; no offset authorized. Skill accepted/root main `0cc4118a`: six findings CLOSED/no actionable findings/four walkthroughs PASS. WARM-FINAL-REVIEW `ses_e68dddb1effeH8TbRzOxiHxLPx` completed No findings, independently96/96 warm PASS maximum5.952669%, event identities/retained windows/all repeats/proxy limits inspected; no separate row/hash verifier rerun. Primary accepted diagnostic/warm scope and archived helper/requirements/all four evidence directories/integration report at `0cd8d5d3`. Review/archive complete; only primary exact skill/prerequisites import/final status commit remains integration TODO. Human two-fix/two-CPU-replay approval requested, NOT granted by subagent messages. Warm numerical PASS does not qualify48 attention omissions, hardware, NIXL/payload, memory or promotion receipts; full ticket stays OPEN.
+
+WARM-ACCOUNTING [report](../h3o_operator_costs/warm_accounting_20261101/test_report_2026-11-01_warm_accounting.md)/[validation](../h3o_operator_costs/warm_accounting_20261101/validation.json) is complete, 7/7 PASS. NIXL component39,521,664 B versus packed46,103,040 B per TP handle supports selected pages × existing physical stride for wire pricing only, preserving ownership/component semantics (+0.417203 ms wire, not TTFT). EP dispatch129/43=3 physical kernels/layer versus COMM registry default1 supports dispatch3/combine1 (+0.046836 ms direct eager P-step, no TTFT promise). Primary accepted both findings, NOT code corrections. Stop residual investigations: READ per-worker timings/host-zero remain insufficient. Next is the concrete two-fix decision and, only if approved, affected CPU regressions; no new GPU/host or READ mechanism. Keep the retained-population THPT rule below; the five current interior exclusions do not change endpoints, but that is not a general fixed-window rule.
+
+### Retained F comparison checkpoint — 2026-11-01, all-request reading
+
+The original eight-reading F comparison below preserves its metrics and terminal failures; it is not the latest warm-target verdict.
 
 All eight complete comparison readings now exist: B29 P2-32 PASS; B29 P2-64 FAIL on repeat 1 TTFT; F1a P2-32 FAIL on TPOT/E2E; both F4 readings FAIL TTFT and equal B28 metrics. F1a P2-64 is complete: all-repeat TTFT/TPOT/E2E FAIL (pooled37.41/39.83/39.77%), THPT7.40%PASS; its gate ran once. F2K18 P2-32 is complete with allfour metrics PASS in every repeat (worstTTFT5.56523%); P2-64 is now complete and fails repeat01 TTFT12.792204607% (779.888727400ms native versus680.123765687ms predicted); the other11 per-repeat metrics pass. All comparison launchers/watchers are terminal. The collector verifies8readings/128metrics/3unavailable outcomes, with zero A8 violations and unchanged references. Decision46 diagnostic comparisons are recorded; full ticket acceptance remains open. See [F comparison report](../test_report_2026-10-31_f_variant_comparison.md). Collectives-only03 completed; F1b fitting and G5h validation are recorded, and both F1b CPU replays terminated COVERAGE_MISS. The held-out validation fails, and no complete F1b E2E metrics exist; both limitations are retained. F3 measurements are complete but the affine fit fails; no F3 replay is claimed. Fresh A6 completed with qualification failures. All four metrics and all three repeats are required; pooled PASS never overrides a repeat FAIL. Complete 05/09 qualification and formal measured acceptance remain OPEN.
 
@@ -77,7 +90,9 @@ measurement-proposal follow-up PAUSED_PENDING_USER_APPROVAL until a new explicit
 GLM data/receipts/globalUNVERIFIED,not PASS. The FULL KERNEL_ONLY proposal is
 parked,not this task's next approval question.
 
-**Status:** PARTIAL — canonical binding and H200 operator comparisons are implemented; F variants and full measured qualification/final acceptance remain incomplete.
+**Status:** PARTIAL — canonical binding, F comparisons, warm/residual/accounting diagnostics, skill acceptance and final warm review/evidence archive are complete. Only primary exact skill/prerequisites import/final status commit remains integration TODO; human approval of two fixes/two CPU replays is pending. Full measured qualification/final acceptance remains OPEN.
+
+**Warm target (D-WARM-TARGET):** use the same source-and-run-event rule for every case/repeat. An evidenced one-time compile/capture/handshake carrier leaves the warm metric population on both native and Frontier sides of that repeat; keep every repeat and the unchanged all-request reading beside it. Do not subtract a fitted delay, exclude slow requests, reconstruct counterfactual scheduling, or treat a fixed warmup count as coverage evidence. Future native formal windows require lifecycle/server proof that every needed lazy communication pair is opened. One-time warmup costs are not modeled. All128 exact-length request completions and original window endpoints remain recorded even when the warm reading retains fewer pairs.
 
 ### Historical source execution checkpoint — superseded (2026-10-22)
 
@@ -117,7 +132,7 @@ Its inputs may include profile04 step-level costs and other listed substitutions
 - [ ] Record client TTFT, TPOT, THPT and per-request E2E with the same definitions, aggregation and window as the native reference, plus p50/p95 and the non-gating diagnostics.
 
 ### comparison_and_calibration
-- [ ] Compute `abs(frontier − vllm) / abs(vllm)` for each of mean client TTFT, mean request TPOT, THPT and mean request E2E, independently gated at 0.10. THPT is `917504 / (last_formal_last_token_completion − first_formal_submission)` for each complete repetition, **not** tokens divided by the 127 s arrival span. Warmup/startup/idle is excluded. Record identical repetition aggregation on both sides; keep each repetition's endpoints, exact counts and metrics. Output-only throughput, request/s, ITL, internal TTFT and percentiles do not gate.
+- [ ] Compute `abs(frontier − vllm) / abs(vllm)` for mean client TTFT, mean request TPOT, THPT and mean request E2E, independently gated at0.10 for each warm repeat under D-WARM-TARGET. Keep the unchanged all-request reading beside it: full-repetition THPT is `917504 / (last_formal_last_token_completion − first_formal_submission)`, not tokens divided by127 s. Warm THPT uses retained paired token totals over each side's retained-population window (`last retained completion − first retained arrival`), using the existing harness arithmetic; pooling sums token totals and duration totals on both sides. Record both original and retained endpoints. In the current P2 readings the five excluded requests are interior and the window endpoints remain unchanged; this observation is not a fixed-endpoint rule for other populations. Keep every repeat's exclusion IDs/evidence, counts, endpoints and both readings; warmup/startup/idle outside the formal window stays excluded. Output-only throughput, request/s, ITL, internal TTFT and percentiles do not gate.
 - [ ] Where a metric misses, localize the cause before changing anything: scheduler behaviour, attention or FFN cost, MoE routing, CUDA graph coverage, host/device overlap, or P/D communication. Record the evidence that identifies the cause.
 - [ ] Fix causes, not symptoms. No arbitrary multipliers, no benchmark-specific numerical patches, no duplicated predictor logic, no widened threshold. A fix that needs a Frontier core refactor goes to YC with alternatives first.
 - [ ] Re-run after each fix and keep every attempt in the record with its verdict.
@@ -146,7 +161,7 @@ Its inputs may include profile04 step-level costs and other listed substitutions
   Active scope is DSV4 across the four requested tasks,not an extra workload/
   topology sweep. GLM results remain paused,not falsely complete and not needed
   for DSV4 closure. Never claim completion for missing active DSV4 cases.
-- [ ] Guard against accidental overfitting without expanding the matrix: compare all 3 clean repetitions from ticket 18, each independently warmed with both roles idle between repetitions and all 128 exact-length completions. Retain every repetition and targeted correctness result. Do not publish PASS from a successful subset, average away unstable admission, or substitute the deferred SharedGPT case.
+- [ ] Guard against accidental overfitting without expanding the matrix: compare all3 admitted repetitions from ticket18, retaining all128 exact-length completions and targeted correctness evidence. Independently warm required kernels/graphs/lazy communication pairs and prove coverage before future formal windows, with both roles idle between repetitions. Apply D-WARM-TARGET's paired event exclusion to retained runs uniformly and retain unchanged all-request readings; do not drop a repeat, select by latency, average away unstable admission or substitute deferred SharedGPT.
 - [ ] Report any limitation that qualifies the verdict: an unmeasured shape, an unstable reference, a diagnostic that could not be collected. Labelling rules stay in force: `FAIL`, `INSUFFICIENT_EVIDENCE`, `COVERAGE_MISS`, `REFERENCE_UNSTABLE`, `BLOCKED_ON_DECISION`.
 - [ ] Record the GPU-hours actually spent, including initialization, compilation, warm-up and failures.
 - [ ] Verify affected shared infrastructure for the active DSV4 change and
@@ -157,7 +172,7 @@ Its inputs may include profile04 step-level costs and other listed substitutions
 ## Acceptance
 
 Every active DSV4(priority,hardware,size) result is recorded independently;
-final PASS requires all four errors<=10% in every admitted repetition.64-GPU
+final PASS requires qualified inputs and all four warm-reading errors<=10% in every admitted repetition under D-WARM-TARGET, with unchanged all-request readings retained.64-GPU
 formal runs additionally have a valid pre-launch30% promotion receipt and correct
 resource class. Publish native/Frontier values, errors, sources and limitations;
 neither basic validation nor30% promotion counts as final acceptance. Paused GLM
