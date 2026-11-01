@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | I-009 resolved at 06:36 UTC: name resolution works again; quota check passed and the supplement job `exp-1101-143721-849401` was submitted once. |
 | 2026-11-01 | I-009 rechecked at 06:28 UTC: name resolution still fails; nothing submitted. |
 | 2026-11-01 | I-009 opened: this session's runtime has no DNS resolution, so the approved A6 supplement passes (D-A6-THREE-RUN) cannot be submitted from it; the package is verified and waits for a networked launch. |
 | 2026-10-31 | I-008 resolved: A10 replays of B28 finished; the EP prices of the 6,144-token prefill now match the native critical paths, and both cases fail on TTFT for reasons outside I-008. |
@@ -191,7 +192,7 @@ One rank's kernel durations are not critical paths, so these readings check cons
 
 ## I-009: no DNS in the session runtime blocks the A6 supplement submission (2026-11-01)
 
-Status: open. Owner: lead; needs YC to launch from a networked runtime or to restore network access here.
+Status: resolved 2026-11-01 06:36 UTC (name resolution works again in this runtime; launch record at the end of this section). Owner: lead.
 
 **Observed.** `socket.getaddrinfo` fails with `gaierror [Errno -3] Temporary failure in name resolution` for `deploy.i.shaipower.com`, `oss.i.shaipower.com`, `artifactory.stepfun-inc.com` and `github.com` (checked 2026-11-01 05:44 UTC, after an earlier failure of the read-only quota inspection `h3o_operator_costs/a6_three_run_20261101/inspect_quota.py`). The proxy recipe, the StepMind RJob API and `ssh shai-ycfeng` all need name resolution. No platform operation was attempted or performed; `quota.json` does not exist. A recheck at 06:28 UTC still failed for `oss.i.shaipower.com` and `deploy.i.shaipower.com`.
 
@@ -201,3 +202,5 @@ Status: open. Owner: lead; needs YC to launch from a networked runtime or to res
 
 1. Read-only quota and personal-reservation check: run `h3o_operator_costs/a6_three_run_20261101/inspect_quota.py` from the main worktree after the handbook proxy recipe, with the StepMind environment Python; it writes `quota.json` next to itself. Submit only if personal non-preemptible H200 reservations stay at most 32 with this job.
 2. `bash /data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01/launch/launch_glm_producers.sh /data/ycfeng/Frontier/.worktrees/g1h-supplement-build/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/package_01/jobs/A6_SUPPLEMENT_PASSES.json`
+
+**Resolution (2026-11-01).** At 06:36 UTC `getent hosts deploy.i.shaipower.com` returned `10.70.201.188`. Step 1 ran at 06:36:46 UTC (`quota.json` written): five live personal jobs, all preemptible (`quotagroup.brainpp.cn/preemptible=yes`, `step_main`), so this job makes one personal non-preemptible H200; the quota-group object read returned 403 and is not used. `ssh shai-ycfeng` (`id -un` = `i-fengyicheng`) confirmed the output directory `/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/h200_v4_attention/a6_supplement_passes_20261101_01` did not exist. Step 2 ran once under `setsid nohup` at 06:37:17 UTC (launcher pid 3087410, log `/data/ycfeng/tmp/a6_supplement_passes_20261101_01/launcher.log`): `Job Create` `exp-1101-143721-849401`. Read back at 06:38 UTC: creator `i-fengyicheng`, preemptible `no`, `step_main`, queue `step-main-default`, 1 GPU / 16 CPU / 125 Gi, the locked image digest `2286e853…`, NFS source `100.96.128.195:/data/ycfeng/Frontier/.worktrees/g1h-supplement-build` (current host address), phase Running.

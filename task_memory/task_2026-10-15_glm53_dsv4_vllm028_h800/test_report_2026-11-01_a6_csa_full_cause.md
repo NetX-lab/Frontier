@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Added section 6: what the variation does to the forward time and metrics a same-configuration vLLM comparison observes, with a revised recommendation. Diagnostic only; no input, threshold or verdict changed. |
 | 2026-11-01 | Created: cause of the CSA FULL decode variation from the retained 16-repeat probe, phase-level repeatability, phase-level held-out on the recorded A6 folds (all 15 keys within the A6 limits), and three correction options. No formal input, threshold or acceptance verdict changed. |
 
 ## Purpose and scope
@@ -138,6 +139,67 @@ The four scopes that fail the formal per-scope gate are all concurrent scopes. T
 
 Interaction with D-A6-THREE-RUN: on the 989 workloads that already have three runs, median-of-three targets left CSA FULL decode at 21–25% p90 for q_projection and index compress-store (noise-floor report), consistent with section 2. Under option 1 the attention gate passes on the current single-run table, so the approved supplement passes (0.93 GPUh, blocked by I-009) would no longer be needed to qualify attention; they would only check robustness.
 
+### 6. Impact on what a same-configuration vLLM comparison observes
+
+YC's follow-up asks for the correction from the user's side: a user compares Frontier with a same-configuration vLLM run and does not collect kernel-level ground truth. The user therefore sees the four request metrics, which follow the forward time. This section propagates the variation to that level.
+
+Command (CPU only, source `47cead2a` plus this script; output SHA `c4c30396…`, script SHA `3428c578…`):
+
+```
+env PYTHONPATH=$PWD:$PWD/tests/analysis PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp \
+  timeout 600s /data/ycfeng/envs/frontier-py310/bin/python h3o_operator_costs/a6_csa_full_cause_20261101/user_impact.py \
+  --phase-heldout h3o_operator_costs/a6_csa_full_cause_20261101/phase_heldout.json \
+  --model-config data/config/models/deepseek-ai__DeepSeek-V4-Flash.json --layers 43 \
+  --replay /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/forwards.jsonl.gz /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/forwards.jsonl.gz \
+  --package-plan h3o_operator_costs/a6_repeatability_20261101/package_plan.json --case-mapping h3o_operator_costs/a6_repeatability_20261101/case_mapping.json \
+  --raw <the two probe raw files of section "Inputs"> --output h3o_operator_costs/a6_csa_full_cause_20261101/user_impact.json
+```
+
+**Metrics on the table that fails A6.** The B29 replays use the same attention table (`01a9d51b…`, in their receipts). Absolute relative error against the pooled native references, `codex_resume_20261031/*/reading.json`:
+
+| Case | TTFT | TPOT | E2E | THPT |
+| --- | ---: | ---: | ---: | ---: |
+| P2-32 | 5.26% | 0.04% | 0.05% | 0.09% |
+| P2-64 | 7.68% (repeat01 12.25%, FAIL) | 2.22% | 2.37% | 0.20% |
+
+P2-64 native TTFT itself ranges 718.27–779.89 ms across its three repeats.
+
+**Share of a real decode forward** (B29 per-forward records, serving, real decode forwards):
+
+| Quantity | P2-32 | P2-64 |
+| --- | ---: | ---: |
+| Forwards; FULL share | 14,678; 98.3% | 23,708; 97.9% |
+| Mean composed forward | 19.881 ms | 25.298 ms |
+| Attention scope sum (upper limit: overlap counted twice) | 4.681 ms (23.5%) | 4.697 ms (18.6%) |
+| The four varying scopes, sum | 0.827 ms (4.16%) | 0.964 ms (3.81%) |
+| Those scopes each wrong by their worse-key p90 (27.4%, 13.1%, 30.4%, 28.2%), same sign, all on the critical path | 0.228 ms (1.15%) | 0.269 ms (1.06%) |
+
+**Start order versus elapsed time** (16-repeat probe, four FULL workloads):
+
+- Layer elapsed, together against staggered: −0.30% to −1.85%.
+- Whole-forward attention (43 layers weighted by layer counts: CSA 1 + 20, HCA 1 + 19, uncompressed 2), every CSA layer together against every CSA layer staggered: −0.020 to −0.040 ms, which is −0.57% to −1.06% of attention and at most about 0.20% of a 19.88 ms forward.
+- Whole-forward attention across 16 repeats, all eight workloads: CV 0.29–1.17%; mean over median −0.09% to +0.16%. The median-based table is therefore not a systematic error against the mean-based official metrics.
+
+**Forward-level held-out.** Rolling the recorded held-out rows over the 43 layers, predicted attention against the measured layer windows (unchanged folds; 1,373 workloads, 24 skipped because a key is outside held-out coverage):
+
+| Forward class | Workloads | Median / p90 absolute | Maximum | Signed mean |
+| --- | ---: | ---: | ---: | ---: |
+| FULL decode | 464 | 0.63 / 1.67% | 7.55% | −0.28% |
+| PIECEWISE decode | 469 | 0.58 / 1.65% | 3.74% | −0.20% |
+| PIECEWISE first_tail | 440 | 0.65 / 1.89% | 4.07% | −0.35% |
+
+Inference, not a replay: with the upper-limit attention share, a 1.67% attention error moves the forward by about 0.39% (P2-32) and 0.31% (P2-64), and the 7.55% maximum by about 1.8% and 1.4%.
+
+**Revised recommendation (replaces option 1 as stated in section 5).**
+
+1. No simulator change and no new measurement for this variation. Modeling the start order would add machinery without moving any observable metric; options 2 and 3 settle per-scope numbers no user sees.
+2. The attention verdict of A6 moves to whole-forward attention per workload against the measured layer windows, per forward class, with unchanged folds, seed and limits. Per-scope and per-key phase errors stay reported as diagnostics for every scope, with no separate concurrent/serial rule. A6 stays a required check for workloads the P2 cases do not exercise; the four metrics against vLLM stay the final verdict.
+3. Evidence still needed, using data already paid for: replay P2-32 and P2-64 with attention tables built from each of the three independent passes (CPU only). The spread of the four metrics is how much measurement noise reaches the user, measured instead of inferred.
+
+Trade-offs of a forward-level verdict: errors of opposite sign between layer types cancel. That cancellation is real for this model because the layer pattern is fixed; a different layer pattern needs its own run. TPOT agreement alone cannot replace the check, because EP collectives take 48–66% of the forward and could compensate.
+
+Outside this decision, same viewpoint: the only failing official reading is P2-64 repeat01 TTFT. A6 evaluates no prefill or dummy row, and the attention table's prefill rows cover one length (6144 padded rows). What Frontier does for another prompt length was not run here.
+
 ## Conclusions
 
 Observations:
@@ -160,3 +222,4 @@ Inferences, not verified:
 - The phase-level held-out evaluates a different quantity (the composed phase per row) than A6 (each scope per row). Its rows include rows where some scope is interpolated; the all-scopes-exact subsets are reported separately and give the same result.
 - The phase reference is one measured run per row; only the 16-repeat probe (eight workloads) measures its repeatability.
 - The probe's prompt contents and GPU cache/clock state were not fixed, as recorded in the probe report.
+- Section 6: all attention times come from graph replay on one H200, not from a serving run. No native per-forward attention comparison exists, so the together/staggered mix of a real serving run is unmeasured; the sensitivity bound assumes these two classes are the ones that occur. The P2 cases are one workload per scale. H800 is not covered.

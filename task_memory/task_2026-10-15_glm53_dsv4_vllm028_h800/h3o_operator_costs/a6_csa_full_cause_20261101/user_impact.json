@@ -1,0 +1,396 @@
+{
+  "classification": "DIAGNOSTIC_USER_VISIBLE_IMPACT",
+  "layer_counts": {
+    "csa/reuse": 20,
+    "csa/first": 1,
+    "hca/reuse": 19,
+    "hca/first": 1,
+    "uncompressed/first": 2
+  },
+  "per_scope_p90_csa_full_decode": {
+    "dsv4_q_projection": 0.273949104282803,
+    "dsv4_index_fused_query_prepare": 0.13069476582125975,
+    "dsv4_compressor_fused_compress_store": 0.3041136495448772,
+    "dsv4_index_compressor_fused_compress_store": 0.28173853262892945
+  },
+  "forward_heldout": {
+    "workloads_complete": 1373,
+    "workloads_incomplete": 24,
+    "groups": {
+      "FULL/decode": {
+        "count": 464,
+        "median_absolute": 0.006296240656761709,
+        "p90_absolute": 0.01667818184251091,
+        "maximum_absolute": 0.07554550345884636,
+        "signed_mean": -0.002763471968386556,
+        "signed_median": -0.003398305401314583,
+        "measured_attention_ms_by_padded_rows": {
+          "1": 3.430669189453125,
+          "2": 3.4109160156250002,
+          "4": 3.4010751953125,
+          "8": 3.38985400390625,
+          "16": 3.534050537109375,
+          "24": 3.7553725585937503
+        }
+      },
+      "PIECEWISE/decode": {
+        "count": 469,
+        "median_absolute": 0.005771787906713066,
+        "p90_absolute": 0.016464283972151182,
+        "maximum_absolute": 0.037442273159643324,
+        "signed_mean": -0.0019986095767066435,
+        "signed_median": -0.0018570970195144199,
+        "measured_attention_ms_by_padded_rows": {
+          "1": 3.7873244628906253,
+          "2": 3.831899169921875,
+          "4": 3.857892578125,
+          "8": 3.8122041015625,
+          "16": 3.92850732421875,
+          "24": 4.2635146484375
+        }
+      },
+      "PIECEWISE/first_tail": {
+        "count": 440,
+        "median_absolute": 0.0065352885688717,
+        "p90_absolute": 0.018866524387944828,
+        "maximum_absolute": 0.04074921407299048,
+        "signed_mean": -0.003454856907663669,
+        "signed_median": -0.0034165619114384094,
+        "measured_attention_ms_by_padded_rows": {
+          "2": 3.9063386230468753,
+          "4": 3.9340322265625,
+          "8": 3.9212324218750005,
+          "16": 4.011495605468751,
+          "24": 4.342982421875
+        }
+      }
+    }
+  },
+  "replays": {
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/forwards.jsonl.gz": {
+      "decode_real_forwards": 14678,
+      "mean_composed_ms": 19.881395417922217,
+      "mode_counts": {
+        "PIECEWISE": 255,
+        "FULL": 14423
+      },
+      "local_tokens": {
+        "1": 389,
+        "2": 404,
+        "3": 404,
+        "4": 404,
+        "5": 404,
+        "6": 404,
+        "7": 405,
+        "8": 404,
+        "9": 400,
+        "10": 8724,
+        "11": 2336
+      },
+      "mean_attention_scope_sum_ms": 4.681071545780594,
+      "mean_varying_scope_ms": {
+        "dsv4_q_projection": 0.3326370827338511,
+        "dsv4_index_fused_query_prepare": 0.061610597062494714,
+        "dsv4_compressor_fused_compress_store": 0.30218278015048544,
+        "dsv4_index_compressor_fused_compress_store": 0.13037670854126265
+      },
+      "varying_scope_share_of_forward": 0.04158697873604803,
+      "bound_all_scopes_wrong_by_their_p90_ms": 0.22780786407596026,
+      "bound_share_of_forward": 0.011458343807728975
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/forwards.jsonl.gz": {
+      "decode_real_forwards": 23708,
+      "mean_composed_ms": 25.29761273621356,
+      "mode_counts": {
+        "PIECEWISE": 506,
+        "FULL": 23202
+      },
+      "local_tokens": {
+        "1": 1292,
+        "2": 1225,
+        "3": 1289,
+        "4": 1249,
+        "5": 1289,
+        "6": 9526,
+        "7": 7838
+      },
+      "mean_attention_scope_sum_ms": 4.696696045201371,
+      "mean_varying_scope_ms": {
+        "dsv4_q_projection": 0.32688556675494723,
+        "dsv4_index_fused_query_prepare": 0.0584768204654486,
+        "dsv4_compressor_fused_compress_store": 0.40849437235534936,
+        "dsv4_index_compressor_fused_compress_store": 0.17003553391143916
+      },
+      "varying_scope_share_of_forward": 0.038102104872028954,
+      "bound_all_scopes_wrong_by_their_p90_ms": 0.26932689878671257,
+      "bound_share_of_forward": 0.010646336537564702
+    }
+  },
+  "probe": {
+    "g1-e0-0262-full": {
+      "mode": "FULL",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.5,
+          "together_median_ms": 0.13097583007812502,
+          "staggered_median_ms": 0.1313759765625,
+          "together_over_staggered": -0.003045811683725974
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.421875,
+          "together_median_ms": 0.10364794921875001,
+          "staggered_median_ms": 0.10464111328125,
+          "together_over_staggered": -0.009491145796878264
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 3.5859343261718744,
+        "mean": 3.5839940490722655,
+        "coefficient_of_variation": 0.007120707123995433,
+        "mean_over_median": -0.0005410799315112014
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": 0.0025396347045898438,
+        "csa/True": -0.004010720085820263,
+        "hca/True": 0.00030244067509843653,
+        "csa/False": -0.0019658902239405585,
+        "hca/False": 0.00019986574535457713
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": -0.020263427734374895,
+      "forward_difference_relative": -0.005650808378302594
+    },
+    "g1-e0-0263-full": {
+      "mode": "FULL",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.375,
+          "together_median_ms": 0.13065576171874999,
+          "staggered_median_ms": 0.13161669921875002,
+          "together_over_staggered": -0.0073010302317561004
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.515625,
+          "together_median_ms": 0.1036796875,
+          "staggered_median_ms": 0.10486376953125,
+          "together_over_staggered": -0.011291621849404576
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 3.612785888671875,
+        "mean": 3.613027099609375,
+        "coefficient_of_variation": 0.00293587568415186,
+        "mean_over_median": 6.676591000220888e-05
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": 0.015386823729880872,
+        "csa/True": -0.0007631689060392244,
+        "hca/True": 0.00057255315469118,
+        "csa/False": -0.0033651214925729533,
+        "hca/False": 0.0010068525885686963
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": -0.02464257812499987,
+      "forward_difference_relative": -0.006820935113334083
+    },
+    "g1-e1-0729-first_tail": {
+      "mode": "PIECEWISE",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.0
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.0
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 3.9389594726562502,
+        "mean": 3.9396655578613284,
+        "coefficient_of_variation": 0.011653576817722378,
+        "mean_over_median": 0.00017925678341690343
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": 0.0015869207766303628,
+        "csa/True": 0.003383192191023232,
+        "hca/True": 0.0029775452291480597,
+        "csa/False": -0.0028907266525556308,
+        "hca/False": 0.005227088442424366
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": 0.0,
+      "forward_difference_relative": 0.0
+    },
+    "g1-e1-0730-first_tail": {
+      "mode": "PIECEWISE",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.0
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.0
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 3.9190556640625,
+        "mean": 3.920238983154297,
+        "coefficient_of_variation": 0.009196796319385839,
+        "mean_over_median": 0.00030193985317650274
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": 0.0010227924187411475,
+        "csa/True": -0.00030091767188100693,
+        "hca/True": 0.0015029860409832008,
+        "csa/False": -0.0019101046255506349,
+        "hca/False": 0.001215614267741083
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": 0.0,
+      "forward_difference_relative": 0.0
+    },
+    "g1hs-e0-0100-full": {
+      "mode": "FULL",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.125,
+          "together_median_ms": 0.13755224609375,
+          "staggered_median_ms": 0.140144287109375,
+          "together_over_staggered": -0.01849551679264705
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.28125,
+          "together_median_ms": 0.1106884765625,
+          "staggered_median_ms": 0.112560546875,
+          "together_over_staggered": -0.016631673925491475
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 3.761401611328125,
+        "mean": 3.758118072509766,
+        "coefficient_of_variation": 0.006267182245145117,
+        "mean_over_median": -0.0008729561896474447
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": -0.00040556798675828176,
+        "csa/True": -0.002418853208043581,
+        "hca/True": -0.0007008100100245329,
+        "csa/False": -0.0009485018869321848,
+        "hca/False": 0.001934048286003076
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": -0.04003344726562502,
+      "forward_difference_relative": -0.010643225957328573
+    },
+    "g1hs-e0-0101-full": {
+      "mode": "FULL",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.3125,
+          "together_median_ms": 0.13891162109375,
+          "staggered_median_ms": 0.14086376953125002,
+          "together_over_staggered": -0.013858414012319575
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.34375,
+          "together_median_ms": 0.1106083984375,
+          "staggered_median_ms": 0.11225634765625,
+          "together_over_staggered": -0.014680231925915943
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 3.81080810546875,
+        "mean": 3.8117021484375,
+        "coefficient_of_variation": 0.0038890368956134946,
+        "mean_over_median": 0.0002346071867189714
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": 0.000286868888445424,
+        "csa/True": -0.0010576010586894613,
+        "hca/True": 0.0008245275679881203,
+        "csa/False": -0.002594437157921403,
+        "hca/False": 1.4146617494992242e-05
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": -0.03491113281250002,
+      "forward_difference_relative": -0.009161083908266162
+    },
+    "g1hs-e0-0253-piecewise": {
+      "mode": "PIECEWISE",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.0
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.0
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 4.370326171875,
+        "mean": 4.3724758911132815,
+        "coefficient_of_variation": 0.0040069876037785645,
+        "mean_over_median": 0.0004918898850423403
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": 0.0015536305707262166,
+        "csa/True": 0.0008532663316582756,
+        "hca/True": -0.0034152195815800868,
+        "csa/False": -0.0022490306705771346,
+        "hca/False": 0.0010383262592228437
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": 0.0,
+      "forward_difference_relative": 0.0
+    },
+    "g1hs-e0-0254-piecewise": {
+      "mode": "PIECEWISE",
+      "layer_samples": 176,
+      "csa_groups": {
+        "first_csa_layer": {
+          "instances": 16,
+          "together_share": 0.0
+        },
+        "reuse_csa_layers": {
+          "instances": 64,
+          "together_share": 0.0
+        }
+      },
+      "forward_attention_ms": {
+        "repeats": 16,
+        "median": 4.2581811523437505,
+        "mean": 4.264833801269531,
+        "coefficient_of_variation": 0.008195421541799754,
+        "mean_over_median": 0.001562321725584459
+      },
+      "layer_window_mean_over_median_by_key": {
+        "uncompressed/True": 0.0009129110393422124,
+        "csa/True": -0.0004845551795479297,
+        "hca/True": -0.0007116849720012475,
+        "csa/False": -0.0025201733042010677,
+        "hca/False": 0.004063695947386758
+      },
+      "forward_difference_all_together_vs_all_staggered_ms": 0.0,
+      "forward_difference_relative": 0.0
+    }
+  },
+  "limits": "Forward attention totals use the sampled layers' row values weighted by the model's layer counts. One probe on one H200 with eight workloads. No native per-forward comparison."
+}
