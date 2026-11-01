@@ -1,0 +1,284 @@
+{
+  "status": "PASS",
+  "generated_utc": "2026-11-01T22:36:39.356931+00:00",
+  "job": "exp-1102-030025-971155",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/p2_nixl6144_q1_20261102",
+  "download": {
+    "files": 23,
+    "bytes": 1297587,
+    "hashes_equal": true,
+    "missing_remote": [],
+    "remote_nodes": [
+      "gpu-h200-0457.lgcm.sh.istep.fun",
+      "gpu-h200-0604.lgcm.sh.istep.fun"
+    ]
+  },
+  "checks": [
+    {
+      "name": "download_hashes",
+      "pass": true,
+      "values": {
+        "files": 23,
+        "bytes": 1297587,
+        "hashes_equal": true,
+        "missing_remote": [],
+        "remote_nodes": [
+          "gpu-h200-0457.lgcm.sh.istep.fun",
+          "gpu-h200-0604.lgcm.sh.istep.fun"
+        ]
+      }
+    },
+    {
+      "name": "two_distinct_h200_nodes_16_ranks",
+      "pass": true,
+      "values": {
+        "nodes": [
+          "gpu-h200-0457.lgcm.sh.istep.fun",
+          "gpu-h200-0604.lgcm.sh.istep.fun"
+        ],
+        "node_ranks": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": 0,
+          "gpu-h200-0604.lgcm.sh.istep.fun": 1
+        },
+        "inventory_gpus_per_node": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": 8,
+          "gpu-h200-0604.lgcm.sh.istep.fun": 8
+        },
+        "h200_inventory_lines_per_node": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": 8,
+          "gpu-h200-0604.lgcm.sh.istep.fun": 8
+        },
+        "allocated_uuids_per_node": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": 8,
+          "gpu-h200-0604.lgcm.sh.istep.fun": 8
+        },
+        "unique_uuids": 16,
+        "cuda_visible_devices_per_node": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": 8,
+          "gpu-h200-0604.lgcm.sh.istep.fun": 8
+        },
+        "census_returncodes": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": 0,
+          "gpu-h200-0604.lgcm.sh.istep.fun": 0
+        }
+      }
+    },
+    {
+      "name": "phase_exits_zero",
+      "pass": true,
+      "values": {
+        "per_node": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": [
+            {
+              "phase": "C_nixl",
+              "returncode": 0,
+              "visible_devices": "GPU-380f85a1-7eac-94ac-c48a-2155433b109f,GPU-8dcb2913-5572-2089-3c20-e84e49aafe7c,GPU-68b319ac-d478-93d9-bcee-3eced4959933,GPU-b61bbe5b-2324-01c9-b1e6-30f57563d484,GPU-f3f6eeb0-b521-9c14-baa0-fa6acd261f8f,GPU-dd2b6c85-aa6b-b359-7848-54ebc5502292,GPU-86ce56ec-4fad-0995-1bd4-bba1f19097de,GPU-21a0dcd1-e931-e645-80c4-88f74c368a71",
+              "ucx_net_devices": "mlx5_bond100:1,mlx5_bond101:1,mlx5_bond102:1,mlx5_bond103:1,mlx5_bond104:1,mlx5_bond105:1,mlx5_bond106:1,mlx5_bond107:1,mlx5_bond_0:1",
+              "exception": null,
+              "skipped": false
+            }
+          ],
+          "gpu-h200-0604.lgcm.sh.istep.fun": [
+            {
+              "phase": "C_nixl",
+              "returncode": 0,
+              "visible_devices": "GPU-be8c646d-d064-5c96-1870-3a816aeb0640,GPU-1875d524-bec1-7ac5-821c-1d957b979843,GPU-6fa69f76-6d0f-0b4d-2cca-af67883774f6,GPU-d42d03bb-23de-8a24-ce16-1aab3814c226,GPU-85e3c428-855e-f54b-ebad-bbb86ccc6cae,GPU-ad7df3db-1aab-0133-8251-56c98b1151c2,GPU-39a10989-c6fc-3a57-d6f2-ee711240f191,GPU-65acac66-d840-72a0-495a-73869718d684",
+              "ucx_net_devices": "mlx5_bond0:1,mlx5_bond100:1,mlx5_bond101:1,mlx5_bond102:1,mlx5_bond103:1,mlx5_bond104:1,mlx5_bond105:1,mlx5_bond106:1,mlx5_bond107:1",
+              "exception": null,
+              "skipped": false
+            }
+          ]
+        },
+        "failed_flags": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": false,
+          "gpu-h200-0604.lgcm.sh.istep.fun": false
+        }
+      }
+    },
+    {
+      "name": "tp_pair_placement",
+      "pass": true,
+      "values": {
+        "reader_rank_pairs": "8..15 read from P ranks 0..7",
+        "reader_ranks_match": true,
+        "phase_commands": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": [
+            [
+              "/usr/bin/python3",
+              "-m",
+              "torch.distributed.run",
+              "--nnodes",
+              "2",
+              "--nproc-per-node",
+              "8",
+              "--node-rank",
+              "0",
+              "--master-addr",
+              "10.204.6.112",
+              "--master-port",
+              "49453",
+              "-m",
+              "frontier.profiling.collectives.nixl_kv_read_benchmark",
+              "--config",
+              "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/p2_nixl6144_q1_20261102/nodes/gpu-h200-0457.lgcm.sh.istep.fun/C_nixl_config.json"
+            ]
+          ],
+          "gpu-h200-0604.lgcm.sh.istep.fun": [
+            [
+              "/usr/bin/python3",
+              "-m",
+              "torch.distributed.run",
+              "--nnodes",
+              "2",
+              "--nproc-per-node",
+              "8",
+              "--node-rank",
+              "1",
+              "--master-addr",
+              "10.204.6.112",
+              "--master-port",
+              "49453",
+              "-m",
+              "frontier.profiling.collectives.nixl_kv_read_benchmark",
+              "--config",
+              "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/p2_nixl6144_q1_20261102/nodes/gpu-h200-0604.lgcm.sh.istep.fun/C_nixl_config.json"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "runtime_checks",
+      "pass": true,
+      "values": {
+        "hosts": [
+          "gpu-h200-0457.lgcm.sh.istep.fun",
+          "gpu-h200-0604.lgcm.sh.istep.fun"
+        ],
+        "gate": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": "soft",
+          "gpu-h200-0604.lgcm.sh.istep.fun": "soft"
+        },
+        "workspace_head": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": "a182084c383fc4be606071b0802284972fa9ee35",
+          "gpu-h200-0604.lgcm.sh.istep.fun": "a182084c383fc4be606071b0802284972fa9ee35"
+        },
+        "checks_passed": {
+          "gpu-h200-0457.lgcm.sh.istep.fun": "23/23",
+          "gpu-h200-0604.lgcm.sh.istep.fun": "23/23"
+        },
+        "mismatches": []
+      },
+      "note": "Soft gate: mismatched pinned identities are reported, not enforced."
+    },
+    {
+      "name": "plan_config",
+      "pass": true,
+      "values": {
+        "passes": 3,
+        "shuffle_seed": 20261102,
+        "warmup": 2,
+        "repeats": 30,
+        "tensor_parallel_size": 8,
+        "block_bytes": 1002240,
+        "num_regions": 1,
+        "cases": 30,
+        "ucx_net_devices": "mlx5_bond100:1,mlx5_bond101:1,mlx5_bond102:1,mlx5_bond103:1,mlx5_bond104:1,mlx5_bond105:1,mlx5_bond106:1,mlx5_bond107:1,mlx5_bond_0:1",
+        "ucx_backend_params": {
+          "num_threads": "4"
+        }
+      }
+    },
+    {
+      "name": "case_pass_matrix",
+      "pass": true,
+      "values": {
+        "raw_rows": 90,
+        "expected_rows": 90,
+        "distinct_cases": 30,
+        "distinct_passes": [
+          0,
+          1,
+          2
+        ],
+        "missing": [],
+        "unexpected": [],
+        "duplicates": []
+      }
+    },
+    {
+      "name": "geometry_and_trials",
+      "pass": true,
+      "values": {
+        "reader_timing_trials": 12150,
+        "expected_reader_trials": 12150,
+        "blocks_per_request_by_prompt": {
+          "6144": [
+            46
+          ],
+          "6145": [
+            51
+          ],
+          "6143": [
+            46
+          ]
+        },
+        "bytes_per_reader_formula": "blocks x in_flight x 1002240",
+        "bytes_per_reader_matches": true,
+        "problems": [],
+        "problem_records": 0
+      }
+    },
+    {
+      "name": "notifications",
+      "pass": true,
+      "values": {
+        "received": 80352,
+        "expected": 80352,
+        "documented_expected": 80352,
+        "per_request_total": 32
+      }
+    },
+    {
+      "name": "csv_matches_raw",
+      "pass": true,
+      "values": {
+        "csv_rows": 90,
+        "rebuilt_rows": 90,
+        "mismatch_count": 0,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "native_registration_stride",
+      "pass": true,
+      "values": {
+        "native_log_lines": 12,
+        "native_block_strides": [
+          "1002240"
+        ],
+        "evidence_sha256": "9672246fe6e4001c34a90f8ebf4fb88e9309090c7a178214dccc1e2f6a781ea5",
+        "lock_sha256": "9672246fe6e4001c34a90f8ebf4fb88e9309090c7a178214dccc1e2f6a781ea5",
+        "synthetic_region_sum_bytes": 1002240,
+        "native_source": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py",
+        "native_source_sha256_recorded": "4860f51b6ac3301c243794b7626b5536f6b0ec41204e426ee6b61bc0e1d0bdb7"
+      },
+      "note": "Native stride comes from recorded vLLM server logs; the run's block selection is synthetic and is checked separately."
+    }
+  ],
+  "counts": {
+    "raw_records": 90,
+    "csv_rows": 90,
+    "cases": 30,
+    "reader_trials": 12150,
+    "notifications_received": 80352,
+    "notifications_expected": 80352
+  },
+  "environment": {
+    "ucx_net_devices": "mlx5_bond100:1,mlx5_bond101:1,mlx5_bond102:1,mlx5_bond103:1,mlx5_bond104:1,mlx5_bond105:1,mlx5_bond106:1,mlx5_bond107:1,mlx5_bond_0:1",
+    "ucx_backend_params": {
+      "num_threads": "4"
+    }
+  },
+  "limits": "Standalone synthetic NIXL KV READ diagnostic on 2x8 H200. The prompt 6143/6144/6145 grid reproduces the packed-block geometry; it does not observe native serving request wire bytes."
+}

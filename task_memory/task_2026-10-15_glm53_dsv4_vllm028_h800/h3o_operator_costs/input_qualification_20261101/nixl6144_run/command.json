@@ -1,0 +1,52 @@
+{
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/g5h/launch/submit.py",
+    "--config",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/packages/nixl6144/stage_nixl6144.json"
+  ],
+  "invocation": "setsid nohup <command> > launcher.log 2>&1 < /dev/null &",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "host": "kun-workspace-vgen2",
+  "host_ip": "100.96.128.195",
+  "start_utc": "2026-11-01T19:00:22.109582Z",
+  "launcher_pid": 2600807,
+  "launcher_session_id": 2600807,
+  "source_commit": "a182084c383fc4be606071b0802284972fa9ee35",
+  "branch": "feat/glm53-dsv4-vllm028",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/nixl6144_q1_20261102/launcher.log",
+  "config": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/packages/nixl6144/stage_nixl6144.json",
+  "rjob_name": "exp-1102-030025-971155",
+  "rjob_create_utc": "2026-11-01T19:00:26Z",
+  "gpus": 16,
+  "gpu_type": "H200",
+  "charged_group": "step_main",
+  "preemptible": true,
+  "replicas": 2,
+  "gpu_per_replica": 8,
+  "timeout_s": 1800,
+  "phase_timeout_s": 1200,
+  "job_tag": "dsv4-h200-nixl6144-q1-20261102",
+  "output_dir": "/mnt/codesign-exp/ycfeng/glm53_dsv4/comm/h200/p2_nixl6144_q1_20261102",
+  "personal_h200_before": {
+    "live_jobs": 5,
+    "live_gpu_total": 280.0,
+    "nonpreemptible_h200_gpus": 56.0,
+    "preemptible_h200_gpus": 224.0,
+    "live_job_names": [
+      "exp-1102-012108-161706",
+      "exp-1102-012158-637416",
+      "exp-1102-012142-157403",
+      "exp-1102-012125-995909",
+      "exp-1102-012214-511680"
+    ],
+    "nonpreemptible_job_names": [
+      "exp-1102-012108-161706"
+    ]
+  },
+  "notes": [
+    "Launcher started detached with setsid so it outlives the submitting shell; RJobBackend stops the workers when the launcher exits.",
+    "Pre-existing personal non-preemptible H200 reservation of 56 GPUs (exp-1102-012108-161706) predates this submission; this job is preemptible=yes and adds no non-preemptible GPUs."
+  ]
+}

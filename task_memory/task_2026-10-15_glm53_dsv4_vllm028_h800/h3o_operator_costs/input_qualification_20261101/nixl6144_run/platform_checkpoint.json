@@ -1,0 +1,56 @@
+{
+  "observed_utc": "2026-11-01T21:00:28.567814+00:00",
+  "checkpoint_reason": "monitoring budget of 120 minutes from 2026-11-01T19:00:22Z exhausted",
+  "job": "exp-1102-030025-971155",
+  "phase": "Pending",
+  "queue_status": "suspend",
+  "queue_reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 2 replicas = 16 GPU (H200). Queue remaining: H200=479.",
+  "start_time": null,
+  "finish_time": null,
+  "stop_annotations": {
+    "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 2 replicas = 16 GPU (H200). Queue remaining: H200=479."
+  },
+  "replicas": [],
+  "monitor_snapshots": 47,
+  "first_snapshot_utc": "2026-11-01T19:04:16.483443+00:00",
+  "last_snapshot_utc": "2026-11-01T21:00:12.320460+00:00",
+  "phase_history": [
+    "Pending"
+  ],
+  "launcher_pid": 2600807,
+  "launcher_alive": true,
+  "launcher_rjob_name_logged": false,
+  "receipts": {
+    "started": true,
+    "lock": true,
+    "exit": false
+  },
+  "live_personal_jobs": [
+    {
+      "name": "exp-1102-030025-971155",
+      "phase": "Pending",
+      "preemptible": "yes"
+    },
+    {
+      "name": "exp-1102-012108-161706",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "name": "exp-1102-012158-637416",
+      "phase": "Starting",
+      "preemptible": "yes"
+    },
+    {
+      "name": "exp-1102-012142-157403",
+      "phase": "Starting",
+      "preemptible": "yes"
+    },
+    {
+      "name": "exp-1102-012214-511680",
+      "phase": "Pending",
+      "preemptible": "yes"
+    }
+  ],
+  "next_action": "Continue polling the same job; do not resubmit. When it is terminal, write platform_terminal.json, download the cloud artifacts, and run verify_nixl6144.py."
+}

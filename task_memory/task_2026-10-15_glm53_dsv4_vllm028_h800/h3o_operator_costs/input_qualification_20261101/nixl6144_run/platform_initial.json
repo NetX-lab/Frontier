@@ -1,0 +1,87 @@
+{
+  "observed_utc": "2026-11-01T19:03:58.910082+00:00",
+  "operation": "read only",
+  "host": "kun-workspace-vgen2",
+  "name": "exp-1102-030025-971155",
+  "uid": "38ed98ab-d5ab-4704-8893-dff1cc33e915",
+  "creation_timestamp": "2026-11-01T19:00:26Z",
+  "creator": "i-fengyicheng",
+  "real_creator_id": "group-shai-core-step-main",
+  "preemptible_label": "yes",
+  "preemptible_spec": null,
+  "queue_name": "quotagroup-global-default",
+  "queue_status": "suspend",
+  "charged_group_label": "step_main",
+  "charged_group_spec": null,
+  "workspace_label": "ws-7fb014dfb4e3d7fe",
+  "mount_annotation": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+  "stop_annotations": {},
+  "phase": "Pending",
+  "tasks": {
+    "default": {
+      "replicas": 2,
+      "positive_tags": [
+        "H200"
+      ],
+      "filestore_volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "mount_annotation": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+      "volumes": [
+        {
+          "name": "auth-info",
+          "secret": {
+            "secretName": "e7163316ad76ba7266a33f9787afd70a",
+            "items": [
+              {
+                "key": "accesskey_id",
+                "path": "accesskey_id"
+              },
+              {
+                "key": "accesskey_secret",
+                "path": "accesskey_secret"
+              }
+            ]
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "default",
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "limits": {
+            "cpu": "64",
+            "mellanox.com/mlnx_rdma": "1",
+            "memory": "500Gi",
+            "nvidia.com/gpu": "8",
+            "rdma/mlnx_shared": "8"
+          },
+          "env_names": [
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "DISTRIBUTED_JOB",
+            "ENABLE_SUBMODULE_COMMIT_CACHE",
+            "EXP_ID",
+            "HF_HUB_OFFLINE",
+            "HOST_NETWORK",
+            "KUBEBRAIN_CLUSTER_ENTRY",
+            "KUBEBRAIN_CLUSTER_ENTRY",
+            "KUBEBRAIN_NAMESPACE",
+            "KUBEBRAIN_NODE_NAME",
+            "KUBEBRAIN_QUOTA_GROUP",
+            "KUBEBRAIN_WORKSPACE_NAME",
+            "KUBEBRAIN_WORKSPACE_NAMESPACE",
+            "MC_DISABLE_METACACHE",
+            "NCCL_DEBUG",
+            "NCCL_DEBUG_SUBSYS",
+            "PYTHONDONTWRITEBYTECODE",
+            "PYTHONPATH",
+            "TRANSFORMERS_OFFLINE",
+            "VLLM_CUDA_COMPATIBILITY_PATH",
+            "VLLM_ENABLE_CUDA_COMPATIBILITY"
+          ],
+          "exp_id": "dsv4-h200-nixl6144-q1-202611025a09f/default"
+        }
+      ]
+    }
+  },
+  "total_gpus": 16.0
+}

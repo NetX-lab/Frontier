@@ -1,0 +1,83 @@
+{
+  "observed_utc": "2026-11-01T22:36:26.309245+00:00",
+  "operation": "read only",
+  "name": "exp-1102-030025-971155",
+  "uid": "38ed98ab-d5ab-4704-8893-dff1cc33e915",
+  "creator": "i-fengyicheng",
+  "preemptible_label": "yes",
+  "queue_name": "quotagroup-global-default",
+  "queue_status": "closed",
+  "phase": "Succeeded",
+  "phase_reason": "RJobSucceeded",
+  "phase_message": "RJob succeeded",
+  "creation_timestamp": "2026-11-01T19:00:26Z",
+  "job_finish_time": "2026-11-01T22:27:40Z",
+  "timeline_annotations": {
+    "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "rjob.brainpp.cn/rjob-queue-approved": "2026-11-01T22:21:16.555267555Z",
+    "rjob.brainpp.cn/rjob-pod-created": "2026-11-01T22:21:16.989689624Z",
+    "rjob.brainpp.cn/rjob-scheduled": "2026-11-01T22:23:32.430176183Z",
+    "rjob.brainpp.cn/rjob-running": "2026-11-01T22:26:22.235187627Z",
+    "stepmind.com/queue-approved-stage": "stepmind-task-stage-1",
+    "stepmind.com/estimated-resource": "{\"default\":{\"H200\":{\"preemptible\":2}}}",
+    "stepmind.com/final-resource": "{}",
+    "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 2 replicas = 16 GPU (H200). Queue remaining: H200=488."
+  },
+  "running_seconds": 77.764813,
+  "created_to_finish_seconds": 12434.0,
+  "container_gpu_hours": 0.345621,
+  "stop_annotations": {},
+  "task_statuses": {
+    "default": {
+      "succeeded": 2,
+      "taskStage": "stepmind-task-stage-1"
+    }
+  },
+  "replicas": [
+    {
+      "task": "default",
+      "replica": "default",
+      "process_id": "exp-1102-030025-971155-c4ca4238",
+      "state": "SUCCEED",
+      "ip": "10.204.24.28",
+      "node": "gpu-h200-0604.lgcm.sh.istep.fun",
+      "node_ip": "10.204.24.28"
+    },
+    {
+      "task": "default",
+      "replica": "default",
+      "process_id": "exp-1102-030025-971155-cfcd2084",
+      "state": "SUCCEED",
+      "ip": "10.204.6.112",
+      "node": "gpu-h200-0457.lgcm.sh.istep.fun",
+      "node_ip": "10.204.6.112"
+    }
+  ],
+  "replica_count": 2,
+  "replica_states": [
+    "SUCCEED"
+  ],
+  "nodes": [
+    "gpu-h200-0457.lgcm.sh.istep.fun",
+    "gpu-h200-0604.lgcm.sh.istep.fun"
+  ],
+  "container_exit_codes": {
+    "source": "replica state from the RJob CR",
+    "value": {
+      "exp-1102-030025-971155-c4ca4238": "0 (replica SUCCEED; job Succeeded implies zero exit)",
+      "exp-1102-030025-971155-cfcd2084": "0 (replica SUCCEED; job Succeeded implies zero exit)"
+    },
+    "note": "The personal credential is forbidden (HTTP 403) on pod list/read in this namespace, so raw container exitCode/restartCount are not readable. Restart policy is Never and the platform reports both replicas SUCCEED."
+  },
+  "launcher_exit_receipt": {
+    "stage": "p2_nixl6144_qualification",
+    "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/packages/nixl6144/stage_nixl6144.json",
+    "pid": 2600807,
+    "start": 1793559625.9533377,
+    "gpus": 16,
+    "preemptible": true,
+    "rjob_name": "exp-1102-030025-971155",
+    "final_status": "succeeded",
+    "end": 1793572061.2968023
+  }
+}

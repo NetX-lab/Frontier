@@ -1,0 +1,8 @@
+{
+  "stage": "p2_nixl6144_qualification",
+  "config": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/packages/nixl6144/stage_nixl6144.json",
+  "pid": 2600807,
+  "start": 1793559625.9533377,
+  "gpus": 16,
+  "preemptible": true
+}

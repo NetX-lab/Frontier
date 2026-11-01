@@ -1,0 +1,250 @@
+{
+  "observed_utc": "2026-11-01T19:00:13.707144+00:00",
+  "operation": "read only",
+  "creator_filter": "i-fengyicheng",
+  "job_tag": "dsv4-h200-nixl6144-q1-20261102",
+  "live_jobs": [
+    {
+      "name": "exp-1102-012108-161706",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "no",
+      "preemptible_spec": null,
+      "queue_name": "step-main-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-stem-full-fixedlr-1102a0192d/default"
+        },
+        {
+          "EXP_ID": "br-stem-full-fixedlr-1102a0192d/inference"
+        },
+        {
+          "EXP_ID": "br-stem-full-fixedlr-1102a0192d/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012158-637416",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-tb-full-fixedlr-1102a76ab5/default"
+        },
+        {
+          "EXP_ID": "br-tb-full-fixedlr-1102a76ab5/inference"
+        },
+        {
+          "EXP_ID": "br-tb-full-fixedlr-1102a76ab5/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012142-157403",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-swe-r256-fixedlr-1102a9e300/default"
+        },
+        {
+          "EXP_ID": "br-swe-r256-fixedlr-1102a9e300/inference"
+        },
+        {
+          "EXP_ID": "br-swe-r256-fixedlr-1102a9e300/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012125-995909",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-swe-full-fixedlr-1102a2804e/default"
+        },
+        {
+          "EXP_ID": "br-swe-full-fixedlr-1102a2804e/inference"
+        },
+        {
+          "EXP_ID": "br-swe-full-fixedlr-1102a2804e/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012214-511680",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-tb-r256-fixedlr-1102a6e180/default"
+        },
+        {
+          "EXP_ID": "br-tb-r256-fixedlr-1102a6e180/inference"
+        },
+        {
+          "EXP_ID": "br-tb-r256-fixedlr-1102a6e180/inference-launcher"
+        }
+      ]
+    }
+  ],
+  "tag_matches": [],
+  "pages": 1,
+  "live_job_count": 5,
+  "live_gpu_total": 280.0,
+  "live_h200_jobs": [
+    {
+      "name": "exp-1102-012108-161706",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "no",
+      "preemptible_spec": null,
+      "queue_name": "step-main-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-stem-full-fixedlr-1102a0192d/default"
+        },
+        {
+          "EXP_ID": "br-stem-full-fixedlr-1102a0192d/inference"
+        },
+        {
+          "EXP_ID": "br-stem-full-fixedlr-1102a0192d/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012158-637416",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-tb-full-fixedlr-1102a76ab5/default"
+        },
+        {
+          "EXP_ID": "br-tb-full-fixedlr-1102a76ab5/inference"
+        },
+        {
+          "EXP_ID": "br-tb-full-fixedlr-1102a76ab5/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012142-157403",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-swe-r256-fixedlr-1102a9e300/default"
+        },
+        {
+          "EXP_ID": "br-swe-r256-fixedlr-1102a9e300/inference"
+        },
+        {
+          "EXP_ID": "br-swe-r256-fixedlr-1102a9e300/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012125-995909",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-swe-full-fixedlr-1102a2804e/default"
+        },
+        {
+          "EXP_ID": "br-swe-full-fixedlr-1102a2804e/inference"
+        },
+        {
+          "EXP_ID": "br-swe-full-fixedlr-1102a2804e/inference-launcher"
+        }
+      ]
+    },
+    {
+      "name": "exp-1102-012214-511680",
+      "phase": "Pending",
+      "gpu_reservations": 56.0,
+      "positive_tags": [
+        "H200"
+      ],
+      "preemptible_label": "yes",
+      "preemptible_spec": null,
+      "queue_name": "quotagroup-global-default",
+      "charged_group": "step_main",
+      "exp_id_envs": [
+        {
+          "EXP_ID": "br-tb-r256-fixedlr-1102a6e180/default"
+        },
+        {
+          "EXP_ID": "br-tb-r256-fixedlr-1102a6e180/inference"
+        },
+        {
+          "EXP_ID": "br-tb-r256-fixedlr-1102a6e180/inference-launcher"
+        }
+      ]
+    }
+  ],
+  "live_nonpreemptible_h200_gpus": 56.0,
+  "live_preemptible_h200_gpus": 224.0,
+  "quota_error": {
+    "type": "ForbiddenException",
+    "status": 403
+  }
+}
