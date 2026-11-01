@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-11-01 | Recorded the warm-reading deliverables, unchanged harness regression, archive verification, and pending phase review. |
+| 2026-11-01 | Accepted both phase reviews, archived evidence, integrated the exact root skill/prerequisites and approved README, and completed validation. |
 
 ## Acceptance and evidence
 
@@ -21,6 +22,7 @@ Authority: `requirements.md`, D-WARM-TARGET. The target is the warmed serving pa
 | Task records | WARM-DOCS reported 71/71 checks PASS; primary corrected a window-wording mismatch against the reused harness | `plan.md`, `progress.md`, `summary.md`, tickets 05/09/19, and `check_progress_2026-11-01_warm_target.md` |
 | Calibration skill consistency | Six findings CLOSED; independent review reports no actionable skill finding; committed at repository root as `0cc4118a` | `/data/ycfeng/Frontier/skills/frontier-calibration/`; `task_memory/task_2026-11-01_calibration_warm_target/review.md` in that checkout |
 | Independent final review | No findings; independently recalculated 96/96 warm metrics PASS, maximum error 5.952669% | WARM-FINAL-REVIEW, `ses_e68dddb1effeH8TbRzOxiHxLPx` |
+| Cross-branch integration | Complete; 34/34 skill/README files match requested root; both validators PASS | `f31b2b2d`, `24ddbbb6`, `f21cdcdb`; root skill `0cc4118a` and closeout `d4924d2e` |
 
 ## Numerical interpretation
 
@@ -54,7 +56,21 @@ WARM-FINAL-REVIEW (`ses_e68dddb1effeH8TbRzOxiHxLPx`) inspected the current requi
 
 The reviewer did not rerun file-level row/hash/event verification; those checks rely on inspected scripts, artifacts and command receipts. It read the 40-PASS regression log without rerunning it. WARM-ACCOUNTING and the separate skill review were outside that review's acceptance scope. Primary separately inspected the decisive accounting source and validation receipt below. The skill has its own accepted phase review at repository-root `task_memory/task_2026-11-01_calibration_warm_target/review.md`.
 
-Primary accepts the retained-reference warm-reading and residual diagnostic deliverables. This acceptance is not formal input admission or a stronger-warmup counterfactual run. Archive/branch integration is the remaining delivery step. The requested repository-root skill is committed; its prerequisite skill updates and accepted warm-target content still need integration onto this branch.
+Primary accepts the retained-reference warm-reading and residual diagnostic deliverables. This acceptance is not formal input admission or a stronger-warmup counterfactual run. Evidence/helper/requirements are archived in `0cd8d5d3`, with status records in `4c3208d1`. Skill integration is complete: prerequisite commits `c3ba1712`, `7077960f`, `33ff10fd`; warm-target skill `f31b2b2d`; approved README `24ddbbb6`; shared skill-task closeout `f21cdcdb`.
+
+### Integration validation and README dependency
+
+The only integration conflict was the branch's older `skills/README.md`, initially preserved. The structure validator then failed on its personal `vLLM-BS` wording. The primary recovered the explicit prior README/generalization request at repository-root `skills/task_memory/task_2026-11-01_frontier_skills_readme/requirements.md:9–11,24–35`, and imported exactly the already-approved `98b680a2:skills/README.md`. No new README prose or validator exception was introduced.
+
+Final commands in the active worktree, Python3.10.6:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 skills/frontier-calibration/tests/pressure_scenarios.py skills/frontier-calibration
+PYTHONDONTWRITEBYTECODE=1 python3 /data/ycfeng/codex-home/skills/.system/skill-creator/scripts/quick_validate.py skills/frontier-calibration
+git diff --check
+```
+
+Results: `v2_pressure=PASS`, `Skill is valid!`, and zero whitespace diagnostics. All 33 tracked skill files plus README match `/data/ycfeng/Frontier` byte-for-byte; README SHA-256 is `594fa59a99a6e3b07e01095ea7a29bebe1163f82dfd2b344552e73153004473b`. All eight shared skill-task files also match both checkouts after the closeout cherry-pick. No merge conflict remains. This completes the approved warm-target continuation; only the separate next correction decision below is pending.
 
 ## Next correction decision
 
