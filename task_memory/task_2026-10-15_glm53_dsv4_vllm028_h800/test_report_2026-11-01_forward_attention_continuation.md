@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Continuation inspected the four original live CPU replay processes; terminal metrics remain pending while comparison collection is prepared. |
 | 2026-11-01 | Recovered the verification command receipt after a shared-exec variable collision; numerical output hashes unchanged, original start timestamp explicitly not retained. |
 | 2026-11-01 | Median3 A6/forward completed and verified against original folds, references and omissions; three complete classes PASS, four P2 outcomes pending. |
 | 2026-11-01 | Supplement business verification, complete three-run tables, current-table forward qualification and review complete; four CPU replays and median3 qualification running. |
@@ -90,6 +91,8 @@ The existing random-forest factory uses `random_state=0` in `frontier/execution_
 
 Run/log/gate roots: `/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/{runs,logs,gates}`. The original supervisor waits and invokes the unchanged `a10_gate.py` once after each successful run, against all three pinned native clean repeats. Gate exit success alone does not imply numerical PASS. B29 P2-64 repeat01 TTFT is already FAIL at 12.254940665%; all per-repeat results must remain visible.
 
+Continuation observation at 09:21 UTC: exact original supervisor/timeout PIDs remain alive; driver PIDs 223797/223795/223802/223801 show 94.3–94.6% CPU and about 1.4 GB RSS each after 1h28m. Current driver receipts are INITIALIZED, so no final metric is available. Commands used `ps -o pid,ppid,stat,etime,%cpu,rss,args --sid <recorded timeout PID>` and scoped JSON/log reads. Existing simulation initialization warnings are retained in the logs; these process observations do not establish numerical correctness. No workload was restarted.
+
 Median3 A6/forward is complete, not an active process: A6 fits/scope diagnostics exit 0 in 2,379.995336 seconds (07:54:32–08:34:12 UTC); forward qualification exit 0 in 216.090562 seconds (08:34:12–08:37:48 UTC), with the same table/fold cache and 30 GiB limit. Exact commands/environment/source/output hashes: `h3o_operator_costs/a6_forward_attention_20261101/{median3_a6_command.json,median3_forward_command.json}`. Scope errors stay diagnostic; no new formal table is published. The original supervisor's two stages finished once and must not be relaunched.
 
 ## Median3 verification and comparison
@@ -111,6 +114,16 @@ The existing median3 generator replaces kernel-time medians only; gap/window ref
 Record-format check: ordinary `git diff --check` passed before adding new artifacts. `git diff --cached --check` then reported the standard Python CSV writer's CRLF endings as trailing whitespace (exit 2). The CSV bytes and recorded hash were preserved. `git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check` passed (exit 0), retaining the default whitespace checks and recognizing CRLF. No source/config file or numerical evidence was changed for this format check.
 
 Verification-receipt RCA: the original inline `exec` shared the parent namespace. Its `for label,r` loop replaced the parent `r` command record with the median3 A6 result, making the final receipt a 2,924,993-byte result dump. The original retained invocation and surviving exit/elapsed/finish/output hashes recovered a correct 8,276-byte command receipt; the wrong prior bytes remain in Git commit `b568dc67` and their SHA is in the recovery block. The verifier took 0.872703 seconds and finished at 08:41:09 UTC; its original start timestamp was lost and is explicitly `null`, not reconstructed. All three numeric output hashes match before/after recovery. No qualification, data generation or P2 process was rerun, and no source/published input changed.
+
+## Pass-comparison collector verification
+
+`tests/analysis/v4_attention_pass_comparison.py` reads retained evidence only. It requires the four original terminal commands and their nested `gate` receipts, checks actual table/config/reference bindings, and emits six readings, 96 pooled/per-repeat metric rows, eight cross-generation spreads and eight three-run native variability summaries. It preserves signed delta separately from absolute error. Spread is `(max prediction - min prediction)` divided by B29 prediction and by pooled native value; native sample SD/CV are descriptive, not confidence intervals.
+
+- Author command: `PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_focused_check.py`. **17 checks PASS**: CLI/compile, both retained B29 readings (32 metric rows), arithmetic/identity negative cases and rejection of incomplete input/output overwrite. B29 P2-64 repeat01 TTFT remains 12.254940665% FAIL.
+- Primary corrected a draft-only schema assumption before use: the existing supervisor embeds `gate` in each command receipt, rather than creating separate gate-command files. Command: `env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_gate_schema_check.py`. **PASS** for all four nested schemas with explicit in-memory terminal fixtures. This is a schema check, not evidence of completed replays.
+- Primary directly checked the four available runtime configs and seven-table sets against the collector's B29 substitution logic: **4/4 PASS**, only the attention generation differs. This does not substitute for checking final artifacts.
+- Phase review `A6-P2-COMPARISON-REVIEW` (`ses_e69881453ffe47mqrOTlBhRn4w`) found one P2 issue: a new pass reading's digest/verdict was not compared with the nested gate record. The two-line correction also binds the run receipt digest. Command: `env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_terminal_binding_check.py`. Matched retained B29 bytes pass; changed receipt digest, reading digest and verdict each reject: **4 checks PASS**. The reviewer confirmed its sole finding resolved, without rerunning checks. Source is 179 lines; SHA-256 `a914c441a6e31c4895ce5408361fdf8307f849abb416e3420a530b8dd59a0137`.
+- Persistent preparation evidence: `h3o_operator_costs/a6_pass_replays_20261101/{collector_verification.json,collector_terminal_binding_check.json}`; exact scripts remain in the temporary directory above. Final 96-row execution remains pending. Preparation checks use explicit in-memory completion envelopes only; no new gate, normalizer or replay was invoked.
 
 ## Pending acceptance
 

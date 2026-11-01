@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "classification": "TARGETED_BINDING_CHECK_ONLY",
+  "checks": [
+    {
+      "check": "matched_retained_artifacts",
+      "status": "PASS"
+    },
+    {
+      "check": "reject_receipt_sha256",
+      "status": "PASS"
+    },
+    {
+      "check": "reject_reading_sha256",
+      "status": "PASS"
+    },
+    {
+      "check": "reject_verdict",
+      "status": "PASS"
+    }
+  ],
+  "source_sha256": "a914c441a6e31c4895ce5408361fdf8307f849abb416e3420a530b8dd59a0137",
+  "source_lines": 179,
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_terminal_binding_check.py"
+  ],
+  "limits": "Actual B29 bytes in in-memory receipt envelopes; four new pass terminals remain unverified."
+}

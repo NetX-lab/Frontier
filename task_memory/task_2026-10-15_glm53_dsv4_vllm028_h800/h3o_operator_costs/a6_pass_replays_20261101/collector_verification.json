@@ -1,0 +1,413 @@
+{
+  "status": "PASS_PREPARATION_CHECKS_FINAL_READINGS_PENDING",
+  "recorded_utc": "2026-11-01T09:39:39.609770+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "commands": [
+    [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_focused_check.py"
+    ],
+    [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_gate_schema_check.py"
+    ]
+  ],
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "focused_checks": [
+    {
+      "check": "compile_and_line_budget",
+      "status": "PASS",
+      "lines": 178
+    },
+    {
+      "check": "actual_B29_arithmetic",
+      "case": "p2_32",
+      "status": "PASS",
+      "rows": 16,
+      "numeric_fail": [],
+      "pooled": [
+        {
+          "generation": "B29",
+          "case": "p2_32",
+          "repeat": "pooled",
+          "metric": "ttft_ms",
+          "unit": "ms",
+          "native": 364.0296495311001,
+          "predicted": 344.8789913386803,
+          "signed_delta": -19.150658192419826,
+          "absolute_error": 19.150658192419826,
+          "source_absolute_error": -19.150658192419826,
+          "relative_error": 0.05260741320682927,
+          "status": "PASS"
+        },
+        {
+          "generation": "B29",
+          "case": "p2_32",
+          "repeat": "pooled",
+          "metric": "tpot_ms",
+          "unit": "ms",
+          "native": 19.918966075308955,
+          "predicted": 19.926786349460063,
+          "signed_delta": 0.007820274151107753,
+          "absolute_error": 0.007820274151107753,
+          "source_absolute_error": 0.007820274151107753,
+          "relative_error": 0.00039260442141128836,
+          "status": "PASS"
+        },
+        {
+          "generation": "B29",
+          "case": "p2_32",
+          "repeat": "pooled",
+          "metric": "request_e2e_time_ms",
+          "unit": "ms",
+          "native": 20741.131944572164,
+          "predicted": 20729.981426836326,
+          "signed_delta": -11.150517735837639,
+          "absolute_error": 11.150517735837639,
+          "source_absolute_error": -11.150517735837639,
+          "relative_error": 0.000537604107897094,
+          "status": "PASS"
+        },
+        {
+          "generation": "B29",
+          "case": "p2_32",
+          "repeat": "pooled",
+          "metric": "token_throughput_tps",
+          "unit": "tokens/s",
+          "native": 6231.415496060633,
+          "predicted": 6225.735861749648,
+          "signed_delta": -5.679634310984511,
+          "absolute_error": 5.679634310984511,
+          "source_absolute_error": -5.679634310984511,
+          "relative_error": 0.0009114517102213861,
+          "status": "PASS"
+        }
+      ],
+      "native": {
+        "request_e2e_time_ms": {
+          "values": {
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat01": 20726.676789752673,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat02": 20710.77769583644,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat03": 20785.94134812738
+          },
+          "minimum": 20710.77769583644,
+          "maximum": 20785.94134812738,
+          "range": 75.16365229093935,
+          "sample_sd": 39.61195882646947,
+          "sample_cv": 0.0019098262781571905
+        },
+        "token_throughput_tps": {
+          "values": {
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat01": 6234.123762198884,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat02": 6231.404806079404,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat03": 6228.720262719535
+          },
+          "minimum": 6228.720262719535,
+          "maximum": 6234.123762198884,
+          "range": 5.403499479349193,
+          "sample_sd": 2.7017680030553612,
+          "sample_cv": 0.00043357206178438654
+        },
+        "tpot_ms": {
+          "values": {
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat01": 19.90684459997105,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat02": 19.88859159321239,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat03": 19.961462032743434
+          },
+          "minimum": 19.88859159321239,
+          "maximum": 19.961462032743434,
+          "range": 0.07287043953104444,
+          "sample_sd": 0.03791731613178271,
+          "sample_cv": 0.001903578528545417
+        },
+        "ttft_ms": {
+          "values": {
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat01": 361.974763982289,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat02": 364.7484959801659,
+            "vllm/dsv4-h200-p2-canonical-20261025-01-repeat03": 365.3656886308454
+          },
+          "minimum": 361.974763982289,
+          "maximum": 365.3656886308454,
+          "range": 3.3909246485563926,
+          "sample_sd": 1.8061416489433226,
+          "sample_cv": 0.004961523467304876
+        }
+      }
+    },
+    {
+      "check": "actual_B29_arithmetic",
+      "case": "p2_64",
+      "status": "PASS",
+      "rows": 16,
+      "numeric_fail": [
+        {
+          "generation": "B29",
+          "case": "p2_64",
+          "repeat": "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01",
+          "metric": "ttft_ms",
+          "unit": "ms",
+          "native": 779.8887274002482,
+          "predicted": 684.313826604259,
+          "signed_delta": -95.57490079598915,
+          "absolute_error": 95.57490079598915,
+          "source_absolute_error": -95.57490079598915,
+          "relative_error": 0.12254940665008353,
+          "status": "FAIL"
+        }
+      ],
+      "pooled": [
+        {
+          "generation": "B29",
+          "case": "p2_64",
+          "repeat": "pooled",
+          "metric": "ttft_ms",
+          "unit": "ms",
+          "native": 741.2163514151567,
+          "predicted": 684.313826604259,
+          "signed_delta": -56.90252481089772,
+          "absolute_error": 56.90252481089772,
+          "source_absolute_error": -56.90252481089772,
+          "relative_error": 0.0767691170091666,
+          "status": "PASS"
+        },
+        {
+          "generation": "B29",
+          "case": "p2_64",
+          "repeat": "pooled",
+          "metric": "tpot_ms",
+          "unit": "ms",
+          "native": 25.870530968031684,
+          "predicted": 25.295336617652367,
+          "signed_delta": -0.5751943503793164,
+          "absolute_error": 0.5751943503793164,
+          "source_absolute_error": -0.5751943503793164,
+          "relative_error": 0.022233573446563053,
+          "status": "PASS"
+        },
+        {
+          "generation": "B29",
+          "case": "p2_64",
+          "repeat": "pooled",
+          "metric": "request_e2e_time_ms",
+          "unit": "ms",
+          "native": 27206.76953171157,
+          "predicted": 26561.443186462628,
+          "signed_delta": -645.3263452489409,
+          "absolute_error": 645.3263452489409,
+          "source_absolute_error": -645.3263452489409,
+          "relative_error": 0.02371933001809582,
+          "status": "PASS"
+        },
+        {
+          "generation": "B29",
+          "case": "p2_64",
+          "repeat": "pooled",
+          "metric": "token_throughput_tps",
+          "unit": "tokens/s",
+          "native": 5963.20631789112,
+          "predicted": 5975.251569855107,
+          "signed_delta": 12.04525196398663,
+          "absolute_error": 12.04525196398663,
+          "source_absolute_error": 12.04525196398663,
+          "relative_error": 0.0020199287634653593,
+          "status": "PASS"
+        }
+      ],
+      "native": {
+        "request_e2e_time_ms": {
+          "values": {
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01": 26794.6444438021,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02": 27584.864259486494,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03": 27240.79989184611
+          },
+          "minimum": 26794.6444438021,
+          "maximum": 27584.864259486494,
+          "range": 790.2198156843951,
+          "sample_sd": 396.2075066593701,
+          "sample_cv": 0.014562828056361487
+        },
+        "token_throughput_tps": {
+          "values": {
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01": 5948.029629425455,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02": 5976.592892034685,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03": 5965.065719579614
+          },
+          "minimum": 5948.029629425455,
+          "maximum": 5976.592892034685,
+          "range": 28.56326260923015,
+          "sample_sd": 14.369899346860604,
+          "sample_cv": 0.002409751218676143
+        },
+        "tpot_ms": {
+          "values": {
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01": 25.42986873548568,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02": 26.25549558116848,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03": 25.926228587440885
+          },
+          "minimum": 25.42986873548568,
+          "maximum": 26.25549558116848,
+          "range": 0.8256268456827982,
+          "sample_sd": 0.4156219323903891,
+          "sample_cv": 0.016065458142470086
+        },
+        "ttft_ms": {
+          "values": {
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01": 779.8887274002482,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02": 725.4922799511405,
+            "vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03": 718.2680468940816
+          },
+          "minimum": 718.2680468940816,
+          "maximum": 779.8887274002482,
+          "range": 61.620680506166536,
+          "sample_sd": 33.68548476814429,
+          "sample_cv": 0.04544622457914044
+        }
+      }
+    },
+    {
+      "check": "changed_population",
+      "status": "PASS",
+      "rejection": "Population/limit changed"
+    },
+    {
+      "check": "changed_semantics",
+      "status": "PASS",
+      "rejection": "Metric semantics changed"
+    },
+    {
+      "check": "missing_repeat",
+      "status": "PASS",
+      "rejection": "Native repeats changed"
+    },
+    {
+      "check": "changed_native",
+      "status": "PASS",
+      "rejection": "Native value changed"
+    },
+    {
+      "check": "repeat_prediction_drift",
+      "status": "PASS",
+      "rejection": "Prediction changed across native repeats"
+    },
+    {
+      "check": "unsigned_source_error",
+      "status": "PASS",
+      "rejection": "Signed source error mismatch"
+    },
+    {
+      "check": "changed_relative_error",
+      "status": "PASS",
+      "rejection": "Error/verdict mismatch"
+    },
+    {
+      "check": "lost_numeric_fail",
+      "status": "PASS",
+      "rejection": "Error/verdict mismatch"
+    },
+    {
+      "check": "duplicate_metric",
+      "status": "PASS",
+      "rejection": "Metric set changed"
+    },
+    {
+      "check": "excluded_request",
+      "status": "PASS",
+      "rejection": "Excluded requests"
+    },
+    {
+      "check": "changed_overall_verdict",
+      "status": "PASS",
+      "rejection": "Overall verdict mismatch"
+    },
+    {
+      "check": "CLI_help",
+      "status": "PASS",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py",
+        "--help"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "CLI_reject_incomplete",
+      "status": "PASS",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py",
+        "--task-root",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800",
+        "--output",
+        "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_incomplete_comparison.json"
+      ],
+      "exit_code": 1,
+      "output_created": false,
+      "stderr": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py\", line 178, in <module>\n    main()\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py\", line 171, in main\n    document = collect(args.task_root)\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py\", line 97, in collect\n    require(command.get(\"status\") == \"FINISHED\" and command.get(\"exit_code\") == 0 and command.get(\"finished_utc\"), f\"{generation}/{case}: run command incomplete\")\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_f_variant_comparison.py\", line 29, in require\n    raise ValueError(message)\nValueError: pass1_all/p2_32: run command incomplete\n"
+    },
+    {
+      "check": "CLI_reject_overwrite",
+      "status": "PASS",
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py",
+        "--task-root",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800",
+        "--output",
+        "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_cli_help.log"
+      ],
+      "exit_code": 1
+    }
+  ],
+  "nested_gate_schema_check": {
+    "status": "PASS",
+    "classification": "SYNTHETIC_SCHEMA_CHECK_ONLY",
+    "source_sha256": "667f33530fc106ce1ee5b1c30c3a1a3b365e5010ee967f155aa045ae2f167873",
+    "checked_command_receipts": [
+      "pass1_all_p2_32_command.json",
+      "pass1_all_p2_64_command.json",
+      "pass2_all_p2_32_command.json",
+      "pass2_all_p2_64_command.json"
+    ],
+    "limit": "Only four terminal schemas exercised with in-memory status fixtures; no gate files, final metrics or workloads generated."
+  },
+  "runtime_config_and_table_binding_checks": {
+    "count": 4,
+    "status": "PASS",
+    "method": "Compare each available actual config to B29 with root and atten_kernel_only_input_file substitutions; compare seven table hashes to preflight, changing only the attention table."
+  },
+  "sources": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py",
+      "sha256": "667f33530fc106ce1ee5b1c30c3a1a3b365e5010ee967f155aa045ae2f167873"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_f_variant_comparison.py",
+      "sha256": "829293b1a70451da2a99b8cd343e52e38ac1efb6ae3a130e2f26e3d8ed0a6ffa"
+    },
+    {
+      "path": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_focused_check.py",
+      "sha256": "fb9b455fa77f1193ed3359a60da86463d7aa15a14acdaecc40e607ab9cb9df74"
+    },
+    {
+      "path": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_focused_check.json",
+      "sha256": "beaba646b810be40b1e7dca537984232598b64b3f0d15347ccfdac0221501d06"
+    },
+    {
+      "path": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_gate_schema_check.py",
+      "sha256": "d074cdafa1f5dc47d3f79e36235dec07f7f39b2b99562a581ec458fe88fe55ae"
+    },
+    {
+      "path": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_gate_schema_check.json",
+      "sha256": "f3b29cd0af5b63170d74480f90358a5039e57cd0d09a847230b994c83ca946c8"
+    }
+  ],
+  "limits": [
+    "Focused checks ran before the nested gate receipt correction; primary schema check compiles and exercises the corrected source.",
+    "Nested gate completion fields are in-memory fixtures only; no terminal run/reading is claimed.",
+    "No simulator, normalizer, gate, model fit or final comparator was run."
+  ]
+}
