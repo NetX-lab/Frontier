@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "name": "pass1_all_p2_32",
+      "run_status": "FINISHED",
+      "exit_code": 0,
+      "gate": "PASS"
+    },
+    {
+      "name": "pass2_all_p2_32",
+      "run_status": "FINISHED",
+      "exit_code": 0,
+      "gate": "PASS"
+    },
+    {
+      "name": "pass2_all_p2_64",
+      "run_status": "FINISHED",
+      "exit_code": 0,
+      "gate": "FAIL"
+    },
+    {
+      "name": "pass1_all_p2_64",
+      "run_status": "FINISHED",
+      "exit_code": 0,
+      "gate": "FAIL"
+    }
+  ],
+  "finished_utc": "2026-11-01T10:34:20.202465+00:00"
+}

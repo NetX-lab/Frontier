@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | All four original replays and final 96-row comparison complete; P2-64 repeat01 TTFT fails for every generation, with other rows passing. |
 | 2026-11-01 | Both P2-32 original replay/gates complete and verified; report partial cross-table sensitivity while original P2-64 runs continue. |
 | 2026-11-01 | Continuation inspected the four original live CPU replay processes; terminal metrics remain pending while comparison collection is prepared. |
 | 2026-11-01 | Recovered the verification command receipt after a shared-exec variable collision; numerical output hashes unchanged, original start timestamp explicitly not retained. |
@@ -143,9 +144,57 @@ The two new tables leave all six other profiling inputs, workload bytes and effe
 
 At 10:13 UTC, original P2-64 drivers 223795/223801 were still active (96.5%/96.3% CPU, 2h19m elapsed). The existing final collector is now queued on supervisor 223761's exit using blocking `pidfd_open`/`select`; `h3o_operator_costs/a6_pass_replays_20261101/comparison_command.json` records the exact collector argv, environment, source hash and output `comparison.json`. It reads the four original terminal/gate records once and never launches a workload. Numeric FAILs remain in that comparison. Its completion is pending.
 
-## Pending acceptance
+## Final independent-pass comparison — 10:34 UTC
 
-1. Two P2-64 terminal replay/gate results and the complete 96-row cross-pass comparison; both P2-32 results and median3 qualification are finished and verified. Original processes only.
-2. Retain findings, review any new defect and obtain a further decision before formal table promotion; do not close unrelated qualification gaps.
+All four original replays and their once-run gates finished. P2-64 pass1/pass2 elapsed 9,636.368776s / 9,619.667357s, exit 0. Both numerical gates report FAIL, not an execution failure. `completion.json` records the final supervisor completion at 10:34:20 UTC. The queued collector executed once after that event:
+
+```bash
+env PYTHONPATH="$PWD:$PWD/tests/analysis" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp \
+  timeout 1200s /data/ycfeng/envs/frontier-py310/bin/python \
+  tests/analysis/v4_attention_pass_comparison.py \
+  --task-root "$PWD/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800" \
+  --output "$PWD/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_pass_replays_20261101/comparison.json"
+```
+
+Environment: repository cwd, Python 3.10.6, no conda activation. Exact absolute argv/environment and script hash are in `comparison_command.json`. Expected six retained readings, 96 metric rows, eight cross-table spreads, eight native variability summaries, unchanged non-attention inputs/config/clean-reference bytes, and original terminal hashes. Actual: **PASS_EVIDENCE_CHECKS**, exit 0 in 1.273275s, finished 10:34:21 UTC. This is evidence-integrity PASS, not numerical or formal qualification PASS. Output SHA-256 `032b832741e1f49fc8915369604e0f7faf8a27bcbc5071a109f9c8763a4f0920`; raw log `/data/ycfeng/tmp/a6_supplement_passes_20261101_01/pass_comparison.log`, SHA-256 `1c2bd1b79a5b2e98b91bf215fcec1f0d6dd36c945f854c6e4cc24aee81d89b94`.
+
+### P2-64 values and preserved failure
+
+| Metric (unit) | Native pooled | B29 prediction (error) | Pass1 prediction (error) | Pass2 prediction (error) | Prediction max−min / B29 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| TTFT (ms) | 741.216351 | 684.313827 (7.67691%) | 700.581587 (5.48217%) | 699.733815 (5.59655%) | 16.267761 ms / 2.37724% |
+| TPOT (ms) | 25.870531 | 25.295337 (2.22336%) | 25.271534 (2.31536%) | 25.293018 (2.23232%) | 0.023802 ms / 0.09410% |
+| Request E2E (ms) | 27206.769532 | 26561.443186 (2.37193%) | 26553.361048 (2.40164%) | 26574.490911 (2.32398%) | 21.129863 ms / 0.07955% |
+| Token throughput (tokens/s) | 5963.206318 | 5975.251570 (0.20199%) | 5967.966913 (0.07983%) | 5966.889413 (0.06176%) | 8.362157 tokens/s / 0.13995% |
+
+Absolute pooled errors (B29/pass1/pass2): TTFT 56.902525/40.634764/41.482536 ms; TPOT 0.575194/0.598997/0.577513 ms; E2E 645.326345/653.408484/632.278621 ms; throughput 12.045252/4.760595/3.683095 tokens/s. All denominators are positive.
+
+The sole failing row in each P2-64 generation is **repeat01 TTFT**, native **779.888727 ms**:
+
+| Generation | Predicted (ms) | Absolute error (ms) | Relative error | Verdict |
+| --- | ---: | ---: | ---: | --- |
+| B29 | 684.313827 | 95.574901 | 12.254941% | FAIL |
+| pass1_all | 700.581587 | 79.307140 | 10.169033% | FAIL |
+| pass2_all | 699.733815 | 80.154912 | 10.277737% | FAIL |
+
+All 93 other pooled/per-repeat rows pass, including every P2-32 row. P2-64 repeat02/repeat03 TTFT errors are respectively 5.676%/4.727% for B29 (exact values in JSON), 3.43363%/2.46238% for pass1 and 3.55048%/2.58041% for pass2. No clean run or request was excluded; pooled PASS does not override these failures.
+
+### Native variability and interpretation
+
+Three independent clean repetitions are retained at each scale. Native TTFT means are P2-32 **361.974764 / 364.748496 / 365.365689 ms** (range 3.390925 ms, sample SD 1.806142 ms, CV 0.496152%) and P2-64 **779.888727 / 725.492280 / 718.268047 ms** (range 61.620681 ms, sample SD 33.685485 ms, CV 4.544622%). Native sample CVs for TPOT/E2E/throughput are P2-32 0.190358%/0.190983%/0.043357% and P2-64 1.606546%/1.456283%/0.240975%. These are descriptive statistics from three runs, not confidence intervals or proof that a representative mean/tail has converged. A stable ordinary-run accuracy claim remains unestablished, particularly near the P2-64 TTFT threshold; retained numeric FAILs remain authoritative for this comparison.
+
+The measured table-generation effect is small for seven of eight case/metric combinations (at most 0.366017% of B29). The exception is P2-64 TTFT at 2.377237% (16.267761 ms), still smaller than its remaining repeat01 gap but material enough not to call all user metrics insensitive. The two new P2-64 predictions differ by only 0.847772 ms; the larger spread is against B29. This experiment changes the complete attention table, including prefill/dummy rows and same-pass gap statistics, so it does not attribute that TTFT change specifically to CSA FULL decode overlap, nor isolate the residual cause. No simulator change or table selection is justified solely by which generation is nearer the gate.
+
+Durable evidence under `h3o_operator_costs/a6_pass_replays_20261101/`: `comparison.json`, `comparison_command.json`, `completion.json`, and all four original terminal command records. `comparison_metrics.csv` exports all 96 rows (SHA-256 `e38a6c8a2717e64d9a891411b36843209f1773ca328f52951af0171b725db732`); `native_variability.csv` exports all eight descriptive summaries (SHA-256 `b644311824e20c1958b63c3ce121b0782690981d1d938e10ebc7d382c370bc8e`). These are direct JSON-row exports using Python `csv.DictWriter`, with no metric recomputation or filtering.
+
+## Completion and remaining acceptance
+
+The approved forward-qualification implementation, supplement validation, median3 verification, and four diagnostic sensitivity replays/comparison are complete. Final actual-evidence review A6-PASS-FINAL-REVIEW (`ses_e69531224ffeMg6U8NpSEOZTF9`) found **no actionable evidence defect** and accepted the diagnostic deliverables. The reviewer inspected requirements, plan/progress, terminal JSON, collector, actual readings/configs/normalized rows and comparison CSV; independently recomputed 96 metrics, eight spreads and eight variability summaries. All three repeat01 TTFT failures were retained. Full large-CSV byte hashes rely on the actual collector; source equivalence relies on baseline's recorded diff paths, not a new independent complete source-diff verification. Final report/status edits were checked by the primary, not reviewed as final text by that reviewer.
+
+The reviewer highlighted that new P2-64 TTFT predictions are only **1.318267 / 2.166039 ms** below the lower acceptance boundary, 701.899855 ms (90% of repeat01 native TTFT). The observed 16.267761 ms cross-generation variation therefore matters to a near-threshold verdict, despite most metrics being stable. No rounding, pooled result or run exclusion changes either FAIL.
+
+Primary acceptance additionally matched the final JSON hash to `comparison_command.json`, checked six readings/96 rows/eight spreads/eight variability records and exactly three retained P2-64 repeat01 TTFT failures, and round-tripped all 96 metric CSV and eight variability CSV rows to the JSON without value differences. `git diff --check` passed. No source or measured input was changed in this close-out, so completed regression tests were not repeated.
+
+The next substantive issue is the remaining P2-64 TTFT gap and reference variability; this comparison alone does not choose its correction or authorize new measurements. Formal table promotion requires a further decision, and no generation is promoted here.
 
 Tickets 05/09/11/19 and formal bundle/E2E acceptance remain OPEN. Attention measurements come from the retained single-H200 graph-replay setup; the CPU sensitivity comparison does not establish an unmeasured real-serving schedule distribution or qualify H800. No prefill, hardware-generalization, or other scope is added here.

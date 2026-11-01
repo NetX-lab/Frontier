@@ -1,6 +1,6 @@
 {
   "classification": "D-A6-PASS-REPLAYS_DIAGNOSTIC_COMPARISON",
-  "status": "WAITING_FOR_ORIGINAL_SUPERVISOR",
+  "status": "FINISHED",
   "wait_supervisor_pid": 223761,
   "wait_method": "pidfd_open/select; no polling",
   "collector_supervisor_pid": 2364277,
@@ -25,5 +25,11 @@
   "script_sha256": "a914c441a6e31c4895ce5408361fdf8307f849abb416e3420a530b8dd59a0137",
   "queued_utc": "2026-11-01T10:14:08.044401+00:00",
   "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_pass_replays_20261101/comparison.json",
-  "log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/pass_comparison.log"
+  "log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/pass_comparison.log",
+  "started_utc": "2026-11-01T10:34:20.211311+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1.273275010753423,
+  "finished_utc": "2026-11-01T10:34:21.485414+00:00",
+  "log_sha256": "1c2bd1b79a5b2e98b91bf215fcec1f0d6dd36c945f854c6e4cc24aee81d89b94",
+  "output_sha256": "032b832741e1f49fc8915369604e0f7faf8a27bcbc5071a109f9c8763a4f0920"
 }
