@@ -6,8 +6,9 @@
 | --- | --- |
 | 2026-11-01 | 完成 SKILL-WARM-FIX 验证后的进度与路线自查。 |
 | 2026-11-01 | 主代理补齐任务记录；独立 review 六项闭环，当前仅提交/整合待完成。 |
+| 2026-11-01 | 提交/整合完成；同步已获批准的README依赖后，34文件与root一致、两validator PASS。 |
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -15,14 +16,14 @@
 | SKILL-WARM-FIX：结构与边界验证 | PASS | 两项现有 validator、whitespace、文档路径、registry invariants 和 CPU 算术检查通过，见本目录 test report。 |
 | SKILL-WARM-FIX：证据交付 | PASS | 已保留精确命令、测试报告及 skill_warm_fix.diff；未 staging、commit 或运行 GPU。 |
 | SKILL-WARM-REVIEW：独立复审 | PASS | 六项 CLOSED，四场景 walkthrough PASS，无 actionable skill finding；见 review.md。 |
-| 主代理提交与工作树整合 | TODO | 已接受文档；待提交并整合到当前 GLM/V4 分支。 |
+| 主代理提交与工作树整合 | PASS | root0cc4118a -> current f31b2b2d；含prerequisites及已获批准README24ddbbb6，34文件逐字节一致、两validator PASS。 |
 
-本自查依据本目录 requirements.md/plan.md、原 D-WARM-TARGET 和 review.md；任务记录由主代理补齐。本表不推定 integration/commit 已完成。
+本自查依据本目录 requirements.md/plan.md、原 D-WARM-TARGET、review.md及实际commit/validation。仅本skill slice完成，父任务输入资格仍OPEN。
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** SKILL-WARM-FIX 指派至独立复审｜**当前前沿：** 主代理提交/整合。
+**检测窗口：** SKILL-WARM-FIX 指派至最终整合验证｜**当前前沿：** 本skill slice已完成。
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -44,10 +45,10 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 主代理提交与工作树整合：只纳入获准的 skill/current-task 文件 → 完成标志：目标分支包含已验收 skill 内容，README 及无关文件不变。
+1. 本skill slice停止修改；父任务按其独立资格和批准记录推进。README采用已明确批准的98b680a2原文，无关文件不变。
 
 ## 4. 最值得关注的 3 点
 
 1. warm reading 使用各 repeat 自己的 matched IDs 和双边窗口；native all-request reading 保持不可变。
 2. warm readiness 不使完整有效 clean repeat 自动 FAIL；缺乏 event binding 或 retained evidence 时仍是 insufficient。
-3. shared-ID harness 的限制已写明；实际 P2 calculator 与 event-coverage 由父任务验收，本 skill slice 仅剩提交/整合。
+3. shared-ID harness 的限制已写明；本skill slice完成，实际P2资格与后续fix/replay批准由父任务记录。

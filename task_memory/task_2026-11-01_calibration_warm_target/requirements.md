@@ -21,3 +21,12 @@ Authority and comparison evidence are maintained in `/data/ycfeng/Frontier/.work
 5. Restrict the simple NIXL compatibility-log counting shortcut to its verified PP1, same-TP pull path. Other layouts require identity-based coverage and completed setup.
 6. A warmup-policy-only correction starts a new run generation and retains the unchanged serving-build identity.
 7. Existing structure validation, skill validation and phase review pass. Preserve README and unrelated work. No simulator or harness runtime change belongs to this skill slice.
+
+## Integration prerequisite: prior README authorization
+
+The root README was not edited by SKILL-WARM-FIX. During branch integration, the newer structure validator rejected the branch's older personal `vLLM-BS` README. The prior explicit user request is retained at `/data/ycfeng/Frontier/skills/task_memory/task_2026-11-01_frontier_skills_readme/requirements.md:9–11,24–35`:
+
+> 修正/data/ycfeng/Frontier/skills/README.md的描述，重写该readme
+> 我希望这份 skill更加通用，而不是针对 我个人的 vLLM-BS，user可以使用这份skill对自己的fork，甚至其他engine（sglang、trt）等进行校准。请你继续修正
+
+Carry forward that approval by importing the exact already-committed `98b680a2:skills/README.md` into the active worktree. This is a prerequisite synchronization, not a new README rewrite or a new calibration decision. Unrelated files remain preserved.

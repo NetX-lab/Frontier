@@ -13,4 +13,4 @@
 - Four read-only scenario walkthroughs PASS: a new service can preflight from its plan; a valid incompletely warmed run with exhaustive event bindings reaches paired analysis; ambiguous events remain insufficient; PP>1/push logs require identity-based proof rather than the shortcut.
 - Verification limits: reviewer did not rerun the validators or audit the actual P2 exclusion identities/numbers; those are separately owned by WARM-FINAL-REVIEW in the parent task.
 - Record completeness: reviewer observed the task records before the primary created `requirements.md`, `plan.md`, `progress.md` and `summary.md`. They now exist and inherit the original decision; no skill change was needed for that timing difference.
-- Primary acceptance: documentation scope accepted for commit. Cross-worktree integration remains pending.
+- Primary acceptance: documentation scope accepted and integrated as `f31b2b2d` plus the approved README `24ddbbb6`. Exact-root byte equivalence and both integrated validators PASS; the test report records the sole README prerequisite issue and resolution.

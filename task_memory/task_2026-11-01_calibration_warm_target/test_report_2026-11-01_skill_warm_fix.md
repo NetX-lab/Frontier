@@ -179,3 +179,19 @@ This is a document/source inspection, not an independent model-behavior test.
 ## Primary archive check
 
 The first staged whitespace check reported the raw `skill_warm_fix.diff` artifact's 34 single-space blank-context lines. These are required unified-diff context prefixes, not whitespace added to skill source. The primary verified that every flagged artifact line is exactly one space and that the artifact remains byte-identical to `git diff 98b680a2 -- skills/frontier-calibration`. The staged source/documents are checked separately with `git diff --cached --check -- . ':!task_memory/task_2026-11-01_calibration_warm_target/skill_warm_fix.diff'`; the raw diff is retained unchanged for review reproducibility.
+
+## Final branch integration
+
+The active branch imported the prerequisite skill changes (`c3ba1712`, `7077960f`, `33ff10fd`) and root warm-target commit `0cc4118a` as `f31b2b2d`. The only cherry-pick conflict was `skills/README.md`; it was initially resolved by retaining existing branch bytes. The subsequent structure check failed with `deployment-specific text 'vLLM-BS' in .../skills/README.md`. Inspection of `pressure_scenarios.py:372–380` showed that the newer validator also checks the parent README.
+
+The primary recovered the prior explicit README/generalization request from `skills/task_memory/task_2026-11-01_frontier_skills_readme/requirements.md:9–11,24–35` at repository root. Commit `24ddbbb6` imports exactly `98b680a2:skills/README.md`; no new README prose or checker exception was introduced. The requested root README remains unchanged.
+
+Final commands in `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028`, Python3.10.6:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 skills/frontier-calibration/tests/pressure_scenarios.py skills/frontier-calibration
+PYTHONDONTWRITEBYTECODE=1 python3 /data/ycfeng/codex-home/skills/.system/skill-creator/scripts/quick_validate.py skills/frontier-calibration
+git diff --check
+```
+
+Observed: `v2_pressure=PASS`, `Skill is valid!`, exit0/zero whitespace diagnostics. Direct comparison of `git ls-files skills/frontier-calibration` plus README found **34/34 files byte-identical** to the requested root; README also equals its `98b680a2` blob, SHA-256 `594fa59a99a6e3b07e01095ea7a29bebe1163f82dfd2b344552e73153004473b`. No unresolved conflict, new simulator run or GPU operation remains in this slice.
