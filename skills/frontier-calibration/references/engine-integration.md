@@ -68,6 +68,9 @@ is only a storage convention. Do not fabricate mode labels, endpoint offsets,
 or routing evidence to fit the reader. If the existing gate cannot express the
 chosen metric boundary, record the limitation and scope the required change;
 a manually adjusted number cannot stand in for the native gate.
+The separately reproducible warm reading in `../entries/e2e-metrics-gap.md`
+retains that native verdict and reuses its arithmetic; it is not a converter
+that hides admission gaps or a hand-adjusted metric.
 
 ## 4. Run the Applicable Branches
 

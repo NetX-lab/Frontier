@@ -81,5 +81,7 @@ and relative), the regression results, the validation status, and the decision
 ID. A result other than `PASS` keeps the case open and authorizes nothing.
 
 Repairs target Frontier. A `groundtruth_defect` is fixed in the ground truth
-by its own decision, as a new ground-truth build identity and run generation; Frontier
-never models it.
+by its own decision and starts a new run generation under `contract.md`,
+Error-Source Classes. A collection-policy-only fix retains the serving build
+identity; actual build/tool changes record their new identities. Frontier never
+models the defect.

@@ -17,6 +17,14 @@ engine binding verifies the same behavior.
   caches with an unmeasured pass, before the formal window; the first step at
   a new token count otherwise carries a one-time stall that looks like model
   error.
+- In the recorded vLLM 0.28 PP1, same-TP pull case, NIXL handshakes each
+  (prefill lane, decode lane) pair on its first KV pull and holds that request
+  1.3-1.9 s. Its load-based
+  lane choice let 16 warmups open only 11-13 of the 16 pairs of a 4 x 4 case,
+  so 3-5 formal requests of the first repeat paid the handshake, while the 2 x 2
+  case was fully covered. Verify connection identities and completed setup
+  under `tool-boundaries.md`, Existing vLLM Collection Profile; a fixed warmup
+  count did not establish readiness.
 - Let the warmups drain before the first formal arrival. When warmups and
   formal requests overlap, TTFT includes their queueing and later batches can
   depend on the warmup state.
@@ -95,7 +103,8 @@ engine binding verifies the same behavior.
 - Compare every padded width with the reference implementation's: the CUDA Graph capture size, the
   token count padded across a DP cohort, and grouped-GEMM rows padded over the
   whole EP domain. Padding differences were a recurring device-price error.
-- Fix a ground-truth defect in the ground truth by decision, as a new build identity
-  and run generation. An intentional fork behavior is not such a defect.
+- Fix a ground-truth defect through its owner under `contract.md`, Error-Source
+  Classes. A warmup-only fix changes collection policy and run generation, not
+  the serving build identity. An intentional fork behavior is not such a defect.
 - After any change to a table or setting, rerun Frontier and republish the
   readings; swapping a CSV under an existing reading leaves the reading stale.

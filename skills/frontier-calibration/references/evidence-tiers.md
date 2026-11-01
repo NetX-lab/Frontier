@@ -20,13 +20,16 @@ provenance is complete. Native filenames and probe formats come from
 | `$FRONTIER_TMP_ROOT/.../<case_id>/<label>/metrics/.../request_metrics.csv` | Frontier request rows of the gated label |
 | Verified converter output: `sample.json`, `vllm/<run_tag>.csv`, `frontier/<label>.csv` | normalized rows and identity gaps; `vllm` is the gate's legacy storage key, with actual engine provenance retained |
 | `run_gate.py gate --output` JSON | the cell reading: verdict, each gated metric or mode pool, routing, coverage |
+| `analysis/e2e_gap_<label>/warm_reading.json` and its replay/exclusion receipt, when required | derived deciding reading from matched clean rows per repeat; selection follows `contract.md`, Warm steady state, and calculation follows `../entries/e2e-metrics-gap.md` |
 | `tests/comparison/e2e_gate/cases/published_readings.json` | the published reading of every claimed cell |
 
 `tests/comparison/calibration/e2e_metrics_gap.py` writes
 `e2e_metrics_table.csv`, `e2e_metrics_status.json`, and
 `e2e_metrics_summary.md` for one vLLM run; use it for a quick single-run check.
-A cell's verdict comes from `run_gate.py gate`, which pools every admissible
-reference run.
+`run_gate.py gate` supplies the immutable all-request arithmetic verdict and
+pools every admissible reference run. The deciding analysis reading follows
+`contract.md`, Warm steady state, through `../entries/e2e-metrics-gap.md`; a quick
+single-run result does not override that selection.
 
 ## Diagnostic Evidence
 

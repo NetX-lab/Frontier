@@ -62,8 +62,23 @@ writes request metrics, and its diagnostic modes disable those metrics. Other
 collectors may emit both, but diagnostic rows never become clean gate evidence.
 
 The published vLLM recipes use at least three warmups per prompt-length class,
-then drain them; eager MoE also gets an unmeasured compile-cache pass. Pair
-clean/probe runs in one job on the same node group and take the KV block count
+then drain them; eager MoE also gets an unmeasured compile-cache pass. Verify
+their actual readiness under `contract.md`, Warm steady state.
+
+For NIXL, only a verified pull-mode case with PP=1 on both sides, matching TP
+sizes and one handshake target rank per decode worker can use the raw
+`NIXL compatibility check passed` count of decode workers x prefill engines.
+Check one successful occurrence per required connection, no retries or stale
+logs, and completed agent registration before the first formal arrival; the
+compatibility line precedes setup completion. In `nixl/base_worker.py`, the
+handshake loops over remote PP ranks and the TP ranks selected by the transfer
+topology. For other PP/TP layouts, push/notif-only paths or a different build,
+derive the required connections from that path and verify identities such as
+local engine/PP/TP rank and remote engine/PP/TP rank, plus completed setup and
+drain. A matching raw count alone does not establish coverage.
+
+Pair clean/probe runs in one job on the same node group and take the KV block
+count
 from that cell's clean run. Inspect the collector's actual warmup and lifecycle
 behavior before reusing the recipe for a different build.
 
@@ -87,7 +102,8 @@ manifest writer, an engine-specific collector or metric converter, the case
 runner that turns the native engine configuration and a Frontier
 settings file into a `frontier.main` command (and, for a DP x PP ensemble
 member, draws its route delays), the GPU job launcher, the coverage
-check, the routing audit, and the error budget. The task keeps them in its
+check, the routing audit, the per-repeat warm-reading calculation described in
+`../entries/e2e-metrics-gap.md`, and the error budget. The task keeps them in its
 artifacts bundle. A case-local tool:
 
 - follows this contract (for example, a runner stops on a null setting and

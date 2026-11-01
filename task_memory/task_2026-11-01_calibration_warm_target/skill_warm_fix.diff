@@ -1,0 +1,515 @@
+diff --git a/skills/frontier-calibration/SKILL.md b/skills/frontier-calibration/SKILL.md
+index 2b98cc6f..29bee797 100644
+--- a/skills/frontier-calibration/SKILL.md
++++ b/skills/frontier-calibration/SKILL.md
+@@ -12,11 +12,11 @@ metric conversion, and Frontier semantic support. Existing vLLM tools are
+ usable only for compatible builds and formats; this skill does not supply ready-made runners
+ for every engine.
+ 
+-Model representative behavior of the selected engine under the user's
+-configuration. Establish a sufficient repeated clean-run reference before
++Establish a sufficient repeated clean-run reference before
+ attributing error or claiming accuracy. Fine-grained traces explain causes; ordinary users must be able to
+ assess predictions with clean runs. Follow `references/contract.md`,
+-"Calibration Objective", before collecting evidence or proposing a correction.
++"Calibration Objective" and "Warm steady state", for the comparison scope
++before collecting evidence or proposing a correction.
+ 
+ If `site.local.md` exists beside this file, read it first. It binds the reference
+ engine checkout or installed build, artifacts root, `$FRONTIER_TMP_ROOT`, and
+@@ -75,11 +75,12 @@ The call graph reaches the other ten entries: `groundtruth-run-check`,
+ 
+ ## Rules for Every Entry
+ 
+-- Only clean-run rows of the formal requests decide the gate. Each metric
+-  passes on its own when its relative error is at most `0.10`, and
+-  `run_gate.py gate` gives the verdict after the engine's metric conversion and
+-  gate compatibility are verified. Instrumented and diagnostic runs never
+-  close it.
++- Each metric passes on its own when its relative error is at most `0.10`.
++  `run_gate.py gate` preserves the all-request arithmetic reading after the
++  engine's metric conversion and gate compatibility are verified. Select the
++  deciding clean-run reading under `references/contract.md`, "Warm steady
++  state", through `e2e-metrics-gap`. Instrumented and diagnostic runs never
++  close the gate.
+ - An unresolved required case choice stops the affected work. Gather evidence,
+   prepare options with costs, ask one focused question, and record the user's verbatim
+   answer under a decision ID in the task's `requirements.md`. No artifact,
+diff --git a/skills/frontier-calibration/entries/e2e-metrics-gap.md b/skills/frontier-calibration/entries/e2e-metrics-gap.md
+index cd4179f4..5deed4a0 100644
+--- a/skills/frontier-calibration/entries/e2e-metrics-gap.md
++++ b/skills/frontier-calibration/entries/e2e-metrics-gap.md
+@@ -2,16 +2,19 @@
+ 
+ **When to use:** Use when clean Frontier and reference-engine request rows of a cell need the five independent E2E metric decisions.
+ 
+-Read `../references/contract.md` (Calibration Objective, E2E Gate, MoE routing gate),
++Read `../references/contract.md` (Calibration Objective, Warm steady state,
++E2E Gate, MoE routing gate),
+ `../references/evidence-tiers.md`, `../references/engine-integration.md`, and
+ `tests/comparison/e2e_gate/README.md`. Verify the selected collector/converter
+ and the gate's metric semantics before normalizing a new engine's rows.
+-Require passing post-run checks for every clean reference run, a Frontier label
+-run on the current settings generation, and the case routing status.
++Require passing post-run validity checks for every clean reference run, its
++separate readiness result and event evidence when needed, a Frontier label run
++on the current settings generation, and the case routing status.
+ 
+ The gate compares runtime timing and throughput only, never generated text or
+ accuracy. Weight and routing substitutions follow the contract's declared-case
+-limits. Warmup rows and setup rows never enter a metric.
++limits. Read `contract.md`, Warm steady state, to select the comparison
++population; normalization retains every formal row before that selection.
+ 
+ 1. Normalize through the converter recorded in `engine_binding`, retaining raw
+    records and a field/endpoint mapping receipt. For the existing compatible
+@@ -22,16 +25,63 @@ limits. Warmup rows and setup rows never enter a metric.
+    accept arbitrary native logs. Read `sample.json`: any missing, duplicate, or
+    unclassified formal id, or a token-count mismatch, makes every metric
+    `INSUFFICIENT_EVIDENCE`.
+-2. Gate: `run_gate.py gate --cell <case_id>/<cell> --rows
++2. Preserve the all-request reading: `run_gate.py gate --cell <case_id>/<cell> --rows
+    analysis/e2e_gap_<label>/ --output analysis/e2e_gap_<label>/reading.json`.
++   Use a fresh output directory for a new generation; reuse an existing
++   published reading unchanged.
+    The cell's gate kind (`single`, `pd_s33`, `dp_pp_pairs`) pools every
+    admissible reference run; list each run used. Apply `pd_s33` offsets or
+    `dp_pp_pairs` conditioning only when the case validates their semantics.
+    Keep the actual engine identity in the report despite legacy `vllm` keys.
+-3. For compatible vLLM logs only,
++   If every repeat is verified `WARM`, this is the deciding arithmetic reading.
++   Otherwise calculate a separate `analysis/e2e_gap_<label>/warm_reading.json`:
++
++   - For each valid clean repeat `r`, record the complete formal set `F`, the
++     event-bound excluded IDs `E_r`, and retained IDs `W_r = F - E_r`. A verified
++     warm repeat has `E_r = {}`. Retain the source/event anchors and the fixed
++     exclusion rule for every `E_r`. Unknown readiness or unbound events leave
++     the analysis `INSUFFICIENT_EVIDENCE`; step 1 admission failures cannot be
++     hidden by exclusion. Keep every repeat, even when `W_r` is empty.
++   - Select `W_r` from repeat `r` and from its matching Frontier label or each
++     ensemble member. For each side recompute the window as
++     `max(completion_s for W_r) - min(arrival_s for W_r)` on its own clock.
++     Use only retained request/token counts in throughput numerators and the
++     ordinary metric eligibility rules below for latency. Preserve original
++     timestamps and execution context: internal elapsed time, event durations
++     and queueing paid by retained requests are not subtracted, and the workload
++     is not rerun as a smaller trace. Record both sides' per-repeat counts,
++     window endpoints, numerators, denominators and values, with warm exclusions
++     separate from TPOT ineligibility.
++   - For `single` and `pd_s33`, sum numerators and denominators across repeats
++     on **both** sides. Reuse the Frontier rows filtered by that repeat's `W_r`
++     once per reference repeat; one unfiltered Frontier value is not a matched
++     comparison when retained IDs differ. For `pd_s33`, compute and record each
++     repeat's minimum endpoint offset on its retained reference rows as in
++     `gate.py`. For `dp_pp_pairs`, pair every repeat with every ensemble member
++     on `W_r`, then apply the existing mode-agreement pools, distinct-request
++     threshold and arithmetic on both sides. Preserve original mode windows
++     and labels. Report whole-cell reference means over repeats and Frontier
++     means over the matching retained-row values of every (repeat, member)
++     pair; these remain diagnostics, not gated metrics.
++   - Retain a replayable calculator path/command, version, input hashes and the
++     per-repeat exclusion receipt. Reuse `e2e_metrics_gap.py` metric arithmetic
++     and `gate.py` pooling/decision rules. The current harness has one shared
++     `sample.formal_request_ids` and one Frontier set for `single`/`pd_s33`;
++     one `run_gate.py gate` call cannot express differing `W_r`. Use a verified
++     case-local calculation for that derived reading, not a cell-wide union or
++     intersection of exclusions, edited `sample.json`, or an overwritten native
++     `reading.json`. Empty retained sets, invalid denominators or insufficient
++     reference precision keep the analysis insufficient, without discarding a
++     repeat. Clearly label the result as a derived warm reading, not a native
++     harness verdict.
++
++3. Write the cell analysis status from the deciding reading in step 2, subject
++   to admission, readiness and reference sufficiency. A valid derived warm
++   reading decides it even when the all-request harness verdict differs; keep
++   both readings and their scope on record. For compatible vLLM logs only,
+    `tests/comparison/calibration/e2e_metrics_gap.py` compares one reference run
+-   and writes `e2e_metrics_table.csv`, status, and summary; the cell verdict still
+-   comes from step 2.
++   and writes `e2e_metrics_table.csv`, status, and summary as a quick diagnostic;
++   it does not replace the repeat-pooled reading selected in step 2.
+ 
+ `run_gate.py` knows only the claimed cells of
+ `tests/comparison/e2e_gate/cases/scenario_matrix.json`. A new case or cell
+@@ -57,9 +107,12 @@ The summary gives each metric's two absolute values with units, the relative
+ error, the gate kind, the independent clean-run count, between-run variability,
+ statistic uncertainty, the reference-sufficiency assessment, the coverage
+ class, and, when the selected gate uses mode pairs, the gated pools and
+-reference modes without gated pairs. Report the ordinary clean-run comparison alongside any
+-conditioned gate, with its stated boundary. Preserve `reading.json` as the
+-harness's arithmetic verdict; when reference evidence is insufficient, the
+-analysis status is `INSUFFICIENT_EVIDENCE` and calibration remains open even if
+-that reading says PASS. This entry is read-only and never proposes a scaling
+-factor or code change.
++reference modes without gated pairs. For a warm reading, include the per-repeat
++exclusion and matched-pooling receipt, its replay command and each excluded
++request's event evidence, beside the unchanged all-request reading. Report the
++ordinary clean-run comparison alongside any conditioned gate, with its stated
++boundary. Preserve `reading.json` as the native harness arithmetic verdict and
++identify which reading decides analysis status. When reference evidence is
++insufficient, the analysis status is `INSUFFICIENT_EVIDENCE` and calibration
++remains open even if an arithmetic reading says PASS. This entry is read-only
++and never proposes a scaling factor or code change.
+diff --git a/skills/frontier-calibration/entries/error-correction.md b/skills/frontier-calibration/entries/error-correction.md
+index bf9fd8e2..1f9cfaa6 100644
+--- a/skills/frontier-calibration/entries/error-correction.md
++++ b/skills/frontier-calibration/entries/error-correction.md
+@@ -14,7 +14,10 @@ code-change marker, lands one commit, and runs the regression set; rerun the
+ affected cells; refresh the domain analysis; and obtain a fresh decision before
+ the next domain. Run workflow and operator corrections before any CPU
+ correction of the same metric. A `groundtruth_defect` returns to `parity-run`
+-with the new ground-truth build identity and a new run generation.
++with a new run generation under `contract.md`, Error-Source Classes. A
++warmup-only `ground_truth_tool` fix revises collection policy and retains the
++serving build identity; update a build/tool identity only when it actually
++changes. This reference fix does not require a Frontier repair.
+ 
+ Close with the gate:
+ 
+diff --git a/skills/frontier-calibration/entries/groundtruth-run-check.md b/skills/frontier-calibration/entries/groundtruth-run-check.md
+index a0afedcc..2aeb4988 100644
+--- a/skills/frontier-calibration/entries/groundtruth-run-check.md
++++ b/skills/frontier-calibration/entries/groundtruth-run-check.md
+@@ -2,7 +2,8 @@
+ 
+ **When to use:** Use when a ground-truth run needs its preflight before launch, or its evidence check after the run before any analysis reads it.
+ 
+-Read `../references/contract.md` (Ground-Truth Engine and Build, Run Modes),
++Read `../references/contract.md` (Ground-Truth Engine and Build, Run Modes,
++Warm steady state),
+ `../references/engine-integration.md`, and `../references/pitfalls.md`
+ (Ground-Truth Collection). Check the mode switches and output contract of the
+ selected collector. This check is case-local (`../references/tool-boundaries.md`).
+@@ -15,8 +16,10 @@ Before launch, record in `runs/groundtruth_<mode>/<run_tag>/run_manifest.json`:
+   any instrumentation overlay; verify the source/build rules in the contract;
+ - the mode, native configuration, required collector/converter capabilities,
+   and the conditions separating clean from diagnostic observations;
+-- warmup coverage and readiness for the measured shapes, with warmups drained
+-  before the first formal arrival;
++- the warmup policy, expected path/connection coverage, and the method and
++  records used to verify readiness and drain at the formal boundary
++  (`contract.md`, Warm steady state); preflight checks this plan, not coverage
++  that can only be observed during the run;
+ - formal/warmup request IDs, workload and trace hashes, and fresh output paths;
+ - authorized resources and topology, paired clean/probe placement, and port
+   isolation for concurrent jobs.
+@@ -28,7 +31,8 @@ collection.
+ ## Post-Run Check
+ 
+ For each run tag, write `analysis/run_check_status.groundtruth_<mode>.json`
+-with a PASS or FAIL for every required check and the evidence:
++with separate clean-run validity and warm-readiness results. For validity,
++record PASS or FAIL for every applicable required check and its evidence:
+ 
+ - serving build, overlays, configuration, inputs, and collector unchanged;
+   actual GPU type/count and topology match the case; successful terminal status
+@@ -47,9 +51,20 @@ collector requires both connector checks and the `pd_metrics.py` request join;
+ its CPU producer needs step, request-phase, and stage records. Such formats are
+ not requirements for another engine's logs.
+ 
+-A run passes when every applicable required check passes. Mark inapplicable
+-checks with their reason. All valid clean runs belong to the declared reference
+-population; probe admission into timing tables remains separate. Missing a
++A run's validity passes when every applicable required validity check passes.
++Mark inapplicable checks with their reason. Separately record warm readiness as
++`WARM`, `INCOMPLETE`, or `UNVERIFIED`, with the actual coverage identities,
++completion records, warmup drain and first formal arrival. Audit formal-window
++events against the preflight method. Compatibility success alone is not proof
++that connection setup completed. For `INCOMPLETE`, retain source/event anchors
++and the exhaustive affected-request IDs needed by `e2e-metrics-gap`; unverified
++drain or incomplete event binding leaves warm evidence insufficient.
++
++Every valid clean repeat reaches analysis, including an incompletely warmed
++repeat with complete request rows and event-exclusion evidence. Its validity
++PASS is not changed to FAIL solely by its readiness result. The deciding reading
++follows `contract.md`, Warm steady state; all-request rows and valid repeats
++remain intact. Probe admission into timing tables remains separate. Missing a
+ required measurement is insufficient evidence, not proof of a simulator defect.
+ 
+ This entry changes no code or data. A run PASS establishes validity, not numeric
+diff --git a/skills/frontier-calibration/references/call-graph.md b/skills/frontier-calibration/references/call-graph.md
+index 693e8a52..6d8e3341 100644
+--- a/skills/frontier-calibration/references/call-graph.md
++++ b/skills/frontier-calibration/references/call-graph.md
+@@ -19,8 +19,11 @@ parity-run
+ ```
+ 
+ `groundtruth-run-check` runs twice: before launch it checks the manifest,
+-engine/build identity, mode predicate, and fresh output paths; after the run it checks the
+-run's evidence, and only a passing run reaches any analysis. Clean,
++engine/build identity, mode predicate, fresh output paths and planned readiness
++verification; after the run it checks validity and warm readiness separately.
++Only a validity PASS reaches analysis; an incompletely warmed valid clean run
++reaches the warm-reading path of `e2e-metrics-gap` with its event evidence
++(`contract.md`, Warm steady state), rather than being discarded. Clean,
+ diagnostic, CPU, and Frontier outputs stay in separate run directories. Missing
+ optional diagnostics leave only their claims unverified; missing required
+ collection, conversion, or semantic support stops the affected comparison.
+@@ -58,10 +61,10 @@ coverage or measurement-admission failure leaves its conclusion
+ 
+ ```text
+ error-analysis
+-  -> e2e-metrics-gap (arithmetic and clean-reference sufficiency)
++  -> e2e-metrics-gap (select all-request or derived warm reading; assess reference sufficiency)
+   -> [insufficient repetitions] collect approved clean repeats; reassess
+        before attributing modeling error
+-  -> [sufficient reference, every gated metric PASS] stop, unless the user asked for diagnostics
++  -> [sufficient reference, deciding analysis reading PASS] stop, unless the user asked for diagnostics
+   -> [a metric FAIL or INSUFFICIENT_EVIDENCE]
+        -> semantic-alignment-check (settings, routing, prefix state, windows)
+        -> [mismatch] stop for a decided semantic-alignment-repair
+@@ -97,7 +100,8 @@ error-correction
+   -> rerun the affected cells
+   -> fresh domain analysis and a fresh decision
+   -> next domain
+-  -> [groundtruth_defect fixed] parity-run with the new ground-truth build identity
++  -> [groundtruth_defect fixed] parity-run with a new run generation;
++       policy-only warmup fix retains the build identity (contract.md, Error-Source Classes)
+   -> e2e-metrics-gap
+   -> republish the readings
+ ```
+diff --git a/skills/frontier-calibration/references/contract.md b/skills/frontier-calibration/references/contract.md
+index 8105c0aa..350b9e7b 100644
+--- a/skills/frontier-calibration/references/contract.md
++++ b/skills/frontier-calibration/references/contract.md
+@@ -1,10 +1,11 @@
+ # Frontier Calibration v2 Contract
+ 
+ This is the shared contract for every entry. `registry.json` is the entry
+-catalog, `call-graph.md` owns execution order, and this file owns the evidence,
+-decision, and approval rules. Gate arithmetic lives in the repository harness,
+-`tests/comparison/e2e_gate/` (`README.md`, `gate.py`); this contract summarizes
+-it and never overrides it. Engine-specific collection and conversion must first
++catalog, `call-graph.md` owns execution order, and this file owns comparison
++scope, evidence, decision, and approval rules. Gate arithmetic lives in the
++repository harness, `tests/comparison/e2e_gate/` (`README.md`, `gate.py`);
++derived readings reuse that arithmetic without changing the native harness
++reading. Engine-specific collection and conversion must first
+ pass `engine-integration.md`; tool availability is not implied by this contract.
+ 
+ ## Calibration Objective
+@@ -66,6 +67,47 @@ fault or a reason to exclude behavior. If evidence or value remains unclear,
+ record an unresolved limitation and the next evidence needed; neither a
+ speculative patch nor a narrower accuracy claim fixes the missing model.
+ 
++### Warm steady state
++
++Comparison and calibration target the selected engine's warm steady state.
++One-time warmup costs belong to service start-up: kernel or JIT compilation,
++autotuning, graph capture, lazily opened communication connections (KV
++connector or collective handshakes), and other first-use setup. Frontier does
++not model them, and no correction prices them.
++
++A clean reference is warm only when its warmup has run every one-time path the
++formal window uses: each prompt/context shape, each compile and graph path, and
++each lazily connected communication pair. Load-based routing can leave pairs
++unopened after a fixed warmup count, so readiness evidence shows the coverage
++itself from the engine's own records (handshake or connection log lines,
++lifecycle records), matched against the path and connection identities the
++topology requires. Preflight records the policy, expected coverage and checking
++method; the collector verifies actual coverage and warmup drain at the formal
++boundary, and the post-run check audits the formal window.
++
++A formal request that still pays a one-time cost makes its run incompletely
++warmed, a `groundtruth_defect`. Identify such a request by mechanism: the
++engine source shows the one-time path, and that run's event records bind each
++event to every request that waited for it. Apply one rule to every case and
++repeat, fixed before reading the comparison. Clean-run validity and warm
++readiness are separate: a complete valid run remains in the reference population
++when it is incompletely warmed. Keep every valid repeat, including one with no
++remaining warm rows; that repeat leaves the comparison insufficient rather than
++being discarded.
++
++For each repeat, the warm reading removes exactly the event-bound requests
++from both its reference rows and the matching Frontier rows, recomputes each
++side's retained-request window, and pools with the harness arithmetic. It
++decides the analysis status when admission, event coverage and reference
++sufficiency are established; the unchanged all-request `run_gate.py` reading
++stays on record beside it. Unknown readiness, unbound events or insufficient
++remaining evidence yield `INSUFFICIENT_EVIDENCE`, not a favorable subset or a
++substitute repeat. `../entries/e2e-metrics-gap.md` owns the reproducible calculation
++and the harness's shared-ID limitation. Latency alone never identifies a
++request; retained requests keep their observed queueing and timing. The next
++collection warms the uncovered paths rather than carrying the exclusion
++forward.
++
+ ## Case Layout
+ 
+ A calibration task keeps one artifacts bundle. Record how each collector reads
+@@ -166,9 +208,8 @@ as the case needs. Their native flags and combinations come from the verified
+ `engine_binding`, not from another engine's mode names. Diagnostic request
+ metrics, if emitted, remain diagnostic.
+ 
+-Before collection, warm the relevant prompt/context shapes and compilation or
+-graph paths, and drain warmups before the formal window. Record the warmup
+-policy and evidence of readiness. Pair timing observations with clean runs on
++Plan and verify readiness under Warm steady state. Pair timing observations
++with clean runs on
+ the same node group and topology; record each run separately and assess repeat
+ counts under Calibration Objective. Isolate conflicting ports and resources.
+ The existing vLLM mode names, switches, and published warmup recipe live in
+@@ -284,10 +325,16 @@ the owner.
+ | --- | --- | --- |
+ | `simulation_logic` | Frontier's scheduling, execution, or pricing logic disagrees with the selected engine | a Frontier repair entry |
+ | `measurement_input` | a profiling table, CPU-overhead table, kernel gap, collective fit, or coverage gap | a supplement entry and a new table generation |
+-| `groundtruth_defect` | reference collection fails to represent the selected build, or a harness/probe corrupts its measurements | a reference fix: new build/tool identity and run generation |
++| `groundtruth_defect` | reference collection fails to represent the selected build or its warm steady state, or a harness/probe corrupts its measurements | a reference fix and new run generation; change build/tool identity only when that build/tool changes |
+ | `reference_instability` | between-run variation whose cause and representative effect need evidence | repeated clean collection and causal attribution under Calibration Objective; exclusion only for evidenced invalid runs |
+ | `declared_abstraction` | a boundary term Frontier deliberately leaves out, with a recorded bound | the gate kind that removes the bound |
+ 
++A warmup-only collection defect belongs to `ground_truth_tool`: revise its
++collection policy and start a new run generation, retaining the serving build
++identity. Record a new collector/tool identity only if its implementation
++changes; an actual serving-build change records a new build identity. This is
++an owner within `groundtruth_defect`, not an additional error-source class.
++
+ Value rule: the highest-value corrections fix `simulation_logic`. Measurement
+ engineering (re-collecting or tuning tables, probe rules, pooling rules) runs
+ only when the user approves it for the task. A Frontier change never models a
+diff --git a/skills/frontier-calibration/references/engine-integration.md b/skills/frontier-calibration/references/engine-integration.md
+index 3c553c05..a03698fd 100644
+--- a/skills/frontier-calibration/references/engine-integration.md
++++ b/skills/frontier-calibration/references/engine-integration.md
+@@ -68,6 +68,9 @@ is only a storage convention. Do not fabricate mode labels, endpoint offsets,
+ or routing evidence to fit the reader. If the existing gate cannot express the
+ chosen metric boundary, record the limitation and scope the required change;
+ a manually adjusted number cannot stand in for the native gate.
++The separately reproducible warm reading in `../entries/e2e-metrics-gap.md`
++retains that native verdict and reuses its arithmetic; it is not a converter
++that hides admission gaps or a hand-adjusted metric.
+ 
+ ## 4. Run the Applicable Branches
+ 
+diff --git a/skills/frontier-calibration/references/evidence-tiers.md b/skills/frontier-calibration/references/evidence-tiers.md
+index 3b3a0fe8..a7b737e6 100644
+--- a/skills/frontier-calibration/references/evidence-tiers.md
++++ b/skills/frontier-calibration/references/evidence-tiers.md
+@@ -20,13 +20,16 @@ provenance is complete. Native filenames and probe formats come from
+ | `$FRONTIER_TMP_ROOT/.../<case_id>/<label>/metrics/.../request_metrics.csv` | Frontier request rows of the gated label |
+ | Verified converter output: `sample.json`, `vllm/<run_tag>.csv`, `frontier/<label>.csv` | normalized rows and identity gaps; `vllm` is the gate's legacy storage key, with actual engine provenance retained |
+ | `run_gate.py gate --output` JSON | the cell reading: verdict, each gated metric or mode pool, routing, coverage |
++| `analysis/e2e_gap_<label>/warm_reading.json` and its replay/exclusion receipt, when required | derived deciding reading from matched clean rows per repeat; selection follows `contract.md`, Warm steady state, and calculation follows `../entries/e2e-metrics-gap.md` |
+ | `tests/comparison/e2e_gate/cases/published_readings.json` | the published reading of every claimed cell |
+ 
+ `tests/comparison/calibration/e2e_metrics_gap.py` writes
+ `e2e_metrics_table.csv`, `e2e_metrics_status.json`, and
+ `e2e_metrics_summary.md` for one vLLM run; use it for a quick single-run check.
+-A cell's verdict comes from `run_gate.py gate`, which pools every admissible
+-reference run.
++`run_gate.py gate` supplies the immutable all-request arithmetic verdict and
++pools every admissible reference run. The deciding analysis reading follows
++`contract.md`, Warm steady state, through `../entries/e2e-metrics-gap.md`; a quick
++single-run result does not override that selection.
+ 
+ ## Diagnostic Evidence
+ 
+diff --git a/skills/frontier-calibration/references/pitfalls.md b/skills/frontier-calibration/references/pitfalls.md
+index 4fa94730..c2158b58 100644
+--- a/skills/frontier-calibration/references/pitfalls.md
++++ b/skills/frontier-calibration/references/pitfalls.md
+@@ -17,6 +17,14 @@ engine binding verifies the same behavior.
+   caches with an unmeasured pass, before the formal window; the first step at
+   a new token count otherwise carries a one-time stall that looks like model
+   error.
++- In the recorded vLLM 0.28 PP1, same-TP pull case, NIXL handshakes each
++  (prefill lane, decode lane) pair on its first KV pull and holds that request
++  1.3-1.9 s. Its load-based
++  lane choice let 16 warmups open only 11-13 of the 16 pairs of a 4 x 4 case,
++  so 3-5 formal requests of the first repeat paid the handshake, while the 2 x 2
++  case was fully covered. Verify connection identities and completed setup
++  under `tool-boundaries.md`, Existing vLLM Collection Profile; a fixed warmup
++  count did not establish readiness.
+ - Let the warmups drain before the first formal arrival. When warmups and
+   formal requests overlap, TTFT includes their queueing and later batches can
+   depend on the warmup state.
+@@ -95,7 +103,8 @@ engine binding verifies the same behavior.
+ - Compare every padded width with the reference implementation's: the CUDA Graph capture size, the
+   token count padded across a DP cohort, and grouped-GEMM rows padded over the
+   whole EP domain. Padding differences were a recurring device-price error.
+-- Fix a ground-truth defect in the ground truth by decision, as a new build identity
+-  and run generation. An intentional fork behavior is not such a defect.
++- Fix a ground-truth defect through its owner under `contract.md`, Error-Source
++  Classes. A warmup-only fix changes collection policy and run generation, not
++  the serving build identity. An intentional fork behavior is not such a defect.
+ - After any change to a table or setting, rerun Frontier and republish the
+   readings; swapping a CSV under an existing reading leaves the reading stale.
+diff --git a/skills/frontier-calibration/references/registry.json b/skills/frontier-calibration/references/registry.json
+index f49a8510..463a804f 100644
+--- a/skills/frontier-calibration/references/registry.json
++++ b/skills/frontier-calibration/references/registry.json
+@@ -35,7 +35,7 @@
+       "outputs": ["analysis/run_check_status.groundtruth_<mode>.json", "analysis/run_check_summary.groundtruth_<mode>.md"],
+       "allows_code_change": false,
+       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+-      "validation": "Before launch, verify the engine/build identity and required capabilities, mode predicate, inputs, and fresh paths; after the run, verify every run check. A valid individual run does not establish case-level reference sufficiency."
++      "validation": "Before launch, verify the engine/build identity and required capabilities, mode predicate, inputs, fresh paths and planned readiness verification; after the run, check validity and warm readiness separately. A valid individual run does not establish warm readiness or case-level reference sufficiency."
+     },
+     {
+       "name": "groundtruth-run",
+@@ -87,10 +87,10 @@
+       "owner": "e2e-metrics-gap",
+       "trigger": "Clean Frontier and the reference engine request rows need the five independent E2E metric decisions for a cell.",
+       "inputs": ["passed clean run checks", "Frontier label run", "cell entry in the scenario matrix", "validated metric converter and gate semantics", "routing status"],
+-      "outputs": ["analysis/e2e_gap_<label>/sample.json", "analysis/e2e_gap_<label>/reading.json", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
++      "outputs": ["analysis/e2e_gap_<label>/sample.json", "analysis/e2e_gap_<label>/reading.json", "analysis/e2e_gap_<label>/warm_reading.json and replay/exclusion receipt when required", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
+       "allows_code_change": false,
+       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+-      "validation": "Assess repeated-clean reference sufficiency, normalize through the verified engine reader, and apply the compatible gate kind over every admissible run. Preserve the arithmetic reading and report reference uncertainty beside absolute values and relative errors."
++      "validation": "Assess repeated-clean reference sufficiency, normalize all formal rows through the verified engine reader, and retain the native all-request arithmetic reading. Select the deciding reading under contract.md, Warm steady state; reproduce any per-repeat matched warm calculation under e2e-metrics-gap.md without discarding a valid repeat. Report reference uncertainty beside absolute values and relative errors."
+     },
+     {
+       "name": "dispatch-align-trace",
+diff --git a/skills/frontier-calibration/references/repair-approval.md b/skills/frontier-calibration/references/repair-approval.md
+index 12b616ae..28b3a614 100644
+--- a/skills/frontier-calibration/references/repair-approval.md
++++ b/skills/frontier-calibration/references/repair-approval.md
+@@ -81,5 +81,7 @@ and relative), the regression results, the validation status, and the decision
+ ID. A result other than `PASS` keeps the case open and authorizes nothing.
+ 
+ Repairs target Frontier. A `groundtruth_defect` is fixed in the ground truth
+-by its own decision, as a new ground-truth build identity and run generation; Frontier
+-never models it.
++by its own decision and starts a new run generation under `contract.md`,
++Error-Source Classes. A collection-policy-only fix retains the serving build
++identity; actual build/tool changes record their new identities. Frontier never
++models the defect.
+diff --git a/skills/frontier-calibration/references/tool-boundaries.md b/skills/frontier-calibration/references/tool-boundaries.md
+index 5281c94f..eb9783b1 100644
+--- a/skills/frontier-calibration/references/tool-boundaries.md
++++ b/skills/frontier-calibration/references/tool-boundaries.md
+@@ -62,8 +62,23 @@ writes request metrics, and its diagnostic modes disable those metrics. Other
+ collectors may emit both, but diagnostic rows never become clean gate evidence.
+ 
+ The published vLLM recipes use at least three warmups per prompt-length class,
+-then drain them; eager MoE also gets an unmeasured compile-cache pass. Pair
+-clean/probe runs in one job on the same node group and take the KV block count
++then drain them; eager MoE also gets an unmeasured compile-cache pass. Verify
++their actual readiness under `contract.md`, Warm steady state.
++
++For NIXL, only a verified pull-mode case with PP=1 on both sides, matching TP
++sizes and one handshake target rank per decode worker can use the raw
++`NIXL compatibility check passed` count of decode workers x prefill engines.
++Check one successful occurrence per required connection, no retries or stale
++logs, and completed agent registration before the first formal arrival; the
++compatibility line precedes setup completion. In `nixl/base_worker.py`, the
++handshake loops over remote PP ranks and the TP ranks selected by the transfer
++topology. For other PP/TP layouts, push/notif-only paths or a different build,
++derive the required connections from that path and verify identities such as
++local engine/PP/TP rank and remote engine/PP/TP rank, plus completed setup and
++drain. A matching raw count alone does not establish coverage.
++
++Pair clean/probe runs in one job on the same node group and take the KV block
++count
+ from that cell's clean run. Inspect the collector's actual warmup and lifecycle
+ behavior before reusing the recipe for a different build.
+ 
+@@ -87,7 +102,8 @@ manifest writer, an engine-specific collector or metric converter, the case
+ runner that turns the native engine configuration and a Frontier
+ settings file into a `frontier.main` command (and, for a DP x PP ensemble
+ member, draws its route delays), the GPU job launcher, the coverage
+-check, the routing audit, and the error budget. The task keeps them in its
++check, the routing audit, the per-repeat warm-reading calculation described in
++`../entries/e2e-metrics-gap.md`, and the error budget. The task keeps them in its
+ artifacts bundle. A case-local tool:
+ 
+ - follows this contract (for example, a runner stops on a null setting and

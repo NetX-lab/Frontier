@@ -1,10 +1,11 @@
 # Frontier Calibration v2 Contract
 
 This is the shared contract for every entry. `registry.json` is the entry
-catalog, `call-graph.md` owns execution order, and this file owns the evidence,
-decision, and approval rules. Gate arithmetic lives in the repository harness,
-`tests/comparison/e2e_gate/` (`README.md`, `gate.py`); this contract summarizes
-it and never overrides it. Engine-specific collection and conversion must first
+catalog, `call-graph.md` owns execution order, and this file owns comparison
+scope, evidence, decision, and approval rules. Gate arithmetic lives in the
+repository harness, `tests/comparison/e2e_gate/` (`README.md`, `gate.py`);
+derived readings reuse that arithmetic without changing the native harness
+reading. Engine-specific collection and conversion must first
 pass `engine-integration.md`; tool availability is not implied by this contract.
 
 ## Calibration Objective
@@ -65,6 +66,47 @@ under `repair-approval.md`. Normal variability is not automatically an external
 fault or a reason to exclude behavior. If evidence or value remains unclear,
 record an unresolved limitation and the next evidence needed; neither a
 speculative patch nor a narrower accuracy claim fixes the missing model.
+
+### Warm steady state
+
+Comparison and calibration target the selected engine's warm steady state.
+One-time warmup costs belong to service start-up: kernel or JIT compilation,
+autotuning, graph capture, lazily opened communication connections (KV
+connector or collective handshakes), and other first-use setup. Frontier does
+not model them, and no correction prices them.
+
+A clean reference is warm only when its warmup has run every one-time path the
+formal window uses: each prompt/context shape, each compile and graph path, and
+each lazily connected communication pair. Load-based routing can leave pairs
+unopened after a fixed warmup count, so readiness evidence shows the coverage
+itself from the engine's own records (handshake or connection log lines,
+lifecycle records), matched against the path and connection identities the
+topology requires. Preflight records the policy, expected coverage and checking
+method; the collector verifies actual coverage and warmup drain at the formal
+boundary, and the post-run check audits the formal window.
+
+A formal request that still pays a one-time cost makes its run incompletely
+warmed, a `groundtruth_defect`. Identify such a request by mechanism: the
+engine source shows the one-time path, and that run's event records bind each
+event to every request that waited for it. Apply one rule to every case and
+repeat, fixed before reading the comparison. Clean-run validity and warm
+readiness are separate: a complete valid run remains in the reference population
+when it is incompletely warmed. Keep every valid repeat, including one with no
+remaining warm rows; that repeat leaves the comparison insufficient rather than
+being discarded.
+
+For each repeat, the warm reading removes exactly the event-bound requests
+from both its reference rows and the matching Frontier rows, recomputes each
+side's retained-request window, and pools with the harness arithmetic. It
+decides the analysis status when admission, event coverage and reference
+sufficiency are established; the unchanged all-request `run_gate.py` reading
+stays on record beside it. Unknown readiness, unbound events or insufficient
+remaining evidence yield `INSUFFICIENT_EVIDENCE`, not a favorable subset or a
+substitute repeat. `../entries/e2e-metrics-gap.md` owns the reproducible calculation
+and the harness's shared-ID limitation. Latency alone never identifies a
+request; retained requests keep their observed queueing and timing. The next
+collection warms the uncovered paths rather than carrying the exclusion
+forward.
 
 ## Case Layout
 
@@ -166,9 +208,8 @@ as the case needs. Their native flags and combinations come from the verified
 `engine_binding`, not from another engine's mode names. Diagnostic request
 metrics, if emitted, remain diagnostic.
 
-Before collection, warm the relevant prompt/context shapes and compilation or
-graph paths, and drain warmups before the formal window. Record the warmup
-policy and evidence of readiness. Pair timing observations with clean runs on
+Plan and verify readiness under Warm steady state. Pair timing observations
+with clean runs on
 the same node group and topology; record each run separately and assess repeat
 counts under Calibration Objective. Isolate conflicting ports and resources.
 The existing vLLM mode names, switches, and published warmup recipe live in
@@ -284,9 +325,15 @@ the owner.
 | --- | --- | --- |
 | `simulation_logic` | Frontier's scheduling, execution, or pricing logic disagrees with the selected engine | a Frontier repair entry |
 | `measurement_input` | a profiling table, CPU-overhead table, kernel gap, collective fit, or coverage gap | a supplement entry and a new table generation |
-| `groundtruth_defect` | reference collection fails to represent the selected build, or a harness/probe corrupts its measurements | a reference fix: new build/tool identity and run generation |
+| `groundtruth_defect` | reference collection fails to represent the selected build or its warm steady state, or a harness/probe corrupts its measurements | a reference fix and new run generation; change build/tool identity only when that build/tool changes |
 | `reference_instability` | between-run variation whose cause and representative effect need evidence | repeated clean collection and causal attribution under Calibration Objective; exclusion only for evidenced invalid runs |
 | `declared_abstraction` | a boundary term Frontier deliberately leaves out, with a recorded bound | the gate kind that removes the bound |
+
+A warmup-only collection defect belongs to `ground_truth_tool`: revise its
+collection policy and start a new run generation, retaining the serving build
+identity. Record a new collector/tool identity only if its implementation
+changes; an actual serving-build change records a new build identity. This is
+an owner within `groundtruth_defect`, not an additional error-source class.
 
 Value rule: the highest-value corrections fix `simulation_logic`. Measurement
 engineering (re-collecting or tuning tables, probe rules, pooling rules) runs

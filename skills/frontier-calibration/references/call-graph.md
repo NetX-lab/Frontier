@@ -19,8 +19,11 @@ parity-run
 ```
 
 `groundtruth-run-check` runs twice: before launch it checks the manifest,
-engine/build identity, mode predicate, and fresh output paths; after the run it checks the
-run's evidence, and only a passing run reaches any analysis. Clean,
+engine/build identity, mode predicate, fresh output paths and planned readiness
+verification; after the run it checks validity and warm readiness separately.
+Only a validity PASS reaches analysis; an incompletely warmed valid clean run
+reaches the warm-reading path of `e2e-metrics-gap` with its event evidence
+(`contract.md`, Warm steady state), rather than being discarded. Clean,
 diagnostic, CPU, and Frontier outputs stay in separate run directories. Missing
 optional diagnostics leave only their claims unverified; missing required
 collection, conversion, or semantic support stops the affected comparison.
@@ -58,10 +61,10 @@ coverage or measurement-admission failure leaves its conclusion
 
 ```text
 error-analysis
-  -> e2e-metrics-gap (arithmetic and clean-reference sufficiency)
+  -> e2e-metrics-gap (select all-request or derived warm reading; assess reference sufficiency)
   -> [insufficient repetitions] collect approved clean repeats; reassess
        before attributing modeling error
-  -> [sufficient reference, every gated metric PASS] stop, unless the user asked for diagnostics
+  -> [sufficient reference, deciding analysis reading PASS] stop, unless the user asked for diagnostics
   -> [a metric FAIL or INSUFFICIENT_EVIDENCE]
        -> semantic-alignment-check (settings, routing, prefix state, windows)
        -> [mismatch] stop for a decided semantic-alignment-repair
@@ -97,7 +100,8 @@ error-correction
   -> rerun the affected cells
   -> fresh domain analysis and a fresh decision
   -> next domain
-  -> [groundtruth_defect fixed] parity-run with the new ground-truth build identity
+  -> [groundtruth_defect fixed] parity-run with a new run generation;
+       policy-only warmup fix retains the build identity (contract.md, Error-Source Classes)
   -> e2e-metrics-gap
   -> republish the readings
 ```

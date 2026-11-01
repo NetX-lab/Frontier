@@ -14,7 +14,10 @@ code-change marker, lands one commit, and runs the regression set; rerun the
 affected cells; refresh the domain analysis; and obtain a fresh decision before
 the next domain. Run workflow and operator corrections before any CPU
 correction of the same metric. A `groundtruth_defect` returns to `parity-run`
-with the new ground-truth build identity and a new run generation.
+with a new run generation under `contract.md`, Error-Source Classes. A
+warmup-only `ground_truth_tool` fix revises collection policy and retains the
+serving build identity; update a build/tool identity only when it actually
+changes. This reference fix does not require a Frontier repair.
 
 Close with the gate:
 

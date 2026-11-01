@@ -35,7 +35,7 @@
       "outputs": ["analysis/run_check_status.groundtruth_<mode>.json", "analysis/run_check_summary.groundtruth_<mode>.md"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
-      "validation": "Before launch, verify the engine/build identity and required capabilities, mode predicate, inputs, and fresh paths; after the run, verify every run check. A valid individual run does not establish case-level reference sufficiency."
+      "validation": "Before launch, verify the engine/build identity and required capabilities, mode predicate, inputs, fresh paths and planned readiness verification; after the run, check validity and warm readiness separately. A valid individual run does not establish warm readiness or case-level reference sufficiency."
     },
     {
       "name": "groundtruth-run",
@@ -87,10 +87,10 @@
       "owner": "e2e-metrics-gap",
       "trigger": "Clean Frontier and the reference engine request rows need the five independent E2E metric decisions for a cell.",
       "inputs": ["passed clean run checks", "Frontier label run", "cell entry in the scenario matrix", "validated metric converter and gate semantics", "routing status"],
-      "outputs": ["analysis/e2e_gap_<label>/sample.json", "analysis/e2e_gap_<label>/reading.json", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
+      "outputs": ["analysis/e2e_gap_<label>/sample.json", "analysis/e2e_gap_<label>/reading.json", "analysis/e2e_gap_<label>/warm_reading.json and replay/exclusion receipt when required", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
-      "validation": "Assess repeated-clean reference sufficiency, normalize through the verified engine reader, and apply the compatible gate kind over every admissible run. Preserve the arithmetic reading and report reference uncertainty beside absolute values and relative errors."
+      "validation": "Assess repeated-clean reference sufficiency, normalize all formal rows through the verified engine reader, and retain the native all-request arithmetic reading. Select the deciding reading under contract.md, Warm steady state; reproduce any per-repeat matched warm calculation under e2e-metrics-gap.md without discarding a valid repeat. Report reference uncertainty beside absolute values and relative errors."
     },
     {
       "name": "dispatch-align-trace",

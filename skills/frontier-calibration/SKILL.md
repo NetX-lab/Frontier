@@ -12,11 +12,11 @@ metric conversion, and Frontier semantic support. Existing vLLM tools are
 usable only for compatible builds and formats; this skill does not supply ready-made runners
 for every engine.
 
-Model representative behavior of the selected engine under the user's
-configuration. Establish a sufficient repeated clean-run reference before
+Establish a sufficient repeated clean-run reference before
 attributing error or claiming accuracy. Fine-grained traces explain causes; ordinary users must be able to
 assess predictions with clean runs. Follow `references/contract.md`,
-"Calibration Objective", before collecting evidence or proposing a correction.
+"Calibration Objective" and "Warm steady state", for the comparison scope
+before collecting evidence or proposing a correction.
 
 If `site.local.md` exists beside this file, read it first. It binds the reference
 engine checkout or installed build, artifacts root, `$FRONTIER_TMP_ROOT`, and
@@ -75,11 +75,12 @@ The call graph reaches the other ten entries: `groundtruth-run-check`,
 
 ## Rules for Every Entry
 
-- Only clean-run rows of the formal requests decide the gate. Each metric
-  passes on its own when its relative error is at most `0.10`, and
-  `run_gate.py gate` gives the verdict after the engine's metric conversion and
-  gate compatibility are verified. Instrumented and diagnostic runs never
-  close it.
+- Each metric passes on its own when its relative error is at most `0.10`.
+  `run_gate.py gate` preserves the all-request arithmetic reading after the
+  engine's metric conversion and gate compatibility are verified. Select the
+  deciding clean-run reading under `references/contract.md`, "Warm steady
+  state", through `e2e-metrics-gap`. Instrumented and diagnostic runs never
+  close the gate.
 - An unresolved required case choice stops the affected work. Gather evidence,
   prepare options with costs, ask one focused question, and record the user's verbatim
   answer under a decision ID in the task's `requirements.md`. No artifact,
