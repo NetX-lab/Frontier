@@ -1,6 +1,6 @@
 {
   "classification": "D-A6-PASS-REPLAYS_DIAGNOSTIC",
-  "status": "RUNNING",
+  "status": "FINISHED",
   "command": [
     "timeout",
     "86400s",
@@ -41,5 +41,27 @@
   },
   "baseline_receipt": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/receipt.json",
   "pid": 223796,
-  "process_session_id": 223796
+  "process_session_id": 223796,
+  "exit_code": 0,
+  "elapsed_seconds": 7804.565653549042,
+  "finished_utc": "2026-11-01T10:03:47.258159+00:00",
+  "receipt_sha256": "d84a5838eecf2d0ae5b62d8961de5496626a426adebcfc392275e3b2274d3f3a",
+  "simulator_status": "FINISHED",
+  "gate": {
+    "status": "FINISHED",
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_gate.py",
+      "p2_32",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32",
+      "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/gates/pass1_all_p2_32"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "log": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/logs/pass1_all_p2_32_gate.log",
+    "started_utc": "2026-11-01T10:03:47.316704+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-11-01T10:03:48.737814+00:00",
+    "reading_sha256": "8450ba126970db3d4092790041cd7ab36b9f174b25861bc178bc84298241cf4f",
+    "verdict": "PASS"
+  }
 }

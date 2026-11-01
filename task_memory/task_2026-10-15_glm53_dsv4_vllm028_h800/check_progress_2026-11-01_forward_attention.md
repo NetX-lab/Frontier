@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Both P2-32 runs/gates complete; remaining P2-64 runs active, collector queued. Corrected summary's stale 4 PASS / 2 TODO count to 5 PASS / 1 TODO. |
 | 2026-11-01 | Continued original CPU runs; prepared the final retained-reading collector with focused/schema checks. Still 5 PASS / 1 TODO; no new workload or scope. |
 
 ## 1. 规划完成情况
@@ -17,13 +18,13 @@
 | 当前完整输入的 forward 判定和全 scope diagnostics | PASS | `a6_forward_attention_20261101/current_phase_heldout.json`，exit 0；1,373 complete / 48 omitted，三个完整类别 PASS，整体仍 NOT_EVALUABLE。 |
 | 完整三轮表、两张独立轮次表和四个输入绑定 | PASS | `a6_pass_replays_20261101/{rows_manifest.json,tables_manifest.json,preflight.json}`；7,105 行均有三轮结果；kernel/gap/window 同轮替换，非 attention 输入不变。 |
 | Median3 表的固定-fold A6/forward 复核 | PASS | 两阶段 exit 0，终态 08:37:48 UTC；`median3_verification.json` 验证所有 folds/reference/weights/omissions 不变，三个完整类别 p90 1.628628%/1.932193%/2.215912% PASS。不能算整体 PASS，不重复启动。 |
-| 四次完整 P2 replay、逐 repeat 四项指标和跨表 spread | TODO | 原 supervisor 223761 与四个 driver 在 09:21 UTC 正常运行；collector 有 17 checks、四个实际输入绑定、nested-gate schema 和 4 个终态绑定检查 PASS，review 唯一发现已修复；终态/96-row 比较仍未完成。 |
+| 四次完整 P2 replay、逐 repeat 四项指标和跨表 spread | TODO | 两个 P2-32 原 replay/gate 于 10:04 UTC 前结束，全部 repeat 数值 PASS；两个 P2-64 原进程仍运行。已验证 collector 排队等待 supervisor 223761 退出，96-row 比较仍未完成。 |
 
 汇总：5 PASS / 0 BLOCKED / 0 FAILED / 0 SKIPPED / 1 TODO。剩余一项包括四个原 replay 的完整终态、gate 和跨表比较。历史失败的辅助检查均已查明并恢复，不计为未完成 workload。整体验收依然 OPEN。
 
 ## 2. 偏离检测
 
-**结论：** 未偏移，正常推进。**检测窗口：** median3 验证完成至当前 collector preparation；**当前前沿：** 四个原 P2 replay 的终态与比较。
+**结论：** 未偏移，正常推进。**检测窗口：** collector preparation 完成至 P2-32 原流程结束；**当前前沿：** 已完成 P2-32 的证据核对，与 P2-64 原流程及全量比较并行。
 
 | 偏离模式 | 判定 | 证据与例外 |
 | --- | --- | --- |
@@ -35,19 +36,22 @@
 | D6 分析空转 | CLEAR | current main exit 0、完整表绑定通过、原四个 replay 已启动；调查产物已被实现/执行消费，没有重开原因分析。 |
 | D7 路线违背 | CLEAR | requirements 两项批准、plan 真实 prerequisite 均执行；scope/phase 只诊断，所有 clean repeats 和门槛保持，未先运行未获准内容。 |
 
-**文档检查：** S1–S6 均未发现新的明显缺陷。上轮 S5 已修正；requirements、plan、tickets 05/09 的最新 continuation 与原进程和已验产物一致，历史记录已标明时间或 superseded。
+**文档检查：** S5：summary.md 的当前区仍写 4 PASS / 2 TODO，与已完成 median3 的 checkpoint 不一致，应为 5 PASS / 1 TODO；执行方已修正。S1–S4、S6 未发现新缺陷。P2-32 终态同步到 plan/progress/summary，历史运行记录保留时间。
 
 **归因：** 无当前 HIT。执行此前已遵循新决定；S5 是未来执行容易读错的旧文档状态，不是重复提交或绕过接受条件的实际行为。
 
 ## 3. 纠正建议
 
-**分支：** A：spec/tickets 合理，无需改动。
+**分支：** B：当前 summary 有过期完成数，修正文档后继续。
+
+**文档更新（先执行）：**
+1. `summary.md` 当前 continuation：4 PASS / 2 TODO 改为 5 PASS / 1 TODO；plan/progress/summary 同步两个 P2-32 已结束、两个 P2-64 待终态（可直接执行，已落实）。
 
 **需停止的偏离行为：无。**
 
 **下一路线：**
 
-1. 完成原四个 P2 流程；已有阻塞式退出通知，只等待事件，不轮询、不重启。完成条件是四份 terminal run 和 nested gate evidence；median3 已完成。
+1. 并行核对已结束的两个 P2-32 与继续原 P2-64 流程；collector 已通过阻塞式退出事件排队，不轮询、不重启。完成条件是四份 terminal run 和 nested gate evidence；median3 已完成。
 2. 用已准备的 collector 汇总 B29/pass1/pass2 的 TTFT/TPOT/E2E/THPT 与三次 clean reference；完成条件：96 行 predicted/actual、绝对/相对误差，8 组跨表 spread 和 8 组三轮 native 变异描述，无挑选最好一轮或 pooled PASS 覆盖 repeat FAIL。
 3. 保留 median3 方法限制（仅 kernel-time median targets 聚合，gap/window reference 仍为原 generation），记录接受范围。新 formal table promotion 仍待进一步决定，不属于此次文档修正的权限。
 

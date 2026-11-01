@@ -1,0 +1,29 @@
+{
+  "classification": "D-A6-PASS-REPLAYS_DIAGNOSTIC_COMPARISON",
+  "status": "WAITING_FOR_ORIGINAL_SUPERVISOR",
+  "wait_supervisor_pid": 223761,
+  "wait_method": "pidfd_open/select; no polling",
+  "collector_supervisor_pid": 2364277,
+  "command": [
+    "timeout",
+    "1200s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_attention_pass_comparison.py",
+    "--task-root",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_pass_replays_20261101/comparison.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "source_commit": "975c646d61161b8354b74ad2820b65ef4218fe2f",
+  "script_sha256": "a914c441a6e31c4895ce5408361fdf8307f849abb416e3420a530b8dd59a0137",
+  "queued_utc": "2026-11-01T10:14:08.044401+00:00",
+  "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_pass_replays_20261101/comparison.json",
+  "log": "/data/ycfeng/tmp/a6_supplement_passes_20261101_01/pass_comparison.log"
+}

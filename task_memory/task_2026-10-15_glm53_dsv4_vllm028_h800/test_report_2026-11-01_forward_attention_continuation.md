@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Both P2-32 original replay/gates complete and verified; report partial cross-table sensitivity while original P2-64 runs continue. |
 | 2026-11-01 | Continuation inspected the four original live CPU replay processes; terminal metrics remain pending while comparison collection is prepared. |
 | 2026-11-01 | Recovered the verification command receipt after a shared-exec variable collision; numerical output hashes unchanged, original start timestamp explicitly not retained. |
 | 2026-11-01 | Median3 A6/forward completed and verified against original folds, references and omissions; three complete classes PASS, four P2 outcomes pending. |
@@ -125,9 +126,26 @@ Verification-receipt RCA: the original inline `exec` shared the parent namespace
 - Phase review `A6-P2-COMPARISON-REVIEW` (`ses_e69881453ffe47mqrOTlBhRn4w`) found one P2 issue: a new pass reading's digest/verdict was not compared with the nested gate record. The two-line correction also binds the run receipt digest. Command: `env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python /data/ycfeng/tmp/a6_supplement_passes_20261101_01/collector_terminal_binding_check.py`. Matched retained B29 bytes pass; changed receipt digest, reading digest and verdict each reject: **4 checks PASS**. The reviewer confirmed its sole finding resolved, without rerunning checks. Source is 179 lines; SHA-256 `a914c441a6e31c4895ce5408361fdf8307f849abb416e3420a530b8dd59a0137`.
 - Persistent preparation evidence: `h3o_operator_costs/a6_pass_replays_20261101/{collector_verification.json,collector_terminal_binding_check.json}`; exact scripts remain in the temporary directory above. Final 96-row execution remains pending. Preparation checks use explicit in-memory completion envelopes only; no new gate, normalizer or replay was invoked.
 
+## P2-32 completed comparison — 10:04 UTC terminals
+
+Original pass1/pass2 replay elapsed times are 7,804.565654s and 7,829.273651s, both exit 0; their once-run gates also exit 0 with PASS for each of the three clean references. A6-P32-PARTIAL (`ses_e6966ea38ffer5zhQD62hilFYn`) verified 41/41 read-only assertions using the retained comparator's `metric_rows`, `table_hashes`, and `verify_reading`: terminal digests, native CSV identity, request population, table hashes, and config identity. Primary independently matched both actual receipt/reading SHA-256 values to their command records and checked all three repeat verdicts and pooled values with `/data/ycfeng/envs/frontier-py310/bin/python -` (`PYTHONDONTWRITEBYTECODE=1`, repository cwd; no conda activation). No gate or replay was repeated.
+
+| Metric (unit) | Native pooled | B29 prediction (error) | Pass1 prediction (error) | Pass2 prediction (error) | Prediction max−min / B29 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| TTFT (ms) | 364.029650 | 344.878991 (5.2607%) | 343.688275 (5.5878%) | 343.616678 (5.6075%) | 1.262313 ms / 0.3660% |
+| TPOT (ms) | 19.918966 | 19.926786 (0.03926%) | 19.917612 (0.006796%) | 19.936668 (0.08887%) | 0.019055 ms / 0.09563% |
+| Request E2E (ms) | 20741.131945 | 20729.981427 (0.05376%) | 20719.405655 (0.10475%) | 20738.827565 (0.01111%) | 19.421910 ms / 0.09369% |
+| Token throughput (tokens/s) | 6231.415496 | 6225.735862 (0.09115%) | 6224.157666 (0.11647%) | 6224.263915 (0.11477%) | 1.578195 tokens/s / 0.02535% |
+
+Absolute pooled errors (B29/pass1/pass2): TTFT 19.150658/20.341374/20.412972 ms; TPOT 0.007820/0.001354/0.017701 ms; E2E 11.150518/21.726289/2.304379 ms; throughput 5.679634/7.257830/7.151581 tokens/s. All reference denominators are positive. Worst per-repeat errors are TTFT repeat03: B29 5.6072%, pass1 5.9331%, pass2 5.9527%. There are no FAIL metrics among the 48 P2-32 pooled/per-repeat rows. This is partial evidence, not the final six-reading/96-row comparison.
+
+The two new tables leave all six other profiling inputs, workload bytes and effective config unchanged except the attention path and run-root paths. All three native CSVs match B29 byte for byte. Observed P2-32 sensitivity is below 0.37% of B29 for every metric; this supports small attention-measurement influence on this fixed case, not a confidence interval or a general accuracy guarantee. TTFT still underpredicts native by about 5.3–5.6%, so small cross-table spread does not eliminate that gap.
+
+At 10:13 UTC, original P2-64 drivers 223795/223801 were still active (96.5%/96.3% CPU, 2h19m elapsed). The existing final collector is now queued on supervisor 223761's exit using blocking `pidfd_open`/`select`; `h3o_operator_costs/a6_pass_replays_20261101/comparison_command.json` records the exact collector argv, environment, source hash and output `comparison.json`. It reads the four original terminal/gate records once and never launches a workload. Numeric FAILs remain in that comparison. Its completion is pending.
+
 ## Pending acceptance
 
-1. Four complete CPU P2 replay/gate results, all-repeat metric and cross-pass sensitivity comparison; original processes only. Median3 qualification is finished and verified.
+1. Two P2-64 terminal replay/gate results and the complete 96-row cross-pass comparison; both P2-32 results and median3 qualification are finished and verified. Original processes only.
 2. Retain findings, review any new defect and obtain a further decision before formal table promotion; do not close unrelated qualification gaps.
 
 Tickets 05/09/11/19 and formal bundle/E2E acceptance remain OPEN. Attention measurements come from the retained single-H200 graph-replay setup; the CPU sensitivity comparison does not establish an unmeasured real-serving schedule distribution or qualify H800. No prefill, hardware-generalization, or other scope is added here.
