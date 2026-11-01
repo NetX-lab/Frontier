@@ -1,0 +1,3742 @@
+{
+  "classification": "DIAGNOSTIC_MEASUREMENT_NOISE_FLOOR",
+  "inputs": {
+    "reference": {
+      "path": "/data/ycfeng/tmp/b13r_accept/after/rows.json",
+      "sha256": "ba1ad088898dbe611323d3b86a9becd67c71486402d5ac428697a1b117eda575",
+      "rows": 4945
+    },
+    "comparisons": [
+      {
+        "path": "/data/ycfeng/tmp/g2h_accept/rows_01/rows.json",
+        "sha256": "ad8cd954a2bf7f1a02b2f660895ef61b88e06792177f84f1bcfe6ee04b22b1a8",
+        "rows": 4945
+      },
+      {
+        "path": "/data/ycfeng/tmp/g2h_accept/rows_04/rows.json",
+        "sha256": "9006bbabd8146dd2f327c1464c3acef522febbad1df1282e7c6ce58cd311a605",
+        "rows": 4945
+      }
+    ],
+    "a6_result": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+      "sha256": "65132e28c3713462e194f544a773137a807810801bd096418130286edba55460"
+    }
+  },
+  "limits": {
+    "median": 0.05,
+    "p90": 0.1
+  },
+  "scopes": {
+    "dsv4_fused_qkv_projection": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.013395672309074059,
+      "a6_p90": 0.05516091660133292,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.014543596730245219,
+        "p90": 0.07701714046822743,
+        "above_10_percent": 343,
+        "fraction_above_10_percent": 0.06936299292214358
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.014719121353979191,
+        "p90": 0.07899232022007993,
+        "above_10_percent": 385,
+        "fraction_above_10_percent": 0.07785642062689585
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.04196867942748474,
+          "p90": 0.1841212800616274,
+          "above_10_percent": 78,
+          "fraction_above_10_percent": 0.23214285714285715
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.016230224071857875,
+          "p90": 0.05159001942596257,
+          "above_10_percent": 7,
+          "fraction_above_10_percent": 0.020833333333333332
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.03743472024584057,
+          "p90": 0.14911374298942057,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.016369632800356103,
+          "p90": 0.029594751960309605,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.006994632517645134,
+          "p90": 0.006994632517645134,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.02917008128640739,
+          "p90": 0.02917008128640739,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0054981486265391665,
+          "p90": 0.0054981486265391665,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0007188836263294953,
+          "p90": 0.0007188836263294953,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.024789414702690325,
+          "p90": 0.16203232109159227,
+          "above_10_percent": 67,
+          "fraction_above_10_percent": 0.19940476190476192
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.013385809521758822,
+          "p90": 0.07280145163762902,
+          "above_10_percent": 18,
+          "fraction_above_10_percent": 0.05357142857142857
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.06790306469736418,
+          "p90": 0.176683768929906,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.01640486781824817,
+          "p90": 0.03746238208487416,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.023519371906468682,
+          "p90": 0.16066724069442956,
+          "above_10_percent": 64,
+          "fraction_above_10_percent": 0.21122112211221122
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.014559004302396907,
+          "p90": 0.08366501860964501,
+          "above_10_percent": 21,
+          "fraction_above_10_percent": 0.06930693069306931
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.022656303158340822,
+          "p90": 0.09660822042071984,
+          "above_10_percent": 33,
+          "fraction_above_10_percent": 0.09821428571428571
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.011947390871426173,
+          "p90": 0.034734870403676704,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.03271171841296906,
+          "p90": 0.10846803170152944,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.01004874455799866,
+          "p90": 0.08565412260344654,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.04516458280173522,
+          "p90": 0.04516458280173522,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.05574459035568082,
+          "p90": 0.05574459035568082,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.012565138293608058,
+          "p90": 0.012565138293608058,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.006326754385964892,
+          "p90": 0.006326754385964892,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.01847981180930922,
+          "p90": 0.08164853154152543,
+          "above_10_percent": 13,
+          "fraction_above_10_percent": 0.03869047619047619
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.012121433233374716,
+          "p90": 0.04469433391748519,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.026785714285714284
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.05010665720646672,
+          "p90": 0.11371119895810236,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.017915172463529753,
+          "p90": 0.04877341355976142,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.018829008649368012,
+          "p90": 0.07567625130998604,
+          "above_10_percent": 20,
+          "fraction_above_10_percent": 0.066006600660066
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.011865719231119632,
+          "p90": 0.03632128487584436,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.0165016501650165
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.007113474591465689,
+          "p90": 0.032216035328383526,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.016845403490378108,
+          "p90": 0.030051051134730063,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.01477998930210294,
+          "p90": 0.01477998930210294,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0035534337574039117,
+          "p90": 0.0035534337574039117,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.006331421822544575,
+          "p90": 0.033385561003442525,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.0050522808254554194,
+          "p90": 0.014996638561212253,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.00639968700220773,
+          "p90": 0.03543159533578353,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_fused_qkv_rmsnorm": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.0356995277449822,
+      "a6_p90": 0.0872216626348858,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.036751582021742606,
+        "p90": 0.10627712300030424,
+        "above_10_percent": 568,
+        "fraction_above_10_percent": 0.11486349848331648
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.039975587427525106,
+        "p90": 0.12433671587256065,
+        "above_10_percent": 811,
+        "fraction_above_10_percent": 0.16400404448938322
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.05473085460599338,
+          "p90": 0.1396856881293866,
+          "above_10_percent": 89,
+          "fraction_above_10_percent": 0.2648809523809524
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.027567074771264244,
+          "p90": 0.06858083832335325,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.008928571428571428
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.07562436722865346,
+          "p90": 0.10943157288384849,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.007442584805549223,
+          "p90": 0.016302369427648414,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.00014961101137048682,
+          "p90": 0.00014961101137048682,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.05492828806835511,
+          "p90": 0.05492828806835511,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 3.0215131737903956e-05,
+          "p90": 3.0215131737903956e-05,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.008872085316623465,
+          "p90": 0.008872085316623465,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.04929682824655893,
+          "p90": 0.13508060979777242,
+          "above_10_percent": 70,
+          "fraction_above_10_percent": 0.20833333333333334
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.035954178479974605,
+          "p90": 0.08350382262739836,
+          "above_10_percent": 13,
+          "fraction_above_10_percent": 0.03869047619047619
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.025314183968969613,
+          "p90": 0.07165518818570704,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.04443077109865395,
+          "p90": 0.08312221366262657,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.047221422401382135,
+          "p90": 0.1351875397329944,
+          "above_10_percent": 60,
+          "fraction_above_10_percent": 0.19801980198019803
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.02928225451343014,
+          "p90": 0.0789665927359074,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.0297029702970297
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.06539302870641299,
+          "p90": 0.16050457542396684,
+          "above_10_percent": 106,
+          "fraction_above_10_percent": 0.31547619047619047
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.030987231392089806,
+          "p90": 0.0831214240305149,
+          "above_10_percent": 19,
+          "fraction_above_10_percent": 0.05654761904761905
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.08153885509307349,
+          "p90": 0.13065216275072783,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.042017172245893596,
+          "p90": 0.05264368362195937,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.07279084551811828,
+          "p90": 0.07279084551811828,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.061785260482846285,
+          "p90": 0.061785260482846285,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.00589064092571498,
+          "p90": 0.00589064092571498,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 1.5167602002195886e-05,
+          "p90": 1.5167602002195886e-05,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.03799650748735878,
+          "p90": 0.1262447589098533,
+          "above_10_percent": 56,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.031150667514303836,
+          "p90": 0.09411001010968015,
+          "above_10_percent": 28,
+          "fraction_above_10_percent": 0.08333333333333333
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.08650030364608878,
+          "p90": 0.15231909698512228,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.025537215820616584,
+          "p90": 0.08132672675583119,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.03198051948051949,
+          "p90": 0.11412450737840497,
+          "above_10_percent": 45,
+          "fraction_above_10_percent": 0.1485148514851485
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.031150667514303836,
+          "p90": 0.09293498355955715,
+          "above_10_percent": 21,
+          "fraction_above_10_percent": 0.06930693069306931
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.03271416594255466,
+          "p90": 0.08620695706115108,
+          "above_10_percent": 25,
+          "fraction_above_10_percent": 0.0744047619047619
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.05472816451113213,
+          "p90": 0.10833436635979705,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.015258939580764384,
+          "p90": 0.015258939580764384,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.015266316579144972,
+          "p90": 0.015266316579144972,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.02543471629042105,
+          "p90": 0.07246054169653282,
+          "above_10_percent": 8,
+          "fraction_above_10_percent": 0.023809523809523808
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.05361065416373956,
+          "p90": 0.06412281509754746,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.026700211004706938,
+          "p90": 0.07227835692725545,
+          "above_10_percent": 7,
+          "fraction_above_10_percent": 0.0231023102310231
+        }
+      }
+    },
+    "dsv4_q_projection": {
+      "a6_verdict": "FAIL",
+      "a6_median": 0.016963551072310165,
+      "a6_p90": 0.10225411357183342,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.014059151307329591,
+        "p90": 0.11375517415073987,
+        "above_10_percent": 548,
+        "fraction_above_10_percent": 0.11081900910010112
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.01612306173651968,
+        "p90": 0.12438561986169873,
+        "above_10_percent": 568,
+        "fraction_above_10_percent": 0.11486349848331648
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.1355399617289056,
+          "p90": 0.3670898711697753,
+          "above_10_percent": 192,
+          "fraction_above_10_percent": 0.5714285714285714
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.06680573927581028,
+          "p90": 0.17915144185992857,
+          "above_10_percent": 110,
+          "fraction_above_10_percent": 0.3273809523809524
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.043122784552802294,
+          "p90": 0.08443509346496349,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.04561218337961536,
+          "p90": 0.16699838219779115,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.032947686116700105,
+          "p90": 0.032947686116700105,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.006961206896551885,
+          "p90": 0.006961206896551885,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.03283952882722012,
+          "p90": 0.03283952882722012,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.02055713198893795,
+          "p90": 0.02055713198893795,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.024382274918403883,
+          "p90": 0.1958783445067026,
+          "above_10_percent": 83,
+          "fraction_above_10_percent": 0.24702380952380953
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.015284042220189684,
+          "p90": 0.11955447831440782,
+          "above_10_percent": 43,
+          "fraction_above_10_percent": 0.12797619047619047
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.24022336166749286,
+          "p90": 0.2761505351523449,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.8333333333333334
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.030802625577134597,
+          "p90": 0.07437080872546638,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.027427246973989194,
+          "p90": 0.19027177076406399,
+          "above_10_percent": 59,
+          "fraction_above_10_percent": 0.19471947194719472
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.013524331667556096,
+          "p90": 0.109575326877208,
+          "above_10_percent": 33,
+          "fraction_above_10_percent": 0.10891089108910891
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.015220168419440896,
+          "p90": 0.04561919179469903,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.01488095238095238
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.011106218582123736,
+          "p90": 0.02752801017133285,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.017894973060574665,
+          "p90": 0.02350786773623116,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.00882459936777286,
+          "p90": 0.139589611441373,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.017380374479889035,
+          "p90": 0.017380374479889035,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.01463371107343606,
+          "p90": 0.01463371107343606,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.005624507563051349,
+          "p90": 0.005624507563051349,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0005188434507805315,
+          "p90": 0.0005188434507805315,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.014173055180703747,
+          "p90": 0.04156970475142712,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.026785714285714284
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.008561149936947565,
+          "p90": 0.022888627474783107,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.01298571474724851,
+          "p90": 0.02209135725817178,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.011479174651997558,
+          "p90": 0.016063197788754074,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.013665325285043616,
+          "p90": 0.03632170629680362,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.009900990099009901
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.008358336905272346,
+          "p90": 0.02231875473120906,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.010909778916963254,
+          "p90": 0.0336969329645575,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.007051594124228358,
+          "p90": 0.021773662725161947,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.03882243543683157,
+          "p90": 0.03882243543683157,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.00635039298486649,
+          "p90": 0.00635039298486649,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.00716448592873744,
+          "p90": 0.021733316569852973,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.007149698459669045,
+          "p90": 0.019953170574929718,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.009762089475045319,
+          "p90": 0.027275042781399562,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_output_inv_rope_quant": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.031680074463133964,
+      "a6_p90": 0.09749725174730031,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.02521986549405062,
+        "p90": 0.07403221248940378,
+        "above_10_percent": 206,
+        "fraction_above_10_percent": 0.0416582406471183
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.029922202274087536,
+        "p90": 0.0884455838092016,
+        "above_10_percent": 349,
+        "fraction_above_10_percent": 0.0705763397371082
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.028115286804182075,
+          "p90": 0.07952117966966739,
+          "above_10_percent": 16,
+          "fraction_above_10_percent": 0.047619047619047616
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.013942223643221261,
+          "p90": 0.03973182797743667,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.12425177548846836,
+          "p90": 0.14953142260712984,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.6666666666666666
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.09368710348956269,
+          "p90": 0.14645219810677917,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.5
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.15071070234113734,
+          "p90": 0.15071070234113734,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.07431006493506506,
+          "p90": 0.07431006493506506,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.009499372607058954,
+          "p90": 0.009499372607058954,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.00039791460265390033,
+          "p90": 0.00039791460265390033,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.03709850817229547,
+          "p90": 0.09512142598077737,
+          "above_10_percent": 29,
+          "fraction_above_10_percent": 0.08630952380952381
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.017370080736706872,
+          "p90": 0.04771837610627881,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.008928571428571428
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.05886834088588472,
+          "p90": 0.07173992008717754,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.02195441856297503,
+          "p90": 0.03511010075488821,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.035831062670299715,
+          "p90": 0.09695571322429221,
+          "above_10_percent": 30,
+          "fraction_above_10_percent": 0.09900990099009901
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.020884520884520908,
+          "p90": 0.05166428675859825,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.009900990099009901
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.018590455049944554,
+          "p90": 0.06567827930589891,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.026785714285714284
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.01803551609322973,
+          "p90": 0.04677617882659035,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.14020067857098795,
+          "p90": 0.3046106252572145,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.5
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.05972308991368459,
+          "p90": 0.19958191758675486,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.0068041237113402805,
+          "p90": 0.0068041237113402805,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.00010172939979648482,
+          "p90": 0.00010172939979648482,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0021316853713599167,
+          "p90": 0.0021316853713599167,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0008007413971108386,
+          "p90": 0.0008007413971108386,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.03446461457511187,
+          "p90": 0.09833646415776749,
+          "above_10_percent": 33,
+          "fraction_above_10_percent": 0.09821428571428571
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.02660930878546127,
+          "p90": 0.07250560077280392,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.026785714285714284
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.0352216324972658,
+          "p90": 0.06546309715604558,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.011722745998786848,
+          "p90": 0.022566694234295286,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.0353508302088913,
+          "p90": 0.0941099058822461,
+          "above_10_percent": 22,
+          "fraction_above_10_percent": 0.07260726072607261
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.020292950869697894,
+          "p90": 0.06718702242782212,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.013201320132013201
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.01957436766709874,
+          "p90": 0.06172848651601898,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.03273809523809524
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.038307022442196415,
+          "p90": 0.07880477488630186,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.028310940499040302,
+          "p90": 0.028310940499040302,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0001298954341755321,
+          "p90": 0.0001298954341755321,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.0269030016415435,
+          "p90": 0.07737473497952727,
+          "above_10_percent": 14,
+          "fraction_above_10_percent": 0.041666666666666664
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.01593857249945159,
+          "p90": 0.06573241246386118,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.028217679239850236,
+          "p90": 0.07392599025668543,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.0297029702970297
+        }
+      }
+    },
+    "dsv4_grouped_output_projection": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.006770157997846068,
+      "a6_p90": 0.017695107609138144,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.00608223768073721,
+        "p90": 0.020460535441808845,
+        "above_10_percent": 13,
+        "fraction_above_10_percent": 0.0026289180990899897
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.0071117146737188774,
+        "p90": 0.023386809269162166,
+        "above_10_percent": 27,
+        "fraction_above_10_percent": 0.005460060667340748
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.009271686917208288,
+          "p90": 0.02794760217219055,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.01488095238095238
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.004740145490130864,
+          "p90": 0.014019619922138606,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.02474582776554972,
+          "p90": 0.06016381395555474,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.013954990823018178,
+          "p90": 0.03801513710736834,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.056470663346740675,
+          "p90": 0.056470663346740675,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.05864354239598099,
+          "p90": 0.05864354239598099,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.004789740282703849,
+          "p90": 0.004789740282703849,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.015643765589874528,
+          "p90": 0.015643765589874528,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.007193199157160388,
+          "p90": 0.027332181189104073,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.007030311076462152,
+          "p90": 0.018071607372246,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.017281978302693148,
+          "p90": 0.03662295886638415,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.0074887879343415575,
+          "p90": 0.011795250156628958,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.007020560212049501,
+          "p90": 0.025268462791965964,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.006600660066006601
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.005958219800181707,
+          "p90": 0.017796244827448755,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.009473531964130767,
+          "p90": 0.0293960063292052,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.005952380952380952
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.006955287437899147,
+          "p90": 0.016659431925338794,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.03418904196186617,
+          "p90": 0.05791092883636909,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.01680073500639792,
+          "p90": 0.04625669573588815,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.008325946561985504,
+          "p90": 0.008325946561985504,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.006102599961858869,
+          "p90": 0.006102599961858869,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.00975637323907482,
+          "p90": 0.00975637323907482,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.00710177311567661,
+          "p90": 0.00710177311567661,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.004828247088309016,
+          "p90": 0.01659676019670233,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.005952380952380952
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.004722807527428577,
+          "p90": 0.009762117937306077,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.014109044025239124,
+          "p90": 0.021043568387575193,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.003650434401693788,
+          "p90": 0.039454883013207376,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.004841904482429679,
+          "p90": 0.01737329226881469,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.0033003300330033004
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.0024822953931518356,
+          "p90": 0.009600642476454629,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.008277103016625039,
+          "p90": 0.02477777377910538,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.019079604175388155,
+          "p90": 0.036033521507422735,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.06260182980323341,
+          "p90": 0.06260182980323341,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.018414759139050385,
+          "p90": 0.018414759139050385,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.004784168756964135,
+          "p90": 0.01634779925001523,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.009191709521827358,
+          "p90": 0.019387645258574008,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.005825487862063997,
+          "p90": 0.018349553528600435,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_output_projection": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.010315473570590289,
+      "a6_p90": 0.027773532864943374,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.01016434397119698,
+        "p90": 0.029171704319858868,
+        "above_10_percent": 34,
+        "fraction_above_10_percent": 0.006875631951466127
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.011104518097821498,
+        "p90": 0.033533499678946824,
+        "above_10_percent": 47,
+        "fraction_above_10_percent": 0.009504550050556117
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.01335710318501557,
+          "p90": 0.034597680169955417,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.005952380952380952
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.006963819454340244,
+          "p90": 0.01783925973481498,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.012375673056619324,
+          "p90": 0.03356402186509792,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.008883793067191652,
+          "p90": 0.01221389928820905,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.02288871349644839,
+          "p90": 0.02288871349644839,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.004542199946299021,
+          "p90": 0.004542199946299021,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.011046931407942315,
+          "p90": 0.011046931407942315,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0042777585116582275,
+          "p90": 0.0042777585116582275,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.010940278491291162,
+          "p90": 0.03304029579968664,
+          "above_10_percent": 6,
+          "fraction_above_10_percent": 0.017857142857142856
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.005764605539291156,
+          "p90": 0.017272081596282803,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.006933252050056608,
+          "p90": 0.0690999160572864,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.010297167106197498,
+          "p90": 0.016443919859598463,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.011230175739391208,
+          "p90": 0.03151243765594107,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.0165016501650165
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.006897704945445389,
+          "p90": 0.01752300724633312,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.01144469494953943,
+          "p90": 0.03626424771244398,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.026785714285714284
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.008484363530920254,
+          "p90": 0.022290631197174532,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.014787727430254482,
+          "p90": 0.019229349576071555,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.0029981362476949377,
+          "p90": 0.011309868849844978,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.005855216465578489,
+          "p90": 0.005855216465578489,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.011709394127561402,
+          "p90": 0.011709394127561402,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.01016434397119698,
+          "p90": 0.01016434397119698,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.006675202661925773,
+          "p90": 0.006675202661925773,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.013550965487044115,
+          "p90": 0.03602519488047601,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.01488095238095238
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.008346348141532536,
+          "p90": 0.021589409435829772,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.004206995605051216,
+          "p90": 0.039928444284538664,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.011161273432334085,
+          "p90": 0.0152946133708682,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.013990164490418785,
+          "p90": 0.034740875709357966,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.0165016501650165
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.008401200171452976,
+          "p90": 0.022129553836950863,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.010950234268530937,
+          "p90": 0.04247317331182958,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.014513372794696375,
+          "p90": 0.024143785299498254,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 2.2439637375567157e-05,
+          "p90": 2.2439637375567157e-05,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0009503493451562941,
+          "p90": 0.0009503493451562941,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.009791533701993937,
+          "p90": 0.02812407953323375,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.00900839197134009,
+          "p90": 0.05039194155367875,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.009796837810268737,
+          "p90": 0.03093924556646909,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_compressor_projection": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.012320068365753634,
+      "a6_p90": 0.033343136232388146,
+      "reference_against_independent_mean": {
+        "rows": 3956,
+        "median": 0.014680564506355055,
+        "p90": 0.04774574265910719,
+        "above_10_percent": 74,
+        "fraction_above_10_percent": 0.01870576339737108
+      },
+      "independent_runs_against_each_other": {
+        "rows": 3956,
+        "median": 0.015802952679186872,
+        "p90": 0.04966471602945876,
+        "above_10_percent": 107,
+        "fraction_above_10_percent": 0.02704752275025278
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.024963639412393816,
+          "p90": 0.07617906772747543,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.03273809523809524
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.014237571255022882,
+          "p90": 0.03947246631160273,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.02170221494390525,
+          "p90": 0.06195044084561134,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.017661378456900998,
+          "p90": 0.05265604480569372,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.048955108359133144,
+          "p90": 0.048955108359133144,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.004285752195950527,
+          "p90": 0.004285752195950527,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.00497147785785948,
+          "p90": 0.00497147785785948,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0008460749837399721,
+          "p90": 0.0008460749837399721,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.019239451688484382,
+          "p90": 0.08001001480720471,
+          "above_10_percent": 16,
+          "fraction_above_10_percent": 0.047619047619047616
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.01247034783108264,
+          "p90": 0.03195133309095904,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.020163597222684692,
+          "p90": 0.048067805432337074,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.009487654455652831,
+          "p90": 0.08775128913126767,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.020506402233561274,
+          "p90": 0.07539408195280187,
+          "above_10_percent": 14,
+          "fraction_above_10_percent": 0.0462046204620462
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.012156697347855084,
+          "p90": 0.03059088232238784,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.0157744168435182,
+          "p90": 0.053176236410322736,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.03273809523809524
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.010752602679540542,
+          "p90": 0.025858845638081634,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.017305523768492617,
+          "p90": 0.037195708309190154,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.007498904232189456,
+          "p90": 0.03360250452082371,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.0024715237481194594,
+          "p90": 0.0024715237481194594,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.016030373338958008,
+          "p90": 0.016030373338958008,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0037122068380898124,
+          "p90": 0.0037122068380898124,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.007184232834133907,
+          "p90": 0.007184232834133907,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.016648571143658773,
+          "p90": 0.04774546501228205,
+          "above_10_percent": 13,
+          "fraction_above_10_percent": 0.03869047619047619
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.010714320329912996,
+          "p90": 0.029207523637593116,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.017117159043640306,
+          "p90": 0.05946586902305063,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.01763445524248875,
+          "p90": 0.03483744216626133,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.01647359242650711,
+          "p90": 0.05120373990759869,
+          "above_10_percent": 8,
+          "fraction_above_10_percent": 0.026402640264026403
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.010787004531818389,
+          "p90": 0.029248242373346472,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.0033003300330033004
+        }
+      }
+    },
+    "dsv4_index_weights_projection": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.030064395923089224,
+      "a6_p90": 0.07947812613251821,
+      "reference_against_independent_mean": {
+        "rows": 1978,
+        "median": 0.021308562788858953,
+        "p90": 0.07204697233748848,
+        "above_10_percent": 97,
+        "fraction_above_10_percent": 0.04903943377148635
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1978,
+        "median": 0.025750738446660794,
+        "p90": 0.08325749638055666,
+        "above_10_percent": 139,
+        "fraction_above_10_percent": 0.07027300303336703
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.02578251741307121,
+          "p90": 0.08098239348351546,
+          "above_10_percent": 21,
+          "fraction_above_10_percent": 0.0625
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.013757185857025865,
+          "p90": 0.033253169915434776,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.03034364991381478,
+          "p90": 0.048667652037662684,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.008890236629230677,
+          "p90": 0.030212533364993466,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.038475322547614176,
+          "p90": 0.038475322547614176,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.13413925521701783,
+          "p90": 0.13413925521701783,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.011987332164263051,
+          "p90": 0.011987332164263051,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.007086667570866785,
+          "p90": 0.007086667570866785,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.03464301367461434,
+          "p90": 0.10552204446302114,
+          "above_10_percent": 38,
+          "fraction_above_10_percent": 0.1130952380952381
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.01609922426735666,
+          "p90": 0.043639656271572694,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.011904761904761904
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.028247544958449597,
+          "p90": 0.12777496821171555,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.03446696494871726,
+          "p90": 0.053453135113238216,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.03610575599008518,
+          "p90": 0.09375308671065069,
+          "above_10_percent": 27,
+          "fraction_above_10_percent": 0.0891089108910891
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.017226659322500754,
+          "p90": 0.04215226252253309,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.009900990099009901
+        }
+      }
+    },
+    "dsv4_index_compressor_projection": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.014118373373390794,
+      "a6_p90": 0.04578543549261407,
+      "reference_against_independent_mean": {
+        "rows": 1978,
+        "median": 0.01774050067718159,
+        "p90": 0.0628612466795644,
+        "above_10_percent": 57,
+        "fraction_above_10_percent": 0.028816986855409503
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1978,
+        "median": 0.019741699073519938,
+        "p90": 0.06687995596953507,
+        "above_10_percent": 78,
+        "fraction_above_10_percent": 0.03943377148634985
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.030909182619576904,
+          "p90": 0.0865621433291283,
+          "above_10_percent": 25,
+          "fraction_above_10_percent": 0.0744047619047619
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.016197848003080953,
+          "p90": 0.04245278764468887,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.005952380952380952
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.03215994829667148,
+          "p90": 0.07269222748119741,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.014308911247447532,
+          "p90": 0.02314068668645023,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.05978543901676907,
+          "p90": 0.05978543901676907,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.10202262680039922,
+          "p90": 0.10202262680039922,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.009560013799325973,
+          "p90": 0.009560013799325973,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.01676190855451331,
+          "p90": 0.01676190855451331,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.021971560235327516,
+          "p90": 0.07945625345737854,
+          "above_10_percent": 16,
+          "fraction_above_10_percent": 0.047619047619047616
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.012576724442291076,
+          "p90": 0.03439238143916391,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.032838455687341755,
+          "p90": 0.08978701917216264,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.015207001035010638,
+          "p90": 0.09932676780356382,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.02142686851829802,
+          "p90": 0.0680891270208448,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.036303630363036306
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.010631112889911806,
+          "p90": 0.03410728164863331,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_index_query_projection": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.02451562141700679,
+      "a6_p90": 0.05768398500066965,
+      "reference_against_independent_mean": {
+        "rows": 1976,
+        "median": 0.01738149734887587,
+        "p90": 0.056657077292817784,
+        "above_10_percent": 63,
+        "fraction_above_10_percent": 0.03188259109311741
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1976,
+        "median": 0.02012485530446841,
+        "p90": 0.06375893773624841,
+        "above_10_percent": 79,
+        "fraction_above_10_percent": 0.039979757085020245
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.024373776247383686,
+          "p90": 0.06263750887154015,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.03273809523809524
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.0122582874053987,
+          "p90": 0.03186881892831557,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.02755339374125302,
+          "p90": 0.05371387512790328,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.018609754087521743,
+          "p90": 0.028413051621014415,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.02966237832994704,
+          "p90": 0.02966237832994704,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.006172347440606996,
+          "p90": 0.006172347440606996,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.026467922055413852,
+          "p90": 0.08235711324250924,
+          "above_10_percent": 23,
+          "fraction_above_10_percent": 0.06845238095238096
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.013324648277992169,
+          "p90": 0.04070556473810838,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.1948970611171301,
+          "p90": 0.25937556711379844,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.8333333333333334
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.0685913702087793,
+          "p90": 0.1503789280260882,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.026534332590642137,
+          "p90": 0.08300185591821747,
+          "above_10_percent": 22,
+          "fraction_above_10_percent": 0.07260726072607261
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.012070116861435826,
+          "p90": 0.037309051390589425,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_index_fused_query_prepare": {
+      "a6_verdict": "FAIL",
+      "a6_median": 0.04647469190848541,
+      "a6_p90": 0.12267273235689417,
+      "reference_against_independent_mean": {
+        "rows": 1976,
+        "median": 0.0468350293178151,
+        "p90": 0.1388946857611602,
+        "above_10_percent": 388,
+        "fraction_above_10_percent": 0.19635627530364372
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1976,
+        "median": 0.05244525459946416,
+        "p90": 0.15461939941635752,
+        "above_10_percent": 460,
+        "fraction_above_10_percent": 0.23279352226720648
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.055835736755078,
+          "p90": 0.16605547374499735,
+          "above_10_percent": 81,
+          "fraction_above_10_percent": 0.24107142857142858
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.031563124530099726,
+          "p90": 0.08296028768961922,
+          "above_10_percent": 20,
+          "fraction_above_10_percent": 0.05952380952380952
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.05077543992271634,
+          "p90": 0.07808943453198769,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.04393128808612877,
+          "p90": 0.07403343269284297,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.010093232914298565,
+          "p90": 0.010093232914298565,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.010095418721670414,
+          "p90": 0.010095418721670414,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.07077264482562282,
+          "p90": 0.18336461955106576,
+          "above_10_percent": 119,
+          "fraction_above_10_percent": 0.3541666666666667
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.040268015988315524,
+          "p90": 0.09994710162289575,
+          "above_10_percent": 34,
+          "fraction_above_10_percent": 0.10119047619047619
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.06352354533806598,
+          "p90": 0.2050356052899288,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.035078011900403654,
+          "p90": 0.04371561349035093,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.07159624413145547,
+          "p90": 0.16844695288360712,
+          "above_10_percent": 106,
+          "fraction_above_10_percent": 0.34983498349834985
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.03976354082457553,
+          "p90": 0.09398518121009201,
+          "above_10_percent": 27,
+          "fraction_above_10_percent": 0.0891089108910891
+        }
+      }
+    },
+    "dsv4_index_short_context_fill": {
+      "a6_verdict": "NOT_EVALUABLE",
+      "a6_median": null,
+      "a6_p90": null,
+      "reference_against_independent_mean": {
+        "rows": 2,
+        "median": 0.1456683953024966,
+        "p90": 0.20683609533858327,
+        "above_10_percent": 1,
+        "fraction_above_10_percent": 0.5
+      },
+      "independent_runs_against_each_other": {
+        "rows": 2,
+        "median": 0.12944980978150622,
+        "p90": 0.18100807219252169,
+        "above_10_percent": 1,
+        "fraction_above_10_percent": 0.5
+      },
+      "groups": {
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.22212802034760493,
+          "p90": 0.22212802034760493,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.06920877025738822,
+          "p90": 0.06920877025738822,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_fused_q_kv_prepare": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.027925694232529715,
+      "a6_p90": 0.0714670434427346,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.025080906148867307,
+        "p90": 0.06871947937564228,
+        "above_10_percent": 169,
+        "fraction_above_10_percent": 0.03417593528816987
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.02961172382535122,
+        "p90": 0.0818413245681797,
+        "above_10_percent": 277,
+        "fraction_above_10_percent": 0.05601617795753286
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.04139754968924824,
+          "p90": 0.09393880786859313,
+          "above_10_percent": 25,
+          "fraction_above_10_percent": 0.0744047619047619
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.016636287760223578,
+          "p90": 0.04650760638788601,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.08866138690361222,
+          "p90": 0.11486396971847643,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.5
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.03475740076584061,
+          "p90": 0.06359423079997736,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.04223081882656358,
+          "p90": 0.04223081882656358,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.07174194834978563,
+          "p90": 0.07174194834978563,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.034306441600295855,
+          "p90": 0.034306441600295855,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.019399276825129284,
+          "p90": 0.019399276825129284,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.037889636539157,
+          "p90": 0.09618877319182104,
+          "above_10_percent": 31,
+          "fraction_above_10_percent": 0.09226190476190477
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.018593613786530523,
+          "p90": 0.04602188788805217,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.002976190476190476
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.0645298182125582,
+          "p90": 0.08801039351723319,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.021508144542220484,
+          "p90": 0.049384266391076126,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.030989460437313206,
+          "p90": 0.09867501729348979,
+          "above_10_percent": 30,
+          "fraction_above_10_percent": 0.09900990099009901
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.019947391494958274,
+          "p90": 0.044728637707281395,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.006600660066006601
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.03205647200900362,
+          "p90": 0.09278297377146143,
+          "above_10_percent": 30,
+          "fraction_above_10_percent": 0.08928571428571429
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.021686846906618,
+          "p90": 0.05730408520108098,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.01488095238095238
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.06714423388902746,
+          "p90": 0.09119260634208401,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.0328963586789926,
+          "p90": 0.11339220734421213,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.0810143626570915,
+          "p90": 0.0810143626570915,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.02759197324414709,
+          "p90": 0.02759197324414709,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0068891316101735356,
+          "p90": 0.0068891316101735356,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.005527006882204116,
+          "p90": 0.005527006882204116,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.031427711820530266,
+          "p90": 0.07580787305119355,
+          "above_10_percent": 10,
+          "fraction_above_10_percent": 0.02976190476190476
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.01780018390080603,
+          "p90": 0.05076729134278824,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.027480360245711093,
+          "p90": 0.13676217845168787,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.027485546738634813,
+          "p90": 0.04757439535588824,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.03329419657832959,
+          "p90": 0.07548029734210773,
+          "above_10_percent": 15,
+          "fraction_above_10_percent": 0.04950495049504951
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.023796548592188962,
+          "p90": 0.0563542897748377,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.006600660066006601
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.02393512725998688,
+          "p90": 0.06105467494290247,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.011904761904761904
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.019214285119217255,
+          "p90": 0.059793839751294334,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.044181554804442254,
+          "p90": 0.044181554804442254,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.002625075802136674,
+          "p90": 0.002625075802136674,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.020197357195414097,
+          "p90": 0.05633523646971965,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.008928571428571428
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.011722757104609138,
+          "p90": 0.06563131422783916,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.020894941634241344,
+          "p90": 0.059264387587645344,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.013201320132013201
+        }
+      }
+    },
+    "dsv4_compressor_save_partial_states": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.04004365160143546,
+      "a6_p90": 0.09482931917212797,
+      "reference_against_independent_mean": {
+        "rows": 3956,
+        "median": 0.03780346820809248,
+        "p90": 0.10459267534796207,
+        "above_10_percent": 454,
+        "fraction_above_10_percent": 0.1147623862487361
+      },
+      "independent_runs_against_each_other": {
+        "rows": 3956,
+        "median": 0.043847761448503414,
+        "p90": 0.12023362037894811,
+        "above_10_percent": 638,
+        "fraction_above_10_percent": 0.16127401415571285
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.04514450867052016,
+          "p90": 0.14146192430950566,
+          "above_10_percent": 63,
+          "fraction_above_10_percent": 0.1875
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.025090091342174985,
+          "p90": 0.061259287665078765,
+          "above_10_percent": 8,
+          "fraction_above_10_percent": 0.023809523809523808
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.06908548978003758,
+          "p90": 0.28168001828486894,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.03679928640490533,
+          "p90": 0.12902753144716678,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.042938099389712304,
+          "p90": 0.042938099389712304,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.03664630760688497,
+          "p90": 0.03664630760688497,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0397088072596183,
+          "p90": 0.0397088072596183,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0010740210359982045,
+          "p90": 0.0010740210359982045,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.06098547216840866,
+          "p90": 0.15674602902753565,
+          "above_10_percent": 91,
+          "fraction_above_10_percent": 0.2708333333333333
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.03269903495164787,
+          "p90": 0.07695702271740601,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.03273809523809524
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.14416309344822972,
+          "p90": 0.32658009689103795,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.6666666666666666
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.10258154311897733,
+          "p90": 0.2308154139048372,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.5
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.059582198001816425,
+          "p90": 0.14653384582301668,
+          "above_10_percent": 79,
+          "fraction_above_10_percent": 0.2607260726072607
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.030567457414567917,
+          "p90": 0.07275357427617138,
+          "above_10_percent": 10,
+          "fraction_above_10_percent": 0.033003300330033
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.040618556701030935,
+          "p90": 0.10441812798906852,
+          "above_10_percent": 39,
+          "fraction_above_10_percent": 0.11607142857142858
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.02938173121838611,
+          "p90": 0.07405839517696983,
+          "above_10_percent": 14,
+          "fraction_above_10_percent": 0.041666666666666664
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.02717908601845092,
+          "p90": 0.051977382650967775,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.027937572386576577,
+          "p90": 0.04276433202456999,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.09694881889763783,
+          "p90": 0.09694881889763783,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.06422244094488191,
+          "p90": 0.06422244094488191,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.06808153272411537,
+          "p90": 0.06808153272411537,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.005792420965304811,
+          "p90": 0.005792420965304811,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.048099808734161364,
+          "p90": 0.10750530028178146,
+          "above_10_percent": 49,
+          "fraction_above_10_percent": 0.14583333333333334
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.031047925169024253,
+          "p90": 0.08200785373328884,
+          "above_10_percent": 18,
+          "fraction_above_10_percent": 0.05357142857142857
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.07145882342196852,
+          "p90": 0.1302149344504504,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.03724603478943654,
+          "p90": 0.07415731234712071,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.04432226211849187,
+          "p90": 0.10868766150783234,
+          "above_10_percent": 45,
+          "fraction_above_10_percent": 0.1485148514851485
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.03276638319159563,
+          "p90": 0.08092542456313066,
+          "above_10_percent": 16,
+          "fraction_above_10_percent": 0.052805280528052806
+        }
+      }
+    },
+    "dsv4_index_compressor_save_partial_states": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.037131475649468934,
+      "a6_p90": 0.09471411283840228,
+      "reference_against_independent_mean": {
+        "rows": 1978,
+        "median": 0.03686041292639138,
+        "p90": 0.10532655246252676,
+        "above_10_percent": 233,
+        "fraction_above_10_percent": 0.11779575328614762
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1978,
+        "median": 0.04387342963677761,
+        "p90": 0.12526237858019437,
+        "above_10_percent": 318,
+        "fraction_above_10_percent": 0.16076845298281092
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.043671144633024,
+          "p90": 0.12423862493782512,
+          "above_10_percent": 56,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.027994307015454203,
+          "p90": 0.07143681395306624,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.026785714285714284
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.05994523589864614,
+          "p90": 0.2524440078027979,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.07125496271713531,
+          "p90": 0.15983477262706586,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.08978873239436612,
+          "p90": 0.08978873239436612,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.12390488110137675,
+          "p90": 0.12390488110137675,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.20558021038790272,
+          "p90": 0.20558021038790272,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.2496463217461599,
+          "p90": 0.2496463217461599,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.05189423835832673,
+          "p90": 0.14911936316594632,
+          "above_10_percent": 73,
+          "fraction_above_10_percent": 0.21726190476190477
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.02784872768481325,
+          "p90": 0.0721358387628483,
+          "above_10_percent": 7,
+          "fraction_above_10_percent": 0.020833333333333332
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.08600736454497632,
+          "p90": 0.41835163033084044,
+          "above_10_percent": 3,
+          "fraction_above_10_percent": 0.5
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.05012641491597307,
+          "p90": 0.14514899463953854,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.05302624531333689,
+          "p90": 0.13439958161993326,
+          "above_10_percent": 70,
+          "fraction_above_10_percent": 0.23102310231023102
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.030785704724936476,
+          "p90": 0.0750607615446935,
+          "above_10_percent": 8,
+          "fraction_above_10_percent": 0.026402640264026403
+        }
+      }
+    },
+    "dsv4_compressor_fused_compress_store": {
+      "a6_verdict": "FAIL",
+      "a6_median": 0.0323947172878479,
+      "a6_p90": 0.13991577527562246,
+      "reference_against_independent_mean": {
+        "rows": 3956,
+        "median": 0.028453049450277823,
+        "p90": 0.13065639761569336,
+        "above_10_percent": 579,
+        "fraction_above_10_percent": 0.14635995955510617
+      },
+      "independent_runs_against_each_other": {
+        "rows": 3956,
+        "median": 0.033052227687859176,
+        "p90": 0.14829337580887753,
+        "above_10_percent": 622,
+        "fraction_above_10_percent": 0.15722952477249746
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.06743694356265083,
+          "p90": 0.24832692358771857,
+          "above_10_percent": 123,
+          "fraction_above_10_percent": 0.36607142857142855
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.034650903033916526,
+          "p90": 0.09961470256486424,
+          "above_10_percent": 34,
+          "fraction_above_10_percent": 0.10119047619047619
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.04435001743906268,
+          "p90": 0.08183364600477344,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.05666204832721321,
+          "p90": 0.08639533038990319,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.14845360824742262,
+          "p90": 0.14845360824742262,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.020693979933110222,
+          "p90": 0.020693979933110222,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.019405345372896517,
+          "p90": 0.019405345372896517,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.006998298305212591,
+          "p90": 0.006998298305212591,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.0631290659112401,
+          "p90": 0.21902442395792338,
+          "above_10_percent": 114,
+          "fraction_above_10_percent": 0.3392857142857143
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.03495480938636,
+          "p90": 0.11850837020153862,
+          "above_10_percent": 50,
+          "fraction_above_10_percent": 0.1488095238095238
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.26946989326783233,
+          "p90": 0.8634549297851091,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.6666666666666666
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.13643816183693575,
+          "p90": 0.22952300247677926,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.8333333333333334
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.05383895131086137,
+          "p90": 0.3379613669325493,
+          "above_10_percent": 111,
+          "fraction_above_10_percent": 0.36633663366336633
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.02688684366066349,
+          "p90": 0.1620004824037297,
+          "above_10_percent": 50,
+          "fraction_above_10_percent": 0.16501650165016502
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.045905816779191665,
+          "p90": 0.11636653422843315,
+          "above_10_percent": 54,
+          "fraction_above_10_percent": 0.16071428571428573
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.027369613496448696,
+          "p90": 0.06409805242220584,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.03273809523809524
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.11856937405468367,
+          "p90": 0.16978640086047914,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.6666666666666666
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.03567043080631902,
+          "p90": 0.06859083711743193,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.1086822025159827,
+          "p90": 0.1086822025159827,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.0859347597334269,
+          "p90": 0.0859347597334269,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0005178177281597169,
+          "p90": 0.0005178177281597169,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0003974689179305952,
+          "p90": 0.0003974689179305952,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.020982245719143804,
+          "p90": 0.07147951971856878,
+          "above_10_percent": 8,
+          "fraction_above_10_percent": 0.023809523809523808
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.015455615837126941,
+          "p90": 0.034991290025274124,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.020053660724875865,
+          "p90": 0.06219933235778303,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.01141522201371072,
+          "p90": 0.031392419072298686,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.01773681356982412,
+          "p90": 0.05820622049674903,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.0297029702970297
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.01391683433936958,
+          "p90": 0.03278281349275388,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_index_compressor_fused_compress_store": {
+      "a6_verdict": "FAIL",
+      "a6_median": 0.029333417498373777,
+      "a6_p90": 0.17506138950173517,
+      "reference_against_independent_mean": {
+        "rows": 1978,
+        "median": 0.02898113636680112,
+        "p90": 0.1710866465489796,
+        "above_10_percent": 374,
+        "fraction_above_10_percent": 0.1890798786653185
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1978,
+        "median": 0.03172948626715584,
+        "p90": 0.1901493381224096,
+        "above_10_percent": 393,
+        "fraction_above_10_percent": 0.19868554095045501
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.11955869478540473,
+          "p90": 0.35054827928691384,
+          "above_10_percent": 187,
+          "fraction_above_10_percent": 0.5565476190476191
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.07616886006557508,
+          "p90": 0.21101734763583863,
+          "above_10_percent": 136,
+          "fraction_above_10_percent": 0.40476190476190477
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.0919130803958525,
+          "p90": 0.14337436424082328,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.04585471213226616,
+          "p90": 0.07748016041447339,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.14838892029395148,
+          "p90": 0.14838892029395148,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.009213936078318465,
+          "p90": 0.009213936078318465,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.018933012434817483,
+          "p90": 0.018933012434817483,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.10775044556484288,
+          "p90": 0.10775044556484288,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 1.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.02596300695740705,
+          "p90": 0.09340123380118394,
+          "above_10_percent": 26,
+          "fraction_above_10_percent": 0.07738095238095238
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.014916327251492827,
+          "p90": 0.04147957539610766,
+          "above_10_percent": 4,
+          "fraction_above_10_percent": 0.011904761904761904
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.06941500635862656,
+          "p90": 0.12844732234488943,
+          "above_10_percent": 2,
+          "fraction_above_10_percent": 0.3333333333333333
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.03125217740809856,
+          "p90": 0.11987622635790533,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.028350962372117212,
+          "p90": 0.07672730366432567,
+          "above_10_percent": 13,
+          "fraction_above_10_percent": 0.0429042904290429
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.013494318181818314,
+          "p90": 0.038805944711762325,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_index_scores": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.018469882291019167,
+      "a6_p90": 0.05449182851468542,
+      "reference_against_independent_mean": {
+        "rows": 1974,
+        "median": 0.015160906938598777,
+        "p90": 0.04640224452135405,
+        "above_10_percent": 37,
+        "fraction_above_10_percent": 0.018743667679837893
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1974,
+        "median": 0.019994404641897078,
+        "p90": 0.057389446105253004,
+        "above_10_percent": 67,
+        "fraction_above_10_percent": 0.033941236068895646
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.02363364140144949,
+          "p90": 0.06476154425740557,
+          "above_10_percent": 7,
+          "fraction_above_10_percent": 0.020833333333333332
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.012026958742414138,
+          "p90": 0.03118517933628088,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.028527335597170654,
+          "p90": 0.060264598363010874,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.024810844892812076,
+          "p90": 0.049754998921566596,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.01099576560579165,
+          "p90": 0.01099576560579165,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.003332534502445878,
+          "p90": 0.003332534502445878,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.019368970269738113,
+          "p90": 0.07635987391064408,
+          "above_10_percent": 20,
+          "fraction_above_10_percent": 0.05952380952380952
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.012390001051608555,
+          "p90": 0.029196897414355785,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 5,
+          "median": 0.030325329202168908,
+          "p90": 0.062044572360897915,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 5,
+          "median": 0.03186188641052592,
+          "p90": 0.0459176879742969,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.021039918637172722,
+          "p90": 0.06000547941997705,
+          "above_10_percent": 9,
+          "fraction_above_10_percent": 0.0297029702970297
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.010000000000000233,
+          "p90": 0.025728983164113147,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.0033003300330033004
+        }
+      }
+    },
+    "dsv4_index_topk": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.02135181912357204,
+      "a6_p90": 0.05812802550295404,
+      "reference_against_independent_mean": {
+        "rows": 1976,
+        "median": 0.023592782487967517,
+        "p90": 0.06391389136610473,
+        "above_10_percent": 48,
+        "fraction_above_10_percent": 0.024291497975708502
+      },
+      "independent_runs_against_each_other": {
+        "rows": 1976,
+        "median": 0.030501526505374944,
+        "p90": 0.08220120057396638,
+        "above_10_percent": 95,
+        "fraction_above_10_percent": 0.04807692307692308
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.03183294759650501,
+          "p90": 0.08448309190663061,
+          "above_10_percent": 19,
+          "fraction_above_10_percent": 0.05654761904761905
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.017148071308611547,
+          "p90": 0.04623055654522622,
+          "above_10_percent": 5,
+          "fraction_above_10_percent": 0.01488095238095238
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.017056903442207845,
+          "p90": 0.0577029811818755,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.03395906977471782,
+          "p90": 0.044874374059558915,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.00019765666839945194,
+          "p90": 0.00019765666839945194,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.0008259742636284498,
+          "p90": 0.0008259742636284498,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.029737195460143112,
+          "p90": 0.07866812547447961,
+          "above_10_percent": 12,
+          "fraction_above_10_percent": 0.03571428571428571
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.018314157000494324,
+          "p90": 0.04396037572636933,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.04647538643196135,
+          "p90": 0.13010832084860643,
+          "above_10_percent": 1,
+          "fraction_above_10_percent": 0.16666666666666666
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.029518606208095714,
+          "p90": 0.06609832650889719,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.03095672135574916,
+          "p90": 0.07190582839089969,
+          "above_10_percent": 11,
+          "fraction_above_10_percent": 0.036303630363036306
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.018396802853651358,
+          "p90": 0.043629884766741955,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    },
+    "dsv4_sparse_attention": {
+      "a6_verdict": "PASS",
+      "a6_median": 0.007434202439887488,
+      "a6_p90": 0.021144748239788354,
+      "reference_against_independent_mean": {
+        "rows": 4945,
+        "median": 0.007013781369164586,
+        "p90": 0.020340387085261348,
+        "above_10_percent": 0,
+        "fraction_above_10_percent": 0.0
+      },
+      "independent_runs_against_each_other": {
+        "rows": 4945,
+        "median": 0.009519731807746982,
+        "p90": 0.026423437256305218,
+        "above_10_percent": 0,
+        "fraction_above_10_percent": 0.0
+      },
+      "groups": {
+        "csa/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.008339175472027116,
+          "p90": 0.02012722047254922,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.007441362563570325,
+          "p90": 0.020150913113156844,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.0046396568350600565,
+          "p90": 0.013137287083788439,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.004258395189969054,
+          "p90": 0.017396277304503976,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.008487339975062652,
+          "p90": 0.008487339975062652,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.041800695061828146,
+          "p90": 0.041800695061828146,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.0004237039002875489,
+          "p90": 0.0004237039002875489,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.002876679723554348,
+          "p90": 0.002876679723554348,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.007299102232204894,
+          "p90": 0.02044495212517162,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.009460589448834284,
+          "p90": 0.024008899297558,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.0169528274816039,
+          "p90": 0.03406615918188479,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.01392127442678423,
+          "p90": 0.026167175278552356,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.0074668880491621705,
+          "p90": 0.019646044293280852,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "csa/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.008502731428146757,
+          "p90": 0.02130455277421731,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.007419960875038326,
+          "p90": 0.01843560195481697,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/decode/reuse": {
+          "rows": 336,
+          "median": 0.009892283561740382,
+          "p90": 0.02539379544600135,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.0071489071076597,
+          "p90": 0.014752165349223616,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/FULL/dummy/reuse": {
+          "rows": 6,
+          "median": 0.016329514132798928,
+          "p90": 0.019364659588270806,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.002476835810169116,
+          "p90": 0.002476835810169116,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/dummy/reuse": {
+          "rows": 1,
+          "median": 0.02900680381657867,
+          "p90": 0.02900680381657867,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.006046234427525421,
+          "p90": 0.006046234427525421,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/NONE/prefill/reuse": {
+          "rows": 1,
+          "median": 0.010450742269069859,
+          "p90": 0.010450742269069859,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.00732079420269998,
+          "p90": 0.017819445821306783,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/decode/reuse": {
+          "rows": 336,
+          "median": 0.01146598461000357,
+          "p90": 0.02648745582527477,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.011947614955911446,
+          "p90": 0.018346402773882466,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/dummy/reuse": {
+          "rows": 6,
+          "median": 0.005213898596456466,
+          "p90": 0.011173530362469854,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.007549326275264536,
+          "p90": 0.01748105223261647,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "hca/PIECEWISE/first_tail/reuse": {
+          "rows": 303,
+          "median": 0.010895377984959757,
+          "p90": 0.027755088857483214,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/FULL/decode/first": {
+          "rows": 336,
+          "median": 0.0039174479196218935,
+          "p90": 0.008605157136947117,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/FULL/dummy/first": {
+          "rows": 6,
+          "median": 0.005261779008029185,
+          "p90": 0.00808721562945883,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/dummy/first": {
+          "rows": 1,
+          "median": 0.007681441507124906,
+          "p90": 0.007681441507124906,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/NONE/prefill/first": {
+          "rows": 1,
+          "median": 0.01038886446815272,
+          "p90": 0.01038886446815272,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/decode/first": {
+          "rows": 336,
+          "median": 0.004222890455934145,
+          "p90": 0.010345424366700235,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/dummy/first": {
+          "rows": 6,
+          "median": 0.005137249213599213,
+          "p90": 0.010112366920884918,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        },
+        "uncompressed/PIECEWISE/first_tail/first": {
+          "rows": 303,
+          "median": 0.003667529614811241,
+          "p90": 0.00982599300359607,
+          "above_10_percent": 0,
+          "fraction_above_10_percent": 0.0
+        }
+      }
+    }
+  }
+}

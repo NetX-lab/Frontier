@@ -1,0 +1,102 @@
+{
+ "purpose": "A6 measurement-noise floor, three-run target tables, touched collective points and extra-pass costs; diagnostic only; three diagnostic A6 reruns on the scratch tables",
+ "decision_ids": [
+  "D-NO-INTERRUPT",
+  "D-A6-COLLECTIVE-UNIT",
+  "D-CODEX-DIRECT-RJOB"
+ ],
+ "working_directory": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+ "python": "/data/ycfeng/envs/frontier-py310/bin/python 3.10.6",
+ "memory_limit": "RLIMIT_AS 30 GiB inside each script or ulimit -v 31457280 for the A6 reruns",
+ "source_commit_at_execution": "9fd97c1b for the noise floor and table builder (scripts then uncommitted, committed unchanged as c4a0244b); c4a0244b for the A6 reruns",
+ "script_sha256": {
+  "tests/analysis/v4_attention_noise_floor.py": "bb0b5f6554cf91a26a0107b9f323dec2fddcaa8867b47453e74cc2caaa186d87",
+  "tests/analysis/v4_attention_multipass_table.py": "93e56b5812d2c26ae484b110d1a3fde2e8bad31e816e565139b48258eac35479",
+  "tests/analysis/v4_attention_heldout.py": "3a13ad2246082aac47182fffe327777c36cdeac36387ce4f4ec460270d44637a"
+ },
+ "inputs_sha256": {
+  "data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+  "/data/ycfeng/tmp/b13r_accept/after/rows.json (G1h-02 reference)": "ba1ad088898dbe611323d3b86a9becd67c71486402d5ac428697a1b117eda575",
+  "/data/ycfeng/tmp/g2h_accept/rows_01/rows.json (G2h-01)": "ad8cd954a2bf7f1a02b2f660895ef61b88e06792177f84f1bcfe6ee04b22b1a8",
+  "/data/ycfeng/tmp/g2h_accept/rows_04/rows.json (G2h-04)": "9006bbabd8146dd2f327c1464c3acef522febbad1df1282e7c6ce58cd311a605"
+ },
+ "commands": [
+  {
+   "name": "noise_floor",
+   "command": "env PYTHONPATH=$PWD:$PWD/tests/analysis PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp timeout 120s /data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_attention_noise_floor.py --reference /data/ycfeng/tmp/b13r_accept/after/rows.json --comparison /data/ycfeng/tmp/g2h_accept/rows_01/rows.json /data/ycfeng/tmp/g2h_accept/rows_04/rows.json --a6-result task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json --output /data/ycfeng/tmp/glm53_dsv4/a6_noise_20261101/noise_floor.json",
+   "exit_code": 0,
+   "elapsed_s": 7.0,
+   "retained_output": "noise_floor.json"
+  },
+  {
+   "name": "three_run_tables",
+   "command": "env PYTHONPATH=$PWD:$PWD/tests/analysis PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp timeout 120s /data/ycfeng/envs/frontier-py310/bin/python tests/analysis/v4_attention_multipass_table.py --published-table data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv --reference /data/ycfeng/tmp/b13r_accept/after/rows.json --comparison /data/ycfeng/tmp/g2h_accept/rows_01/rows.json /data/ycfeng/tmp/g2h_accept/rows_04/rows.json --output-dir /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/tables",
+   "exit_code": 0,
+   "retained_output": "multipass_tables_manifest.json",
+   "note": "The first attempt was piped through grep; its output and exit status were lost after it wrote one table. The partial directory was removed and the unchanged command rerun with output redirected to a log."
+  },
+  {
+   "name": "three_run_table_check",
+   "command": "/data/ycfeng/envs/frontier-py310/bin/python check_multipass_tables.py (run from the tables directory)",
+   "exit_code": 0,
+   "retained_output": "check_multipass_tables.log"
+  },
+  {
+   "name": "touched_collective_points",
+   "command": "timeout 60s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/touched_collective_points.py",
+   "exit_code": 0,
+   "retained_output": "touched_collective_points.json, touched_collective_points.log"
+  },
+  {
+   "name": "supplement_pass_costs",
+   "command": "env PYTHONPATH=$PWD:$PWD/tests/analysis PYTHONDONTWRITEBYTECODE=1 timeout 60s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/supplement_pass_costs.py",
+   "exit_code": 0,
+   "retained_output": "supplement_pass_costs.json"
+  },
+  {
+   "name": "a6_original_shared",
+   "command": "env PYTHONPATH=$PWD PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared FRONTIER_TMP_ROOT=/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared bash -c \"ulimit -v 31457280; timeout 7200 /data/ycfeng/envs/frontier-py310/bin/python -u tests/analysis/v4_attention_heldout.py --table /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/tables/original_shared/attention_graph_replay_kernel_only.csv --folds 5 --seed 1234 --scratch-dir /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches --output-dir /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/out\"",
+   "exit_code": 0,
+   "elapsed_s": 2690.342629153,
+   "source_commit": "c4a0244b",
+   "retained_output": "a6_original_shared/result.json, a6_original_shared/summary.md",
+   "result_sha256": "21418220eea00f11c93b83dae1fbd0425fd7553afa1d60143cd719d20b75ebba"
+  },
+  {
+   "name": "a6_median3_shared",
+   "command": "env PYTHONPATH=$PWD PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared FRONTIER_TMP_ROOT=/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared bash -c \"ulimit -v 31457280; timeout 7200 /data/ycfeng/envs/frontier-py310/bin/python -u tests/analysis/v4_attention_heldout.py --table /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/tables/median3_shared/attention_graph_replay_kernel_only.csv --folds 5 --seed 1234 --scratch-dir /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches --output-dir /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/out\"",
+   "exit_code": 0,
+   "elapsed_s": 2685.225662325,
+   "source_commit": "c4a0244b",
+   "retained_output": "a6_median3_shared/result.json, a6_median3_shared/summary.md",
+   "result_sha256": "0418f828dc0608248db5e2d90902028ba2472d61a317d995a57d83534f6c3a0f"
+  },
+  {
+   "name": "a6_median3_all",
+   "command": "env PYTHONPATH=$PWD PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all FRONTIER_TMP_ROOT=/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all bash -c \"ulimit -v 31457280; timeout 7200 /data/ycfeng/envs/frontier-py310/bin/python -u tests/analysis/v4_attention_heldout.py --table /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/tables/median3_all/attention_graph_replay_kernel_only.csv --folds 5 --seed 1234 --scratch-dir /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches --output-dir /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/out\"",
+   "exit_code": 0,
+   "elapsed_s": 2800.82140093,
+   "source_commit": "c4a0244b",
+   "retained_output": "a6_median3_all/result.json, a6_median3_all/summary.md",
+   "result_sha256": "e2408dce062f4b840d4d36e73a505727c9d00e7aa373364408d0f1976c8010cf"
+  },
+  {
+   "name": "multipass_a6_comparison",
+   "command": "timeout 120s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/compare_multipass_a6.py (from the worktree root)",
+   "exit_code": 0,
+   "retained_output": "compare_multipass_a6.log and the JSON it writes"
+  },
+  {
+   "name": "per_key_breakdown",
+   "command": "timeout 120s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/per_key_breakdown.py (from the worktree root)",
+   "exit_code": 0,
+   "retained_output": "per_key_breakdown.log and the JSON it writes"
+  },
+  {
+   "name": "csa_full_decode_share",
+   "command": "timeout 120s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/csa_full_decode_share.py (from the worktree root)",
+   "exit_code": 0,
+   "retained_output": "csa_full_decode_share.log and the JSON it writes"
+  }
+ ]
+}

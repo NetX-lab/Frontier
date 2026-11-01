@@ -1,0 +1,1081 @@
+{
+  "classification": "DIAGNOSTIC_MULTIPASS_A6_PER_KEY",
+  "inputs": {
+    "formal": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+    "original_shared": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/a6_original_shared/result.json",
+    "median3_shared": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/a6_median3_shared/result.json",
+    "median3_all": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/a6_median3_all/result.json"
+  },
+  "columns": [
+    "formal",
+    "original_shared",
+    "median3_shared",
+    "median3_all"
+  ],
+  "scopes": {
+    "dsv4_q_projection": {
+      "[\"dsv4_q_projection\",\"csa\",\"FULL\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.09419103595204822,
+          "p90": 0.25613246342875695
+        },
+        "original_shared": {
+          "count": 668,
+          "median": 0.09228788149478985,
+          "p90": 0.2621464450856636
+        },
+        "median3_shared": {
+          "count": 668,
+          "median": 0.07518545683048444,
+          "p90": 0.24997999964078924
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.08052371553071794,
+          "p90": 0.24800137867405342
+        }
+      },
+      "[\"dsv4_q_projection\",\"csa\",\"FULL\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"csa\",\"NONE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"csa\",\"NONE\",\"prefill\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"csa\",\"PIECEWISE\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.04751489510331333,
+          "p90": 0.13119899395768794
+        },
+        "original_shared": {
+          "count": 664,
+          "median": 0.0239342872643429,
+          "p90": 0.0899797897136012
+        },
+        "median3_shared": {
+          "count": 664,
+          "median": 0.013370658181892451,
+          "p90": 0.043460555125076884
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.03786704609620359,
+          "p90": 0.10992634707485574
+        }
+      },
+      "[\"dsv4_q_projection\",\"csa\",\"PIECEWISE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"csa\",\"PIECEWISE\",\"first_tail\"]": {
+        "formal": {
+          "count": 886,
+          "median": 0.04942474107181249,
+          "p90": 0.11862998975201997
+        },
+        "original_shared": {
+          "count": 598,
+          "median": 0.024504563132369567,
+          "p90": 0.05671327458181381
+        },
+        "median3_shared": {
+          "count": 598,
+          "median": 0.01336828237665833,
+          "p90": 0.0355354775221362
+        },
+        "median3_all": {
+          "count": 886,
+          "median": 0.04048401771948562,
+          "p90": 0.10498124663232869
+        }
+      },
+      "[\"dsv4_q_projection\",\"hca\",\"FULL\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.013508655494427192,
+          "p90": 0.03672435980454715
+        },
+        "original_shared": {
+          "count": 668,
+          "median": 0.011467561947772714,
+          "p90": 0.030864531013615137
+        },
+        "median3_shared": {
+          "count": 668,
+          "median": 0.007711530118281014,
+          "p90": 0.02169448994212306
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.0114806351204834,
+          "p90": 0.029016609902739514
+        }
+      },
+      "[\"dsv4_q_projection\",\"hca\",\"FULL\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"hca\",\"NONE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"hca\",\"NONE\",\"prefill\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"hca\",\"PIECEWISE\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.010361035976748154,
+          "p90": 0.026624215408021228
+        },
+        "original_shared": {
+          "count": 664,
+          "median": 0.010193164884147241,
+          "p90": 0.026763547336067454
+        },
+        "median3_shared": {
+          "count": 664,
+          "median": 0.0063250844818697315,
+          "p90": 0.017824944842218013
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.008213567843653465,
+          "p90": 0.019895887291944504
+        }
+      },
+      "[\"dsv4_q_projection\",\"hca\",\"PIECEWISE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"hca\",\"PIECEWISE\",\"first_tail\"]": {
+        "formal": {
+          "count": 886,
+          "median": 0.010070450474836005,
+          "p90": 0.023267334848388693
+        },
+        "original_shared": {
+          "count": 598,
+          "median": 0.00871922042691101,
+          "p90": 0.02413876739043093
+        },
+        "median3_shared": {
+          "count": 598,
+          "median": 0.006428417415896482,
+          "p90": 0.015655163924988096
+        },
+        "median3_all": {
+          "count": 886,
+          "median": 0.008464837989384211,
+          "p90": 0.020068220767809068
+        }
+      },
+      "[\"dsv4_q_projection\",\"uncompressed\",\"FULL\",\"decode\"]": {
+        "formal": {
+          "count": 478,
+          "median": 0.010180628959749617,
+          "p90": 0.024345135031912508
+        },
+        "original_shared": {
+          "count": 334,
+          "median": 0.010167186945339423,
+          "p90": 0.025387317639826143
+        },
+        "median3_shared": {
+          "count": 334,
+          "median": 0.00710622000292358,
+          "p90": 0.01629799082079891
+        },
+        "median3_all": {
+          "count": 478,
+          "median": 0.007914394755579738,
+          "p90": 0.020635431888755412
+        }
+      },
+      "[\"dsv4_q_projection\",\"uncompressed\",\"FULL\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"uncompressed\",\"NONE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"uncompressed\",\"NONE\",\"prefill\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"uncompressed\",\"PIECEWISE\",\"decode\"]": {
+        "formal": {
+          "count": 478,
+          "median": 0.0070207425049923465,
+          "p90": 0.017073770397462613
+        },
+        "original_shared": {
+          "count": 332,
+          "median": 0.0072276370029734135,
+          "p90": 0.017268758227048858
+        },
+        "median3_shared": {
+          "count": 332,
+          "median": 0.004538140008916258,
+          "p90": 0.01342906536178598
+        },
+        "median3_all": {
+          "count": 478,
+          "median": 0.005459117606147652,
+          "p90": 0.014215895242633865
+        }
+      },
+      "[\"dsv4_q_projection\",\"uncompressed\",\"PIECEWISE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_q_projection\",\"uncompressed\",\"PIECEWISE\",\"first_tail\"]": {
+        "formal": {
+          "count": 443,
+          "median": 0.007944638186573663,
+          "p90": 0.019074419300089848
+        },
+        "original_shared": {
+          "count": 299,
+          "median": 0.00760541140320923,
+          "p90": 0.018977423483060626
+        },
+        "median3_shared": {
+          "count": 299,
+          "median": 0.0052680444214579375,
+          "p90": 0.013571048157180082
+        },
+        "median3_all": {
+          "count": 443,
+          "median": 0.006515644473703545,
+          "p90": 0.015153561909349704
+        }
+      }
+    },
+    "dsv4_index_fused_query_prepare": {
+      "[\"dsv4_index_fused_query_prepare\",\"csa\",\"FULL\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.040081925828438836,
+          "p90": 0.10680606452651693
+        },
+        "original_shared": {
+          "count": 668,
+          "median": 0.03837537860905957,
+          "p90": 0.10405009101328122
+        },
+        "median3_shared": {
+          "count": 668,
+          "median": 0.024485146252143486,
+          "p90": 0.06064088914380897
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.02943342043096854,
+          "p90": 0.08038823184550734
+        }
+      },
+      "[\"dsv4_index_fused_query_prepare\",\"csa\",\"FULL\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_index_fused_query_prepare\",\"csa\",\"NONE\",\"prefill\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_index_fused_query_prepare\",\"csa\",\"PIECEWISE\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.05405059286243013,
+          "p90": 0.1338364048440494
+        },
+        "original_shared": {
+          "count": 664,
+          "median": 0.055675050397835685,
+          "p90": 0.13314192005616252
+        },
+        "median3_shared": {
+          "count": 664,
+          "median": 0.036425604911520484,
+          "p90": 0.09681531836694661
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.039835398855173024,
+          "p90": 0.1136883144495312
+        }
+      },
+      "[\"dsv4_index_fused_query_prepare\",\"csa\",\"PIECEWISE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_index_fused_query_prepare\",\"csa\",\"PIECEWISE\",\"first_tail\"]": {
+        "formal": {
+          "count": 886,
+          "median": 0.04767649729188584,
+          "p90": 0.12501553595152942
+        },
+        "original_shared": {
+          "count": 598,
+          "median": 0.04711797402527171,
+          "p90": 0.12741719677368668
+        },
+        "median3_shared": {
+          "count": 598,
+          "median": 0.03545173818591891,
+          "p90": 0.09435329859087457
+        },
+        "median3_all": {
+          "count": 886,
+          "median": 0.037685207736393896,
+          "p90": 0.10975781510479553
+        }
+      }
+    },
+    "dsv4_compressor_fused_compress_store": {
+      "[\"dsv4_compressor_fused_compress_store\",\"csa\",\"FULL\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.05480610508191507,
+          "p90": 0.20964464901364666
+        },
+        "original_shared": {
+          "count": 668,
+          "median": 0.0441353138904059,
+          "p90": 0.15556971744680087
+        },
+        "median3_shared": {
+          "count": 668,
+          "median": 0.028726740494353017,
+          "p90": 0.07811971517578993
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.03940145997179509,
+          "p90": 0.15277956877065588
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"csa\",\"FULL\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"csa\",\"NONE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"csa\",\"NONE\",\"prefill\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"csa\",\"PIECEWISE\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.05204267928254332,
+          "p90": 0.19453350054480267
+        },
+        "original_shared": {
+          "count": 664,
+          "median": 0.04517741905301552,
+          "p90": 0.16287940494743486
+        },
+        "median3_shared": {
+          "count": 664,
+          "median": 0.03259398212786317,
+          "p90": 0.11139156394095358
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.039557106014416234,
+          "p90": 0.15853879569857543
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"csa\",\"PIECEWISE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"csa\",\"PIECEWISE\",\"first_tail\"]": {
+        "formal": {
+          "count": 882,
+          "median": 0.05063529851655757,
+          "p90": 0.23381580326455292
+        },
+        "original_shared": {
+          "count": 594,
+          "median": 0.03792672552997724,
+          "p90": 0.1632052628013244
+        },
+        "median3_shared": {
+          "count": 594,
+          "median": 0.021258812459959926,
+          "p90": 0.08106710634415949
+        },
+        "median3_all": {
+          "count": 882,
+          "median": 0.03225344497628342,
+          "p90": 0.20143253753259852
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"hca\",\"FULL\",\"decode\"]": {
+        "formal": {
+          "count": 950,
+          "median": 0.03544318983157904,
+          "p90": 0.0991453898300101
+        },
+        "original_shared": {
+          "count": 668,
+          "median": 0.035737397820163455,
+          "p90": 0.10766727325855768
+        },
+        "median3_shared": {
+          "count": 668,
+          "median": 0.02645585427473638,
+          "p90": 0.08136985737051511
+        },
+        "median3_all": {
+          "count": 950,
+          "median": 0.030400293757615687,
+          "p90": 0.08518999442644265
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"hca\",\"FULL\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"hca\",\"NONE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"hca\",\"NONE\",\"prefill\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"hca\",\"PIECEWISE\",\"decode\"]": {
+        "formal": {
+          "count": 950,
+          "median": 0.01937035357280757,
+          "p90": 0.05155957782839062
+        },
+        "original_shared": {
+          "count": 664,
+          "median": 0.01732731101857884,
+          "p90": 0.05282963930386859
+        },
+        "median3_shared": {
+          "count": 664,
+          "median": 0.011347043532413965,
+          "p90": 0.03530042454714216
+        },
+        "median3_all": {
+          "count": 950,
+          "median": 0.014873548922056334,
+          "p90": 0.04100245777708978
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"hca\",\"PIECEWISE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_compressor_fused_compress_store\",\"hca\",\"PIECEWISE\",\"first_tail\"]": {
+        "formal": {
+          "count": 882,
+          "median": 0.01782693190795966,
+          "p90": 0.047027863370074766
+        },
+        "original_shared": {
+          "count": 588,
+          "median": 0.01767216734249815,
+          "p90": 0.04281440938924861
+        },
+        "median3_shared": {
+          "count": 588,
+          "median": 0.013280259661208408,
+          "p90": 0.034754005449654624
+        },
+        "median3_all": {
+          "count": 882,
+          "median": 0.015081714333361081,
+          "p90": 0.04143763604086655
+        }
+      }
+    },
+    "dsv4_index_compressor_fused_compress_store": {
+      "[\"dsv4_index_compressor_fused_compress_store\",\"csa\",\"FULL\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.11146949595486287,
+          "p90": 0.2626565661757489
+        },
+        "original_shared": {
+          "count": 668,
+          "median": 0.11077620675075536,
+          "p90": 0.2553482919354921
+        },
+        "median3_shared": {
+          "count": 668,
+          "median": 0.08869860111085211,
+          "p90": 0.21640890885680034
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.0930808678720649,
+          "p90": 0.22759472124562982
+        }
+      },
+      "[\"dsv4_index_compressor_fused_compress_store\",\"csa\",\"FULL\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_index_compressor_fused_compress_store\",\"csa\",\"NONE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_index_compressor_fused_compress_store\",\"csa\",\"NONE\",\"prefill\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_index_compressor_fused_compress_store\",\"csa\",\"PIECEWISE\",\"decode\"]": {
+        "formal": {
+          "count": 956,
+          "median": 0.019965704474133233,
+          "p90": 0.059855266165144874
+        },
+        "original_shared": {
+          "count": 664,
+          "median": 0.02052119722989442,
+          "p90": 0.06106857125189224
+        },
+        "median3_shared": {
+          "count": 664,
+          "median": 0.016493515357490877,
+          "p90": 0.04427547579321517
+        },
+        "median3_all": {
+          "count": 956,
+          "median": 0.01741044572719486,
+          "p90": 0.046967517586865466
+        }
+      },
+      "[\"dsv4_index_compressor_fused_compress_store\",\"csa\",\"PIECEWISE\",\"dummy\"]": {
+        "formal": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "original_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_shared": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        },
+        "median3_all": {
+          "count": 0,
+          "median": null,
+          "p90": null
+        }
+      },
+      "[\"dsv4_index_compressor_fused_compress_store\",\"csa\",\"PIECEWISE\",\"first_tail\"]": {
+        "formal": {
+          "count": 882,
+          "median": 0.020013848410807247,
+          "p90": 0.052443304585431914
+        },
+        "original_shared": {
+          "count": 594,
+          "median": 0.02110599342714727,
+          "p90": 0.05645180114939265
+        },
+        "median3_shared": {
+          "count": 594,
+          "median": 0.016204755481748972,
+          "p90": 0.04265245829274117
+        },
+        "median3_all": {
+          "count": 882,
+          "median": 0.015935838982973113,
+          "p90": 0.04298782574136201
+        }
+      }
+    }
+  }
+}

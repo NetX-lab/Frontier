@@ -1,0 +1,49 @@
+{
+  "classification": "DIAGNOSTIC_MULTIPASS_TARGET_TABLES",
+  "published_table": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+    "rows": 7105,
+    "rewrite_byte_identical": true
+  },
+  "runs": {
+    "reference": {
+      "path": "/data/ycfeng/tmp/b13r_accept/after/rows.json",
+      "sha256": "ba1ad088898dbe611323d3b86a9becd67c71486402d5ac428697a1b117eda575",
+      "rows": 4945
+    },
+    "comparisons": [
+      {
+        "path": "/data/ycfeng/tmp/g2h_accept/rows_01/rows.json",
+        "sha256": "ad8cd954a2bf7f1a02b2f660895ef61b88e06792177f84f1bcfe6ee04b22b1a8",
+        "rows": 4945
+      },
+      {
+        "path": "/data/ycfeng/tmp/g2h_accept/rows_04/rows.json",
+        "sha256": "9006bbabd8146dd2f327c1464c3acef522febbad1df1282e7c6ce58cd311a605",
+        "rows": 4945
+      }
+    ]
+  },
+  "shared_rows": 4945,
+  "shared_cases": 989,
+  "replaced_kernel_time_medians": 67244,
+  "unchanged_columns": "all except time_stats.<scope>.median of shared rows",
+  "tables": {
+    "original_shared": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/tables/original_shared/attention_graph_replay_kernel_only.csv",
+      "rows": 4945,
+      "sha256": "ee355d1066d44d5993fb01f574b4bcf2e9e0bdc8a8918a296603a6e2db6766da"
+    },
+    "median3_shared": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/tables/median3_shared/attention_graph_replay_kernel_only.csv",
+      "rows": 4945,
+      "sha256": "56e0b8bdc01614dd16cf35dc611d500c98e18e0dcdc38062bd40a7b4895cde0a"
+    },
+    "median3_all": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/tables/median3_all/attention_graph_replay_kernel_only.csv",
+      "rows": 7105,
+      "sha256": "7618e719df40e731b17c88287b692c0221085635317059943fa22dc41cba2f0b"
+    }
+  }
+}

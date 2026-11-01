@@ -1,0 +1,5 @@
+changed cells 41266 shared cases 989 all rows 7105
+dsv4_q_projection 3107 median3/original p10 0.966 p50 1.000 p90 1.025
+dsv4_index_fused_query_prepare 1279 median3/original p10 0.901 p50 0.988 p90 1.073
+dsv4_compressor_fused_compress_store 2424 median3/original p10 0.934 p50 0.991 p90 1.055
+dsv4_index_compressor_fused_compress_store 1192 median3/original p10 0.913 p50 0.995 p90 1.056

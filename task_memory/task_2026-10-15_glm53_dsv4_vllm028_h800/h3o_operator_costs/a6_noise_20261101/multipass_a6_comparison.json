@@ -1,0 +1,671 @@
+{
+  "classification": "DIAGNOSTIC_MULTIPASS_A6_COMPARISON",
+  "inputs": {
+    "formal": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_codex_20261101/result.json",
+    "original_shared": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/a6_original_shared/result.json",
+    "median3_shared": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/a6_median3_shared/result.json",
+    "median3_all": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_noise_20261101/a6_median3_all/result.json"
+  },
+  "per_scope": {
+    "dsv4_fused_qkv_projection": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.013395672309074059,
+        "p90": 0.05516091660133292
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.013057803468208012,
+        "p90": 0.052202356381017403
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.007993707295400873,
+        "p90": 0.02774714581203652
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.009679443343884509,
+        "p90": 0.03496127813165053
+      }
+    },
+    "dsv4_fused_qkv_rmsnorm": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.0356995277449822,
+        "p90": 0.0872216626348858
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.036277786677599885,
+        "p90": 0.08930675787235488
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.02419268605645854,
+        "p90": 0.06439639905548984
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.028530624263839875,
+        "p90": 0.07273346109660814
+      }
+    },
+    "dsv4_q_projection": {
+      "formal": {
+        "verdict": "FAIL",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.016963551072310165,
+        "p90": 0.10225411357183342
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.01417294566761663,
+        "p90": 0.08825616250518184
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.009768079274720691,
+        "p90": 0.06340117607637524
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.013771195744602725,
+        "p90": 0.08896175429713435
+      }
+    },
+    "dsv4_query_padding": {
+      "formal": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "original_shared": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "median3_shared": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "median3_all": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      }
+    },
+    "dsv4_attention_output_zero": {
+      "formal": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "original_shared": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "median3_shared": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "median3_all": {
+        "verdict": "LEGALLY_ZERO",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      }
+    },
+    "dsv4_output_inv_rope_quant": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.031680074463133964,
+        "p90": 0.09749725174730031
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.030778780282444792,
+        "p90": 0.09238263440159285
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.027911974130238555,
+        "p90": 0.08212668914935856
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.02928834517232316,
+        "p90": 0.08884987429244609
+      }
+    },
+    "dsv4_grouped_output_projection": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.006770157997846068,
+        "p90": 0.017695107609138144
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.006517573040208306,
+        "p90": 0.01796265642587573
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.004693884219826696,
+        "p90": 0.013437491528432433
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.005396790622112147,
+        "p90": 0.014948467226415992
+      }
+    },
+    "dsv4_output_projection": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.010315473570590289,
+        "p90": 0.027773532864943374
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.010477468773034192,
+        "p90": 0.027350411552527366
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4825,
+        "exact_lookup": 4825,
+        "median": 0.007593560011456021,
+        "p90": 0.020334430677606354
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6995,
+        "exact_lookup": 6995,
+        "median": 0.008608296991139448,
+        "p90": 0.022923019944246985
+      }
+    },
+    "dsv4_compressor_projection": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 5596,
+        "exact_lookup": 5596,
+        "median": 0.012320068365753634,
+        "p90": 0.033343136232388146
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 3860,
+        "exact_lookup": 3860,
+        "median": 0.012568339933002767,
+        "p90": 0.033959479625913905
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 3860,
+        "exact_lookup": 3860,
+        "median": 0.008150794854095884,
+        "p90": 0.021770721637201753
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 5596,
+        "exact_lookup": 5596,
+        "median": 0.009215309291015047,
+        "p90": 0.024262893947615286
+      }
+    },
+    "dsv4_index_weights_projection": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.030064395923089224,
+        "p90": 0.07947812613251821
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.017992344244984197,
+        "p90": 0.0538166593657953
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.013268706792505688,
+        "p90": 0.0373798778702053
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.026711151074205686,
+        "p90": 0.06588369469044522
+      }
+    },
+    "dsv4_index_compressor_projection": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.014118373373390794,
+        "p90": 0.04578543549261407
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.013347316324367161,
+        "p90": 0.04710938855177969
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.008897439194751068,
+        "p90": 0.02698983911145625
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.010319371196472304,
+        "p90": 0.033348979294091495
+      }
+    },
+    "dsv4_index_query_projection": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.02451562141700679,
+        "p90": 0.05768398500066965
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.014550101319961541,
+        "p90": 0.044481128057337206
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.01088854293532366,
+        "p90": 0.03058831042836742
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.021394766473644005,
+        "p90": 0.050766019818827786
+      }
+    },
+    "dsv4_index_fused_query_prepare": {
+      "formal": {
+        "verdict": "FAIL",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.04647469190848541,
+        "p90": 0.12267273235689417
+      },
+      "original_shared": {
+        "verdict": "FAIL",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.04593119606834671,
+        "p90": 0.12207051444685782
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 1930,
+        "exact_lookup": 1930,
+        "median": 0.030830145042508174,
+        "p90": 0.08435133798219537
+      },
+      "median3_all": {
+        "verdict": "FAIL",
+        "evaluable": 2798,
+        "exact_lookup": 2798,
+        "median": 0.03383287556746884,
+        "p90": 0.10477680640737673
+      }
+    },
+    "dsv4_index_short_context_fill": {
+      "formal": {
+        "verdict": "NOT_EVALUABLE",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "original_shared": {
+        "verdict": "NOT_EVALUABLE",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "median3_shared": {
+        "verdict": "NOT_EVALUABLE",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      },
+      "median3_all": {
+        "verdict": "NOT_EVALUABLE",
+        "evaluable": 0,
+        "exact_lookup": 0,
+        "median": null,
+        "p90": null
+      }
+    },
+    "dsv4_fused_q_kv_prepare": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 6985,
+        "exact_lookup": 6985,
+        "median": 0.027925694232529715,
+        "p90": 0.0714670434427346
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4815,
+        "exact_lookup": 4815,
+        "median": 0.027328626736506583,
+        "p90": 0.06935626773094965
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4815,
+        "exact_lookup": 4815,
+        "median": 0.021855052156313202,
+        "p90": 0.05559003848606343
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6985,
+        "exact_lookup": 6985,
+        "median": 0.023401867373498548,
+        "p90": 0.06212219722491361
+      }
+    },
+    "dsv4_compressor_save_partial_states": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 5588,
+        "exact_lookup": 5588,
+        "median": 0.04004365160143546,
+        "p90": 0.09482931917212797
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 3852,
+        "exact_lookup": 3852,
+        "median": 0.038540875307548794,
+        "p90": 0.0943733111420859
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 3852,
+        "exact_lookup": 3852,
+        "median": 0.028798049355484006,
+        "p90": 0.07131960687399724
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 5588,
+        "exact_lookup": 5588,
+        "median": 0.03247873681576016,
+        "p90": 0.08112189706217261
+      }
+    },
+    "dsv4_index_compressor_save_partial_states": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 2794,
+        "exact_lookup": 2794,
+        "median": 0.037131475649468934,
+        "p90": 0.09471411283840228
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 1926,
+        "exact_lookup": 1926,
+        "median": 0.03673129554775942,
+        "p90": 0.08465070375060711
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 1926,
+        "exact_lookup": 1926,
+        "median": 0.026317208782604656,
+        "p90": 0.06637262270593738
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 2794,
+        "exact_lookup": 2794,
+        "median": 0.02975702863015764,
+        "p90": 0.08098290104486464
+      }
+    },
+    "dsv4_compressor_fused_compress_store": {
+      "formal": {
+        "verdict": "FAIL",
+        "evaluable": 5576,
+        "exact_lookup": 5402,
+        "median": 0.0323947172878479,
+        "p90": 0.13991577527562246
+      },
+      "original_shared": {
+        "verdict": "FAIL",
+        "evaluable": 3846,
+        "exact_lookup": 3696,
+        "median": 0.02967916943890426,
+        "p90": 0.11517966397676832
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 3846,
+        "exact_lookup": 3696,
+        "median": 0.02031815799280094,
+        "p90": 0.07296777173460775
+      },
+      "median3_all": {
+        "verdict": "FAIL",
+        "evaluable": 5576,
+        "exact_lookup": 5402,
+        "median": 0.025362852632208513,
+        "p90": 0.10334677974062949
+      }
+    },
+    "dsv4_index_compressor_fused_compress_store": {
+      "formal": {
+        "verdict": "FAIL",
+        "evaluable": 2794,
+        "exact_lookup": 2706,
+        "median": 0.029333417498373777,
+        "p90": 0.17506138950173517
+      },
+      "original_shared": {
+        "verdict": "FAIL",
+        "evaluable": 1926,
+        "exact_lookup": 1838,
+        "median": 0.031587223202972664,
+        "p90": 0.17475858197690977
+      },
+      "median3_shared": {
+        "verdict": "FAIL",
+        "evaluable": 1926,
+        "exact_lookup": 1838,
+        "median": 0.024995451952624852,
+        "p90": 0.13863368853382058
+      },
+      "median3_all": {
+        "verdict": "FAIL",
+        "evaluable": 2794,
+        "exact_lookup": 2706,
+        "median": 0.025288228653919595,
+        "p90": 0.15254137098309803
+      }
+    },
+    "dsv4_index_scores": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 2758,
+        "exact_lookup": 674,
+        "median": 0.018469882291019167,
+        "p90": 0.05449182851468542
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 1878,
+        "exact_lookup": 434,
+        "median": 0.016739663896317872,
+        "p90": 0.05092731205990536
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 1878,
+        "exact_lookup": 434,
+        "median": 0.012689947246748507,
+        "p90": 0.03604369588853757
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 2758,
+        "exact_lookup": 674,
+        "median": 0.015274380802474277,
+        "p90": 0.04294416147192187
+      }
+    },
+    "dsv4_index_topk": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 2758,
+        "exact_lookup": 674,
+        "median": 0.02135181912357204,
+        "p90": 0.05812802550295404
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 1878,
+        "exact_lookup": 434,
+        "median": 0.020517413376153572,
+        "p90": 0.05809532109030051
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 1878,
+        "exact_lookup": 434,
+        "median": 0.01426955449930078,
+        "p90": 0.038958052112249945
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 2758,
+        "exact_lookup": 674,
+        "median": 0.016531154245456092,
+        "p90": 0.04407706977310035
+      }
+    },
+    "dsv4_sparse_attention": {
+      "formal": {
+        "verdict": "PASS",
+        "evaluable": 6971,
+        "exact_lookup": 6193,
+        "median": 0.007434202439887488,
+        "p90": 0.021144748239788354
+      },
+      "original_shared": {
+        "verdict": "PASS",
+        "evaluable": 4787,
+        "exact_lookup": 4221,
+        "median": 0.006821496859813982,
+        "p90": 0.01996786613780934
+      },
+      "median3_shared": {
+        "verdict": "PASS",
+        "evaluable": 4787,
+        "exact_lookup": 4221,
+        "median": 0.004691045111706183,
+        "p90": 0.014105444144067792
+      },
+      "median3_all": {
+        "verdict": "PASS",
+        "evaluable": 6971,
+        "exact_lookup": 6193,
+        "median": 0.0059088274736788975,
+        "p90": 0.017569720726092572
+      }
+    }
+  }
+}

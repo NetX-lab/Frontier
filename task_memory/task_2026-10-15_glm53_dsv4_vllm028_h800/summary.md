@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Archived the A6 noise-floor result and the three pending YC decisions. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
 | 2026-10-31 | Archived current Codex/H200 route, B29/A8/F4 observations and incomplete F comparisons/qualification in English. |
 | 2026-10-26 | Archived D-NO-STEP-COST-SHORTCUT and D-OPERATOR-LEVEL-ROUTE: the step-cost results are diagnostic only, and operator-level DSV4 costs (H3o) are the next route. |
@@ -106,7 +107,7 @@ Deliverables, relative to this task directory:
 - `h3o_operator_costs/f_comparisons_20261101/complete_command.json` and `finish_comparison_command.py`: exact closeout commands, environment and results.
 - `h3o_operator_costs/codex_resume_20261031/`: earlier B29/F4 commands and identities, and the updated check-progress checkpoint.
 
-B30b code and retained outcomes are integrated on the current mainline. Tickets 05/09/11/19 and all other unfinished active DSV4 criteria remain open. A6 fails four attention scopes and seven of eight collective curves. The completed 128-step repeatability diagnostic preserves identities/counts but does not qualify a repetition count or identify the cause of variation. The remaining approximate G1h–G4h budget is 2.160175 GPUh. The scratch 16-repeat full-grid proposal is not selected or approved; it has no package, adapter or new measurement generation. A supported uniform measurement correction and qualified hardware/NIXL/memory coverage precede formal acceptance, followed by H800 continuation. B30a remains on its diagnostic branch pending YC's decision; historical native admission is preserved.
+B30b code and retained outcomes are integrated on the current mainline. Tickets 05/09/11/19 and all other unfinished active DSV4 criteria remain open. A6 fails four attention scopes and seven of eight collective curves. The completed 128-step repeatability diagnostic preserves identities/counts but does not qualify a repetition count or identify the cause of variation. The remaining approximate G1h–G4h budget is 2.160175 GPUh. The scratch 16-repeat full-grid proposal is not selected or approved; it has no package, adapter or new measurement generation. The A6 noise-floor analysis (`test_report_2026-11-01_a6_noise_floor.md`, evidence `h3o_operator_costs/a6_noise_20261101/`) shows the four attention failures at the noise of their single-run targets; median-of-three targets on the 989 three-run workloads make three of them pass, while index_compressor_fused_compress_store still fails from CSA FULL decode. P2 uses exact collective points only. Three YC decisions are pending: the three-run attention recipe (about 0.93 GPUh), the CSA FULL decode index-compression failure, and the collective qualification rule for exact-only consumers. A supported uniform measurement correction and qualified hardware/NIXL/memory coverage precede formal acceptance, followed by H800 continuation. B30a remains on its diagnostic branch pending YC's decision; historical native admission is preserved.
 
 ## Historical state — DSV4 H800 mainline (2026-10-25)
 

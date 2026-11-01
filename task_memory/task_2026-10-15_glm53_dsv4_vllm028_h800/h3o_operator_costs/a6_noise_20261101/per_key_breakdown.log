@@ -1,0 +1,49 @@
+["dsv4_q_projection","csa","FULL","decode"]                                       9.42/ 25.61% n=956 |  9.23/ 26.21% n=668 |  7.52/ 25.00% n=668 |  8.05/ 24.80% n=956
+["dsv4_q_projection","csa","FULL","dummy"]                                       - | - | - | -
+["dsv4_q_projection","csa","NONE","dummy"]                                       - | - | - | -
+["dsv4_q_projection","csa","NONE","prefill"]                                     - | - | - | -
+["dsv4_q_projection","csa","PIECEWISE","decode"]                                  4.75/ 13.12% n=956 |  2.39/  9.00% n=664 |  1.34/  4.35% n=664 |  3.79/ 10.99% n=956
+["dsv4_q_projection","csa","PIECEWISE","dummy"]                                  - | - | - | -
+["dsv4_q_projection","csa","PIECEWISE","first_tail"]                              4.94/ 11.86% n=886 |  2.45/  5.67% n=598 |  1.34/  3.55% n=598 |  4.05/ 10.50% n=886
+["dsv4_q_projection","hca","FULL","decode"]                                       1.35/  3.67% n=956 |  1.15/  3.09% n=668 |  0.77/  2.17% n=668 |  1.15/  2.90% n=956
+["dsv4_q_projection","hca","FULL","dummy"]                                       - | - | - | -
+["dsv4_q_projection","hca","NONE","dummy"]                                       - | - | - | -
+["dsv4_q_projection","hca","NONE","prefill"]                                     - | - | - | -
+["dsv4_q_projection","hca","PIECEWISE","decode"]                                  1.04/  2.66% n=956 |  1.02/  2.68% n=664 |  0.63/  1.78% n=664 |  0.82/  1.99% n=956
+["dsv4_q_projection","hca","PIECEWISE","dummy"]                                  - | - | - | -
+["dsv4_q_projection","hca","PIECEWISE","first_tail"]                              1.01/  2.33% n=886 |  0.87/  2.41% n=598 |  0.64/  1.57% n=598 |  0.85/  2.01% n=886
+["dsv4_q_projection","uncompressed","FULL","decode"]                              1.02/  2.43% n=478 |  1.02/  2.54% n=334 |  0.71/  1.63% n=334 |  0.79/  2.06% n=478
+["dsv4_q_projection","uncompressed","FULL","dummy"]                              - | - | - | -
+["dsv4_q_projection","uncompressed","NONE","dummy"]                              - | - | - | -
+["dsv4_q_projection","uncompressed","NONE","prefill"]                            - | - | - | -
+["dsv4_q_projection","uncompressed","PIECEWISE","decode"]                         0.70/  1.71% n=478 |  0.72/  1.73% n=332 |  0.45/  1.34% n=332 |  0.55/  1.42% n=478
+["dsv4_q_projection","uncompressed","PIECEWISE","dummy"]                         - | - | - | -
+["dsv4_q_projection","uncompressed","PIECEWISE","first_tail"]                     0.79/  1.91% n=443 |  0.76/  1.90% n=299 |  0.53/  1.36% n=299 |  0.65/  1.52% n=443
+["dsv4_index_fused_query_prepare","csa","FULL","decode"]                          4.01/ 10.68% n=956 |  3.84/ 10.41% n=668 |  2.45/  6.06% n=668 |  2.94/  8.04% n=956
+["dsv4_index_fused_query_prepare","csa","FULL","dummy"]                          - | - | - | -
+["dsv4_index_fused_query_prepare","csa","NONE","prefill"]                        - | - | - | -
+["dsv4_index_fused_query_prepare","csa","PIECEWISE","decode"]                     5.41/ 13.38% n=956 |  5.57/ 13.31% n=664 |  3.64/  9.68% n=664 |  3.98/ 11.37% n=956
+["dsv4_index_fused_query_prepare","csa","PIECEWISE","dummy"]                     - | - | - | -
+["dsv4_index_fused_query_prepare","csa","PIECEWISE","first_tail"]                 4.77/ 12.50% n=886 |  4.71/ 12.74% n=598 |  3.55/  9.44% n=598 |  3.77/ 10.98% n=886
+["dsv4_compressor_fused_compress_store","csa","FULL","decode"]                    5.48/ 20.96% n=956 |  4.41/ 15.56% n=668 |  2.87/  7.81% n=668 |  3.94/ 15.28% n=956
+["dsv4_compressor_fused_compress_store","csa","FULL","dummy"]                    - | - | - | -
+["dsv4_compressor_fused_compress_store","csa","NONE","dummy"]                    - | - | - | -
+["dsv4_compressor_fused_compress_store","csa","NONE","prefill"]                  - | - | - | -
+["dsv4_compressor_fused_compress_store","csa","PIECEWISE","decode"]               5.20/ 19.45% n=956 |  4.52/ 16.29% n=664 |  3.26/ 11.14% n=664 |  3.96/ 15.85% n=956
+["dsv4_compressor_fused_compress_store","csa","PIECEWISE","dummy"]               - | - | - | -
+["dsv4_compressor_fused_compress_store","csa","PIECEWISE","first_tail"]           5.06/ 23.38% n=882 |  3.79/ 16.32% n=594 |  2.13/  8.11% n=594 |  3.23/ 20.14% n=882
+["dsv4_compressor_fused_compress_store","hca","FULL","decode"]                    3.54/  9.91% n=950 |  3.57/ 10.77% n=668 |  2.65/  8.14% n=668 |  3.04/  8.52% n=950
+["dsv4_compressor_fused_compress_store","hca","FULL","dummy"]                    - | - | - | -
+["dsv4_compressor_fused_compress_store","hca","NONE","dummy"]                    - | - | - | -
+["dsv4_compressor_fused_compress_store","hca","NONE","prefill"]                  - | - | - | -
+["dsv4_compressor_fused_compress_store","hca","PIECEWISE","decode"]               1.94/  5.16% n=950 |  1.73/  5.28% n=664 |  1.13/  3.53% n=664 |  1.49/  4.10% n=950
+["dsv4_compressor_fused_compress_store","hca","PIECEWISE","dummy"]               - | - | - | -
+["dsv4_compressor_fused_compress_store","hca","PIECEWISE","first_tail"]           1.78/  4.70% n=882 |  1.77/  4.28% n=588 |  1.33/  3.48% n=588 |  1.51/  4.14% n=882
+["dsv4_index_compressor_fused_compress_store","csa","FULL","decode"]             11.15/ 26.27% n=956 | 11.08/ 25.53% n=668 |  8.87/ 21.64% n=668 |  9.31/ 22.76% n=956
+["dsv4_index_compressor_fused_compress_store","csa","FULL","dummy"]              - | - | - | -
+["dsv4_index_compressor_fused_compress_store","csa","NONE","dummy"]              - | - | - | -
+["dsv4_index_compressor_fused_compress_store","csa","NONE","prefill"]            - | - | - | -
+["dsv4_index_compressor_fused_compress_store","csa","PIECEWISE","decode"]         2.00/  5.99% n=956 |  2.05/  6.11% n=664 |  1.65/  4.43% n=664 |  1.74/  4.70% n=956
+["dsv4_index_compressor_fused_compress_store","csa","PIECEWISE","dummy"]         - | - | - | -
+["dsv4_index_compressor_fused_compress_store","csa","PIECEWISE","first_tail"]     2.00/  5.24% n=882 |  2.11/  5.65% n=594 |  1.62/  4.27% n=594 |  1.59/  4.30% n=882
+exit=0

@@ -1,0 +1,26 @@
+formal: table 01a9d51b4389 units 1421 rows 7105 legally-zero PASS commit 286aa81c dirty 2
+original_shared: table ee355d1066d4 units 989 rows 4945 legally-zero PASS commit c4a0244b dirty 0
+median3_shared: table 56e0b8bdc016 units 989 rows 4945 legally-zero PASS commit c4a0244b dirty 0
+median3_all: table 7618e719df40 units 1421 rows 7105 legally-zero PASS commit c4a0244b dirty 0
+dsv4_fused_qkv_projection                    PASS  1.34/  5.52% n=6995 | PASS  1.31/  5.22% n=4825 | PASS  0.80/  2.77% n=4825 | PASS  0.97/  3.50% n=6995
+dsv4_fused_qkv_rmsnorm                       PASS  3.57/  8.72% n=6995 | PASS  3.63/  8.93% n=4825 | PASS  2.42/  6.44% n=4825 | PASS  2.85/  7.27% n=6995
+dsv4_q_projection                            FAIL  1.70/ 10.23% n=6995 | PASS  1.42/  8.83% n=4825 | PASS  0.98/  6.34% n=4825 | PASS  1.38/  8.90% n=6995
+dsv4_query_padding                           - | - | - | -
+dsv4_attention_output_zero                   - | - | - | -
+dsv4_output_inv_rope_quant                   PASS  3.17/  9.75% n=6995 | PASS  3.08/  9.24% n=4825 | PASS  2.79/  8.21% n=4825 | PASS  2.93/  8.88% n=6995
+dsv4_grouped_output_projection               PASS  0.68/  1.77% n=6995 | PASS  0.65/  1.80% n=4825 | PASS  0.47/  1.34% n=4825 | PASS  0.54/  1.49% n=6995
+dsv4_output_projection                       PASS  1.03/  2.78% n=6995 | PASS  1.05/  2.74% n=4825 | PASS  0.76/  2.03% n=4825 | PASS  0.86/  2.29% n=6995
+dsv4_compressor_projection                   PASS  1.23/  3.33% n=5596 | PASS  1.26/  3.40% n=3860 | PASS  0.82/  2.18% n=3860 | PASS  0.92/  2.43% n=5596
+dsv4_index_weights_projection                PASS  3.01/  7.95% n=2798 | PASS  1.80/  5.38% n=1930 | PASS  1.33/  3.74% n=1930 | PASS  2.67/  6.59% n=2798
+dsv4_index_compressor_projection             PASS  1.41/  4.58% n=2798 | PASS  1.33/  4.71% n=1930 | PASS  0.89/  2.70% n=1930 | PASS  1.03/  3.33% n=2798
+dsv4_index_query_projection                  PASS  2.45/  5.77% n=2798 | PASS  1.46/  4.45% n=1930 | PASS  1.09/  3.06% n=1930 | PASS  2.14/  5.08% n=2798
+dsv4_index_fused_query_prepare               FAIL  4.65/ 12.27% n=2798 | FAIL  4.59/ 12.21% n=1930 | PASS  3.08/  8.44% n=1930 | FAIL  3.38/ 10.48% n=2798
+dsv4_index_short_context_fill                - | - | - | -
+dsv4_fused_q_kv_prepare                      PASS  2.79/  7.15% n=6985 | PASS  2.73/  6.94% n=4815 | PASS  2.19/  5.56% n=4815 | PASS  2.34/  6.21% n=6985
+dsv4_compressor_save_partial_states          PASS  4.00/  9.48% n=5588 | PASS  3.85/  9.44% n=3852 | PASS  2.88/  7.13% n=3852 | PASS  3.25/  8.11% n=5588
+dsv4_index_compressor_save_partial_states    PASS  3.71/  9.47% n=2794 | PASS  3.67/  8.47% n=1926 | PASS  2.63/  6.64% n=1926 | PASS  2.98/  8.10% n=2794
+dsv4_compressor_fused_compress_store         FAIL  3.24/ 13.99% n=5576 | FAIL  2.97/ 11.52% n=3846 | PASS  2.03/  7.30% n=3846 | FAIL  2.54/ 10.33% n=5576
+dsv4_index_compressor_fused_compress_store   FAIL  2.93/ 17.51% n=2794 | FAIL  3.16/ 17.48% n=1926 | FAIL  2.50/ 13.86% n=1926 | FAIL  2.53/ 15.25% n=2794
+dsv4_index_scores                            PASS  1.85/  5.45% n=2758 | PASS  1.67/  5.09% n=1878 | PASS  1.27/  3.60% n=1878 | PASS  1.53/  4.29% n=2758
+dsv4_index_topk                              PASS  2.14/  5.81% n=2758 | PASS  2.05/  5.81% n=1878 | PASS  1.43/  3.90% n=1878 | PASS  1.65/  4.41% n=2758
+dsv4_sparse_attention                        PASS  0.74/  2.11% n=6971 | PASS  0.68/  2.00% n=4787 | PASS  0.47/  1.41% n=4787 | PASS  0.59/  1.76% n=6971

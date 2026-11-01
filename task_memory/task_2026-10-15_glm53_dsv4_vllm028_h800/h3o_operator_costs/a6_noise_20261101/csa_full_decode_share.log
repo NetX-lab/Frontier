@@ -1,0 +1,5 @@
+dsv4_q_projection                             first  rows 480 share p10/p50/p90 4.01/5.56/6.34%
+dsv4_q_projection                             reuse  rows 480 share p10/p50/p90 5.50/6.60/7.69%
+dsv4_index_compressor_fused_compress_store    first  rows 480 share p10/p50/p90 1.68/4.53/6.39%
+dsv4_index_compressor_fused_compress_store    reuse  rows 480 share p10/p50/p90 2.15/5.37/6.61%
+exit=0

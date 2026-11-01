@@ -1,0 +1,30 @@
+{
+  "classification": "DIAGNOSTIC_ATTENTION_LAYER_SHARE",
+  "table": "data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+  "shares": {
+    "dsv4_q_projection/first": {
+      "rows": 480,
+      "p10": 0.040135246545848394,
+      "median": 0.05562933344431503,
+      "p90": 0.06340659052241553
+    },
+    "dsv4_q_projection/reuse": {
+      "rows": 480,
+      "p10": 0.05500193235730906,
+      "median": 0.06604352175196218,
+      "p90": 0.07685854998098962
+    },
+    "dsv4_index_compressor_fused_compress_store/first": {
+      "rows": 480,
+      "p10": 0.01680602515074791,
+      "median": 0.04528430403412746,
+      "p90": 0.06390958078096112
+    },
+    "dsv4_index_compressor_fused_compress_store/reuse": {
+      "rows": 480,
+      "p10": 0.02149257389545872,
+      "median": 0.05368898671681974,
+      "p90": 0.06611859160039839
+    }
+  }
+}

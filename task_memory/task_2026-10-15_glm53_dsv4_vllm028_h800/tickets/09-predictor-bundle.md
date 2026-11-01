@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Added the A6 noise-floor and three-run-target follow-up; qualification remains open pending YC decisions. |
 | 2026-11-01 | Completed F2 P2-64 with repeat1 TTFT FAIL, exact A8 coverage, and the full eight-reading F comparison; formal qualification remains open. |
 | 2026-11-01 | Completed the 128-step A6 repeatability diagnostic; retained failed qualification and uniform-generation/budget limits. |
 | 2026-11-01 | Added collective curve attribution; full qualification remains open. |
@@ -67,6 +68,8 @@ H200 operator tables/runtime and full A10 replays are implemented; numerical com
 CSA follow-up (2026-11-01): the sole one-H200 reconstruction probe completed with platform/container/launcher success,128/128 geometries,640 rows and zero identity/count mismatches. All544 original medians reconstruct. Timings and CSA contrasts vary across16 repeats; the index-compression control still has20.50%half-median difference. Keep predictor features and formal tables unchanged; F comparisons are now complete, with F2 P2-64 repeat01 TTFT12.792204607%FAIL. Choose a supported uniform measurement correction from the retained evidence; the completed comparison does not justify changing the formal inputs. No repetition count is yet qualified, and two full reconstructions exceed the remaining approximate7-GPUh budget. Evidence: [repeatability report](../test_report_2026-11-01_a6_repeatability.md).
 
 Collective follow-up (2026-11-01): all eight curve summaries and source medians reproduce; six of seven failing curves also fail separately in every retained pass. Sparse payload intervals, mode/kernel changes and within-pass variability remain distinct findings, with no input or threshold change. See [collective attribution](../test_report_2026-11-01_a6_collective_curves.md).
+
+Noise-floor follow-up (2026-11-01): the four failing attention scopes fail at the noise floor of their single-run targets. On the 989 workloads with three independent runs, median-of-three targets make three of the four pass with unchanged folds and thresholds; index_compressor_fused_compress_store stays FAIL (p90 13.86%), driven by CSA FULL decode (21.64% p90 on that key). P2 uses exact collective points only; pass-to-pass deviation of those points is 0.81% (P2-64) and 5.76% (P2-32) time-weighted. Nothing is promoted; the next step waits on three YC decisions (attention three-run recipe, CSA FULL decode index compression, collective qualification rule). See [noise-floor report](../test_report_2026-11-01_a6_noise_floor.md).
 
 ## Historical route — DSV4 H800 mainline (2026-10-25)
 

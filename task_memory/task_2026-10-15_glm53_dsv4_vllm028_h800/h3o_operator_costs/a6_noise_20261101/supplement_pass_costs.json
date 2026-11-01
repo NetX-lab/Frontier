@@ -1,0 +1,76 @@
+{
+  "classification": "CONDITIONAL_COST_ESTIMATES_NO_LAUNCH",
+  "table_sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+  "supplement_only": [
+    {
+      "cases": 432,
+      "engine_indices": [
+        0,
+        1
+      ],
+      "reconstructions_per_case": 1,
+      "estimated_engine_steps": 5334,
+      "estimated_gpu_hours": 0.5977994444444444
+    },
+    {
+      "cases": 432,
+      "engine_indices": [
+        0,
+        1
+      ],
+      "reconstructions_per_case": 2,
+      "estimated_engine_steps": 10668,
+      "estimated_gpu_hours": 0.9255411111111111
+    }
+  ],
+  "original_grid": [
+    {
+      "cases": 989,
+      "engine_indices": [
+        0,
+        1,
+        2
+      ],
+      "reconstructions_per_case": 1,
+      "estimated_engine_steps": 9134,
+      "estimated_gpu_hours": 0.9801616666666666
+    },
+    {
+      "cases": 989,
+      "engine_indices": [
+        0,
+        1,
+        2
+      ],
+      "reconstructions_per_case": 2,
+      "estimated_engine_steps": 18268,
+      "estimated_gpu_hours": 1.5552366666666666
+    }
+  ],
+  "all_cases": [
+    {
+      "cases": 1421,
+      "engine_indices": [
+        0,
+        1,
+        2
+      ],
+      "reconstructions_per_case": 1,
+      "estimated_engine_steps": 14468,
+      "estimated_gpu_hours": 1.3079033333333332
+    },
+    {
+      "cases": 1421,
+      "engine_indices": [
+        0,
+        1,
+        2
+      ],
+      "reconstructions_per_case": 2,
+      "estimated_engine_steps": 28936,
+      "estimated_gpu_hours": 2.21072
+    }
+  ],
+  "model_source": "same constants as a6_repeatability_20261101/reconstruction_costs.py",
+  "limits": "Planning estimates only, not timeout exposure or platform billing."
+}
