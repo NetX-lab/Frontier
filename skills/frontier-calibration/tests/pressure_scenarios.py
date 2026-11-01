@@ -49,10 +49,10 @@ REQUIRED_REFERENCES = {
     "evidence-tiers.md",
     "migration.md",
     "tool-boundaries.md",
+    "engine-integration.md",
 }
-EXPECTED_GROUNDTRUTH_BRANCH = "feature/frontier-comparison-instrumentation"
-# The checked-in skill stays host-neutral; host bindings live in the untracked
-# site.local.md (skills/README.md).
+# Portable instructions must not require one host or a personal reference fork.
+# Deployment bindings belong in site.local.md or the case inputs.
 HOST_SPECIFIC_PATTERNS = (
     r"/data/",
     r"/mnt/",
@@ -63,6 +63,9 @@ HOST_SPECIFIC_PATTERNS = (
     r"codesign",
     r"i-fengyicheng",
     r"ycfeng",
+    r"fwyc0573",
+    r"(?i)\bvllm-bs\b",
+    r"feature/frontier-comparison-instrumentation",
 )
 REPOSITORY_PATH = re.compile(r"(?:`|\")((?:tests|frontier|docs|skills|data|examples)/[^`\"\s]*)")
 
@@ -293,9 +296,10 @@ def run(root: Path) -> None:
         fail("contract must define the reviewed no-change correction state")
     if "CPU lane" not in contract or "not_applicable" not in contract:
         fail("contract must explain how CPU analysis consumes a no-change state")
-    if EXPECTED_GROUNDTRUTH_BRANCH not in contract:
-        fail("contract must pin the requested ground-truth branch")
     for field in (
+        "groundtruth_engine",
+        "groundtruth_version",
+        "engine_binding",
         "groundtruth_checkout_path",
         "groundtruth_remote_url",
         "groundtruth_remote_tip",
@@ -373,7 +377,7 @@ def run(root: Path) -> None:
         for pattern in HOST_SPECIFIC_PATTERNS:
             match = re.search(pattern, text)
             if match:
-                fail(f"host-specific text {match.group(0)!r} in {path}; move it to site.local.md")
+                fail(f"deployment-specific text {match.group(0)!r} in {path}; move it to site.local.md or case inputs")
         if path.name != "migration.md" and re.search(r"auto_recycle|auto receipt", text):
             fail(f"retired automatic approval wording in {path}")
 

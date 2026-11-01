@@ -18,11 +18,13 @@ the ordinary calibration path without claiming workflow isolation.
 
 ## Analyze a Collected Gap
 
-Require formal ids, a passing `schedule_timing` run of the same cell and node
-group as the clean reference, Frontier stage and event traces of the gated
-label, and the error budget.
+Require formal IDs, admitted workflow observations from the selected engine
+on the same cell and node group as the clean reference, Frontier stage/event
+traces of the gated label, and the error budget. Use the verified observation
+mapping in `engine_binding`; missing workflow probes leave this analysis
+unverified without invalidating an independently supported E2E comparison.
 
-Evidence: the vLLM scheduler log; for DP cells,
+For the existing vLLM profile, evidence includes the `schedule_timing` log and
 `tests/comparison/dp_placement_pp/extract_vllm_placement.py` (placement,
 engine iterations, dummy passes, joined by correlation id) and
 `compare_placement.py`; the DP x PP mode labels from
@@ -37,7 +39,8 @@ hand-offs, transfers, and completion bookkeeping. Start from the first valid
 non-empty formal scheduler batch with ordered ids and token vectors. Separate
 client dispatch skew (`dispatch-align-trace`) from internal control flow, and
 for DP x PP cells compare within the same lane mode before comparing across
-modes.
+modes when the case validates that conditioning. Keep the ordinary clean
+comparison alongside it.
 
 Record every row as `MATCH`, `MISMATCH`, `UNSET`, or `UNSUPPORTED` with values,
 source anchors, confidence, affected phase, error-source class, and Frontier

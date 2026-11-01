@@ -31,18 +31,18 @@
       "kind": "atomic",
       "owner": "groundtruth-run-check",
       "trigger": "A ground-truth run needs its preflight before launch or its evidence check after the run.",
-      "inputs": ["case manifest", "run manifest", "engine file of the mode", "selected ground-truth checkout", "run directory after the run"],
+      "inputs": ["case manifest", "run manifest", "native engine configuration for the mode", "pinned reference-engine source or build", "engine binding", "run directory after the run"],
       "outputs": ["analysis/run_check_status.groundtruth_<mode>.json", "analysis/run_check_summary.groundtruth_<mode>.md"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
-      "validation": "Before launch, verify the checkout tuple, mode predicate, inputs, and fresh paths; after the run, verify every run check. A valid individual run does not establish case-level reference sufficiency."
+      "validation": "Before launch, verify the engine/build identity and required capabilities, mode predicate, inputs, and fresh paths; after the run, verify every run check. A valid individual run does not establish case-level reference sufficiency."
     },
     {
       "name": "groundtruth-run",
       "kind": "atomic",
       "owner": "groundtruth-run",
-      "trigger": "A passed preflight permits a vLLM-BS ground-truth run in one declared mode.",
-      "inputs": ["passed preflight", "case manifest", "engine file", "cell trace", "selected clean checkout"],
+      "trigger": "A passed preflight permits a run of the selected reference engine in one declared mode.",
+      "inputs": ["passed preflight", "case manifest", "native engine configuration", "cell trace", "pinned reference-engine source or build", "engine binding"],
       "outputs": ["runs/groundtruth_<mode>/<run_tag>/run_manifest.json", "runs/groundtruth_<mode>/<run_tag>/run/*", "launcher receipt"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
@@ -53,7 +53,7 @@
       "kind": "atomic",
       "owner": "simulator-run",
       "trigger": "A frozen Frontier case and cell are ready to run after the semantic check.",
-      "inputs": ["passed semantic check", "case manifest", "Frontier settings file of the current generation", "cell trace", "KV block count of the cell's clean run"],
+      "inputs": ["passed semantic check", "case manifest", "Frontier settings file of the current generation", "cell trace", "KV capacity and Frontier mapping from the cell's clean run"],
       "outputs": ["$FRONTIER_TMP_ROOT/<task>/<case_id>/<label>/run_manifest.json", "$FRONTIER_TMP_ROOT/<task>/<case_id>/<label>/metrics/*"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
@@ -63,8 +63,8 @@
       "name": "semantic-alignment-check",
       "kind": "atomic",
       "owner": "semantic-alignment-check",
-      "trigger": "Frontier and vLLM values may look equal while their topology, scheduling, routing, or metric meaning differs.",
-      "inputs": ["case manifest", "engine file", "Frontier settings file and effective settings", "checkout provenance", "routing records for MoE"],
+      "trigger": "Frontier and the reference engine values may look equal while their topology, scheduling, routing, or metric meaning differs.",
+      "inputs": ["case manifest", "native engine configuration", "Frontier settings file and effective settings", "engine/build provenance and semantic mapping", "routing records for MoE"],
       "outputs": ["analysis/semantic_alignment_table.csv", "analysis/semantic_alignment_summary.md", "analysis/semantic_alignment_status.json"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
@@ -85,12 +85,12 @@
       "name": "e2e-metrics-gap",
       "kind": "atomic",
       "owner": "e2e-metrics-gap",
-      "trigger": "Clean Frontier and vLLM request rows need the five independent E2E metric decisions for a cell.",
-      "inputs": ["passed clean run checks", "Frontier label run", "cell entry in the scenario matrix", "routing status"],
+      "trigger": "Clean Frontier and the reference engine request rows need the five independent E2E metric decisions for a cell.",
+      "inputs": ["passed clean run checks", "Frontier label run", "cell entry in the scenario matrix", "validated metric converter and gate semantics", "routing status"],
       "outputs": ["analysis/e2e_gap_<label>/sample.json", "analysis/e2e_gap_<label>/reading.json", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
-      "validation": "Assess repeated-clean reference sufficiency, normalize the rows, and apply the gate kind over every admissible run. Preserve the arithmetic reading and report reference uncertainty beside absolute values and relative errors."
+      "validation": "Assess repeated-clean reference sufficiency, normalize through the verified engine reader, and apply the compatible gate kind over every admissible run. Preserve the arithmetic reading and report reference uncertainty beside absolute values and relative errors."
     },
     {
       "name": "dispatch-align-trace",
@@ -101,7 +101,7 @@
       "outputs": ["<Frontier run dir>/trace.csv per ensemble member", "route_delay record in the run receipt and the scenario matrix"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
-      "validation": "Draw member delays from the measured pool with recorded seeds, change only arrival times, and verify ids, token counts, and trace hashes."
+      "validation": "Validate the selected engine's dispatch boundary and delay model, then draw member delays with recorded seeds, change only arrival times, and verify ids, token counts, and trace hashes."
     },
     {
       "name": "workflow-gap-analysis",
@@ -217,12 +217,12 @@
       "name": "parity-run",
       "kind": "composite",
       "owner": "parity-run",
-      "trigger": "A user needs a reproducible Frontier and vLLM-BS case, or new cells, collected with aligned semantics.",
+      "trigger": "A user needs a reproducible Frontier and the selected reference engine case, or new cells, collected with aligned semantics.",
       "inputs": ["user-approved settings", "workload", "case manifest"],
       "outputs": ["manifest.yaml", "case_init.md", "runs/groundtruth_<mode>/*", "Frontier label runs", "run checks"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
-      "validation": "Call the semantic check, ground-truth preflight, repeated clean runs and post-run checks, then simulator runs in call-graph order; assess reference sufficiency by the contract.",
+      "validation": "Bind the selected engine and its required capabilities, then call the semantic check, ground-truth preflight, repeated clean runs and post-run checks, then simulator runs in call-graph order; assess reference sufficiency by the contract.",
       "calls": ["semantic-alignment-check", "groundtruth-run-check", "groundtruth-run", "dispatch-align-trace", "simulator-run"]
     },
     {

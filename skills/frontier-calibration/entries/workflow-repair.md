@@ -6,8 +6,8 @@ Read `../references/contract.md` and `../references/repair-approval.md`.
 Require a complete workflow status with a concrete causal `simulation_logic`
 mismatch, `correction_state=pending`, and the user's recorded decision with its
 decision ID; the human review record follows `repair-approval.md`. Re-check the
-cited Frontier symbols and keep vLLM's scheduling and inference behavior, as
-the fork diff shows it, as the reference. A scheduler or event change touches a
+cited Frontier symbols against the selected engine's scheduling and inference
+behavior, including intentional fork changes and their declared base. A scheduler or event change touches a
 core module, so a design note goes to the user before the edit.
 
 Write the code-change marker (`change_marker`) with the decision ID and scope

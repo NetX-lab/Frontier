@@ -4,7 +4,9 @@
 17 atomics and 3 composites. Every entry has one owner, a trigger, inputs, fixed
 output paths, a direct code-change permission, stop statuses, and a validation
 summary. The `calls` array of a composite lists possible dependencies; it is
-not an execution order.
+not an execution order. Engine/build selection and capability bindings are
+case inputs (`engine-integration.md`); they do not add per-engine entries or
+change this registry mechanism.
 
 `call-graph.md` is the authoritative route: predicates, branches, stops, return
 edges, and one-domain-at-a-time ordering. A `calls` entry never bypasses the

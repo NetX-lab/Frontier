@@ -1,27 +1,36 @@
 # E2E Metrics Gap
 
-**When to use:** Use when clean Frontier and vLLM request rows of a cell need the five independent E2E metric decisions.
+**When to use:** Use when clean Frontier and reference-engine request rows of a cell need the five independent E2E metric decisions.
 
 Read `../references/contract.md` (Calibration Objective, E2E Gate, MoE routing gate),
-`../references/evidence-tiers.md`, and `tests/comparison/e2e_gate/README.md`.
+`../references/evidence-tiers.md`, `../references/engine-integration.md`, and
+`tests/comparison/e2e_gate/README.md`. Verify the selected collector/converter
+and the gate's metric semantics before normalizing a new engine's rows.
 Require passing post-run checks for every clean reference run, a Frontier label
 run on the current settings generation, and the case routing status.
 
 The gate compares runtime timing and throughput only, never generated text or
-accuracy. Formal rows from a dummy-weight clean run are eligible. Warmup rows
-and setup rows never enter a metric.
+accuracy. Weight and routing substitutions follow the contract's declared-case
+limits. Warmup rows and setup rows never enter a metric.
 
-1. Normalize: `run_gate.py normalize --cell <case_id>/<cell> --artifacts-root
+1. Normalize through the converter recorded in `engine_binding`, retaining raw
+   records and a field/endpoint mapping receipt. For the existing compatible
+   vLLM collector only: `run_gate.py normalize --cell <case_id>/<cell> --artifacts-root
    <bundle> --vllm-run-dir <run> ... --frontier-run <label>=<dir> --output-dir
-   analysis/e2e_gap_<label>/`. Read `sample.json`: any missing, duplicate, or
+   analysis/e2e_gap_<label>/`. Other engines need a verified converter to the
+   same schema, as described in `engine-integration.md`; this command does not
+   accept arbitrary native logs. Read `sample.json`: any missing, duplicate, or
    unclassified formal id, or a token-count mismatch, makes every metric
    `INSUFFICIENT_EVIDENCE`.
 2. Gate: `run_gate.py gate --cell <case_id>/<cell> --rows
    analysis/e2e_gap_<label>/ --output analysis/e2e_gap_<label>/reading.json`.
    The cell's gate kind (`single`, `pd_s33`, `dp_pp_pairs`) pools every
-   admissible reference run; list each run used.
-3. For a quick check against one vLLM run, `tests/comparison/calibration/e2e_metrics_gap.py`
-   writes `e2e_metrics_table.csv`, status, and summary; the cell verdict still
+   admissible reference run; list each run used. Apply `pd_s33` offsets or
+   `dp_pp_pairs` conditioning only when the case validates their semantics.
+   Keep the actual engine identity in the report despite legacy `vllm` keys.
+3. For compatible vLLM logs only,
+   `tests/comparison/calibration/e2e_metrics_gap.py` compares one reference run
+   and writes `e2e_metrics_table.csv`, status, and summary; the cell verdict still
    comes from step 2.
 
 `run_gate.py` knows only the claimed cells of
@@ -47,8 +56,8 @@ Write `analysis/e2e_metrics_summary.md` and `analysis/e2e_metrics_status.json`.
 The summary gives each metric's two absolute values with units, the relative
 error, the gate kind, the independent clean-run count, between-run variability,
 statistic uncertainty, the reference-sufficiency assessment, the coverage
-class, and, for DP x PP cells, the gated mode pools and the reference modes
-without gated pairs. Report the ordinary clean-run comparison alongside any
+class, and, when the selected gate uses mode pairs, the gated pools and
+reference modes without gated pairs. Report the ordinary clean-run comparison alongside any
 conditioned gate, with its stated boundary. Preserve `reading.json` as the
 harness's arithmetic verdict; when reference evidence is insufficient, the
 analysis status is `INSUFFICIENT_EVIDENCE` and calibration remains open even if

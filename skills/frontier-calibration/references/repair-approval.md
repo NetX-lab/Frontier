@@ -54,8 +54,8 @@ For core modules under `frontier/`, a decision covers the scope it names. Ask
 again before going past it: another core module or domain, a shared interface
 or config schema, a gate-rule change, or more than 5 core files or 500 changed
 lines in core files. Add a configuration field only when the analysis measured
-its fidelity effect; a field whose default leaves every existing run unchanged
-and whose effect is below 0.5% of a gate metric stays out.
+its fidelity effect and the gain justifies its implementation and maintenance
+cost for the selected engine and workload.
 
 Direct authorization of non-core file edits does not resolve decisions that
 change calibration semantics; those still follow `contract.md`, Decisions and
@@ -81,5 +81,5 @@ and relative), the regression results, the validation status, and the decision
 ID. A result other than `PASS` keeps the case open and authorizes nothing.
 
 Repairs target Frontier. A `groundtruth_defect` is fixed in the ground truth
-by its own decision, as a new ground-truth commit and run generation; Frontier
+by its own decision, as a new ground-truth build identity and run generation; Frontier
 never models it.

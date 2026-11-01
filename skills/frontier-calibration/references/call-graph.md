@@ -7,20 +7,24 @@ This graph owns execution order, predicates, stops, and return edges. A
 
 ```text
 parity-run
+  -> bind selected engine/build and required capabilities (engine-integration.md)
   -> semantic-alignment-check
   -> [blocking mismatch] semantic-alignment-repair (decided only)
   -> semantic-alignment-check (fresh)
   -> groundtruth-run-check (preflight)
   -> groundtruth-run
   -> groundtruth-run-check (post-run, every run tag)
-  -> [DP x PP cell or online dispatch skew] dispatch-align-trace
+  -> [dispatch skew affects the comparison] dispatch-align-trace
   -> simulator-run
 ```
 
 `groundtruth-run-check` runs twice: before launch it checks the manifest,
-checkout, mode predicate, and fresh output paths; after the run it checks the
+engine/build identity, mode predicate, and fresh output paths; after the run it checks the
 run's evidence, and only a passing run reaches any analysis. Clean,
-diagnostic, CPU, and Frontier outputs stay in separate run directories.
+diagnostic, CPU, and Frontier outputs stay in separate run directories. Missing
+optional diagnostics leave only their claims unverified; missing required
+collection, conversion, or semantic support stops the affected comparison.
+A new engine does not create new entries or bypass their evidence rules.
 
 ## Optional Workflow Calibration
 
@@ -34,7 +38,7 @@ workflow-gap-analysis (optional measured-layer path)
   -> groundtruth-run-check (preflight)
   -> groundtruth-run (clean and required timing observations)
   -> groundtruth-run-check (post-run, every run tag)
-  -> [DP x PP cell or online dispatch skew] dispatch-align-trace
+  -> [dispatch skew affects the comparison] dispatch-align-trace
   -> measure/admit full-model layer and stage timing coverage
   -> diagnostic simulator run with measured times and native workflow
   -> compare key metrics and workflow events
@@ -75,7 +79,7 @@ error-analysis
        -> classify every attributed part (contract.md, Error-Source Classes)
 ```
 
-The error budget splits each failing metric's Frontier-minus-vLLM gap per
+The error budget splits each failing metric's Frontier-minus-reference gap per
 request into queue, step mix, device price, host price, and declared boundary
 terms, and closes to the gap within a stated residual. The analyses it selects
 are read-only and may run in any order. `op-gap-analysis` normalizes the
@@ -93,7 +97,7 @@ error-correction
   -> rerun the affected cells
   -> fresh domain analysis and a fresh decision
   -> next domain
-  -> [groundtruth_defect fixed] parity-run with the new ground-truth commit
+  -> [groundtruth_defect fixed] parity-run with the new ground-truth build identity
   -> e2e-metrics-gap
   -> republish the readings
 ```

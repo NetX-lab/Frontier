@@ -14,8 +14,10 @@ example, a 32-GPU target needs the matching 32-GPU deployment; extrapolating a
 smaller run does not isolate that target's workflow. Follow the operator's
 platform rules and existing resource authorization.
 
-Inspect the pinned ground-truth probes and Frontier timing input path before
-collecting anything. `BaseExecutionTimePredictor.predict_stage_execution_time`
+Inspect the selected engine's probes in `engine-integration.md` and the Frontier
+timing input path before collecting anything. Map native or compiler-fused
+scopes to model layers; unavailable layer boundaries leave this optional
+experiment unsupported, even when clean E2E collection works. `BaseExecutionTimePredictor.predict_stage_execution_time`
 and `StageExecutionTime` expose layer results and stage-owned work, but do not
 by themselves provide a measured-timing importer. Identify the actual adapter,
 its accepted timing boundaries, and the scheduler/event consumers. If a probe
@@ -30,7 +32,7 @@ path. Reuse adequate existing observations of the same case generation.
 
 Freeze the case with `semantic-alignment-check`: model/dtype, physical rank
 placement and parallel groups, request trace, scheduler limits, graph mode,
-routing, prefix state, and the clean run's KV block count. Collect clean ground
+routing, prefix state, and the clean run's observed KV capacity and allocation mapping. Collect clean ground
 truth and the needed timing observations through `groundtruth-run-check` and
 `groundtruth-run`, on the same node group. Keep their run tags separate. Apply
 `contract.md`, Calibration Objective, to the clean repetitions and timing
@@ -85,7 +87,8 @@ Compare the diagnostic simulator's formal-request rows with clean ground truth
 using the contract's definitions for TTFT, TPOT, request E2E, request throughput,
 and token throughput. Report both absolute values, absolute errors, and relative
 errors; a zero reference makes relative error undefined. Use the existing
-per-metric 10% criterion, identity checks, and DP x PP mode/dispatch treatment.
+per-metric 10% criterion and verified metric conversion. Apply identity checks
+and only the mode/dispatch treatment justified for this engine and case.
 Store this as a diagnostic comparison; it never closes the native E2E gate.
 
 Also compare topology/placement, the first formal batch, subsequent step
