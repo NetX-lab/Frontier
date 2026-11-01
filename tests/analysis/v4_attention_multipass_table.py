@@ -8,9 +8,13 @@ controlled A6 comparison:
 - ``median3_shared``: the same rows, each ``time_stats.<scope>.median`` replaced by
   the median of the three runs;
 - ``median3_all``: every published row, with the shared workloads replaced as above.
+- ``pass1_all`` and ``pass2_all``: the independent runs' complete timing statistics
+  on the shared workloads, retaining published identities and any unshared rows.
 
-Only kernel-time medians change; gap statistics, counts and identities are copied
-unchanged. Each table keeps the published file name, which the V4 loader requires.
+The median-of-three tables change only kernel-time medians. The independent-pass
+tables keep each run's kernel, gap and layer-window statistics together, so they do
+not combine one run's kernel costs with another run's stream offsets. Each table
+keeps the published file name, which the V4 loader requires.
 The tables are diagnostic and never replace the published input.
 """
 from __future__ import annotations
@@ -24,7 +28,7 @@ from pathlib import Path
 import resource
 import statistics
 
-from v4_attention_repeats import read_rows
+from v4_attention_repeats import TIMING_PREFIXES, read_rows
 
 TABLE_NAME = "attention_graph_replay_kernel_only.csv"
 
@@ -39,6 +43,23 @@ def render(fieldnames, rows):
     writer.writeheader()
     writer.writerows(rows)
     return buffer.getvalue().encode()
+
+
+def independent_pass_rows(published, measured):
+    """Replace timing statistics together while preserving published row identities."""
+    by_key = {row_key(row): row for row in measured.values()}
+    output = []
+    for row in published:
+        source = by_key.get(row_key(row))
+        if source is None:
+            output.append(row)
+            continue
+        columns = {column for column, value in row.items()
+                   if column.startswith(TIMING_PREFIXES) and value != ""}
+        if columns != {column for column in source if column.startswith(TIMING_PREFIXES)}:
+            raise ValueError(f"Timing statistics differ from the published row: {row['case_id']}")
+        output.append({**row, **{column: repr(source[column]) for column in columns}})
+    return output
 
 
 def main():
@@ -88,7 +109,9 @@ def main():
         return {**row, **{column: repr(value) for column, value in medians[row_key(row)][1].items()}}
 
     tables = {"original_shared": shared, "median3_shared": [replace(row) for row in shared],
-              "median3_all": [replace(row) for row in published]}
+               "median3_all": [replace(row) for row in published],
+               "pass1_all": independent_pass_rows(published, first),
+               "pass2_all": independent_pass_rows(published, second)}
     replaced_values = sum(len(values) for _, values in medians.values())
     manifest = {"classification": "DIAGNOSTIC_MULTIPASS_TARGET_TABLES",
                 "published_table": {"path": str(args.published_table.resolve()),
@@ -97,7 +120,9 @@ def main():
                 "runs": {"reference": reference_input, "comparisons": [first_input, second_input]},
                 "shared_rows": len(shared), "shared_cases": len({row["case_id"] for row in shared}),
                 "replaced_kernel_time_medians": replaced_values,
-                "unchanged_columns": "all except time_stats.<scope>.median of shared rows", "tables": {}}
+                 "unchanged_columns": "median3: all except time_stats.<scope>.median of shared rows; "
+                                      "pass1/pass2: all except timing statistics of shared rows",
+                 "independent_pass_complete": len(shared) == len(published), "tables": {}}
     for name, rows in tables.items():
         payload = render(fieldnames, rows)
         path = args.output_dir / name / TABLE_NAME
