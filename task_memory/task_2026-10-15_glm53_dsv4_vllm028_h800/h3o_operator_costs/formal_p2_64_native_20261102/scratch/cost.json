@@ -1,0 +1,58 @@
+{
+  "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/platform_terminal_receipt.json",
+  "source_sha256": "634a6e7380909a0992876407a067da1fb96506dd88f6f7f17a12b3094040256a",
+  "containers": [
+    {
+      "replica": "exp-1025-155441-668927-1679091c",
+      "duration_s": 1311.0,
+      "gpu_hours": 2.9133333333333336
+    },
+    {
+      "replica": "exp-1025-155441-668927-8f14e45f",
+      "duration_s": 1452.0,
+      "gpu_hours": 3.2266666666666666
+    },
+    {
+      "replica": "exp-1025-155441-668927-a87ff679",
+      "duration_s": 1314.0,
+      "gpu_hours": 2.92
+    },
+    {
+      "replica": "exp-1025-155441-668927-c4ca4238",
+      "duration_s": 1304.0,
+      "gpu_hours": 2.897777777777778
+    },
+    {
+      "replica": "exp-1025-155441-668927-c81e728d",
+      "duration_s": 1452.0,
+      "gpu_hours": 3.2266666666666666
+    },
+    {
+      "replica": "exp-1025-155441-668927-cfcd2084",
+      "duration_s": 1473.0,
+      "gpu_hours": 3.2733333333333334
+    },
+    {
+      "replica": "exp-1025-155441-668927-e4da3b7f",
+      "duration_s": 1316.0,
+      "gpu_hours": 2.9244444444444446
+    },
+    {
+      "replica": "exp-1025-155441-668927-eccbc87e",
+      "duration_s": 1323.0,
+      "gpu_hours": 2.94
+    }
+  ],
+  "aggregate_container_seconds": 10945.0,
+  "container_gpu_hours": 24.322222222222223,
+  "mean_container_s": 1368.125,
+  "native_campaign_from_first_warmup_to_last_token_s": 644.8770877560601,
+  "job_timeout_s": 3600,
+  "replay_timeout_s": 1800,
+  "timeout_gpu_hours": 64.0,
+  "startup_timeout_s": 1800,
+  "idle_timeout_s": 180,
+  "pair_warmup_added_requests": 0,
+  "pair_warmup_added_arrival_span_s": 0,
+  "targeted_warmup_duration_change": "NOT_MEASURED; native runtime varies; only pair targets change"
+}

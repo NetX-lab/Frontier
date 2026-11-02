@@ -1,0 +1,89 @@
+{
+  "status": "PASS_EXACT",
+  "soft_gate": true,
+  "r4": "PASS",
+  "readings": [
+    {
+      "kind": "warm",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/readings/p2_64_warm_reading.json",
+      "source_sha256": "6d11142e8e1ef1966dd99963f9551c97dd7f2d2df9c71ed22ad9daceab9ef5e0",
+      "reproduced": "scratch/control_verified/warm_reading.json",
+      "reproduced_sha256": "d93406ab0357d99a753c01f00f9f662092d815ec4c116b9b07e7c9a0e0397631",
+      "status": "PASS_EXACT"
+    },
+    {
+      "kind": "empty",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/readings/p2_64_empty_reading.json",
+      "source_sha256": "15c1879d85a6d734a28126978df09d49687178a09e10ede7d3b0e60c519def1b",
+      "reproduced": "scratch/control_verified/empty_reading.json",
+      "reproduced_sha256": "06c3e6978d756eba4dfd9552e242a0c1d7b8512db1068e604e8a2c0ef23117f0",
+      "status": "PASS_EXACT"
+    }
+  ],
+  "csv_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv",
+  "csv_sha256": "12307165ba5d1fc4f082900fdae2860d8e8fe89ef549aeea63810ff0dbbe0b06",
+  "csv_rows": [
+    {
+      "repeat": "repeat01",
+      "metric": "ttft_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat01",
+      "metric": "tpot_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat01",
+      "metric": "request_e2e_time_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat01",
+      "metric": "token_throughput_tps",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat02",
+      "metric": "ttft_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat02",
+      "metric": "tpot_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat02",
+      "metric": "request_e2e_time_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat02",
+      "metric": "token_throughput_tps",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat03",
+      "metric": "ttft_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat03",
+      "metric": "tpot_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat03",
+      "metric": "request_e2e_time_ms",
+      "fields": 26
+    },
+    {
+      "repeat": "repeat03",
+      "metric": "token_throughput_tps",
+      "fields": 26
+    }
+  ],
+  "all_request_verdict": "FAIL",
+  "warm_verdict": "PASS"
+}

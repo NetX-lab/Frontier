@@ -1,0 +1,94 @@
+{
+  "status": "SOURCE_AND_RETAINED_RUNTIME_VERIFIED",
+  "native_sources": [
+    {
+      "path": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/cli/serve.py",
+      "sha256": "1becda2116e54732ae3f049d4660088bf8fb103f6dcc13ccb207813c8eab6bf9"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/generate/base/serving.py",
+      "sha256": "09b0237bd37c7dd719ed04e5b447efbb54941e0c19825e62138c8f6db4d3064e"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/entrypoints/openai/completion/serving.py",
+      "sha256": "c4348ccaf254e4a6b729f9c452aa02f899df64a1fb6d3ab7b7dde199f53dff40"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/engine/core_client.py",
+      "sha256": "afb2b627cf9ef861f05b411494156cc6ad5076ea770c6f2a4c8a941ca82103ec"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py",
+      "sha256": "4860f51b6ac3301c243794b7626b5536f6b0ec41204e426ee6b61bc0e1d0bdb7"
+    }
+  ],
+  "runtime_records": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0040.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "be69d34dc097b0ef08355eaa4227bb3ee2193a1db41b4e6a551617b4e2fb8173",
+      "role": "prefill",
+      "lane": 0,
+      "api_process_count_field": 4,
+      "headless": false
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0543.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "2a341c334ad97d5af7f41c93c9ec97800d1111cf612f0e64fe32fda96b7f10f0",
+      "role": "prefill",
+      "lane": 1,
+      "api_process_count_field": 1,
+      "headless": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "e5888a690c52feea19804c57db1855cb4230db226c7a718ef864f4c68bbae9f0",
+      "role": "prefill",
+      "lane": 2,
+      "api_process_count_field": 1,
+      "headless": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0716.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "094f9f7002c1dd6141d5ac27fa843c93e7d1d73d1109f892bbd00a1cb0fac672",
+      "role": "prefill",
+      "lane": 3,
+      "api_process_count_field": 1,
+      "headless": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0722.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "6e6498418043f94c641585da5a828e029e8772eb9ce09f3f80ccf2e49464fca4",
+      "role": "decode",
+      "lane": 0,
+      "api_process_count_field": 4,
+      "headless": false
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0760.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "d8a4725454f4df99d0bca4ac1a99c0843a672cfb43e22290ef3833afc92e0982",
+      "role": "decode",
+      "lane": 1,
+      "api_process_count_field": 1,
+      "headless": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "57e3caa42cc14ea26f57d90e75f5144c6d20528aeccf3606ca8e2103df436963",
+      "role": "decode",
+      "lane": 2,
+      "api_process_count_field": 1,
+      "headless": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/artifacts/nodes/gpu-h200-0968.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "8e46afcae665ca1e151dd9922610bdc547fd4e111c731c3888b541e579902a60",
+      "role": "decode",
+      "lane": 3,
+      "api_process_count_field": 1,
+      "headless": true
+    }
+  ],
+  "routing_state_finding": "Targeted requests skip each API process scan-index advance; 16 total requests do not imply zero modulo4 advances in every one of four clients at the role head. Idle metrics do not reset these indices. Exact formal placements may differ.",
+  "header_honored_on_both_roles": true,
+  "engine_ttl_s": 3600
+}

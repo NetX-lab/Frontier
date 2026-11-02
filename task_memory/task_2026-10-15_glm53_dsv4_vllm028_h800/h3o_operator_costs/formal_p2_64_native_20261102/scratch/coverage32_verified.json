@@ -1,0 +1,1631 @@
+{
+  "status": "NOT_COVERED",
+  "evidence_verified": true,
+  "soft_gate": true,
+  "run": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts",
+  "expected_pairs": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "repetitions": {
+    "repeat01": {
+      "status": "NOT_COVERED",
+      "first_contacts_warmed_before_formal": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "pairs_reached_in_this_warmup": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "missing_warmup_pairs": [],
+      "new_contacts_in_this_warmup": [
+        {
+          "pair": [
+            0,
+            0
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1792942589.8517375,
+            "origin_monotonic": 7617211.69684663,
+            "wall_minus_monotonic_s": 1785325378.1548908,
+            "end_wall": 1792942674.7344327
+          },
+          "remote_engine_id": "e8674cae-bb99-46ab-b298-aaf2848715a8_dp0"
+        },
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1792942589.8517375,
+            "origin_monotonic": 7617211.69684663,
+            "wall_minus_monotonic_s": 1785325378.1548908,
+            "end_wall": 1792942674.7344327
+          },
+          "remote_engine_id": "e8674cae-bb99-46ab-b298-aaf2848715a8_dp0"
+        },
+        {
+          "pair": [
+            1,
+            0
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1792942589.8517375,
+            "origin_monotonic": 7617211.69684663,
+            "wall_minus_monotonic_s": 1785325378.1548908,
+            "end_wall": 1792942674.7344327
+          },
+          "remote_engine_id": "fa904f48-3805-4127-9af7-76fb021a3b71_dp1"
+        },
+        {
+          "pair": [
+            1,
+            1
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1792942589.8517375,
+            "origin_monotonic": 7617211.69684663,
+            "wall_minus_monotonic_s": 1785325378.1548908,
+            "end_wall": 1792942674.7344327
+          },
+          "remote_engine_id": "fa904f48-3805-4127-9af7-76fb021a3b71_dp1"
+        }
+      ],
+      "formal_openers": [],
+      "intended_pairs_verified": false,
+      "warmup_requests": [
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat01",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        }
+      ],
+      "formal_requests_untargeted": true,
+      "idle_verified": true
+    },
+    "repeat02": {
+      "status": "NOT_COVERED",
+      "first_contacts_warmed_before_formal": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "pairs_reached_in_this_warmup": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "missing_warmup_pairs": [],
+      "new_contacts_in_this_warmup": [],
+      "formal_openers": [],
+      "intended_pairs_verified": false,
+      "warmup_requests": [
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat02",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        }
+      ],
+      "formal_requests_untargeted": true,
+      "idle_verified": true
+    },
+    "repeat03": {
+      "status": "NOT_COVERED",
+      "first_contacts_warmed_before_formal": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "pairs_reached_in_this_warmup": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "missing_warmup_pairs": [],
+      "new_contacts_in_this_warmup": [],
+      "formal_openers": [],
+      "intended_pairs_verified": false,
+      "warmup_requests": [
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": false
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat03",
+          "intended_pair": null,
+          "proxy_intended_pair": null,
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": false
+        }
+      ],
+      "formal_requests_untargeted": true,
+      "idle_verified": true
+    }
+  },
+  "first_contacts": [
+    {
+      "pair": [
+        0,
+        0
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1792942589.8517375,
+        "origin_monotonic": 7617211.69684663,
+        "wall_minus_monotonic_s": 1785325378.1548908,
+        "end_wall": 1792942674.7344327
+      },
+      "remote_engine_id": "e8674cae-bb99-46ab-b298-aaf2848715a8_dp0"
+    },
+    {
+      "pair": [
+        0,
+        1
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1792942589.8517375,
+        "origin_monotonic": 7617211.69684663,
+        "wall_minus_monotonic_s": 1785325378.1548908,
+        "end_wall": 1792942674.7344327
+      },
+      "remote_engine_id": "e8674cae-bb99-46ab-b298-aaf2848715a8_dp0"
+    },
+    {
+      "pair": [
+        1,
+        0
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1792942589.8517375,
+        "origin_monotonic": 7617211.69684663,
+        "wall_minus_monotonic_s": 1785325378.1548908,
+        "end_wall": 1792942674.7344327
+      },
+      "remote_engine_id": "fa904f48-3805-4127-9af7-76fb021a3b71_dp1"
+    },
+    {
+      "pair": [
+        1,
+        1
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1792942589.8517375,
+        "origin_monotonic": 7617211.69684663,
+        "wall_minus_monotonic_s": 1785325378.1548908,
+        "end_wall": 1792942674.7344327
+      },
+      "remote_engine_id": "fa904f48-3805-4127-9af7-76fb021a3b71_dp1"
+    }
+  ],
+  "idle": {
+    "verified": true,
+    "evidence": "7 boundaries; both roles, all 2 DP lanes and fresh phase completion counts",
+    "boundaries": [
+      {
+        "boundary": "before_repeat01_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat01_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat01_formal",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat02_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat02_formal",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat03_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat03_formal",
+        "verified": true
+      }
+    ]
+  },
+  "cohorts": [
+    {
+      "decode_lane": 0,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 681,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 682,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 685,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 683,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 691,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 688,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 684,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 694,
+          "local_stamp": "10-25 15:37:31",
+          "utc_second": 1792942651.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r001-repeat01"
+      ],
+      "binding": "UNIQUE_MATCHING",
+      "bound_request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01"
+    },
+    {
+      "decode_lane": 0,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 722,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 716,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 718,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 714,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 725,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 724,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 712,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "line": 720,
+          "local_stamp": "10-25 15:37:34",
+          "utc_second": 1792942654.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r006-repeat01"
+      ],
+      "binding": "UNIQUE_MATCHING",
+      "bound_request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01"
+    },
+    {
+      "decode_lane": 1,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 359,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 369,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 364,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 365,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 358,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 366,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 361,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 360,
+          "local_stamp": "10-25 15:37:00",
+          "utc_second": 1792942620.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r000-repeat01"
+      ],
+      "binding": "UNIQUE_MATCHING",
+      "bound_request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01"
+    },
+    {
+      "decode_lane": 1,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 387,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 385,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 389,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 375,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 382,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 378,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 381,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+          "line": 376,
+          "local_stamp": "10-25 15:37:32",
+          "utc_second": 1792942652.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r005-repeat01"
+      ],
+      "binding": "UNIQUE_MATCHING",
+      "bound_request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01"
+    }
+  ],
+  "event_derivation": {
+    "run": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts",
+    "mode": "clean",
+    "native_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+    "clock": {
+      "server_local_to_utc_offset_s": 0,
+      "resolution_s": 1,
+      "anchors": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/server_ready.json",
+          "ready_at_utc": "2026-10-25T15:36:08.028247+00:00",
+          "log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/server.log",
+          "starts": [
+            {
+              "line": 589,
+              "local_stamp": "10-25 15:36:06",
+              "utc_second": 1792942566.0
+            },
+            {
+              "line": 639,
+              "local_stamp": "10-25 15:36:06",
+              "utc_second": 1792942566.0
+            }
+          ],
+          "ready_minus_last_start_second_s": 2.028247117996216
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server_ready.json",
+          "ready_at_utc": "2026-10-25T15:36:16.934376+00:00",
+          "log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+          "starts": [
+            {
+              "line": 605,
+              "local_stamp": "10-25 15:36:16",
+              "utc_second": 1792942576.0
+            },
+            {
+              "line": 637,
+              "local_stamp": "10-25 15:36:16",
+              "utc_second": 1792942576.0
+            }
+          ],
+          "ready_minus_last_start_second_s": 0.9343760013580322
+        }
+      ],
+      "client_proxy_wall_minus_monotonic_range_s": [
+        1785325378.1548882,
+        1785325378.1548913
+      ],
+      "rule": "UTC civil seconds established by server start/readiness anchors; client/proxy phase epoch anchors map monotonic seconds."
+    },
+    "windows": [
+      {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1792942589.8517375,
+        "origin_monotonic": 7617211.69684663,
+        "wall_minus_monotonic_s": 1785325378.1548908,
+        "end_wall": 1792942674.7344327
+      },
+      {
+        "repeat": 1,
+        "phase": "formal",
+        "origin_wall": 1792942676.214844,
+        "origin_monotonic": 7617298.059952839,
+        "wall_minus_monotonic_s": 1785325378.1548913,
+        "end_wall": 1792942823.3894987
+      },
+      {
+        "repeat": 2,
+        "phase": "warmup",
+        "origin_wall": 1792942824.7275913,
+        "origin_monotonic": 7617446.572700392,
+        "wall_minus_monotonic_s": 1785325378.1548908,
+        "end_wall": 1792942859.882592
+      },
+      {
+        "repeat": 2,
+        "phase": "formal",
+        "origin_wall": 1792942861.3731322,
+        "origin_monotonic": 7617483.218241306,
+        "wall_minus_monotonic_s": 1785325378.154891,
+        "end_wall": 1792943008.6122425
+      },
+      {
+        "repeat": 3,
+        "phase": "warmup",
+        "origin_wall": 1792943009.9048436,
+        "origin_monotonic": 7617631.749952682,
+        "wall_minus_monotonic_s": 1785325378.1548908,
+        "end_wall": 1792943045.101611
+      },
+      {
+        "repeat": 3,
+        "phase": "formal",
+        "origin_wall": 1792943046.6129248,
+        "origin_monotonic": 7617668.458033645,
+        "wall_minus_monotonic_s": 1785325378.1548913,
+        "end_wall": 1792943193.91523
+      }
+    ],
+    "events": [
+      {
+        "decode_lane": 0,
+        "ordinal_per_tp": 0,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-10-25T15:37:31+00:00",
+          "2026-10-25T15:37:32+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 681,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 682,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 685,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 683,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 691,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 688,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 684,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 694,
+            "local_stamp": "10-25 15:37:31",
+            "utc_second": 1792942651.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r003-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 0,
+        "ordinal_per_tp": 1,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-10-25T15:37:34+00:00",
+          "2026-10-25T15:37:35+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 722,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 716,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 718,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 714,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 725,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 724,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 712,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+            "line": 720,
+            "local_stamp": "10-25 15:37:34",
+            "utc_second": 1792942654.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r014-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 1,
+        "ordinal_per_tp": 0,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-10-25T15:37:00+00:00",
+          "2026-10-25T15:37:01+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 359,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 369,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 364,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 365,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 358,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 366,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 361,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 360,
+            "local_stamp": "10-25 15:37:00",
+            "utc_second": 1792942620.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r000-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 1,
+        "ordinal_per_tp": 1,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-10-25T15:37:32+00:00",
+          "2026-10-25T15:37:33+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 387,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 385,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 389,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 375,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 382,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 378,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 381,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+            "line": 376,
+            "local_stamp": "10-25 15:37:32",
+            "utc_second": 1792942652.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r012-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      }
+    ],
+    "first_contact_pairs": [
+      {
+        "remote_engine_id": "e8674cae-bb99-46ab-b298-aaf2848715a8_dp0",
+        "decode_lane": 0,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01"
+      },
+      {
+        "remote_engine_id": "e8674cae-bb99-46ab-b298-aaf2848715a8_dp0",
+        "decode_lane": 1,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01"
+      },
+      {
+        "remote_engine_id": "fa904f48-3805-4127-9af7-76fb021a3b71_dp1",
+        "decode_lane": 0,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01"
+      },
+      {
+        "remote_engine_id": "fa904f48-3805-4127-9af7-76fb021a3b71_dp1",
+        "decode_lane": 1,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01"
+      }
+    ],
+    "formal_openers": [],
+    "validation": {
+      "status": "NOT_APPLICABLE_CLEAN_NO_LIFECYCLE"
+    },
+    "counts": {
+      "handshake_log_lines": 32,
+      "events": 4,
+      "warmup_events": 4,
+      "formal_events": 0
+    },
+    "sources": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/server.log",
+        "sha256": "46884a97a30dd4bf59c353f9f9120e5a294343d352e1544d2837aee4e86e177a"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/server_ready.json",
+        "sha256": "52ef9846bda5d9e3f73ee905e2372452f15f290670a04cf6a014e703009134ec"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "804c5a1114d3d543af501f58095b8a476cd9918e83c2e2014b06c032e2a82316"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0146.lgcm.sh.istep.fun/server.log",
+        "sha256": "fc57e79fad19ad4097fa23df3b23faf3912b1f5c563ac86925d94b8a3ccc39a3"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "b3f32a55b0d4fb4bb0cfa96c478a12625f18878065a405f9b7cdcd55515988d0"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+        "sha256": "cbac6386abe9fbcd354d490a280d3ca140ed1d122980394d6e172bc9b5c8943a"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server_ready.json",
+        "sha256": "b060eb9247f779e36d2daa772120af3a193dc3dc557c074b3f5ea0da4894882c"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "d993d21a65538875e690b6c50d1ddb62e2092f8845482323c98401fa2c078a34"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+        "sha256": "aa7f73c87bb7d8e03256563be0de45e73a0c486ec31e41cb335300558ea13308"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "150580ec67d77619dd351835332d2a744f60552f6e858128e950b9d77c54a9d0"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run/canonical_repetitions.json",
+        "sha256": "d72c7c27cd1cd2ed5ccac364f9946265eb485d731d13f03b8a766708f1b88aa6"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run/client_requests.jsonl",
+        "sha256": "6ce1cbc2f552389085059f292591463a0d1384ffd4b09d26e1562b6aff497be3"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run/proxy_requests.jsonl",
+        "sha256": "4d715d7bc848d46e1258956145e69caf4e1fb28d3145bfdf9c8850cce0bf5115"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run_manifest.json",
+        "sha256": "d447e75be5cef3f56858b203854ed52c3043beebbb618fa22e3d0707ab87bbbd"
+      }
+    ]
+  },
+  "openers": {
+    "vllm/dsv4-h200-p2-canonical-20261025-01-repeat01": [],
+    "vllm/dsv4-h200-p2-canonical-20261025-01-repeat02": [],
+    "vllm/dsv4-h200-p2-canonical-20261025-01-repeat03": []
+  },
+  "limitations": [
+    "Compatibility logs have one-second resolution; ambiguous warmup events retain candidates.",
+    "Later repetitions reuse warmed connections; no new handshake is required in each repeat.",
+    "Legacy untargeted controls cannot prove intended-pair matching."
+  ],
+  "sources": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/server.log",
+      "sha256": "46884a97a30dd4bf59c353f9f9120e5a294343d352e1544d2837aee4e86e177a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/server_ready.json",
+      "sha256": "52ef9846bda5d9e3f73ee905e2372452f15f290670a04cf6a014e703009134ec"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "804c5a1114d3d543af501f58095b8a476cd9918e83c2e2014b06c032e2a82316"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0146.lgcm.sh.istep.fun/server.log",
+      "sha256": "fc57e79fad19ad4097fa23df3b23faf3912b1f5c563ac86925d94b8a3ccc39a3"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "b3f32a55b0d4fb4bb0cfa96c478a12625f18878065a405f9b7cdcd55515988d0"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+      "sha256": "cbac6386abe9fbcd354d490a280d3ca140ed1d122980394d6e172bc9b5c8943a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server_ready.json",
+      "sha256": "b060eb9247f779e36d2daa772120af3a193dc3dc557c074b3f5ea0da4894882c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "d993d21a65538875e690b6c50d1ddb62e2092f8845482323c98401fa2c078a34"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+      "sha256": "aa7f73c87bb7d8e03256563be0de45e73a0c486ec31e41cb335300558ea13308"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "150580ec67d77619dd351835332d2a744f60552f6e858128e950b9d77c54a9d0"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run/canonical_repetitions.json",
+      "sha256": "d72c7c27cd1cd2ed5ccac364f9946265eb485d731d13f03b8a766708f1b88aa6"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run/client_requests.jsonl",
+      "sha256": "6ce1cbc2f552389085059f292591463a0d1384ffd4b09d26e1562b6aff497be3"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run/proxy_requests.jsonl",
+      "sha256": "4d715d7bc848d46e1258956145e69caf4e1fb28d3145bfdf9c8850cce0bf5115"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/run_manifest.json",
+      "sha256": "d447e75be5cef3f56858b203854ed52c3043beebbb618fa22e3d0707ab87bbbd"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/identify_openers.py",
+      "sha256": "32a2ec4b58832313291c6b3d2e768a670ac2aa649132b8c2dd92492ffd1999de"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/coverage.py",
+      "sha256": "04ea0165364b791a80d372f37e6a57601e0d379c843bb7fb9fe3dffec8b58338"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "804c5a1114d3d543af501f58095b8a476cd9918e83c2e2014b06c032e2a82316"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "b3f32a55b0d4fb4bb0cfa96c478a12625f18878065a405f9b7cdcd55515988d0"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "d993d21a65538875e690b6c50d1ddb62e2092f8845482323c98401fa2c078a34"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "150580ec67d77619dd351835332d2a744f60552f6e858128e950b9d77c54a9d0"
+    }
+  ]
+}

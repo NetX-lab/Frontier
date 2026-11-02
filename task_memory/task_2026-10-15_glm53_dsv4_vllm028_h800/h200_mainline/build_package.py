@@ -13,7 +13,9 @@ The package directory must not exist yet.
 import argparse
 import ast
 import difflib
+from datetime import datetime, timezone
 import hashlib
+import importlib
 import json
 import runpy
 import shutil
@@ -39,6 +41,8 @@ SOURCES = {
                       harness='v4-balanced-native-model', harness_commit='b62c155abd981a71e12e62aa0c0fe3990741d2f8'),
     'profile': dict(package='v4_p0_native_20261021/candidate_h800_p0_profile_02', built_in='v4-native-profile-run',
                     harness='v4-native-profile-run', harness_commit='a90c9dbbee53e2cabbfac73ba8490ffb958ce8eb'),
+    'formal': dict(package='h200_mainline/p2_64_reference/package_01', built_in='glm53-dsv4-vllm028',
+                   harness='p2-64-pair-warmup', harness_commit=None),
     'wave': dict(package='h200_mainline/p2_64_lifecycle/package_01', built_in='glm53-dsv4-vllm028',
                  harness='p2-64-wave-harness', harness_commit=None),
     # H4b-(a): native06 plus the engine-core scheduler lifecycle observer.
@@ -47,6 +51,11 @@ SOURCES = {
 }
 # h200_limit: the session's non-preemptible H200 limit, running plus queued, when the case was built.
 CASES = {
+    'p2_64_formal': dict(source='formal', dp=4, h200_limit=32,
+                         case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
+                         run_tag='dsv4-h200-p2-64-formal-20261102-01',
+                         purpose='Formal P2 H200-64 native reference under D-P2-64-FORMAL-B; '
+                                 'pair-warmed, wholly preemptible; issued 30% receipt precedes build'),
     'p2_64_wave': dict(source='wave', dp=4, h200_limit=64, case_id='dsv4-h200-p2-64-wave-fixed128-qps1',
                        run_tag='dsv4-h200-p2-64-wave-20261030-01',
                        purpose='DIAGNOSTIC P2-64 native DP wave restart under D-P2-64-WAVE-DIAGNOSTIC; '
@@ -94,6 +103,7 @@ class Case:
         case = CASES[name]
         source = SOURCES[case['source']]
         self.wave = case['source'] == 'wave'
+        self.formal = case['source'] == 'formal'
         self.name, self.profile, self.dp, self.h200_limit = name, case['source'] == 'profile', case['dp'], case['h200_limit']
         self.replicas = 2 * self.dp
         self.case_id, self.run_tag, self.purpose = case['case_id'], case['run_tag'], case['purpose']
@@ -108,9 +118,9 @@ class Case:
              "('H800', 'codesign', 8, 4)",
              "assert (config['gpu_type'], config['charged_group'], config['gpu'], config['replica']) == "
              f"('{HARDWARE['gpu_type']}', '{HARDWARE['charged_group']}', 8, {self.replicas})", 1)]
-        if self.wave:
+        if self.wave or self.formal:
             self.launch_lines = []
-        if self.dp != 2 and not self.wave:
+        if self.dp != 2 and not (self.wave or self.formal):
             self.launch_lines.append(("assert config['engine']['data_parallel_size'] == 2",
                                       f"assert config['engine']['data_parallel_size'] == {self.dp}", 1))
 
@@ -209,6 +219,8 @@ def copy_source(case):
 
 
 def build(case):
+    if case.formal:
+        return build_formal(case)
     if case.wave:
         return build_wave(case)
     copy_source(case)
@@ -269,6 +281,8 @@ def build(case):
 
 def compare(case, config, changed_retained):
     """Fail unless the package differs from its source only by the listed changes."""
+    if case.formal:
+        return compare_formal(case, config)
     if case.wave:
         return compare_wave(case, config)
     import yaml
@@ -333,6 +347,135 @@ def compare(case, config, changed_retained):
             report[relative] = diff
         elif old != new:
             raise ValueError(f'Unexpected byte change: {relative}')
+    return report
+
+
+# D-P2-64-FORMAL-B keeps the retained engine, workload and observers intact.
+FORMAL_MODULES = ('tests/comparison/calibration/native_pd_worker.py',
+                  'tests/comparison/calibration/pd_replay.py',
+                  'tests/comparison/calibration/pd_proxy.py',
+                  'tests/comparison/dp_placement_pp/vllm_replay.py')
+PROMOTION_PATH = HERE.parent / 'h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json'
+PROMOTION_SHA256 = 'd505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596'
+FORMAL_LAUNCH_INSERT = "from native_pd_worker import validate_promotion_receipt\nvalidate_promotion_receipt(config)\n"
+PREEMPTIBLE_LINE = '        replica=config["replica"], image=config["image"], positive_tags=[config["gpu_type"]],'
+
+
+def formal_harness_differences(case):
+    config = json.loads((case.source / 'config.json').read_text())
+    return [name for name, target in config['harness_files'].items()
+            if name not in FORMAL_MODULES
+            and sha256(case.harness / name) != sha256(case.source / target)]
+
+
+def formal_documents(case):
+    """Construct the exact allowed target; comparison rederives it from source."""
+    from importlib.util import module_from_spec, spec_from_file_location
+    spec = spec_from_file_location('formal_receipt_validator', case.harness / FORMAL_MODULES[0])
+    worker = module_from_spec(spec)
+    spec.loader.exec_module(worker)
+    binding = dict(path=str(PROMOTION_PATH), sha256=PROMOTION_SHA256, build_utc=case.build_utc)
+    worker.validate_promotion_receipt(dict(promotion_receipt=binding))
+    if formal_harness_differences(case):
+        raise ValueError('Unapproved retained harness changes: ' + str(formal_harness_differences(case)))
+    files = {name: path.read_bytes() for name, path in source_files(case).items()}
+    config = relocate(case, json.loads(files['config.json']))
+    config.update(run_tag=case.run_tag, job_tag=case.run_tag, output_dir=case.output_dir,
+                  harness_worktree=str(case.harness), pair_warmup=True, preemptible=True,
+                  promotion_receipt=binding)
+    lock = relocate(case, json.loads(files['source_lock.json']))
+    lock['harness_commit'] = case.harness_commit
+    # Rebind unchanged staged modules to the same new reviewed commit too.
+    for name, target in config['harness_files'].items():
+        if name in FORMAL_MODULES:
+            files[target] = (case.harness / name).read_bytes()
+        lock['committed_files'][target] = dict(commit=case.harness_commit, path=name,
+                                              sha256=hashlib.sha256(files[target]).hexdigest())
+    launch = files['launch.py'].decode()
+    marker = "if sys.argv[1:] == ['--check-only']:"
+    if launch.count(marker) != 1:
+        raise ValueError('Non-unique launch receipt validation boundary')
+    files['launch.py'] = launch.replace(marker, FORMAL_LAUNCH_INSERT + marker).encode()
+    submit = files['submit_native_diagnostic.py'].decode()
+    if submit.splitlines().count(PREEMPTIBLE_LINE) != 1:
+        raise ValueError('Non-unique ResourceConfig preemptible boundary')
+    files['submit_native_diagnostic.py'] = submit.replace(
+        PREEMPTIBLE_LINE, PREEMPTIBLE_LINE + '\n        preemptible=config.get("preemptible", False),').encode()
+    overlay = relocate(case, json.loads(files['overlay.json']))
+    files['overlay.json'] = dumps(overlay).encode()
+    lock['runtime_overlay'] = overlay
+    changed = []
+    for name, old_digest in config['retained_files'].items():
+        digest = hashlib.sha256(files[name]).hexdigest()
+        if digest != old_digest:
+            changed.append(name)
+            config['retained_files'][name] = digest
+            if name in lock['retained_files']:
+                entry = lock['retained_files'][name]
+                entry.update(sha256=digest, source=str(case.source / name),
+                             source_sha256=old_digest, changed=True)
+                if 'staged_sha256' in entry:
+                    entry['staged_sha256'] = digest
+    # Paths have been relocated; derive hashes from the candidate bytes rather
+    # than reading a partially built package.
+    for path in config['tool_hashes']:
+        relative = Path(path).relative_to(case.target).as_posix()
+        config['tool_hashes'][path] = hashlib.sha256(files[relative]).hexdigest()
+    for name in CONFIGS:
+        files[name] = dumps(config).encode()
+    files['source_lock.json'] = dumps(lock).encode()
+    readiness = json.loads(files['evidence_readiness.json'])
+    readiness.update(purpose=case.purpose, target='H200/step_main64 preemptible; P32+D32 TP8/DP4/EP32/PP1')
+    readiness['cost'].update(preemptible=True, H200_nonpreemptible_running_plus_queued_limit=32,
+                            requested_gpus=64, timeout_gpu_hours=64.0,
+                            estimated_container_gpu_hours=24.322222222222223)
+    files['evidence_readiness.json'] = dumps(readiness).encode()
+    manifest = files['case/manifest.yaml'].decode()
+    purpose = next(line for line in manifest.splitlines() if line.startswith('purpose: '))
+    generation = next(line for line in manifest.splitlines() if line.startswith('run_generation: '))
+    files['case/manifest.yaml'] = replace_lines(manifest, [
+        (purpose, 'purpose: ' + case.purpose, 1),
+        (generation, f"run_generation: v4-native-v028-{case.run_tag.removeprefix('dsv4-')}", 1),
+        ('  preemptible: false', '  preemptible: true', 1),
+        ('  H200_nonpreemptible_running_plus_queued_limit: 64',
+         '  H200_nonpreemptible_running_plus_queued_limit: 32', 1),
+        ('  sha256: ' + json.loads((case.source / 'config.json').read_text())['retained_files']['overlay.json'],
+         '  sha256: ' + config['retained_files']['overlay.json'], 1),
+    ]).encode()
+    return files, config, changed
+
+
+def build_formal(case):
+    case.build_utc = datetime.now(timezone.utc).isoformat()
+    files, config, changed = formal_documents(case)  # receipt check precedes mkdir
+    case.target.mkdir(parents=True, exist_ok=False)
+    for name, content in files.items():
+        destination = case.target / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(content)
+    # Loading the worker above searched sys.path before the package root
+    # existed, which cached that root as having no importer.
+    importlib.invalidate_caches()
+    return config, changed
+
+
+def compare_formal(case, config):
+    """Fail on any byte beyond the declared transformations/restaged harness."""
+    expected, expected_config, _ = formal_documents(case)
+    actual = {p.relative_to(case.target).as_posix(): p for p in case.target.rglob('*') if p.is_file()}
+    if actual.keys() != expected.keys() or config != expected_config:
+        raise ValueError('Unexpected formal package file set or config')
+    report = {}
+    for name, content in expected.items():
+        if actual[name].read_bytes() != content:
+            raise ValueError(f'Unexpected formal package bytes: {name}')
+        original = (case.source / name).read_bytes()
+        if original != content:
+            if name.endswith('.json'):
+                paths = leaf_differences(relocate(case, json.loads(original)), json.loads(content))
+                report[name] = ['.'.join(path) for path in paths]
+            else:
+                report[name] = list(difflib.unified_diff(original.decode().splitlines(), content.decode().splitlines(), n=0))
     return report
 
 
@@ -553,7 +696,7 @@ def frontier_reconstruction(case, config):
 
 def launch_path(case, config):
     """Plan every host and build its server command, as the worker does, for placeholder addresses."""
-    sys.path[:0] = [config['harness_dir'], str(Path(config['harness_dir']).parent / 'dp_placement_pp')]
+    sys.path[:0] = [str(case.target), config['harness_dir'], str(Path(config['harness_dir']).parent / 'dp_placement_pp')]
     from native_pd_worker import node_plan
     from pd_replay import kv_transfer_config
     from vllm_replay import server_command
@@ -593,11 +736,11 @@ def main():
     parser.add_argument('case', choices=sorted(CASES))
     parser.add_argument('--package', help='New directory name; default package_02 for wave, package_01 otherwise')
     parser.add_argument('--harness', type=Path, help='Clean harness containing the retained source files plus the observer changes')
-    parser.add_argument('--dry-check', type=Path, help='Wave only: scratch package comparison and offline launch plan; no sealing/preflight/commit required')
+    parser.add_argument('--dry-check', type=Path, help='Wave/formal: scratch package comparison and offline launch plan; no sealing/preflight/commit required')
     arguments = parser.parse_args()
     package = arguments.package or ('package_02' if arguments.case == 'p2_64_wave' else 'package_01')
     case = Case(arguments.case, package)
-    if case.wave:
+    if case.wave or case.formal:
         if arguments.harness:
             case.harness = arguments.harness.resolve()
         case.harness_commit = git(case.harness, 'rev-parse', 'HEAD').strip()
@@ -607,15 +750,16 @@ def main():
             report = compare(case, config, changed)
             plans = launch_path(case, config)
             result = dict(status='DRY_CHECK_PASS', changes=report, launch_path=plans,
-                          harness_prerequisites=wave_harness_differences(case),
+                          harness_prerequisites=(formal_harness_differences(case) if case.formal else wave_harness_differences(case)),
+                          receipt_checks=('PASS' if case.formal else 'NOT_APPLICABLE'),
                           not_run=['seal', 'run_manifest_preflight', 'R3_reconstruction', 'launch_check_only'])
             print(json.dumps(result, indent=2))
             return
-        differences = wave_harness_differences(case)
+        differences = formal_harness_differences(case) if case.formal else wave_harness_differences(case)
         if differences:
             raise ValueError(f'Retained harness differs from the lifecycle package: {differences}; prepare a clean composed harness commit with the source drivers and inventory plus the worker bootstrap')
     elif arguments.harness or arguments.dry_check:
-        raise ValueError('--harness and --dry-check apply only to p2_64_wave')
+        raise ValueError('--harness and --dry-check apply only to p2_64_wave and p2_64_formal')
     if git(case.harness, 'status', '--short', '--untracked-files=all').strip():
         raise ValueError(f'The harness worktree {case.harness} is not clean')
     if git(case.harness, 'rev-parse', 'HEAD').strip() != case.harness_commit:
