@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Archived completed promotion/Q5/single submission, complete prior GPU-hours and the current co-scheduling blocker; post-run and final case acceptance remain open. |
 | 2026-11-02 | Formal P2 assessed: replays with the H200 NIXL pair identical to two-fix apart from the pair; P2-32 formal PASS; P2-64 BLOCKED_ON_DECISION on the pre-launch promotion receipt (options A/B to YC). |
 | 2026-11-02 | YC chose payload route C (D-P2-PAYLOAD-C); Q3 accepted: the native per-pair READ bound equals the priced 46,103,040 B, and every check passes, so the payload edge is QUALIFIED (source-derived, metric-invariant). |
 | 2026-11-01 | nixl6144 complete (0.346 container GPUh) and Q2 adopted: the H200 affine NIXL pair is the formal P2 timing input at the measured coordinate (D-P2-Q2-NIXL-TIMING); P2 outputs unchanged by the event proof; payload route waits for YC with a new invariance option. |
@@ -102,9 +103,9 @@
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
 
-## Current state — Codex CLI continuation (2026-11-01)
+## Current state — Codex CLI continuation (2026-11-02)
 
-The task remains in progress. The active route is DSV4 H200 P2-32/P2-64, followed by H800; GLM remains paused. Codex uses the local personal StepMind Python RJobBackend directly under D-CODEX-DIRECT-RJOB. This comparison closeout used CPU checks only.
+The task remains in progress. P2-32 is formally accepted. Under D-P2-64-FORMAL-B the lead issued the promotion receipt, accepted and built Q5, and submitted exactly one new wholly preemptible 64-H200 native job through `/ds4-exec`: `exp-1102-164536-160317` at 2026-11-02T08:45:36Z. At 10:29:23Z its eight replicas were still unassigned and the scheduler rejected the co-scheduling group; no containers had started. The existing launcher remains alive. Native execution and post-run acceptance are unfinished. H800 follows a concrete package/resource approval; GLM remains paused.
 
 Decision 46's ingress option A is implemented at `a69a5213`: driver inputs 10.3 ms ingress and 11.4 ms handoff, with zero code defaults. D-WARM-TARGET now makes the event-defined warmed serving path the comparison target. Six paired B29/pass1/pass2 readings at P2-32/P2-64 PASS all 96 warm metrics across all repeats and pooled values. Original all-request P2-64 repeat01 TTFT FAILs are preserved beside them. Measured CC, K19, tables, reference bytes and all input-qualification requirements remain unchanged; numerical warm PASS is not formal acceptance.
 
@@ -144,7 +145,7 @@ Authority: requirements D-P2-INPUT-QUALIFICATION, D-P2-Q1-CHOICES, D-P2-Q2-NIXL-
 4. H200 NIXL timing adopted (D-P2-Q2-NIXL-TIMING; Codex `8ce5ed55`, [Q2 evidence](h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/report.md), [lead review](test_report_2026-11-01_q2_h200_nixl_timing.md)): `analytical_kv_cache_transfer_config_network_bandwidth_gbps = 390.39349928254796`, `analytical_kv_cache_transfer_config_network_latency_ms = 0.0236521842818856`, 0.968 ms per READ. Fit on all 90 case/pass medians with a positive intercept; qualified only at the coordinate the P2 replays use (one transfer at a time per decode pod, eight pairs), where every held-out pass meets per-trial median 5% / p90 10% (p90 at most 2.464%). The P2 outputs equal the two-fix outputs: inside every transfer window the next decode step start is at least 18.72 / 24.38 ms after any possible posting step, longer than every price and observed trial at the coordinate (2,034 checks, zero crossings). Other bytes or concurrency are not qualified.
 5. Native payload QUALIFIED under YC's route C (D-P2-PAYLOAD-C; Codex `bd667bb6`, [Q3 evidence](h3o_operator_costs/input_qualification_20261101/payload_q3/report.md), [lead review](test_report_2026-11-02_q3_payload_bound.md)). From the native source rules, one READ on one TP rank pair moves at most 46 pages x 1,002,240 B = 46,103,040 B, the payload Frontier already prices. At 0.968 ms it stays below every decode-step gap (at least 18.72 / 24.38 ms); the measured maximum at that size is 12.55 ms. Wire bytes reach only the transfer time. Provenance: source-derived, metric-invariant, not observed; P2-32/P2-64 on H200 only. No replay.
 
-### Formal P2 assessment — 2026-11-02
+### Retained-reference formal P2 assessment — 2026-11-02
 
 Report: [formal P2 test report](test_report_2026-11-02_formal_p2_assessment.md). Evidence: `h3o_operator_costs/formal_p2_20261102/` (runner `run_formal_replay.py` at `abd1e141`, command records, `readings/`, Codex `75ccdbe8` deliverables in `assessment/`, lead checks in `lead_review/`).
 
@@ -158,8 +159,9 @@ Report: [formal P2 test report](test_report_2026-11-02_formal_p2_assessment.md).
 | P2-32 (P16+D16, TP8/DP2/EP16) | TTFT repeat03: 365.366 vs 344.879 ms, 5.607176% | **PASS** | none |
 | P2-64 (P32+D32, TP8/DP4/EP32) | TTFT repeat02: 725.492 vs 684.314 ms, 5.675933% | **BLOCKED_ON_DECISION** | reference `exp-1025-155441-668927` was launched 2026-10-25T15:54:41Z, before any 30% promotion receipt could exist |
 
-5. P2-64 options to YC: A, exception for the existing reference (0 GPUh); B, issue the P2-32 receipt (30% predicate true, maximum 5.607176%), add a warmup that opens all 16 P x D lane pairs (D-WARM-TARGET rule for future native runs), then a new 64-H200 preemptible campaign of about 24.3 container GPUh. Lead recommends B.
-6. GPU-hours: 35 H200 jobs; 141.41 container GPUh witnessed plus 19 jobs with incomplete clocks; actual total unknown (INSUFFICIENT_EVIDENCE).
+5. YC chose option B (D-P2-64-FORMAL-B). The new receipt was issued at 07:38:49Z (`1a7950ed`); it does not retroactively cover the old reference above. Q5 (`0ee7f6c2`) built `h200_mainline/p2_64_formal/package_02` at 08:42:19Z with harness `4861e680`, and check-only passed. The job was submitted at 08:45:36Z: 8 x 8 H200, `step_main`, preemptible `yes`, timeout 3,600 s, ceiling 64 GPUh, expected about 24.3 container GPUh. Each repeat has 16 pair-targeted warmups and 128 native-routed formal requests. Post-run coverage, R4 and the unchanged formal replay comparison are pending.
+6. GPU-hours: all 19 missing clocks recovered read-only (`2bdf9fed`); 35 prior terminal jobs total 158.271667 container GPUh (P2 H200 151.86, earlier shared prerequisites 6.41). Initialization, compilation, warmup and failures are included; queuing and pre-container image pulling are excluded. New formal job usage awaits its actual container clocks; no ceiling or wall-clock queue wait is counted as usage.
+7. Current startup evidence and verification: [test_report_2026-11-02_p2_64_startup.md](test_report_2026-11-02_p2_64_startup.md), `h200_mainline/p2_64_formal/startup_20261102/report.json`, and [phase checkpoint](check_progress_2026-11-02_p2_64_formal.md). The accepted harness port to the final branch is in progress; the frozen standalone harness/package stay unchanged for this run.
 
 ### Two-fix continuation — 2026-11-01
 

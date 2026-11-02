@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Recorded the current-branch continuation and reconciled the Q5 handoff with the already submitted formal P2-64 job; existing authority and limits unchanged. |
 | 2026-11-02 | YC chose option B for P2-64 (D-P2-64-FORMAL-B): receipt first, then a new pair-warmed, wholly preemptible 64-H200 formal native campaign; resources approved for that campaign only; two `__pycache__` directories deleted. |
 | 2026-11-02 | Recorded the Q3 result under D-P2-PAYLOAD-C: all four checks PASS and the lead accepted; payload edge QUALIFIED (source-derived, metric-invariant). |
 | 2026-11-02 | YC chose payload option C (D-P2-PAYLOAD-C): the source-derived payload is accepted for P2 when a CPU-derived upper bound on native per-request READ bytes still finishes inside every decode-step gap; Codex Q3 derives and checks the bound. |
@@ -153,6 +154,25 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request] 2026-11-02 — continue the current branch after the Q5 handoff
+
+> 继续当前branch的task。以下是最新一次session的feedback（供你参考）：- P2-32 → P2-64 晋级 receipt 已签发，提交 1a7950ed。依据：P2-32 三次重复共 24 个误差全部 ≤ 30%，最大 5.61%。
+> - GPU-hours 已补齐，提交 2bdf9fed：
+>   - Q4 里缺时钟的 19 个 job，已通过 Pi 只读查询平台记录补上，没有任何提交、停止或修改。其中 3 个 job 的 job 对象已被平台清除，时钟取自仍保留的 replica 记录。
+>   - 每个值都按容器起止时间 × GPU 数重新算过，并核对了 creator、step_main 和 GPU 数量，19/19 一致。
+>   - 35 个 job 合计 158.27 container GPU-hours：P2 H200 campaign 151.86，早期共享前置任务 6.41。
+>   - 计量包含初始化、编译、warm-up 和失败的尝试；不含排队时间，也不含容器启动前的镜像拉取（可见的 3 条记录约 153–165 s）。
+>   - ticket 19 的 GPU-hours 勾选项等正式 P2-64 那次运行的用量加进来之后再关闭。
+> - 正式 P2-64 的 package（Codex Q5）仍在运行中，还没有重试。内容是 pair warmup、全部可抢占（preemptible）、绑定 receipt，以及运行后的覆盖检查和对比脚本。
+>
+> 下一步：
+> 1. Codex 完成后，我审查它在 harness worktree 和 build_package.py 的改动，独立重跑检查。
+> 2. 提交 harness，正式 build，并通过 launch.py --check-only。
+> 3. 通过 /ds4-exec 提交 64 张 H200，全部 preemptible，step_main，timeout 3600 s，上限 64 GPU-hours，预计约 24.3。
+> 4. 运行结束后依次做：terminal receipt、复制到本地、pair 覆盖检查、R4、gate 和 warm reading。
+
+Continuation interpretation: retain D-P2-64-FORMAL-B and its resource limits. Actual repository/platform evidence supersedes the handoff's pending-Q5 snapshot: Q5 is committed at `0ee7f6c2`, the independent harness at `4861e680`, and exactly one formal job `exp-1102-164536-160317` was submitted at 2026-11-02T08:45:36Z. Continue that job; no duplicate submission. Consolidate the accepted harness code onto the final task branch while preserving the frozen package/harness identities used by the live run. No new modeling, H800 resource, or GLM authority is added.
 
 ## [Original Request / Decision] 2026-11-01 — Codex continuation of P2 input qualification (D-P2-INPUT-QUALIFICATION)
 

@@ -5,6 +5,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Exact-job startup diagnosis confirms eight unassigned replicas and co-scheduling rejection; current records reconciled and accepted harness integration runs independently. |
+| 2026-11-02 | Formal P2-64 submitted once via Pi `h200-p64-formal-submit-1102a`: job `exp-1102-164536-160317` (08:45:36Z), preemptible `yes`, queue `quotagroup-global-default`, identity checks PASS; Pending. |
 | 2026-11-02 | Q5 reviewed; harness `4861e680`; builder import-cache fix; `p2_64_formal/package_02` built and check-only PASS; [test report](test_report_2026-11-02_p2_64_formal_package.md). |
 | 2026-11-02 | GPU-hours clocks: the 19 UNKNOWN jobs filled from read-only platform clocks (Pi `gpuh-clocks-1102a`); 35 jobs, 158.27 container GPU-hours; `formal_p2_20261102/gpu_hours_clocks/`. |
 | 2026-11-02 | D-P2-64-FORMAL-B: YC chose option B; P2-32 → P2-64 promotion receipt issued (`formal_p2_20261102/promotion/`); cleanup done; Q5 package assignment next. |
@@ -419,7 +421,8 @@ Authority: requirements D-P2-INPUT-QUALIFICATION. Assignment: [Q1](h3o_operator_
   Receipt `formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json` (sha256 `d505eece...f7596`). It unlocks only a new wholly preemptible 64-H200 campaign built and submitted after its `issued_utc`, and excludes `exp-1025-155441-668927`. The Q4 `binding.json` is referenced by path in the draft and pinned by commit `57433735`.
 - completed — GPU-hours clocks for the 19 jobs that Q4 left UNKNOWN. Pi label `gpuh-clocks-1102a` turn 1 (prompt `/data/ycfeng/tmp/ds4_runs/prompts/gpuh-clocks-1102a.md`, read-only mode, exit 0, `[settled] aborted=false`), personal `i-fengyicheng` StepMind client, no platform write. 16 jobs: `h200_mainline/terminal_receipt.py` receipts. 3 jobs (`exp-1028-024316-296035`, `exp-1028-031147-398843`, `exp-1028-132243-707076`): the parent job object is purged (HTTP 404), so the clocks come from their remaining replica objects. The earlier HTTP 403 for `exp-1102-030025-971155` did not recur. Every container is terminated, so every clock is present; no job object retains a `startTime`, so job envelopes are undefined. Pi first hit `brainpp only work in kubebrain environment` until it set the `KUBEBRAIN_CLUSTER_ENTRY`/`KUBEBRAIN_NAMESPACE`/`KUBEBRAIN_WORKSPACE_NAME` markers. Lead check: `gpu_hours_clocks/merge_gpu_hours.py` recomputes each job from container startedAt/finishedAt × GPU limit, matches each receipt, checks creator `i-fengyicheng`, group `step_main`, and replicas × GPUs equal to the Q4 `gpus` column (all 19 PASS), and writes `gpu_hours_complete.{csv,json}` without changing the Q4 table. Result: 19 jobs add 16.861111 GPU-hours; all 35 jobs total **158.271667 container GPU-hours** (151.864444 P2 H200 campaign, 6.407222 earlier shared DSV4 prerequisites). Basis: container start-to-finish, which includes initialization, compilation, warm-up and failed attempts and excludes queue time and pod time before the container starts (image pull; 153–165 s on the three replica-only records, the only ones that show the pod start). The ticket 19 GPU-hours checkbox stays open until the formal P2-64 campaign is added.
 - completed — Q5 (Codex `54cbb041`, implemented) reviewed and accepted with one lead fix. Harness committed `4861e680` in `p2-64-pair-warmup`. Lead decision on the four-API-process scan-index finding: formal routing stays native; accepted (test report, finding 2). First real build failed at preflight (`No module named 'native_pd_worker'`: the worker was loaded before the package root existed, so Python cached the root as having no importer); fix `importlib.invalidate_caches()` in `build_formal`. Rebuilt as `p2_64_formal/package_02` (package_01 is the sealed partial output of the failed attempt, not committed, not to be launched; deletion awaits YC). Build exit 0, check-only PASS, preflight manifest preemptible true and receipt bound; control reproduces the retained readings exactly. [test report](test_report_2026-11-02_p2_64_formal_package.md).
-- in-progress: submit `package_02` through `/ds4-exec` (64 H200, step_main, wholly preemptible).
+- completed: `package_02` submitted once through `/ds4-exec` (Pi label `h200-p64-formal-submit-1102a`, prompt `/data/ycfeng/tmp/ds4_runs/prompts/h200-p64-formal-submit-1102a.md`). Job `exp-1102-164536-160317`, Job Create 2026-11-02T08:45:36Z, launcher PID 3140124 (`launcher_started.json` 08:45:32Z). First status (`/data/ycfeng/tmp/glm53_dsv4/h200/monitor/status_p64f_1.json`): creator `i-fengyicheng`, preemptible `yes`, queue `quotagroup-global-default`, 8 replicas, package_02 mount, pinned image; phase Pending.
+- in-progress: Pi monitors the job to a terminal state (status every 120 s Pending / 180 s Running).
 
 ### Two-fix continuation evidence — 2026-11-01
 
@@ -499,9 +502,25 @@ The following completed A6 history retains its original all-request verdicts. D-
 - **in-progress, resumed same IDs only**: PASS-REPLAY-INPUTS needs the exact retained source-row/raw/config/cache paths; B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) needs phase-level findings. No duplicate agents or completed checks were restarted.
 - **pending**: repeatability producer -> business verification -> complete three-run rows/tables -> four CPU P2 replays and median3 held-out run. Unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched; changes are not yet committed.
 
-## Current session handoff — Codex CLI (2026-10-31)
+## Current session handoff — Codex CLI (2026-11-02)
 
+<a id="current-session-handoff--codex-cli-2026-10-31"></a>
 <a id="current-session-handoff--2026-10-25-mainline-correction"></a>
+
+**State: in-progress.** P2-32 formal PASS; P2-32 → P2-64 receipt issued at 07:38:49Z (`1a7950ed`), Q5 accepted/built at `0ee7f6c2`, independent harness `4861e680`. One formal job `exp-1102-164536-160317` was submitted through Pi at 08:45:36Z on November 2, 2026. Resources: 8 × 8 H200, `step_main`, wholly preemptible (`yes`), timeout 3,600 s, ceiling 64 GPUh. Package `h200_mainline/p2_64_formal/package_02`; launcher PID 3140124. Do not submit that sealed package again.
+
+- completed — read-only exact-job diagnosis through Pi `p64-startup-inspect-1102b`: at 10:29:23Z all eight replicas had `PodScheduled=False/Unschedulable`, no assigned node, start time or container status. Repeated co-scheduling prefilter rejections show `member gap` 8/2/7/8. The specific resource shortfall and start ETA are UNKNOWN; there is no image-pull, mount or worker-init evidence because no container started. Retained report: [startup test report](test_report_2026-11-02_p2_64_startup.md).
+- completed — GPU accounting through the previous 35 terminal jobs: 158.271667 container GPUh (`2bdf9fed`). The new P2-64 job has no terminal usage yet. Keep ticket 19's usage checkbox open until its actual container clocks are included.
+- in-progress — original Pi monitor `h200-p64-formal-submit-1102a`; `/data/ycfeng/tmp/glm53_dsv4/h200/monitor/status_p64f_*.json` must be sorted by numeric suffix or mtime. The monitor has a 150-minute observation limit; if it exits while the job queues, the independently launched Python launcher must remain alive.
+- in-progress — Pi `p64-mainline-integration-1102c` consolidates only the accepted five-file warmup/receipt change onto the final branch. Existing mainline profiling and shutdown changes are preserved. Frozen package and independent harness stay untouched.
+- completed — check-progress found S5 stale current records; current plan, ticket 19 and summary are updated. No scope, criterion or resource change.
+
+Next actions:
+1. Inspect the existing job through `/ds4-exec`; keep its launcher alive. A real failure/preemption triggers exact-job RCA before any new clean generation, under the existing three-job loop cap.
+2. After terminal state, use Pi to write the terminal receipt and execute the existing zero-GPU cloud-copy path. Then run `h3o_operator_costs/formal_p2_64_native_20261102/compare.py` into a fresh output directory: verify download hashes, pair coverage, R4, all-request gate and warm/empty readings. Inspect each JSON; the tool's exit 0 is only soft-gate completion.
+3. Add actual container GPU-hours, record each repeat's four errors and verdict, finish the current-step commit and re-check ticket 19. H800 needs its own concrete package/resource approval; GLM and EP count correction remain paused/deferred.
+
+## Historical session handoff — Codex CLI (2026-10-31)
 
 **State: in-progress; refreshed2026-11-01 under D-WARM-TARGET.** Decision46 and D-CODEX-DIRECT-RJOB retain DSV4 H200 P2-32/P2-64, then H800; GLM stays paused. Measured CC, K19 and10.3/11.4 ms delays stay unchanged. Six event-bound paired readings now PASS all96 warm metrics/all repeats. Original all-request P2-64 repeat01 TTFT FAILs remain historical evidence, not the current deciding reading. Numerical warm PASS does not close attention omissions, hardware, NIXL/payload, memory or formal qualification.
 

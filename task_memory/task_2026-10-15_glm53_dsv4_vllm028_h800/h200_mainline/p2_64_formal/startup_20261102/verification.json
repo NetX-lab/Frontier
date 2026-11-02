@@ -1,0 +1,30 @@
+{
+  "checked_utc": "2026-11-02T10:35:09.864441+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "command": [
+    "/usr/bin/python3",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/verify_p64_startup_20261102.py"
+  ],
+  "checks": {
+    "receipt_hash": true,
+    "package_manifest_hash": true,
+    "receipt_build_submission_order": true,
+    "promotion_predicate": true,
+    "job_identity": true,
+    "resource_class": true,
+    "resource_size": true,
+    "source_mount": true,
+    "all_replicas_unassigned": true,
+    "all_replicas_unschedulable": true,
+    "event_read_complete": true,
+    "co_scheduling_event_evidence": true,
+    "no_terminal_receipt": true,
+    "retained_report.json": true,
+    "retained_snapshot.json": true,
+    "launcher_alive": true
+  },
+  "status": "PASS",
+  "launcher_ps": "    PID    PPID     ELAPSED STAT COMMAND\n3140124 3140122    01:49:38 Ssl  /data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02/launch.py\n",
+  "platform_snapshot_utc": "2026-11-02T10:29:23Z",
+  "limits": "Local verification of Pi-collected platform snapshot; no direct platform read, new submission or terminal/runtime acceptance."
+}

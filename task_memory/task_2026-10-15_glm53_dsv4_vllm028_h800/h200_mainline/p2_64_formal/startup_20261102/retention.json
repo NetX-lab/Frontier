@@ -1,0 +1,13 @@
+{
+  "retained_utc": "2026-11-02T10:34:09.185145+00:00",
+  "files": {
+    "report.json": {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-startup-inspect-1102b/scratch/report.json",
+      "sha256": "76d873cc78b0d5ab3371834dfcb28962c3448ca7dd3113dd39eda232dd44cbee"
+    },
+    "snapshot.json": {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-startup-inspect-1102b/scratch/snapshot.json",
+      "sha256": "3e2851db7dd3f7f5cdbdbbbd2a20692609208e74a3675dca94468bbfa65254a0"
+    }
+  }
+}
