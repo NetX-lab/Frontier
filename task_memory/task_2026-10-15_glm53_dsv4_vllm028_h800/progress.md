@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Formal P2 runs: runner `abd1e141` binds the adopted H200 NIXL pair; both fresh-cache CPU replays started 03:09:44Z; Q4 formal assessment assigned to Codex. |
 | 2026-11-02 | Q3 complete: Codex `bd667bb6` payload bound accepted (B_max = 46,103,040 B = the priced payload; four checks PASS); payload edge QUALIFIED under D-P2-PAYLOAD-C; [test report](test_report_2026-11-02_q3_payload_bound.md). |
 | 2026-11-02 | YC chose payload route C (D-P2-PAYLOAD-C); Q3 assignment written and submitted to Codex. |
 | 2026-11-01 | Q2 complete: Codex `8ce5ed55` H200 NIXL timing proposal reviewed (reruns, independent refit, wake-path source check all PASS); adopted as D-P2-Q2-NIXL-TIMING; [test report](test_report_2026-11-01_q2_h200_nixl_timing.md). Payload stays with YC, now with an invariance option C. |
@@ -396,7 +397,9 @@ Authority: requirements D-P2-INPUT-QUALIFICATION. Assignment: [Q1](h3o_operator_
   - Lead review ([test report](test_report_2026-11-02_q3_payload_bound.md)): rerun of `analyze.py`, lifecycle pytest (9 passed) and `verify.py`, all exit 0; outputs bit-identical with Codex's `TMPDIR`; independent bound arithmetic, raw-JSONL measured check and price match; native source rules spot-checked; wire-byte sink census confirmed.
   - Decision: payload edge QUALIFIED (`source-derived, metric-invariant`, not observed) for retained P2-32/P2-64; no replay. The frozen Q1 ledger files stay unchanged; current statuses live in summary.md and tickets.
 - finding (not this task's job): `native_track_20261020/g0d_launch/launcher.log` is about 2.88 GB and still grows with proxy-connection errors for the old RJob `exp-1020-203529-472675`. No process in this session's namespace holds it open. Left untouched; reported to YC.
-- next: formal P2 assessment. Remaining Q1 OPEN rows: memory peaks and planner agreement, which the ledger marks as not prerequisites of the measured-capacity isolation; the 32-to-64 promotion receipt, needed only before a new formal 64 launch; and aggregate coverage, whose three missing items (attention, H200 timing, payload) are now resolved.
+- completed: lead decision on the formal P2 runs (under D-NO-INTERRUPT and D-P2-Q2-NIXL-TIMING). The two-fix replays consumed the H800 pair (126.2 Gbit/s, 0.0647 ms) from the B29 inputs, and ticket 19's `frontier_reference_run` forbids cross-hardware cost substitution. The Q2 equality of outputs is an inference, so the formal runs bind the adopted H200 pair directly. Runner `h3o_operator_costs/formal_p2_20261102/run_formal_replay.py` (committed `abd1e141`) overrides only the two analytical KV transfer fields read from `nixl_timing_q2/proposed_input.json` (sha256 `74374415...f673`). Expected: outputs identical to two-fix apart from the pair and wire end fields.
+- in-progress: both formal fresh-cache CPU replays started 2026-11-02T03:09:44Z from `abd1e141` (64 GiB address-space limit each; scratch `/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/`; supervisor output in its `supervisor/`). Expected end about 06:00Z / 06:40Z from the two-fix run times.
+- in-progress: Q4 formal P2 assessment assigned to Codex ([assignment](h3o_operator_costs/formal_p2_20261102/codex_assignment_Q4_formal_p2_assessment.md)): current input status, input binding, formal versus two-fix, per-repeat gates, milestone map, promotion receipt and the P2-64 options, GPU-hours, verdict per case. Remaining Q1 OPEN rows going in: memory peaks and planner agreement (ledger: not prerequisites of the measured-capacity isolation), the 32-to-64 promotion receipt, and aggregate coverage (its three missing items now resolved).
 
 ### Two-fix continuation evidence — 2026-11-01
 
