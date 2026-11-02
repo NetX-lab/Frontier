@@ -27,7 +27,7 @@ def container(status):
                state=dict(terminated={key: terminated.get(key) for key in
                                       ('exitCode', 'reason', 'startedAt', 'finishedAt', 'containerID')})
                if terminated else {key: None for key in status.get('state') or {}})
-    if terminated:
+    if terminated and terminated.get('startedAt') and terminated.get('finishedAt'):
         row['duration_seconds'] = seconds(terminated['startedAt'], terminated['finishedAt'])
     return row
 
@@ -51,6 +51,12 @@ def main(name, output):
                                  containers=[container(c) for c in pod['status'].get('containerStatuses') or []]))
     gpus = {task: int(row['resources'][0]['limits']['nvidia.com/gpu']) for task, row in tasks.items()}
     [gpu] = set(gpus.values())
+    durations = [c.get('duration_seconds') for r in replicas for c in r['containers']]
+    expected_replicas = sum(task['replicas'] for task in tasks.values())
+    clocks_complete = (len(replicas) == expected_replicas
+                       and all(r['containers'] for r in replicas)
+                       and all(value is not None for value in durations))
+    known_gpu_hours = sum(value for value in durations if value is not None) * gpu / 3600
     receipt = dict(
         observed_utc=datetime.now(timezone.utc).isoformat(), job=name,
         creator=labels.get('kubebrain.brainpp.cn/creator'),
@@ -58,7 +64,8 @@ def main(name, output):
         preemptible_label=labels.get('quotagroup.brainpp.cn/preemptible'),
         status={key: status.get(key) for key in ('phase', 'startTime', 'finishTime')},
         tasks=tasks, replicas=sorted(replicas, key=lambda replica: replica['name']),
-        container_gpu_hours=sum(c.get('duration_seconds', 0) for r in replicas for c in r['containers']) * gpu / 3600)
+        container_gpu_hours=known_gpu_hours if clocks_complete else None,
+        known_container_gpu_hours=known_gpu_hours, container_clocks_complete=clocks_complete)
     Path(output).write_text(json.dumps(receipt, indent=1) + '\n')
     print(json.dumps(dict(job=name, phase=receipt['status']['phase'], replicas=len(replicas),
                           container_gpu_hours=receipt['container_gpu_hours'])))

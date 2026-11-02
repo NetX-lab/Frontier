@@ -1,0 +1,22 @@
+{
+  "complete": {
+    "status": "PASS",
+    "container_gpu_hours": 16.0,
+    "known_container_gpu_hours": 16.0
+  },
+  "missing_replica": {
+    "status": "PASS",
+    "container_gpu_hours": null,
+    "known_container_gpu_hours": 8.0
+  },
+  "running": {
+    "status": "PASS",
+    "container_gpu_hours": null,
+    "known_container_gpu_hours": 8.0
+  },
+  "missing_end": {
+    "status": "PASS",
+    "container_gpu_hours": null,
+    "known_container_gpu_hours": 8.0
+  }
+}

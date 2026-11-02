@@ -525,6 +525,8 @@ Current outcome: formal generation 01 `exp-1102-164536-160317` failed at 2026-11
 - completed — native startup correction `a06a72a4`, independent source review, CPU communication and harness verification (120 PASS/21 SKIP); frozen harness `f33306d4`; recovery package02 sealed47 files and independent check-only PASS. Package01 failed on stale engine metadata and remains unlaunched. See [recovery report](test_report_2026-11-02_p2_64_recovery.md).
 - completed — pinned-image CPU job `exp-1102-232618-248194` Succeeded; all expected markers and6cases pass on torch2.13.0+cu130. Lead source/hash/sum checks pass. Package review confirms inputs/workload/resources, but old R4 rejects the newly approved identity; its historical FAIL review is preserved. Clock follow-up returned8replica objects but still only1exact end.
 - in-progress — `p64-reader-1102m` implements narrow R5 source binding and explicit comparison reader selection under the existing debug authorization. All R4 numerical and other native predicates stay unchanged.
+- completed — terminal receipt no longer reports incomplete clocks as zero: four mocked scenarios PASS, exact total null until every expected clock is present; known subtotal retained separately.
+- in-progress — second submission executor `p64-formal2-1102n`; predecessor `p64-formal2-1102l` stopped exit130 before submission after missing cluster env in its quota read. Wrapper now explicitly supplies the verified cluster/namespace values; no GPU retry occurred.
 - pending — second formal GPU execution; missing terminal clocks; complete new reference followed by pair coverage soft gate, R4, all-request gate and warm reading. No request data exists for generation 01, so these comparisons are NOT RUN.
 
 Next actions:
