@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | YC chose option B for P2-64 (D-P2-64-FORMAL-B): receipt first, then a new pair-warmed, wholly preemptible 64-H200 formal native campaign; resources approved for that campaign only; two `__pycache__` directories deleted. |
 | 2026-11-02 | Recorded the Q3 result under D-P2-PAYLOAD-C: all four checks PASS and the lead accepted; payload edge QUALIFIED (source-derived, metric-invariant). |
 | 2026-11-02 | YC chose payload option C (D-P2-PAYLOAD-C): the source-derived payload is accepted for P2 when a CPU-derived upper bound on native per-request READ bytes still finishes inside every decode-step gap; Codex Q3 derives and checks the bound. |
 | 2026-11-01 | Q2 choice (D-P2-Q2-NIXL-TIMING): the H200 affine NIXL pair becomes the formal P2 timing input at the measured coordinate, with a physical-fit and per-pass trial median 5% / p90 10% rule; no replay by the event proof. |
@@ -205,6 +206,29 @@ The lead's previous message explained the payload (the bytes one NIXL READ moves
 - **If a check fails**, or `B_max` lies outside the measured grid, the edge stays OPEN and the evidence comes back with a proposal. The criterion is not adjusted after seeing the result.
 - **Scope.** The bound and the invariance claim cover P2-32 and P2-64 with the adopted H200 pair. H800 needs its own check with H800 timing and gaps. No `frontier/`, native source, table or timing change; no GPU or platform action.
 - **Result (2026-11-02, lead acceptance).** Codex Q3 `bd667bb6` passed all four checks; the lead accepted it ([Q3 test report](test_report_2026-11-02_q3_payload_bound.md)). `B_max` = 46 pages x 1,002,240 B = 46,103,040 B per TP rank pair, equal to the priced payload. The price is 0.968 ms against gaps of at least 18.72 / 24.38 ms, and the maximum measured trial at that coordinate is 12.55 ms. The payload edge is QUALIFIED with provenance `source-derived, metric-invariant`. No replay.
+
+## [Original Request / Decision] 2026-11-02 — YC's choice on the P2-64 promotion receipt (D-P2-64-FORMAL-B)
+
+Basis: [the formal P2 assessment](test_report_2026-11-02_formal_p2_assessment.md). P2-32 is a formal PASS. P2-64's numbers pass, but its native reference `exp-1025-155441-668927` was submitted on 2026-10-25T15:54:41Z, before any 30% promotion receipt could exist, and ticket 19 requires a receipt that exists before formal 64-GPU native submission. The lead offered A (YC waives the launch order for the existing reference, 0 GPUh) and B (issue the P2-32 receipt, then a new pair-warmed formal P2-64 native campaign), recommended B, and asked to delete two untracked `__pycache__` directories.
+
+[Original Request]
+> 选择你的推荐，批准资源使用和清理无用文件
+
+- **Option B.**
+  1. **Receipt first.** The lead issues the P2-32 → P2-64 promotion receipt from the Q4 draft (`formal_p2_20261102/assessment/promotion.json`) after re-checking the 30% predicate and every bound hash. It is issued before any package for the new campaign is built. Its only successor is the new formal P2-64 native campaign; it does not cover `exp-1025-155441-668927`.
+  2. **Package.** Derived from `h200_mainline/p2_64_reference/package_01` with the existing builder. Changes are limited to:
+     - a warmup that opens every lazily connected (P lane, D lane) pair, 16 at DP4 x DP4, before the first formal window, with both roles idle and KV released before each formal window;
+     - the wholly preemptible resource class;
+     - the binding of the issued receipt.
+
+     Formal requests keep native vLLM routing and the unchanged workload (128 requests of 6144/1024 tokens at QPS 1, three repetitions).
+  3. **Coverage proof (D-WARM-TARGET).** From lifecycle and server records, with the existing first-contact method (`warm_target_20261101/identify_openers.py`): every pair's first contact falls in a warmup window, and no formal request opens a pair. The coverage check runs after the job as a soft gate and never stops it. A formal first contact is reported, not hidden; the warm reading then applies D-WARM-TARGET's paired exclusion as for the retained runs.
+  4. **Resources approved.** One job of 64 H200 (8 nodes x 8) in `step_main`, wholly preemptible (`ResourceConfig.preemptible=True`, platform label `yes`), 3,600 s job timeout (ceiling 64 GPUh; about 24.3 container GPUh expected from the original campaign). Submission, monitoring and log reads go through `/ds4-exec` after `launch.py --check-only` and a quota read. A preempted or infrastructure-failed job keeps its evidence and restarts as a new clean generation under the existing loop cap of three GPU jobs per case; beyond that the case goes back to YC.
+  5. **Comparison.** The unchanged formal P2-64 Frontier replay (`formal_p2_20261102`, H200 NIXL pair) against the new reference, with the all-request gate and the warm reading. The verdict follows ticket 19 Acceptance. The readings against the old reference stay on record.
+- **Scope of "批准资源使用" (resource approval).** The lead reads it as covering only the option B campaign above. The H800 continuation still needs a concrete package and GPU estimate, then YC's approval.
+- **Cleanup (done 2026-11-02).** Deleted `h3o_operator_costs/two_fix_20261101/__pycache__/` and `h3o_operator_costs/input_qualification_20261101/nixl6144_run/__pycache__/`, which held untracked compiled `.pyc` files of committed scripts. These were left untouched:
+  - other `__pycache__` directories inside frozen evidence trees;
+  - `native_track_20261020/g0d_launch/launcher.log`, about 2.88 GB and still growing.
 
 ## [Original Request / Decision] 2026-11-01 — two existing-path corrections and two CPU replays (D-WARM-TWO-FIX)
 

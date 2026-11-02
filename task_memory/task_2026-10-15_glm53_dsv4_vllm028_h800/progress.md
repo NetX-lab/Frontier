@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | D-P2-64-FORMAL-B: YC chose option B; P2-32 → P2-64 promotion receipt issued (`formal_p2_20261102/promotion/`); cleanup done; Q5 package assignment next. |
 | 2026-11-02 | Formal P2 complete: both replays FINISHED, identical to two-fix except the H200 pair and roots; Codex Q4 reviewed and accepted; P2-32 PASS, P2-64 BLOCKED_ON_DECISION (no pre-launch promotion receipt); [test report](test_report_2026-11-02_formal_p2_assessment.md). |
 | 2026-11-02 | Formal P2 runs: runner `abd1e141` binds the adopted H200 NIXL pair; both fresh-cache CPU replays started 03:09:44Z; Q4 formal assessment assigned to Codex. |
 | 2026-11-02 | Q3 complete: Codex `bd667bb6` payload bound accepted (B_max = 46,103,040 B = the priced payload; four checks PASS); payload edge QUALIFIED under D-P2-PAYLOAD-C; [test report](test_report_2026-11-02_q3_payload_bound.md). |
@@ -406,7 +407,15 @@ Authority: requirements D-P2-INPUT-QUALIFICATION. Assignment: [Q1](h3o_operator_
   - Lead review ([test report](test_report_2026-11-02_formal_p2_assessment.md); scripts and logs in `formal_p2_20261102/lead_review/`): scope, inventory hashes, metric-file and config diffs, reading identity, per-repeat errors against `gate_readings.csv`, 30% predicate, chronology, GPU-hour arithmetic and ledger criteria all PASS.
   - Decision: P2-32 formal PASS. P2-64 BLOCKED_ON_DECISION: the reference `exp-1025-155441-668927` was submitted 2026-10-25T15:54:41Z, before any receipt could exist. Options to YC: A (exception for the existing reference, 0 GPUh) or B (issue the P2-32 receipt, add a warmup that opens all 16 P x D lane pairs as D-WARM-TARGET requires of future native runs, then a new 64-H200 preemptible campaign of about 24.3 container GPUh). Lead recommends B.
   - GPU-hours checkbox: INSUFFICIENT_EVIDENCE; the 19 incomplete clocks can be read through `/ds4-exec` without a GPU run.
-- pending: YC decision on P2-64 (A or B); H800 continuation needs YC's GPU approval.
+- completed: YC chose option B and approved the resources and the cleanup ("选择你的推荐，批准资源使用和清理无用文件"), recorded as D-P2-64-FORMAL-B. The lead reads the resource approval as covering the option B campaign only; the H800 continuation still needs its own estimate and approval. The two untracked `__pycache__` directories (`two_fix_20261101/`, `input_qualification_20261101/nixl6144_run/`) are deleted.
+- completed: P2-32 → P2-64 promotion receipt issued by `formal_p2_20261102/promotion/issue_receipt.py` (log `issue_receipt.log`) before any new-campaign package exists. The script re-checked:
+  - the draft's five predicate flags;
+  - all 24 P2-32 warm and all-request errors from `gate_readings.csv`: finite, non-zero native, at most 0.30 (maximum 5.607176%), each equal to the draft value;
+  - the P2-32 PASS verdict;
+  - the 10 files the draft binds by SHA-256.
+
+  Receipt `formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json` (sha256 `d505eece...f7596`). It unlocks only a new wholly preemptible 64-H200 campaign built and submitted after its `issued_utc`, and excludes `exp-1025-155441-668927`. The Q4 `binding.json` is referenced by path in the draft and pinned by commit `57433735`.
+- in-progress: Q5 Codex assignment for the pair-warmed formal P2-64 native package.
 
 ### Two-fix continuation evidence — 2026-11-01
 
