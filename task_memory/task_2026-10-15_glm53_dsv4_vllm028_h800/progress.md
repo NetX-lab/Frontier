@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | YC chose payload route C (D-P2-PAYLOAD-C); Q3 assignment written and submitted to Codex. |
 | 2026-11-01 | Q2 complete: Codex `8ce5ed55` H200 NIXL timing proposal reviewed (reruns, independent refit, wake-path source check all PASS); adopted as D-P2-Q2-NIXL-TIMING; [test report](test_report_2026-11-01_q2_h200_nixl_timing.md). Payload stays with YC, now with an invariance option C. |
 | 2026-11-01 | nixl6144 complete: RJob `exp-1102-030025-971155` Succeeded (16 H200 preemptible, 0.346 container GPU-hours after a 3 h 21 min queue wait); Pi verification 11/11 PASS and the lead's independent check PASS; [test report](test_report_2026-11-01_nixl6144_h200.md). Q2 timing proposal assigned to Codex next. |
 | 2026-11-01 | D-P2-Q1-CHOICES recorded (`a182084c`, with the `submit.py` preemptible fix); nixl6144 submitted through `/ds4-exec` as RJob `exp-1102-030025-971155` (16 H200, preemptible, queued); tickets and summary synchronized. |
@@ -388,7 +389,8 @@ Authority: requirements D-P2-INPUT-QUALIFICATION. Assignment: [Q1](h3o_operator_
   - Proposal: affine H200 pair 390.39349928 Gbit/s / 0.0236521843 ms (0.9684023 ms per READ); P2 replays have one transfer at a time per decode pod (coordinate `t6144_pairs8_inflight1`); 2,034 posting-window checks, zero crossings, so no replay.
   - Lead review ([test report](test_report_2026-11-01_q2_h200_nixl_timing.md)): four scripts rerun, all exit 0, 12/12 checks; outputs reproducible except timestamps; independent numpy refit from Pi's `case_summary.csv` matches (held-out maximum 0.919528%); forwards traces complete with dummy forwards included; both wire-end wake paths (`next_pass_start`, `_connector_step_events`) need a zero-cost or idle loop, absent here; B29/two-fix bit-identity confirms it; at the P2 coordinate all three passes also pass the per-trial median 5% / p90 10% rule (p90 ≤ 2.464%).
 - completed: D-P2-Q2-NIXL-TIMING recorded (requirements.md). Reason: ticket 19 needs an own-hardware NIXL input; the affine pair is physical, passes the stricter per-trial rule at the one coordinate P2 uses, and moves no event, so no replay is needed. The rule is stricter than Codex's median-only proposal.
-- pending: native payload route (needs YC). New option C for YC: accept the source-derived payload because P2 metrics do not depend on it within a bound. A different payload changes no event while its READ finishes within the 18.72 ms minimum step gap; at the measured H200 rate a reader moving 16 requests' worth (737.6-817.8 MB, 16-17.7x the P2 payload) still finishes at the median in 15.12-16.80 ms, with tails to 27.50 ms. It needs a CPU-derived upper bound on native per-request bytes instead of observed descriptor ranges (0 GPUh), and it relaxes Spec 5.5.
+- completed: YC chose payload route C ("选择方案c，继续"), recorded as D-P2-PAYLOAD-C with a fixed four-part criterion (upper bound `B_max` on native bytes, model check and measured check against the 18.724965 / 24.380076 ms gaps, bytes reach only the transfer time). Option B's observer stays unbuilt.
+- in-progress: Q3 Codex assignment [codex_assignment_Q3_payload_bound.md](h3o_operator_costs/input_qualification_20261101/codex_assignment_Q3_payload_bound.md); output `input_qualification_20261101/payload_q3/`.
 
 ### Two-fix continuation evidence — 2026-11-01
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | YC chose payload option C (D-P2-PAYLOAD-C): the source-derived payload is accepted for P2 when a CPU-derived upper bound on native per-request READ bytes still finishes inside every decode-step gap; Codex Q3 derives and checks the bound. |
 | 2026-11-01 | Q2 choice (D-P2-Q2-NIXL-TIMING): the H200 affine NIXL pair becomes the formal P2 timing input at the measured coordinate, with a physical-fit and per-pass trial median 5% / p90 10% rule; no replay by the event proof. |
 | 2026-11-01 | Q1 choices under D-P2-INPUT-QUALIFICATION (D-P2-Q1-CHOICES): attention supplement A, original attention table, H200 NIXL timing route B with the 16-H200 preemptible nixl6144 measurement; the native payload route is left to YC. |
 | 2026-11-01 | Recorded YC's `/codex-implement` continuation request (Codex implements; RJobs go through `/ds4-exec`) and the lead's choice under D-NO-INTERRUPT: P2 formal input qualification next (D-P2-INPUT-QUALIFICATION). |
@@ -186,6 +187,22 @@ Basis: Q2 [report](h3o_operator_costs/input_qualification_20261101/nixl_timing_q
 - **No replay.** With `engine_step`, a READ is found at its lane's first step start after the wire end. Inside every transfer window that next start is at least 18.724965 ms (P2-32) / 24.380076 ms (P2-64) after any possible posting step; the H800, two-fix and new prices and every observed trial at the coordinate (maximum 12.554511 ms) stay below it (2,034 checks, zero crossings). No DECODE forward has zero duration, so no idle wake at a wire end exists, and B29 (2.570 ms) and two-fix (2.987 ms) are already bit-identical. P2 outputs under the new pair therefore equal the two-fix outputs. A payload decision that changes the bytes needs a new replay anyway.
 - **Kept on record.** NIXL02's negative-intercept FAIL; the empirical-bound and exact-point candidates and their full-grid failures. Not taken: the exact-point candidate (same value at the coordinate; general use needs interface work).
 - **Unchanged.** The native payload edge stays OPEN for YC; this pair depends on the source-derived payload. No `frontier/` or table change.
+
+## [Original Request / Decision] 2026-11-02 — YC's choice on the native payload edge (D-P2-PAYLOAD-C)
+
+The lead's previous message explained the payload (the bytes one NIXL READ moves per TP rank pair from prefill to decode after prefill) and offered three routes: A, accept the source-derived payload as an exception; B, a native observer plus about 35.6 GPUh of native campaigns; C, accept the source-derived payload because P2 metrics do not depend on it while a READ finishes inside the decode-step gap, checked against a CPU-derived upper bound on native per-request bytes (0 GPUh).
+
+[Original Request]
+> 选择方案c，继续
+
+- **Route C replaces A and B for P2.** It relaxes Spec 5.5's requirement for observed send/receive descriptor ranges, for P2-32 and P2-64 only. Option B's observer contract stays on record, not built.
+- **Criterion.** The payload edge is QUALIFIED with provenance `source-derived, metric-invariant` (not observed) only if all of these hold:
+  1. **Upper bound.** A CPU-only derivation from the retained native vLLM source, the observed registrations and the retained P2 workload gives `B_max`, the largest number of bytes one native NIXL READ can move on one TP rank pair for any P2 request. Trimming, null pages, aliases, padding or rank mapping may reduce the bound only where the retained source applies them unconditionally on the P2 path; otherwise the bound counts every page the request holds in every KV cache group, at the registered stride.
+  2. **Model check.** The adopted H200 pair (D-P2-Q2-NIXL-TIMING) prices one READ of `B_max` below the minimum next-step gap of every possible posting step: 18.724965 ms (P2-32), 24.380076 ms (P2-64).
+  3. **Measured check.** `B_max` is at most the largest bytes per reader measured with eight active pairs in nixl6144, and every trial, in every pass, at the eight-pair coordinate with the smallest bytes per reader at or above `B_max` stays below both gaps. Slow trials are never removed.
+  4. **Only transfer time depends on the bytes.** The four compared metrics and the event sequence depend on the payload only through the READ transfer time.
+- **If a check fails**, or `B_max` lies outside the measured grid, the edge stays OPEN and the evidence comes back with a proposal. The criterion is not adjusted after seeing the result.
+- **Scope.** The bound and the invariance claim cover P2-32 and P2-64 with the adopted H200 pair. H800 needs its own check with H800 timing and gaps. No `frontier/`, native source, table or timing change; no GPU or platform action.
 
 ## [Original Request / Decision] 2026-11-01 — two existing-path corrections and two CPU replays (D-WARM-TWO-FIX)
 
