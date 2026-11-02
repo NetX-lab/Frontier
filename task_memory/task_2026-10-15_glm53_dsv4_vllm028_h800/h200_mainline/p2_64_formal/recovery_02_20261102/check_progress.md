@@ -2,55 +2,58 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-11-02 | Modification History: native 修复通过首轮 CPU 验证后的主线自查。 |
+| 2026-11-03 | Modification History: R5 验收里程碑自查；同步 Running 放置证据，后续聚焦新参考和计量。 |
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 1｜TODO 3
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 1｜TODO 3
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| P2-32 与晋级 receipt | PASS | 1a7950ed；保留 formal PASS |
+| P2-32 与晋级 receipt | PASS | 1a7950ed；formal PASS 保留 |
 | 第一代 P2-64 | FAILED | b0ceff53；启动失败，无请求结果 |
-| 第一代 RCA 与复制 | PASS | 74/74 文件；端口分叉 CPU 复现 |
-| D-P2-64-STARTUP-RECOVERY | PASS | 用户明确批准方案 B 及同类 debug |
-| ticket18 native 修复 | PASS | a06a72a4；CPU 六组、独立 review、锁定镜像检查 PASS |
-| ticket18 第二代 package/执行 | TODO | f33306d4/47文件 sealed；package 检查 PASS，准备提交 GPU |
-| ticket19 新参考比较 | TODO | R4 源身份不支持新提交；R5 修复与 GPU 运行并行，复用已有 Frontier replay |
-| ticket19 GPU 计量 | TODO | 一次精确复查后仍缺七个 finish clocks，不再重复轮询 |
+| 第一代 RCA 与复制 | PASS | 74/74 文件；CPU 端口分叉复现 |
+| D-P2-64-STARTUP-RECOVERY | PASS | 用户批准方案 B 及相关 debug |
+| ticket18 native/harness/package | PASS | a06a72a4/f33306d4/39f9d20f；CPU、image、seal/check-only 通过 |
+| ticket19 R5 reader code/control | PASS | r5_lead_acceptance.json；153+25 tests、实际 graph-entry 和旧参考 PASS_EXACT |
+| ticket18 第二代执行 | TODO | exp-1102-233941-576872；八个独立节点 Running，尚无完整参考 |
+| ticket19 新参考比较 | TODO | 等待 terminal/copy 后 coverage、R5、逐次及 pooled readings |
+| ticket19 GPU 计量 | TODO | 第一代仍缺7个结束时间；第二代尚未终态 |
 
 ## 2. 偏离检测
 
-**结论：** 已偏离：命中 D1；已停止扩展并收敛新 review。
-**检测窗口：** b0ceff53 至今｜**当前前沿：** ticket18 native 修复、第二代 package、已有运行计量
+**结论：** 未偏移，正常推进。
+**检测窗口：** 第二代提交自查（39f9d20f 后）至 R5 验收｜**当前前沿：** ticket18 现有运行，ticket19 新参考处理与计量
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | HIT | review-1102g 在实际通信 PASS 后反复搜索 Torch 二进制和全盘源码；已停止 exit130，新 review-1102h 限定为四文件与必要调用者 |
-| D2 细节反复重试 | CLEAR | 首次工具错误因提取器漏掉 decorator；修正后全通过 |
-| D3 支线问题修补 | CLEAR | 四个 native 文件均用于当前启动路径 |
-| D4 可并行任务停滞 | CLEAR | 独立 review 与 package 准备并行；计量待下次平台精确查询 |
-| D5 超范围镀金 | CLEAR | 没有新 serving 功能、模型或全局开关 |
-| D6 分析空转 | CLEAR | 已交付可执行修复和实际通信结果 |
-| D7 路线违背 | CLEAR | 用户批准后进入修复；保留第一代及既有 replay |
+| D1 工具打磨 | CLEAR | R5 是新 source admission 的必要修复；实际入口和旧参考验证已完成，停止扩展与重复测试 |
+| D2 细节反复重试 | CLEAR | 先复现 exec namespace 失配，再修正真实调用链；r5_initial_call_chain_failure.json 与最终验收记录闭环 |
+| D3 支线问题修补 | CLEAR | 14 个 unchanged collector-hash tests 单独记入报告，不展开修复 |
+| D4 可并行任务停滞 | CLEAR | R5 验收与现有 GPU job 放置/运行并行；比较确需 native 输出 |
+| D5 超范围镀金 | CLEAR | 仅接受指定 startup source；没有新模型、kernel、routing 或指标规则 |
+| D6 分析空转 | CLEAR | R5 从失败转为已验收；三文件 hashes 与验收绑定一致 |
+| D7 路线违背 | CLEAR | 现有第二代只提交一次，旧 generation 与已完成 CPU replay 保留 |
 
-**文档检查：** S5 当前 progress 遗留 pending approval 一行，已移除；R4→新 source 的真实依赖补入 plan/ticket19，R5 与运行并行。S1/S2/S3/S4/S6 未发现明显缺陷。
-**归因：** D1 执行偏离
+**文档检查：** S5：plan/progress/tickets18/19/summary 的当前状态仍称 R5 in-progress，与最终 PASS 证据矛盾；本轮已同步。S1/S2/S3/S4/S6 未发现新缺陷。
+**归因：** 无
 
 ## 3. 纠正建议
 
 **分支：** B：spec/tickets 存在缺陷，先更新文档再继续
 
 **文档更新（先执行）：**
-1. requirements、plan、progress、tickets18/19 当前状态：记录 D-P2-64-STARTUP-RECOVERY 并消除失效的等待批准状态（可直接执行，已完成）。
+1. plan/progress/tickets18/19/summary/recovery report：记录 R5 code/control PASS、八节点 Running 和仍待核验的 native 结果（可直接执行，已完成）。
 
-**需停止的偏离行为：** D1：停止已通过通信检查之后的可选底层搜索；完成握手和生命周期 review 后立即冻结 package。
+**需停止的偏离行为：** 无
 
 **接下去的路线：**
-1. 提交已验证的 native/harness/package 主分支记录，并通过 /ds4-exec 提交正式 generation02。
-2. 并行：R5 只修正已批准 source/overlay 的身份检查，保留旧 R4；正例、篡改反例和旧参考控制通过后提交。
-3. 终态复制 → 完成标志：批准资源内的完整参考、复制校验、覆盖/R5/四指标/warm 结果。
+1. 提交已验收 R5/tests/compare 与必要记录；Pi 继续现有 job，核验硬件/source/native 启动。
+2. terminal receipt → hash-identical copy → pair coverage soft gate → R5 → unchanged all-request gate/warm reading；完成标志为三次重复均有明确 validity/readiness 和四指标结果。
+3. 更新第二代 actual GPU-hours 与 ticket19；第一代缺时钟继续明确 exact null，不重复已无新增证据的旧时钟查询。
+
+**暂缓事项：** 14 个既有 collector-hash tests → test_report_2026-11-02_p2_64_recovery.md 已记明，后续独立处理。
 
 ## 4. 最值得关注的 3 点
 
-1. 锁定镜像实际 torch2.13 的 CPU 验证已通过；下一步应尽快执行正式 GPU 任务。
-2. 正式 nnodes=1；后续 worker 的 rendezvous 必须共享已绑定 store，不能遗留旧的空闲端口竞争。
-3. 第一代已消耗资源；第二代应在验证完毕后尽快执行，停止扩展无关辅助测试。
+1. 第二代已在八个独立节点 Running；需要 actual native 输出才能证明修复成功。
+2. R5 code/control 已验收，应转到新参考处理；旧 control 的 PASS 不能代替新运行结论。
+3. 第一代 exact GPU-hours 仍缺7个 finish clocks；不能将估算并入已完成精确账本。

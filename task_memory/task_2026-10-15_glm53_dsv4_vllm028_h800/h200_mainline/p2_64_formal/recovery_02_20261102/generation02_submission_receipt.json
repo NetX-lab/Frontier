@@ -1,0 +1,76 @@
+{
+ "captured_utc": "2026-11-02T15:40:23.001071+00:00",
+ "job": "exp-1102-233941-576872",
+ "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+ "created": "2026-11-02T15:39:41Z",
+ "creator": "i-fengyicheng",
+ "real_creator_id": "group-shai-core-step-main",
+ "phase_at_capture": "Starting",
+ "preemptible": "yes",
+ "quotagroup": "step_main",
+ "queue_name": "quotagroup-global-default",
+ "queue_status": "approved",
+ "restartable": "false",
+ "replicas": 8,
+ "positive_tags": [
+  "H200"
+ ],
+ "max_wait_duration": "0s",
+ "max_running_duration": "0s",
+ "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+ "command": [
+  "bash",
+  "-lc",
+  "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02/config.json'"
+ ],
+ "resources": {
+  "limits": {
+   "cpu": "64",
+   "mellanox.com/mlnx_rdma": "1",
+   "memory": "500Gi",
+   "nvidia.com/gpu": "8",
+   "rdma/mlnx_shared": "8"
+  },
+  "requests": {
+   "cpu": "64",
+   "memory": "500Gi",
+   "nvidia.com/gpu": "8"
+  }
+ },
+ "filestore_volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02",
+ "juicefs_mount": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+ "env_names": [
+  "VLLM_LOGGING_LEVEL",
+  "PYTHONDONTWRITEBYTECODE",
+  "HF_HUB_OFFLINE",
+  "TRANSFORMERS_OFFLINE",
+  "HF_DATASETS_OFFLINE",
+  "VLLM_ENABLE_CUDA_COMPATIBILITY",
+  "VLLM_CUDA_COMPATIBILITY_PATH",
+  "DISTRIBUTED_JOB",
+  "MC_DISABLE_METACACHE",
+  "PYTHONPATH",
+  "EXP_ID",
+  "ENABLE_SUBMODULE_COMMIT_CACHE",
+  "KUBEBRAIN_CLUSTER_ENTRY",
+  "KUBEBRAIN_WORKSPACE_NAME",
+  "KUBEBRAIN_NODE_NAME",
+  "HOST_NETWORK",
+  "KUBEBRAIN_CLUSTER_ENTRY",
+  "KUBEBRAIN_QUOTA_GROUP",
+  "KUBEBRAIN_WORKSPACE_NAMESPACE",
+  "KUBEBRAIN_NAMESPACE",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY"
+ ],
+ "distributed_job": "true",
+ "launcher": {
+  "pid": 1215755,
+  "session": "detached start_new_session",
+  "log": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/launcher.log"
+ },
+ "quota_snapshot": {
+  "H200": 512
+ },
+ "quota_used_nonpreemptible_h200": "328"
+}

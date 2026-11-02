@@ -1,0 +1,173 @@
+{
+  "task": "P2 startup repair: narrow R5 source-binding successor (reader side only)",
+  "created_utc": "2026-11-02T15:46:59.377603+00:00",
+  "environment": {
+    "python": "/data/ycfeng/envs/openmopd-py312/bin/python",
+    "python_version": "3.12.13",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028"
+  },
+  "changed_files": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r5.py": "1d9205e65051f693ba56fc8aa0e517d8a57f18c5c2ac5d62a6990170bf1d14a8",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_native_startup_source_binding.py": "bbdf5b4907bdb888bcc30782202af622b0758ed348c73b11a0684906f0db50fd",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/compare.py": "ad1874ef141dd1e4fd71575b0459a7d6133a22175cecb2bc20bc40bd644ef743"
+  },
+  "unchanged_pins": {
+    "r2": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py",
+      "sha256": "29523700ac8492fa6e192ce272f8ab5a7a48d1528bd4064417e26e811533d10a"
+    },
+    "r3": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py",
+      "sha256": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917"
+    },
+    "r4": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py",
+      "sha256": "67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b"
+    },
+    "coverage_py": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/coverage.py",
+      "sha256": "04ea0165364b791a80d372f37e6a57601e0d379c843bb7fb9fe3dffec8b58338"
+    }
+  },
+  "source_table": {
+    "vllm/config/parallel.py": [
+      "native_config_parallel.py",
+      "f29f984ac39f4ae11622c2c64f92a657951f3a28e624a2a60d1040b49e025311",
+      "f489eb26a3784ce5691faebad99a33b6e2e7c5988605bd7427415efc685f7440"
+    ],
+    "vllm/distributed/parallel_state.py": [
+      "native_distributed_parallel_state.py",
+      "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c",
+      "a9b20efd63ece3bd4e4436f774a7be7156bfc410b310944c4ef4d7e19a091572"
+    ],
+    "vllm/distributed/utils.py": [
+      "native_distributed_utils.py",
+      "792146b357139e705064a68d3b66858de8a0baaca4dc7db1232fa217d45db231",
+      "a06292492a5cc24a17be299a5890d617fc8d1fe82e9a95b1cfc6be47d0d250ab"
+    ],
+    "vllm/v1/engine/utils.py": [
+      "native_engine_utils.py",
+      "6ce83b0552b6207505c9bd7ac1fd67d2771628eac01572738765923aa91c1c0f",
+      "533d60761f2505e93b318c349baf733a1ec7e386f1c2ad3f768e41bdab017599"
+    ],
+    "vllm/models/deepseek_v4/nvidia/model.py": [
+      "overlay_model.py",
+      "c01be6d313f494eb38982c8f56c314267bbf67310e7f13ca53b596b31aef4e44",
+      "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee"
+    ]
+  },
+  "commands": [
+    {
+      "argv": [
+        "pytest",
+        "tests/unit/test_native_startup_source_binding.py",
+        "-q",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "result": {
+        "log": "/data/ycfeng/tmp/ds4_runs/p64-reader-1102m/scratch/pytest_startup_binding.log",
+        "passed": 31,
+        "failed": 0,
+        "line": "31 passed in 3.03s"
+      }
+    },
+    {
+      "argv": [
+        "pytest",
+        "tests/unit/test_native_reader_binding.py",
+        "-q",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "purpose": "old-reader control",
+      "result": {
+        "log": "/data/ycfeng/tmp/ds4_runs/p64-reader-1102m/scratch/pytest_reader_binding_control.log",
+        "passed": 121,
+        "failed": 14,
+        "line": "14 failed, 121 passed in 55.83s"
+      }
+    },
+    {
+      "argv": [
+        "pytest",
+        "test_tools.py",
+        "-q",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102",
+      "purpose": "compare/coverage caller tools",
+      "result": {
+        "log": "/data/ycfeng/tmp/ds4_runs/p64-reader-1102m/scratch/pytest_compare_tools.log",
+        "passed": 25,
+        "failed": 0,
+        "line": "25 passed in 3.39s"
+      }
+    },
+    {
+      "argv": [
+        "python",
+        "-"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "purpose": "real sealed packages, read only",
+      "result": {
+        "output": [
+          "R4_SHA256 67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b",
+          "R3_SHA256 ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+          "R2_SHA256 n/a",
+          "R5_SHA256 1d9205e65051f693ba56fc8aa0e517d8a57f18c5c2ac5d62a6990170bf1d14a8",
+          "compare_SHA256 ec618f6d7360c7cbad6f192036d6ef501dee6d5230e08baa3062027a74dc7aa7",
+          "generation01-base2cf identity 2cf0a6915ce544dc493a0990f2ea38d81601128a 2cf0a6915ce544dc493a0990f2ea38d81601128a 2cf0a6915ce544dc493a0990f2ea38d81601128a",
+          "  R4 ACCEPTED",
+          "  R5 ACCEPTED",
+          "generation02-startup-a06 identity a06a72a4326cba02234df6cfbdc21b78d3a15d26 a06a72a4326cba02234df6cfbdc21b78d3a15d26 a06a72a4326cba02234df6cfbdc21b78d3a15d26",
+          "  R4 REJECTED ValueError V4 runtime must declare the exact approved base2cf plus C26 source identity",
+          "  R5 ACCEPTED"
+        ]
+      }
+    }
+  ],
+  "fault_injection": {
+    "file": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_native_startup_source_binding.py",
+    "generation02_positive": "actual generation 02 package bytes rebound into scratch; R5 accepts, frozen R4 rejects",
+    "generation01_control": "actual generation 01 package; R5 delegates to frozen R4, both accept",
+    "rejected": [
+      "unapproved manifest/engine/declaration commit x3",
+      "extra overlay member",
+      "missing overlay member",
+      "forged staged bytes",
+      "forged overlay new hash",
+      "forged overlay base hash",
+      "forged expected_source_hashes entry",
+      "unapproved checkout bytes",
+      "missing seal pin",
+      "missing retained_files pin",
+      "missing prelaunch input",
+      "wrong committed commit/path/hash x3",
+      "extra vllm committed binding",
+      "C26 forged overlay hash",
+      "C26 forged staged bytes",
+      "C26 forged declaration hash",
+      "C26 empty effective_runtime_source",
+      "overlay manifest outside stage",
+      "source_lock runtime overlay mismatch",
+      "harness commit mismatch",
+      "prelaunch config mismatch",
+      "stale seal mtime",
+      "unapproved other native source"
+    ],
+    "caller_reader": "compare.run_pipeline records r4 by default and r5 when selected; unknown name raises"
+  },
+  "known_unrelated": {
+    "test": "tests/unit/test_native_reader_binding.py::test_balanced_strategy_actual_import_and_missing_identity",
+    "failures": 14,
+    "cause": "checksum of tests/comparison/calibration/native_full_structure.py at HEAD is 19f462f1..., not the frozen harness hash e6a9025c...; pre-existing on this branch and untouched by this task"
+  },
+  "verdict": "PASS"
+}

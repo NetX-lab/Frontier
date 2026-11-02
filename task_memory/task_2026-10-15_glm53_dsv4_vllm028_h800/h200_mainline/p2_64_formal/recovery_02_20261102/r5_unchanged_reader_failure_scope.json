@@ -1,0 +1,13 @@
+{
+  "tests/unit/test_native_reader_binding.py": {
+    "current_sha256": "3a130582029c97f506d34f30c1a5c5b806153fcb633928a2eea0770f6f8bda0c",
+    "HEAD_sha256": "3a130582029c97f506d34f30c1a5c5b806153fcb633928a2eea0770f6f8bda0c",
+    "unchanged": true
+  },
+  "tests/comparison/calibration/native_full_structure.py": {
+    "current_sha256": "19f462f1e008e214319e7eb4e9c4d96fd5a052feb89902d5a7cbae92c746b258",
+    "HEAD_sha256": "19f462f1e008e214319e7eb4e9c4d96fd5a052feb89902d5a7cbae92c746b258",
+    "unchanged": true
+  },
+  "evidence": "The existing test file defaults to frozen R2 and does not import R5. Its expected native_full_structure hash is e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa, which differs from unchanged HEAD bytes. The 14 failures are outside the R5 change."
+}

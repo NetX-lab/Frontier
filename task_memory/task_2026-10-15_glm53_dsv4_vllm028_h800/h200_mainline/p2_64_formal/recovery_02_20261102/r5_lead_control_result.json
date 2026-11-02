@@ -1,0 +1,178 @@
+{
+  "status": "TOOLS_FINISHED",
+  "soft_gate": true,
+  "control": true,
+  "steps": [
+    {
+      "name": "hash_identical_download",
+      "status": "PASS"
+    },
+    {
+      "name": "read_run_manifest",
+      "status": "PASS"
+    },
+    {
+      "name": "prepare_case_and_policy",
+      "status": "PASS"
+    },
+    {
+      "name": "coverage",
+      "status": "PASS"
+    },
+    {
+      "name": "r4",
+      "status": "PASS"
+    },
+    {
+      "name": "persist_native_inputs",
+      "status": "PASS"
+    },
+    {
+      "name": "comparison",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "reference_checker": {
+    "name": "r5",
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r5.py",
+    "sha256": "7a7d6c31eb351216ef0f366b018ac40dd8eaed9ec438908a5552cd368cd97e30"
+  },
+  "download": {
+    "status": "PASS",
+    "inventory": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/cloud_inventory.json",
+      "sha256": "2c66838affbe9098469bc818ec8cd3bdb93b858b9136f3ad947ae3ef73be7e69"
+    },
+    "receipt": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-canonical-20261025-01/download_receipt.json",
+      "sha256": "ee594e30fe69f32716b748c0506235a5340da22c0a0ba6e415c13cbb5f0db3e0"
+    },
+    "files": 122,
+    "local_receipt_additions": []
+  },
+  "coverage": {
+    "status": "NOT_COVERED",
+    "evidence_verified": true
+  },
+  "commands": [
+    {
+      "argv": [
+        "/data/ycfeng/envs/openmopd-py312/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r5.py",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/r4_case",
+        "dsv4-h200-p2-64-canonical-20261025-01",
+        "clean"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "interpreter": "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "started_utc": "2026-11-02T15:56:21.565946+00:00",
+      "exit_code": 0,
+      "stdout": "{\"run_tag\": \"dsv4-h200-p2-64-canonical-20261025-01\", \"status\": \"PASS\", \"failed\": [], \"derived_num_blocks\": {}}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/e2e_gate/run_gate.py",
+        "normalize",
+        "--matrix",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/matrix.json",
+        "--cell",
+        "dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path",
+        "--artifacts-root",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate",
+        "--vllm-run-dir",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01",
+        "--frontier-run",
+        "a10=/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64",
+        "--output-dir",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/rows"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "started_utc": "2026-11-02T15:56:30.825631+00:00",
+      "exit_code": 0,
+      "stdout": "wrote /data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/rows\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/e2e_gate/run_gate.py",
+        "gate",
+        "--matrix",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/matrix.json",
+        "--cell",
+        "dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path",
+        "--rows",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/rows",
+        "--output",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/reading.json"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "started_utc": "2026-11-02T15:56:31.617131+00:00",
+      "exit_code": 0,
+      "stdout": "ttft_ms                  vllm 741.2164 frontier 684.3138 rel 0.0768 PASS\ntpot_ms                  vllm 25.8705 frontier 25.2953 rel 0.0222 PASS\nrequest_e2e_time_ms      vllm 27206.7695 frontier 26561.4432 rel 0.0237 PASS\ntoken_throughput_tps     vllm 5963.2063 frontier 5975.2516 rel 0.0020 PASS\ndsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path: FAIL (routing MATCH)\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+        "--rows",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/rows",
+        "--reading",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/reading.json",
+        "--openers",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/openers.json",
+        "--output",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/warm_reading.json"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "started_utc": "2026-11-02T15:56:32.119183+00:00",
+      "exit_code": 0,
+      "stdout": "PASS_EXACT original; warm=PASS retained=379\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+        "--rows",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/rows",
+        "--reading",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/gate/reading.json",
+        "--openers",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/empty_openers.json",
+        "--output",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102/empty_reading.json"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "started_utc": "2026-11-02T15:56:32.697534+00:00",
+      "exit_code": 0,
+      "stdout": "PASS_EXACT original; warm=FAIL retained=384\n",
+      "stderr": ""
+    }
+  ],
+  "r4_status": "PASS",
+  "all_request_verdict": "FAIL",
+  "formal_replay": {
+    "command_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/p2_64_command.json",
+    "command_sha256": "702e9d0a00e60bf40f029fd48b33866cbc7458a4ef320b991e780549fe2d3ac1",
+    "files": {
+      "receipt.json": "ecfaa1821906b7d55cc9272cf0f3dcc715078418e2cc1645d213d2416d7611f1",
+      "forwards.jsonl.gz": "4507318110b06d5aafc298ffaf727ac20bb47bd341bd39104a40e022e7c5c745",
+      "collectives.json": "8af0f669bdf3f58c327d02d94e5b4337592a915745a4f40992f4f64500b66a15"
+    }
+  },
+  "comparison_complete": true
+}

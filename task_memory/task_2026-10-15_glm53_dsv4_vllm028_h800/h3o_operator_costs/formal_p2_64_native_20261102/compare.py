@@ -1,10 +1,12 @@
-"""CPU post-run R4, persisted inputs, all-request and warm reading; soft gate.
+"""CPU post-run ground-truth reader, persisted inputs, all-request and warm reading; soft gate.
 
 compare.py --case PACKAGE_CASE --download DOWNLOAD_TAG_DIR --output NEW_DIR
-           [--controller-run LOCAL_RUN_WITH_RECEIPTS]
+           [--controller-run LOCAL_RUN_WITH_RECEIPTS] [--reference-checker r4|r5]
 compare.py --control --output NEW_DIR
 The lead supplies the hash-identical cloud copy and terminal receipt. This tool
-never submits a job, copies from the cloud, or changes the formal replay.
+never submits a job, copies from the cloud, or changes the formal replay. The
+reference reader defaults to the generation 01 R4 checker; R5 is the approved
+startup-repair successor and keeps the same reading and soft-gate behavior.
 """
 import argparse
 from datetime import datetime, timezone
@@ -25,6 +27,10 @@ COMMAND = TASK / 'h3o_operator_costs/formal_p2_20261102/p2_64_command.json'
 CONTROL_TAG = 'dsv4-h200-p2-64-canonical-20261025-01'
 CONTROL_CASE = Path('/data/ycfeng/tmp/glm53_dsv4/h200/cases/p2_64r_case_20261025')
 CONTROL_DOWNLOAD = Path('/data/ycfeng/tmp/glm53_dsv4/h200/downloads') / CONTROL_TAG
+CHECKERS = {
+    'r4': R4,
+    'r5': HERE.parents[2] / 'task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r5.py',
+}
 PERSISTED = TASK / 'h200_mainline/diagnostic/inputs'
 CONTROL_FILES = [r['path'] for r in json.loads((PERSISTED / 'manifest.json').read_text())['p2_64r']['files']]
 RECEIPTS = {'launcher_receipt.json', 'platform_terminal_receipt.json'}
@@ -41,6 +47,13 @@ def sha(path):
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def select_reference_checker(choice='r4'):
+    require(choice in CHECKERS, f'Unknown reference checker: {choice}')
+    path = CHECKERS[choice]
+    require(path.is_file(), f'Missing reference checker: {path}')
+    return path
 
 
 def checked_copy(source, target):
@@ -92,9 +105,13 @@ def persist(run, r4, download, out):
     return inputs
 
 
-def run_pipeline(case_source, download, out, controller=None, control=False, r4_python=None):
+def run_pipeline(case_source, download, out, controller=None, control=False, r4_python=None,
+                 reference_checker='r4'):
+    checker = select_reference_checker(reference_checker)
     out.mkdir(parents=True, exist_ok=False)
-    result = dict(status='UNVERIFIED', soft_gate=True, control=control, steps=[], errors=[])
+    result = dict(status='UNVERIFIED', soft_gate=True, control=control, steps=[], errors=[],
+                  reference_checker=dict(name=reference_checker, path=str(checker),
+                                         sha256=sha(checker)))
     def stage(name, action):
         try:
             value = action()
@@ -165,8 +182,8 @@ def run_pipeline(case_source, download, out, controller=None, control=False, r4_
         result['coverage'] = dict(status=coverage['status'], evidence_verified=coverage['evidence_verified'])
     r4_path = case / 'analysis/run_check_status.groundtruth_clean.json'
     if prepared:
-        stage('r4', lambda: command([str(r4_python or sys.executable), str(R4), str(case), tag, 'clean']))
-    # subprocess command returns None on success; inspect the actual R4 artifact.
+        stage('r4', lambda: command([str(r4_python or sys.executable), str(checker), str(case), tag, 'clean']))
+    # The command returns None on success; inspect the selected reader's artifact.
     r4_pass = r4_path.is_file() and json.loads(r4_path.read_text())['runs'][tag]['status'] == 'PASS'
     result['r4_status'] = 'PASS' if r4_pass else 'UNVERIFIED'
     inputs = stage('persist_native_inputs', lambda: persist(run, r4_path, download, out)) if r4_path.is_file() else None
@@ -223,7 +240,9 @@ def main():
         parser.add_argument('--download', type=Path)
         parser.add_argument('--controller-run', type=Path)
         parser.add_argument('--output', type=Path, required=True)
-        parser.add_argument('--r4-python', type=Path, help='Existing CPU interpreter with torch for R4; default this interpreter')
+        parser.add_argument('--r4-python', type=Path, help='Existing CPU interpreter with torch for the reader; default this interpreter')
+        parser.add_argument('--reference-checker', choices=tuple(CHECKERS), default='r4',
+                            help='Immutable reference reader; r4 is generation 01, r5 the startup-repair successor')
         args = parser.parse_args()
         if args.control:
             require(args.case is None and args.download is None, 'Control fixes the retained case and download')
@@ -233,7 +252,8 @@ def main():
             require(args.case is not None and args.download is not None, '--case and --download are required')
             case, download, controller = args.case.resolve(), args.download.resolve(), args.controller_run
         sys.path.insert(0, str(TASK / 'h3o_operator_costs/a10'))
-        result = run_pipeline(case, download, args.output.resolve(), controller, args.control, args.r4_python)
+        result = run_pipeline(case, download, args.output.resolve(), controller, args.control, args.r4_python,
+                              args.reference_checker)
         print(json.dumps({k: result.get(k) for k in ('status', 'r4_status', 'all_request_verdict', 'coverage', 'errors')}))
     except (Exception, SystemExit) as error:
         print(f'P2_COMPARISON_UNVERIFIED {type(error).__name__}: {error}', file=sys.stderr)

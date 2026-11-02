@@ -1,0 +1,26 @@
+{
+  "status": "PASS_READER_CODE_AND_CONTROL_ONLY",
+  "reviewer": "lead",
+  "files": {
+    "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r5.py": "7a7d6c31eb351216ef0f366b018ac40dd8eaed9ec438908a5552cd368cd97e30",
+    "tests/unit/test_native_startup_source_binding.py": "e855e0a5074a37a817adc3034e3c02222347c57558b524fcbfa4375befb3ff85",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/compare.py": "ad1874ef141dd1e4fd71575b0459a7d6133a22175cecb2bc20bc40bd644ef743"
+  },
+  "tests": {
+    "reader_passed": 153,
+    "unrelated_hash_tests_deselected": 14,
+    "tools_passed": 25
+  },
+  "old_reference_control": "PASS_EXACT",
+  "new_gpu_reference": "PENDING",
+  "initial_failure": "r5_initial_call_chain_failure.json",
+  "correction": "Replace the binding in the inherited exec namespace. Preserve the frozen R4 predicate for the old build.",
+  "lead_adjustment": "Removed the recursive bytecode reachability inspection; retained real graph-entry tests and ran the full comparison CLI. Fixtures copy only sealed input files, derive the prelaunch manifest, and read pinned native Git objects.",
+  "test_prerequisite": "Pinned native Git commits 2cf0a691 and a06a72a4; FRONTIER_NATIVE_SOURCE_REPO can select their repository. No silent skip.",
+  "executor": {
+    "label": "p64-reader-1102m",
+    "turn": 2,
+    "exit": 130,
+    "reason": "Lead ended implementation after 32 new tests passed; independently completed final regression and full CLI control."
+  }
+}

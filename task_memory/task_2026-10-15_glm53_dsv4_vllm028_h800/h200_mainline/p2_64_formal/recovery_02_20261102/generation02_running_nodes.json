@@ -1,0 +1,144 @@
+{
+ "captured_utc": "2026-11-02T15:58:59.693281+00:00",
+ "job": "exp-1102-233941-576872",
+ "replicas": [
+  {
+   "replica": "exp-1102-233941-576872-a87ff679",
+   "phase": "Running",
+   "nodeName": "gpu-h200-1021.lgcm.sh.istep.fun",
+   "hostIP": "10.204.9.45",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:20Z",
+     "exitCode": null
+    }
+   ]
+  },
+  {
+   "replica": "exp-1102-233941-576872-e4da3b7f",
+   "phase": "Running",
+   "nodeName": "gpu-h200-0319.lgcm.sh.istep.fun",
+   "hostIP": "10.204.6.54",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:17Z",
+     "exitCode": null
+    }
+   ]
+  },
+  {
+   "replica": "exp-1102-233941-576872-c4ca4238",
+   "phase": "Running",
+   "nodeName": "gpu-h200-0125.lgcm.sh.istep.fun",
+   "hostIP": "10.204.2.77",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:04Z",
+     "exitCode": null
+    }
+   ]
+  },
+  {
+   "replica": "exp-1102-233941-576872-eccbc87e",
+   "phase": "Running",
+   "nodeName": "gpu-h200-0272.lgcm.sh.istep.fun",
+   "hostIP": "10.204.16.67",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:06Z",
+     "exitCode": null
+    }
+   ]
+  },
+  {
+   "replica": "exp-1102-233941-576872-cfcd2084",
+   "phase": "Running",
+   "nodeName": "gpu-h200-0285.lgcm.sh.istep.fun",
+   "hostIP": "10.204.16.70",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:20Z",
+     "exitCode": null
+    }
+   ]
+  },
+  {
+   "replica": "exp-1102-233941-576872-8f14e45f",
+   "phase": "Running",
+   "nodeName": "gpu-h200-0733.lgcm.sh.istep.fun",
+   "hostIP": "10.204.14.92",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:09Z",
+     "exitCode": null
+    }
+   ]
+  },
+  {
+   "replica": "exp-1102-233941-576872-c81e728d",
+   "phase": "Running",
+   "nodeName": "gpu-h200-0626.lgcm.sh.istep.fun",
+   "hostIP": "10.204.24.32",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:17Z",
+     "exitCode": null
+    }
+   ]
+  },
+  {
+   "replica": "exp-1102-233941-576872-1679091c",
+   "phase": "Running",
+   "nodeName": "gpu-h200-0873.lgcm.sh.istep.fun",
+   "hostIP": "10.204.1.63",
+   "startTime": "2026-11-02T15:55:48Z",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "startedAt": "2026-11-02T15:58:17Z",
+     "exitCode": null
+    }
+   ]
+  }
+ ],
+ "distinct_nodes": [
+  "gpu-h200-0125.lgcm.sh.istep.fun",
+  "gpu-h200-0272.lgcm.sh.istep.fun",
+  "gpu-h200-0285.lgcm.sh.istep.fun",
+  "gpu-h200-0319.lgcm.sh.istep.fun",
+  "gpu-h200-0626.lgcm.sh.istep.fun",
+  "gpu-h200-0733.lgcm.sh.istep.fun",
+  "gpu-h200-0873.lgcm.sh.istep.fun",
+  "gpu-h200-1021.lgcm.sh.istep.fun"
+ ]
+}

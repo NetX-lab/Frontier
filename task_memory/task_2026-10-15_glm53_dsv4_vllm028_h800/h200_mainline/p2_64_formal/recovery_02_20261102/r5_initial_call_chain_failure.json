@@ -1,0 +1,9 @@
+{
+  "actual_entry": "native_rank_graph_evidence",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02",
+  "result": [
+    false,
+    "UNVERIFIED: NameError: name 'native_v4_source_binding' is not defined"
+  ],
+  "namespace_has_binding": false
+}

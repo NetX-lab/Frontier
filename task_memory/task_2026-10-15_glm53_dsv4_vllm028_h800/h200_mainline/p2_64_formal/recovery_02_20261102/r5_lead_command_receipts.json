@@ -1,0 +1,38 @@
+[
+  {
+    "name": "r5_lead_tools_tests",
+    "argv": [
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "-m",
+      "pytest",
+      "test_tools.py",
+      "-q",
+      "-p",
+      "no:cacheprovider"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102",
+    "started_utc": "2026-11-02T15:56:20.645387+00:00",
+    "finished_utc": "2026-11-02T15:56:25.019040+00:00",
+    "returncode": 0,
+    "log": "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_tools_tests.log"
+  },
+  {
+    "name": "r5_lead_control",
+    "argv": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/compare.py",
+      "--control",
+      "--reference-checker",
+      "r5",
+      "--r4-python",
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "--output",
+      "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control_20261102"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "started_utc": "2026-11-02T15:56:20.646870+00:00",
+    "finished_utc": "2026-11-02T15:56:33.242249+00:00",
+    "returncode": 0,
+    "log": "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control.log"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "reader_sha256": "b958298a884006931fa32a50545e6e80575a19610ffc633f8f5d471576c184ee",
+  "chain_binding": {
+    "main": true,
+    "check": true,
+    "native_rank_graph_evidence": true
+  },
+  "approved_identity_reaches_next_check": [
+    false,
+    "UNVERIFIED: ValueError: Missing canonical client phase IDs"
+  ],
+  "unapproved_identity_rejected": [
+    false,
+    "UNVERIFIED: ValueError: Unknown V4 native source identity: ('0000000000000000000000000000000000000000', 'a06a72a4326cba02234df6cfbdc21b78d3a15d26', 'a06a72a4326cba02234df6cfbdc21b78d3a15d26')"
+  ]
+}
