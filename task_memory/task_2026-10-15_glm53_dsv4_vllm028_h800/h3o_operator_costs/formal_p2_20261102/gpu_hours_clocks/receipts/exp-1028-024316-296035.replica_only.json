@@ -1,0 +1,36 @@
+{
+ "observed_utc": "2026-11-02T07:45:37.728573+00:00",
+ "job": "exp-1028-024316-296035",
+ "basis": "replica objects only; parent RJob object not found (404), no job-level status",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "no",
+ "replicas": [
+  {
+   "name": "exp-1028-024316-296035-cfcd2084",
+   "phase": "Failed",
+   "node": "gpu-h200-1161.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-10-27T18:43:31Z",
+   "gpu_limits": {
+    "default": "1"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "state": {
+      "terminated": {
+       "exitCode": 1,
+       "reason": "Error",
+       "startedAt": "2026-10-27T18:46:16Z",
+       "finishedAt": "2026-10-27T18:53:11Z"
+      }
+     },
+     "duration_seconds": 415.0,
+     "gpu_limit": 1
+    }
+   ]
+  }
+ ],
+ "container_gpu_hours": 0.11527777777777778
+}

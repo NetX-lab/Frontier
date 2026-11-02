@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | GPU-hours: the 19 UNKNOWN jobs filled from read-only platform container clocks; 35 jobs total 158.27 container GPU-hours. |
 | 2026-11-02 | Created: formal P2-32/P2-64 replays with the adopted H200 NIXL pair, lead review of Codex Q4, independent checks, and the per-case verdicts (P2-32 PASS; P2-64 BLOCKED_ON_DECISION on the pre-launch promotion receipt). |
 
 Authority: ticket 19 (`frontier_reference_run`, `comparison_and_calibration`, `promotion_32_to_64`, `final_acceptance`, Acceptance); requirements D-P2-INPUT-QUALIFICATION, D-P2-Q1-CHOICES, D-P2-Q2-NIXL-TIMING, D-P2-PAYLOAD-C, D-WARM-TARGET, D-WARM-TWO-FIX, D-WARM-EP-DEFER, decision 46 and D-NO-INTERRUPT.
@@ -57,6 +58,7 @@ Environment: `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6), cwd the wor
   - Lead finding for B: D-WARM-TARGET requires future native runs to warm every lazily connected (P lane, D lane) pair before the formal window and prove it from lifecycle/server records. The retained package uses 16 fixed warmup requests, which its own manifest says do not prove coverage. B therefore needs a package change (a warmup that opens all 16 P x D lane pairs) and a check-only verification before submission. The new reference would not need the paired exclusion.
   - Lead recommendation: B. The Acceptance text says not to waive an active DSV4 criterion, and the pair-warmed reference also tests the warm target directly. Choose A if 64 H200 for about 25 minutes of container time (the original containers ran 1,304–1,473 s), plus the queue wait, is not worth it now.
 - **GPU-hours checkbox:** INSUFFICIENT_EVIDENCE, not blocking the Acceptance predicate. Authoritative allocation records for the 19 incomplete-clock jobs can be requested read-only through `/ds4-exec`; no GPU run is needed.
+- **GPU-hours, follow-up (same day):** the 19 jobs were read through `/ds4-exec` (Pi `gpuh-clocks-1102a`, read-only, personal client). 16 have `terminal_receipt.py` receipts; 3 have purged job objects (HTTP 404) and keep their clocks on the replica objects. `h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/merge_gpu_hours.py` recomputes each from container start/finish × GPU limit and checks creator, group, replica × GPU count and the receipt value (19/19 PASS). Total for the 35 jobs: **158.271667 container GPU-hours** (151.864444 P2 H200 campaign, 6.407222 earlier shared DSV4 prerequisites); `gpu_hours_complete.{csv,json}` beside the script. Basis: container start-to-finish, including initialization, compilation, warm-up and failures; queue time and pre-container pod time (image pull, 153–165 s where visible) are excluded. The checkbox stays open until the formal P2-64 campaign is added.
 
 ## Limits
 

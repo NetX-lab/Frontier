@@ -1,0 +1,15 @@
+{
+ "jobs": 35,
+ "filled_from_platform_clocks": 19,
+ "filled_gpu_hours": 16.86111111111111,
+ "total_container_gpu_hours": 158.27166666666665,
+ "by_accounting_scope": {
+  "earlier_shared_DSV4_prerequisite": 6.407222222222222,
+  "P2_H200_campaign": 151.86444444444442
+ },
+ "basis": "container start-to-finish x GPU limit for every job; includes initialization, compilation, warm-up and failed attempts; excludes queue time and pod time before the container started (image pull)",
+ "source_table": {
+  "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gpu_hours.csv",
+  "sha256": "16e30be39e6dd5274725eedb0d20bf8926ad57afcac821deaaddc5b42d347829"
+ }
+}

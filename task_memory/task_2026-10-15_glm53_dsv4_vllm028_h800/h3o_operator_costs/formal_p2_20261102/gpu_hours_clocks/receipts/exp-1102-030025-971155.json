@@ -1,0 +1,80 @@
+{
+ "observed_utc": "2026-11-02T07:44:34.796700+00:00",
+ "job": "exp-1102-030025-971155",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "yes",
+ "status": {
+  "phase": "Succeeded",
+  "startTime": null,
+  "finishTime": "2026-11-01T22:27:40Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 2,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1102-030025-971155-c4ca4238",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0604.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-11-01T22:26:02Z",
+       "finishedAt": "2026-11-01T22:27:38Z",
+       "containerID": "containerd://2706a94e03c828fb3d4cb1d411ccb5eed1867b6be96e10ae5e05c1babf1b5c8e"
+      }
+     },
+     "duration_seconds": 96.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-030025-971155-cfcd2084",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0457.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-11-01T22:26:20Z",
+       "finishedAt": "2026-11-01T22:27:38Z",
+       "containerID": "containerd://fba945cc0c4b4c8632aac428a6cf07471c8494720f3aaf1d169808e9fbe7ac1c"
+      }
+     },
+     "duration_seconds": 78.0
+    }
+   ]
+  }
+ ],
+ "container_gpu_hours": 0.38666666666666666
+}

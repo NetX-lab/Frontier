@@ -1,0 +1,58 @@
+{
+ "observed_utc": "2026-11-02T07:44:13.699013+00:00",
+ "job": "exp-1029-010008-493772",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "no",
+ "status": {
+  "phase": "Succeeded",
+  "startTime": null,
+  "finishTime": "2026-10-28T17:03:01Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 1,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "16",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "125Gi",
+      "nvidia.com/gpu": "1",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "16",
+      "memory": "125Gi",
+      "nvidia.com/gpu": "1"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1029-010008-493772-cfcd2084",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0700.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-28T17:00:26Z",
+       "finishedAt": "2026-10-28T17:02:59Z",
+       "containerID": "containerd://db8d78ad35f25afc7b9a92547c398f3cb1ffe0527f9ee3171257e8f639a45e31"
+      }
+     },
+     "duration_seconds": 153.0
+    }
+   ]
+  }
+ ],
+ "container_gpu_hours": 0.0425
+}

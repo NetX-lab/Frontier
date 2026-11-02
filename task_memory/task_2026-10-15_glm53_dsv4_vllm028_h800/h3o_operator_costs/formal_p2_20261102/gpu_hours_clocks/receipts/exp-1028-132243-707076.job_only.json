@@ -1,0 +1,6 @@
+{
+ "observed_utc": "2026-11-02T07:45:01.939212+00:00",
+ "job": "exp-1028-132243-707076",
+ "basis": "job object only; no container clocks",
+ "read_error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': '87188cb0-d4c2-4592-a8e7-8b1adc792d90, 87188cb0-d4c2-4592-a8e7-8b1adc792d90', 'cache-control': 'no-cache, private,no-cache, private', 'content-length': '256', 'content-type': 'application/json', 'date': 'Mon, 02 Nov 2026 07:45:01 GMT', 'x-kubernetes-pf-flowschema-uid': 'bb9a21e1-c624-4681-a37b-f9e9cefbadb6', 'x-kubernetes-pf-prioritylevel-uid': '6cc3b69b-3d5d-4f36-8276-a0fe04161ae2', 'x-envoy-upstream-service-time': '3', 'x-request-id': '3253e606-a12a-43d0-ab0d-1f76fc08b4fa', 'server': 'envoy'})"
+}
