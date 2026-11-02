@@ -1,0 +1,19 @@
+
+mode=squatter out=/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/collision
+rank attempts (port, listen_socket)            outcome               error
+0    43900, 43899                              error                 torch.distributed.DistStoreError
+1    43900                                     error                 torch.distributed.DistNetworkError
+2    43900                                     error                 torch.distributed.DistNetworkError
+3    43900                                     error                 torch.distributed.DistNetworkError
+[PASS] all_ranks_produced_evidence
+[PASS] coord_store_port_is_zero
+[PASS] port_lists_identical_across_ranks
+[PASS] rank0_first_attempt_hit_squatted_port
+[PASS] rank0_retried_on_a_different_port
+[PASS] rank0_emitted_native_retry_warning
+[PASS] peers_stayed_on_the_stale_port
+[PASS] peers_connections_reached_squatter
+[PASS] divergent_rendezvous_ports
+[PASS] rank0_failed
+[PASS] peers_failed
+SYMPTOM_DETECTED

@@ -1,0 +1,14 @@
+
+mode=baseline out=/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline
+rank attempts (port, listen_socket)            outcome               error
+0    41544                                     ok                    
+1    41544                                     ok                    
+2    41544                                     ok                    
+3    41544                                     ok                    
+[PASS] all_ranks_produced_evidence
+[PASS] coord_store_port_is_zero
+[PASS] port_lists_identical_across_ranks
+[PASS] baseline_all_ranks_ok
+[PASS] baseline_single_shared_port
+[PASS] baseline_no_retry_warning
+NO_SYMPTOM

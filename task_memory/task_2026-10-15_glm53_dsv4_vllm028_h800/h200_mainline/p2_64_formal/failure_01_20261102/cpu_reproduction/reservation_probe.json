@@ -1,0 +1,39 @@
+{
+  "vllm_port_base": 54715,
+  "ports_returned": [
+    54715,
+    54716,
+    54717,
+    54718,
+    54719
+  ],
+  "same_process_rebind": [
+    {
+      "port": 54715,
+      "rebind_succeeded": true
+    },
+    {
+      "port": 54716,
+      "rebind_succeeded": true
+    },
+    {
+      "port": 54717,
+      "rebind_succeeded": true
+    },
+    {
+      "port": 54718,
+      "rebind_succeeded": true
+    },
+    {
+      "port": 54719,
+      "rebind_succeeded": true
+    }
+  ],
+  "cross_process_first_port": {
+    "port": 54715,
+    "returncode": 0,
+    "stdout": "{\"port\": 54715, \"bound_in_child\": true}",
+    "stderr": ""
+  },
+  "native_source": "vllm/utils/network_utils.py:190-213 get_open_ports_list; :216-247 _get_open_port binds inside `with socket.socket(...) as s`, so the probe socket is closed again before the port is returned (line 225-228)"
+}

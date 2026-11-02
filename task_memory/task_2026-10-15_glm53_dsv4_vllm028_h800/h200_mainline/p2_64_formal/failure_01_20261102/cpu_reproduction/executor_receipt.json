@@ -1,0 +1,19 @@
+{
+  "label": "p64-dp-port-repro-1102f",
+  "session_id": "6a0cf576-e8b6-43df-97cd-1a51559116cb",
+  "model_and_thinking": [
+    "custom/deepseek-v4.1-flash-sys",
+    "high"
+  ],
+  "exit": 130,
+  "settled_success_claimed": false,
+  "termination": "Lead stopped after sufficient artifact evidence and independent reproduction; optional harness reruns had continued.",
+  "review_status": "Accepted mechanism evidence only; executor findings contain rejected inferences.",
+  "executor_findings_sha256": "02ac8c4f521f93bc3b5c48c6b71c7b07ac7a497c4f564542f5973592ff07a06f",
+  "rejected_claims": [
+    "Agreement on the remote port does not imply a common VLLM_PORT environment; production HELLO metadata already propagates the port list.",
+    "The logs do not directly capture the first contested bind port, replacement port, or original listener owner.",
+    "The mixed coordination-store Gloo result is not proven unrelated transport flakiness.",
+    "The reproduction does not qualify the production native repair, environment/config changes, or a fail-fast substitute."
+  ]
+}

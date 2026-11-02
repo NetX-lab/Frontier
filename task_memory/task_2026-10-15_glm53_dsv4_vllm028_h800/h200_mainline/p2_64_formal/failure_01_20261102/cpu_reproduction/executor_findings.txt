@@ -1,0 +1,313 @@
+# DP-init rendezvous port divergence: CPU reproduction and bounded findings
+
+Frozen native source under test:
+`/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69`
+(`pyproject.toml` declares `torch == 2.13.0`; the tree's git objects are
+incomplete in this checkout, so identity is recorded by file SHA-256 in every
+`manifest.json` instead).
+
+Formal failure being explained: `exp-1102-164536-160317` (`dsv4-h200-p2-64-formal-20261102-01`),
+decode head `gpu-h200-0760` logs `parallel.py:655 Address already in use.
+Retrying with a new port.` and never becomes ready; peers keep retrying
+`10.204.22.14:40273`; everything is stopped ~30 minutes later.
+
+This work did **not** touch the frozen source, the package, the worktree, or
+the platform. Everything below is under
+`/data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch`.
+
+---
+
+## 1. Reproduction: one unattended CPU command
+
+```bash
+bash /data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch/run_all.sh
+```
+
+Interpreter and libraries (recorded in each `manifest.json`):
+`/data/ycfeng/envs/openmopd-py312/bin/python`, Python 3.12.13,
+`torch 2.8.0+cu128` (CPU only, real `torch.distributed.TCPStore` and real gloo
+process groups; no GPU, no installs).
+
+The command runs, against 4 CPU rank processes (`data_parallel_size=4`, the
+formal job's value):
+
+| case | command | expected | actual (canonical run `runs/canonical_v3`) |
+| --- | --- | --- | --- |
+| baseline | `repro_dp_port_collision.py --no-squatter --ranks 4 --timeout 10` | all 4 ranks join one gloo group on one port | PASS: all `ok`, single port 34980, no warning, 2.9 s |
+| collision | `... --squatter --ranks 4 --timeout 10` | rank0 retries on a new port, peers stay on the old one, case fails | PASS (symptom): rank0 attempts 42516 then 42515; peers keep 42516; 16.1 s |
+| minimal collision | `... --squatter --ranks 2 --timeout 8` | same symptom with 2 ranks | PASS: rank0 40588→40587, peer stays 40588 |
+| reservation lifetime | `... --probe reservation` | listed "open" ports are not held | PASS: 5/5 listed ports rebind immediately, also from another process |
+| list determinism | `... --probe determinism` | `VLLM_PORT` makes the list identical across processes; unset does not | PASS |
+| coordinated publish (native coord-store branch) | `... --coord-store --squatter --ranks 4 --timeout 10` | all ranks use the published ephemeral port, ignore the occupied fixed port | PASS: all `ok` on 40829; squatted 47412 untouched; rank0 used a pre-bound socket |
+
+Whole suite wall time: **65 s** (`runs/canonical_v3.log`); the collision case alone is 16-22 s. Exit status 0 means
+every expectation held.
+
+Canonical evidence paths:
+
+* `runs/canonical_v3/baseline_4ranks/{result.json,rank*.json,manifest.json}`
+* `runs/canonical_v3/collision_4ranks/{result.json,rank*.json,manifest.json}`
+* `runs/canonical_v3/collision_2ranks_minimal/…`
+* `runs/canonical_v3/probe_reservation/reservation_probe.json`
+* `runs/canonical_v3/probe_list_determinism/list_determinism_probe.json`
+* `runs/canonical_v3/coord_store_path/…`
+* `runs/canonical_v3/import_probe/import_probe.json`
+* raw per-rank stdout/stderr: `runs/canonical_v3/<case>/rank<N>.stdout.log`
+* earlier equivalent run kept for comparison: `runs/canonical_1/`
+
+Collision case, verbatim from `runs/canonical_v3/collision_4ranks/result.json`
+(ports are one deterministic 5-port scan starting at 42512; `__post_init__`
+consumes one, so the 4-entry list that survives is
+`[42513, 42514, 42515, 42516]` and `pop()` is LIFO):
+
+```
+rank0 attempts=[(42516, no listen_socket), (42515, no listen_socket)]
+      warnings=['Address already in use. Retrying with a new port.']
+      outcome=error  torch.distributed.DistStoreError
+      "Timed out after 11 seconds waiting for clients. 1/4 clients joined."
+rank1 attempts=[(42516, ...)]  error torch.distributed.DistNetworkError "Connection reset by peer"
+rank2 attempts=[(42516, ...)]  error torch.distributed.DistNetworkError "Connection reset by peer"
+rank3 attempts=[(42516, ...)]  error torch.distributed.DistNetworkError "Connection reset by peer"
+squatted port 42516 was contacted 22 times by rank processes (plus 1 harness liveness probe)
+```
+
+Baseline, same port list and same ranks:
+
+```
+rank0..rank3 attempts=[(34980, ...)] outcome=ok on 34977..34980 window
+```
+
+The collision case is deterministic: it passed identically in
+`runs/canonical_1`, in three standalone repeats (`out_collision_auto_1..3`),
+and with 2 ranks. One coord-store repeat (1 of 12) hit a gloo full-mesh
+`connectFullMesh` `RuntimeError` (torch data-plane flake on loopback, unrelated
+to port selection); see `runs/canonical_final/coord_store_path/rank0.json`.
+The failing run is retained, not hidden.
+
+---
+
+## 2. The native path that produces this (observations, file:line)
+
+All line numbers are in the frozen tree.
+
+1. `vllm/v1/engine/core.py:2014-2028` `EngineCore._init_data_parallel()` calls
+   `parallel_config.stateless_init_dp_group(return_store=True)`.
+2. `vllm/config/parallel.py:621-662` `stateless_init_dp_group()`:
+   * `:637` `max_retries = 5`
+   * `:641` `port, listen_socket = self._pick_stateless_dp_port()`
+   * `:643-652` `stateless_init_torch_distributed_process_group(ip, port, rank,
+     size, backend="gloo", listen_socket=listen_socket)`
+   * `:653-657` `except DistNetworkError` → if `"EADDRINUSE" in str(e)`:
+     `logger.warning("Address already in use. Retrying with a new port."); continue`
+   * `:662` re-raises the last exception after 5 attempts
+   This is exactly the `parallel.py:655` warning from the formal log.
+3. `vllm/config/parallel.py:586-611` `_pick_stateless_dp_port()`:
+   * `:593-594` `if not self._coord_store_port: return self.get_next_dp_init_port(), None`
+   * `:596-609` otherwise (coord store): rank0 binds `(ip, 0)`, publishes
+     `"dp_master_port"` into the shared TCPStore, others read it, and rank0
+     returns the bound socket as `listen_socket`.
+4. `vllm/config/parallel.py:569-584` `get_next_dp_init_port()`:
+   * `:578-579` pop from this process's `_data_parallel_master_port_list`
+   * `:581-582` else `data_parallel_master_port` and `+= 1`
+   Nothing is published; the pop is local to the calling process.
+5. `vllm/config/parallel.py:879-884` (`__post_init__`, non-elastic path):
+   `_data_parallel_master_port_list = get_open_ports_list(5)` then
+   `data_parallel_master_port = list.pop()`. So after config time 4 entries
+   remain, and the DP group init consumes them LIFO.
+6. `vllm/config/parallel.py:333,338` defaults: `_data_parallel_master_port_list`
+   empty, `_coord_store_port: int = 0`; `:208` `enable_elastic_ep: bool = False`.
+7. `vllm/distributed/utils.py:576-684`
+   `stateless_init_torch_distributed_process_group()`:
+   * `:622` `init_method = get_tcp_uri(host, port)` — a plain string
+   * `:634-643` `listen_socket` present → create the TCPStore server directly on
+     the pre-bound fd (`create_tcp_store`, `:175-195`)
+   * `:645-647` `listen_socket is None` → `next(rendezvous(init_method, rank,
+     world_size, timeout))`, i.e. torch re-binds/connects by string, so the
+     earlier `get_open_ports_list` probe is only a guess
+   * `:658-663` gloo PG via `init_gloo_process_group` (`:546-573`)
+8. `vllm/utils/network_utils.py:190-213` `get_open_ports_list()`, `:216-247`
+   `_get_open_port()` — see §4.
+9. Second consumer of the same list inside one process:
+   `vllm/distributed/parallel_state.py:1629` (`init_distributed_environment`,
+   only when `nnodes == 1` and DP > 1). In the formal 4-node group
+   (`nnodes > 1`) that branch is not used; it uses `master_addr:master_port`.
+
+`_coord_store_port == 0` for this run (observations):
+`_setup_elastic_ep_reconfig_bootstrap()` at
+`vllm/v1/engine/core_client.py:1682-1701` is the only producer of a non-zero
+value, and it is called from the elastic-EP scale-up path; other writers are
+`vllm/distributed/elastic_ep/elastic_state.py:456` and
+`vllm/v1/engine/core.py:2261`, both applying an elastic `ReconfigureDistributedRequest`.
+The formal job's `non-default args` (decode head `server.log:8`) contain no
+`enable_elastic_ep`/`eplb` setting, so the default `False` applies. The repro
+reads the default straight out of `ParallelConfig` (`_coord_store_port == 0`
+asserted in `native_extract.make_parallel_config`) and records
+`coord_store_port: 0` per rank in every non-coord case.
+
+---
+
+## 3. Is rank0's retry communicated to peers? (mechanism + log reading)
+
+**No, and it cannot be.**
+
+* The retry only re-enters `_pick_stateless_dp_port()` (`parallel.py:641`); in
+  the non-elastic mode that pops rank0's *own* list (`:593-594`, `:578-579`).
+  There is no store write anywhere in this branch.
+* Peers already built `init_method = tcp://<head>:40273` (`utils.py:622`) and are
+  inside torch's `rendezvous` client, which retries that same URI
+  (`utils.py:645-647`), with the 1800 s default store timeout. They are
+  TCPStore *clients*: they never bind, so even if the port became free they
+  would keep failing to connect and would never discover rank0's new store.
+* Consequently the retry cannot converge: rank0's new store waits for
+  `world_size - 1` clients that are all dialing the old port. The only exits
+  are rank0's store timeout and each peer's rendezvous timeout. The CPU repro
+  shows exactly that shape: rank0 `DistStoreError "Timed out ... 1/4 clients
+  joined"` on port B, peers `DistNetworkError "Connection reset by peer"` on
+  port A.
+
+Real-log observations (paths under
+`/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261102_01/dsv4-h200-p2-64-formal-20261102-01/artifacts/nodes`):
+
+* decode head `gpu-h200-0760…/server.log:59`, 12:22:14:
+  `(EngineCore_DP0 pid=1495) WARNING … [parallel.py:655] Address already in use. Retrying with a new port.`
+  Nothing is logged about which port was retried, and nothing is logged again
+  until the 12:50:44 shutdown (`:60-65`).
+* decode peers `gpu-h200-0819…/server.log:14` (12:22:14.227), `:51` (try=0,
+  `timeout=1800000ms`), `:458` (try=6, `Ping failed, invalid value returned
+  from server. Expected: 1327, Got: 255`), retries continue to 12:50:51
+  (shutdown `:3009`). `0828` and `0882` show the same pattern against
+  `10.204.22.14:40273`.
+* All three decode peers name the **same** remote port 40273 across three
+  different hosts; `grep -c "Waiting for READY message from DP Coordinator"`
+  is 0 for `0760/0819/0828/0882` (they never got past DP group init), while the
+  prefill group head `gpu-h200-0043…/server.log:414` reached
+  `All engine subscriptions received by DP coordinator` and prefill DP3
+  (`0375:356`) reached the READY wait. The failure is specific to one DP group's
+  rendezvous port, not to the deployment as a whole.
+* `serve.py:231` on `0819` prints the *DP RPC* head address
+  `tcp://10.204.22.14:24571`; that is a different port from the failing 40273.
+
+What the logs **prove**: one rank of one DP group hit EADDRINUSE on its first
+rendezvous bind, retried on another port, and its peers never stopped dialing
+the old one; the peers' client never validated a TCPStore on 40273 (one reply
+did not even carry the TCPStore validation value), so the listener on 40273 was
+not the group's own store. The prefill group completed the same code path
+successfully.
+
+What the logs **do not prove**:
+* who owned 40273 on `gpu-h200-0760` at 12:22:14 (no socket/owner snapshot, no
+  pid, no start-time evidence was downloaded);
+* the exact port rank0 retried on (never logged), hence the exact four-port
+  sequence cannot be reconstructed from logs; only that it was not 40273;
+* whether the owner was a leftover from an earlier attempt/run, a co-located
+  vLLM process, or an unrelated process. The reproduction proves the *failure
+  mechanism*, not the identity of the original port owner.
+
+Inference (marked as inference): because `get_open_ports_list()` is
+deterministic only when `VLLM_PORT` is set (`network_utils.py:190-213`, the
+else-branch uses a random ephemeral bind), three independent peers agreeing on
+40273 implies the launcher exported one `VLLM_PORT` base to all nodes. That
+also means the head's port list was the same list, so its first attempt was
+very likely 40273 as well — consistent with, but not proof of, an external
+owner on the head node.
+
+---
+
+## 4. Reservation lifetime of `get_open_ports_list`
+
+`_get_open_port()` (`network_utils.py:216-247`) finds a free port by binding and
+then **closing** the probe socket inside a `with` block (`:225-228`; the
+`bind(("",0))` fallback is `:239-247`). `get_open_ports_list()` just collects
+five such values. There is no reservation, no fd kept, and no lock shared with
+other processes. The list is a snapshot taken at `ParallelConfig.__post_init__`
+(`parallel.py:879-884`) and consumed later at DP group init
+(`core.py:2028`); in the formal job that window is ~64-75 s
+(config logs 12:20:59-12:21:10, EADDRINUSE 12:22:14).
+
+`runs/canonical_v3/probe_reservation/reservation_probe.json` (native function,
+same interpreter): all 5 listed ports rebind successfully, in the same process
+and from a separate child process. So the "prepared port list" holds nothing;
+any process on the head node can take a listed port between config and use.
+
+Also relevant: with `VLLM_PORT` unset, two independent processes derive
+completely different 5-port lists (`probe_list_determinism`: with the env var
+the two lists are identical, without it they share no port). Agreement of the
+DP rendezvous port therefore depends on the launcher's environment, not on any
+coordination in the code.
+
+---
+
+## 5. Smallest concrete repair options (not implemented here)
+
+All options are evaluated only for the port-selection/rendezvous step; none is
+shipped, and all need the lead's/user's approval.
+
+**A. Fail fast instead of retrying blindly (smallest).**
+In `stateless_init_dp_group()`, when `_coord_store_port == 0`, do not `continue`
+on EADDRINUSE: raise a clear error naming host/port and the fact that peers
+cannot learn a new port. Cost: one branch; no healthy-path change.
+Measurement implication: the 1800 s hang becomes an immediate failure; the
+error text becomes an assertion target; no timing change on success.
+
+**B. Reuse the coordinated publish path that already exists in this source.**
+`_pick_stateless_dp_port()`'s coord-store branch (`parallel.py:596-609`) already
+implements "rank0 binds `(ip, 0)`, publishes, peers read" and hands the
+pre-bound socket to `create_tcp_store` (`utils.py:634-643`), which removes the
+re-bind TOCTOU. Today it is wired only for elastic EP: the API server creates
+the store (`core_client.py:1693-1700`) and ships its port to workers in
+`ReconfigureDistributedRequest` (`:1714-1716`). Extending it to the normal
+multi-node DP path needs one store created before engine start and its port
+propagated to EngineCore (env var or request field).
+CPU validation of that exact branch: `runs/canonical_v3/coord_store_path`
+(4/4 ranks `ok` on one published port 40829, rank0 `listen_socket=True`, the
+fixed port 47412 deliberately occupied and untouched, no retry warning,
+2.8 s). Implications: adds one TCPStore dependency at startup and a new
+config/env surface; no effect on post-init timing; must be measured against
+the current startup path.
+
+**C. Keep the current list but bind once and keep the fd.**
+Have rank0 bind the chosen port at config time and pass the listening socket
+through to group init (the `listen_socket` argument already supports this).
+No new external store, but it needs fd inheritance/handoff across the
+API-server → EngineCore `mp.Process` boundary and explicit lifetime ownership.
+More invasive than A/B; only worth it if an extra store is unacceptable.
+
+Recommendation for the lead: A as the immediate blocking fix, B as the durable
+one, with the coord-store CPU evidence as the validation baseline for B.
+Not investigated here (out of scope): why the head node's port was occupied,
+and the exact native startup timing impact of B.
+
+---
+
+## 6. Proof boundary and limitations
+
+* The frozen package cannot be imported in this environment: with the CPU
+  interpreter used here, `vllm.config.parallel` fails at import
+  (`ImportError: Support for Transformers v4 is deprecated …`, recorded in
+  `runs/canonical_v3/import_probe/import_probe.json`); with `/usr/bin/python3`
+  it fails earlier (`torch.library.infer_schema`). `pyproject.toml` declares
+  `torch == 2.13.0`, while this host has CPU torch 2.8.0 / 2.1.0.
+  Therefore the harness **executes the verbatim source text** of the native
+  functions (`native_extract.py`), sliced by AST with recorded spans and
+  SHA-256 of each file (`manifest.json`). It does not re-implement the
+  algorithm: the same statements, imports, retry loop, `pop()` ordering and
+  gloo init run; only `ParallelConfig` the object, the `vllm.envs` accessors
+  and `vllm.config.get_current_vllm_config_or_none` are small shims, because
+  those modules import the GPU/platform stack. The shim config reads its
+  defaults (including `_coord_store_port = 0`) out of the frozen source.
+* Network is loopback only (`127.0.0.1`), one process per rank on one host, and
+  the DP timeout is shortened to 8-10 s (`REPRO_DP_TIMEOUT_S`) instead of the
+  native 1800 s. The timeout value is not part of the bug; the failure shape is
+  identical (rank0 waits for clients, peers retry a stale port).
+* The "occupied port" is a scratch listener that accepts and immediately
+  closes, chosen only to imitate `Connection likely closed/reset` behaviour seen
+  in the real peer logs. It is **not** evidence about the original owner.
+* No GPU, no vLLM engine, no CUDA, no model; startup phases before/after DP
+  group init are not exercised. This is a mechanism reproduction, not a full
+  GPU startup reproduction.
+* `DistNetworkError` with `"EADDRINUSE"` in the message requires torch >= 2.6
+  (torch 2.1 raises `RuntimeError` with `errno: 98` and no `EADDRINUSE`
+  substring, so the native retry branch would not even fire there); torch 2.8
+  reproduces the native branch. The native runtime's own torch produced the
+  same branch in the formal job, so this is a harness-version constraint, not a
+  behavioural difference.

@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Recorded reviewed native-startup failure findings and pending recovery proposal without adding source-change or retry authority. |
+| 2026-11-02 | Recorded continuation after e2289283; first formal launcher reports failure and exact-job RCA precedes any retry. |
 | 2026-11-02 | Recorded the current-branch continuation and reconciled the Q5 handoff with the already submitted formal P2-64 job; existing authority and limits unchanged. |
 | 2026-11-02 | YC chose option B for P2-64 (D-P2-64-FORMAL-B): receipt first, then a new pair-warmed, wholly preemptible 64-H200 formal native campaign; resources approved for that campaign only; two `__pycache__` directories deleted. |
 | 2026-11-02 | Recorded the Q3 result under D-P2-PAYLOAD-C: all four checks PASS and the lead accepted; payload edge QUALIFIED (source-derived, metric-invariant). |
@@ -154,6 +156,14 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request] 2026-11-02 — continue after harness integration
+
+> continue
+
+Continue D-P2-64-FORMAL-B under the existing resource and retry limits. At resumption the local launcher reports the first formal job failed; establish its exact terminal state and initiating cause before choosing any new clean generation. Preserve the failed package, all outputs, and actual usage. This adds no new resource or modeling authority.
+
+Recorded investigation outcome (2026-11-02; lead finding, not a new user decision): generation 01 failed before requests; CPU tests reproduce a reachable native DP port-retry coordination defect. The original GPU port occupant remains unknown, so infrastructure/preemption retry authority is not invoked. [Option B's recovery proposal](h200_mainline/p2_64_formal/failure_01_20261102/recovery_proposal.md) requests a startup-only native source correction and a distinct generation 02 under the same per-job limits. It is **pending approval**. No source correction, timeout change or second submission has been made. Actual GPU-hours remain incomplete because seven container end clocks are absent; the observation estimate does not amend accounting acceptance.
 
 ## [Original Request] 2026-11-02 — continue the current branch after the Q5 handoff
 

@@ -1,0 +1,40 @@
+[
+  {
+    "command": [
+      "timeout",
+      "60s",
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/repro_dp_port_collision.py",
+      "--out",
+      "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline",
+      "--ranks",
+      "4",
+      "--timeout",
+      "8",
+      "--no-squatter"
+    ],
+    "cwd": "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102",
+    "start_utc": "2026-11-02T14:48:28.815138+00:00",
+    "end_utc": "2026-11-02T14:48:33.600976+00:00",
+    "returncode": 0
+  },
+  {
+    "command": [
+      "timeout",
+      "60s",
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/repro_dp_port_collision.py",
+      "--out",
+      "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/collision",
+      "--ranks",
+      "4",
+      "--timeout",
+      "8",
+      "--squatter"
+    ],
+    "cwd": "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102",
+    "start_utc": "2026-11-02T14:48:33.601744+00:00",
+    "end_utc": "2026-11-02T14:48:51.112673+00:00",
+    "returncode": 0
+  }
+]

@@ -1,0 +1,11 @@
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02/native_pd_worker.py", line 345, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02/native_pd_worker.py", line 239, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished

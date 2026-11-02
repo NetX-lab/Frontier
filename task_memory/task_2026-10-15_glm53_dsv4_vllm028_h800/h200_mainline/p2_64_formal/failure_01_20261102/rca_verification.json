@@ -1,0 +1,119 @@
+{
+  "verified_utc": "2026-11-02T14:44:39.353166+00:00",
+  "job": "exp-1102-164536-160317",
+  "checks": {
+    "identity": true,
+    "resources_and_terminal": true,
+    "all_start_clocks": true,
+    "only_one_finish_clock": true,
+    "estimate_recomputed": true,
+    "copy_identity_and_zero_gpu": true
+  },
+  "exact_container_starts": 8,
+  "exact_container_finishes": 1,
+  "exact_job_gpu_hours": null,
+  "known_exact_container_subtotal_gpu_hours": 4.053333333333334,
+  "observed_runtime_estimate_gpu_hours": 34.01883068666667,
+  "estimate_is_not_exact_or_a_rigorous_bound": true,
+  "previous_exact_gpu_hours": 158.27166666666665,
+  "previous_exact_jobs": 35,
+  "combined_estimate_gpu_hours": 192.2904973533333,
+  "copy_job_gpu_hours": 0,
+  "per_replica": [
+    {
+      "replica": "exp-1102-164536-160317-1679091c",
+      "node": "gpu-h200-0375.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:17:36Z",
+      "finished_at": null,
+      "estimated_end_if_missing": "2026-11-02T12:50:51.512135+00:00",
+      "gpus": 8,
+      "seconds_to_recorded_end": 1995.512135,
+      "gpu_hours": 4.434471411111111,
+      "clock_status": "OBSERVED_RUNTIME_ESTIMATE"
+    },
+    {
+      "replica": "exp-1102-164536-160317-8f14e45f",
+      "node": "gpu-h200-0357.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:20:19Z",
+      "finished_at": null,
+      "estimated_end_if_missing": "2026-11-02T12:50:51.519478+00:00",
+      "gpus": 8,
+      "seconds_to_recorded_end": 1832.519478,
+      "gpu_hours": 4.072265506666667,
+      "clock_status": "OBSERVED_RUNTIME_ESTIMATE"
+    },
+    {
+      "replica": "exp-1102-164536-160317-a87ff679",
+      "node": "gpu-h200-0760.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:20:25Z",
+      "finished_at": "2026-11-02T12:50:49Z",
+      "estimated_end_if_missing": null,
+      "gpus": 8,
+      "seconds_to_recorded_end": 1824.0,
+      "gpu_hours": 4.053333333333334,
+      "clock_status": "EXACT"
+    },
+    {
+      "replica": "exp-1102-164536-160317-c4ca4238",
+      "node": "gpu-h200-0197.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:20:20Z",
+      "finished_at": null,
+      "estimated_end_if_missing": "2026-11-02T12:50:51.486763+00:00",
+      "gpus": 8,
+      "seconds_to_recorded_end": 1831.486763,
+      "gpu_hours": 4.0699705844444445,
+      "clock_status": "OBSERVED_RUNTIME_ESTIMATE"
+    },
+    {
+      "replica": "exp-1102-164536-160317-c81e728d",
+      "node": "gpu-h200-0828.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:17:38Z",
+      "finished_at": null,
+      "estimated_end_if_missing": "2026-11-02T12:50:51.504220+00:00",
+      "gpus": 8,
+      "seconds_to_recorded_end": 1993.50422,
+      "gpu_hours": 4.430009377777778,
+      "clock_status": "OBSERVED_RUNTIME_ESTIMATE"
+    },
+    {
+      "replica": "exp-1102-164536-160317-cfcd2084",
+      "node": "gpu-h200-0043.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:20:08Z",
+      "finished_at": null,
+      "estimated_end_if_missing": "2026-11-02T12:50:51.500270+00:00",
+      "gpus": 8,
+      "seconds_to_recorded_end": 1843.50027,
+      "gpu_hours": 4.096667266666667,
+      "clock_status": "OBSERVED_RUNTIME_ESTIMATE"
+    },
+    {
+      "replica": "exp-1102-164536-160317-e4da3b7f",
+      "node": "gpu-h200-0819.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:17:37Z",
+      "finished_at": null,
+      "estimated_end_if_missing": "2026-11-02T12:50:51.526395+00:00",
+      "gpus": 8,
+      "seconds_to_recorded_end": 1994.526395,
+      "gpu_hours": 4.432280877777778,
+      "clock_status": "OBSERVED_RUNTIME_ESTIMATE"
+    },
+    {
+      "replica": "exp-1102-164536-160317-eccbc87e",
+      "node": "gpu-h200-0882.lgcm.sh.istep.fun",
+      "started_at": "2026-11-02T12:17:37Z",
+      "finished_at": null,
+      "estimated_end_if_missing": "2026-11-02T12:50:50.424548+00:00",
+      "gpus": 8,
+      "seconds_to_recorded_end": 1993.424548,
+      "gpu_hours": 4.429832328888889,
+      "clock_status": "OBSERVED_RUNTIME_ESTIMATE"
+    }
+  ],
+  "artifact_sha256": {
+    "report.json": "6f12a6ba81734958d96832269aa9847163c177a7204c1c2e8c6a13b6f477dc39",
+    "terminal_receipt.json": "ddaf497f088fb702de8aa7f46805f694676e7d77a10020f22bfebb5fdc23c350",
+    "mount_and_container_clocks.json": "9ebbabf67bd600c8f1b1d2050b53f3bf13b245ff68df5a44087e802b2aaa095d",
+    "job_and_replicas.json": "9a248bdc54d73b2a5dee0e5521954d15bb181f8c0db08fd19a2ae30be0b88065",
+    "copy_job_receipt.json": "18dd7cd37f19ca30b9adfdbd9ca1dc52bb3adbf04cd8f3042c0333d761cdd344"
+  }
+}

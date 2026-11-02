@@ -1,0 +1,710 @@
+{
+ "schema": "p2-64-formal-rca/v1",
+ "observed_utc": "2026-11-02T14:38:46.864491+00:00",
+ "status": "DONE - terminal receipt and UTC timeline recorded. The observed failure is a native vLLM data-parallel rendezvous that never completed after an EADDRINUSE retry on decode head gpu-h200-0760 at 2026-11-02T12:22:14Z. The cause of the bind conflict is NOT determined: the surviving evidence cannot separate a port held outside this workload from internal port-selection/retry behaviour in the native stack. Container clocks are complete for starts (8/8) and incomplete for finishes (1/8); no exact job GPU-hour total exists. No repair, resubmission or retry authority is asserted.",
+ "job": {
+  "name": "exp-1102-164536-160317",
+  "uid": "8e2e21a9-4041-4694-8c60-4abfea9a57a1",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "branch": "feat/glm53-dsv4-vllm028",
+  "head": "e2289283",
+  "creator": "i-fengyicheng",
+  "real_creator_id": "group-shai-core-step-main",
+  "quota_group": "step_main",
+  "preemptible_label": "yes",
+  "gang_group": "true",
+  "creation_timestamp": "2026-11-02T08:45:36Z",
+  "deletion_timestamp": null,
+  "resources_per_replica": {
+   "limits": {
+    "cpu": "64",
+    "mellanox.com/mlnx_rdma": "1",
+    "memory": "500Gi",
+    "nvidia.com/gpu": "8",
+    "rdma/mlnx_shared": "8"
+   },
+   "requests": {
+    "cpu": "64",
+    "memory": "500Gi",
+    "nvidia.com/gpu": "8"
+   }
+  },
+  "mount": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+ },
+ "terminal": {
+  "receipt_path": "/data/ycfeng/tmp/glm53_dsv4/h200/rca_p2_64_formal_01_20261102/terminal_receipt.json",
+  "phase": "Failed",
+  "startTime": null,
+  "finishTime": "2026-11-02T12:50:51Z",
+  "task_statuses": {
+   "default": {
+    "failed": 1,
+    "stopped": 7,
+    "taskStage": "stepmind-task-stage-1"
+   }
+  },
+  "stop_annotation": {
+   "rjob.brainpp.cn/system-stop-reason": "Task fail policy [any] caused undesired running replicas."
+  },
+  "stop_spec": {
+   "stopTimestamp": "2026-11-02T12:50:51Z"
+  },
+  "container_gpu_hours_receipt_field": 4.053333333333334,
+  "container_gpu_hours_receipt_field_limitation": "One-container subtotal only (the failed replica). Not a job total; seven of eight replicas had no terminated state when captured. See timing_and_gpu_usage.",
+  "reserved_gpu_hours": 35.538,
+  "gpu_usage_is_not_zero": "All eight containers ran 30.4-33.2 min with 8 GPUs each; no evidence of zero use.",
+  "exact_gpu_hours_job_total": null,
+  "exact_gpu_hours_job_total_status": "INCOMPLETE_CLOCKS",
+  "observed_runtime_estimate_gpu_hours": 34.01883068666667
+ },
+ "replicas": [
+  {
+   "replica": "exp-1102-164536-160317-cfcd2084",
+   "replica_uid": "846ea702-ac97-497a-9df3-cc50ef67da47",
+   "role": "prefill",
+   "lane": 0,
+   "position": 0,
+   "node": "gpu-h200-0043.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.8.31",
+   "pod_start_utc": "2026-11-02T12:17:33Z",
+   "phase": "Stopped",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": null,
+   "container_exit_code_container_log": -1,
+   "container_last_log_at_utc": "2026-11-02T12:50:51.500270+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:52.775177+00:00",
+   "container_state_reported": "running",
+   "container_started_at_utc": "2026-11-02T12:20:08Z",
+   "container_finished_at_utc": null,
+   "exact_runtime_seconds": null,
+   "exact_gpu_hours": null,
+   "observed_runtime_seconds": 1843.50027,
+   "observed_gpu_hours_estimate": 4.096667266666667,
+   "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)"
+  },
+  {
+   "replica": "exp-1102-164536-160317-c4ca4238",
+   "replica_uid": "971beca4-9e90-4eef-bcde-e51296d63ac4",
+   "role": "prefill",
+   "lane": 1,
+   "position": 1,
+   "node": "gpu-h200-0197.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.14.30",
+   "pod_start_utc": "2026-11-02T12:17:32Z",
+   "phase": "Stopped",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": null,
+   "container_exit_code_container_log": -1,
+   "container_last_log_at_utc": "2026-11-02T12:50:51.486763+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:59.758795+00:00",
+   "container_state_reported": "running",
+   "container_started_at_utc": "2026-11-02T12:20:20Z",
+   "container_finished_at_utc": null,
+   "exact_runtime_seconds": null,
+   "exact_gpu_hours": null,
+   "observed_runtime_seconds": 1831.486763,
+   "observed_gpu_hours_estimate": 4.0699705844444445,
+   "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)"
+  },
+  {
+   "replica": "exp-1102-164536-160317-8f14e45f",
+   "replica_uid": "63c6214a-e312-4f9a-b876-3bedeea885ab",
+   "role": "prefill",
+   "lane": 2,
+   "position": 2,
+   "node": "gpu-h200-0357.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.2.23",
+   "pod_start_utc": "2026-11-02T12:17:32Z",
+   "phase": "Stopped",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": null,
+   "container_exit_code_container_log": -1,
+   "container_last_log_at_utc": "2026-11-02T12:50:51.519478+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:54.297371+00:00",
+   "container_state_reported": "running",
+   "container_started_at_utc": "2026-11-02T12:20:19Z",
+   "container_finished_at_utc": null,
+   "exact_runtime_seconds": null,
+   "exact_gpu_hours": null,
+   "observed_runtime_seconds": 1832.519478,
+   "observed_gpu_hours_estimate": 4.072265506666667,
+   "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)"
+  },
+  {
+   "replica": "exp-1102-164536-160317-1679091c",
+   "replica_uid": "a0766e6d-9c8b-4a5a-8fcd-190efc3269ed",
+   "role": "prefill",
+   "lane": 3,
+   "position": 3,
+   "node": "gpu-h200-0375.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.12.67",
+   "pod_start_utc": "2026-11-02T12:17:32Z",
+   "phase": "Stopped",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": null,
+   "container_exit_code_container_log": -1,
+   "container_last_log_at_utc": "2026-11-02T12:50:51.512135+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:56.915008+00:00",
+   "container_state_reported": "running",
+   "container_started_at_utc": "2026-11-02T12:17:36Z",
+   "container_finished_at_utc": null,
+   "exact_runtime_seconds": null,
+   "exact_gpu_hours": null,
+   "observed_runtime_seconds": 1995.512135,
+   "observed_gpu_hours_estimate": 4.434471411111111,
+   "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)"
+  },
+  {
+   "replica": "exp-1102-164536-160317-a87ff679",
+   "replica_uid": "f189604c-43df-4984-bda3-ed133c8912b2",
+   "role": "decode",
+   "lane": 0,
+   "position": 4,
+   "node": "gpu-h200-0760.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.22.14",
+   "pod_start_utc": "2026-11-02T12:17:32Z",
+   "phase": "Failed",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": 1,
+   "container_exit_code_container_log": 1,
+   "container_last_log_at_utc": "2026-11-02T12:50:49.347582+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:41.411089+00:00",
+   "container_state_reported": "terminated",
+   "container_started_at_utc": "2026-11-02T12:20:25Z",
+   "container_finished_at_utc": "2026-11-02T12:50:49Z",
+   "exact_runtime_seconds": 1824.0,
+   "exact_gpu_hours": 4.053333333333334,
+   "observed_runtime_seconds": null,
+   "observed_gpu_hours_estimate": null,
+   "clock_status": "EXACT (platform startedAt and finishedAt)"
+  },
+  {
+   "replica": "exp-1102-164536-160317-e4da3b7f",
+   "replica_uid": "32f2cf80-f3b0-413b-abac-ac4edd728cc9",
+   "role": "decode",
+   "lane": 1,
+   "position": 5,
+   "node": "gpu-h200-0819.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.22.64",
+   "pod_start_utc": "2026-11-02T12:17:33Z",
+   "phase": "Stopped",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": null,
+   "container_exit_code_container_log": -1,
+   "container_last_log_at_utc": "2026-11-02T12:50:51.526395+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:53.586418+00:00",
+   "container_state_reported": "running",
+   "container_started_at_utc": "2026-11-02T12:17:37Z",
+   "container_finished_at_utc": null,
+   "exact_runtime_seconds": null,
+   "exact_gpu_hours": null,
+   "observed_runtime_seconds": 1994.526395,
+   "observed_gpu_hours_estimate": 4.432280877777778,
+   "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)"
+  },
+  {
+   "replica": "exp-1102-164536-160317-c81e728d",
+   "replica_uid": "b55aa537-c8da-4a7f-8d3b-b21c512c897a",
+   "role": "decode",
+   "lane": 2,
+   "position": 6,
+   "node": "gpu-h200-0828.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.22.73",
+   "pod_start_utc": "2026-11-02T12:17:32Z",
+   "phase": "Stopped",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": null,
+   "container_exit_code_container_log": -1,
+   "container_last_log_at_utc": "2026-11-02T12:50:51.504220+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:40.556233+00:00",
+   "container_state_reported": "running",
+   "container_started_at_utc": "2026-11-02T12:17:38Z",
+   "container_finished_at_utc": null,
+   "exact_runtime_seconds": null,
+   "exact_gpu_hours": null,
+   "observed_runtime_seconds": 1993.50422,
+   "observed_gpu_hours_estimate": 4.430009377777778,
+   "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)"
+  },
+  {
+   "replica": "exp-1102-164536-160317-eccbc87e",
+   "replica_uid": "0a06a8fa-b5b7-4337-9e91-8a8f5be52db4",
+   "role": "decode",
+   "lane": 3,
+   "position": 7,
+   "node": "gpu-h200-0882.lgcm.sh.istep.fun",
+   "pod_ip": "10.204.13.90",
+   "pod_start_utc": "2026-11-02T12:17:32Z",
+   "phase": "Stopped",
+   "owner_is_this_rjob": true,
+   "creator_label": "i-fengyicheng",
+   "preemptible_label": "yes",
+   "quota_group_label": "step_main",
+   "gpu_limit": "8",
+   "container_started_at_platform_utc": null,
+   "container_finished_at_platform_utc": null,
+   "container_exit_code_platform": null,
+   "container_exit_code_container_log": 1,
+   "container_last_log_at_utc": "2026-11-02T12:50:50.424548+00:00",
+   "container_seconds_from_logs": null,
+   "gpu_hours_from_logs": null,
+   "server_launched_at_utc": "2026-11-02T12:20:53.733172+00:00",
+   "container_state_reported": "running",
+   "container_started_at_utc": "2026-11-02T12:17:37Z",
+   "container_finished_at_utc": null,
+   "exact_runtime_seconds": null,
+   "exact_gpu_hours": null,
+   "observed_runtime_seconds": 1993.424548,
+   "observed_gpu_hours_estimate": 4.429832328888889,
+   "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)"
+  }
+ ],
+ "timeline": [
+  {
+   "utc": "2026-11-02T08:45:32.191Z",
+   "event": "launcher_started.json records launcher start; pid 3140124.",
+   "source": "h200_mainline/p2_64_formal/package_02/launcher_started.json"
+  },
+  {
+   "utc": "2026-11-02T08:45:36Z",
+   "event": "Audit create by i-fengyicheng; job created (8 replicas, 8 GPU each).",
+   "source": "failed_replica_a87ff679/rjob-audit.json"
+  },
+  {
+   "utc": "2026-11-02T08:46:32Z-08:46:33Z",
+   "event": "All eight replicas created (\"Start replica\") by rjob-controller.",
+   "source": "failed_replica_a87ff679/rjob-historical-events.json, replica_audits/summary.json"
+  },
+  {
+   "utc": "2026-11-02T08:46:33Z-12:15:31Z",
+   "event": "Gang scheduling retries (76 FailedScheduling events): the eight-pod group could not be placed together; queue wait 3.53 h.",
+   "source": "failed_replica_a87ff679/rjob-historical-events.json"
+  },
+  {
+   "utc": "2026-11-02T12:17:32Z-12:17:33Z",
+   "event": "Eight pods created and started (pod startTime).",
+   "source": "job_and_replicas.json"
+  },
+  {
+   "utc": "2026-11-02T12:17:36Z",
+   "event": "Image pull event for vllm-openai@sha256:2286e853.",
+   "source": "failed_replica_a87ff679/rjob-historical-events.json"
+  },
+  {
+   "utc": "2026-11-02T12:17:37Z-12:20:25Z",
+   "event": "Containers begin (4 replicas at 12:17:37, four at 12:20:08-12:20:25).",
+   "source": "mount_and_container_clocks.json"
+  },
+  {
+   "utc": "2026-11-02T12:20:40Z-12:20:59Z",
+   "event": "Native vLLM servers launched on all eight nodes (server_started_at_utc).",
+   "source": "native_run_outputs/nodes/*/result.json"
+  },
+  {
+   "utc": "2026-11-02T12:21:48Z",
+   "event": "Decode head (gpu-h200-0760): DP Coordinator process 1357 and 4 API servers started.",
+   "source": "native_run_outputs/nodes/gpu-h200-0760.../server.log"
+  },
+  {
+   "utc": "2026-11-02T12:22:14Z",
+   "event": "INITIATING EVENT: decode head EngineCore_DP0 logs \"Address already in use. Retrying with a new port.\"; at the same second the three decode DP peers begin failing TCPStore handshakes against 10.204.22.14:40273. The decode engine never initializes after this line.",
+   "source": "native_run_outputs/nodes/gpu-h200-0760.../server.log; 0819/0828/0882 server.log"
+  },
+  {
+   "utc": "2026-11-02T12:22:26Z",
+   "event": "Contrast: prefill head (gpu-h200-0043) starts V1 engine and forms its DP group normally (world_size=8); prefill reaches /health 200 at 12:31:05.8.",
+   "source": "native_run_outputs/nodes/gpu-h200-0043.../server.log, server_ready.json"
+  },
+  {
+   "utc": "2026-11-02T12:22:14Z-12:50:39Z",
+   "event": "All three decode peers (0819/0828/0882) retry the coordination TCPStore 39-41 times until shutdown (backoff up to ~90 s): \"Failed to recv, got 0 bytes\", \"Connection reset by peer\", and \"Ping failed, invalid value returned from server. Expected: 1319, Got: 255\". The four prefill logs contain zero TCPStore errors.",
+   "source": "native_run_outputs/nodes/gpu-h200-0819/0828/0882 server.log"
+  },
+  {
+   "utc": "2026-11-02T12:50:44Z",
+   "event": "Decode head startup_timeout_s=1800 elapses: TimeoutError in native_pd_worker.await_condition; worker writes failed.json; process manager SIGTERMs DP0/API servers.",
+   "source": "native_run_outputs/nodes/gpu-h200-0760.../worker.log, failed.json, server.log"
+  },
+  {
+   "utc": "2026-11-02T12:50:49Z-12:50:50Z",
+   "event": "Head container exits 1 (API terminated: \"user command: exit status 1\"); peer 0882 raises \"Native P/D peer failed\" and exits; 0357 aborts its await_replay.",
+   "source": "job_and_replicas.json, *.failed.json, worker.log"
+  },
+  {
+   "utc": "2026-11-02T12:50:51Z",
+   "event": "RJob finishTime; rjob-controller stops the remaining replicas (62 stop operations, no human actor); all pods deleted.",
+   "source": "job_and_replicas.json, replica_audits/summary.json, rjob-historical-events.json"
+  },
+  {
+   "utc": "2026-11-02T12:50:52Z-12:50:53Z",
+   "event": "Launcher raises \"Waited job ... ended with status: failed\" and then calls Job Stop (20:50:53.024 HKT) - cleanup after the platform had already failed the job.",
+   "source": "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal.log"
+  }
+ ],
+ "initiating_event": {
+  "object": "exp-1102-164536-160317-a87ff679 (decode role, lane 0, position 4), node gpu-h200-0760.lgcm.sh.istep.fun, container log of the native vLLM server",
+  "timestamp_utc": "2026-11-02T12:22:14Z",
+  "text": "(EngineCore_DP0 pid=1495) WARNING 11-02 12:22:14 [parallel.py:655] Address already in use. Retrying with a new port.",
+  "corroborating_text": "[W1102 12:22:14.227747612 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=84, addr=[gpu-h200-0819...]:35132, remote=[gpu-h200-0760...]:40273): Failed to recv, got 0 bytes. Connection was likely closed.",
+  "observation": "The decode role never completed vLLM data-parallel group initialization. The head engine core reported a bind conflict and retried; its coordination TCPStore on 10.204.22.14:40273 never completed a valid handshake with the three peer lanes, /health never returned 200, and the 1800 s startup window expired.",
+  "code_reference": "The message is emitted by vllm/config/parallel.py:655 (stateless_init_dp_group) in native_source 2cf0a6915ce544dc493a0990f2ea38d81601128a, for a DistNetworkError whose text contains EADDRINUSE; the function retries up to five times with a fresh port.",
+  "cause_status": "UNDETERMINED - the process that caused the bind conflict is unknown, and the surviving evidence does not select external port occupancy versus internal port contention or retry behaviour."
+ },
+ "failure_chain": [
+  "Decode DP group init on the head (0760) collided on a port at 12:22:14Z and retried.",
+  "The three peer lanes 0819/0828/0882 could not complete a TCPStore ping against 10.204.22.14:40273 (0-byte reads, connection resets, and \"Ping failed ... Expected: 1319, Got: 255\").",
+  "Peers retried 38-41 times with exponential backoff until shutdown; no decode engine was ever initialized (no \"Initializing a V1 LLM engine\" line on 0760, no serving/ directory on any decode node).",
+  "Decode /health never returned 200, so native_pd_worker.await_condition(healthy, startup_timeout_s=1800, native_required=True) raised TimeoutError at 12:50:44Z (window started ~12:20:44Z).",
+  "The worker wrote failed.json and exited 1 (container exit code 1, reason Error).",
+  "Peer replicas raised \"Native P/D peer failed\" (0882) or aborted await_replay (0357, and others on shutdown), so all replicas ended.",
+  "The platform applied task fail policy \"any\" and stopped the seven remaining replicas (12:50:51-12:50:58Z); the launcher then reported the failure at 12:50:52Z and issued its own Job Stop at 12:50:53Z."
+ ],
+ "classification": {
+  "verdict": "UNCLASSIFIED BY CAUSE - do not use this report to authorize or deny a retry.",
+  "observed_failure_mode": "native data-parallel rendezvous did not complete on the decode head (EADDRINUSE plus retry, then TCPStore handshake failures with the peer lanes)",
+  "what_is_established": [
+   "The decode role failed first and never initialized an engine; the prefill role formed its DP group and became healthy at 12:31:05.8Z.",
+   "The head reported EADDRINUSE at 12:22:14Z and its coordination TCPStore at 10.204.22.14:40273 never served a valid handshake to 0819/0828/0882.",
+   "The failure preceded the platform stop by about 28 minutes, and no replay or inference request ran."
+  ],
+  "what_is_not_established": [
+   "Whether a process outside this workload held the port (external infrastructure occupancy) or the native stack lost a port-selection/retry race internally. Both remain open; the original occupant cannot be identified from logs because the container and its host process table are gone.",
+   "Whether the same configuration would fail again on a different node."
+  ],
+  "not_preemption": "preemptible=yes is only a label. The stop annotation is rjob.brainpp.cn/system-stop-reason \"Task fail policy [any] caused undesired running replicas.\", every replica stop is by rjob-controller with no human audit row, and the failure preceded the stop by 28 minutes.",
+  "not_workload": "No replay, warmup or request ever started (no replay_finished.json, no request metrics, no run/ directory). The harness fail-fast path behaved as designed.",
+  "not_image_or_mount": "Image pull finished at 12:17:36Z; all eight containers ran; the worker validated the model directory and native source hashes before the failure.",
+  "external_context_from_lead": "The lead reports that a separate CPU-side run reproduced TCPStore/Gloo with rank 0 switching ports while three peers stayed on the old one; that observation shows an internal port-switch behaviour is reachable but does not identify the occupant in this job. It is outside this artifact set."
+ },
+ "stop_actor": {
+  "actor": "system:serviceaccount:kubebrain:rjob-controller (with queue-controller updates)",
+  "reason": "Task fail policy [any] caused undesired running replicas.",
+  "timestamp": "2026-11-02T12:50:51Z",
+  "evidence": "rjob-audit.json (15 rows, no human subject), replica_audits/summary.json (62 stop operations, all rjob-controller; failed replica a87ff679 has none, it exited by itself)",
+  "note": "The launcher cleanup line \"Job Stop ... 20:50:53.024\" is 2 s AFTER finishTime 12:50:51Z and is a consequence, not the cause."
+ },
+ "resource_accounting": {
+  "queue_wait": {
+   "from": "2026-11-02T08:45:36Z",
+   "to": "2026-11-02T12:17:32Z",
+   "hours": 3.534,
+   "note": "Gang of eight H200 nodes; 76 FailedScheduling events up to 12:15:31Z."
+  },
+  "image_pull": {
+   "event_utc": "2026-11-02T12:17:36Z",
+   "to_first_container_12:17:37Z": "about 1 s on the first four nodes",
+   "to_last_container_12:20:25Z": "about 2 min 49 s on the last node",
+   "note": "Pull and container start are separate from queue time."
+  },
+  "reserved_gpu_hours_total": 35.538,
+  "productive_serving": "Prefill head healthy at 12:31:05.8Z; decode never healthy. Zero replay or inference requests were executed, so no measured throughput exists.",
+  "container_usage_reference": "See timing_and_gpu_usage: exact single-container subtotal 1824 s / 4.053333333333334 GPUh, observed-runtime estimate 34.01883068666667 GPUh over eight replicas, exact job total null (INCOMPLETE_CLOCKS). The earlier first-log-to-last-log arithmetic (34.011) was withdrawn because it was not a clock-derived total.",
+  "reserved_gpu_hours_note": "Pod start of the earliest replica to RJob finishTime at the full 64-GPU reservation; reference only."
+ },
+ "workload_output": {
+  "artifacts_present": {
+   "run_manifest.json": "yes (11235 bytes, 12:45 HKT)",
+   "nodes/*/result.json": "yes, all eight",
+   "nodes/*/worker.log": "yes, all eight",
+   "nodes/gpu-h200-0043/server_ready.json": "yes (health 200 at 12:31:05.833920Z)",
+   "nodes/gpu-h200-{0043,0197,0357,0375}/serving/rank*.json": "yes, prefill instrumentation dumps",
+   "nodes/gpu-h200-{0760,0819,0828,0882}/serving/": "no (decode engine never initialized)",
+   "replay_finished.json": "absent",
+   "request metrics / run outputs": "absent"
+  },
+  "conclusion": "No inference or replay business output exists; only platform records, worker records and prefill-side instrumentation dumps.",
+  "cloud_path": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261102_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261102-01",
+  "local_copies": "/data/ycfeng/tmp/glm53_dsv4/h200/rca_p2_64_formal_01_20261102/native_run_outputs"
+ },
+ "query_coverage": [
+  {
+   "source": "RJob object (get_namespaced_custom_object)",
+   "result": "PASS",
+   "artifact": "job_and_replicas.json"
+  },
+  {
+   "source": "eight Replica pods",
+   "result": "PASS",
+   "artifact": "job_and_replicas.json"
+  },
+  {
+   "source": "per-replica container logs (query_range, 12:15-12:56Z, limit 3000)",
+   "result": "PASS",
+   "artifact": "mount_and_container_clocks.json"
+  },
+  {
+   "source": "replica live events (a87ff679)",
+   "result": "PASS (0 events)"
+  },
+  {
+   "source": "replica historical events (a87ff679)",
+   "result": "PASS"
+  },
+  {
+   "source": "RJob historical events",
+   "result": "PASS (99 rows, 76 FailedScheduling)"
+  },
+  {
+   "source": "RJob live events",
+   "result": "PASS"
+  },
+  {
+   "source": "all-operation audit, RJob",
+   "result": "PASS (15 rows)"
+  },
+  {
+   "source": "all-operation audit, eight replicas",
+   "result": "PASS (1+6..13 rows each)"
+  },
+  {
+   "source": "platform DeepScan (atlasflow flow/task list)",
+   "result": "PASS but EMPTY (total 0); absence of a DeepScan record proves nothing"
+  },
+  {
+   "source": "host process / port occupancy on gpu-h200-0760 at failure time",
+   "result": "UNKNOWN - no snapshot, pod deleted, no node shell"
+  },
+  {
+   "source": "container terminated timestamps for the seven stopped replicas",
+   "result": "UNKNOWN - platform status still reports state=running; log timestamps used instead"
+  },
+  {
+   "source": "vLLM DP coordinator internal state (PID 1357)",
+   "result": "UNKNOWN - process gone with the pod; only its stdout survives"
+  },
+  {
+   "source": "bounded receipt read of the separate copy job exp-1102-222827-251818",
+   "result": "PASS",
+   "artifact": "copy_job_receipt.json"
+  }
+ ],
+ "commands": [
+  "eval \"$(curl -s --noproxy '*' http://deploy.i.shaipower.com/httpproxy)\"; export KUBEBRAIN_CLUSTER_ENTRY=https://platform.shaipower.com KUBEBRAIN_NAMESPACE=shai-core KUBEBRAIN_WORKSPACE_NAME=kun-workspace-vgen2 PYTHONPATH=/data/ycfeng/steptron STEPMIND_BACKEND=rjob",
+  "timeout 60s /data/ycfeng/tmp/stepmind-env/bin/python -u -B h200_mainline/terminal_receipt.py exp-1102-164536-160317 /data/ycfeng/tmp/glm53_dsv4/h200/rca_p2_64_formal_01_20261102/terminal_receipt.json",
+  "timeout 180s /data/ycfeng/tmp/stepmind-env/bin/python -u -B read2.py  # mount, replica states, per-replica logs",
+  "timeout 180s /data/ycfeng/tmp/stepmind-env/bin/python -u -B read3.py  # eight replica all-operation audits",
+  "timeout 60s /data/ycfeng/tmp/stepmind-env/bin/python -u -B /data/ycfeng/codex-home/skills/stepmind-gpu-worker/scripts/collect_failure_evidence.py exp-1102-164536-160317 --replica exp-1102-164536-160317-a87ff679 --expected-creator i-fengyicheng --credential-dir /data/ycfeng/tmp/brainctl-auth-i-fengyicheng --start 2026-11-02T12:17:00Z --end 2026-11-02T12:51:30Z --timeout 45 --page-size 50 --log-limit 3000 --output .../failed_replica_a87ff679",
+  "ssh shai-ycfeng \"tar -cf - run_manifest.json nodes/*/{worker.log,failed.json,native_stopped.json,ready.json,server_ready.json,result.json} nodes/gpu-h200-{0760,0819,0882,0043}*/server.log\" | tar -xf - -C /data/ycfeng/tmp/glm53_dsv4/h200/rca_p2_64_formal_01_20261102/native_run_outputs",
+  "timeout 90s /data/ycfeng/tmp/stepmind-env/bin/python -u -B read_copy_job.py  # bounded receipt read of exp-1102-222827-251818"
+ ],
+ "schematic_note": "Corrected after lead review: start clocks are exact for 8/8 replicas; finish clocks are exact for 1/8; the usage figure labelled \"estimate\" is not an exact total and not a rigorous bound. The failure is left unclassified by cause.",
+ "timing_and_gpu_usage": {
+  "clock_completeness": "INCOMPLETE_CLOCKS",
+  "exact_start_clocks": "8/8 (replica.containers[0].state.running|terminated.startedAt)",
+  "exact_finish_clocks": "1/8 (only the failed replica reports state.terminated.finishedAt)",
+  "exact_gpu_hours_job_total": null,
+  "exact_gpu_hours_job_total_reason": "INCOMPLETE_CLOCKS: seven replicas were stopped without a platform finishedAt, so no exact job total exists. No value was manufactured.",
+  "exact_single_container_gpu_hours": 4.053333333333334,
+  "exact_single_container_seconds": 1824.0,
+  "exact_single_container_replica": "exp-1102-164536-160317-a87ff679",
+  "exact_single_container_detail": "exp-1102-164536-160317-a87ff679, started 2026-11-02T12:20:25Z, finished 2026-11-02T12:50:49Z, exit code 1, 8 GPUs: 1824 s -> 4.053333333333334 GPUh (14592 GPU-seconds).",
+  "observed_runtime_estimate_gpu_hours": 34.01883068666667,
+  "observed_runtime_estimate_definition": "Per replica: exact container startedAt -> timestamp of that replica's last container log line, x 8 GPU / 3600, summed over all eight replicas. Seven of eight end clocks are log-line timestamps, not platform finish clocks, so this is an observed-runtime estimate for sizing only: it is neither an exact total nor a rigorous bound (a stopped process may have exited after its last log line).",
+  "observed_runtime_estimate_matches_lead_recomputation": 34.01883068666667,
+  "reservation_wall_gpu_hours_reference_only": 35.538,
+  "reservation_wall_definition": "Pod start of the earliest replica -> RJob finishTime at the full 64-GPU reservation; a scheduling reference, not measured container usage.",
+  "per_replica": [
+   {
+    "replica": "exp-1102-164536-160317-cfcd2084",
+    "role": "prefill",
+    "lane": 0,
+    "node": "gpu-h200-0043.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:20:08Z",
+    "container_finished_at_utc": null,
+    "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)",
+    "exact_gpu_hours": null,
+    "observed_gpu_hours_estimate": 4.096667266667
+   },
+   {
+    "replica": "exp-1102-164536-160317-c4ca4238",
+    "role": "prefill",
+    "lane": 1,
+    "node": "gpu-h200-0197.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:20:20Z",
+    "container_finished_at_utc": null,
+    "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)",
+    "exact_gpu_hours": null,
+    "observed_gpu_hours_estimate": 4.069970584444
+   },
+   {
+    "replica": "exp-1102-164536-160317-8f14e45f",
+    "role": "prefill",
+    "lane": 2,
+    "node": "gpu-h200-0357.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:20:19Z",
+    "container_finished_at_utc": null,
+    "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)",
+    "exact_gpu_hours": null,
+    "observed_gpu_hours_estimate": 4.072265506667
+   },
+   {
+    "replica": "exp-1102-164536-160317-1679091c",
+    "role": "prefill",
+    "lane": 3,
+    "node": "gpu-h200-0375.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:17:36Z",
+    "container_finished_at_utc": null,
+    "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)",
+    "exact_gpu_hours": null,
+    "observed_gpu_hours_estimate": 4.434471411111
+   },
+   {
+    "replica": "exp-1102-164536-160317-a87ff679",
+    "role": "decode",
+    "lane": 0,
+    "node": "gpu-h200-0760.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:20:25Z",
+    "container_finished_at_utc": "2026-11-02T12:50:49Z",
+    "clock_status": "EXACT (platform startedAt and finishedAt)",
+    "exact_gpu_hours": 4.053333333333334,
+    "observed_gpu_hours_estimate": null
+   },
+   {
+    "replica": "exp-1102-164536-160317-e4da3b7f",
+    "role": "decode",
+    "lane": 1,
+    "node": "gpu-h200-0819.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:17:37Z",
+    "container_finished_at_utc": null,
+    "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)",
+    "exact_gpu_hours": null,
+    "observed_gpu_hours_estimate": 4.432280877778
+   },
+   {
+    "replica": "exp-1102-164536-160317-c81e728d",
+    "role": "decode",
+    "lane": 2,
+    "node": "gpu-h200-0828.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:17:38Z",
+    "container_finished_at_utc": null,
+    "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)",
+    "exact_gpu_hours": null,
+    "observed_gpu_hours_estimate": 4.430009377778
+   },
+   {
+    "replica": "exp-1102-164536-160317-eccbc87e",
+    "role": "decode",
+    "lane": 3,
+    "node": "gpu-h200-0882.lgcm.sh.istep.fun",
+    "container_started_at_utc": "2026-11-02T12:17:37Z",
+    "container_finished_at_utc": null,
+    "clock_status": "OBSERVED ESTIMATE (exact startedAt -> last container log line; finishedAt missing)",
+    "exact_gpu_hours": null,
+    "observed_gpu_hours_estimate": 4.429832328889
+   }
+  ],
+  "rounding_note": "Per-replica values are rounded (12-15 decimals); the totals are computed from unrounded clocks, so the listed rows may not add up to the last digit."
+ },
+ "terminal_receipt_warning": {
+  "path": "/data/ycfeng/tmp/glm53_dsv4/h200/rca_p2_64_formal_01_20261102/terminal_receipt.json",
+  "file_immutable": true,
+  "field": "container_gpu_hours",
+  "field_value": 4.053333333333334,
+  "meaning": "This field is a one-container subtotal, not a job total. The receipt script sums only containers that expose state.terminated; at capture time only exp-1102-164536-160317-a87ff679 reported one (1824 s x 8 GPU / 3600 = 4.053333333333334). The other seven replicas were stopped with state.running still reported and therefore contribute nothing to that field. Do not use it as the campaign GPU-hour total; see timing_and_gpu_usage for the exact/estimate split.",
+  "receipt_status": {
+   "phase": "Failed",
+   "finishTime": "2026-11-02T12:50:51Z"
+  }
+ },
+ "withdrawn_suggestions": {
+  "policy": "No remedy in this report is recommended or authorized. The lead owns any bounded source/CPU repair proposal to YC. These drafts were withdrawn after review.",
+  "items": [
+   {
+    "suggestion": "Pin --data-parallel-master-port to a fixed value per role.",
+    "withdrawn_because": "The nonelastic code path consumes _data_parallel_master_port_list first, so supplying a fixed data_parallel_master_port alone does not establish collision avoidance."
+   },
+   {
+    "suggestion": "Run a pre-launch \"ss -ltn\" audit of the relevant ports on every node.",
+    "withdrawn_because": "It is a time-of-check snapshot; it cannot exclude a port chosen or occupied after the check, nor a race between the native processes themselves."
+   },
+   {
+    "suggestion": "Split the 1800 s startup window into a 240-300 s DP-rendezvous deadline and further H200 diagnostic runs.",
+    "withdrawn_because": "The 240-300 s figure is arbitrary and not derived from the evidence; further H200 diagnostic runs are not authorized and would consume scarce capacity without selecting a cause."
+   }
+  ]
+ },
+ "copy_job": {
+  "receipt": "/data/ycfeng/tmp/glm53_dsv4/h200/rca_p2_64_formal_01_20261102/copy_job_receipt.json",
+  "note": "One bounded read (RJob object plus its single replica) for creator, GPU limits and terminal status; no source search, no listing of other jobs.",
+  "phase": "Succeeded",
+  "reason": "RJobSucceeded",
+  "creator": "i-fengyicheng",
+  "real_creator_id": "group-shai-core-step-main",
+  "quota_group": "step_main",
+  "gpu_limits_observed": [
+   "0"
+  ],
+  "replicas": 1,
+  "container": {
+   "startedAt": "2026-11-02T14:28:31Z",
+   "finishedAt": "2026-11-02T14:28:42Z",
+   "exitCode": 0
+  },
+  "finishTime": "2026-11-02T14:28:45Z",
+  "verified": [
+   "creator i-fengyicheng",
+   "real_creator group-shai-core-step-main",
+   "quota group step_main",
+   "zero GPU limit on the single replica",
+   "terminal phase Succeeded with exit code 0"
+  ],
+  "limitation": "This read captured the job object and its single replica only; it does not verify which TCPStore ports the CPU-side reproduction exercised."
+ }
+}

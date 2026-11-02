@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Completed failure-copy/RCA/CPU mechanism evidence; retained native failure, incomplete finish clocks and the pending startup-only recovery decision. |
+| 2026-11-02 | Replaced the current queued-job state with the confirmed first-attempt failure; exact-job RCA and failed-artifact recovery are active. |
 | 2026-11-02 | Corrected the stale direct-Codex route and recorded the single formal P2-64 job plus verified final-branch harness integration. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: P0 native06 reference subtask PASS/ACCEPTED_NATIVE_REFERENCE_R4; full18 other hardware/prerequisites open, native05/originalR3 remain historical. |
@@ -30,7 +32,7 @@
 
 Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-11-02). Platform actions use `/ds4-exec` under D-P2-INPUT-QUALIFICATION and D-P2-64-FORMAL-B. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
 
-The receipt-bound formal P2-64 job `exp-1102-164536-160317` was submitted once at 2026-11-02T08:45:36Z: 64 H200, wholly preemptible, `step_main`, timeout 3,600 s. At 10:45:58Z it remained Starting with 8 pending replicas; preserve launcher PID 3140124. The accepted harness is integrated on the final branch with relevant CPU tests and frozen check-only PASS ([report](../test_report_2026-11-02_p2_64_mainline_integration.md)). Native terminal evidence, pair coverage, R4 and the new reference admission remain open. Existing reference history below is unchanged.
+The receipt-bound formal P2-64 job `exp-1102-164536-160317` was submitted once at 2026-11-02T08:45:36Z: 64 H200, wholly preemptible, `step_main`, timeout 3,600 s. The early Starting snapshot is historical. Replicas obtained nodes around 12:17Z; one failed with exit 1 at 12:50:49Z, the job became Failed at 12:50:51Z, and launcher PID 3140124 exited. RCA review and failed-output recovery are complete: all 74 files match their inventory, and independent CPU execution of frozen native methods reproduces DP port divergence after rank-0 EADDRINUSE. The actual port occupant is unknown; no preemption/infrastructure classification is accepted. The coordination-store control has mixed results, so no native correction is qualified. [Recovery option B](../h200_mainline/p2_64_formal/failure_01_20261102/recovery_proposal.md) is pending YC approval; no new generation has been submitted. The accepted harness is integrated on the final branch with relevant CPU tests and frozen check-only PASS ([report](../test_report_2026-11-02_p2_64_mainline_integration.md)). Failed-job terminal evidence is retained, with seven container finish clocks missing. Pair coverage, R4 and comparison are NOT RUN because generation 01 has no client request output. New-reference admission remains open. Existing reference history below is unchanged.
 
 P2-32 reference exp-1025-152327-225209 and P2-64 reference exp-1025-155441-668927 have R4 PASS. Exact reports: h200_mainline/diagnostic/inputs/p2_32r and p2_64r/run_check_status.groundtruth_clean.json. Reuse all three independently warmed clean repetitions. Their original checkers, authorization and admission remain unchanged; current resource/promotion rules do not rewrite past receipts. Complete all-hardware native qualification stays OPEN.
 

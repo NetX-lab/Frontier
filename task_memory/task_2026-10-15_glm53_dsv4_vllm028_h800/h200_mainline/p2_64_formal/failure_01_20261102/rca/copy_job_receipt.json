@@ -1,0 +1,68 @@
+{
+ "schema": "rca-correction/copy-job-receipt/v1",
+ "job": "exp-1102-222827-251818",
+ "uid": "72f82e06-5792-4b02-a7fd-ab877c66156b",
+ "namespace": "shai-core",
+ "creator": "i-fengyicheng",
+ "creator_id": "e7163316ad76ba7266a33f9787afd70a",
+ "real_creator_id": "group-shai-core-step-main",
+ "quota_group": "step_main",
+ "preemptible": "no",
+ "creator_label_full": {
+  "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+  "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+  "kubebrain.brainpp.cn/creator-type": "user",
+  "quotagroup.brainpp.cn/preemptible": "no",
+  "quotagroup.brainpp.cn/quotagroup": "step_main"
+ },
+ "creationTimestamp": "2026-11-02T14:28:27Z",
+ "deletionTimestamp": null,
+ "stop_annotations": {},
+ "task_specs": {
+  "default": {
+   "replicas": 1,
+   "resources": null
+  }
+ },
+ "phase": "Succeeded",
+ "reason": "RJobSucceeded",
+ "message": "RJob succeeded",
+ "startTime": null,
+ "finishTime": "2026-11-02T14:28:45Z",
+ "taskStatuses": {
+  "default": {
+   "succeeded": 1,
+   "taskStage": "stepmind-task-stage-1"
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1102-222827-251818-cfcd2084",
+   "phase": "Succeeded",
+   "nodeName": "gpu-h200-0757.lgcm.sh.istep.fun",
+   "startTime": "2026-11-02T14:28:29Z",
+   "stop_annotations": {},
+   "resource_limits": {
+    "cpu": "16",
+    "mellanox.com/mlnx_rdma": "1",
+    "memory": "64000Mi",
+    "nvidia.com/gpu": "0"
+   },
+   "container_state": {
+    "terminated": {
+     "exitCode": 0,
+     "reason": "Completed",
+     "startedAt": "2026-11-02T14:28:31Z",
+     "finishedAt": "2026-11-02T14:28:42Z",
+     "containerID": "containerd://ff78350a849a944c24a43dec468c7e5c6ecbac6316326bad57bb1fef2085245a"
+    }
+   }
+  }
+ ],
+ "gpu_limits_observed": [
+  "0"
+ ],
+ "container_gpu_hours": null,
+ "container_gpu_hours_note": "Zero-GPU job; the field stays null because no GPU was requested or charged.",
+ "source": "RJobClient get_namespaced_custom_object + get_rjob_infos for this job only"
+}

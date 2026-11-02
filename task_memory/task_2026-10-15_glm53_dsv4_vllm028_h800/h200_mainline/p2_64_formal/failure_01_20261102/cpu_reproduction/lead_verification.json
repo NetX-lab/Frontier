@@ -1,0 +1,45 @@
+{
+  "verified_utc": "2026-11-02T14:49:58.377062+00:00",
+  "scope": "CPU mechanism reproduction and reviewed failure evidence; no production repair or GPU startup acceptance",
+  "checks": {
+    "lead_baseline_native_group_init_pass": true,
+    "lead_collision_reproduced_divergence_and_native_failure": true,
+    "source_hashes_match_frozen_tree": true,
+    "rca_copy_hashes_unchanged": true,
+    "observed_runtime_estimate_sum_matches": true,
+    "coord_store_control_not_qualified": true
+  },
+  "interpreter": "/data/ycfeng/envs/openmopd-py312/bin/python",
+  "python": "3.12.13",
+  "torch": "2.8.0+cu128",
+  "baseline_ports": [
+    41544,
+    41544,
+    41544,
+    41544
+  ],
+  "collision_rank0_ports": [
+    43900,
+    43899
+  ],
+  "collision_peer_ports": {
+    "1": [
+      43900
+    ],
+    "2": [
+      43900
+    ],
+    "3": [
+      43900
+    ]
+  },
+  "native_gpu_torch": "2.13.0+cu130",
+  "limitations": [
+    "Frozen native methods are source-extracted; surrounding configuration/imports are shims.",
+    "The full GPU model package and production distributed launcher are not executed.",
+    "The original GPU port occupant and replacement port are not recorded.",
+    "Existing coord-store control has both successful and failed trials; no production correction accepted.",
+    "Only parallel.py has a captured matching file hash on all eight GPU workers.",
+    "The exact total GPU-hours remains unknown because seven finishedAt clocks are missing."
+  ]
+}

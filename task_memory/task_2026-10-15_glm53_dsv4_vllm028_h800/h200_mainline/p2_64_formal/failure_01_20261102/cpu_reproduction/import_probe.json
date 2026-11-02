@@ -1,0 +1,16 @@
+{
+  "native_root": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+  "python": "3.12.13",
+  "executable": "/data/ycfeng/envs/openmopd-py312/bin/python",
+  "torch": "2.8.0+cu128",
+  "vllm.config.parallel": {
+    "imported": false,
+    "error_type": "builtins.ImportError",
+    "error": "Support for Transformers v4 is deprecated and was removed in vLLM v0.24.0. Please upgrade to Transformers v5: pip install --upgrade transformers",
+    "traceback_tail": "Traceback (most recent call last):\n  File \"/data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch/import_probe.py\", line 51, in main\n    __import__(target)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/__init__.py\", line 23, in <module>\n    from vllm.config.model import (\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/model.py\", line 31, in <module>\n    from vllm.transformers_utils.config import (\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/transformers_utils/config.py\", line 56, in <module>\n    raise ImportError(\nImportError: Support for Transformers v4 is deprecated and was removed in vLLM v0.24.0. Please upgrade to Transformers v5: pip install --upgrade transformers\n"
+  },
+  "vllm.distributed.utils": {
+    "imported": true
+  },
+  "declared_torch_requirement": "\"torch == 2.13.0\","
+}

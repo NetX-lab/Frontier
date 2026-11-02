@@ -1,0 +1,479 @@
+{
+  "manifest": {
+    "native_root": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "files": {
+      "vllm/utils/network_utils.py": {
+        "sha256": "383648e9374a6f2304fec91bd6a54aeb0301c009e69c267bcdc4dfbed38e20e9",
+        "bytes": 12459
+      },
+      "vllm/utils/system_utils.py": {
+        "sha256": "837e6ff0ab524c06c048d6b42d4f35b77baba2e9d9e57837fe333ca0aaee1cfb",
+        "bytes": 10525
+      },
+      "vllm/distributed/utils.py": {
+        "sha256": "792146b357139e705064a68d3b66858de8a0baaca4dc7db1232fa217d45db231",
+        "bytes": 27341
+      },
+      "vllm/config/parallel.py": {
+        "sha256": "f29f984ac39f4ae11622c2c64f92a657951f3a28e624a2a60d1040b49e025311",
+        "bytes": 44810
+      }
+    },
+    "spans": {
+      "vllm/utils/network_utils.py::_get_reserved_port_range": [
+        {
+          "class": null,
+          "start_line": 166,
+          "end_line": 171,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::get_open_port": [
+        {
+          "class": null,
+          "start_line": 174,
+          "end_line": 187,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::get_open_ports_list": [
+        {
+          "class": null,
+          "start_line": 190,
+          "end_line": 213,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::_get_open_port": [
+        {
+          "class": null,
+          "start_line": 216,
+          "end_line": 247,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::get_tcp_uri": [
+        {
+          "class": null,
+          "start_line": 150,
+          "end_line": 154,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::is_valid_ipv6_address": [
+        {
+          "class": null,
+          "start_line": 104,
+          "end_line": 109,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/system_utils.py::suppress_stdout": [
+        {
+          "class": null,
+          "start_line": 61,
+          "end_line": 91,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::create_tcp_store": [
+        {
+          "class": null,
+          "start_line": 175,
+          "end_line": 195,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::get_cached_tcp_store_client": [
+        {
+          "class": null,
+          "start_line": 516,
+          "end_line": 523,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::get_cpu_distributed_timeout_or_none": [
+        {
+          "class": null,
+          "start_line": 526,
+          "end_line": 533,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::get_distributed_timeout_or_none": [
+        {
+          "class": null,
+          "start_line": 536,
+          "end_line": 543,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::init_gloo_process_group": [
+        {
+          "class": null,
+          "start_line": 546,
+          "end_line": 573,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::stateless_init_torch_distributed_process_group": [
+        {
+          "class": null,
+          "start_line": 576,
+          "end_line": 684,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::stateless_destroy_torch_distributed_process_group": [
+        {
+          "class": null,
+          "start_line": 687,
+          "end_line": 693,
+          "overload_stub": false
+        }
+      ],
+      "vllm/config/parallel.py::get_next_dp_init_port": [
+        {
+          "class": "ParallelConfig",
+          "start_line": 569,
+          "end_line": 584,
+          "overload_stub": false
+        }
+      ],
+      "vllm/config/parallel.py::_pick_stateless_dp_port": [
+        {
+          "class": "ParallelConfig",
+          "start_line": 586,
+          "end_line": 611,
+          "overload_stub": false
+        }
+      ],
+      "vllm/config/parallel.py::stateless_init_dp_group": [
+        {
+          "class": "ParallelConfig",
+          "start_line": 613,
+          "end_line": 616,
+          "overload_stub": true
+        },
+        {
+          "class": "ParallelConfig",
+          "start_line": 617,
+          "end_line": 620,
+          "overload_stub": true
+        },
+        {
+          "class": "ParallelConfig",
+          "start_line": 621,
+          "end_line": 662,
+          "overload_stub": false
+        }
+      ]
+    },
+    "python": "3.12.13",
+    "mode": "squatter",
+    "coord_store_port": null,
+    "torch": "2.8.0+cu128",
+    "command": "/data/ycfeng/envs/openmopd-py312/bin/python /data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch/repro_dp_port_collision.py --out /data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch/out_min_ranks2_collision --squatter --ranks 2 --timeout 8",
+    "host": "127.0.0.1",
+    "vllm_port_base": 33059,
+    "dp_timeout_s": 8.0
+  },
+  "mode": "squatter",
+  "squatted_port": 33062,
+  "accepted_connections_at_squatter": [
+    {
+      "peer": "127.0.0.1:33442",
+      "t": 2.07
+    },
+    {
+      "peer": "127.0.0.1:33446",
+      "t": 2.13
+    },
+    {
+      "peer": "127.0.0.1:33448",
+      "t": 2.647
+    },
+    {
+      "peer": "127.0.0.1:33454",
+      "t": 3.207
+    },
+    {
+      "peer": "127.0.0.1:33482",
+      "t": 4.376
+    },
+    {
+      "peer": "127.0.0.1:33490",
+      "t": 5.816
+    },
+    {
+      "peer": "127.0.0.1:33520",
+      "t": 7.198
+    },
+    {
+      "peer": "127.0.0.1:33566",
+      "t": 9.893
+    },
+    {
+      "peer": "127.0.0.1:33718",
+      "t": 15.004
+    }
+  ],
+  "liveness_probe_connections": 1,
+  "rank_connections_at_squatter": 8,
+  "ranks": {
+    "0": {
+      "rank": 0,
+      "pid": 388530,
+      "hostname": "kun-workspace-vgen2",
+      "dp_size": 2,
+      "host": "127.0.0.1",
+      "attempts": [
+        {
+          "port": 33062,
+          "listen_socket": false,
+          "t_rel_s": 2.051
+        },
+        {
+          "port": 33061,
+          "listen_socket": false,
+          "t_rel_s": 2.053
+        }
+      ],
+      "warnings": [
+        "Address already in use. Retrying with a new port."
+      ],
+      "coord_store_port_env": null,
+      "native_defaults": {
+        "data_parallel_master_port": 29500,
+        "data_parallel_master_ip": "127.0.0.1",
+        "enable_elastic_ep": false,
+        "_coord_store_port": 0,
+        "_data_parallel_master_port_list": {
+          "default_factory": "list"
+        }
+      },
+      "coord_store_port": 0,
+      "port_list_after_post_init": [
+        33059,
+        33060,
+        33061,
+        33062
+      ],
+      "master_port_after_post_init": 33063,
+      "cpu_distributed_timeout_seconds": 8,
+      "outcome": "error",
+      "error_type": "torch.distributed.DistStoreError",
+      "error_message": "Timed out after 9 seconds waiting for clients. 1/2 clients joined.",
+      "error_traceback_tail": "Traceback (most recent call last):\n  File \"/data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch/repro_dp_port_collision.py\", line 139, in run_rank\n    pg, store = cfg.stateless_init_dp_group(return_store=True)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/parallel.py:621\", line 23, in stateless_init_dp_group\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/utils.py:576\", line 70, in stateless_init_torch_distributed_process_group\n  File \"/data/ycfeng/envs/openmopd-py312/lib/python3.12/site-packages/torch/distributed/rendezvous.py\", line 230, in _tcp_rendezvous_handler\n    store = _create_c10d_store(\n            ^^^^^^^^^^^^^^^^^^^\n  File \"/data/ycfeng/envs/openmopd-py312/lib/python3.12/site-packages/torch/distributed/rendezvous.py\", line 198, in _create_c10d_store\n    return TCPStore(\n           ^^^^^^^^^\ntorch.distributed.DistStoreError: Timed out after 9 seconds waiting for clients. 1/2 clients joined.\n",
+      "group_init_seconds": 9.007,
+      "elapsed_s": 11.059
+    },
+    "1": {
+      "rank": 1,
+      "pid": 388531,
+      "hostname": "kun-workspace-vgen2",
+      "dp_size": 2,
+      "host": "127.0.0.1",
+      "attempts": [
+        {
+          "port": 33062,
+          "listen_socket": false,
+          "t_rel_s": 2.061
+        }
+      ],
+      "warnings": [],
+      "coord_store_port_env": null,
+      "native_defaults": {
+        "data_parallel_master_port": 29500,
+        "data_parallel_master_ip": "127.0.0.1",
+        "enable_elastic_ep": false,
+        "_coord_store_port": 0,
+        "_data_parallel_master_port_list": {
+          "default_factory": "list"
+        }
+      },
+      "coord_store_port": 0,
+      "port_list_after_post_init": [
+        33059,
+        33060,
+        33061,
+        33062
+      ],
+      "master_port_after_post_init": 33063,
+      "cpu_distributed_timeout_seconds": 8,
+      "outcome": "error",
+      "error_type": "torch.distributed.DistNetworkError",
+      "error_message": "Connection reset by peer",
+      "error_traceback_tail": "Traceback (most recent call last):\n  File \"/data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch/repro_dp_port_collision.py\", line 139, in run_rank\n    pg, store = cfg.stateless_init_dp_group(return_store=True)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/parallel.py:621\", line 38, in stateless_init_dp_group\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/config/parallel.py:621\", line 23, in stateless_init_dp_group\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/utils.py:576\", line 70, in stateless_init_torch_distributed_process_group\n  File \"/data/ycfeng/envs/openmopd-py312/lib/python3.12/site-packages/torch/distributed/rendezvous.py\", line 230, in _tcp_rendezvous_handler\n    store = _create_c10d_store(\n            ^^^^^^^^^^^^^^^^^^^\n  File \"/data/ycfeng/envs/openmopd-py312/lib/python3.12/site-packages/torch/distributed/rendezvous.py\", line 198, in _create_c10d_store\n    return TCPStore(\n           ^^^^^^^^^\ntorch.distributed.DistNetworkError: Connection reset by peer\n",
+      "group_init_seconds": 12.882,
+      "elapsed_s": 14.944
+    }
+  },
+  "port_lists": {
+    "0": [
+      33059,
+      33060,
+      33061,
+      33062
+    ],
+    "1": [
+      33059,
+      33060,
+      33061,
+      33062
+    ]
+  },
+  "checks": [
+    {
+      "check": "all_ranks_produced_evidence",
+      "pass": true,
+      "detail": [
+        0,
+        1
+      ]
+    },
+    {
+      "check": "coord_store_port_is_zero",
+      "pass": true,
+      "detail": {
+        "0": 0,
+        "1": 0
+      }
+    },
+    {
+      "check": "port_lists_identical_across_ranks",
+      "pass": true,
+      "detail": {
+        "rank0": [
+          33059,
+          33060,
+          33061,
+          33062
+        ],
+        "all": {
+          "0": [
+            33059,
+            33060,
+            33061,
+            33062
+          ],
+          "1": [
+            33059,
+            33060,
+            33061,
+            33062
+          ]
+        }
+      }
+    },
+    {
+      "check": "rank0_first_attempt_hit_squatted_port",
+      "pass": true,
+      "detail": {
+        "rank0_attempts": [
+          {
+            "port": 33062,
+            "listen_socket": false,
+            "t_rel_s": 2.051
+          },
+          {
+            "port": 33061,
+            "listen_socket": false,
+            "t_rel_s": 2.053
+          }
+        ],
+        "squatted": 33062
+      }
+    },
+    {
+      "check": "rank0_retried_on_a_different_port",
+      "pass": true,
+      "detail": [
+        {
+          "port": 33062,
+          "listen_socket": false,
+          "t_rel_s": 2.051
+        },
+        {
+          "port": 33061,
+          "listen_socket": false,
+          "t_rel_s": 2.053
+        }
+      ]
+    },
+    {
+      "check": "rank0_emitted_native_retry_warning",
+      "pass": true,
+      "detail": [
+        "Address already in use. Retrying with a new port."
+      ]
+    },
+    {
+      "check": "peers_stayed_on_the_stale_port",
+      "pass": true,
+      "detail": {
+        "1": [
+          {
+            "port": 33062,
+            "listen_socket": false,
+            "t_rel_s": 2.061
+          }
+        ]
+      }
+    },
+    {
+      "check": "peers_connections_reached_squatter",
+      "pass": true,
+      "detail": {
+        "total_accepted": 9,
+        "liveness_probe_connections": 1,
+        "rank_connections": 8,
+        "first": [
+          {
+            "peer": "127.0.0.1:33446",
+            "t": 2.13
+          },
+          {
+            "peer": "127.0.0.1:33448",
+            "t": 2.647
+          },
+          {
+            "peer": "127.0.0.1:33454",
+            "t": 3.207
+          }
+        ]
+      }
+    },
+    {
+      "check": "divergent_rendezvous_ports",
+      "pass": true,
+      "detail": {
+        "0": [
+          33062,
+          33061
+        ],
+        "1": [
+          33062
+        ]
+      }
+    },
+    {
+      "check": "rank0_failed",
+      "pass": true,
+      "detail": {
+        "outcome": "error",
+        "error_type": "torch.distributed.DistStoreError"
+      }
+    },
+    {
+      "check": "peers_failed",
+      "pass": true,
+      "detail": {
+        "1": "error"
+      }
+    }
+  ],
+  "symptom_detected": true,
+  "all_checks_pass": true,
+  "wall_seconds": 15.606
+}

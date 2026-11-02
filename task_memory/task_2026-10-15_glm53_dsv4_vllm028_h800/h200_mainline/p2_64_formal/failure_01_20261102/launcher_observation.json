@@ -1,0 +1,16 @@
+{
+  "observed_utc": "2026-11-02T14:26:15.488207+00:00",
+  "job": "exp-1102-164536-160317",
+  "local_launcher_pid": 3140124,
+  "launcher_alive": false,
+  "launcher_source": "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal.log",
+  "launcher_sha256": "8fadca63f649a8a42f20f97c0f13b0647e17104f7cab558e472eb25b5ec56b5e",
+  "launcher_reported_phase": "failed",
+  "launcher_cleanup_utc": "2026-11-02T12:50:53.024Z",
+  "initiating_cause": "UNKNOWN_PENDING_PLATFORM_RCA",
+  "original_monitor_end_utc": "2026-11-02T11:15:53Z",
+  "original_monitor_exit": "exit 0",
+  "rca_executor": "p64-formal-rca-1102d",
+  "rca_session": "6dbb5423-3705-4d27-a9ef-dd22409c13ec",
+  "old_label_resume": "refused: this run belongs to another caller session; no new GPU job submitted"
+}

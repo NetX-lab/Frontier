@@ -1,0 +1,483 @@
+{
+  "manifest": {
+    "native_root": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "files": {
+      "vllm/utils/network_utils.py": {
+        "sha256": "383648e9374a6f2304fec91bd6a54aeb0301c009e69c267bcdc4dfbed38e20e9",
+        "bytes": 12459
+      },
+      "vllm/utils/system_utils.py": {
+        "sha256": "837e6ff0ab524c06c048d6b42d4f35b77baba2e9d9e57837fe333ca0aaee1cfb",
+        "bytes": 10525
+      },
+      "vllm/distributed/utils.py": {
+        "sha256": "792146b357139e705064a68d3b66858de8a0baaca4dc7db1232fa217d45db231",
+        "bytes": 27341
+      },
+      "vllm/config/parallel.py": {
+        "sha256": "f29f984ac39f4ae11622c2c64f92a657951f3a28e624a2a60d1040b49e025311",
+        "bytes": 44810
+      }
+    },
+    "spans": {
+      "vllm/utils/network_utils.py::_get_reserved_port_range": [
+        {
+          "class": null,
+          "start_line": 166,
+          "end_line": 171,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::get_open_port": [
+        {
+          "class": null,
+          "start_line": 174,
+          "end_line": 187,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::get_open_ports_list": [
+        {
+          "class": null,
+          "start_line": 190,
+          "end_line": 213,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::_get_open_port": [
+        {
+          "class": null,
+          "start_line": 216,
+          "end_line": 247,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::get_tcp_uri": [
+        {
+          "class": null,
+          "start_line": 150,
+          "end_line": 154,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/network_utils.py::is_valid_ipv6_address": [
+        {
+          "class": null,
+          "start_line": 104,
+          "end_line": 109,
+          "overload_stub": false
+        }
+      ],
+      "vllm/utils/system_utils.py::suppress_stdout": [
+        {
+          "class": null,
+          "start_line": 61,
+          "end_line": 91,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::create_tcp_store": [
+        {
+          "class": null,
+          "start_line": 175,
+          "end_line": 195,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::get_cached_tcp_store_client": [
+        {
+          "class": null,
+          "start_line": 516,
+          "end_line": 523,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::get_cpu_distributed_timeout_or_none": [
+        {
+          "class": null,
+          "start_line": 526,
+          "end_line": 533,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::get_distributed_timeout_or_none": [
+        {
+          "class": null,
+          "start_line": 536,
+          "end_line": 543,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::init_gloo_process_group": [
+        {
+          "class": null,
+          "start_line": 546,
+          "end_line": 573,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::stateless_init_torch_distributed_process_group": [
+        {
+          "class": null,
+          "start_line": 576,
+          "end_line": 684,
+          "overload_stub": false
+        }
+      ],
+      "vllm/distributed/utils.py::stateless_destroy_torch_distributed_process_group": [
+        {
+          "class": null,
+          "start_line": 687,
+          "end_line": 693,
+          "overload_stub": false
+        }
+      ],
+      "vllm/config/parallel.py::get_next_dp_init_port": [
+        {
+          "class": "ParallelConfig",
+          "start_line": 569,
+          "end_line": 584,
+          "overload_stub": false
+        }
+      ],
+      "vllm/config/parallel.py::_pick_stateless_dp_port": [
+        {
+          "class": "ParallelConfig",
+          "start_line": 586,
+          "end_line": 611,
+          "overload_stub": false
+        }
+      ],
+      "vllm/config/parallel.py::stateless_init_dp_group": [
+        {
+          "class": "ParallelConfig",
+          "start_line": 613,
+          "end_line": 616,
+          "overload_stub": true
+        },
+        {
+          "class": "ParallelConfig",
+          "start_line": 617,
+          "end_line": 620,
+          "overload_stub": true
+        },
+        {
+          "class": "ParallelConfig",
+          "start_line": 621,
+          "end_line": 662,
+          "overload_stub": false
+        }
+      ]
+    },
+    "python": "3.12.13",
+    "mode": "baseline",
+    "coord_store_port": null,
+    "torch": "2.8.0+cu128",
+    "command": "/data/ycfeng/envs/openmopd-py312/bin/python /data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/repro_dp_port_collision.py --out /data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline --ranks 4 --timeout 8 --no-squatter",
+    "host": "127.0.0.1",
+    "vllm_port_base": 41541,
+    "dp_timeout_s": 8.0
+  },
+  "mode": "baseline",
+  "squatted_port": null,
+  "accepted_connections_at_squatter": [],
+  "liveness_probe_connections": 0,
+  "rank_connections_at_squatter": 0,
+  "ranks": {
+    "0": {
+      "rank": 0,
+      "pid": 494858,
+      "hostname": "kun-workspace-vgen2",
+      "dp_size": 4,
+      "host": "127.0.0.1",
+      "attempts": [
+        {
+          "port": 41544,
+          "listen_socket": false,
+          "t_rel_s": 1.981
+        }
+      ],
+      "warnings": [],
+      "coord_store_port_env": null,
+      "native_defaults": {
+        "data_parallel_master_port": 29500,
+        "data_parallel_master_ip": "127.0.0.1",
+        "enable_elastic_ep": false,
+        "_coord_store_port": 0,
+        "_data_parallel_master_port_list": {
+          "default_factory": "list"
+        }
+      },
+      "coord_store_port": 0,
+      "port_list_after_post_init": [
+        41541,
+        41542,
+        41543,
+        41544
+      ],
+      "master_port_after_post_init": 41545,
+      "cpu_distributed_timeout_seconds": 8,
+      "outcome": "ok",
+      "group_created": true,
+      "group_init_seconds": 0.015,
+      "elapsed_s": 1.996
+    },
+    "1": {
+      "rank": 1,
+      "pid": 494859,
+      "hostname": "kun-workspace-vgen2",
+      "dp_size": 4,
+      "host": "127.0.0.1",
+      "attempts": [
+        {
+          "port": 41544,
+          "listen_socket": false,
+          "t_rel_s": 1.988
+        }
+      ],
+      "warnings": [],
+      "coord_store_port_env": null,
+      "native_defaults": {
+        "data_parallel_master_port": 29500,
+        "data_parallel_master_ip": "127.0.0.1",
+        "enable_elastic_ep": false,
+        "_coord_store_port": 0,
+        "_data_parallel_master_port_list": {
+          "default_factory": "list"
+        }
+      },
+      "coord_store_port": 0,
+      "port_list_after_post_init": [
+        41541,
+        41542,
+        41543,
+        41544
+      ],
+      "master_port_after_post_init": 41545,
+      "cpu_distributed_timeout_seconds": 8,
+      "outcome": "ok",
+      "group_created": true,
+      "group_init_seconds": 0.008,
+      "elapsed_s": 1.995
+    },
+    "2": {
+      "rank": 2,
+      "pid": 494860,
+      "hostname": "kun-workspace-vgen2",
+      "dp_size": 4,
+      "host": "127.0.0.1",
+      "attempts": [
+        {
+          "port": 41544,
+          "listen_socket": false,
+          "t_rel_s": 1.985
+        }
+      ],
+      "warnings": [],
+      "coord_store_port_env": null,
+      "native_defaults": {
+        "data_parallel_master_port": 29500,
+        "data_parallel_master_ip": "127.0.0.1",
+        "enable_elastic_ep": false,
+        "_coord_store_port": 0,
+        "_data_parallel_master_port_list": {
+          "default_factory": "list"
+        }
+      },
+      "coord_store_port": 0,
+      "port_list_after_post_init": [
+        41541,
+        41542,
+        41543,
+        41544
+      ],
+      "master_port_after_post_init": 41545,
+      "cpu_distributed_timeout_seconds": 8,
+      "outcome": "ok",
+      "group_created": true,
+      "group_init_seconds": 0.011,
+      "elapsed_s": 1.996
+    },
+    "3": {
+      "rank": 3,
+      "pid": 494861,
+      "hostname": "kun-workspace-vgen2",
+      "dp_size": 4,
+      "host": "127.0.0.1",
+      "attempts": [
+        {
+          "port": 41544,
+          "listen_socket": false,
+          "t_rel_s": 1.99
+        }
+      ],
+      "warnings": [],
+      "coord_store_port_env": null,
+      "native_defaults": {
+        "data_parallel_master_port": 29500,
+        "data_parallel_master_ip": "127.0.0.1",
+        "enable_elastic_ep": false,
+        "_coord_store_port": 0,
+        "_data_parallel_master_port_list": {
+          "default_factory": "list"
+        }
+      },
+      "coord_store_port": 0,
+      "port_list_after_post_init": [
+        41541,
+        41542,
+        41543,
+        41544
+      ],
+      "master_port_after_post_init": 41545,
+      "cpu_distributed_timeout_seconds": 8,
+      "outcome": "ok",
+      "group_created": true,
+      "group_init_seconds": 0.006,
+      "elapsed_s": 1.996
+    }
+  },
+  "port_lists": {
+    "0": [
+      41541,
+      41542,
+      41543,
+      41544
+    ],
+    "1": [
+      41541,
+      41542,
+      41543,
+      41544
+    ],
+    "2": [
+      41541,
+      41542,
+      41543,
+      41544
+    ],
+    "3": [
+      41541,
+      41542,
+      41543,
+      41544
+    ]
+  },
+  "checks": [
+    {
+      "check": "all_ranks_produced_evidence",
+      "pass": true,
+      "detail": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "check": "coord_store_port_is_zero",
+      "pass": true,
+      "detail": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      }
+    },
+    {
+      "check": "port_lists_identical_across_ranks",
+      "pass": true,
+      "detail": {
+        "rank0": [
+          41541,
+          41542,
+          41543,
+          41544
+        ],
+        "all": {
+          "0": [
+            41541,
+            41542,
+            41543,
+            41544
+          ],
+          "1": [
+            41541,
+            41542,
+            41543,
+            41544
+          ],
+          "2": [
+            41541,
+            41542,
+            41543,
+            41544
+          ],
+          "3": [
+            41541,
+            41542,
+            41543,
+            41544
+          ]
+        }
+      }
+    },
+    {
+      "check": "baseline_all_ranks_ok",
+      "pass": true,
+      "detail": {
+        "0": "ok",
+        "1": "ok",
+        "2": "ok",
+        "3": "ok"
+      }
+    },
+    {
+      "check": "baseline_single_shared_port",
+      "pass": true,
+      "detail": {
+        "0": [
+          {
+            "port": 41544,
+            "listen_socket": false,
+            "t_rel_s": 1.981
+          }
+        ],
+        "1": [
+          {
+            "port": 41544,
+            "listen_socket": false,
+            "t_rel_s": 1.988
+          }
+        ],
+        "2": [
+          {
+            "port": 41544,
+            "listen_socket": false,
+            "t_rel_s": 1.985
+          }
+        ],
+        "3": [
+          {
+            "port": 41544,
+            "listen_socket": false,
+            "t_rel_s": 1.99
+          }
+        ]
+      }
+    },
+    {
+      "check": "baseline_no_retry_warning",
+      "pass": true,
+      "detail": {
+        "0": [],
+        "1": [],
+        "2": [],
+        "3": []
+      }
+    }
+  ],
+  "symptom_detected": false,
+  "all_checks_pass": true,
+  "wall_seconds": 2.558
+}

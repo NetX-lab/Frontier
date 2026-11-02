@@ -1,0 +1,1132 @@
+{
+  "verified_utc": "2026-11-02T14:33:41.130241+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "download_status": "HASH_IDENTICAL_DOWNLOAD",
+  "files": 74,
+  "bytes": 29702405,
+  "mismatches": [],
+  "extra_files": [],
+  "missing_files": [],
+  "inventory_digest_ok": true,
+  "run_tag": "dsv4-h200-p2-64-formal-20261102-01",
+  "harness_commit": "4861e680548a5666f3107945ec4881b7022c23fb",
+  "groundtruth_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "node_results": [
+    {
+      "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation"
+      ],
+      "plan": {
+        "position": 0,
+        "role": "prefill",
+        "lane": 0,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.8.31"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.8.31",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.8.31",
+          "data_parallel_rpc_port": 24471,
+          "role_devices": {
+            "prefill": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": false
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    },
+    {
+      "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation"
+      ],
+      "plan": {
+        "position": 1,
+        "role": "prefill",
+        "lane": 1,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.14.30"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.14.30",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.8.31",
+          "data_parallel_rpc_port": 24471,
+          "role_devices": {
+            "prefill": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": true,
+          "data_parallel_start_rank": 1
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    },
+    {
+      "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation"
+      ],
+      "plan": {
+        "position": 2,
+        "role": "prefill",
+        "lane": 2,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.2.23"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.2.23",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.8.31",
+          "data_parallel_rpc_port": 24471,
+          "role_devices": {
+            "prefill": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": true,
+          "data_parallel_start_rank": 2
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    },
+    {
+      "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation"
+      ],
+      "plan": {
+        "position": 3,
+        "role": "prefill",
+        "lane": 3,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.12.67"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.12.67",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.8.31",
+          "data_parallel_rpc_port": 24471,
+          "role_devices": {
+            "prefill": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": true,
+          "data_parallel_start_rank": 3
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    },
+    {
+      "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation",
+        "exception",
+        "shutdown_order",
+        "server_stop",
+        "weight_audit",
+        "workload_returncode"
+      ],
+      "plan": {
+        "position": 4,
+        "role": "decode",
+        "lane": 0,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.22.14"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.22.14",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.22.14",
+          "data_parallel_rpc_port": 24571,
+          "role_devices": {
+            "decode": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": false
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    },
+    {
+      "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation"
+      ],
+      "plan": {
+        "position": 5,
+        "role": "decode",
+        "lane": 1,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.22.64"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.22.64",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.22.14",
+          "data_parallel_rpc_port": 24571,
+          "role_devices": {
+            "decode": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": true,
+          "data_parallel_start_rank": 1
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    },
+    {
+      "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation"
+      ],
+      "plan": {
+        "position": 6,
+        "role": "decode",
+        "lane": 2,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.22.73"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.22.73",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.22.14",
+          "data_parallel_rpc_port": 24571,
+          "role_devices": {
+            "decode": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": true,
+          "data_parallel_start_rank": 2
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    },
+    {
+      "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+      "qualification_verified": false,
+      "keys": [
+        "host",
+        "qualification_verified",
+        "observation_errors",
+        "stage",
+        "plan",
+        "ucx_devices",
+        "nvidia_smi",
+        "versions",
+        "serving_instrumentation",
+        "server_command",
+        "server_env_set",
+        "server_pid",
+        "server_started_at_utc",
+        "run_manifest_sha256",
+        "run_generation",
+        "exception",
+        "shutdown_order",
+        "server_stop",
+        "weight_audit",
+        "workload_returncode"
+      ],
+      "plan": {
+        "position": 7,
+        "role": "decode",
+        "lane": 3,
+        "engine": {
+          "async_scheduling": true,
+          "block_size": null,
+          "data_parallel_size": 4,
+          "distributed_executor_backend": "mp",
+          "dtype": "bfloat16",
+          "enable_chunked_prefill": false,
+          "enable_expert_parallel": true,
+          "enable_prefix_caching": false,
+          "enforce_eager": false,
+          "gpu_memory_utilization": 0.85,
+          "kv_cache_dtype": "fp8",
+          "kv_transfer": {
+            "decode_side_channel_port": 5700,
+            "kv_buffer_device": "cuda",
+            "prefill_side_channel_port": 5600,
+            "side_channel_host": "10.204.13.90"
+          },
+          "load_format": "dummy",
+          "max_model_len": 7168,
+          "max_num_batched_tokens": 8192,
+          "max_num_seqs": 128,
+          "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+          "moe_gating_routing_runtime_path": "balanced_topk",
+          "native_reference": {
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+          },
+          "pipeline_parallel_size": 1,
+          "seed": 1234,
+          "shutdown_timeout": 30,
+          "skip_tokenizer_init": true,
+          "tensor_parallel_size": 8,
+          "vllm_version": "0.28.0",
+          "worker_extension_cls": "native_full_structure.FullModelInventory",
+          "host": "10.204.13.90",
+          "data_parallel_size_local": 1,
+          "data_parallel_address": "10.204.22.14",
+          "data_parallel_rpc_port": 24571,
+          "role_devices": {
+            "decode": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7"
+            ]
+          },
+          "headless": true,
+          "data_parallel_start_rank": 3
+        },
+        "heads": {
+          "prefill": {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          "decode": {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          }
+        },
+        "peers": [
+          {
+            "host": "gpu-h200-0043.lgcm.sh.istep.fun",
+            "ip": "10.204.8.31"
+          },
+          {
+            "host": "gpu-h200-0197.lgcm.sh.istep.fun",
+            "ip": "10.204.14.30"
+          },
+          {
+            "host": "gpu-h200-0357.lgcm.sh.istep.fun",
+            "ip": "10.204.2.23"
+          },
+          {
+            "host": "gpu-h200-0375.lgcm.sh.istep.fun",
+            "ip": "10.204.12.67"
+          },
+          {
+            "host": "gpu-h200-0760.lgcm.sh.istep.fun",
+            "ip": "10.204.22.14"
+          },
+          {
+            "host": "gpu-h200-0819.lgcm.sh.istep.fun",
+            "ip": "10.204.22.64"
+          },
+          {
+            "host": "gpu-h200-0828.lgcm.sh.istep.fun",
+            "ip": "10.204.22.73"
+          },
+          {
+            "host": "gpu-h200-0882.lgcm.sh.istep.fun",
+            "ip": "10.204.13.90"
+          }
+        ],
+        "urls": {
+          "prefill": "http://10.204.8.31:8100",
+          "decode": "http://10.204.22.14:8200"
+        }
+      }
+    }
+  ],
+  "files_present": [
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/server_ready.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank0.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank1.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank2.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank3.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank4.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank5.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank6.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/serving/rank7.json",
+    "nodes/gpu-h200-0043.lgcm.sh.istep.fun/worker.log",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank0.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank1.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank2.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank3.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank4.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank5.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank6.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/serving/rank7.json",
+    "nodes/gpu-h200-0197.lgcm.sh.istep.fun/worker.log",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/failed.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank0.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank0.json.1570.tmp",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank1.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank1.json.1571.tmp",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank2.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank3.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank4.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank4.json.1574.tmp",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank5.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank6.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/serving/rank7.json",
+    "nodes/gpu-h200-0357.lgcm.sh.istep.fun/worker.log",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank0.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank1.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank2.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank3.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank4.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank5.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank6.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/serving/rank7.json",
+    "nodes/gpu-h200-0375.lgcm.sh.istep.fun/worker.log",
+    "nodes/gpu-h200-0760.lgcm.sh.istep.fun/failed.json",
+    "nodes/gpu-h200-0760.lgcm.sh.istep.fun/native_stopped.json",
+    "nodes/gpu-h200-0760.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0760.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0760.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0760.lgcm.sh.istep.fun/worker.log",
+    "nodes/gpu-h200-0819.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0819.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0819.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0819.lgcm.sh.istep.fun/worker.log",
+    "nodes/gpu-h200-0828.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0828.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0828.lgcm.sh.istep.fun/worker.log",
+    "nodes/gpu-h200-0882.lgcm.sh.istep.fun/failed.json",
+    "nodes/gpu-h200-0882.lgcm.sh.istep.fun/native_stopped.json",
+    "nodes/gpu-h200-0882.lgcm.sh.istep.fun/ready.json",
+    "nodes/gpu-h200-0882.lgcm.sh.istep.fun/result.json",
+    "nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+    "nodes/gpu-h200-0882.lgcm.sh.istep.fun/worker.log",
+    "run_manifest.json"
+  ]
+}

@@ -1,0 +1,95 @@
+[
+  {
+    "path": "nodes/gpu-h200-0357.lgcm.sh.istep.fun/worker.log",
+    "sha256": "c0a21b8bdbf7e7b6b44d8c121e4ede3921082e0bd3adc5c0495cadbb436db244",
+    "line": 9,
+    "matched": [
+      "Native P/D peer failed"
+    ],
+    "text": "    raise RuntimeError(f'Native P/D peer failed: {failed}')"
+  },
+  {
+    "path": "nodes/gpu-h200-0760.lgcm.sh.istep.fun/server.log",
+    "sha256": "0481ff0b908d2a9763cfd333d2b4f70032444216c262dd07acebe9537b0e7e9a",
+    "line": 59,
+    "matched": [
+      "Address already in use"
+    ],
+    "text": "(EngineCore_DP0 pid=1495) WARNING 11-02 12:22:14 [parallel.py:655] Address already in use. Retrying with a new port."
+  },
+  {
+    "path": "nodes/gpu-h200-0760.lgcm.sh.istep.fun/worker.log",
+    "sha256": "4873e6ac92e5bda5dd26d5c85e9e2220d11ade0a4c6598dbac6c9a5c82f71e01",
+    "line": 8,
+    "matched": [
+      "deadline exceeded"
+    ],
+    "text": "    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')"
+  },
+  {
+    "path": "nodes/gpu-h200-0819.lgcm.sh.istep.fun/server.log",
+    "sha256": "1e97101e43bcf877d1d1596e2760bd8ca6562b61ed8362fd9cd6a9e1daf81b65",
+    "line": 14,
+    "matched": [
+      "Failed to recv, got 0 bytes",
+      "40273"
+    ],
+    "text": "[W1102 12:22:14.227747612 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=84, addr=[gpu-h200-0819.lgcm.sh.istep.fun]:35132, remote=[gpu-h200-0760.lgcm.sh.istep.fun]:40273): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+  },
+  {
+    "path": "nodes/gpu-h200-0819.lgcm.sh.istep.fun/server.log",
+    "sha256": "1e97101e43bcf877d1d1596e2760bd8ca6562b61ed8362fd9cd6a9e1daf81b65",
+    "line": 458,
+    "matched": [
+      "Ping failed"
+    ],
+    "text": "[W1102 12:22:23.125483562 TCPStore.cpp:340] [c10d] TCP client failed to connect/validate to host 10.204.22.14:40273 - retrying (try=6, timeout=1800000ms, delay=3405ms): Ping failed, invalid value returned from server. Expected: 1327, Got: 255"
+  },
+  {
+    "path": "nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+    "sha256": "23c24570730a0263c8243fcc991d818a29155efb0d0cf46f33b7ecb925703a0d",
+    "line": 14,
+    "matched": [
+      "Failed to recv, got 0 bytes",
+      "40273"
+    ],
+    "text": "[W1102 12:22:14.379442914 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=84, addr=[gpu-h200-0828.lgcm.sh.istep.fun]:40798, remote=[gpu-h200-0760.lgcm.sh.istep.fun]:40273): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+  },
+  {
+    "path": "nodes/gpu-h200-0828.lgcm.sh.istep.fun/server.log",
+    "sha256": "23c24570730a0263c8243fcc991d818a29155efb0d0cf46f33b7ecb925703a0d",
+    "line": 1494,
+    "matched": [
+      "Ping failed"
+    ],
+    "text": "[W1102 12:33:13.472739993 TCPStore.cpp:340] [c10d] TCP client failed to connect/validate to host 10.204.22.14:40273 - retrying (try=20, timeout=1800000ms, delay=55003ms): Ping failed, invalid value returned from server. Expected: 1316, Got: 255"
+  },
+  {
+    "path": "nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+    "sha256": "27f8d739f8839fab8246c1864a8380e217f36e557b28241c366271fd3670d53c",
+    "line": 14,
+    "matched": [
+      "Failed to recv, got 0 bytes",
+      "40273"
+    ],
+    "text": "[W1102 12:22:14.561600319 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=84, addr=[gpu-h200-0882.lgcm.sh.istep.fun]:39424, remote=[gpu-h200-0760.lgcm.sh.istep.fun]:40273): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+  },
+  {
+    "path": "nodes/gpu-h200-0882.lgcm.sh.istep.fun/server.log",
+    "sha256": "27f8d739f8839fab8246c1864a8380e217f36e557b28241c366271fd3670d53c",
+    "line": 162,
+    "matched": [
+      "Ping failed"
+    ],
+    "text": "[W1102 12:22:15.377390751 TCPStore.cpp:340] [c10d] TCP client failed to connect/validate to host 10.204.22.14:40273 - retrying (try=2, timeout=1800000ms, delay=1338ms): Ping failed, invalid value returned from server. Expected: 1319, Got: 255"
+  },
+  {
+    "path": "nodes/gpu-h200-0882.lgcm.sh.istep.fun/worker.log",
+    "sha256": "3e21d5f1537c46c05c519ef7f23dde1b834cf0dacab348b981a85042da07cc24",
+    "line": 9,
+    "matched": [
+      "Native P/D peer failed"
+    ],
+    "text": "    raise RuntimeError(f'Native P/D peer failed: {failed}')"
+  }
+]
