@@ -1,0 +1,58 @@
+--- check_groundtruth_run.frozen.py
++++ check_groundtruth_run_successor.py
+@@ -706 +706,2 @@
+-def native_idle_evidence(repetitions: dict, records: list[dict], workload: dict, dp: int) -> tuple[bool, str]:
++def native_idle_evidence(repetitions: dict, records: list[dict], workload: dict, dp: int,
++                         dedicated_services: dict | None = None) -> tuple[bool, str]:
+@@ -728,0 +730,6 @@
++        cold = index == 0 and boundary.get("proof") == "dedicated_services_ready_client_zero_native_counters_zero"
++        if cold and (not dedicated_services or boundary.get("fresh_services") != dedicated_services
++                     or boundary.get("client_dispatched_requests") != 0
++                     or any(r["dispatch_monotonic"] is None or r["dispatch_monotonic"] <= sample["monotonic"]
++                            for r in records)):
++            return False, "Unbound dedicated service or existing-client cold-start evidence"
+@@ -731 +738,2 @@
+-            if (set(lanes) != {str(i) for i in range(dp)} or not observed["idle"]
++            unpublished = cold and all(not values for values in lanes.values())
++            if (set(lanes) != {str(i) for i in range(dp)} or not unpublished and (not observed["idle"]
+@@ -733,2 +741,2 @@
+-                           or not math.isfinite(v) or v != 0 for v in values.values())
+-                           for values in lanes.values())):
++                            or not math.isfinite(v) or v != 0 for v in values.values())
++                            for values in lanes.values()))):
+@@ -736,0 +745,7 @@
++            if cold:
++                counters = observed["completion_counters"]
++                reasons = {"stop", "length", "abort", "error", "repetition"}
++                if (count != 0 or set(counters) != {str(i) for i in range(dp)}
++                        or any(set(values) != reasons or any(type(v) not in (int, float) or v != 0
++                               for v in values.values()) for values in counters.values())):
++                    return False, "Missing or nonzero cold-start native DP lane completion counters"
+@@ -756,0 +772 @@
++    dedicated = None
+@@ -882 +898 @@
+-        nonlocal summary, records
++        nonlocal summary, records, dedicated
+@@ -894 +910,14 @@
+-        return native_idle_evidence(repetitions, records, workload, engine["data_parallel_size"])
++        dedicated = None
++        if repetitions["idle_boundaries"][0].get("proof") == "dedicated_services_ready_client_zero_native_counters_zero":
++            # Only the new proof asks the already pinned harness to rebind actual node receipts.
++            code = '''import json, pathlib, sys
++sys.path.insert(0, sys.argv[1])
++from tests.comparison.calibration.pd_replay import dedicated_services
++print(json.dumps(dedicated_services(pathlib.Path(sys.argv[2]), json.loads(sys.argv[3]), int(sys.argv[4]))))
++'''
++            urls = {role: summary["instances"][role]["http_url"] for role in ("prefill", "decode")}
++            read = subprocess.run([sys.executable, "-I", "-B", "-c", code, manifest["harness_worktree"],
++                                   str(run_dir), json.dumps(urls), str(engine["data_parallel_size"])],
++                                  check=True, capture_output=True, text=True)
++            dedicated = json.loads(read.stdout)
++        return native_idle_evidence(repetitions, records, workload, engine["data_parallel_size"], dedicated)
+@@ -948 +977,5 @@
+-                if ready != dict(role=role, url=urls[role]):
++                cold = (summary["canonical_repetitions"]["idle_boundaries"][0].get("proof")
++                        == "dedicated_services_ready_client_zero_native_counters_zero")
++                if cold and (not dedicated or ready != dedicated["services"][role]):
++                    raise ValueError(f"Unbound dedicated head launch/readiness evidence: {host}")
++                if not cold and ready != dict(role=role, url=urls[role]):

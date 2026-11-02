@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/integrity_controls.py", line 82, in <module>
+    assert 'enable_rdma=True' in launcher and 'mem_gb=config["mem_gb"]' in launcher
+AssertionError

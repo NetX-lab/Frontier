@@ -1,0 +1,37 @@
+{
+  "status": "ACCEPTED_PACKAGE_CPU_PREPARATION_WITH_LIMITS",
+  "record_date": "2026-10-25",
+  "source_acceptance_commit": "84a66948",
+  "owner_commits": ["10677995", "15b1d197", "0243b415"],
+  "main_merge_commit": "08b389052e6249776a16f152163da81ff90d4229",
+  "source_sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "input_count": 18,
+  "file_count": 19,
+  "bytes": 184495,
+  "executable_package": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "reviews": "Spec and Standards: No findings within declared static coverage; not an independent full-byte review of all archived duplicates.",
+  "root_evidence": {
+    "archive": "root_archive_verification.json",
+    "locked_image_cpu": "image/receipt.json",
+    "locked_image_witness": "image/stdout",
+    "actual_sdk_without_submission": "sdk/receipt.json",
+    "review": "review_2026-10-25_package.md",
+    "test_report": "test_report_2026-10-25_package_primary.md"
+  },
+  "gates": {
+    "source_cpu": "PASS",
+    "package_reviews": "PASS_WITH_DECLARED_COVERAGE",
+    "merged_package_hashes_and_67_pins": "PASS",
+    "locked_image_cpu_and_binary_pins": "PASS",
+    "actual_sdk_launch_entry_no_submission": "PASS",
+    "fresh_storage_quota_destination": "NOT_RUN",
+    "root_seal": "NOT_RUN",
+    "gpu_submission": "NOT_RUN",
+    "gpu_tls_lifetime_observe_control": "UNVERIFIED"
+  },
+  "gpu_submissions_used": 0,
+  "gpu_attempt_ceiling": 1,
+  "sealed": false,
+  "limits": "Prepared package and CPU/image/signature/SDK controls only. No GPU lifetime, native captured ownership, non-perturbation, reference or cost admission. Preserve the original worktree and package bytes; perform fresh prelaunch gates before the existing single GPU attempt."
+}

@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="22" skipped="0" tests="123" time="8.797" timestamp="2026-10-24T16:08:18.425904+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_separates_auxiliary_report_faults_from_native_failure[control]" time="0.013" /><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_separates_auxiliary_report_faults_from_native_failure[report_write_failure]" time="0.134" /><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_separates_auxiliary_report_faults_from_native_failure[native_exit_at_replay_completion]" time="0.015" /><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_separates_auxiliary_report_faults_from_native_failure[native_shutdown_error]" time="0.022" /><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_forwards_canonical_clean_mode_and_idle_configuration" time="0.013" /><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_preserves_native_completion_when_client_admission_is_unverified" time="0.012" /><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_uses_case_run_layout_and_retains_ordered_shutdown" time="0.030" /><testcase classname="tests.unit.test_native_pd_worker" name="test_manifest_copy_failure_is_soft_and_native_work_still_completes" time="0.013" /><testcase classname="tests.unit.test_native_pd_worker" name="test_headless_natural_completion_still_waits_for_head_stop_evidence" time="0.087" /><testcase classname="tests.unit.test_native_pd_worker" name="test_serving_extension_receives_actual_generation_role_and_node_directory" time="0.077" /><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_launch_exports_staged_extension_path_to_real_child" time="0.150"><failure message="assert (1 == 0)">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_launch_exports_sta0')
+
+    def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child')
+&gt;       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:379: AssertionError</failure></testcase><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_child_ready_timeout_matches_configured_startup_budget[3600-None]" time="0.026"><failure message="assert (1 == 0)">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_child_ready_timeou0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fe6892a4280&gt;
+budget = 3600, inherited = None
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+&gt;       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:402: AssertionError</failure></testcase><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_child_ready_timeout_matches_configured_startup_budget[3600-600]" time="0.032"><failure message="assert (1 == 0)">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_child_ready_timeou1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fe72edd3550&gt;
+budget = 3600, inherited = '600'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+&gt;       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:402: AssertionError</failure></testcase><testcase classname="tests.unit.test_native_pd_worker" name="test_worker_child_ready_timeout_matches_configured_startup_budget[37-7200]" time="0.164"><failure message="assert (1 == 0)">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_worker_child_ready_timeou2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fe72ed3e590&gt;
+budget = 37, inherited = '7200'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+&gt;       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:402: AssertionError</failure></testcase><testcase classname="tests.unit.test_native_pd_worker" name="test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission[canonical_clean_serving_missing_provenance]" time="0.120" /><testcase classname="tests.unit.test_native_pd_worker" name="test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission[canonical_clean_serving_invalid_generation]" time="0.059" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[True-iterations0]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[True-iterations1]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[True-iterations2]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[True-iterations3]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[False-iterations0]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[False-iterations1]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[False-iterations2]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_profile_nodes_have_distinct_trace_directories_without_changing_input[False-iterations3]" time="0.002" /><testcase classname="tests.unit.test_native_pd_worker" name="test_native_profile_config_outside_local_torch_window_is_preserved[profiler0]" time="0.000" /><testcase classname="tests.unit.test_native_pd_worker" name="test_native_profile_config_outside_local_torch_window_is_preserved[profiler1]" time="0.000" /><testcase classname="tests.unit.test_native_pd_worker" name="test_role_profiler_iterations_require_positive_integer_role_values[None]" time="0.001" /><testcase classname="tests.unit.test_native_pd_worker" name="test_role_profiler_iterations_require_positive_integer_role_values[iterations1]" time="0.000" /><testcase classname="tests.unit.test_native_pd_worker" name="test_role_profiler_iterations_require_positive_integer_role_values[iterations2]" time="0.000" /><testcase classname="tests.unit.test_native_pd_worker" name="test_role_profiler_iterations_require_positive_integer_role_values[iterations3]" time="0.000" /><testcase classname="tests.unit.test_native_pd_worker" name="test_role_profiler_iterations_require_positive_integer_role_values[iterations4]" time="0.000" /><testcase classname="tests.unit.test_native_pd_worker" name="test_role_profiler_iterations_require_positive_integer_role_values[iterations5]" time="0.000" /><testcase classname="tests.unit.test_native_pd_worker" name="test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_natural_headless_exit-20-20-0-None-True]" time="0.015" /><testcase classname="tests.unit.test_native_pd_worker" name="test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_active_headless_exit-20-20-0-SIGINT-True]" time="0.078" /><testcase classname="tests.unit.test_native_pd_worker" name="test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_active_headless_exit-61-60-0-SIGINT-False]" time="0.014" /><testcase classname="tests.unit.test_native_pd_worker" name="test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_natural_headless_exit-None-60-0-None-False]" time="0.033" /><testcase classname="tests.unit.test_native_pd_worker" name="test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome[canonical_clean_headless_native_error-20-0-23-None-False]" time="0.045" /><testcase classname="tests.unit.test_native_pd_worker" name="test_head_drain_quorum_and_membership_use_known_paths[True-0-0-0-members0]" time="0.481" /><testcase classname="tests.unit.test_native_pd_worker" name="test_head_drain_quorum_and_membership_use_known_paths[False-20-20-0-members1]" time="0.078" /><testcase classname="tests.unit.test_native_pd_worker" name="test_head_drain_quorum_and_membership_use_known_paths[False-None-60-1-members2]" time="0.019" /><testcase classname="tests.unit.test_native_pd_worker" name="test_native_stop_exception_is_not_suppressed_by_diagnostic_timing" time="0.012" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_actual_clean_provenance_and_prelaunch_snapshot_are_preserved" time="0.117" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[empty_authorization]" time="0.037" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[native_commit]" time="0.047" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[native_dirty]" time="0.061" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[native_untracked]" time="0.044" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[harness_dirty]" time="0.048" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[harness_untracked]" time="0.046" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[staged_module]" time="0.051" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[case_trace]" time="0.081" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[runner_trace]" time="0.049" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[model]" time="0.070" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[retained]" time="0.071" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[mode]" time="0.065" /><testcase classname="tests.unit.test_native_pd_manifest" name="test_prelaunch_rejects_actual_source_and_input_mutations[execution_config]" time="0.145" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_selects_pull_roles_explicit_devices_and_distinct_side_channels" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_node_uses_its_local_lane_and_reachable_side_channel[prefill]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_node_uses_its_local_lane_and_reachable_side_channel[decode]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_node_rejects_unusable_side_channels[loopback]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_node_rejects_unusable_side_channels[unspecified]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_node_rejects_unusable_side_channels[multicast]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_node_rejects_unusable_side_channels[rpc_window]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_node_rejects_unusable_side_channels[http_window]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[None]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na0')
+fault = None
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[missing]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na1')
+fault = 'missing'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[push]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na2')
+fault = 'push'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[identity]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na3')
+fault = 'identity'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[blocks]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na4')
+fault = 'blocks'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_passes_only_native_pull_response_metadata_to_decode[response_list]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_passes_only_na5')
+fault = 'response_list'
+
+    @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+    def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:100: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[200-False]" time="0.002"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_streams_before0')
+decode_status = 200, disconnect = False
+
+    @pytest.mark.parametrize(("decode_status", "disconnect"), [(200, False), (503, False), (200, True)])
+    def test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata(tmp_path, decode_status, disconnect):
+&gt;       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:163: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[503-False]" time="0.002"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_streams_before1')
+decode_status = 503, disconnect = False
+
+    @pytest.mark.parametrize(("decode_status", "disconnect"), [(200, False), (503, False), (200, True)])
+    def test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata(tmp_path, decode_status, disconnect):
+&gt;       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:163: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata[200-True]" time="0.002"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_proxy_streams_before2')
+decode_status = 200, disconnect = True
+
+    @pytest.mark.parametrize(("decode_status", "disconnect"), [(200, False), (503, False), (200, True)])
+    def test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata(tmp_path, decode_status, disconnect):
+&gt;       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:163: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_legacy_proxy_preserves_address_id_and_unchanged_decode_body" time="0.002"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_legacy_proxy_preserves_ad0')
+
+    def test_legacy_proxy_preserves_address_id_and_unchanged_decode_body(tmp_path):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:239: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.10.2-False]" time="0.002"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_uses_independent_up0')
+vllm_version = '0.10.2', stream = False
+
+    @pytest.mark.parametrize(("vllm_version", "stream"), [
+        ("0.10.2", False), ("0.28.0", False), ("0.28.0", True),
+    ])
+    def test_proxy_uses_independent_upstream_connections_for_consecutive_posts(tmp_path, vllm_version, stream):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:274: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-False]" time="0.002"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_uses_independent_up1')
+vllm_version = '0.28.0', stream = False
+
+    @pytest.mark.parametrize(("vllm_version", "stream"), [
+        ("0.10.2", False), ("0.28.0", False), ("0.28.0", True),
+    ])
+    def test_proxy_uses_independent_upstream_connections_for_consecutive_posts(tmp_path, vllm_version, stream):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:274: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-True]" time="0.002"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_uses_independent_up2')
+vllm_version = '0.28.0', stream = True
+
+    @pytest.mark.parametrize(("vllm_version", "stream"), [
+        ("0.10.2", False), ("0.28.0", False), ("0.28.0", True),
+    ])
+    def test_proxy_uses_independent_upstream_connections_for_consecutive_posts(tmp_path, vllm_version, stream):
+&gt;       from aiohttp import web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:274: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[prefill]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_does_not_retry_disc0')
+disconnect_at = 'prefill'
+
+    @pytest.mark.parametrize("disconnect_at", ["prefill", "decode_headers", "decode_stream"])
+    def test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent(tmp_path, disconnect_at):
+&gt;       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:360: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_headers]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_does_not_retry_disc1')
+disconnect_at = 'decode_headers'
+
+    @pytest.mark.parametrize("disconnect_at", ["prefill", "decode_headers", "decode_stream"])
+    def test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent(tmp_path, disconnect_at):
+&gt;       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:360: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_stream]" time="0.001"><failure message="ModuleNotFoundError: No module named 'aiohttp'">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_proxy_does_not_retry_disc2')
+disconnect_at = 'decode_stream'
+
+    @pytest.mark.parametrize("disconnect_at", ["prefill", "decode_headers", "decode_stream"])
+    def test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent(tmp_path, disconnect_at):
+&gt;       from aiohttp import ClientPayloadError, web
+E       ModuleNotFoundError: No module named 'aiohttp'
+
+tests/unit/test_calibration_pd_harness.py:360: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[role]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[nested]" time="0.002" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[same_output]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[alias_output]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[nested_output]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[parent_output]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[run]" time="0.002" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[devices]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[pp]" time="0.002" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[missing_kv]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[overlap]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_preflights_both_roles_before_any_launch[side_http]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_main_retains_plans_and_terminal_state_without_legacy_admission[None]" time="0.009" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_main_retains_plans_and_terminal_state_without_legacy_admission[prefill_spawn]" time="0.004" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_pd_main_retains_plans_and_terminal_state_without_legacy_admission[decode_spawn]" time="0.004" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_replays_http_without_owning_native_servers[200-200]" time="1.513"><failure message="RuntimeError: vllm serve exited with 1 during startup">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_external_pd_replays_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fe68950fca0&gt;
+decode_status = 200, health_status = 200
+
+    @pytest.mark.parametrize("decode_status,health_status", [(200, 200), (503, 200), (200, 503)])
+    def test_v028_external_pd_replays_http_without_owning_native_servers(
+        tmp_path, monkeypatch, decode_status, health_status,
+    ):
+        import socket
+        import threading
+        import urllib.request
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    
+        received, launched = [], []
+        params = {
+            "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+            "remote_engine_id": "native-p-engine", "remote_request_id": "native-p-request",
+            "remote_host": "192.0.2.10", "remote_port": 5557, "remote_block_ids": [[7, 9]],
+        }
+    
+        class Endpoint(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+    
+            def do_GET(self):
+                assert self.path == "/health"
+                self.send_response(health_status)
+                self.end_headers()
+    
+            def do_POST(self):
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                received.append((self.server.role, self.headers["X-Request-Id"], body))
+                status = 200 if self.server.role == "prefill" else decode_status
+                payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
+                           {"choices": [{"text": "native response", "finish_reason": "length"}],
+                            "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+                streaming = self.server.role == "decode" and status == 200 and body["stream"]
+                self.send_response(status)
+                self.send_header("Content-Type", "text/event-stream" if streaming else "application/json")
+                self.end_headers()
+                if streaming:
+                    events = [
+                        {"choices": [{"index": 0, "text": "", "token_ids": [7, 8, 9], "finish_reason": "length"}]},
+                        {"choices": [], "usage": {"prompt_tokens": 65, "completion_tokens": 3, "total_tokens": 68}},
+                    ]
+                    self.wfile.write(("".join("data: " + json.dumps(event) + "\n\n" for event in events)
+                                     + "data: [DONE]\n\n").encode())
+                else:
+                    self.wfile.write(json.dumps(payload).encode())
+    
+        servers, threads = [], []
+        try:
+            urls = []
+            for role in ("prefill", "decode"):
+                server = ThreadingHTTPServer(("127.0.0.1", 0), Endpoint)
+                server.role = role
+                servers.append(server)
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                threads.append(thread)
+                urls.append(f"http://127.0.0.1:{server.server_port}")
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                proxy_port = listener.getsockname()[1]
+            engine = nixl_engine()
+            del engine["role_devices"]
+            argv, output = native_replay_inputs(tmp_path, engine)
+            argv += ["--prefill-url", urls[0], "--decode-url", urls[1],
+                     "--proxy-port", str(proxy_port), "--origin-lead-s", "0",
+                     "--startup-timeout-s", "0.01" if health_status != 200 else "10"]
+            popen = pd_replay.subprocess.Popen
+    
+            def spawn(command, **kwargs):
+                assert command[1].endswith("/pd_proxy.py")
+                process = popen(command, **kwargs)
+                launched.append(process)
+                return process
+    
+            monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+            if health_status == 200:
+&gt;               assert pd_replay.main(argv) == (0 if decode_status == 200 else 4)
+
+tests/unit/test_calibration_pd_harness.py:634: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/comparison/calibration/pd_replay.py:744: in main
+    wait_until_ready(processes["proxy"], args.proxy_port, args.startup_timeout_s)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+server = &lt;Popen: returncode: 1 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...&gt;
+port = 44769, timeout_s = 10.0, host = '127.0.0.1'
+
+    def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: float, *,
+                         host: str = "127.0.0.1") -&gt; float:
+        started = time.monotonic()
+        while time.monotonic() - started &lt; timeout_s:
+            if server is not None and server.poll() is not None:
+&gt;               raise RuntimeError(f"vllm serve exited with {server.returncode} during startup")
+E               RuntimeError: vllm serve exited with 1 during startup
+
+tests/comparison/dp_placement_pp/vllm_replay.py:415: RuntimeError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_replays_http_without_owning_native_servers[503-200]" time="1.523"><failure message="RuntimeError: vllm serve exited with 1 during startup">tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/profile04_package_W128/pytest_work/test_v028_external_pd_replays_1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fe689417760&gt;
+decode_status = 503, health_status = 200
+
+    @pytest.mark.parametrize("decode_status,health_status", [(200, 200), (503, 200), (200, 503)])
+    def test_v028_external_pd_replays_http_without_owning_native_servers(
+        tmp_path, monkeypatch, decode_status, health_status,
+    ):
+        import socket
+        import threading
+        import urllib.request
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    
+        received, launched = [], []
+        params = {
+            "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+            "remote_engine_id": "native-p-engine", "remote_request_id": "native-p-request",
+            "remote_host": "192.0.2.10", "remote_port": 5557, "remote_block_ids": [[7, 9]],
+        }
+    
+        class Endpoint(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+    
+            def do_GET(self):
+                assert self.path == "/health"
+                self.send_response(health_status)
+                self.end_headers()
+    
+            def do_POST(self):
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                received.append((self.server.role, self.headers["X-Request-Id"], body))
+                status = 200 if self.server.role == "prefill" else decode_status
+                payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
+                           {"choices": [{"text": "native response", "finish_reason": "length"}],
+                            "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+                streaming = self.server.role == "decode" and status == 200 and body["stream"]
+                self.send_response(status)
+                self.send_header("Content-Type", "text/event-stream" if streaming else "application/json")
+                self.end_headers()
+                if streaming:
+                    events = [
+                        {"choices": [{"index": 0, "text": "", "token_ids": [7, 8, 9], "finish_reason": "length"}]},
+                        {"choices": [], "usage": {"prompt_tokens": 65, "completion_tokens": 3, "total_tokens": 68}},
+                    ]
+                    self.wfile.write(("".join("data: " + json.dumps(event) + "\n\n" for event in events)
+                                     + "data: [DONE]\n\n").encode())
+                else:
+                    self.wfile.write(json.dumps(payload).encode())
+    
+        servers, threads = [], []
+        try:
+            urls = []
+            for role in ("prefill", "decode"):
+                server = ThreadingHTTPServer(("127.0.0.1", 0), Endpoint)
+                server.role = role
+                servers.append(server)
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                threads.append(thread)
+                urls.append(f"http://127.0.0.1:{server.server_port}")
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                proxy_port = listener.getsockname()[1]
+            engine = nixl_engine()
+            del engine["role_devices"]
+            argv, output = native_replay_inputs(tmp_path, engine)
+            argv += ["--prefill-url", urls[0], "--decode-url", urls[1],
+                     "--proxy-port", str(proxy_port), "--origin-lead-s", "0",
+                     "--startup-timeout-s", "0.01" if health_status != 200 else "10"]
+            popen = pd_replay.subprocess.Popen
+    
+            def spawn(command, **kwargs):
+                assert command[1].endswith("/pd_proxy.py")
+                process = popen(command, **kwargs)
+                launched.append(process)
+                return process
+    
+            monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+            if health_status == 200:
+&gt;               assert pd_replay.main(argv) == (0 if decode_status == 200 else 4)
+
+tests/unit/test_calibration_pd_harness.py:634: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/comparison/calibration/pd_replay.py:744: in main
+    wait_until_ready(processes["proxy"], args.proxy_port, args.startup_timeout_s)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+server = &lt;Popen: returncode: 1 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...&gt;
+port = 57667, timeout_s = 10.0, host = '127.0.0.1'
+
+    def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: float, *,
+                         host: str = "127.0.0.1") -&gt; float:
+        started = time.monotonic()
+        while time.monotonic() - started &lt; timeout_s:
+            if server is not None and server.poll() is not None:
+&gt;               raise RuntimeError(f"vllm serve exited with {server.returncode} during startup")
+E               RuntimeError: vllm serve exited with 1 during startup
+
+tests/comparison/dp_placement_pp/vllm_replay.py:415: RuntimeError</failure></testcase><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_replays_http_without_owning_native_servers[200-503]" time="1.511" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://192.0.2.10:8100-None]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[None-http://192.0.2.12:8200]" time="0.027" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[https://192.0.2.10:8100-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://user:secret@192.0.2.10:8100-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://192.0.2.10:8100/path-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://192.0.2.10:8100?query=1-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://192.0.2.10-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://192.0.2.10:65536-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://0.0.0.0:8100-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://127.0.0.1:8000-http://192.0.2.12:8200]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch[http://192.0.2.10:8100-http://192.0.2.10:8100]" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_v028_local_pair_rejects_an_unmanaged_partial_dp_deployment" time="0.002" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_both_instances_parse_the_other_address_from_the_proxied_id[g3-p000]" time="0.000" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_both_instances_parse_the_other_address_from_the_proxied_id[g3-batch-w15]" time="0.000" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_both_instances_parse_the_other_address_from_the_proxied_id[7-1]" time="0.000" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_both_instances_parse_the_other_address_from_the_proxied_id[a_b]" time="0.000" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_a_client_id_that_would_move_an_address_match_is_rejected[g3:p000]" time="0.000" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_a_client_id_that_would_move_an_address_match_is_rejected[_g3-p000]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_the_join_applies_the_pd_metric_contract_and_reports_every_other_request" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_a_prefill_with_more_than_one_output_token_is_reported_but_kept" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_the_joined_files_are_written_once" time="0.003" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_the_connector_check_needs_its_put_async_init_line_and_no_fault[lines0-faults0-True]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_the_connector_check_needs_its_put_async_init_line_and_no_fault[lines1-faults1-False]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_the_connector_check_needs_its_put_async_init_line_and_no_fault[lines2-faults2-False]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_the_connector_check_needs_its_put_async_init_line_and_no_fault[lines3-faults3-False]" time="0.001" /><testcase classname="tests.unit.test_calibration_pd_harness" name="test_each_instance_gets_its_role_gpu_and_connector_values_from_the_engine_file" time="0.001" /></testsuite></testsuites>

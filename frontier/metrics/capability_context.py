@@ -82,3 +82,15 @@ class CapabilityContext:
             self.cluster_type,
             self.expected_ep_size,
         )
+
+    @property
+    def uses_sequence_parallel_moe(self) -> bool:
+        replica = self.replica_config
+        return self.architecture_profile.uses_sequence_parallel_moe(
+            replica.attn_tensor_parallel_size, replica.attn_dp,
+            replica.num_pipeline_stages, replica.moe_expert_parallel_size,
+        )
+
+    @property
+    def embedding_logits_collectives(self) -> bool:
+        return self.architecture_profile.embedding_logits_collectives

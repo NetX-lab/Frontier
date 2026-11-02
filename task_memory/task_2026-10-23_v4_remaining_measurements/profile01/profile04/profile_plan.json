@@ -1,0 +1,50 @@
+{
+  "generation": "04",
+  "diagnostic_only": true,
+  "e2e_reference_admission": false,
+  "accepted_runtime_commit": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "primary_acceptance": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/primary_integration_acceptance.json",
+  "proposal_inputs": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/proposal_inputs.json",
+  "run_tag": "dsv4-h800-p0-profile-20261024-04",
+  "run_generation": "v4-native-v028-h800-p0-profile-20261024-04",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024_04",
+  "worker_extension_cls": "native_serve_profile.NativeServeProfile",
+  "window": "First formal repetition through its existing drain; one window only",
+  "role_profiler_max_iterations": {
+    "prefill": 512,
+    "decode": 64
+  },
+  "serving_profile_limits": {
+    "records": 600000,
+    "bytes": 268435456
+  },
+  "profiler_config": {
+    "profiler": "torch",
+    "max_iterations": 64,
+    "delay_iterations": 0,
+    "warmup_iterations": 0,
+    "wait_iterations": 0,
+    "ignore_frontend": true,
+    "torch_profiler_use_gzip": true,
+    "torch_profiler_with_stack": false,
+    "torch_profiler_record_shapes": false,
+    "torch_profiler_with_flops": false,
+    "torch_profiler_with_memory": false,
+    "torch_profiler_dump_cuda_time_total": false
+  },
+  "native_profile_source_pins": [
+    "vllm/config/profiler.py",
+    "vllm/profiler/wrapper.py",
+    "vllm/entrypoints/serve/profile/api_router.py",
+    "vllm/v1/engine/async_llm.py",
+    "vllm/v1/executor/abstract.py",
+    "vllm/distributed/utils.py",
+    "vllm/utils/multi_stream_utils.py",
+    "vllm/v1/worker/gpu/model_states/default.py",
+    "vllm/models/common/ops/fused_qk_rmsnorm.py",
+    "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py",
+    "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+    "vllm/model_executor/layers/vocab_parallel_embedding.py",
+    "vllm/model_executor/layers/layernorm.py"
+  ]
+}

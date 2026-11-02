@@ -1,0 +1,97 @@
+{
+  "status": "PASS_PRIMARY_CLOSED_RAW_BINDINGS",
+  "observed_at_utc": "2026-10-24T15:02:45.364270+00:00",
+  "checked": {
+    "evidence.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/evidence.log",
+      "sha256": "12a13be656ca6db3be7f0b283d54e717f77a320beef2d0aa5ef67c4dfe1a48f5"
+    },
+    "evidence.xml": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/evidence.xml",
+      "sha256": "f1f1993443a265f524ae8e93347e9bc7a21490187009c0b02d7d4e500ee2da89"
+    },
+    "evidence_corrected.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/evidence_corrected.log",
+      "sha256": "ef349fe71aeb4742108afe6fea4cca03b0e739770e9c3077d8930fef6642a7f4"
+    },
+    "evidence_corrected.xml": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/evidence_corrected.xml",
+      "sha256": "59c07ebb141d9dfe4d5349b2052fa839032915785bc972bc4aa658ef1c1bd85e"
+    },
+    "final.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/final.log",
+      "sha256": "e34255a6a75d46b0bca5c2419d33a366c44882624dcb20649336066e16b4354b"
+    },
+    "final.xml": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/final.xml",
+      "sha256": "54ad43bb15a7468ae7887d72ab6ae2f721b3a87391823d0d72bd6b9d6bc465f1"
+    },
+    "green1.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/green1.log",
+      "sha256": "c77928e261dab1239bc9e1e185968609d3d96d172a04be0150e7fd41ca3977af"
+    },
+    "green2.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/green2.log",
+      "sha256": "302c400446a6c661e940420cff79a08bdd18a0fef822314bdd5c0baac37c7b97"
+    },
+    "green3.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/green3.log",
+      "sha256": "c381549f02d532d0bb727478e95977f066bb022022b4abacf512654dd2b3404e"
+    },
+    "receipt_plugin.py": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/receipt_plugin.py",
+      "sha256": "ee15d5da592cc06b6a1ea95acd99b55e34f67ecd8abefa4c999dfa7ecc467038"
+    },
+    "receipt_plugin_corrected.py": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/receipt_plugin_corrected.py",
+      "sha256": "4b9297bad91adb96e6186d113c18f29086b324b1a0b9e535f26e81778cb7a9d2"
+    },
+    "red.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/red.log",
+      "sha256": "a920f89e381cd5cf17f2d0c5e8293ed4ed018e00b17f37924196ae96f84855ec"
+    },
+    "red_source.txt": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/red_source.txt",
+      "sha256": "d7f36faa8e989d5ec299689623c18c3bfb4d4b54fc06e3d1ad15d03459cda75d"
+    },
+    "red_test.txt": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/red_test.txt",
+      "sha256": "6da0b43051e87d63779641e55b3354be76984005b6fc0bba429f97c848dcbeb6"
+    },
+    "validate.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/validate.log",
+      "sha256": "a84d08f2f8c87e9d369712df008962d7535f58bbbeccac945f7846e8506d1d90"
+    },
+    "validate.py": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/validate.py",
+      "sha256": "8d290f5d845e162a3d192ab9cbcf00ccfd6b7e2e02b93728bfe2c7f42a34ad6f"
+    },
+    "validate_final.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_source_hv4239mb/validate_final.log",
+      "sha256": "8b3b315f82c3c0cf72dc621c527fff046a0167781f048931fa95067f8ff1abbf"
+    },
+    "tuple_repair/red_source.txt": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_tuple_repair_qkfl_ebp/red_source.txt",
+      "sha256": "84ad08d30b8deac30a8bd64f3e1afa035e757ec8839251ab6f74ca312d54db63"
+    },
+    "tuple_repair/red_test.txt": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_tuple_repair_qkfl_ebp/red_test.txt",
+      "sha256": "ae8451a37892884f1c16cc845661ac132ea51ca5169a09831553a25b5b079487"
+    },
+    "tuple_repair/red.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_tuple_repair_qkfl_ebp/red.log",
+      "sha256": "f5e7ae8e26c9352871c8c84f1138309271b7bf809031d354508f0c4edd564ce9"
+    },
+    "tuple_repair/green.log": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_tuple_repair_qkfl_ebp/green.log",
+      "sha256": "deff2ce2a4502836bc1aaa725021fdf66310c6f3a83a31bedd8feb33f4e150a4"
+    },
+    "tuple_repair/green.xml": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_tuple_repair_qkfl_ebp/green.xml",
+      "sha256": "a17c0b6dd9caab56d19cd37006904e2995c668b038d87a61b3f6f088e6d87127"
+    }
+  },
+  "original_bindings_checked": 26,
+  "current_raw_artifacts_checked": 22,
+  "limits": "Root rehashed every retained binding after owner writer-stop; this is not GPU/source lifetime evidence."
+}

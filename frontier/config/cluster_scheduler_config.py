@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from frontier.config.base_poly_config import BasePolyConfig
 from frontier.types import ClusterSchedulerType
@@ -50,7 +50,19 @@ class StickyLORClusterSchedulerConfig(BaseClusterSchedulerConfig):
 
 @dataclass
 class VllmLoadBalancingClusterSchedulerConfig(BaseClusterSchedulerConfig):
-    """Select vLLM V1's internal DP placement. Selecting it is the only knob."""
+    """Select the reference version of vLLM's internal DP placement."""
+
+    policy_version: str = field(
+        default="v0.10.2",
+        metadata={"help": "Internal DP policy reference: v0.10.2 or v0.28.0."},
+    )
+
+    def __post_init__(self) -> None:
+        if self.policy_version not in ("v0.10.2", "v0.28.0"):
+            raise ValueError(
+                "vllm_load_balancing policy_version must be v0.10.2 or v0.28.0, "
+                f"got {self.policy_version!r}"
+            )
 
     @staticmethod
     def get_type():

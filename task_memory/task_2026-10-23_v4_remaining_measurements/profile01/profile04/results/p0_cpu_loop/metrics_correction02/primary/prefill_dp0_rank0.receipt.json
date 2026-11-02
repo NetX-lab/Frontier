@@ -1,0 +1,94 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "key": [
+    "prefill",
+    0,
+    0
+  ],
+  "attempt": "1/1",
+  "allocation_sha256": "f5830ece5508b339bfe8de26695c28c9f8fe21d674e66a85683964e9e7b04511",
+  "adapter_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+  "source_commit": "8b4d6993d8daf738352c117a091cb4f801c0a429",
+  "driver_sha256": "c53aba29a70897cf44459a416d8fe2e23a0b101cf389fb74ba5f5f36b793eb31",
+  "input_bindings": {
+    "trace_path": "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+    "trace_sha256": "53af6964786dc3c2d53d797e6d2ce1ada6c3151138f01333235690e523124e12",
+    "trace_bytes": 142288791,
+    "profile_path": "nodes/gpu-h800-0030.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+    "profile_sha256": "e71a1ed50d43f6e2d5bbde1b65175f090579cdda13885446ddae8f6675e0712e",
+    "profile_bytes": 39194409,
+    "inventory_path": "nodes/gpu-h800-0030.host.platform.shaipower.com/serving/rank0.json",
+    "inventory_sha256": "b871c7dc485bee31fa70f355fc68c247315ccfd023a8b231839da1baf8f8cb7f",
+    "inventory_bytes": 835104
+  },
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+    "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "start_utc": "2026-10-24T20:44:23.273683+00:00",
+  "status": "FAILED",
+  "returncode": 124,
+  "enclosing_seconds": 60.32408194895834,
+  "end_utc": "2026-10-24T20:45:23.598051+00:00",
+  "actual_cgroup": {
+    "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope\n0::/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope\n",
+    "memory_mount_root": "/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c",
+    "group": "/sys/fs/cgroup/memory/system.slice/run-r5857633a4b074d349c2f5f907613aa05.scope",
+    "limits": {
+      "memory.limit_in_bytes": "32212254720",
+      "memory.usage_in_bytes": "7401472",
+      "memory.failcnt": "0"
+    }
+  },
+  "outputs": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0.cgroup.json",
+      "bytes": 1947,
+      "sha256": "c9439dda3db74f9ee27986a3df4a325b311613217e8bb3d9545d60e1189299d8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0.gc.jsonl",
+      "bytes": 2873,
+      "sha256": "fe99340efb0528dc2b4505b88a6febed9715a3d8c843a3659b14699769ba99f9"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0.hb.log",
+      "bytes": 10427,
+      "sha256": "3d6fe3babadf1de6d275b03c34a0165b81591d223c9bbd7b626b0f5e2f6bf08d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0.kernels.jsonl.gz",
+      "bytes": 5383858,
+      "sha256": "6fa3637f527c53517adca8e2922558901503cc8cd78bddb7023d4d00a329c019"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0.obs.jsonl",
+      "bytes": 7362,
+      "sha256": "79954f72ededade9cde7190be4a9eba371fc168ed164240ae2018425e61d0014"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0.stderr",
+      "bytes": 67,
+      "sha256": "1722095793244d93d4331be1e98f25b660baae0f510f9b4e90d9dcc1cea13efc"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/prefill_dp0_rank0.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

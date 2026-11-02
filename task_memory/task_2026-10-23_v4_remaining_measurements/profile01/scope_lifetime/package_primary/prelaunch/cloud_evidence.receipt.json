@@ -1,0 +1,19 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "python3",
+    "-"
+  ],
+  "start_utc": "2026-10-24T18:06:38.046006+00:00",
+  "end_utc": "2026-10-24T18:06:38.596897+00:00",
+  "exit": 0,
+  "stdout": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/cloud_evidence.stdout",
+  "stderr": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/cloud_evidence.stderr"
+}

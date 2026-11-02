@@ -1,0 +1,21 @@
+{
+  "status": "SEALED_READY_DIAGNOSTIC",
+  "utc": "2026-10-23T10:04:33.555223+00:00",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02",
+  "run_tag": "dsv4-h800-p0-profile-20261023-02",
+  "source_commit": "d87f4c74b9d5c0eec0958ba2b7351e76b04acf14",
+  "merge_commit": "cc0227e9ea0f7e173e1f37d7e302f943ff86707a",
+  "runtime_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
+  "source_and_package_writer_stopped": true,
+  "manifest_sha256": "51e39a42ec863e496f20be8a165230e0dee17c34906ad6bd4fade14bf898ee91",
+  "sealed_files": 45,
+  "root_checks": "/data/ycfeng/tmp/glm53_dsv4/profile02_final_cc0227e9_8hf9_hy7/receipt.json",
+  "root_checks_sha256": "73096978675d38dba01d6c3813aae8f4c65ed1c4b0af9858eafd945826a88cfe",
+  "source_binding_sha256": "a782fe1c48c7739e885258d0cfdf0b72205d34934c7b4c33db61eb4f710bbb12",
+  "seal_stdout": "{\"sealed_files\": 45}\n",
+  "check_only_stdout": "INPUT_HASHES_PASS_NO_SUBMISSION\n",
+  "diagnostic_only": true,
+  "native_reference_admission": false,
+  "gpu_qualification": false,
+  "submitted": false
+}

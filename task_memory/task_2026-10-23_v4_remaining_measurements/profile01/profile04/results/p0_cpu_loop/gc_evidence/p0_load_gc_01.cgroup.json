@@ -1,0 +1,10 @@
+{
+  "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n0::/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope\n",
+  "memory_mount_root": "/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c",
+  "group": "/sys/fs/cgroup/memory/system.slice/run-reabf6a5929424bdaab7c235d449ad74c.scope",
+  "limits": {
+    "memory.limit_in_bytes": "32212254720",
+    "memory.usage_in_bytes": "6475776",
+    "memory.failcnt": "0"
+  }
+}

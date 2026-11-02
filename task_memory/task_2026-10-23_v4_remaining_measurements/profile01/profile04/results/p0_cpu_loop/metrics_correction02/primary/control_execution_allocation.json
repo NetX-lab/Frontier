@@ -1,0 +1,90 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "recorded_utc": "2026-10-24T20:30:38.203163+00:00",
+  "head_before_execution": "4ae81052e8b7a82593b68c6740dadb07e9e1624b",
+  "repo": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+  "test_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+  "source_pins": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+      "expected_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+      "expected_sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+      "expected_sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "expected_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "expected_sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+      "expected_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+      "expected_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "expected_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52"
+    }
+  ],
+  "allocation_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/allocation.json",
+  "allocation_sha256": "ed949333e768673045ce606e50548dbf7d683eb3f090889c8401ecdc63e79c3d",
+  "control_inputs_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_inputs.json",
+  "control_inputs_sha256": "750d7b26404c0bd7356f66ef530c0fc6323260bd95d25427fec7e62589f0e72e",
+  "unit_driver_path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/run_primary_unit.py",
+  "unit_driver_sha256": "6fb1fa954fad5369d197bc756acdce1615eaa28264b5b36d574a66c633a35363",
+  "unit_driver_gross_lines": 74,
+  "unit_driver_line_cap": 90,
+  "unit_command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/run_primary_unit.py"
+  ],
+  "control_driver_path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/run_fresh_controls.py",
+  "control_driver_sha256": "0414ddf36836dfcbfc8acd23a8122f17ee43c5df531688c87cd608b34e076fa2",
+  "control_driver_gross_lines": 74,
+  "control_driver_line_cap": 100,
+  "command_prefix": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B"
+  ],
+  "expected_unit_tests": 9,
+  "primary_unit_invocation_ceiling": 1,
+  "complete_control_invocation_ceiling": 2,
+  "actual_memory_limit_bytes": 32212254720,
+  "timeout_seconds": 60,
+  "max_rank_concurrency": 2,
+  "automatic_retry": false,
+  "comparison_state": "PENDING_BOUNDED_STREAMING_EXACT_COMPARISON",
+  "old_drivers_imported_or_executed": 0
+}

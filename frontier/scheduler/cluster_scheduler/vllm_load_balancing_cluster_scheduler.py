@@ -13,8 +13,9 @@ from frontier.types import ClusterType, ReplicaSchedulerType
 class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     """Model single-frontend vLLM V1 DP routing with delayed load snapshots.
 
-    Supported scope, and nothing wider: one co-location Replica, one modeled
-    frontend, the `vllm_v1` replica scheduler, and a report key whose ordering
+    Supported scope, and nothing wider: one co-location Replica or one PP1
+    PREFILL/DECODE Replica, one modeled frontend, the `vllm_v1` replica scheduler, and
+    a report key whose ordering
     actually holds -- a MoE model, whose attention-DP lanes share each stage-0
     forward, or a single lane, where the question does not arise. Everything
     else is rejected in the constructor.
@@ -25,17 +26,23 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if (
-            self._cluster_type is not ClusterType.MONOLITHIC
+            self._cluster_type not in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
             or self._num_replicas != 1
             or self._replica_scheduler_type is not ReplicaSchedulerType.VLLM_V1
         ):
             raise ValueError(
-                "vllm_load_balancing supports one co-location Replica with "
+                "vllm_load_balancing supports one co-location Replica, one PREFILL Replica or one "
+                "DECODE Replica at PP1 with "
                 "vllm_v1, got "
                 f"cluster_type={self._cluster_type.name}, "
                 f"num_replicas={self._num_replicas}, "
                 f"replica_scheduler={self._replica_scheduler_type}"
             )
+        if (
+            self._cluster_type in (ClusterType.PREFILL, ClusterType.DECODE)
+            and self._config.replica_config.num_pipeline_stages != 1
+        ):
+            raise ValueError(f"vllm_load_balancing supports {self._cluster_type.name} at PP1 only")
         # The load report is keyed by the Replica's stage-0 forward group. A
         # MoE Replica binds one group for every lane of one forward, so peer
         # lanes share the key. A dense Replica has no per-forward collective
@@ -52,7 +59,10 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
                 )
         self._serving_replica_id = next(iter(self._cluster.replicas))
         self._num_pipeline_stages = self._config.replica_config.num_pipeline_stages
-        self._load_balancer = VllmDPLoadBalancer(self._replica_dp_size)
+        self._load_balancer = VllmDPLoadBalancer(
+            self._replica_dp_size,
+            policy_version=self._config.cluster_scheduler_config.policy_version,
+        )
         self._last_admitted_key = [-1] * self._replica_dp_size
         self._held_key: list[int | None] = [None] * self._replica_dp_size
 
@@ -66,7 +76,11 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
 
         self.sort_requests()
         mapping = [
-            (self._serving_replica_id, self._load_balancer.select(time), request)
+            (
+                self._serving_replica_id,
+                self._load_balancer.select(time, request_id=request.id),
+                request,
+            )
             for request in self._request_queue
         ]
         self._request_queue.clear()
@@ -78,6 +92,18 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         raise RuntimeError(
             "vllm_load_balancing selects from a time-dependent load snapshot; "
             "route through schedule_at(time), which ClusterScheduleEvent calls"
+        )
+
+    def select_kv_transfer_target(
+        self, time: float, request: Request
+    ) -> tuple[int, int]:
+        """Place a NIXL request once, before its selected lane reserves KV."""
+
+        if self._cluster_type is not ClusterType.DECODE:
+            raise ValueError("NIXL transfer target selection requires DECODE")
+        return (
+            self._serving_replica_id,
+            self._load_balancer.select(time, request_id=request.id),
         )
 
     def on_replica_batch_scheduled(
@@ -120,6 +146,16 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         """
 
         lane_id = self._lane_index(replica_local_id)
+        if batch is not None and batch.completed:
+            # A preempted in-flight sample can finish a request whose execution
+            # signature is now stale. Stale-drop callbacks apply no output and
+            # leave batch.completed false; they must not release ownership.
+            self._load_balancer.finish_requests(
+                request.id for request in batch.requests
+                if request.completed or (
+                    self._cluster_type is ClusterType.PREFILL and request.is_prefill_complete
+                )
+            )
         key = self._held_key[lane_id]
         if key is None:
             key = self._next_report_key(replica_id, lane_id)

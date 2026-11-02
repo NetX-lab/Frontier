@@ -995,7 +995,7 @@ def test_moe_wrapper_typed_result_round_trips_through_manager(tmp_path) -> None:
     config = ModelConfig.from_model_name("step-moe-noquant")
     wrapper = object.__new__(MoEWrapper)
     wrapper.model_config = config
-    wrapper.num_tensor_parallel_workers = 1
+    wrapper.num_tensor_parallel_workers, wrapper.rank = 1, 0
     wrapper.expert_parallel_size = 8
     wrapper.num_experts = config.num_experts
     wrapper.num_experts_per_device = config.num_experts // wrapper.expert_parallel_size
@@ -1003,7 +1003,7 @@ def test_moe_wrapper_typed_result_round_trips_through_manager(tmp_path) -> None:
     wrapper.hidden_dim = config.embedding_dim
     wrapper.expert_hidden_dim = config.routed_mlp_hidden_dim
     wrapper.use_gated = config.use_gated_mlp
-    wrapper.routing_runtime_metadata = {}
+    wrapper.routing_runtime_metadata, wrapper.routing_runtime_path = {}, "standard_fused_topk"
     wrapper.gating_runtime_context_metadata = {}
 
     result = wrapper._build_profile_result(  # pylint: disable=protected-access

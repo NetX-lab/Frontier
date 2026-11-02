@@ -1,0 +1,25 @@
+{
+  "status": "PASS_FINAL_CPU_DELIVERY_HASHES",
+  "task_id": "W128-PROFILE03-PACKAGE",
+  "source_commit": "9946771815903f6cd6de8147765fd41395deee21",
+  "package_files": 45,
+  "package_bytes": 6983474,
+  "package_map_sha256": "f39041d2e3f379c0165d17b55a7d9fee0be051dbccd36ca714dc6bf2d230b9de",
+  "hash_inventory_sha256": "4798b60c346a8d447ac9e4a290f898a976784176a2a91512d73c2904ceb0305e",
+  "prospective_manifest_sha256": "4e827ca74e26abfba5816b61f6bac095ca1da326957b80d0f5e4d5c0c59423b7",
+  "maintained_gross": 68,
+  "accepted_cpu_commands": 5,
+  "preserved_checker_failures": 1,
+  "evidence_files": 42,
+  "sealed": false,
+  "submitted": false,
+  "runtime_qualified": false,
+  "root_gates": [
+    "Independent source/package reviews",
+    "Actual locked-image87 source/23 tool/20 binary verification and fresh bootstrap imports",
+    "Actual StepMind SDK resources/RDMA/non-preemptible/local NFS mount checks",
+    "Personal auth/quota/fresh destination checks; then root seal/launch",
+    "Actual >=3 useful steps per role/lane, zero unintended drops, raw DP pairing, stream joins and post-stop evidence",
+    "Captured per-op ownership remains UNKNOWN; no cost/reference/E2E admission"
+  ]
+}

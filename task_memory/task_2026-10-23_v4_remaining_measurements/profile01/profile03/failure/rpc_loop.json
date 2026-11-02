@@ -1,0 +1,744 @@
+{
+  "task_id": "W128-PROFILE03-RPC-LOOP",
+  "local_cpu_only": true,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "timeout_seconds": 300,
+  "source_hashes": {
+    "vllm/envs.py": {
+      "sha256": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9",
+      "package_pin": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9",
+      "observed_pin": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9"
+    },
+    "vllm/distributed/device_communicators/shm_broadcast.py": {
+      "sha256": "f3e7a3f3ff713fccbd535e0d41650ee05bdf8677e83d4b90519910645022c30b",
+      "package_pin": null,
+      "observed_pin": null
+    },
+    "vllm/profiler/wrapper.py": {
+      "sha256": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+      "package_pin": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+      "observed_pin": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15"
+    },
+    "vllm/v1/executor/multiproc_executor.py": {
+      "sha256": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea",
+      "package_pin": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea",
+      "observed_pin": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea"
+    },
+    "vllm/v1/worker/gpu_worker.py": {
+      "sha256": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+      "package_pin": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+      "observed_pin": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552"
+    },
+    "vllm/distributed/kv_transfer/kv_connector/utils.py": {
+      "sha256": "d13b26e939ebc289ae5fedd4c504823e074927a9e5be6c33bc8d4e9c86b5a179",
+      "package_pin": null,
+      "observed_pin": null
+    }
+  },
+  "native_slices": [
+    {
+      "file": "vllm/profiler/wrapper.py",
+      "class": "WorkerProfiler",
+      "members": null,
+      "ranges": [
+        [
+          29,
+          51
+        ],
+        [
+          54,
+          56
+        ],
+        [
+          59,
+          61
+        ],
+        [
+          64,
+          66
+        ],
+        [
+          68,
+          74
+        ],
+        [
+          76,
+          83
+        ],
+        [
+          85,
+          95
+        ],
+        [
+          97,
+          128
+        ],
+        [
+          130,
+          138
+        ],
+        [
+          140,
+          152
+        ],
+        [
+          154,
+          158
+        ],
+        [
+          160,
+          162
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/profiler/wrapper.py",
+      "class": "TorchProfilerWrapper",
+      "members": [
+        "_start",
+        "_stop",
+        "_profiler_step",
+        "_maybe_add_version_metadata"
+      ],
+      "ranges": [
+        [
+          277,
+          299
+        ],
+        [
+          302,
+          306
+        ],
+        [
+          309,
+          330
+        ],
+        [
+          333,
+          348
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/executor/multiproc_executor.py",
+      "class": "WorkerProc",
+      "members": [
+        "ResponseStatus"
+      ],
+      "ranges": [
+        [
+          975,
+          977
+        ]
+      ],
+      "bases_replaced": [],
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/executor/multiproc_executor.py",
+      "class": "FutureWrapper",
+      "members": null,
+      "ranges": [
+        [
+          79,
+          89
+        ],
+        [
+          91,
+          99
+        ],
+        [
+          101,
+          108
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/executor/multiproc_executor.py",
+      "class": "MultiprocExecutor",
+      "members": [
+        "execute_model",
+        "collective_rpc"
+      ],
+      "ranges": [
+        [
+          337,
+          348
+        ],
+        [
+          372,
+          445
+        ]
+      ],
+      "bases_replaced": [],
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/v1/worker/gpu_worker.py",
+      "class": "Worker",
+      "members": [
+        "annotate_profile",
+        "execute_model"
+      ],
+      "ranges": [
+        [
+          931,
+          1042
+        ],
+        [
+          1053,
+          1141
+        ]
+      ],
+      "bases_replaced": [],
+      "decorators_removed": [
+        "execute_model"
+      ]
+    },
+    {
+      "file": "vllm/distributed/kv_transfer/kv_connector/utils.py",
+      "class": "KVOutputAggregator",
+      "members": null,
+      "ranges": [
+        [
+          55,
+          56
+        ],
+        [
+          58,
+          63
+        ],
+        [
+          66,
+          67
+        ],
+        [
+          69,
+          174
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    },
+    {
+      "file": "vllm/distributed/device_communicators/shm_broadcast.py",
+      "class": "MessageQueue",
+      "members": [
+        "ReadTimeoutWithWarnings",
+        "acquire_read",
+        "dequeue"
+      ],
+      "ranges": [
+        [
+          719,
+          758
+        ],
+        [
+          761,
+          821
+        ],
+        [
+          882,
+          907
+        ]
+      ],
+      "bases_replaced": null,
+      "decorators_removed": []
+    }
+  ],
+  "results": [
+    {
+      "case": "no_pause",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 0.0,
+      "stop_seconds": 0,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "within_budget",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 299.0,
+      "stop_seconds": 299,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "exact_deadline_ready",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 300.0,
+      "stop_seconds": 300,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "autostop_exceeds_budget",
+      "verdict": "RED",
+      "error": "RPC call to execute_model timed out.",
+      "cause": "TimeoutError",
+      "native_traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 430, in get_response\n    status, result = mq.dequeue(timeout=dequeue_timeout)\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 160, in dequeue\n    return super().dequeue(timeout, indefinite)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 889, in dequeue\n    with self.acquire_read(timeout, indefinite) as buf:\n  File \"/usr/lib/python3.10/contextlib.py\", line 135, in __enter__\n    return next(self.gen)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 794, in acquire_read\n    self._spin_condition.wait(timeout_ms=read_timeout.timeout_ms())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 747, in timeout_ms\n    raise TimeoutError\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 188, in case\n    assert future.result() is None\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 99, in result\n    return super().result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 451, in result\n    return self.__get_result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 403, in __get_result\n    raise self._exception\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 103, in _wait_for_response\n    response = self.aggregate(self.get_response())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 432, in get_response\n    raise TimeoutError(f\"RPC call to {method} timed out.\") from e\nTimeoutError: RPC call to execute_model timed out.\n",
+      "virtual_seconds": 300.0,
+      "stop_seconds": 301,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "shared_deadline_remaining",
+      "verdict": "RED",
+      "error": "RPC call to execute_model timed out.",
+      "cause": "TimeoutError",
+      "native_traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 430, in get_response\n    status, result = mq.dequeue(timeout=dequeue_timeout)\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 160, in dequeue\n    return super().dequeue(timeout, indefinite)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 889, in dequeue\n    with self.acquire_read(timeout, indefinite) as buf:\n  File \"/usr/lib/python3.10/contextlib.py\", line 135, in __enter__\n    return next(self.gen)\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 794, in acquire_read\n    self._spin_condition.wait(timeout_ms=read_timeout.timeout_ms())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/distributed/device_communicators/shm_broadcast.py\", line 747, in timeout_ms\n    raise TimeoutError\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py\", line 188, in case\n    assert future.result() is None\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 99, in result\n    return super().result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 451, in result\n    return self.__get_result()\n  File \"/usr/lib/python3.10/concurrent/futures/_base.py\", line 403, in __get_result\n    raise self._exception\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 103, in _wait_for_response\n    response = self.aggregate(self.get_response())\n  File \"/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69/vllm/v1/executor/multiproc_executor.py\", line 432, in get_response\n    raise TimeoutError(f\"RPC call to {method} timed out.\") from e\nTimeoutError: RPC call to execute_model timed out.\n",
+      "virtual_seconds": 300.0,
+      "stop_seconds": 301,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 1.0,
+          "time": 299.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "all_ready_after_deadline",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 302,
+      "stop_seconds": 301,
+      "reply_ranks": [
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 0.0,
+          "time": 302
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 0.0,
+          "time": 302
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "no_aggregator_nonoutput_pause",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 0.0,
+      "stop_seconds": 301,
+      "reply_ranks": [
+        0
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "future_fifo",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 0.0,
+      "stop_seconds": 0,
+      "reply_ranks": [
+        null,
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 0,
+          "call": 1,
+          "timeout": 300.0,
+          "time": 0.0
+        },
+        {
+          "rank": 1,
+          "call": 1,
+          "timeout": 300.0,
+          "time": 0.0
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    },
+    {
+      "case": "future_fifo_lazy_ready",
+      "verdict": "GREEN",
+      "error": null,
+      "cause": null,
+      "native_traceback": null,
+      "virtual_seconds": 302,
+      "stop_seconds": 301,
+      "reply_ranks": [
+        null,
+        null
+      ],
+      "reads": [
+        {
+          "rank": 0,
+          "call": 0,
+          "timeout": 0.0,
+          "time": 302
+        },
+        {
+          "rank": 1,
+          "call": 0,
+          "timeout": 0.0,
+          "time": 302
+        },
+        {
+          "rank": 0,
+          "call": 1,
+          "timeout": 0.0,
+          "time": 302
+        },
+        {
+          "rank": 1,
+          "call": 1,
+          "timeout": 0.0,
+          "time": 302
+        }
+      ],
+      "worker_events": [
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop",
+          "model_runner.execute_model after autostop"
+        ],
+        [
+          "TorchProfilerWrapper._stop -> profiler.stop",
+          "model_runner.execute_model after autostop",
+          "model_runner.execute_model after autostop"
+        ]
+      ]
+    }
+  ],
+  "wall_seconds": 0.007199938874691725,
+  "verification": "PASS_CPU_SOURCE_BOUND_LOOP_NOT_ROOT_CAUSE",
+  "determinism": "All fields except wall_seconds identical across both repeated commands",
+  "commands": [
+    {
+      "mode": "matrix",
+      "repeat": 1,
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py"
+      ],
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "wall_seconds": 0.26536029716953635,
+      "stdout": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_1.json",
+      "stderr": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_1.stderr",
+      "stdout_sha256": "c7830c55eabc3758709dd954812c9bc18675f454c7f2aa935e0d8e2a66cbc94d"
+    },
+    {
+      "mode": "matrix",
+      "repeat": 2,
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py"
+      ],
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "wall_seconds": 0.26669674972072244,
+      "stdout": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_2.json",
+      "stderr": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/matrix_2.stderr",
+      "stdout_sha256": "5c2a7252e9a3bb3e4c027c06727921b195ec75f68b0b060b189110a43491530d"
+    },
+    {
+      "mode": "symptom",
+      "repeat": 1,
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py",
+        "--symptom"
+      ],
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "wall_seconds": 0.25784905906766653,
+      "stdout": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_1.json",
+      "stderr": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_1.stderr",
+      "stdout_sha256": "d142c18c31f4b32bd814404b95ce4c447fd2aca72940b1fdc1772403bc21fd9a"
+    },
+    {
+      "mode": "symptom",
+      "repeat": 2,
+      "argv": [
+        "/data/ycfeng/toolchain/bin/uv",
+        "run",
+        "--offline",
+        "--no-project",
+        "--python",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "--",
+        "python",
+        "-B",
+        "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py",
+        "--symptom"
+      ],
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "wall_seconds": 0.31245531886816025,
+      "stdout": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_2.json",
+      "stderr": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/symptom_2.stderr",
+      "stdout_sha256": "a10d0b0ebb71d1da2ba8225e7a2880954543b934d4463850cbbbe2b4ff1c69fc"
+    }
+  ],
+  "native_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "source_commit_checks": {
+    "vllm/envs.py": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9",
+    "vllm/distributed/device_communicators/shm_broadcast.py": "f3e7a3f3ff713fccbd535e0d41650ee05bdf8677e83d4b90519910645022c30b",
+    "vllm/profiler/wrapper.py": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+    "vllm/v1/executor/multiproc_executor.py": "d5ca86635611758c2bd543ffd1fe9ad200db62880ce1f47eda8e4c63847595ea",
+    "vllm/v1/worker/gpu_worker.py": "5e8faf3e00649289c81c2917dd4557a80b0b351c33295d8e0c4b204a304e6552",
+    "vllm/distributed/kv_transfer/kv_connector/utils.py": "d13b26e939ebc289ae5fedd4c504823e074927a9e5be6c33bc8d4e9c86b5a179"
+  },
+  "script": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/loop.py",
+  "script_sha256": "5608b2ec83b0744fa756ca203f8d01963b33516a6018d7adab1f5c1c37db80d9",
+  "scratch_code_gross_lines": 218,
+  "native_import_probe": {
+    "argv": [
+      "/data/ycfeng/toolchain/bin/uv",
+      "run",
+      "--offline",
+      "--no-project",
+      "--python",
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "--",
+      "python",
+      "-B",
+      "-c",
+      "import sys; sys.path.insert(0,'/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69'); from vllm.profiler.wrapper import WorkerProfiler; from vllm.v1.executor.multiproc_executor import MultiprocExecutor"
+    ],
+    "exit": 1,
+    "log": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/native_import_failure.log"
+  },
+  "initial_harness_failure": {
+    "log": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_loop_native_20261024/initial_missing_log_constant.log",
+    "error": "NameError: LONG_WAIT_TIME_LOG_MSG; bound native constant, no behavior change"
+  },
+  "limits": [
+    "Local Python3.10.6 only; no Docker/image/binary/GPU qualification",
+    "AST member bodies unchanged; Worker/Multiproc bases and GPU decorators excluded",
+    "Worker-local stop duration generates future reply times synchronously; no concurrent processes",
+    "Native transport timeout/parser methods with mock buffers/wait/clock; no spinloop or memory-fence proof",
+    "Native TorchProfilerWrapper constructor/Kineto/C++ parser/table dump excluded; duration injected at profiler.stop",
+    "Only None outputs, PP1, one RPC caller/two endpoints; no model/connector payload aggregation proof",
+    "Queue and KV aggregator match native commit but are absent from package/observed source pins",
+    "No EngineDeadError/GPU recurrence, transport-choice or original pending-reply chronology/root-cause proof",
+    "No source repair selected; root owns hypothesis testing and repair decision"
+  ]
+}

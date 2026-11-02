@@ -1,0 +1,227 @@
+{
+  "status": "AUXILIARY_SOURCE_SNAPSHOT_INVALIDATED",
+  "task_id": "W128-PROFILE03-COLLECTION",
+  "batch_returncode": 1,
+  "original_error": "Traceback (most recent call last):\n  File \"<stdin>\", line 24, in <module>\nAssertionError\n",
+  "failed_assertion": "assert before == after",
+  "cause": "Only test_native_pd_worker.py assertions changed while the first separate-process verification batch ran; production worker unchanged.",
+  "suites": [
+    {
+      "suite": "test_native_pd_worker",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_worker.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_worker.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_worker_temp"
+      ],
+      "counts": {
+        "tests": 36,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_worker.log",
+      "log_sha256": "535dd7558833b4d50a6e0ff24123947ddd216316e973abda6a61462518a52421",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_worker.xml",
+      "xml_sha256": "750add58fbf687a9559978ef0473bb9dc954a22a96db067f4202ffec4abe7111"
+    },
+    {
+      "suite": "test_native_pd_manifest",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_manifest.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_manifest.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_manifest_temp"
+      ],
+      "counts": {
+        "tests": 14,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_manifest.log",
+      "log_sha256": "bb5d0fcc13b6c8f53e0b5da7cc7de21b9d04ea9e558417ad9cb0e54949042349",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_manifest.xml",
+      "xml_sha256": "0d4d37f470f39641979a8d3dc0ae7706c65681be97786e10455ece79ae11331d"
+    },
+    {
+      "suite": "test_native_serve_profile",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serve_profile.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_serve_profile.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_serve_profile_temp"
+      ],
+      "counts": {
+        "tests": 33,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_serve_profile.log",
+      "log_sha256": "495fe3284fd945f4a9b44f8766c98f95510486072f363b10deb09a2019ee3332",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_serve_profile.xml",
+      "xml_sha256": "20191a4c7276191ea5a120850cc32719c07b4bd34d0b86a301d9a5b91b2e9422"
+    },
+    {
+      "suite": "test_native_streaming_replay",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_streaming_replay.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_streaming_replay.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_streaming_replay_temp"
+      ],
+      "counts": {
+        "tests": 39,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_streaming_replay.log",
+      "log_sha256": "5ea40b969b6e853aba7049df39dfa4ae3fcf682a3927c45a32b4d57f54b4c64f",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_streaming_replay.xml",
+      "xml_sha256": "4871932c53945a7e7780460c80383c936bc5df13599e3d742842ec0a24fff033"
+    },
+    {
+      "suite": "test_native_cold_start",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_cold_start.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_cold_start.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_cold_start_temp"
+      ],
+      "counts": {
+        "tests": 18,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_cold_start.log",
+      "log_sha256": "842b3b4c59cfb4bd450f74ab64340d9896c8a0ce19b352566587b7bec60ec1eb",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_cold_start.xml",
+      "xml_sha256": "39a1b19f1fc58499a4327ab2ab72956dd619ec093f69623c92680e8760d47031"
+    },
+    {
+      "suite": "test_native_pd_canonical_http",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_canonical_http.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_canonical_http.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_canonical_http_temp"
+      ],
+      "counts": {
+        "tests": 1,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_canonical_http.log",
+      "log_sha256": "74bf2948bf93862cf8a9ef650a62e694b22ac59d8b571bb08ac7450677d09c60",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_native_pd_canonical_http.xml",
+      "xml_sha256": "e1f6b91b2c10fdcc4676b03979f531dac2fe621e87202a6656fcb5d4d8206573"
+    },
+    {
+      "suite": "test_calibration_pd_harness",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_calibration_pd_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_calibration_pd_harness.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_calibration_pd_harness_temp"
+      ],
+      "counts": {
+        "tests": 68,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_calibration_pd_harness.log",
+      "log_sha256": "11dd99994d40c210a33460231fb1937feb94429419223970e2a0390a0b813d7d",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_calibration_pd_harness.xml",
+      "xml_sha256": "e996bf62cf434c27ca24c3d62ed8c02be5bef54e701af1bf8daacc4221ddc224"
+    },
+    {
+      "suite": "test_dp_placement_harness",
+      "argv": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_dp_placement_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_dp_placement_harness.xml",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_dp_placement_harness_temp"
+      ],
+      "counts": {
+        "tests": 75,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "process_returncode": null,
+      "returncode_limit": "Individual subprocess exit codes were not retained because the aggregate summary assertion failed.",
+      "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_dp_placement_harness.log",
+      "log_sha256": "1401b03c852faaa9ba4a480f65e65834a8d54d9da1251ee4f6e0e6f14ee86ecd",
+      "xml": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/final_test_dp_placement_harness.xml",
+      "xml_sha256": "445c6f8ea4ab4dd0cd138305a31a24858d3dbf5524f4e309f937f6892d163656"
+    }
+  ],
+  "correction": "Freeze both allocated sources, rerun worker and the seven other suites, preserve actual per-process returns in final_checks.json."
+}

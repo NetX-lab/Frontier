@@ -1,0 +1,129 @@
+{
+  "status": "FAILED_P0_PILOT_NO_FINAL_JSON",
+  "observed_utc": "2026-10-24T19:34:35.013005+00:00",
+  "checks": [
+    {
+      "name": "pilot_exit124",
+      "pass": true
+    },
+    {
+      "name": "final_json_absent",
+      "pass": true
+    },
+    {
+      "name": "actual30GiB",
+      "pass": true
+    },
+    {
+      "name": "adapter_byte_binding",
+      "pass": true
+    },
+    {
+      "name": "closed_output:prefill_dp0_rank0.cgroup.json",
+      "pass": true
+    },
+    {
+      "name": "closed_output:prefill_dp0_rank0.gc.jsonl",
+      "pass": true
+    },
+    {
+      "name": "closed_output:prefill_dp0_rank0.hb.log",
+      "pass": true
+    },
+    {
+      "name": "closed_output:prefill_dp0_rank0.kernels.jsonl.gz",
+      "pass": true
+    },
+    {
+      "name": "closed_output:prefill_dp0_rank0.obs.jsonl",
+      "pass": true
+    },
+    {
+      "name": "closed_output:prefill_dp0_rank0.stderr",
+      "pass": true
+    },
+    {
+      "name": "closed_output:prefill_dp0_rank0.stdout",
+      "pass": true
+    },
+    {
+      "name": "complete_index_status_counts",
+      "pass": true
+    },
+    {
+      "name": "complete_index_count",
+      "pass": true
+    },
+    {
+      "name": "retained_loading_gc_index_sha",
+      "pass": true
+    },
+    {
+      "name": "kernel_index_exact_decompressed_equality",
+      "pass": true
+    }
+  ],
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "seconds": 6.500774206593633,
+  "returncode": 124,
+  "affected_invocations_used": 1,
+  "remaining_invocations_started": 0,
+  "conditionally_remaining_ranks": 7,
+  "actual_limit_bytes": 32212254720,
+  "complete_index_rows": 1215919,
+  "complete_index_sha256": "1bc09069db679759bce5f40d65c3ddc3c2e975f517ef19e2897bce2eee79f875",
+  "decompressed_index_sha256": "678fb91782cc85a5068cf6bccbd51749562449abdfc90c628c0a084dddf68667",
+  "index_equals_retained_loading_gc_index": true,
+  "status_counts": {
+    "unowned": 11385,
+    "unique_leaf": 138134,
+    "captured_segment_unknown": 1066400
+  },
+  "last_stage": {
+    "t": 56.015,
+    "stage": "kernel_pass_done",
+    "rss_mb": 6366.2,
+    "streams": 155,
+    "status_rows": {
+      "unowned": 11385,
+      "unique_leaf": 138134,
+      "captured_segment_unknown": 1066400
+    }
+  },
+  "retained_index": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.kernels.jsonl.gz",
+    "sha256": "7d7c482f0b590392b63a794a80ad1c73dfd1ee7c008f2f215c54e35214fccdce",
+    "receipt_sha256": "60c046cf0ecd55557a7acb420b48373a287e3547680f74c0654ec966f99b5aa0"
+  },
+  "stages": {
+    "instrumented": 0.043,
+    "enter": 0.048,
+    "metadata_loaded": 0.484,
+    "header_start": 0.487,
+    "header_done": 0.488,
+    "load_gc_disabled": 0.488,
+    "load_start": 0.488,
+    "load_done": 31.143,
+    "freeze_after_load": 31.529,
+    "events_ready": 31.529,
+    "annotations_named": 32.103,
+    "event_pass_done": 38.029,
+    "correlation_done": 41.247,
+    "kernel_pass_start": 41.247,
+    "kernel_pass_done": 56.015
+  },
+  "max_observed_sparse_rss_mib": 6366.2,
+  "missing_final_stages": [
+    "per_stream_done",
+    "sync_done",
+    "steps_done",
+    "result_built",
+    "output_written",
+    "done",
+    "process_end"
+  ],
+  "full_trace_parses": 0,
+  "full_adapter_invocations": 0,
+  "gpu_operations": 0,
+  "limit": "Index completion and the CPU failure only; no final metrics/useful steps, R5/full32, ownership, dependency, cost or reference acceptance."
+}

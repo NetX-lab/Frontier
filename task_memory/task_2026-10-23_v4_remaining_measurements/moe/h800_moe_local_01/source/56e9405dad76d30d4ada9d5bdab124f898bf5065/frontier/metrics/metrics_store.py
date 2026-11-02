@@ -1,0 +1,5744 @@
+import json
+import os
+from functools import reduce
+from typing import Dict, List, TYPE_CHECKING, Any, Optional
+
+import pandas as pd
+import plotly.express as px
+
+from frontier.config import SimulationConfig, ClusterConfig, get_quantization_manager, global_vars
+from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
+from frontier.entities import Batch, BatchStage, ExecutionTime, Request, StageExecutionTime
+from frontier.logger import get_cluster_logger, init_logger
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
+    DSA_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
+    LATENT_MLA_ATTENTION_FAMILY,
+    get_attention_family,
+    iter_attention_families,
+)
+from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.trace_mapping import get_attention_trace_op_times
+from frontier.operators.families import (
+    FFN_FAMILY,
+    MEMORY_FAMILY,
+    MOE_FAMILY,
+    SHARE_EXPERT_FAMILY,
+)
+from frontier.operators.spec import OperatorFamilySpec
+
+if TYPE_CHECKING:
+    from frontier.metrics.trace_store import TraceStore
+from frontier.metrics.capability_context import CapabilityContext
+from frontier.metrics.cdf_sketch import CDFSketch
+from frontier.metrics.trace_store import TraceStore
+from frontier.metrics.constants import (
+    BatchMetricsCountDistribution,
+    BatchMetricsTimeDistribution,
+    CpuOperationMetrics,
+    OperationMetrics,
+    RequestCompletionMetricsTimeSeries,
+    RequestMetricsHistogram,
+    RequestMetricsTimeDistributions,
+    TokenCompletionMetricsTimeSeries,
+    TokenMetricsTimeDistribution,
+)
+from frontier.metrics.data_series import DataSeries
+from frontier.metrics.series_average_meter import SeriesAverageMeter
+from frontier.metrics.trace_store import TraceStore
+from frontier.metrics.op_trace_utils import (
+    OpTraceContext,
+    build_kv_cache_transfer_meta,
+    build_m2n_transfer_meta,
+    build_parallel_context,
+    compute_op_trace_meta,
+)
+from frontier.metrics.wandb_utils import get_wandb, require_wandb
+from frontier.utils.mfu_calculator import MFUCalculator
+from frontier.types import ClusterType
+
+wandb = get_wandb()
+logger = init_logger(__name__)
+
+
+def if_write_metrics(func):
+    def wrapper(self, *args, **kwargs):
+        if self._config.write_metrics:
+            return func(self, *args, **kwargs)
+
+    return wrapper
+
+
+REQUEST_ID_STR = "Request Id"
+COUNT_STR = "Count"
+TIME_STR = "Time (sec)"
+BATCH_ID_STR = "Batch Id"
+MEMORY_USAGE_STR = "Memory Usage (%)"
+BUSY_TIME_PERCENT = "Busy Time (%)"
+UTILIZATION_STR = "Utilization (%)"
+OPERATION_STR = "Operation"
+TIME_STR_MS = "Time (ms)"
+
+
+# Legacy CSV names are an output adapter; runtime ownership stays in family specs.
+_ATTENTION_LEDGER_FIELD_BY_OPERATOR = {
+    "attn_kv_cache_save": "attention_kv_cache_save_execution_time",
+    "attn_prefill": "attention_prefill_execution_time",
+    "attn_decode": "attention_decode_execution_time",
+    **{
+        operator.name: operator.execution_time_attr
+        for operator in LATENT_MLA_ATTENTION_FAMILY.e2e_trace_ops()
+    },
+}
+
+
+def _round_ledger_ms(value: float) -> float:
+    return round(float(value), 9)
+
+
+def _iter_source_tp_collective_times(execution_time: ExecutionTime):
+    from frontier.operators.sequence_parallel_moe import (
+        EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
+    )
+
+    return tuple(
+        (name, execution_time.op_times[name])
+        for name in (*SP_TP_OPERATORS, *EMBEDDING_LOGITS_OPERATORS)
+        if execution_time.op_times.get(name, 0.0) > 0
+    )
+
+
+def _iter_mla_attention_op_times(execution_time: ExecutionTime):
+    return tuple(
+        (operator.name, duration_ms)
+        for operator, duration_ms in get_attention_trace_op_times(
+            execution_time,
+            LATENT_MLA_ATTENTION_FAMILY,
+            skip_zero=False,
+        )
+    )
+
+
+def _iter_family_execution_times(
+    family: OperatorFamilySpec,
+    execution_time: ExecutionTime,
+) -> tuple[tuple[str, float], ...]:
+    return tuple(
+        (operator.name, float(getattr(execution_time, operator.execution_time_attr)))
+        for operator in family.e2e_trace_ops()
+        if operator.execution_time_attr is not None
+    )
+
+
+def _iter_layer_attention_times(execution_time: ExecutionTime, *, skip_zero: bool = True):
+    """Project model and family operators without duplicating owned projections."""
+    if execution_time.attention_family_id == "deepseek_v4_attention":
+        from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+
+        yield from ((name, value) for _, name, value in timing_operator_times(execution_time, "attention")
+                    if value or not skip_zero)
+        return
+    family = get_attention_family(execution_time.attention_family_id)
+    family_attrs = {operator.execution_time_attr for operator in family.e2e_trace_ops()}
+    model_ops = (
+        ("attn_pre_proj", "attention_layer_pre_proj_execution_time", "attention_pre_proj_time"),
+        ("attn_rope", "attention_rope_execution_time", "attention_rope_execution_time"),
+        ("attn_post_proj", "attention_layer_post_proj_execution_time", "attention_post_proj_time"),
+    )
+    for name, component_attr, public_attr in model_ops[:2]:
+        if component_attr not in family_attrs:
+            value = float(getattr(execution_time, public_attr))
+            if value or not skip_zero:
+                yield name, value
+    for operator, value in get_attention_trace_op_times(
+        execution_time, family, skip_zero=skip_zero,
+        allow_structural=family.structural_execution_enabled,
+    ):
+        name = (_DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE.get(operator.role, operator.name)
+                if family.dense_compatible else operator.name)
+        yield name, value
+    name, component_attr, public_attr = model_ops[2]
+    if component_attr not in family_attrs:
+        value = float(getattr(execution_time, public_attr))
+        if value or not skip_zero:
+            yield name, value
+
+
+def _iter_memory_execution_times(
+    execution_time: ExecutionTime,
+    *,
+    per_layer_count: int | None = None,
+    include_input_layernorm: bool = True,
+    include_post_attention_layernorm: bool = True,
+    include_add_attn_residual: bool = True,
+    include_add_ffn_residual: bool = True,
+) -> tuple[tuple[str, float], ...]:
+    if per_layer_count is not None and per_layer_count <= 0:
+        raise ValueError("per_layer_count must be positive when provided")
+
+    included_ops = {
+        "input_layernorm": include_input_layernorm,
+        "post_attention_layernorm": include_post_attention_layernorm,
+        "add_attn_residual": include_add_attn_residual,
+        "add_ffn_residual": include_add_ffn_residual,
+    }
+    memory_times: list[tuple[str, float]] = []
+    for operator in MEMORY_FAMILY.e2e_trace_ops():
+        if operator.execution_time_attr is None:
+            continue
+        if not included_ops.get(operator.name, False):
+            continue
+        duration_ms = float(getattr(execution_time, operator.execution_time_attr))
+        if per_layer_count is not None:
+            duration_ms /= per_layer_count
+        memory_times.append((operator.name, duration_ms))
+    return tuple(memory_times)
+
+
+_DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE = {
+    AttentionOperatorRole.PREFILL_KERNEL: OperationMetrics.ATTN_PREFILL.value,
+    AttentionOperatorRole.DECODE_KERNEL: OperationMetrics.ATTN_DECODE.value,
+    AttentionOperatorRole.CACHE_WRITE: OperationMetrics.ATTN_KV_CACHE_SAVE.value,
+}
+
+
+def _dense_attention_op_times_by_role(
+    execution_time: ExecutionTime,
+    *,
+    per_layer_count: int | None = None,
+    skip_zero: bool = True,
+) -> dict[AttentionOperatorRole, float]:
+    role_times: dict[AttentionOperatorRole, float] = {}
+    for operator, duration_ms in get_attention_trace_op_times(
+        execution_time,
+        DENSE_ATTENTION_FAMILY,
+        per_layer_count=per_layer_count,
+        skip_zero=skip_zero,
+    ):
+        if operator.role in role_times:
+            raise ValueError(
+                f"Duplicate dense attention role in trace mapping: "
+                f"{operator.role.value}"
+            )
+        role_times[operator.role] = duration_ms
+
+    if not skip_zero:
+        missing_roles = [
+            role.value
+            for role in _DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE
+            if role not in role_times
+        ]
+        if missing_roles:
+            raise ValueError(
+                "Dense attention trace mapping is missing required roles: "
+                f"{missing_roles}"
+            )
+
+    return role_times
+
+
+def _iter_dense_attention_public_trace_ops(
+    execution_time: ExecutionTime,
+    *,
+    per_layer_count: int | None = None,
+) -> tuple[tuple[str, float], ...]:
+    role_times = _dense_attention_op_times_by_role(
+        execution_time,
+        per_layer_count=per_layer_count,
+    )
+    return tuple(
+        (public_name, role_times.get(role, 0.0))
+        for role, public_name in _DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE.items()
+    )
+
+
+def _iter_mla_attention_operation_metrics(execution_time: ExecutionTime):
+    return tuple(
+        (OperationMetrics(operator.name), duration_ms)
+        for operator, duration_ms in get_attention_trace_op_times(
+            execution_time,
+            LATENT_MLA_ATTENTION_FAMILY,
+            skip_zero=False,
+        )
+    )
+
+
+class MetricsStore:
+    def __init__(
+        self,
+        simulation_config: SimulationConfig,
+        cluster_configs: Dict[ClusterType, ClusterConfig],
+        trace_store: Optional["TraceStore"] = None,
+    ) -> None:
+        self._simulation_config = simulation_config
+        self._config = self._simulation_config.metrics_config
+        self._trace_store = trace_store
+        self._last_request_arrived_at = None
+
+        # Completion tracking for termination logic
+        self._total_requests = 0
+        self._completed_requests = 0
+        self._completed_request_ids = set()
+
+        self._cluster_configs = cluster_configs
+
+        # Initialise request metrics
+        self._request_metrics_time_distributions: Dict[
+            RequestMetricsTimeDistributions, DataSeries
+        ] = {}
+        for metric_name in RequestMetricsTimeDistributions:
+            self._request_metrics_time_distributions[metric_name] = DataSeries(
+                REQUEST_ID_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+
+        self._token_metrics_time_distribution: Dict[
+            TokenMetricsTimeDistribution, DataSeries
+        ] = {}
+        for metric_name in TokenMetricsTimeDistribution:
+            self._token_metrics_time_distribution[metric_name] = CDFSketch(
+                metric_name.value,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+
+        self._request_metrics_histogram: Dict[RequestMetricsHistogram, DataSeries] = {}
+        for metric_name in RequestMetricsHistogram:
+            self._request_metrics_histogram[metric_name] = DataSeries(
+                REQUEST_ID_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+
+        # Initialise batch metrics per cluster
+        self._batch_metrics_count_distribution: Dict[
+            ClusterType, Dict[BatchMetricsCountDistribution, CDFSketch]
+        ] = {}
+        self._batch_metrics_count_distribution_per_batch: Dict[
+            ClusterType, Dict[BatchMetricsCountDistribution, DataSeries]
+        ] = {}
+        self._batch_metrics_time_distribution: Dict[
+            ClusterType, Dict[BatchMetricsTimeDistribution, CDFSketch]
+        ] = {}
+        self._batch_metrics_time_distribution_per_batch: Dict[
+            ClusterType, Dict[BatchMetricsTimeDistribution, DataSeries]
+        ] = {}
+
+        # Initialise operation metrics per cluster
+        self._operation_metrics: Dict[
+            ClusterType, Dict[OperationMetrics, CDFSketch]
+        ] = {}
+        self._operation_metrics_per_batch: Dict[
+            ClusterType, Dict[OperationMetrics, DataSeries]
+        ] = {}
+        self._cpu_operation_metrics: Dict[
+            ClusterType, Dict[CpuOperationMetrics, CDFSketch]
+        ] = {}
+        self._cpu_operation_metrics_per_batch: Dict[
+            ClusterType, Dict[CpuOperationMetrics, DataSeries]
+        ] = {}
+
+        # per replica metrics per cluster
+        self._replica_memory_usage: Dict[
+            ClusterType, List[List[SeriesAverageMeter]]
+        ] = {}
+        # per replica stage metrics per cluster
+        self._replica_busy_time: Dict[
+            ClusterType, List[List[List[SeriesAverageMeter]]]
+        ] = {}
+        self._replica_mfu: Dict[ClusterType, List[List[List[SeriesAverageMeter]]]] = {}
+        # Dense/full-stage work has no replica-local EP identity.  Keep its
+        # utilization series separate instead of encoding it as EP0.
+        self._replica_full_stage_memory_usage: Dict[
+            ClusterType, List[SeriesAverageMeter]
+        ] = {}
+        self._replica_full_stage_busy_time: Dict[
+            ClusterType, List[List[SeriesAverageMeter]]
+        ] = {}
+        self._replica_full_stage_mfu: Dict[
+            ClusterType, List[List[SeriesAverageMeter]]
+        ] = {}
+        self._mfu_calculator: Dict[ClusterType, MFUCalculator] = {}
+        self._pending_frontier_stage_batch_ledger_rows: Dict[int, dict[str, Any]] = {}
+        self._pending_frontier_stage_batch_ledger_row_keys: Dict[
+            tuple[str, int, int | None, int, int], int
+        ] = {}
+        self._pending_frontier_stage_batch_ledger_rows_by_key: Dict[
+            tuple[str, int, int | None, int, int], dict[str, Any]
+        ] = {}
+        self._frontier_stage_batch_ledger_rows: list[dict[str, Any]] = []
+        self._frontier_ep_wave_lane_ledger_rows: list[dict[str, Any]] = []
+        self._frontier_stage_batch_ledger_summary = (
+            self._new_frontier_stage_batch_ledger_summary()
+        )
+        self._frontier_stage_batch_ledger_summary_groups: dict[
+            tuple[int, int, float, tuple[int, ...]], dict[str, Any]
+        ] = {}
+
+        for cluster_type, cluster_config in self._cluster_configs.items():
+            self._init_per_cluster_metrics(cluster_type, cluster_config)
+
+        # Initialise completion metrics (these are global)
+        self._request_completion_metrics_time_series: Dict[
+            RequestCompletionMetricsTimeSeries, DataSeries
+        ] = {}
+        for metric_name in RequestCompletionMetricsTimeSeries:
+            self._request_completion_metrics_time_series[metric_name] = DataSeries(
+                TIME_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+        self._token_completion_metrics_time_series: Dict[
+            TokenCompletionMetricsTimeSeries, DataSeries
+        ] = {}
+        for metric_name in TokenCompletionMetricsTimeSeries:
+            self._token_completion_metrics_time_series[metric_name] = DataSeries(
+                TIME_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+
+        # Initialize KV cache transfer metrics
+        self._kv_cache_transfer_metrics = {
+            "transfer_count": 0,
+            "total_transfer_time": 0.0,
+            "total_data_transferred": 0,
+            "transfer_times": DataSeries(
+                "Transfer ID",
+                "Transfer Time (ms)",
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            ),
+            "transfer_sizes": DataSeries(
+                "Transfer ID",
+                "Transfer Size (bytes)",
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            ),
+        }
+        # Transfer lineage is kept as a small lifecycle ledger.  The row is
+        # created at transfer start and enriched when the target scheduler has
+        # selected the physical target Replica.
+        self._transfer_ledger_next_id = 0
+        self._transfer_ledger_rows: list[dict[str, Any]] = []
+        self._transfer_ledger_rows_by_info_id: dict[int, dict[str, Any]] = {}
+        self._transfer_info_objects: dict[int, Any] = {}
+
+        # Initialize preemption statistics collector for system-level metrics
+        # NOTE: Separation of Concerns - Request-Level vs. System-Level Metrics
+        # - Request-level metrics (request_metrics.csv): Per-request preemption details
+        #   (e.g., how many times each request was preempted, tokens-at-preemption statistics)
+        # - System-level metrics (system_metrics.json): Cluster-wide aggregate statistics
+        #   (e.g., total preemption events, preemption rate, tokens-at-preemption distribution)
+        # This stores per-cluster aggregate statistics computed from all requests
+        self._preemption_statistics = {
+            "total_preemption_events": 0,  # Total preemption events across all clusters
+            "preempted_request_ids": set(),  # Set of unique request IDs that were preempted
+            "by_cluster_type": {
+                ClusterType.MONOLITHIC: {
+                    "preemption_events": 0,
+                    "preempted_request_ids": set(),
+                    "tokens_at_preemption": [],  # Not applicable for MONOLITHIC
+                },
+                ClusterType.PREFILL: {
+                    "preemption_events": 0,
+                    "preempted_request_ids": set(),
+                    "tokens_at_preemption": [],  # Not applicable for PREFILL
+                },
+                ClusterType.DECODE: {
+                    "preemption_events": 0,
+                    "preempted_request_ids": set(),
+                    "tokens_at_preemption": [],  # List of all tokens-at-preemption values
+                },
+                ClusterType.DECODE_ATTN: {
+                    "preemption_events": 0,
+                    "preempted_request_ids": set(),
+                    "tokens_at_preemption": [],  # List of all tokens-at-preemption values
+                },
+                ClusterType.DECODE_FFN: {
+                    "preemption_events": 0,
+                    "preempted_request_ids": set(),
+                    "tokens_at_preemption": [],  # Not applicable for DECODE_FFN
+                },
+            },
+        }
+
+        self._expanded_trace_batches: set[tuple[ClusterType, int]] = set()
+
+        # Per-layer expansion tracking (cluster-aware): request IDs traced per cluster.
+        # Limited by num_requests_to_trace_per_layer config for each cluster.
+        self._per_layer_traced_requests_by_cluster = {
+            cluster_type: set() for cluster_type in self._cluster_configs
+        }
+        self._metrics_ground_truth_trace_path = os.path.join(
+            self._config.output_dir,
+            self._config.metrics_ground_truth_trace_file,
+        )
+        if self._config.enable_metrics_ground_truth_trace:
+            os.makedirs(self._config.output_dir, exist_ok=True)
+            with open(self._metrics_ground_truth_trace_path, "w", encoding="utf-8"):
+                pass
+
+        self._init_wandb()
+
+    @property
+    def trace_store(self) -> Optional["TraceStore"]:
+        """Get the trace store for op-level tracing."""
+        return self._trace_store
+
+    @property
+    def stage_execution_reporting_enabled(self) -> bool:
+        """Whether any enabled consumer needs an execution-time payload.
+
+        Utilization uses BatchStage timing and does not require this payload.
+        Ledger summaries consume the same physical records as full ledgers.
+        """
+        return bool(
+            self._config.enable_op_level_tracing
+            or (self._config.write_metrics and (
+                self._config.store_operation_metrics
+                or self._should_capture_frontier_stage_batch_ledger()
+            ))
+        )
+
+    @property
+    def ep_wave_reporting_enabled(self) -> bool:
+        """Retain lane predictions for the enabled execution-time consumers."""
+        return self.stage_execution_reporting_enabled
+
+    def on_ep_wave_schedule(self, plan, *, time, replica_id, stage_id, cluster_type):
+        """Report actual lane operators at their scheduled phase boundaries."""
+        if not self.ep_wave_reporting_enabled:
+            return
+        from frontier.metrics.ep_wave_metrics import record_ep_wave
+
+        record_ep_wave(self, plan, time=time, replica_id=replica_id,
+                       stage_id=stage_id, cluster_type=cluster_type)
+
+    def _write_metrics_ground_truth_record(self, record: dict[str, Any]) -> None:
+        if not self._config.enable_metrics_ground_truth_trace:
+            return
+        with open(self._metrics_ground_truth_trace_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, sort_keys=True) + "\n")
+
+    # =========================================================================
+    # Op-Level Tracing: Emit Traces for Stage Execution
+    # =========================================================================
+
+    def _build_op_trace_context(
+        self, batch_stage: BatchStage, cluster_type: ClusterType
+    ) -> OpTraceContext:
+        cluster_config = self._cluster_configs.get(cluster_type)
+        if cluster_config is None:
+            raise ValueError(f"Cluster config not found for {cluster_type}")
+        total_tokens = sum(batch_stage.num_tokens)
+        return OpTraceContext(
+            cluster_type=cluster_type,
+            model_config=cluster_config.replica_config.model_config,
+            replica_config=cluster_config.replica_config,
+            total_tokens=total_tokens,
+            effective_tokens_compute=batch_stage.effective_total_tokens_compute,
+            effective_tokens_transfer=batch_stage.effective_total_tokens_transfer,
+            effective_tokens_rounded=batch_stage.effective_total_tokens_rounded,
+            tokens_are_post_routing=batch_stage.tokens_are_post_routing,
+            selected_logits_rows=len(batch_stage.request_ids),
+        )
+
+    def _emit_op_level_traces(
+        self,
+        time: float,
+        batch_stage: BatchStage,
+        replica_id: int,
+        execution_time: ExecutionTime,
+        cluster_type: ClusterType,
+        request_ids: List[str] = None,
+    ) -> None:
+        """
+        Emit op-level trace events for a batch stage execution.
+
+        Unrolls the ExecutionTime object into a sequence of trace events,
+        placing them sequentially on the timeline (cursor-based timing).
+
+        Semantic Model: This represents PREDICTED execution, not actual
+        hardware execution. Operations are serialized; overlap is not modeled.
+
+        Per-layer expansion: When enable_per_layer_expansion is True and we
+        haven't traced num_requests_to_trace_per_layer requests yet, emit
+        individual layer traces instead of aggregated spans.
+
+        Args:
+            time: Simulation time when stage execution begins (seconds)
+            batch_stage: BatchStage with request and token context
+            replica_id: Replica ID
+            execution_time: ExecutionTime object with all component times
+            cluster_type: Type of cluster (PREFILL, DECODE_ATTN, DECODE_FFN, etc.)
+            request_ids: List of request IDs in the batch (for traceability)
+        """
+        if not self._trace_store or not self._config.enable_op_level_tracing:
+            return
+
+        from frontier.metrics.trace_store import TraceEvent
+
+        # Determine if we should emit per-layer traces for this batch
+        should_expand_layers = self._should_expand_layers(
+            cluster_type, request_ids, batch_ids=(batch_stage._batch_id,)
+        )
+
+        trace_context = self._build_op_trace_context(batch_stage, cluster_type)
+        parallel_context = build_parallel_context(trace_context)
+        cluster_config = self._cluster_configs.get(cluster_type)
+        model_name = (
+            cluster_config.replica_config.model_name if cluster_config else "unknown"
+        )
+        capability_context = (
+            CapabilityContext.from_replica_config(
+                cluster_type=cluster_type,
+                replica_config=cluster_config.replica_config,
+            )
+            if cluster_config is not None
+            and getattr(cluster_config.replica_config, "model_config", None) is not None
+            else None
+        )
+        skip_ffn_attn_norm_residual = bool(
+            capability_context is not None
+            and capability_context.skip_decode_ffn_attn_norm_residual
+        )
+        skip_add_attn_residual = bool(
+            capability_context is not None
+            and capability_context.skip_decode_attn_residual
+        )
+        use_profile_ep_alltoall = bool(
+            capability_context is not None
+            and capability_context.uses_profile_ep_alltoall
+        )
+        use_ep_alltoall_dispatch_combine = self._use_ep_alltoall_dispatch_combine(
+            cluster_type=cluster_type,
+            batch_stage=batch_stage,
+        )
+
+        # Convert seconds to milliseconds for cursor tracking
+        cursor_ms = time * 1000.0
+        cluster_name = cluster_type.name
+        num_layers = execution_time.num_layers
+
+        # Common metadata for all events in this stage
+        base_meta = {
+            "num_tokens": batch_stage.num_tokens,
+            "total_tokens": trace_context.total_tokens,
+            "effective_total_tokens_compute": trace_context.effective_tokens_compute,
+            "effective_total_tokens_transfer": trace_context.effective_tokens_transfer,
+            "effective_total_tokens_rounded": trace_context.effective_tokens_rounded,
+            "tokens_are_post_routing": batch_stage.tokens_are_post_routing,
+            "num_layers": num_layers,
+            "request_ids": request_ids or [],
+            "model_name": model_name,
+            "parallel_context": parallel_context,
+        }
+
+        def emit(
+            op_type: str,
+            op_name: str,
+            duration_ms: float,
+            layer_id: int = -1,
+            extra_meta: dict = None,
+            *,
+            resolved_meta: dict | None = None,
+        ):
+            """Helper to emit a single trace event and advance cursor."""
+            nonlocal cursor_ms
+            if duration_ms <= 0:
+                return  # Skip zero-duration ops
+
+            if resolved_meta is not None:
+                trace_meta = resolved_meta.copy()
+            elif op_type in ("COMPUTE", "COMM"):
+                trace_meta = compute_op_trace_meta(op_name, op_type, trace_context)
+            else:
+                trace_meta = {}
+            if extra_meta:
+                trace_meta.update(extra_meta)
+
+            if op_type in ("COMPUTE", "COMM") and not trace_meta:
+                raise ValueError(
+                    f"Missing op trace metadata for op={op_name} type={op_type}"
+                )
+
+            meta = base_meta.copy()
+            meta.update(trace_meta)
+
+            event = TraceEvent(
+                type=op_type,
+                name=op_name,
+                ts_start=cursor_ms / 1000.0,  # Convert back to seconds for ts_start
+                duration_ms=duration_ms,
+                cluster=cluster_name,
+                replica_id=replica_id,
+                batch_id=batch_stage._batch_id,
+                layer_id=layer_id,
+                meta=meta,
+            )
+            self._trace_store.log_event(event)
+            cursor_ms += duration_ms
+
+        def emit_related_collective_wait_traces() -> None:
+            wait_specs = getattr(execution_time, "_trace_related_collective_waits", None)
+            if not isinstance(wait_specs, list) or not wait_specs:
+                return
+
+            for spec in wait_specs:
+                if not isinstance(spec, dict):
+                    continue
+                base_op_name = str(spec.get("op_name") or "").strip()
+                if not base_op_name:
+                    continue
+                related_wait_ms = float(spec.get("related_wait_ms", 0.0) or 0.0)
+                per_layer_related_wait_ms = float(
+                    spec.get("per_layer_related_wait_ms", 0.0) or 0.0
+                )
+                collective_domain = str(spec.get("collective_domain") or "").strip()
+                scope_alignment_mode = str(
+                    spec.get("scope_alignment_mode") or "wait_inclusive"
+                ).strip()
+                reason = str(spec.get("reason") or "").strip()
+
+                wait_meta = compute_op_trace_meta(base_op_name, "COMM", trace_context)
+                wait_meta.update(
+                    {
+                        "collective_scope_component": "related_wait",
+                        "collective_base_op_name": base_op_name,
+                        "collective_domain": collective_domain,
+                        "collective_scope_alignment_mode": scope_alignment_mode,
+                        "collective_wait_reason": reason,
+                    }
+                )
+                wait_event_name = f"{base_op_name}_wait"
+
+                if should_expand_layers and num_layers > 1:
+                    if per_layer_related_wait_ms <= 0.0:
+                        continue
+                    for layer_idx in range(num_layers):
+                        emit(
+                            "COMM",
+                            wait_event_name,
+                            per_layer_related_wait_ms,
+                            layer_idx,
+                            resolved_meta={"layer_idx": layer_idx, **wait_meta},
+                        )
+                    continue
+
+                if related_wait_ms <= 0.0:
+                    continue
+                emit(
+                    "COMM",
+                    wait_event_name,
+                    related_wait_ms,
+                    -1,
+                    resolved_meta=wait_meta,
+                )
+
+        # =====================================================================
+        # Emit Overhead (CPU) Operations - Before Model Execution
+        # These are NOT per-layer, always emit as aggregated
+        # =====================================================================
+        emit("OVERHEAD", "schedule", execution_time.schedule_time)
+        emit("OVERHEAD", "prepare_inputs_e2e", execution_time.prepare_inputs_e2e_time)
+        emit(
+            "OVERHEAD",
+            "pp_receiver_head_runtime",
+            execution_time.pp_receiver_head_runtime_time,
+        )
+        emit(
+            "OVERHEAD",
+            "pp_prefill_consumer_active_runtime",
+            execution_time.pp_prefill_consumer_active_runtime_time,
+        )
+        emit(
+            "COMPUTE",
+            "decode_draft_proposer",
+            execution_time.decode_draft_proposer_time,
+            resolved_meta={
+                "residual_family": "mtp_draft_proposer",
+                "spec_decode_component": "draft_proposer",
+            },
+        )
+        emit(
+            "COMPUTE",
+            "mtp_terminal_overshoot",
+            execution_time.mtp_terminal_overshoot_time,
+            resolved_meta={
+                "residual_family": "mtp_terminal_overshoot_compute",
+                "spec_decode_component": "terminal_overshoot",
+            },
+        )
+
+        # =====================================================================
+        # Emit Model Execution Operations (Attention + MLP/MoE)
+        # =====================================================================
+        moe_tp_enabled = False
+        ep_enabled = False
+        if isinstance(execution_time, StageExecutionTime):
+            stage_has_moe = any(
+                layer._is_moe for layer in execution_time.layer_execution_times
+            )
+        else:
+            stage_has_moe = execution_time._is_moe
+        if stage_has_moe:
+            cluster_config = self._cluster_configs.get(cluster_type)
+            if cluster_config is None:
+                raise ValueError(f"Cluster config not found for {cluster_type}")
+            moe_tp_enabled = cluster_config.replica_config.moe_tensor_parallel_size > 1
+            # COMM_SKIP: EP communication only needed when ep_size > 1 (experts distributed across devices)
+            ep_enabled = cluster_config.replica_config.moe_expert_parallel_size > 1
+
+        if isinstance(execution_time, StageExecutionTime):
+            # Aggregated output preserves family/variant identity instead of
+            # collapsing a mixed stage into the first layer's family.
+            aggregate_ops = {}
+
+            def collect_stage_op(op_type, op_name, duration_ms, layer_id, metadata):
+                key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name)
+                if key not in aggregate_ops:
+                    aggregate_ops[key] = [0.0, [], {}]
+                if duration_ms <= 0:
+                    return
+                aggregate_ops[key][0] += duration_ms
+                aggregate_ops[key][1].append(layer_id)
+                if metadata["attention_family_id"] == "deepseek_v4_attention":
+                    physical_meta = aggregate_ops[key][2]
+                    physical_meta.update({name: value for name, value in metadata.items()
+                                          if name not in {"layer_idx", "global_layer_id", "source_tensor_calls"}})
+                    physical_meta.setdefault("source_tensor_calls", []).extend(
+                        {"global_layer_id": layer_id, **call}
+                        for call in metadata.get("source_tensor_calls", ())
+                    )
+
+            self._emit_stage_layer_traces(
+                emit if should_expand_layers else collect_stage_op,
+                execution_time,
+                cluster_type,
+                moe_tp_enabled=moe_tp_enabled,
+                ep_enabled=ep_enabled,
+                skip_ffn_attn_norm_residual=skip_ffn_attn_norm_residual,
+                skip_add_attn_residual=skip_add_attn_residual,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
+                use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+            )
+            if not should_expand_layers:
+                for (family_id, variant_id, op_type, op_name), (duration_ms, layer_ids, physical_meta) in aggregate_ops.items():
+                    emit(op_type, op_name, duration_ms, -1, {
+                        **physical_meta,
+                        "attention_family_id": family_id,
+                        "attention_variant_id": variant_id,
+                        "global_layer_ids": layer_ids,
+                    })
+        elif should_expand_layers and num_layers > 1:
+            # Per-layer expansion mode: emit individual layer traces
+            self._emit_per_layer_traces(
+                emit,
+                execution_time,
+                num_layers,
+                base_meta,
+                moe_tp_enabled,
+                ep_enabled,
+                cluster_type,
+                skip_ffn_attn_norm_residual=skip_ffn_attn_norm_residual,
+                skip_add_attn_residual=skip_add_attn_residual,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
+                use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+            )
+        else:
+            # Aggregated mode (default): emit single spans for all layers
+            self._emit_aggregated_traces(
+                emit,
+                execution_time,
+                moe_tp_enabled,
+                ep_enabled,
+                cluster_type,
+                skip_ffn_attn_norm_residual=skip_ffn_attn_norm_residual,
+                skip_add_attn_residual=skip_add_attn_residual,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
+                use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+            )
+
+        emit_related_collective_wait_traces()
+
+        # =====================================================================
+        # Emit Pipeline Parallel Communication (if applicable)
+        # This is NOT per-layer, always emit as aggregated
+        # =====================================================================
+        emit(
+            "COMM",
+            "pipeline_parallel_send_recv",
+            execution_time.pipeline_parallel_communication_time,
+        )
+        emit(
+            "OVERHEAD",
+            "pp_stage_boundary_handoff",
+            execution_time.pp_stage_boundary_handoff_time,
+        )
+
+        # =====================================================================
+        # Emit Overhead (CPU) Operations - After Model Execution
+        # These are NOT per-layer, always emit as aggregated
+        # =====================================================================
+        emit("OVERHEAD", "sampler_e2e", execution_time.sampler_e2e_time)
+        emit(
+            "OVERHEAD",
+            "process_model_outputs",
+            execution_time.process_model_outputs_time,
+        )
+        emit("OVERHEAD", "ray_comm_time", execution_time.ray_comm_time)
+
+    def _should_expand_layers(
+        self, cluster_type: ClusterType, request_ids: List[str] = None,
+        *, batch_ids: tuple[int, ...] = (),
+    ) -> bool:
+        """
+        Determine if per-layer expansion should be used for this batch.
+
+        Returns True if:
+        1. enable_per_layer_expansion is True
+        2. We haven't traced num_requests_to_trace_per_layer requests yet
+        3. At least one request in the batch hasn't been traced yet
+
+        Note: The per-layer trace quota is tracked per cluster to avoid
+        prefill traces consuming decode-attn/ffn expansion slots.
+        """
+        if not self._config.enable_per_layer_expansion:
+            return False
+
+        if not request_ids:
+            return False
+        if any((cluster_type, batch_id) in self._expanded_trace_batches for batch_id in batch_ids):
+            return True
+
+        if cluster_type not in self._per_layer_traced_requests_by_cluster:
+            self._per_layer_traced_requests_by_cluster[cluster_type] = set()
+
+        traced_requests = self._per_layer_traced_requests_by_cluster[cluster_type]
+        max_requests = self._config.num_requests_to_trace_per_layer
+        if len(traced_requests) >= max_requests:
+            return False
+
+        # Check if any request in this batch is new (not yet traced)
+        for req_id in request_ids:
+            if req_id not in traced_requests:
+                # Mark all requests in this batch as traced
+                for rid in request_ids:
+                    if len(traced_requests) < max_requests:
+                        traced_requests.add(rid)
+                self._expanded_trace_batches.update(
+                    (cluster_type, batch_id) for batch_id in batch_ids
+                )
+                return True
+
+        return False
+
+    def _use_ep_alltoall_dispatch_combine(
+        self,
+        *,
+        cluster_type: ClusterType,
+        batch_stage: BatchStage,
+    ) -> bool:
+        if cluster_type == ClusterType.DECODE_FFN:
+            return True
+        if batch_stage.tokens_are_post_routing:
+            return True
+        cluster_config = self._cluster_configs.get(cluster_type)
+        if cluster_config is None:
+            return False
+        return int(
+            getattr(cluster_config.replica_config, "attn_dp", 1)
+        ) > 1
+
+    def _emit_aggregated_traces(
+        self,
+        emit,
+        execution_time: ExecutionTime,
+        moe_tp_enabled: bool,
+        ep_enabled: bool,
+        cluster_type: ClusterType,
+        skip_ffn_attn_norm_residual: bool = False,
+        skip_add_attn_residual: bool = False,
+        use_profile_ep_alltoall: bool = False,
+        use_ep_alltoall_dispatch_combine: bool = True,
+    ) -> None:
+        """
+        Emit aggregated traces (one span per op type across all layers).
+
+        Communication skip rules:
+        - EP communication ops (expert_parallel_alltoall_*) are emitted only when ep_enabled.
+        - MoE TP all-reduce is emitted only when moe_tp_enabled.
+        """
+        is_moe = execution_time._is_moe
+
+        # Attention Block
+        for op_name, duration_ms in _iter_memory_execution_times(
+            execution_time,
+            include_post_attention_layernorm=False,
+            include_add_attn_residual=False,
+            include_add_ffn_residual=False,
+        ):
+            emit("COMPUTE", op_name, duration_ms)
+        emit("COMPUTE", "attn_pre_proj", execution_time.attention_pre_proj_time)
+        emit("COMPUTE", "attn_rope", execution_time.attention_rope_execution_time)
+
+        dense_attention_trace_ops = _iter_dense_attention_public_trace_ops(
+            execution_time
+        )
+        for op_name, duration_ms in dense_attention_trace_ops[:2]:
+            emit("COMPUTE", op_name, duration_ms)
+
+        for op_name, duration_ms in _iter_mla_attention_op_times(execution_time):
+            if duration_ms > 0:
+                emit("COMPUTE", op_name, duration_ms)
+
+        for op_name, duration_ms in dense_attention_trace_ops[2:]:
+            emit("COMPUTE", op_name, duration_ms)
+        emit("COMPUTE", "attn_post_proj", execution_time.attention_post_proj_time)
+        emit(
+            "COMM",
+            "attn_tensor_parallel_allreduce",
+            execution_time.attention_all_reduce_time,
+        )
+        for name, duration_ms in _iter_source_tp_collective_times(execution_time):
+            emit("COMM", name, duration_ms)
+
+        # MLP or MoE Block
+        if not skip_ffn_attn_norm_residual:
+            for op_name, duration_ms in _iter_memory_execution_times(
+                execution_time,
+                include_input_layernorm=False,
+                include_add_attn_residual=not skip_add_attn_residual,
+                include_add_ffn_residual=False,
+            ):
+                emit("COMPUTE", op_name, duration_ms)
+
+        if cluster_type == ClusterType.DECODE_ATTN:
+            return
+
+        if is_moe:
+            emit(
+                "COMM",
+                "moe_tensor_parallel_allgather",
+                execution_time.moe_tensor_parallel_allgather_time,
+            )
+            if execution_time.share_expert_time > 0:
+                for op_name, duration_ms in _iter_family_execution_times(
+                    SHARE_EXPERT_FAMILY,
+                    execution_time,
+                ):
+                    emit("COMPUTE", op_name, duration_ms)
+                emit(
+                    "COMM",
+                    "share_expert_tensor_parallel_allreduce",
+                    execution_time.share_expert_tensor_parallel_allreduce_time,
+                )
+            for op_name, duration_ms in _iter_family_execution_times(
+                MOE_FAMILY,
+                execution_time,
+            )[:3]:
+                emit("COMPUTE", op_name, duration_ms)
+            # COMM_SKIP: EP communication only needed when ep_size > 1 (experts distributed)
+            if ep_enabled:
+                if use_profile_ep_alltoall:
+                    emit(
+                        "COMM",
+                        "expert_parallel_alltoall",
+                        (
+                            execution_time.get_single_layer_moe_dispatch_time()
+                            * execution_time.num_layers
+                        ),
+                    )
+                elif use_ep_alltoall_dispatch_combine:
+                    emit(
+                        "COMM",
+                        "expert_parallel_alltoall_dispatch",
+                        (
+                            execution_time.get_single_layer_moe_dispatch_time()
+                            * execution_time.num_layers
+                        ),
+                    )
+            for op_name, duration_ms in _iter_family_execution_times(
+                MOE_FAMILY,
+                execution_time,
+            )[3:]:
+                emit("COMPUTE", op_name, duration_ms)
+            if ep_enabled:
+                if use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine:
+                    emit(
+                        "COMM",
+                        "expert_parallel_alltoall_combine",
+                        (
+                            execution_time.get_single_layer_moe_combine_time()
+                            * execution_time.num_layers
+                        ),
+                    )
+                else:
+                    emit(
+                        "COMM",
+                        "expert_parallel_allreduce",
+                        execution_time.expert_parallel_communication_time,
+                    )
+            if moe_tp_enabled:
+                emit(
+                    "COMM",
+                    "moe_tensor_parallel_allreduce",
+                    execution_time.mlp_all_reduce_time,
+                )
+
+        else:
+            for op_name, duration_ms in _iter_family_execution_times(
+                FFN_FAMILY,
+                execution_time,
+            ):
+                emit("COMPUTE", op_name, duration_ms)
+            emit(
+                "COMM",
+                "mlp_tensor_parallel_allreduce",
+                execution_time.mlp_all_reduce_time,
+            )
+
+        for op_name, duration_ms in _iter_memory_execution_times(
+            execution_time,
+            include_input_layernorm=False,
+            include_post_attention_layernorm=False,
+            include_add_attn_residual=False,
+        ):
+            emit("COMPUTE", op_name, duration_ms)
+
+    def _emit_stage_layer_traces(
+        self,
+        emit,
+        execution_time: StageExecutionTime,
+        cluster_type: ClusterType,
+        moe_tp_enabled: bool,
+        ep_enabled: bool,
+        skip_ffn_attn_norm_residual: bool = False,
+        skip_add_attn_residual: bool = False,
+        use_profile_ep_alltoall: bool = False,
+        use_ep_alltoall_dispatch_combine: bool = True,
+    ) -> None:
+        """Emit one trace sequence for each authoritative stage layer.
+
+        ``StageExecutionTime`` keeps layer payloads separate because a stage can
+        contain multiple attention families. The legacy aggregate helpers use
+        homogeneous scalar views and therefore cannot safely consume this type.
+        Stage-owned overhead remains emitted by ``_emit_op_level_traces`` once.
+        """
+
+        for layer_idx, layer in enumerate(execution_time.layer_execution_times):
+            family_id = layer.attention_family_id
+            layer_meta = {
+                "layer_idx": layer_idx,
+                "global_layer_id": layer.global_layer_id,
+                "attention_family_id": family_id,
+                "attention_variant_id": layer.attention_variant_id,
+            }
+
+            def emit_layer(op_type: str, op_name: str, duration_ms: float) -> None:
+                emit(op_type, op_name, duration_ms, layer.global_layer_id, layer_meta)
+
+            if family_id == "deepseek_v4_attention":
+                from frontier.execution_time_predictor.deepseek_v4 import (
+                    operator_workload_metadata, timing_operator_times,
+                )
+
+                layer_meta.update(getattr(layer, "_dsv4_source_rows", {}))
+                phases = ("attention",) if skip_ffn_attn_norm_residual else (
+                    "attention", "pre_dispatch", "dispatch", "routed_compute", "combine", "post_combine",
+                )
+                for phase in phases:
+                    for kind, name, duration_ms in timing_operator_times(layer, phase):
+                        emit(kind, name, duration_ms, layer.global_layer_id, {
+                            **layer_meta, **operator_workload_metadata(layer, name),
+                        })
+                continue
+
+            for op_name, duration_ms in _iter_memory_execution_times(
+                layer,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+                include_add_ffn_residual=False,
+            ):
+                emit_layer("COMPUTE", op_name, duration_ms)
+
+            for op_name, duration_ms in _iter_layer_attention_times(layer):
+                emit_layer("COMPUTE", op_name, duration_ms)
+            emit_layer(
+                "COMM",
+                "attn_tensor_parallel_allreduce",
+                layer.attention_all_reduce_time,
+            )
+            for name, duration_ms in _iter_source_tp_collective_times(layer):
+                emit_layer("COMM", name, duration_ms)
+
+            if not skip_ffn_attn_norm_residual:
+                for op_name, duration_ms in _iter_memory_execution_times(
+                    layer,
+                    include_input_layernorm=False,
+                    include_add_attn_residual=not skip_add_attn_residual,
+                    include_add_ffn_residual=False,
+                ):
+                    emit_layer("COMPUTE", op_name, duration_ms)
+
+            if cluster_type == ClusterType.DECODE_ATTN:
+                continue
+
+            if layer._is_moe:
+                emit_layer(
+                    "COMM",
+                    "moe_tensor_parallel_allgather",
+                    layer.moe_tensor_parallel_allgather_time,
+                )
+                if layer.share_expert_time > 0:
+                    for op_name, duration_ms in _iter_family_execution_times(
+                        SHARE_EXPERT_FAMILY,
+                        layer,
+                    ):
+                        emit_layer("COMPUTE", op_name, duration_ms)
+                    emit_layer(
+                        "COMM",
+                        "share_expert_tensor_parallel_allreduce",
+                        layer.share_expert_tensor_parallel_allreduce_time,
+                    )
+                for op_name, duration_ms in _iter_family_execution_times(
+                    MOE_FAMILY,
+                    layer,
+                ):
+                    emit_layer("COMPUTE", op_name, duration_ms)
+                if ep_enabled:
+                    if use_profile_ep_alltoall:
+                        emit_layer(
+                            "COMM",
+                            "expert_parallel_alltoall",
+                            layer.get_single_layer_moe_dispatch_time(),
+                        )
+                    elif use_ep_alltoall_dispatch_combine:
+                        emit_layer(
+                            "COMM",
+                            "expert_parallel_alltoall_dispatch",
+                            layer.get_single_layer_moe_dispatch_time(),
+                        )
+                    emit_layer(
+                        "COMM",
+                        "expert_parallel_alltoall_combine",
+                        layer.get_single_layer_moe_combine_time(),
+                    )
+                else:
+                    emit_layer(
+                        "COMM",
+                        "expert_parallel_allreduce",
+                        layer.expert_parallel_communication_time,
+                    )
+                if moe_tp_enabled:
+                    emit_layer(
+                        "COMM",
+                        "moe_tensor_parallel_allreduce",
+                        layer.mlp_all_reduce_time,
+                    )
+            else:
+                for op_name, duration_ms in _iter_family_execution_times(
+                    FFN_FAMILY,
+                    layer,
+                ):
+                    emit_layer("COMPUTE", op_name, duration_ms)
+                emit_layer(
+                    "COMM",
+                    "mlp_tensor_parallel_allreduce",
+                    layer.mlp_all_reduce_time,
+                )
+
+            for op_name, duration_ms in _iter_memory_execution_times(
+                layer,
+                include_input_layernorm=False,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+            ):
+                emit_layer("COMPUTE", op_name, duration_ms)
+
+    def _emit_per_layer_traces(
+        self,
+        emit,
+        execution_time: ExecutionTime,
+        num_layers: int,
+        base_meta: dict,
+        moe_tp_enabled: bool,
+        ep_enabled: bool,
+        cluster_type: ClusterType,
+        skip_ffn_attn_norm_residual: bool = False,
+        skip_add_attn_residual: bool = False,
+        use_profile_ep_alltoall: bool = False,
+        use_ep_alltoall_dispatch_combine: bool = True,
+    ) -> None:
+        """
+        Emit per-layer traces (individual spans for each layer).
+
+        Divides aggregated times by num_layers to get per-layer times.
+
+        Communication skip rules:
+        - EP communication ops (expert_parallel_alltoall_*) are emitted only when ep_enabled.
+        - MoE TP all-reduce is emitted only when moe_tp_enabled.
+        """
+        is_moe = execution_time._is_moe
+
+        # Get per-layer times by dividing aggregated times
+        per_layer_attn_pre_proj = execution_time.attention_pre_proj_time / num_layers
+        per_layer_attn_rope = execution_time.attention_rope_execution_time / num_layers
+        per_layer_dense_attention_times = dict(
+            _iter_dense_attention_public_trace_ops(
+                execution_time,
+                per_layer_count=num_layers,
+            )
+        )
+        per_layer_mla_attention_ops = tuple(
+            (op_name, duration_ms / num_layers)
+            for op_name, duration_ms in _iter_mla_attention_op_times(execution_time)
+        )
+        per_layer_attn_post_proj = execution_time.attention_post_proj_time / num_layers
+        per_layer_attn_allreduce = execution_time.attention_all_reduce_time / num_layers
+        per_layer_moe_tp_allgather = (
+            execution_time.moe_tensor_parallel_allgather_time / num_layers
+        )
+        per_layer_share_expert_allreduce = (
+            execution_time.share_expert_tensor_parallel_allreduce_time / num_layers
+        )
+
+        if is_moe:
+            per_layer_moe_times = tuple(
+                (op_name, duration_ms / num_layers)
+                for op_name, duration_ms in _iter_family_execution_times(
+                    MOE_FAMILY,
+                    execution_time,
+                )
+            )
+            per_layer_share_expert_times = tuple(
+                (op_name, duration_ms / num_layers)
+                for op_name, duration_ms in _iter_family_execution_times(
+                    SHARE_EXPERT_FAMILY,
+                    execution_time,
+                )
+            )
+            per_layer_ep_dispatch = (
+                execution_time.get_single_layer_moe_dispatch_time()
+            )
+            per_layer_ep_combine = execution_time.get_single_layer_moe_combine_time()
+            per_layer_moe_tp_allreduce = execution_time.mlp_all_reduce_time / num_layers
+        else:
+            per_layer_mlp_up = (
+                execution_time.mlp_layer_up_proj_execution_time / num_layers
+            )
+            per_layer_mlp_act = execution_time.mlp_layer_act_execution_time / num_layers
+            per_layer_mlp_down = (
+                execution_time.mlp_layer_down_proj_execution_time / num_layers
+            )
+            per_layer_mlp_allreduce = execution_time.mlp_all_reduce_time / num_layers
+
+        # Emit traces for each layer
+        for layer_idx in range(num_layers):
+            layer_meta = {"layer_idx": layer_idx}
+
+            # Attention Block
+            for op_name, duration_ms in _iter_memory_execution_times(
+                execution_time,
+                per_layer_count=num_layers,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+                include_add_ffn_residual=False,
+            ):
+                emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
+            emit(
+                "COMPUTE",
+                "attn_pre_proj",
+                per_layer_attn_pre_proj,
+                layer_idx,
+                layer_meta,
+            )
+            emit("COMPUTE", "attn_rope", per_layer_attn_rope, layer_idx, layer_meta)
+
+            emit(
+                "COMPUTE",
+                OperationMetrics.ATTN_PREFILL.value,
+                per_layer_dense_attention_times.get(
+                    OperationMetrics.ATTN_PREFILL.value,
+                    0.0,
+                ),
+                layer_idx,
+                layer_meta,
+            )
+            emit(
+                "COMPUTE",
+                OperationMetrics.ATTN_DECODE.value,
+                per_layer_dense_attention_times.get(
+                    OperationMetrics.ATTN_DECODE.value,
+                    0.0,
+                ),
+                layer_idx,
+                layer_meta,
+            )
+
+            for op_name, duration_ms in per_layer_mla_attention_ops:
+                if duration_ms > 0:
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
+
+            emit(
+                "COMPUTE",
+                OperationMetrics.ATTN_KV_CACHE_SAVE.value,
+                per_layer_dense_attention_times.get(
+                    OperationMetrics.ATTN_KV_CACHE_SAVE.value,
+                    0.0,
+                ),
+                layer_idx,
+                layer_meta,
+            )
+            emit(
+                "COMPUTE",
+                "attn_post_proj",
+                per_layer_attn_post_proj,
+                layer_idx,
+                layer_meta,
+            )
+            emit(
+                "COMM",
+                "attn_tensor_parallel_allreduce",
+                per_layer_attn_allreduce,
+                layer_idx,
+                layer_meta,
+            )
+            for name, duration_ms in _iter_source_tp_collective_times(execution_time):
+                emit("COMM", name, duration_ms / num_layers, layer_idx, layer_meta)
+
+            # MLP or MoE Block
+            if not skip_ffn_attn_norm_residual:
+                for op_name, duration_ms in _iter_memory_execution_times(
+                    execution_time,
+                    per_layer_count=num_layers,
+                    include_input_layernorm=False,
+                    include_add_attn_residual=not skip_add_attn_residual,
+                    include_add_ffn_residual=False,
+                ):
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
+
+            if cluster_type == ClusterType.DECODE_ATTN:
+                continue
+
+            if is_moe:
+                emit(
+                    "COMM",
+                    "moe_tensor_parallel_allgather",
+                    per_layer_moe_tp_allgather,
+                    layer_idx,
+                    layer_meta,
+                )
+                if execution_time.share_expert_time > 0:
+                    for op_name, duration_ms in per_layer_share_expert_times:
+                        emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
+                    emit(
+                        "COMM",
+                        "share_expert_tensor_parallel_allreduce",
+                        per_layer_share_expert_allreduce,
+                        layer_idx,
+                        layer_meta,
+                    )
+                for op_name, duration_ms in per_layer_moe_times[:3]:
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
+                # COMM_SKIP: EP communication only needed when ep_size > 1 (experts distributed)
+                if ep_enabled:
+                    if use_profile_ep_alltoall:
+                        emit(
+                            "COMM",
+                            "expert_parallel_alltoall",
+                            per_layer_ep_dispatch,
+                            layer_idx,
+                            layer_meta,
+                        )
+                    elif use_ep_alltoall_dispatch_combine:
+                        emit(
+                            "COMM",
+                            "expert_parallel_alltoall_dispatch",
+                            per_layer_ep_dispatch,
+                            layer_idx,
+                            layer_meta,
+                        )
+                for op_name, duration_ms in per_layer_moe_times[3:]:
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
+                if ep_enabled:
+                    if use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine:
+                        emit(
+                            "COMM",
+                            "expert_parallel_alltoall_combine",
+                            per_layer_ep_combine,
+                            layer_idx,
+                            layer_meta,
+                        )
+                    else:
+                        emit(
+                            "COMM",
+                            "expert_parallel_allreduce",
+                            per_layer_ep_dispatch + per_layer_ep_combine,
+                            layer_idx,
+                            layer_meta,
+                        )
+                if moe_tp_enabled:
+                    emit(
+                        "COMM",
+                        "moe_tensor_parallel_allreduce",
+                        per_layer_moe_tp_allreduce,
+                        layer_idx,
+                        layer_meta,
+                    )
+
+            else:
+                per_layer_ffn_times = {
+                    "mlp_layer_up_proj_execution_time": per_layer_mlp_up,
+                    "mlp_layer_act_execution_time": per_layer_mlp_act,
+                    "mlp_layer_down_proj_execution_time": per_layer_mlp_down,
+                }
+                for operator in FFN_FAMILY.e2e_trace_ops():
+                    if operator.execution_time_attr is None:
+                        continue
+                    emit(
+                        "COMPUTE",
+                        operator.name,
+                        per_layer_ffn_times[operator.execution_time_attr],
+                        layer_idx,
+                        layer_meta,
+                    )
+                emit(
+                    "COMM",
+                    "mlp_tensor_parallel_allreduce",
+                    per_layer_mlp_allreduce,
+                    layer_idx,
+                    layer_meta,
+                )
+
+            for op_name, duration_ms in _iter_memory_execution_times(
+                execution_time,
+                per_layer_count=num_layers,
+                include_input_layernorm=False,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+            ):
+                emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
+
+    def _should_store_memory_time_series(self) -> bool:
+        if not self._config.enable_memory_time_series:
+            return False
+        if str(self._simulation_config.log_level).lower() != "debug":
+            raise ValueError(
+                "metrics_config.enable_memory_time_series requires log_level='debug'"
+            )
+        return True
+
+    @staticmethod
+    def _get_replica_local_scope_count(cluster_type: ClusterType, replica_config) -> int:
+        """Return the local scheduler-lane count used for utilization indexing.
+
+        Non-FFN roles expose one logical scheduler per attention-DP lane.  The
+        FFN role exposes one scheduler per MoE EP lane.  Full-stage events keep
+        using the separate ``replica_local_id=None`` meters.
+        """
+        if cluster_type == ClusterType.DECODE_FFN:
+            local_scope_count = int(replica_config.moe_expert_parallel_size)
+        elif cluster_type == ClusterType.DECODE_ATTN:
+            local_scope_count = 0
+        else:
+            local_scope_count = int(getattr(replica_config, "attn_dp", 1))
+
+        if local_scope_count < 0:
+            raise ValueError(
+                f"Invalid Replica-local scope count for {cluster_type.name}: "
+                f"{local_scope_count}"
+            )
+
+        return local_scope_count
+
+    @staticmethod
+    def _get_frontier_stage_execution_scope(
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+    ) -> str:
+        """Classify the local identity used by one stage-batch ledger row."""
+
+        if replica_local_id is None:
+            return "FULL_STAGE_WORLD"
+        if cluster_type == ClusterType.DECODE_FFN:
+            return "EP_WAVE_LANE"
+        return "ATTN_DP_LANE"
+
+    def _init_per_cluster_metrics(self, cluster_type: ClusterType, cluster_config):
+        # Batch metrics
+        self._batch_metrics_count_distribution[cluster_type] = {
+            metric_name: CDFSketch(
+                metric_name.value,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in BatchMetricsCountDistribution
+        }
+        self._batch_metrics_count_distribution_per_batch[cluster_type] = {
+            metric_name: DataSeries(
+                BATCH_ID_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in BatchMetricsCountDistribution
+        }
+        self._batch_metrics_time_distribution[cluster_type] = {
+            metric_name: CDFSketch(
+                metric_name.value,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in BatchMetricsTimeDistribution
+        }
+        self._batch_metrics_time_distribution_per_batch[cluster_type] = {
+            metric_name: DataSeries(
+                BATCH_ID_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in BatchMetricsTimeDistribution
+        }
+
+        # Operation metrics
+        family_ids = {
+            spec.family_id
+            for spec in cluster_config.replica_config.model_config.get_layer_attention_specs()
+        }
+        absent_structural_ops = {
+            operator.name
+            for family in iter_attention_families()
+            if family.structural_execution_enabled and family.family_id not in family_ids
+            for operator in family.e2e_trace_ops()
+        }
+        if DEEPSEEK_V4_ATTENTION_FAMILY.family_id not in family_ids:
+            absent_structural_ops.add(OperationMetrics.KV_CACHE_BLOCK_ZERO.value)
+        from frontier.operators.sequence_parallel_moe import (
+            EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
+        )
+
+        capabilities = CapabilityContext.from_replica_config(
+            cluster_type=cluster_type, replica_config=cluster_config.replica_config,
+        )
+        if (DEEPSEEK_V4_ATTENTION_FAMILY.family_id in family_ids
+                or not capabilities.uses_sequence_parallel_moe):
+            absent_structural_ops.update(SP_TP_OPERATORS)
+        if not capabilities.embedding_logits_collectives:
+            absent_structural_ops.update(EMBEDDING_LOGITS_OPERATORS)
+        operation_metrics = tuple(
+            metric for metric in OperationMetrics
+            if metric.value not in absent_structural_ops
+        )
+        self._operation_metrics[cluster_type] = {
+            metric_name: CDFSketch(
+                metric_name.value,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in operation_metrics
+        }
+        self._operation_metrics_per_batch[cluster_type] = {
+            metric_name: DataSeries(
+                BATCH_ID_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in operation_metrics
+        }
+        self._cpu_operation_metrics[cluster_type] = {
+            metric_name: CDFSketch(
+                metric_name.value,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in CpuOperationMetrics
+        }
+        self._cpu_operation_metrics_per_batch[cluster_type] = {
+            metric_name: DataSeries(
+                BATCH_ID_STR,
+                metric_name.value,
+                self._config.subsamples,
+                self._config.save_table_to_wandb,
+                self._config.store_plots,
+            )
+            for metric_name in CpuOperationMetrics
+        }
+
+        # Utilization metrics support full-stage and Replica-local scopes.
+        num_replicas = cluster_config.num_replicas
+        num_pipeline_stages = cluster_config.replica_config.num_pipeline_stages
+        local_scope_count = self._get_replica_local_scope_count(
+            cluster_type, cluster_config.replica_config
+        )
+
+        self._replica_memory_usage[cluster_type] = []
+        self._replica_busy_time[cluster_type] = []
+        self._replica_mfu[cluster_type] = []
+        self._replica_full_stage_memory_usage[cluster_type] = []
+        self._replica_full_stage_busy_time[cluster_type] = []
+        self._replica_full_stage_mfu[cluster_type] = []
+        self._mfu_calculator[cluster_type] = MFUCalculator(
+            cluster_config.replica_config, cluster_type
+        )
+
+        for replica_idx in range(num_replicas):
+            full_stage_memory = SeriesAverageMeter(
+                TIME_STR,
+                MEMORY_USAGE_STR,
+                save_table_to_wandb=self._config.save_table_to_wandb,
+                store_data_series=self._should_store_memory_time_series(),
+            )
+            full_stage_memory.put(0, 0)
+            self._replica_full_stage_memory_usage[cluster_type].append(
+                full_stage_memory
+            )
+
+            full_stage_busy = []
+            full_stage_mfu = []
+            for stage_idx in range(num_pipeline_stages):
+                busy_meter = SeriesAverageMeter(
+                    TIME_STR,
+                    BUSY_TIME_PERCENT,
+                    save_table_to_wandb=self._config.save_table_to_wandb,
+                )
+                busy_meter.put(0, 0)
+                full_stage_busy.append(busy_meter)
+
+                mfu_meter = SeriesAverageMeter(
+                    TIME_STR,
+                    UTILIZATION_STR,
+                    save_table_to_wandb=self._config.save_table_to_wandb,
+                )
+                mfu_meter.put(0, 0)
+                full_stage_mfu.append(mfu_meter)
+
+            self._replica_full_stage_busy_time[cluster_type].append(
+                full_stage_busy
+            )
+            self._replica_full_stage_mfu[cluster_type].append(full_stage_mfu)
+
+            # Create only the Replica-local EP scopes for DECODE_FFN. Other
+            # roles use the full-stage world and therefore have no local lane.
+            self._replica_memory_usage[cluster_type].append([])
+            self._replica_busy_time[cluster_type].append([])
+            self._replica_mfu[cluster_type].append([])
+
+            for replica_local_id in range(local_scope_count):
+                self._replica_memory_usage[cluster_type][replica_idx].append(
+                    SeriesAverageMeter(
+                        TIME_STR,
+                        MEMORY_USAGE_STR,
+                        save_table_to_wandb=self._config.save_table_to_wandb,
+                        store_data_series=self._should_store_memory_time_series(),
+                    )
+                )
+                self._replica_memory_usage[cluster_type][replica_idx][replica_local_id].put(0, 0)
+
+                self._replica_busy_time[cluster_type][replica_idx].append([])
+                self._replica_mfu[cluster_type][replica_idx].append([])
+
+                for stage_idx in range(num_pipeline_stages):
+                    self._replica_busy_time[cluster_type][replica_idx][replica_local_id].append(
+                        SeriesAverageMeter(
+                            TIME_STR,
+                            BUSY_TIME_PERCENT,
+                            save_table_to_wandb=self._config.save_table_to_wandb,
+                        )
+                    )
+                    self._replica_busy_time[cluster_type][replica_idx][replica_local_id][
+                        stage_idx
+                    ].put(0, 0)
+
+                    self._replica_mfu[cluster_type][replica_idx][replica_local_id].append(
+                        SeriesAverageMeter(
+                            TIME_STR,
+                            UTILIZATION_STR,
+                            save_table_to_wandb=self._config.save_table_to_wandb,
+                        )
+                    )
+                    self._replica_mfu[cluster_type][replica_idx][replica_local_id][stage_idx].put(
+                        0, 0
+                    )
+
+    def _init_wandb(self):
+        if (
+            not self._config.write_metrics
+            or not self._config.wandb_project
+            or not self._config.wandb_group
+        ):
+            return
+
+        global wandb
+        wandb = require_wandb()
+        wandb.init(
+            project=self._config.wandb_project,
+            group=self._config.wandb_group,
+            name=self._config.wandb_run_name,
+            config=self._simulation_config.to_dict(),
+        )
+
+    def _save_as_csv(
+        self,
+        dataseries_list: List[DataSeries],
+        key_to_join: str,
+        base_path: str,
+        file_name: str,
+        collapse_duplicates: bool = False,
+    ):
+        from frontier.logger import init_logger
+
+        logger = init_logger(__name__)
+
+        logger.info(f"Saving {file_name}.csv: {len(dataseries_list)} dataseries")
+        os.makedirs(base_path, exist_ok=True)
+
+        # Convert dataseries to DataFrames (detailed logging at DEBUG level)
+        dfs = []
+        empty_count = 0
+        for i, dataseries in enumerate(dataseries_list):
+            logger.debug(
+                f"Converting dataseries {i + 1}/{len(dataseries_list)}: {dataseries._metric_name}"
+            )
+            df = dataseries._to_df()
+            logger.debug(f"  DataFrame shape: {df.shape}")
+            if collapse_duplicates and not df.empty and key_to_join in df.columns:
+                value_cols = [col for col in df.columns if col != key_to_join]
+                if value_cols:
+                    df = (
+                        df.groupby(key_to_join, as_index=False)[value_cols]
+                        .sum()
+                    )
+            # Skip empty DataFrames to avoid merge issues
+            if not df.empty:
+                dfs.append(df)
+            else:
+                empty_count += 1
+                logger.debug(
+                    f"  Skipping empty DataFrame for {dataseries._metric_name}"
+                )
+
+        if empty_count > 0:
+            logger.info(f"Skipped {empty_count} empty DataFrames")
+
+        # Merge DataFrames
+        if not dfs:
+            logger.warning(
+                "No non-empty DataFrames to merge! Creating empty DataFrame."
+            )
+            merged_df = pd.DataFrame()
+        elif len(dfs) == 1:
+            logger.info("Only one DataFrame, no merge needed")
+            merged_df = dfs[0]
+        else:
+            logger.info(f"Starting merge of {len(dfs)} DataFrames...")
+            # Perform merge iteratively with progress logging
+            merged_df = dfs[0]
+            logger.info(
+                f"Initial DataFrame: {merged_df.shape[0]} rows × {merged_df.shape[1]} columns"
+            )
+
+            for i, df in enumerate(dfs[1:], start=2):
+                logger.info(f"Merging DataFrame {i}/{len(dfs)} (shape: {df.shape})...")
+                try:
+                    before_rows = merged_df.shape[0]
+                    merged_df = pd.merge(merged_df, df, on=[key_to_join], how="outer")
+                    after_rows = merged_df.shape[0]
+                    logger.info(
+                        f"  Merge {i}/{len(dfs)} complete: {before_rows} → {after_rows} rows, {merged_df.shape[1]} columns"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Error merging DataFrame {i}/{len(dfs)}: {e}", exc_info=True
+                    )
+                    raise
+
+            logger.info(f"All merges complete!")
+
+        # Log summary statistics
+        if not merged_df.empty:
+            num_rows = merged_df.shape[0]
+            num_cols = merged_df.shape[1]
+            logger.info(f"Computing unique {key_to_join} count...")
+            unique_keys = (
+                merged_df[key_to_join].nunique()
+                if key_to_join in merged_df.columns
+                else 0
+            )
+            logger.info(
+                f"Final merged DataFrame: {num_rows} rows × {num_cols} columns (unique {key_to_join}: {unique_keys})"
+            )
+        else:
+            logger.info("Final merged DataFrame: empty")
+
+        # Normalize exported request-level time metrics to milliseconds.
+        # Internal simulation and scheduler timelines remain in seconds.
+        if file_name == "request_metrics" and not merged_df.empty:
+            for metric_name in RequestMetricsTimeDistributions:
+                column_name = metric_name.value
+                if column_name not in merged_df.columns:
+                    continue
+                merged_df[column_name] = (
+                    pd.to_numeric(merged_df[column_name], errors="coerce") * 1000.0
+                )
+
+        # Write to CSV
+        csv_path = f"{base_path}/{file_name}.csv"
+        merged_df.to_csv(csv_path, index=False)
+        logger.info(f"Saved to {csv_path}")
+
+        if wandb is not None and wandb.run and self._config.save_table_to_wandb:
+            logger.info("Logging to wandb...")
+            wand_table = wandb.Table(dataframe=merged_df)
+            wandb.log({f"{file_name}_table": wand_table}, step=0)
+            logger.info("Wandb logging complete")
+
+    def _store_bar_plot(
+        self,
+        base_path: str,
+        plot_name: str,
+        x_label: str,
+        y_label: str,
+        data: Dict[str, float],
+    ):
+        if not data:
+            return
+        if wandb is not None and wandb.run:
+            wandb.log(
+                {
+                    plot_name: wandb.plot.bar(
+                        wandb.Table(
+                            dataframe=pd.DataFrame(
+                                data=data.items(), columns=[x_label, y_label]
+                            )
+                        ),
+                        x_label,
+                        y_label,
+                        title=plot_name,
+                    )
+                },
+                step=0,
+            )
+        if self._config.store_plots:
+            fig = px.bar(
+                x=list(data.keys()),
+                y=list(data.values()),
+                labels={"x": x_label, "y": y_label},
+            )
+            try:
+                fig.write_image(f"{base_path}/{plot_name}.png")
+            except Exception as exc:
+                logger.warning(
+                    "Skipping bar plot image export because image rendering is unavailable. "
+                    "plot_name=%s base_path=%s error=%s",
+                    plot_name,
+                    base_path,
+                    exc,
+                )
+
+    def _store_operation_metrics(self, base_plot_path: str):
+        if not self._config.store_operation_metrics:
+            return
+
+        for cluster_type in self._cluster_configs.keys():
+            cluster_plot_path = f"{base_plot_path}/{cluster_type.name.lower()}"
+            os.makedirs(cluster_plot_path, exist_ok=True)
+
+            # Plot operation metrics (only if store_plots=True)
+            if self._config.store_plots:
+                total_operation_runtimes: Dict[str, float] = {}
+                total_operation_runtimes["model_execution_e2e"] = 0
+
+                for dataseries in self._operation_metrics[cluster_type].values():
+                    plot_name_with_cluster = f"{cluster_type.name.lower()}_{dataseries._metric_name}_execution_time"
+                    dataseries.plot_cdf(
+                        cluster_plot_path, plot_name_with_cluster, TIME_STR_MS
+                    )
+                    total_operation_runtimes[dataseries._metric_name] = dataseries.sum
+                    total_operation_runtimes["model_execution_e2e"] += dataseries.sum
+
+                for dataseries in self._cpu_operation_metrics[cluster_type].values():
+                    plot_name_with_cluster = f"{cluster_type.name.lower()}_{dataseries._metric_name}_execution_time"
+                    dataseries.plot_cdf(
+                        cluster_plot_path, plot_name_with_cluster, TIME_STR_MS
+                    )
+                    total_operation_runtimes[dataseries._metric_name] = dataseries.sum
+
+                self._store_bar_plot(
+                    cluster_plot_path,
+                    f"{cluster_type.name.lower()}_total_operation_runtimes",
+                    OPERATION_STR,
+                    TIME_STR_MS,
+                    total_operation_runtimes,
+                )
+
+            if not self._config.keep_individual_batch_metrics:
+                continue
+
+            # Plot per-batch operation metrics (only if store_plots=True)
+            if self._config.store_plots:
+                for dataseries in self._operation_metrics_per_batch[
+                    cluster_type
+                ].values():
+                    dataseries.consolidate()
+                    plot_name_with_cluster = f"{cluster_type.name.lower()}_{dataseries._metric_name}_per_batch"
+                    dataseries.plot_step(
+                        cluster_plot_path,
+                        plot_name_with_cluster,
+                        y_axis_label=TIME_STR_MS,
+                        y_cumsum=False,
+                    )
+
+                for dataseries in self._cpu_operation_metrics_per_batch[
+                    cluster_type
+                ].values():
+                    dataseries.consolidate()
+                    plot_name_with_cluster = f"{cluster_type.name.lower()}_{dataseries._metric_name}_per_batch"
+                    dataseries.plot_step(
+                        cluster_plot_path,
+                        plot_name_with_cluster,
+                        y_axis_label=TIME_STR_MS,
+                        y_cumsum=False,
+                    )
+
+            # Save to CSV (always execute if keep_individual_batch_metrics=True)
+            operations_dataseries_list = list(
+                self._operation_metrics_per_batch[cluster_type].values()
+            )
+            self._save_as_csv(
+                dataseries_list=operations_dataseries_list,
+                key_to_join=BATCH_ID_STR,
+                base_path=self._config.output_dir,
+                file_name=f"{cluster_type.name.lower()}_operation_metrics",
+                collapse_duplicates=True,
+            )
+
+            cpu_operations_dataseries_list = list(
+                self._cpu_operation_metrics_per_batch[cluster_type].values()
+            )
+            self._save_as_csv(
+                dataseries_list=cpu_operations_dataseries_list,
+                key_to_join=BATCH_ID_STR,
+                base_path=self._config.output_dir,
+                file_name=f"{cluster_type.name.lower()}_cpu_operation_metrics",
+                collapse_duplicates=True,
+            )
+
+    def _store_request_metrics(self, base_plot_path: str):
+        from frontier.logger import init_logger
+
+        logger = init_logger(__name__)
+
+        if not self._config.store_request_metrics:
+            logger.debug("store_request_metrics=False, skipping")
+            return
+
+        all_request_metrics = list(
+            self._request_metrics_time_distributions.values()
+        ) + list(self._request_metrics_histogram.values())
+
+        if not all_request_metrics:
+            logger.warning("No request metrics to save!")
+            return
+
+        # Save to CSV (detailed logging in _save_as_csv)
+        # CSV generation is always executed when store_request_metrics=True
+        self._save_as_csv(
+            dataseries_list=all_request_metrics,
+            key_to_join=REQUEST_ID_STR,
+            base_path=self._config.output_dir,
+            file_name="request_metrics",
+        )
+
+        # Plot histograms and CDFs (only if store_plots=True)
+        if self._config.store_plots:
+            # Plot histograms (detailed logging at DEBUG level)
+            num_histograms = len(self._request_metrics_histogram)
+            logger.info(f"Plotting {num_histograms} histograms...")
+            for i, dataseries in enumerate(self._request_metrics_histogram.values()):
+                logger.debug(
+                    f"Plotting histogram {i + 1}/{num_histograms}: {dataseries._y_name}"
+                )
+                dataseries.plot_histogram(base_plot_path, dataseries._y_name)
+
+            # Plot CDFs (detailed logging at DEBUG level)
+            num_cdfs = len(self._request_metrics_time_distributions)
+            logger.info(f"Plotting {num_cdfs} CDFs...")
+            for i, dataseries in enumerate(
+                self._request_metrics_time_distributions.values()
+            ):
+                logger.debug(f"Plotting CDF {i + 1}/{num_cdfs}: {dataseries._y_name}")
+                dataseries.plot_cdf(base_plot_path, dataseries._y_name, TIME_STR)
+            logger.info("Plotting completed")
+        else:
+            logger.info("Skipping plots (store_plots=False)")
+
+        logger.info("Request metrics storage completed")
+
+    def _store_batch_metrics(self, base_plot_path: str):
+        if not self._config.store_batch_metrics:
+            return
+
+        for cluster_type in self._cluster_configs.keys():
+            cluster_plot_path = f"{base_plot_path}/{cluster_type.name.lower()}"
+            os.makedirs(cluster_plot_path, exist_ok=True)
+
+            # Plot CDFs (only if store_plots=True)
+            if self._config.store_plots:
+                for dataseries in self._batch_metrics_time_distribution[
+                    cluster_type
+                ].values():
+                    y_axis_label = (
+                        TIME_STR_MS
+                        if "model_execution" in dataseries._metric_name
+                        else TIME_STR
+                    )
+                    plot_name_with_cluster = (
+                        f"{cluster_type.name.lower()}_{dataseries._metric_name}"
+                    )
+                    dataseries.plot_cdf(
+                        cluster_plot_path, plot_name_with_cluster, y_axis_label
+                    )
+
+                for dataseries in self._batch_metrics_count_distribution[
+                    cluster_type
+                ].values():
+                    plot_name_with_cluster = (
+                        f"{cluster_type.name.lower()}_{dataseries._metric_name}"
+                    )
+                    dataseries.plot_cdf(
+                        cluster_plot_path, plot_name_with_cluster, COUNT_STR
+                    )
+
+            # Save individual batch metrics (if enabled)
+            if not self._config.keep_individual_batch_metrics:
+                continue
+
+            # Plot per-batch metrics (only if store_plots=True)
+            if self._config.store_plots:
+                for dataseries in self._batch_metrics_time_distribution_per_batch[
+                    cluster_type
+                ].values():
+                    y_axis_label = (
+                        TIME_STR_MS
+                        if "model_execution" in dataseries._metric_name
+                        else TIME_STR
+                    )
+                    plot_name_with_cluster = f"{cluster_type.name.lower()}_{dataseries._metric_name}_per_batch"
+                    dataseries.plot_step(
+                        cluster_plot_path,
+                        plot_name_with_cluster,
+                        y_axis_label=y_axis_label,
+                        y_cumsum=False,
+                    )
+
+                for dataseries in self._batch_metrics_count_distribution_per_batch[
+                    cluster_type
+                ].values():
+                    plot_name_with_cluster = f"{cluster_type.name.lower()}_{dataseries._metric_name}_per_batch"
+                    dataseries.plot_step(
+                        cluster_plot_path,
+                        plot_name_with_cluster,
+                        y_axis_label=COUNT_STR,
+                        y_cumsum=False,
+                    )
+
+            # Save to CSV (always execute if keep_individual_batch_metrics=True)
+            all_batch_metrics = list(
+                self._batch_metrics_count_distribution_per_batch[cluster_type].values()
+            ) + list(
+                self._batch_metrics_time_distribution_per_batch[cluster_type].values()
+            )
+            self._save_as_csv(
+                dataseries_list=all_batch_metrics,
+                key_to_join=BATCH_ID_STR,
+                base_path=self._config.output_dir,
+                file_name=f"{cluster_type.name.lower()}_batch_metrics",
+                collapse_duplicates=True,
+            )
+
+    def _store_completion_metrics(self, base_plot_path: str):
+        # Plot completion metrics (only if store_plots=True)
+        if self._config.store_plots:
+            if self._config.store_request_metrics:
+                for dataseries in self._request_completion_metrics_time_series.values():
+                    dataseries.plot_step(
+                        base_plot_path, f"{dataseries._y_name}_time_series", COUNT_STR
+                    )
+
+            if self._config.store_token_completion_metrics:
+                for dataseries in self._token_metrics_time_distribution.values():
+                    dataseries.plot_cdf(
+                        base_plot_path, dataseries._metric_name, TIME_STR
+                    )
+
+                for dataseries in self._token_completion_metrics_time_series.values():
+                    dataseries.plot_step(
+                        base_plot_path, f"{dataseries._y_name}_time_series", COUNT_STR
+                    )
+
+    def _store_utilization_metrics(self, base_plot_path: str):
+        if not self._config.store_utilization_metrics:
+            return
+
+        # Plot utilization metrics (only if store_plots=True)
+        if self._config.store_plots:
+            for cluster_type, cluster_config in self._cluster_configs.items():
+                cluster_plot_path = f"{base_plot_path}/{cluster_type.name.lower()}"
+                os.makedirs(cluster_plot_path, exist_ok=True)
+                num_replicas = cluster_config.num_replicas
+                num_pipeline_stages = cluster_config.replica_config.num_pipeline_stages
+                local_scope_count = self._get_replica_local_scope_count(
+                    cluster_type, cluster_config.replica_config
+                )
+
+                for replica_idx in range(num_replicas):
+                    self._replica_full_stage_memory_usage[cluster_type][
+                        replica_idx
+                    ].print_stats(
+                        f"replica_{replica_idx + 1}_full_stage_world_memory_usage",
+                        cluster_plot_path,
+                    )
+                    for stage_idx in range(num_pipeline_stages):
+                        self._replica_full_stage_busy_time[cluster_type][replica_idx][
+                            stage_idx
+                        ].print_stats(
+                            f"replica_{replica_idx + 1}_full_stage_world_stage_{stage_idx + 1}_busy_time_percent",
+                            cluster_plot_path,
+                        )
+                        self._replica_full_stage_mfu[cluster_type][replica_idx][
+                            stage_idx
+                        ].print_stats(
+                            f"replica_{replica_idx + 1}_full_stage_world_stage_{stage_idx + 1}_mfu",
+                            cluster_plot_path,
+                        )
+
+                    for replica_local_id in range(local_scope_count):
+                        self._replica_memory_usage[cluster_type][replica_idx][
+                            replica_local_id
+                        ].print_stats(
+                            f"replica_{replica_idx + 1}_local_{replica_local_id}_memory_usage",
+                            cluster_plot_path,
+                        )
+                        for stage_idx in range(num_pipeline_stages):
+                            self._replica_busy_time[cluster_type][replica_idx][replica_local_id][
+                                stage_idx
+                            ].print_stats(
+                                f"replica_{replica_idx + 1}_local_{replica_local_id}_stage_{stage_idx + 1}_busy_time_percent",
+                                cluster_plot_path,
+                            )
+                            self._replica_mfu[cluster_type][replica_idx][replica_local_id][
+                                stage_idx
+                            ].print_stats(
+                                f"replica_{replica_idx + 1}_local_{replica_local_id}_stage_{stage_idx + 1}_mfu",
+                                cluster_plot_path,
+                            )
+
+    # ----- Completion tracking API -----
+    def register_total_requests(self, n: int) -> None:
+        """Register total number of requests generated for this simulation."""
+        self._total_requests = int(n)
+
+    def all_requests_completed(self) -> bool:
+        """Return True if all requests have completed (and at least one was registered)."""
+        return (self._total_requests > 0) and (
+            self._completed_requests >= self._total_requests
+        )
+
+    def get_total_requests(self) -> int:
+        return getattr(self, "_total_requests", 0)
+
+    def get_completed_requests(self) -> int:
+        return getattr(self, "_completed_requests", 0)
+
+    def _write_op_precision_metadata(self) -> None:
+        from frontier.logger import init_logger
+
+        logger = init_logger(__name__)
+        quant_manager = get_quantization_manager()
+        metadata = quant_manager.get_operation_precision_metadata()
+        if not metadata:
+            logger.info("No op precision metadata to write")
+            return
+        output_path = os.path.join(self._config.output_dir, "op_precision_metadata.csv")
+        df = pd.DataFrame(metadata)
+        df.to_csv(output_path, index=False)
+        logger.info("Wrote op precision metadata to %s", output_path)
+
+    @if_write_metrics
+    def plot(self) -> None:
+        from frontier.logger import init_logger
+
+        logger = init_logger(__name__)
+
+        logger.info(f"Writing metrics to {self._config.output_dir}")
+        dir_plot_path = f"{self._config.output_dir}/plots"
+        os.makedirs(dir_plot_path, exist_ok=True)
+
+        self._store_request_metrics(dir_plot_path)
+        self._store_batch_metrics(dir_plot_path)
+        self._store_completion_metrics(dir_plot_path)
+        self._store_operation_metrics(dir_plot_path)
+        self._store_utilization_metrics(dir_plot_path)
+        self._write_system_metrics()
+        self._write_op_precision_metadata()
+        self._write_frontier_stage_batch_ledger()
+        self._write_frontier_transfer_ledger()
+
+        # Flush and close TraceStore if active
+        if self.trace_store:
+            self.trace_store.close()
+
+        logger.info("Metrics output completed")
+
+    def _write_system_metrics(self) -> None:
+        """
+        Write system-level aggregate metrics to system_metrics.json.
+
+        This file contains aggregate statistics computed from per-request metrics,
+        providing a high-level summary of simulation performance.
+        """
+        from frontier.logger import init_logger
+        import numpy as np
+
+        logger = init_logger(__name__)
+
+        logger.info("Computing system-level aggregate metrics...")
+
+        system_metrics: Dict[str, Any] = {}
+
+        # 1. Simulation metadata
+        system_metrics["simulation_metadata"] = {
+            "total_requests": self._total_requests,
+            "completed_requests": self._completed_requests,
+            "system_architecture": self._simulation_config.sys_arch,
+        }
+        server_count_metadata = (
+            self._simulation_config.cluster_config.get_server_count_metadata(
+                self._simulation_config.sys_arch
+            )
+        )
+        system_metrics["simulation_metadata"].update(server_count_metadata)
+        quant_manager = get_quantization_manager()
+        quant_config_path = quant_manager.get_config_path() or "none"
+        system_metrics["quantization_config"] = {
+            "config_path": quant_config_path,
+            "default_precision": quant_manager.get_default_precision().name,
+            "custom_operation_count": quant_manager.get_custom_operation_count(),
+            "config_hash": quant_manager.get_config_hash(),
+        }
+
+        # 2. TTFT statistics (Time To First Token)
+        ttft_data = self._request_metrics_time_distributions.get(
+            RequestMetricsTimeDistributions.TTFT
+        )
+        if ttft_data and len(ttft_data) > 0:
+            ttft_values = [y * 1000.0 for _, y in ttft_data._data_series]
+            system_metrics["ttft_statistics"] = self._compute_percentile_stats(
+                ttft_values, "ms"
+            )
+        else:
+            system_metrics["ttft_statistics"] = {"error": "No TTFT data available"}
+
+        # 3. TPOT statistics (Time Per Output Token)
+        tpot_data = self._request_metrics_time_distributions.get(
+            RequestMetricsTimeDistributions.TPOT
+        )
+        if tpot_data and len(tpot_data) > 0:
+            tpot_values = [y * 1000.0 for _, y in tpot_data._data_series]
+            system_metrics["tpot_statistics"] = self._compute_percentile_stats(
+                tpot_values, "ms"
+            )
+            # Add note about requests with single decode token
+            system_metrics["tpot_statistics"]["note"] = (
+                f"TPOT is only computed for requests with num_decode_tokens > 1. "
+                f"Computed from {len(tpot_values)} out of {self._completed_requests} requests."
+            )
+        else:
+            system_metrics["tpot_statistics"] = {
+                "error": "No TPOT data available (all requests may have num_decode_tokens=1)"
+            }
+
+        # 4. Request E2E time statistics
+        e2e_data = self._request_metrics_time_distributions.get(
+            RequestMetricsTimeDistributions.REQUEST_E2E_TIME
+        )
+        if e2e_data and len(e2e_data) > 0:
+            e2e_values = [y * 1000.0 for _, y in e2e_data._data_series]
+            system_metrics["request_e2e_time_statistics"] = (
+                self._compute_percentile_stats(e2e_values, "ms")
+            )
+        else:
+            system_metrics["request_e2e_time_statistics"] = {
+                "error": "No E2E time data available"
+            }
+
+        # 5. Throughput metrics
+        if self._completed_requests > 0:
+            # Get first request arrival and last request completion times
+            arrival_data = self._request_completion_metrics_time_series.get(
+                RequestCompletionMetricsTimeSeries.REQUEST_ARRIVAL
+            )
+            completion_data = self._request_completion_metrics_time_series.get(
+                RequestCompletionMetricsTimeSeries.REQUEST_COMPLETION
+            )
+
+            if (
+                arrival_data
+                and completion_data
+                and len(arrival_data) > 0
+                and len(completion_data) > 0
+            ):
+                first_arrival = min(x for x, _ in arrival_data._data_series)
+                last_completion = max(x for x, _ in completion_data._data_series)
+                # NOTE: Simulator time is in SECONDS, convert to milliseconds for reporting
+                total_duration_s = last_completion - first_arrival
+                total_duration_ms = total_duration_s * 1000.0  # Convert to milliseconds
+
+                if total_duration_ms > 0:
+                    # Calculate total tokens processed
+                    total_tokens = 0
+                    total_decode_tokens = 0
+                    decode_tokens_data = self._request_metrics_histogram.get(
+                        RequestMetricsHistogram.REQUEST_DECODE_TOKENS
+                    )
+                    num_tokens_data = self._request_metrics_histogram.get(
+                        RequestMetricsHistogram.REQUEST_NUM_TOKENS
+                    )
+
+                    if decode_tokens_data and len(decode_tokens_data) > 0:
+                        total_decode_tokens = sum(
+                            y for _, y in decode_tokens_data._data_series
+                        )
+                    if num_tokens_data and len(num_tokens_data) > 0:
+                        total_tokens = sum(y for _, y in num_tokens_data._data_series)
+
+                    system_metrics["throughput_metrics"] = {
+                        "total_duration_ms": total_duration_ms,
+                        "total_duration_seconds": total_duration_s,
+                        "requests_per_second": self._completed_requests
+                        / total_duration_s,
+                        "total_tokens_processed": int(total_tokens),
+                        "total_decode_tokens_generated": int(total_decode_tokens),
+                        "tokens_per_second": total_tokens / total_duration_s
+                        if total_tokens > 0
+                        else 0,
+                        "decode_tokens_per_second": total_decode_tokens
+                        / total_duration_s
+                        if total_decode_tokens > 0
+                        else 0,
+                    }
+                else:
+                    system_metrics["throughput_metrics"] = {
+                        "error": "Total duration is zero"
+                    }
+            else:
+                system_metrics["throughput_metrics"] = {
+                    "error": "Missing arrival or completion data"
+                }
+        else:
+            system_metrics["throughput_metrics"] = {"error": "No completed requests"}
+
+        # 6. Speculative decoding aggregate statistics (Phase 1)
+        spec_iter_data = self._request_metrics_histogram.get(
+            RequestMetricsHistogram.REQUEST_SPEC_TOTAL_ITERATIONS
+        )
+        spec_accepted_data = self._request_metrics_histogram.get(
+            RequestMetricsHistogram.REQUEST_SPEC_ACCEPTED_DRAFTS
+        )
+        spec_rejected_data = self._request_metrics_histogram.get(
+            RequestMetricsHistogram.REQUEST_SPEC_REJECTED_DRAFTS
+        )
+        spec_committed_data = self._request_metrics_histogram.get(
+            RequestMetricsHistogram.REQUEST_SPEC_COMMITTED_TOKENS
+        )
+        if (
+            spec_iter_data
+            and spec_accepted_data
+            and spec_rejected_data
+            and spec_committed_data
+            and len(spec_iter_data) > 0
+        ):
+            total_iterations = float(sum(y for _, y in spec_iter_data._data_series))
+            total_accepted = float(sum(y for _, y in spec_accepted_data._data_series))
+            total_rejected = float(sum(y for _, y in spec_rejected_data._data_series))
+            total_committed = float(sum(y for _, y in spec_committed_data._data_series))
+            total_drafts = total_accepted + total_rejected
+            acceptance_ratio = total_accepted / total_drafts if total_drafts > 0 else 0.0
+            committed_per_iteration = (
+                total_committed / total_iterations if total_iterations > 0 else 0.0
+            )
+            system_metrics["spec_decode_statistics"] = {
+                "total_iterations": int(total_iterations),
+                "total_accepted_drafts": int(total_accepted),
+                "total_rejected_drafts": int(total_rejected),
+                "total_committed_tokens": int(total_committed),
+                "acceptance_ratio": float(acceptance_ratio),
+                "avg_committed_tokens_per_iteration": float(committed_per_iteration),
+            }
+        else:
+            system_metrics["spec_decode_statistics"] = {
+                "total_iterations": 0,
+                "total_accepted_drafts": 0,
+                "total_rejected_drafts": 0,
+                "total_committed_tokens": 0,
+                "acceptance_ratio": 0.0,
+                "avg_committed_tokens_per_iteration": 0.0,
+            }
+
+        prefix_cache_statistics = self._compute_prefix_cache_statistics()
+        if prefix_cache_statistics is not None:
+            system_metrics["prefix_cache_statistics"] = prefix_cache_statistics
+
+        # 7. KV Cache Transfer statistics (for disaggregated mode)
+        if self._kv_cache_transfer_metrics["transfer_count"] > 0:
+            transfer_times = self._kv_cache_transfer_metrics["transfer_times"]
+            if len(transfer_times) > 0:
+                transfer_time_values = [y for _, y in transfer_times._data_series]
+                system_metrics["kv_cache_transfer_statistics"] = {
+                    "total_transfers": self._kv_cache_transfer_metrics[
+                        "transfer_count"
+                    ],
+                    "total_data_transferred_bytes": self._kv_cache_transfer_metrics[
+                        "total_data_transferred"
+                    ],
+                    "total_transfer_time_ms": self._kv_cache_transfer_metrics[
+                        "total_transfer_time"
+                    ],
+                    "transfer_time_stats": self._compute_percentile_stats(
+                        transfer_time_values, "ms"
+                    ),
+                }
+                system_metrics["kv_cache_transfer_total_bytes"] = (
+                    self._kv_cache_transfer_metrics["total_data_transferred"]
+                )
+
+        # 8. M2N Transfer statistics (for PD+AF disaggregated mode)
+        if hasattr(self, "_m2n_transfer_metrics") and self._m2n_transfer_metrics[
+            "transfer_count"
+        ] > 0:
+            transfer_times = self._m2n_transfer_metrics["transfer_times"]
+            if len(transfer_times) > 0:
+                transfer_time_values = [y for _, y in transfer_times._data_series]
+                system_metrics["m2n_transfer_statistics"] = {
+                    "total_transfers": self._m2n_transfer_metrics["transfer_count"],
+                    "total_data_transferred_bytes": self._m2n_transfer_metrics[
+                        "total_data_transferred"
+                    ],
+                    "total_transfer_time_ms": self._m2n_transfer_metrics[
+                        "total_transfer_time"
+                    ],
+                    "attn_to_ffn_transfers": self._m2n_transfer_metrics[
+                        "attn_to_ffn_transfers"
+                    ],
+                    "ffn_to_attn_transfers": self._m2n_transfer_metrics[
+                        "ffn_to_attn_transfers"
+                    ],
+                    "transfer_time_stats": self._compute_percentile_stats(
+                        transfer_time_values, "ms"
+                    ),
+                }
+                system_metrics["m2n_transfer_total_bytes"] = (
+                    self._m2n_transfer_metrics["total_data_transferred"]
+                )
+
+        # 9. Per-cluster utilization summary
+        cluster_utilization = {}
+        for cluster_type in self._cluster_configs.keys():
+            if cluster_type in self._replica_memory_usage:
+                memory_usage_data = self._replica_memory_usage[cluster_type]
+                if memory_usage_data:
+                    # Compute average memory usage across all replicas and DPs
+                    all_memory_values = []
+                    for replica_data in memory_usage_data:
+                        for dp_data in replica_data:
+                            if (
+                                hasattr(dp_data, "_data_series")
+                                and dp_data._data_series is not None
+                                and len(dp_data._data_series) > 0
+                            ):
+                                all_memory_values.extend(
+                                    [y for _, y in dp_data._data_series]
+                                )
+
+                    if all_memory_values:
+                        cluster_utilization[cluster_type.name] = {
+                            "avg_memory_usage_percent": float(
+                                np.mean(all_memory_values)
+                            ),
+                            "max_memory_usage_percent": float(
+                                np.max(all_memory_values)
+                            ),
+                        }
+
+        if cluster_utilization:
+            system_metrics["cluster_utilization"] = cluster_utilization
+
+        # 10. Preemption statistics (cluster-level aggregate metrics)
+        if self._preemption_statistics["total_preemption_events"] > 0:
+            preemption_stats = {
+                "total_preemption_events": self._preemption_statistics[
+                    "total_preemption_events"
+                ],
+                "total_preempted_requests": len(
+                    self._preemption_statistics["preempted_request_ids"]
+                ),
+                "preemption_rate": len(
+                    self._preemption_statistics["preempted_request_ids"]
+                )
+                / self._total_requests
+                if self._total_requests > 0
+                else 0.0,
+                "by_cluster_type": {},
+            }
+
+            # Compute per-cluster statistics
+            for cluster_type, cluster_data in self._preemption_statistics[
+                "by_cluster_type"
+            ].items():
+                if cluster_data["preemption_events"] > 0:
+                    cluster_stats = {
+                        "total_preemption_events": cluster_data["preemption_events"],
+                        "preempted_request_count": len(
+                            cluster_data["preempted_request_ids"]
+                        ),
+                        "preemption_rate": len(cluster_data["preempted_request_ids"])
+                        / self._total_requests
+                        if self._total_requests > 0
+                        else 0.0,
+                    }
+
+                    # Add tokens-at-preemption statistics for DECODE clusters
+                    if (
+                        cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN]
+                        and cluster_data["tokens_at_preemption"]
+                    ):
+                        tokens_list = cluster_data["tokens_at_preemption"]
+                        cluster_stats["tokens_at_preemption"] = {
+                            "mean": float(np.mean(tokens_list)),
+                            "max": int(np.max(tokens_list)),
+                            "min": int(np.min(tokens_list)),
+                        }
+
+                    preemption_stats["by_cluster_type"][cluster_type.name] = (
+                        cluster_stats
+                    )
+
+            system_metrics["preemption_statistics"] = preemption_stats
+        else:
+            # No preemptions occurred
+            system_metrics["preemption_statistics"] = {
+                "total_preemption_events": 0,
+                "total_preempted_requests": 0,
+                "preemption_rate": 0.0,
+                "by_cluster_type": {},
+            }
+
+        # 11. System architecture-specific configuration and model weight memory information
+        system_architecture_info = {
+            "system_architecture": self._simulation_config.sys_arch,
+            "cluster_configurations": {},
+        }
+
+        model_weight_memory = {}
+        for cluster_type, cluster_config in self._cluster_configs.items():
+            try:
+                # Import ParamCounter for model weight calculations
+                from frontier.utils.param_counter import ParamCounter
+
+                # Create ParamCounter for this cluster configuration
+                param_counter = ParamCounter(
+                    replica_config=cluster_config.replica_config,
+                    cluster_type=cluster_type,
+                )
+
+                # Calculate model parameters and memory
+                num_params_per_device = param_counter.get_num_parameters_per_device()
+                num_attention_params_per_layer = (
+                    param_counter.get_num_attention_params_per_layer()
+                )
+                num_mlp_params_per_layer = param_counter.get_num_mlp_params_per_layer()
+                num_mlp_params_per_device = (
+                    param_counter.get_num_mlp_parameters_per_device()
+                )
+
+                # Calculate memory in bytes (FP16: 2 bytes per parameter)
+                model_weight_memory_bytes = 2 * num_params_per_device
+                model_weight_memory_gb = model_weight_memory_bytes / (1024**3)
+
+                # Calculate memory breakdown
+                attention_memory_bytes = (
+                    2
+                    * num_attention_params_per_layer
+                    * (
+                        cluster_config.replica_config.model_config.num_layers
+                        // cluster_config.replica_config.num_pipeline_stages
+                    )
+                )
+                mlp_memory_bytes = 2 * num_mlp_params_per_device
+
+                attention_parameters = num_attention_params_per_layer * (
+                    cluster_config.replica_config.model_config.num_layers
+                    // cluster_config.replica_config.num_pipeline_stages
+                )
+                source_weight_estimate = any(
+                    spec.family_id in (
+                        DSA_ATTENTION_FAMILY.family_id,
+                        DEEPSEEK_V4_ATTENTION_FAMILY.family_id,
+                    )
+                    for spec in cluster_config.replica_config.model_config.get_layer_attention_specs()
+                )
+                if source_weight_estimate:
+                    # Source coefficients and packed storage have different owners.
+                    # Preserve the historical report calculation for existing models.
+                    attention_parameters = (
+                        param_counter.get_num_attention_parameters_per_device()
+                    )
+                    model_weight_memory_bytes = (
+                        param_counter.get_parameter_memory_per_device_bytes()
+                    )
+                    model_weight_memory_gb = model_weight_memory_bytes / (1024**3)
+                    attention_memory_bytes = (
+                        param_counter.get_attention_parameter_memory_per_device_bytes()
+                    )
+                    mlp_memory_bytes = (
+                        param_counter.get_mlp_parameter_memory_per_device_bytes()
+                    )
+
+                # Calculate memory utilization percentage
+                total_device_memory_gb = (
+                    cluster_config.replica_config.device_config.total_memory_gb
+                )
+                memory_utilization_percent = (
+                    (model_weight_memory_gb / total_device_memory_gb) * 100
+                    if total_device_memory_gb > 0
+                    else 0
+                )
+
+                # Extract parallel parameters based on cluster type
+                replica_config = cluster_config.replica_config
+                parallel_params = {
+                    "PP": replica_config.num_pipeline_stages,
+                }
+
+                # Add cluster-specific parallel parameters
+                if cluster_type == ClusterType.DECODE_FFN:
+                    # DECODE_FFN cluster only has MoE parameters
+                    parallel_params.update(
+                        {
+                            "MOE_TP": replica_config.moe_tensor_parallel_size,
+                            "MOE_EP": replica_config.moe_expert_parallel_size,
+                        }
+                    )
+                elif cluster_type == ClusterType.DECODE_ATTN:
+                    # DECODE_ATTN cluster only has Attention parameters
+                    parallel_params.update(
+                        {
+                            "ATTN_TP": replica_config.attn_tensor_parallel_size,
+                        }
+                    )
+                else:
+                    # MONOLITHIC, PREFILL, DECODE clusters have both Attention and MoE parameters
+                    parallel_params.update(
+                        {
+                            "ATTN_TP": replica_config.attn_tensor_parallel_size,
+                            "MOE_TP": replica_config.moe_tensor_parallel_size,
+                            "MOE_EP": replica_config.moe_expert_parallel_size,
+                        }
+                    )
+
+                cluster_memory_info = {
+                    "total_parameters": int(num_params_per_device),
+                    "total_memory_bytes": int(model_weight_memory_bytes),
+                    "total_memory_gb": float(model_weight_memory_gb),
+                    "memory_utilization_percent": float(memory_utilization_percent),
+                    "breakdown": {
+                        "attention_parameters": int(attention_parameters),
+                        "attention_memory_bytes": int(attention_memory_bytes),
+                        "attention_memory_gb": float(
+                            attention_memory_bytes / (1024**3)
+                        ),
+                        "ffn_parameters": int(num_mlp_params_per_device),
+                        "ffn_memory_bytes": int(mlp_memory_bytes),
+                        "ffn_memory_gb": float(mlp_memory_bytes / (1024**3)),
+                    },
+                    "device_info": {
+                        "device_type": cluster_config.replica_config.device_config.get_type().name,
+                        "total_device_memory_gb": float(total_device_memory_gb),
+                        "num_replicas": cluster_config.num_replicas,
+                        "expert_parallel_size": getattr(
+                            cluster_config.replica_config, "moe_expert_parallel_size", 1
+                        ),
+                        "moe_tensor_parallel_size": getattr(
+                            cluster_config.replica_config, "moe_tensor_parallel_size", 1
+                        ),
+                    },
+                }
+
+                if source_weight_estimate:
+                    cluster_memory_info["memory_accounting"] = (
+                        "source-defined weight storage estimate; native allocation unverified"
+                    )
+                    if any(
+                        spec.family_id == DEEPSEEK_V4_ATTENTION_FAMILY.family_id
+                        for spec in cluster_config.replica_config.model_config.get_layer_attention_specs()
+                    ):
+                        cluster_memory_info["conditional_mhc_broadcast_memory_bytes"] = (
+                            param_counter.get_conditional_mhc_broadcast_memory_bytes()
+                        )
+                        cluster_memory_info["conditional_mhc_broadcast_native_verified"] = False
+                    cluster_memory_info["breakdown"].update(
+                        {
+                            "other_parameters": int(
+                                num_params_per_device
+                                - attention_parameters
+                                - num_mlp_params_per_device
+                            ),
+                            "other_memory_bytes": int(
+                                model_weight_memory_bytes
+                                - attention_memory_bytes
+                                - mlp_memory_bytes
+                            ),
+                        }
+                    )
+                model_weight_memory[cluster_type.name] = cluster_memory_info
+
+                # Add cluster configuration to system architecture info
+                system_architecture_info["cluster_configurations"][
+                    cluster_type.name
+                ] = {
+                    "num_replicas": cluster_config.num_replicas,
+                    "parallel_parameters": parallel_params,
+                    "device_type": cluster_config.replica_config.device_config.get_type().name,
+                    "model_name": cluster_config.replica_config.model_name,
+                }
+
+            except Exception as e:
+                logger.warning(
+                    f"Failed to calculate model weight memory for cluster {cluster_type.name}: {e}"
+                )
+                model_weight_memory[cluster_type.name] = {
+                    "error": f"Failed to calculate: {str(e)}"
+                }
+                # Still add basic cluster configuration info even if memory calculation fails
+                system_architecture_info["cluster_configurations"][
+                    cluster_type.name
+                ] = {
+                    "num_replicas": cluster_config.num_replicas,
+                    "error": f"Failed to extract configuration: {str(e)}",
+                }
+
+        if model_weight_memory:
+            system_metrics["model_weight_memory"] = model_weight_memory
+            system_metrics["memory_utilization_percent"] = {
+                cluster_name: float(cluster_info.get("memory_utilization_percent", 0.0))
+                for cluster_name, cluster_info in model_weight_memory.items()
+            }
+
+        if system_architecture_info["cluster_configurations"]:
+            system_metrics["system_architecture_info"] = system_architecture_info
+
+        # Write to JSON file
+        output_path = f"{self._config.output_dir}/system_metrics.json"
+        with open(output_path, "w") as f:
+            json.dump(system_metrics, f, indent=2)
+
+        logger.info(f"System metrics written to {output_path}")
+
+    def _compute_percentile_stats(
+        self, values: List[float], unit: str = "ms"
+    ) -> Dict[str, Any]:
+        """Compute percentile statistics for a list of values."""
+        import numpy as np
+
+        if not values:
+            return {"error": "No data available"}
+
+        values_array = np.array(values)
+        return {
+            "count": len(values),
+            "mean": float(np.mean(values_array)),
+            "median": float(np.median(values_array)),
+            "std": float(np.std(values_array)),
+            "min": float(np.min(values_array)),
+            "max": float(np.max(values_array)),
+            "p50": float(np.percentile(values_array, 50)),
+            "p90": float(np.percentile(values_array, 90)),
+            "p95": float(np.percentile(values_array, 95)),
+            "p99": float(np.percentile(values_array, 99)),
+            "unit": unit,
+        }
+
+    @if_write_metrics
+    def on_request_arrival(
+        self, time: float, request: Request, cluster_type: ClusterType
+    ) -> None:
+        if not self._config.store_request_metrics:
+            return
+
+        # The following metrics are global and should only be recorded once per request
+        # In disaggregated mode, requests arrive at multiple clusters (e.g., PREFILL → DECODE)
+        # Use a flag to prevent duplicate recording
+        if hasattr(request, "_metrics_recorded") and request._metrics_recorded:
+            return
+
+        # Mark as recorded to prevent duplicate recording in subsequent cluster arrivals
+        request._metrics_recorded = True
+
+        self._request_completion_metrics_time_series[
+            RequestCompletionMetricsTimeSeries.REQUEST_ARRIVAL
+        ].put(time, 1)
+        self._write_metrics_ground_truth_record(
+            {
+                "event_type": "request_arrival",
+                "time_s": float(time),
+                "time_ms": float(time) * 1000.0,
+                "request_id": int(request.id),
+                "cluster_type": cluster_type.name,
+                "arrived_at": float(request.arrived_at),
+                "arrived_at_ms": float(request.arrived_at) * 1000.0,
+                "num_prefill_tokens": int(request.num_prefill_tokens),
+                "num_decode_tokens": int(request.num_decode_tokens),
+            }
+        )
+
+        self._request_metrics_histogram[RequestMetricsHistogram.REQUEST_NUM_TOKENS].put(
+            request.id,
+            request.user_facing_total_tokens,
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_PREFILL_TOKENS
+        ].put(
+            request.id,
+            request.user_facing_num_prefill_tokens,
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_TOKENS
+        ].put(
+            request.id,
+            request.user_facing_num_decode_tokens,
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_PD_RATIO
+        ].put(
+            request.id,
+            request.user_facing_pd_ratio,
+        )
+        if self._last_request_arrived_at is not None:
+            self._request_metrics_histogram[
+                RequestMetricsHistogram.REQUEST_INTER_ARRIVAL_DELAY
+            ].put(request.id, request.arrived_at - self._last_request_arrived_at)
+        self._last_request_arrived_at = request.arrived_at
+
+    def _get_ttft_export_value(self, request: Request) -> float:
+        return request.ttft
+
+    def _get_sj2q_pen_export_value(
+        self,
+        request: Request,
+        penalty_attr_name: str,
+        bounded_attr_name: str,
+    ) -> int:
+        if hasattr(request, penalty_attr_name):
+            return int(getattr(request, penalty_attr_name, 0))
+        return int(getattr(request, bounded_attr_name, 0))
+
+    def _get_prefix_cache_block_size(self) -> Optional[int]:
+        cluster_configs = getattr(self, "_cluster_configs", {})
+        for cluster_type, cluster_config in cluster_configs.items():
+            if cluster_type not in (ClusterType.MONOLITHIC, ClusterType.PREFILL):
+                continue
+            replica_scheduler_config = getattr(
+                cluster_config,
+                "replica_scheduler_config",
+                None,
+            )
+            if replica_scheduler_config is None:
+                continue
+            if not bool(
+                getattr(replica_scheduler_config, "enable_prefix_caching", False)
+            ):
+                continue
+            block_size = int(getattr(replica_scheduler_config, "block_size", 0))
+            if block_size > 0:
+                return block_size
+        return None
+
+    def _record_prefix_cache_request_metrics(self, request: Request) -> None:
+        block_size = self._get_prefix_cache_block_size()
+        if block_size is None or block_size <= 0:
+            return
+        query_blocks = len(request.prompt_block_hash_ids(block_size))
+        hit_blocks = int(request.num_prefill_tokens_cached // block_size)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_CACHED_PREFILL_TOKENS
+        ].put(request.id, int(request.num_prefill_tokens_cached))
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_PREFIX_CACHE_QUERY_BLOCKS
+        ].put(request.id, int(query_blocks))
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_PREFIX_CACHE_HIT_BLOCKS
+        ].put(request.id, int(hit_blocks))
+
+    def _compute_prefix_cache_statistics(self) -> Optional[Dict[str, Any]]:
+        cached_tokens_data = self._request_metrics_histogram.get(
+            RequestMetricsHistogram.REQUEST_CACHED_PREFILL_TOKENS
+        )
+        query_blocks_data = self._request_metrics_histogram.get(
+            RequestMetricsHistogram.REQUEST_PREFIX_CACHE_QUERY_BLOCKS
+        )
+        hit_blocks_data = self._request_metrics_histogram.get(
+            RequestMetricsHistogram.REQUEST_PREFIX_CACHE_HIT_BLOCKS
+        )
+        if cached_tokens_data is None or len(cached_tokens_data) == 0:
+            return None
+
+        cached_values = [int(value) for _, value in cached_tokens_data._data_series]
+        query_values = (
+            [int(value) for _, value in query_blocks_data._data_series]
+            if query_blocks_data is not None
+            else []
+        )
+        hit_values = (
+            [int(value) for _, value in hit_blocks_data._data_series]
+            if hit_blocks_data is not None
+            else []
+        )
+        total_query_blocks = int(sum(query_values))
+        total_hit_blocks = int(sum(hit_values))
+        requests = len(cached_values)
+        requests_with_hits = sum(1 for value in cached_values if value > 0)
+
+        return {
+            "block_size_tokens": self._get_prefix_cache_block_size(),
+            "requests": int(requests),
+            "requests_with_hits": int(requests_with_hits),
+            "total_cached_prefill_tokens": int(sum(cached_values)),
+            "mean_cached_prefill_tokens": (
+                float(sum(cached_values) / requests) if requests > 0 else 0.0
+            ),
+            "total_query_blocks": total_query_blocks,
+            "total_hit_blocks": total_hit_blocks,
+            "hit_ratio": (
+                float(total_hit_blocks / total_query_blocks)
+                if total_query_blocks > 0
+                else 0.0
+            ),
+        }
+
+    def _on_request_end(self, time: float, request: Request) -> None:
+        # Update completion counters regardless of plotting preferences. Counter
+        # update failures must propagate so corrupted completion accounting is
+        # not reported as a successful simulation.
+        if (
+            getattr(self, "_completed_request_ids", None) is not None
+            and request.id not in self._completed_request_ids
+        ):
+            self._completed_request_ids.add(request.id)
+            self._completed_requests += 1
+
+        if not self._config.store_request_metrics:
+            return
+
+        # Prevent duplicate recording of request end metrics in disaggregated mode
+        # In disaggregated mode, on_batch_end() may be called multiple times for the same request
+        # (e.g., once in PREFILL cluster, once in DECODE cluster)
+        # Use a flag to ensure metrics are only recorded once when the request truly completes
+        if hasattr(request, "_end_metrics_recorded") and request._end_metrics_recorded:
+            return
+
+        # Mark as recorded to prevent duplicate recording
+        request._end_metrics_recorded = True
+
+        self._request_completion_metrics_time_series[
+            RequestCompletionMetricsTimeSeries.REQUEST_COMPLETION
+        ].put(request.completed_at, 1)
+        request_waiting_time_total = request.get_total_waiting_time()
+        self._write_metrics_ground_truth_record(
+            {
+                "event_type": "request_completion",
+                "time_s": float(time),
+                "time_ms": float(time) * 1000.0,
+                "request_id": int(request.id),
+                "arrived_at": float(request.arrived_at),
+                "arrived_at_ms": float(request.arrived_at) * 1000.0,
+                "prefill_completed_at": float(request.prefill_completed_at),
+                "prefill_completed_at_ms": float(request.prefill_completed_at)
+                * 1000.0,
+                "first_decode_token_completed_at": float(
+                    request.first_decode_token_completed_at
+                ),
+                "first_decode_token_completed_at_ms": float(
+                    request.first_decode_token_completed_at
+                )
+                * 1000.0,
+                "decode_first_token_completed_at": float(
+                    request.decode_first_token_completed_at
+                ),
+                "decode_first_token_completed_at_ms": float(
+                    request.decode_first_token_completed_at
+                )
+                * 1000.0,
+                "completed_at": float(request.completed_at),
+                "completed_at_ms": float(request.completed_at) * 1000.0,
+                "num_prefill_tokens": int(request.num_prefill_tokens),
+                "num_decode_tokens": int(request.num_decode_tokens),
+                "request_e2e_time_s": float(request.e2e_time),
+                "request_e2e_time_ms": float(request.e2e_time) * 1000.0,
+                "request_waiting_time_total_s": float(request_waiting_time_total),
+                "request_waiting_time_total_ms": float(request_waiting_time_total)
+                * 1000.0,
+                "ttft_s": float(request.ttft),
+                "ttft_ms": float(request.ttft) * 1000.0,
+                "tpot_s": float(request.tpot),
+                "tpot_ms": float(request.tpot) * 1000.0,
+            }
+        )
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_E2E_TIME
+        ].put(request.id, request.e2e_time)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_E2E_TIME_NORMALIZED
+        ].put(request.id, request.e2e_time_normalized)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_EXECUTION_TIME
+        ].put(request.id, request.execution_time)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_EXECUTION_TIME_NORMALIZED
+        ].put(request.id, request.execution_time_normalized)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_MODEL_EXECUTION_TIME
+        ].put(request.id, request.model_execution_time)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_MODEL_EXECUTION_TIME_NORMALIZED
+        ].put(request.id, request.model_execution_time_normalized)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_PREEMPTION_TIME
+        ].put(request.id, 0.0)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_FIRST_SCHEDULING_DELAY
+        ].put(request.id, request.scheduling_delay)
+
+        # Per-cluster waiting time metrics (includes time after preemption)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_WAITING_TIME_TOTAL
+        ].put(request.id, request.get_total_waiting_time())
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_WAITING_TIME_PREFILL
+        ].put(request.id, request.get_cluster_waiting_time(ClusterType.PREFILL))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_WAITING_TIME_DECODE
+        ].put(request.id, request.get_cluster_waiting_time(ClusterType.DECODE))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_WAITING_TIME_DECODE_ATTN
+        ].put(request.id, request.get_cluster_waiting_time(ClusterType.DECODE_ATTN))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_WAITING_TIME_DECODE_FFN
+        ].put(request.id, request.get_cluster_waiting_time(ClusterType.DECODE_FFN))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_HIDDEN_WAITING_TIME
+        ].put(request.id, request.get_round_class_waiting_time("hidden"))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_FINAL_WAITING_TIME
+        ].put(request.id, request.get_round_class_waiting_time("final"))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_HIDDEN_SERVICE_TIME
+        ].put(request.id, request.get_round_class_service_time("hidden"))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_FINAL_SERVICE_TIME
+        ].put(request.id, request.get_round_class_service_time("final"))
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.FINAL_ROUND_PREFILL_WAIT_MS
+        ].put(
+            request.id,
+            request.get_round_class_cluster_waiting_time(
+                "final",
+                ClusterType.PREFILL,
+            ),
+        )
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.FINAL_ROUND_DECODE_WAIT_MS
+        ].put(
+            request.id,
+            request.get_round_class_cluster_waiting_time(
+                "final",
+                ClusterType.DECODE,
+            ),
+        )
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.FINAL_ROUND_PREFILL_SERVICE_MS
+        ].put(
+            request.id,
+            request.get_round_class_cluster_service_time(
+                "final",
+                ClusterType.PREFILL,
+            ),
+        )
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.LATE_HIDDEN_PREFILL_WAIT_MS
+        ].put(
+            request.id,
+            request.get_round_numbers_cluster_waiting_time(
+                round_numbers=(3, 4),
+                cluster_type=ClusterType.PREFILL,
+            ),
+        )
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_THINKING_TIME
+        ].put(request.id, request.thinking_time_total)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_TOOL_CALL_TIME
+        ].put(request.id, request.tool_call_time_total)
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_EXECUTION_PLUS_PREEMPTION_TIME
+        ].put(request.id, request.execution_time)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.REQUEST_EXECUTION_PLUS_PREEMPTION_TIME_NORMALIZED
+        ].put(
+            request.id,
+            request.execution_time / request.num_decode_tokens,
+        )
+
+        if request.is_prefill_complete:
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.PREFILL_E2E_TIME
+            ].put(request.id, request.prefill_completed_at - request.arrived_at)
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.PREFILL_EXECUTION_PLUS_PREEMPTION
+            ].put(request.id, request.prefill_completed_at - request.scheduled_at)
+            # Guard against division by zero (defensive programming)
+            # Normal requests should always have num_prefill_tokens >= 1, but
+            # this protects against edge cases or synthetic test requests
+            if request.num_prefill_tokens > 0:
+                self._request_metrics_time_distributions[
+                    RequestMetricsTimeDistributions.PREFILL_EXECUTION_PLUS_PREEMPTION_PER_TOKEN
+                ].put(
+                    request.id,
+                    (request.prefill_completed_at - request.scheduled_at)
+                    / request.num_prefill_tokens,
+                )
+            #
+            # Guard against division by zero for decode tokens
+            if request.num_decode_tokens > 0:
+                self._request_metrics_time_distributions[
+                    RequestMetricsTimeDistributions.DECODE_E2E_TIME_PER_TOKEN
+                ].put(
+                    request.id,
+                    (request.completed_at - request.prefill_completed_at)
+                    / request.num_decode_tokens,
+                )
+
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_NUM_RESTARTS
+        ].put(request.id, request.num_restarts)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_THINKING_ROUND_COUNT
+        ].put(request.id, request.completed_thinking_rounds)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SESSION_ID
+        ].put(request.id, request.session_id)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_COHORT
+        ].put(request.id, request.cohort)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SJ2Q_PEN_QSHORT_ENTRIES_TOTAL
+        ].put(
+            request.id,
+            self._get_sj2q_pen_export_value(
+                request,
+                "_sj2q_penalty_qshort_entries_total",
+                "_sj2q_bounded_qshort_entries_total",
+            ),
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SJ2Q_PEN_QSHORT_LONG_HISTORY_ENTRIES_TOTAL
+        ].put(
+            request.id,
+            self._get_sj2q_pen_export_value(
+                request,
+                "_sj2q_penalty_qshort_long_history_entries_total",
+                "_sj2q_bounded_qshort_long_history_entries_total",
+            ),
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SJ2Q_PEN_QLONG_ENTRIES_TOTAL
+        ].put(
+            request.id,
+            self._get_sj2q_pen_export_value(
+                request,
+                "_sj2q_penalty_qlong_entries_total",
+                "_sj2q_bounded_qlong_entries_total",
+            ),
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SJ2Q_PEN_LONG_HISTORY_TO_QSHORT_REENTRY_COUNT
+        ].put(
+            request.id,
+            self._get_sj2q_pen_export_value(
+                request,
+                "_sj2q_penalty_long_history_to_qshort_reentry_count",
+                "_sj2q_bounded_long_history_to_qshort_reentry_count",
+            ),
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SJ2Q_PEN_FIRST_LONG_HISTORY_ROUND_NUMBER
+        ].put(
+            request.id,
+            self._get_sj2q_pen_export_value(
+                request,
+                "_sj2q_penalty_first_long_history_round_number",
+                "_sj2q_bounded_first_long_history_round_number",
+            ),
+        )
+        self._record_prefix_cache_request_metrics(request)
+
+        spec_total_iterations = int(getattr(request, "spec_total_iterations", 0))
+        spec_accepted_drafts = int(getattr(request, "spec_total_accepted_drafts", 0))
+        spec_rejected_drafts = int(getattr(request, "spec_total_rejected_drafts", 0))
+        spec_committed_tokens = int(getattr(request, "spec_total_committed_tokens", 0))
+        spec_acceptance_ratio = 0.0
+        spec_committed_per_iter = 0.0
+        total_drafts = spec_accepted_drafts + spec_rejected_drafts
+        if total_drafts > 0:
+            spec_acceptance_ratio = spec_accepted_drafts / total_drafts
+        if spec_total_iterations > 0:
+            spec_committed_per_iter = spec_committed_tokens / spec_total_iterations
+
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SPEC_TOTAL_ITERATIONS
+        ].put(request.id, spec_total_iterations)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SPEC_ACCEPTED_DRAFTS
+        ].put(request.id, spec_accepted_drafts)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SPEC_REJECTED_DRAFTS
+        ].put(request.id, spec_rejected_drafts)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SPEC_COMMITTED_TOKENS
+        ].put(request.id, spec_committed_tokens)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SPEC_ACCEPTANCE_RATIO
+        ].put(request.id, spec_acceptance_ratio)
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_SPEC_COMMITTED_PER_ITER
+        ].put(request.id, spec_committed_per_iter)
+
+        # Record preemption tracking metrics (request-level)
+        # NOTE: These metrics describe what happened to each individual request
+        # For cluster-wide aggregate statistics, see self._preemption_statistics
+        # which is exported to system_metrics.json
+        # ClusterType is already imported at module level (line 51)
+
+        # Total preemption count across all clusters
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_TOTAL_PREEMPTION_COUNT
+        ].put(request.id, request.get_total_preemption_count())
+
+        # Per-cluster preemption counts (request-level)
+        # These provide detailed per-cluster breakdown for each request
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_PREFILL_PREEMPTION_COUNT
+        ].put(request.id, request.get_preemption_count(ClusterType.PREFILL))
+
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_PREEMPTION_COUNT
+        ].put(request.id, request.get_preemption_count(ClusterType.DECODE))
+
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_ATTN_PREEMPTION_COUNT
+        ].put(request.id, request.get_preemption_count(ClusterType.DECODE_ATTN))
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_HIDDEN_PREEMPTION_COUNT
+        ].put(request.id, request.get_round_class_preemption_count("hidden"))
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_FINAL_PREEMPTION_COUNT
+        ].put(request.id, request.get_round_class_preemption_count("final"))
+
+        # Complete tokens-at-preemption lists (request-level, raw data)
+        # Format: comma-separated integers (e.g., "257,15" for 2 preemptions)
+        # Empty string "" if never preempted in that cluster
+        tokens_at_preemption_decode = request.get_tokens_at_preemption(
+            ClusterType.DECODE
+        )
+        tokens_at_preemption_decode_str = (
+            ",".join(map(str, tokens_at_preemption_decode))
+            if tokens_at_preemption_decode
+            else ""
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_TOKENS_AT_PREEMPTION_ALL
+        ].put(request.id, tokens_at_preemption_decode_str)
+
+        tokens_at_preemption_decode_attn = request.get_tokens_at_preemption(
+            ClusterType.DECODE_ATTN
+        )
+        tokens_at_preemption_decode_attn_str = (
+            ",".join(map(str, tokens_at_preemption_decode_attn))
+            if tokens_at_preemption_decode_attn
+            else ""
+        )
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_ATTN_TOKENS_AT_PREEMPTION_ALL
+        ].put(request.id, tokens_at_preemption_decode_attn_str)
+
+        # Decode tokens-at-preemption statistics (aggregated summary)
+        # Aggregate tokens-at-preemption data from both DECODE and DECODE_ATTN clusters
+        # This provides a unified view of decode preemption behavior regardless of architecture mode
+        all_decode_tokens_at_preemption = []
+
+        # Collect from DECODE cluster (PD-disaggregation mode)
+        if tokens_at_preemption_decode:
+            all_decode_tokens_at_preemption.extend(tokens_at_preemption_decode)
+
+        # Collect from DECODE_ATTN cluster (PD+AF-disaggregation mode)
+        if tokens_at_preemption_decode_attn:
+            all_decode_tokens_at_preemption.extend(tokens_at_preemption_decode_attn)
+
+        # Calculate statistics from aggregated data
+        if all_decode_tokens_at_preemption:
+            mean_tokens = sum(all_decode_tokens_at_preemption) / len(
+                all_decode_tokens_at_preemption
+            )
+            max_tokens = max(all_decode_tokens_at_preemption)
+            min_tokens = min(all_decode_tokens_at_preemption)
+        else:
+            # No decode preemptions occurred for this request
+            mean_tokens = 0
+            max_tokens = 0
+            min_tokens = 0
+
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_TOKENS_AT_PREEMPTION_MEAN
+        ].put(request.id, mean_tokens)
+
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_TOKENS_AT_PREEMPTION_MAX
+        ].put(request.id, max_tokens)
+
+        self._request_metrics_histogram[
+            RequestMetricsHistogram.REQUEST_DECODE_TOKENS_AT_PREEMPTION_MIN
+        ].put(request.id, min_tokens)
+
+        # Collect system-level preemption statistics for aggregate metrics
+        # This data will be used to generate cluster-level statistics in system_metrics.json
+        total_preemptions = request.get_total_preemption_count()
+        if total_preemptions > 0:
+            # Track this request as preempted
+            self._preemption_statistics["preempted_request_ids"].add(request.id)
+            self._preemption_statistics["total_preemption_events"] += total_preemptions
+
+            # Collect per-cluster statistics
+            for cluster_type in [
+                ClusterType.MONOLITHIC,
+                ClusterType.PREFILL,
+                ClusterType.DECODE,
+                ClusterType.DECODE_ATTN,
+                ClusterType.DECODE_FFN,
+            ]:
+                cluster_preemption_count = request.get_preemption_count(cluster_type)
+                if cluster_preemption_count > 0:
+                    cluster_stats = self._preemption_statistics["by_cluster_type"][
+                        cluster_type
+                    ]
+                    cluster_stats["preemption_events"] += cluster_preemption_count
+                    cluster_stats["preempted_request_ids"].add(request.id)
+
+                    # Collect tokens-at-preemption for DECODE clusters
+                    if cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN]:
+                        tokens_list = request.get_tokens_at_preemption(cluster_type)
+                        cluster_stats["tokens_at_preemption"].extend(tokens_list)
+
+        # TTFT (Time To First Token) metrics
+        if request.is_prefill_complete:
+            ttft_value = self._get_ttft_export_value(request)
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.TTFT
+            ].put(request.id, ttft_value)
+
+            # TTFT breakdown components
+            if request.is_prefill_complete:
+                # Prefill execution time
+                prefill_exec_time = request.prefill_completed_at - request.scheduled_at
+                self._request_metrics_time_distributions[
+                    RequestMetricsTimeDistributions.TTFT_PREFILL_ONLY
+                ].put(request.id, prefill_exec_time)
+
+                # KV cache transfer time
+                self._request_metrics_time_distributions[
+                    RequestMetricsTimeDistributions.TTFT_KV_TRANSFER
+                ].put(request.id, request.kv_cache_transfer_time)
+
+                # Legacy TTFT residual kept for backward-compatible reporting.
+                # This is no longer the canonical first pure decode latency.
+                # Use decode_first_token_latency for the actual first pure decode
+                # token duration after TTFT re-anchoring.
+                ttft_decode_first = (
+                    ttft_value - prefill_exec_time - request.kv_cache_transfer_time
+                )
+                self._request_metrics_time_distributions[
+                    RequestMetricsTimeDistributions.TTFT_DECODE_FIRST_TOKEN
+                ].put(request.id, max(0, ttft_decode_first))  # Ensure non-negative
+
+        if request.num_decode_tokens > 1:
+            if request.first_decode_token_completed_at <= 0:
+                raise ValueError(
+                    f"Missing first token completion timestamp for request_id={request.id}"
+                )
+            if request.decode_first_token_completed_at <= 0:
+                raise ValueError(
+                    f"Missing decode-first-token completion timestamp for request_id={request.id}"
+                )
+            decode_first_token_latency = (
+                request.decode_first_token_completed_at - request.first_decode_token_completed_at
+            )
+            if decode_first_token_latency < -1e-9:
+                raise ValueError(
+                    "Negative decode-first-token latency for "
+                    f"request_id={request.id}: {decode_first_token_latency} "
+                    f"(first_decode_token_completed_at={request.first_decode_token_completed_at}, "
+                    f"decode_first_token_completed_at={request.decode_first_token_completed_at})"
+                )
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.DECODE_FIRST_TOKEN_LATENCY
+            ].put(request.id, max(0, decode_first_token_latency))
+
+        # TPOT (Time Per Output Token) metrics
+        if (
+            request.num_decode_tokens > 1
+            and request.first_decode_token_completed_at > 0
+        ):
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.TPOT
+            ].put(request.id, request.tpot)
+
+            # TPOT breakdown: computation vs transfer
+            # Total decode time after first token
+            total_decode_time_after_first = (
+                request.completed_at - request.first_decode_token_completed_at
+            )
+            # M2N transfer time per token (excluding first token)
+            tpot_transfer = request.total_m2n_transfer_time / (
+                request.num_decode_tokens - 1
+            )
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.TPOT_TRANSFER
+            ].put(request.id, tpot_transfer)
+
+            # Computation time per token = TPOT - transfer_per_token
+            tpot_computation = request.tpot - tpot_transfer
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.TPOT_COMPUTATION
+            ].put(request.id, max(0, tpot_computation))  # Ensure non-negative
+
+        # Transfer time metrics (disaggregated modes)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.TRANSFER_KV_CACHE
+        ].put(request.id, request.kv_cache_transfer_time)
+        if request.kv_cache_transfer_start_time is not None:
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.TRANSFER_KV_CACHE_REQUEST_START_TS
+            ].put(request.id, request.kv_cache_transfer_start_time)
+        if request.kv_cache_transfer_end_time is not None:
+            self._request_metrics_time_distributions[
+                RequestMetricsTimeDistributions.TRANSFER_KV_CACHE_REQUEST_END_TS
+            ].put(request.id, request.kv_cache_transfer_end_time)
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.TRANSFER_M2N_TOTAL
+        ].put(request.id, request.total_m2n_transfer_time)
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.TRANSFER_M2N_ATTN_TO_FFN
+        ].put(request.id, request.m2n_transfer_time_attn_to_ffn)
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.TRANSFER_M2N_FFN_TO_ATTN
+        ].put(request.id, request.m2n_transfer_time_ffn_to_attn)
+
+        # Cluster computation time metrics
+        # Get per-cluster execution times from request's cluster-specific tracking
+        # ClusterType is already imported at module level (line 51)
+
+        prefill_computation = sum(request._execution_time.get(ClusterType.PREFILL, []))
+        decode_attn_computation = sum(
+            request._execution_time.get(ClusterType.DECODE_ATTN, [])
+        )
+        decode_ffn_computation = sum(
+            request._execution_time.get(ClusterType.DECODE_FFN, [])
+        )
+        decode_computation = sum(
+            request._execution_time.get(ClusterType.DECODE, [])
+        )  # PD mode
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.CLUSTER_PREFILL_COMPUTATION
+        ].put(request.id, prefill_computation)
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.CLUSTER_DECODE_ATTN_COMPUTATION
+        ].put(request.id, decode_attn_computation)
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.CLUSTER_DECODE_FFN_COMPUTATION
+        ].put(request.id, decode_ffn_computation)
+
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.CLUSTER_DECODE_COMPUTATION
+        ].put(request.id, decode_computation)
+
+        # Decode phase E2E time metrics
+        # decode_e2e_time: Total decode phase time (from prefill completion to request completion)
+        decode_e2e_time = request.completed_at - request.prefill_completed_at
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.DECODE_E2E_TIME
+        ].put(request.id, decode_e2e_time)
+
+        # cluster_decode_attn_e2e_time: DECODE_ATTN cluster computation time only (PD+AF mode)
+        # This is the same as cluster_decode_attn_computation (pure computation, no transfer)
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.CLUSTER_DECODE_ATTN_E2E_TIME
+        ].put(request.id, decode_attn_computation)
+
+        # cluster_decode_ffn_e2e_time: request-level DECODE_FFN residence time (PD+AF mode)
+        # AUDIT decision: request-level DECODE_FFN timing should track residence time
+        # defined by (A→F transfer end) -> (F→A transfer start).
+        self._request_metrics_time_distributions[
+            RequestMetricsTimeDistributions.CLUSTER_DECODE_FFN_E2E_TIME
+        ].put(request.id, request.decode_ffn_residence_time)
+
+    def _update_per_token_execution_times(
+        self, time: float, request: Request, batch: Batch
+    ) -> None:
+        if not self._config.store_token_completion_metrics:
+            return
+
+        # if prefill has just finished in this iteration, update the prefill completion time series
+        prefill_completed_at = request._prefill_completed_at
+        if prefill_completed_at > 0 and time == prefill_completed_at:
+            self._token_completion_metrics_time_series[
+                TokenCompletionMetricsTimeSeries.PREFILL_COMPLETIONS
+            ].put(
+                time,
+                request.num_prefill_tokens,
+            )
+
+        # determine if this was prefill or decode token
+        if not request.has_started_decode or request.is_recomputing:
+            return
+
+        self._token_metrics_time_distribution[
+            TokenMetricsTimeDistribution.DECODE_TOKEN_EXECUTION_PLUS_PREMPTION_TIME
+        ].put(
+            time - batch.scheduled_at + request.latest_iteration_scheduling_delay,
+        )
+
+        self._token_completion_metrics_time_series[
+            TokenCompletionMetricsTimeSeries.DECODE_COMPLETIONS
+        ].put(time, 1)
+
+    def _push_metric(
+        self,
+        metric_name: OperationMetrics,
+        batch_id: int,
+        value: float,
+        cluster_type: ClusterType,
+    ) -> None:
+        if metric_name in OperationMetrics:
+            self._operation_metrics[cluster_type][metric_name].put(value)
+            self._operation_metrics_per_batch[cluster_type][metric_name].put(
+                batch_id, value
+            )
+        elif metric_name in CpuOperationMetrics:
+            self._cpu_operation_metrics[cluster_type][metric_name].put(value)
+            self._cpu_operation_metrics_per_batch[cluster_type][metric_name].put(
+                batch_id, value
+            )
+        elif metric_name in BatchMetricsTimeDistribution:
+            self._batch_metrics_time_distribution[cluster_type][metric_name].put(value)
+            self._batch_metrics_time_distribution_per_batch[cluster_type][
+                metric_name
+            ].put(batch_id, value)
+        elif metric_name in BatchMetricsCountDistribution:
+            self._batch_metrics_count_distribution[cluster_type][metric_name].put(value)
+            self._batch_metrics_count_distribution_per_batch[cluster_type][
+                metric_name
+            ].put(batch_id, value)
+        else:
+            raise ValueError(f"Invalid metric name {metric_name}")
+
+    @if_write_metrics
+    def on_batch_end(
+        self,
+        time: float,
+        batch: Batch,
+        replica_id: int,
+        memory_usage_percent: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None = None,
+    ) -> None:
+        if (
+            self._config.min_batch_index and batch.id < self._config.min_batch_index
+        ) or (self._config.max_batch_index and batch.id > self._config.max_batch_index):
+            return
+
+        for request in batch.completed_requests:
+            self._on_request_end(time, request)
+
+        if self._config.store_utilization_metrics:
+            replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
+            self._get_memory_usage_meter(
+                cluster_type, replica_index, replica_local_id
+            ).put(time, memory_usage_percent)
+
+        for request in batch.requests:
+            self._update_per_token_execution_times(time, request, batch)
+
+        if not self._config.store_batch_metrics:
+            return
+
+        self._push_metric(
+            BatchMetricsTimeDistribution.BATCH_EXECUTION_TIME,
+            batch.id,
+            time - batch.scheduled_at,
+            cluster_type,
+        )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_NUM_TOKENS,
+            batch.id,
+            batch.total_num_tokens,
+            cluster_type,
+        )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_NUM_PREFILL_TOKENS,
+            batch.id,
+            batch.num_prefill_tokens,
+            cluster_type,
+        )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_NUM_DECODE_TOKENS,
+            batch.id,
+            batch.num_decode_tokens,
+            cluster_type,
+        )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_SIZE, batch.id, batch.size, cluster_type
+        )
+
+    @if_write_metrics
+    def on_replica_schedule(
+        self,
+        time: float,
+        replica_id: int,
+        memory_usage_percent: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None = None,
+    ) -> None:
+        if not self._config.store_utilization_metrics:
+            return
+
+        # Convert global replica_id to cluster-relative index
+        replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
+        self._get_memory_usage_meter(
+            cluster_type, replica_index, replica_local_id
+        ).put(
+            time, memory_usage_percent
+        )
+
+    def _get_cluster_replica_index(
+        self, cluster_type: ClusterType, replica_id: int
+    ) -> int:
+        """
+        Convert global replica_id to cluster-relative index.
+
+        In disaggregated systems, replica_ids are globally unique across clusters,
+        but metrics arrays are indexed by cluster-relative positions (0, 1, 2, ...).
+
+        Args:
+            cluster_type: The cluster type
+            replica_id: Global replica ID
+
+        Returns:
+            Cluster-relative replica index (0-based)
+        """
+        # Get all replica IDs for this cluster type
+        cluster_config = self._cluster_configs[cluster_type]
+
+        # For now, use a simple mapping: assume replicas are assigned sequentially
+        # within each cluster starting from 0
+        # This works for the current disaggregated setup where each cluster has 1 replica
+        num_replicas = cluster_config.num_replicas
+
+        # Simple approach: use modulo to map global replica_id to cluster-relative index
+        # This assumes replica_ids are assigned in a predictable pattern
+        replica_index = 0  # For single-replica clusters, always use index 0
+
+        # Validate the index is within bounds
+        if replica_index >= num_replicas:
+            raise ValueError(
+                f"Replica index {replica_index} out of bounds for cluster {cluster_type.name} "
+                f"with {num_replicas} replicas. Global replica_id: {replica_id}"
+            )
+
+        return replica_index
+
+    def _get_memory_usage_meter(
+        self,
+        cluster_type: ClusterType,
+        replica_index: int,
+        replica_local_id: int | None,
+    ) -> SeriesAverageMeter:
+        if replica_local_id is None:
+            return self._replica_full_stage_memory_usage[cluster_type][replica_index]
+
+        lane_meters = self._replica_memory_usage[cluster_type][replica_index]
+        if replica_local_id < 0 or replica_local_id >= len(lane_meters):
+            raise ValueError(
+                f"Invalid replica-local id for utilization metrics: "
+                f"cluster={cluster_type.name} replica_index={replica_index} "
+                f"replica_local_id={replica_local_id} available={len(lane_meters)}"
+            )
+        return lane_meters[replica_local_id]
+
+    def _get_stage_utilization_meters(
+        self,
+        cluster_type: ClusterType,
+        replica_index: int,
+        stage_id: int,
+        replica_local_id: int | None,
+    ) -> tuple[SeriesAverageMeter, SeriesAverageMeter]:
+        if replica_local_id is None:
+            busy_meters = self._replica_full_stage_busy_time[cluster_type][
+                replica_index
+            ]
+            mfu_meters = self._replica_full_stage_mfu[cluster_type][replica_index]
+        else:
+            busy_meters = self._replica_busy_time[cluster_type][replica_index][
+                replica_local_id
+            ]
+            mfu_meters = self._replica_mfu[cluster_type][replica_index][
+                replica_local_id
+            ]
+
+        if stage_id < 0 or stage_id >= len(busy_meters):
+            scope = "full-stage" if replica_local_id is None else "replica-local"
+            raise ValueError(
+                f"Invalid stage id for {scope} utilization metrics: "
+                f"cluster={cluster_type.name} replica={replica_index} "
+                f"stage={stage_id} available_stages={len(busy_meters)}"
+            )
+        return busy_meters[stage_id], mfu_meters[stage_id]
+
+    def _push_stage_layer_operation_metrics(
+        self,
+        *,
+        stage_execution_time: StageExecutionTime,
+        batch_id: int,
+        cluster_type: ClusterType,
+        moe_tp_enabled: bool,
+        ep_enabled: bool,
+        use_profile_ep_alltoall: bool,
+        use_ep_alltoall_dispatch_combine: bool,
+    ) -> None:
+        """Push operation metrics from each real layer exactly once."""
+
+        for layer in stage_execution_time.layer_execution_times:
+            def push(metric: OperationMetrics, value: float) -> None:
+                self._push_metric(metric, batch_id, value, cluster_type)
+
+            for op_name, duration_ms in _iter_layer_attention_times(layer, skip_zero=False):
+                push(OperationMetrics(op_name), duration_ms)
+            push(OperationMetrics.ATTN_TENSOR_PARALLEL_ALLREDUCE, layer.attention_all_reduce_time)
+            for name, duration_ms in _iter_source_tp_collective_times(layer):
+                push(OperationMetrics(name), duration_ms)
+
+            push(OperationMetrics.INPUT_LAYERNORM, layer.attn_norm_time)
+            push(OperationMetrics.POST_ATTENTION_LAYERNORM, layer.mlp_norm_time)
+            push(OperationMetrics.ADD, layer.add_time)
+            push(OperationMetrics.ADD_ATTN_RESIDUAL, layer.add_attn_residual_time)
+            push(OperationMetrics.ADD_FFN_RESIDUAL, layer.add_ffn_residual_time)
+
+            if layer._is_moe:
+                push(
+                    OperationMetrics.MOE_TENSOR_PARALLEL_ALLGATHER,
+                    layer.moe_tensor_parallel_allgather_time,
+                )
+                if moe_tp_enabled:
+                    push(
+                        OperationMetrics.MOE_TENSOR_PARALLEL_ALLREDUCE,
+                        layer.mlp_all_reduce_time,
+                    )
+                for op_name, metric_value in _iter_family_execution_times(
+                    MOE_FAMILY,
+                    layer,
+                ):
+                    push(OperationMetrics(op_name), metric_value)
+                if ep_enabled and (
+                    use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine
+                ):
+                    push(
+                        OperationMetrics.EXPERT_PARALLEL_ALLTOALL_DISPATCH,
+                        layer.get_single_layer_moe_dispatch_time(),
+                    )
+                    push(
+                        OperationMetrics.EXPERT_PARALLEL_ALLTOALL_COMBINE,
+                        layer.get_single_layer_moe_combine_time(),
+                    )
+                elif ep_enabled:
+                    push(
+                        OperationMetrics.EXPERT_PARALLEL_ALLREDUCE,
+                        layer.expert_parallel_communication_time,
+                    )
+                for op_name, metric_value in _iter_family_execution_times(
+                    SHARE_EXPERT_FAMILY,
+                    layer,
+                ):
+                    push(OperationMetrics(op_name), metric_value)
+                push(
+                    OperationMetrics.SHARE_EXPERT_TENSOR_PARALLEL_ALLREDUCE,
+                    layer.share_expert_tensor_parallel_allreduce_time,
+                )
+            else:
+                push(OperationMetrics.MLP_UP_PROJ, layer.mlp_layer_up_proj_execution_time)
+                push(OperationMetrics.MLP_ACTIVATION, layer.mlp_layer_act_execution_time)
+                push(OperationMetrics.MLP_DOWN_PROJ, layer.mlp_layer_down_proj_execution_time)
+                push(OperationMetrics.MLP_DOWN_PROJ_ALL_REDUCE, layer.mlp_all_reduce_time)
+
+    def on_replica_stage_schedule(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch_stage: BatchStage,
+        execution_time: ExecutionTime,
+        cluster_type: ClusterType,
+        replica_local_id: int | None = None,
+    ) -> None:
+        if (
+            self._config.write_metrics
+            and batch_stage is not None
+            and cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN}
+            and stage_id == 0
+        ):
+            self._bind_pending_kv_transfer_target(
+                time=time,
+                batch_stage=batch_stage,
+                cluster_type=cluster_type,
+                replica_id=replica_id,
+                replica_local_id=replica_local_id,
+            )
+
+        # Emit op-level traces if enabled (independent of write_metrics flag)
+        # This must be called FIRST because it uses the raw simulation time,
+        # and trace events should capture the start time of the stage execution.
+        # Note: Op-level tracing is controlled by enable_op_level_tracing, NOT write_metrics
+        if execution_time is not None:
+            request_ids = (
+                [str(rid) for rid in batch_stage.request_ids] if batch_stage else []
+            )
+            self._emit_op_level_traces(
+                time=time,
+                batch_stage=batch_stage,
+                replica_id=replica_id,
+                execution_time=execution_time,
+                cluster_type=cluster_type,
+                request_ids=request_ids,
+            )
+
+        if (
+            self._config.write_metrics
+            and self._should_capture_frontier_stage_batch_ledger()
+            and execution_time is not None
+            and batch_stage is not None
+        ):
+            ledger_row_id = id(batch_stage)
+            ledger_row = self._build_frontier_stage_batch_ledger_capture_row(
+                batch_stage=batch_stage,
+                execution_time=execution_time,
+                replica_id=replica_id,
+                stage_id=stage_id,
+                cluster_type=cluster_type,
+                replica_local_id=replica_local_id,
+                stage_end_time=time + batch_stage.execution_time,
+            )
+            ledger_key = self._frontier_stage_batch_ledger_key(
+                batch_id=batch_stage._batch_id,
+                replica_id=replica_id,
+                stage_id=stage_id,
+                cluster_type=cluster_type,
+                replica_local_id=replica_local_id,
+            )
+            self._pending_frontier_stage_batch_ledger_rows[ledger_row_id] = ledger_row
+            self._pending_frontier_stage_batch_ledger_row_keys[ledger_key] = ledger_row_id
+            self._pending_frontier_stage_batch_ledger_rows_by_key[ledger_key] = ledger_row
+
+        if not self._config.write_metrics:
+            return
+
+        if self._config.store_utilization_metrics:
+            replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
+            busy_meter, mfu_meter = self._get_stage_utilization_meters(
+                cluster_type,
+                replica_index,
+                stage_id,
+                replica_local_id,
+            )
+            busy_meter.put(time, 100)
+            mfu = self._mfu_calculator[cluster_type].get_mfu(batch_stage)
+            mfu_meter.put(time, mfu)
+
+        if not self._config.store_operation_metrics:
+            return
+
+        cluster_config = self._cluster_configs.get(cluster_type)
+        moe_tp_enabled = False
+        ep_enabled = False
+        use_profile_ep_alltoall = False
+        use_ep_alltoall_dispatch_combine = False
+        if isinstance(execution_time, StageExecutionTime):
+            stage_has_moe = any(
+                layer._is_moe for layer in execution_time.layer_execution_times
+            )
+        else:
+            stage_has_moe = execution_time._is_moe
+        if stage_has_moe:
+            if cluster_config is None:
+                raise ValueError(f"Cluster config not found for {cluster_type}")
+            moe_tp_enabled = cluster_config.replica_config.moe_tensor_parallel_size > 1
+            ep_enabled = cluster_config.replica_config.moe_expert_parallel_size > 1
+            capability_context = (
+                CapabilityContext.from_replica_config(
+                    cluster_type=cluster_type,
+                    replica_config=cluster_config.replica_config,
+                )
+                if getattr(cluster_config.replica_config, "model_config", None)
+                is not None
+                else None
+            )
+            use_profile_ep_alltoall = bool(
+                capability_context is not None
+                and capability_context.uses_profile_ep_alltoall
+            )
+            use_ep_alltoall_dispatch_combine = (
+                self._use_ep_alltoall_dispatch_combine(
+                    cluster_type=cluster_type,
+                    batch_stage=batch_stage,
+                )
+                )
+
+        batch_id = batch_stage._batch_id
+        if isinstance(execution_time, StageExecutionTime):
+            self._push_stage_layer_operation_metrics(
+                stage_execution_time=execution_time,
+                batch_id=batch_id,
+                cluster_type=cluster_type,
+                moe_tp_enabled=moe_tp_enabled,
+                ep_enabled=ep_enabled,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
+                use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+            )
+            return
+
+        dense_attention_times = _dense_attention_op_times_by_role(
+            execution_time,
+            skip_zero=False,
+        )
+        for _ in range(execution_time.num_layers):
+            self._push_metric(
+                OperationMetrics.MLP_UP_PROJ,
+                batch_id,
+                execution_time.mlp_layer_up_proj_execution_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.MLP_ACTIVATION,
+                batch_id,
+                execution_time.mlp_layer_act_execution_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.MLP_DOWN_PROJ,
+                batch_id,
+                execution_time.mlp_layer_down_proj_execution_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.MLP_DOWN_PROJ_ALL_REDUCE,
+                batch_id,
+                execution_time.mlp_all_reduce_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ATTN_PRE_PROJ,
+                batch_id,
+                execution_time.attention_pre_proj_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ATTN_POST_PROJ,
+                batch_id,
+                execution_time.attention_post_proj_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ATTN_POST_PROJ_ALL_REDUCE,
+                batch_id,
+                execution_time.attention_all_reduce_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ATTN_TENSOR_PARALLEL_ALLREDUCE,
+                batch_id,
+                execution_time.attention_all_reduce_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.MOE_TENSOR_PARALLEL_ALLGATHER,
+                batch_id,
+                execution_time.moe_tensor_parallel_allgather_time,
+                cluster_type,
+            )
+            if moe_tp_enabled:
+                self._push_metric(
+                    OperationMetrics.MOE_TENSOR_PARALLEL_ALLREDUCE,
+                    batch_id,
+                    execution_time.mlp_all_reduce_time,
+                    cluster_type,
+                )
+            self._push_metric(
+                OperationMetrics.SHARE_EXPERT_TENSOR_PARALLEL_ALLREDUCE,
+                batch_id,
+                execution_time.share_expert_tensor_parallel_allreduce_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.INPUT_LAYERNORM,
+                batch_id,
+                execution_time.attn_norm_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.POST_ATTENTION_LAYERNORM,
+                batch_id,
+                execution_time.mlp_norm_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ADD,
+                batch_id,
+                execution_time.add_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ADD_ATTN_RESIDUAL,
+                batch_id,
+                execution_time.add_attn_residual_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ADD_FFN_RESIDUAL,
+                batch_id,
+                execution_time.add_ffn_residual_time,
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ATTN_PREFILL,
+                batch_id,
+                dense_attention_times[AttentionOperatorRole.PREFILL_KERNEL],
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ATTN_DECODE,
+                batch_id,
+                dense_attention_times[AttentionOperatorRole.DECODE_KERNEL],
+                cluster_type,
+            )
+            self._push_metric(
+                OperationMetrics.ATTN_KV_CACHE_SAVE,
+                batch_id,
+                dense_attention_times[AttentionOperatorRole.CACHE_WRITE],
+                cluster_type,
+            )
+            for metric_name, metric_value in _iter_mla_attention_operation_metrics(
+                execution_time
+            ):
+                self._push_metric(metric_name, batch_id, metric_value, cluster_type)
+            self._push_metric(
+                OperationMetrics.ATTN_ROPE,
+                batch_id,
+                execution_time.attention_rope_execution_time,
+                cluster_type,
+            )
+            if ep_enabled and (
+                use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine
+            ):
+                self._push_metric(
+                    OperationMetrics.EXPERT_PARALLEL_ALLTOALL_DISPATCH,
+                    batch_id,
+                    execution_time.get_single_layer_moe_dispatch_time(),
+                    cluster_type,
+                )
+            for op_name, metric_value in _iter_family_execution_times(
+                MOE_FAMILY,
+                execution_time,
+            ):
+                self._push_metric(
+                    OperationMetrics(op_name),
+                    batch_id,
+                    metric_value,
+                    cluster_type,
+                )
+            if ep_enabled and (
+                use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine
+            ):
+                self._push_metric(
+                    OperationMetrics.EXPERT_PARALLEL_ALLTOALL_COMBINE,
+                    batch_id,
+                    execution_time.get_single_layer_moe_combine_time(),
+                    cluster_type,
+                )
+            for op_name, metric_value in _iter_family_execution_times(
+                SHARE_EXPERT_FAMILY,
+                execution_time,
+            ):
+                self._push_metric(
+                    OperationMetrics(op_name),
+                    batch_id,
+                    metric_value,
+                    cluster_type,
+                )
+
+    @if_write_metrics
+    def on_batch_stage_end(
+        self,
+        batch_stage: BatchStage,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None = None,
+    ) -> None:
+        if self._config.store_utilization_metrics:
+            replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
+            busy_meter, mfu_meter = self._get_stage_utilization_meters(
+                cluster_type,
+                replica_index,
+                stage_id,
+                replica_local_id,
+            )
+            busy_meter.put(time, 0)
+            mfu_meter.put(time, 0)
+
+        ledger_row = self._pending_frontier_stage_batch_ledger_rows.pop(id(batch_stage), None)
+        if ledger_row is not None:
+            self._pending_frontier_stage_batch_ledger_row_keys.pop(
+                ledger_key := self._frontier_stage_batch_ledger_key(
+                    batch_id=ledger_row["batch_id"],
+                    replica_id=ledger_row["replica_id"],
+                    stage_id=ledger_row["stage_id"],
+                    cluster_type=ledger_row["cluster_type"],
+                    replica_local_id=ledger_row.get("replica_local_id"),
+                ),
+                None,
+            )
+            self._pending_frontier_stage_batch_ledger_rows_by_key.pop(ledger_key, None)
+            ledger_row["stage_end_ts"] = time
+            self._complete_frontier_stage_batch_ledger_row(ledger_row)
+
+    def _build_frontier_stage_batch_component_ledger(
+        self,
+        execution_time: ExecutionTime,
+    ) -> dict[str, float]:
+        if (isinstance(execution_time, StageExecutionTime)
+                and set(execution_time.attention_family_ids) == {"deepseek_v4_attention"}
+                or getattr(execution_time, "attention_family_id", None) == "deepseek_v4_attention"):
+            from frontier.execution_time_predictor.deepseek_v4 import component_ledger
+
+            return {name: _round_ledger_ms(value) for name, value in component_ledger(execution_time).items()}
+        if isinstance(execution_time, StageExecutionTime):
+            owner_only_names = execution_time.stage_owned_fields
+            component_ledger: dict[str, float] = {}
+            for layer in execution_time.layer_execution_times:
+                layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
+                family = get_attention_family(layer.attention_family_id)
+                # The historical CSV uses public scalar field names for dense
+                # and MLA operators. Newly registered operators keep their
+                # canonical names; remove reused legacy scalar slots first.
+                component_public_names = {
+                    "attention_layer_pre_proj_execution_time": "attention_pre_proj_time",
+                    "attention_layer_post_proj_execution_time": "attention_post_proj_time",
+                }
+                for operator, duration_ms in get_attention_trace_op_times(
+                    layer, family, skip_zero=False,
+                    allow_structural=family.structural_execution_enabled,
+                ):
+                    legacy_name = _ATTENTION_LEDGER_FIELD_BY_OPERATOR.get(operator.name)
+                    if legacy_name is None:
+                        old_name = component_public_names.get(operator.execution_time_attr, operator.execution_time_attr)
+                        layer_ledger.pop(old_name, None)
+                        legacy_name = operator.name
+                    layer_ledger[legacy_name] = _round_ledger_ms(duration_ms)
+                for name, value in layer_ledger.items():
+                    if name in owner_only_names:
+                        continue
+                    component_ledger[name] = component_ledger.get(name, 0.0) + float(value)
+
+            owner_ledger = self._build_frontier_stage_batch_component_ledger(
+                execution_time.stage_execution_time
+            )
+            for name in owner_only_names & owner_ledger.keys():
+                component_ledger[name] = float(owner_ledger[name])
+            return {
+                name: _round_ledger_ms(value)
+                for name, value in component_ledger.items()
+            }
+
+        dense_attention_times = _dense_attention_op_times_by_role(
+            execution_time,
+            skip_zero=False,
+        )
+        mla_attention_times = dict(_iter_mla_attention_op_times(execution_time))
+        component_ledger = {
+            "attention_prefill_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.PREFILL_KERNEL]
+            ),
+            "attention_decode_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.DECODE_KERNEL]
+            ),
+            "attention_pre_proj_time": _round_ledger_ms(execution_time.attention_pre_proj_time),
+            "attention_post_proj_time": _round_ledger_ms(
+                execution_time.attention_post_proj_time
+            ),
+            "attention_kv_cache_save_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.CACHE_WRITE]
+            ),
+            "attention_rope_execution_time": _round_ledger_ms(
+                execution_time.attention_rope_execution_time
+            ),
+            "attn_mla_kv_cache_save_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_kv_cache_save"]
+            ),
+            "attn_mla_prefill_kv_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill_kv_up_proj"]
+            ),
+            "attn_mla_prefill_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill"]
+            ),
+            "attn_mla_decode_q_latent_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode_q_latent_proj"]
+            ),
+            "attn_mla_decode_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode"]
+            ),
+            "attn_mla_v_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_v_up_proj"]
+            ),
+            "attn_norm_time": _round_ledger_ms(execution_time.attn_norm_time),
+            "mlp_layer_up_proj_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_up_proj_execution_time
+            ),
+            "mlp_layer_act_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_act_execution_time
+            ),
+            "mlp_layer_down_proj_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_down_proj_execution_time
+            ),
+            "mlp_norm_time": _round_ledger_ms(execution_time.mlp_norm_time),
+            "attention_all_reduce_time": _round_ledger_ms(execution_time.attention_all_reduce_time),
+            "mlp_all_reduce_time": _round_ledger_ms(execution_time.mlp_all_reduce_time),
+            "moe_tensor_parallel_allgather_time": _round_ledger_ms(
+                execution_time.moe_tensor_parallel_allgather_time
+            ),
+            "share_expert_tensor_parallel_allreduce_time": _round_ledger_ms(
+                execution_time.share_expert_tensor_parallel_allreduce_time
+            ),
+            "dp_input_allreduce_time": _round_ledger_ms(execution_time.dp_input_allreduce_time),
+            "dp_output_allreduce_time": _round_ledger_ms(execution_time.dp_output_allreduce_time),
+            "pipeline_parallel_communication_time": _round_ledger_ms(
+                execution_time.pipeline_parallel_communication_time
+            ),
+            "expert_parallel_communication_time": _round_ledger_ms(
+                execution_time.expert_parallel_communication_time
+            ),
+            "moe_gating_linear_time": _round_ledger_ms(execution_time.moe_gating_linear_time),
+            "moe_gating_routing_topk_time": _round_ledger_ms(
+                execution_time.moe_gating_routing_topk_time
+            ),
+            "moe_shuffling_time": _round_ledger_ms(execution_time.moe_shuffling_time),
+            "moe_grouped_gemm_time": _round_ledger_ms(execution_time.moe_grouped_gemm_time),
+            "share_expert_up_proj_time": _round_ledger_ms(
+                execution_time.share_expert_up_proj_time
+            ),
+            "share_expert_act_time": _round_ledger_ms(execution_time.share_expert_act_time),
+            "share_expert_down_proj_time": _round_ledger_ms(
+                execution_time.share_expert_down_proj_time
+            ),
+            "add_attn_residual_time": _round_ledger_ms(
+                execution_time.add_attn_residual_time
+            ),
+            "add_ffn_residual_time": _round_ledger_ms(execution_time.add_ffn_residual_time),
+            "schedule_time": _round_ledger_ms(execution_time.schedule_time),
+            "sampler_e2e_time": _round_ledger_ms(execution_time.sampler_e2e_time),
+            "prepare_inputs_e2e_time": _round_ledger_ms(
+                execution_time.prepare_inputs_e2e_time
+            ),
+            "pp_producer_send_path_runtime_time": _round_ledger_ms(
+                execution_time.pp_producer_send_path_runtime_time
+            ),
+            "pp_receiver_head_runtime_time": _round_ledger_ms(
+                execution_time.pp_receiver_head_runtime_time
+            ),
+            "pp_prefill_consumer_active_runtime_time": _round_ledger_ms(
+                execution_time.pp_prefill_consumer_active_runtime_time
+            ),
+            "pp_stage_boundary_residual_runtime_time": _round_ledger_ms(
+                execution_time.pp_stage_boundary_residual_runtime_time
+            ),
+            "process_model_outputs_time": _round_ledger_ms(
+                execution_time.process_model_outputs_time
+            ),
+            "ray_comm_time": _round_ledger_ms(execution_time.ray_comm_time),
+            "decode_draft_proposer_time": _round_ledger_ms(
+                execution_time.decode_draft_proposer_time
+            ),
+            "mtp_terminal_overshoot_time": _round_ledger_ms(
+                execution_time.mtp_terminal_overshoot_time
+            ),
+        }
+        component_ledger.update({
+            name: _round_ledger_ms(duration_ms)
+            for name, duration_ms in _iter_source_tp_collective_times(execution_time)
+        })
+        if execution_time.has_kernel_gap:
+            component_ledger["kernel_gap_time"] = _round_ledger_ms(execution_time.kernel_gap_time)
+        if global_vars.get_kv_connector() != "none":
+            component_ledger[DENSE_ATTENTION_KV_CACHE_EXTRACT.execution_time_attr] = _round_ledger_ms(
+                execution_time.attention_kv_cache_extract_execution_time
+            )
+        return component_ledger
+
+    def _build_frontier_stage_batch_diagnostic_component_ledger(
+        self,
+        execution_time: ExecutionTime,
+    ) -> dict[str, float]:
+        return {
+            "pp_stage_boundary_handoff_time": _round_ledger_ms(
+                execution_time.pp_stage_boundary_handoff_time
+            ),
+        }
+
+    def _frontier_stage_batch_ledger_key(
+        self,
+        *,
+        batch_id: int,
+        replica_id: int,
+        stage_id: int,
+        cluster_type: ClusterType | str,
+        replica_local_id: int | None,
+    ) -> tuple[str, int, int | None, int, int]:
+        cluster_type_name = (
+            cluster_type.name if isinstance(cluster_type, ClusterType) else str(cluster_type)
+        )
+        return (
+            cluster_type_name,
+            int(replica_id),
+            None if replica_local_id is None else int(replica_local_id),
+            int(stage_id),
+            int(batch_id),
+        )
+
+    def flush_frontier_stage_batch_ledger_row(
+        self,
+        *,
+        time: float,
+        batch_id: int,
+        replica_id: int,
+        stage_id: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+        completion_source: str = "manual_flush",
+    ) -> None:
+        if (
+            not self._config.write_metrics
+            or not self._should_capture_frontier_stage_batch_ledger()
+        ):
+            return
+
+        ledger_key = self._frontier_stage_batch_ledger_key(
+            batch_id=batch_id,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            cluster_type=cluster_type,
+            replica_local_id=replica_local_id,
+        )
+        ledger_row = self._pending_frontier_stage_batch_ledger_rows_by_key.pop(
+            ledger_key, None
+        )
+        if ledger_row is None:
+            raise ValueError(
+                "Missing pending Frontier stage-batch ledger row for manual flush: "
+                f"cluster={cluster_type.name}, replica_id={replica_id}, "
+                f"replica_local_id={replica_local_id}, "
+                f"stage_id={stage_id}, batch_id={batch_id}"
+            )
+        ledger_row_id = self._pending_frontier_stage_batch_ledger_row_keys.pop(
+            ledger_key, None
+        )
+        if (
+            ledger_row_id is not None
+            and self._pending_frontier_stage_batch_ledger_rows.get(ledger_row_id)
+            is ledger_row
+        ):
+            self._pending_frontier_stage_batch_ledger_rows.pop(ledger_row_id, None)
+
+        ledger_row["stage_completion_observed_ts"] = float(time)
+        ledger_row["stage_completion_observed_source"] = completion_source
+        ledger_row["observed_stage_duration_ms"] = _round_ledger_ms(
+            (float(time) - float(ledger_row["stage_start_ts"])) * 1e3
+        )
+        self._complete_frontier_stage_batch_ledger_row(ledger_row)
+
+    def _build_frontier_stage_batch_ledger_row(
+        self,
+        *,
+        batch_stage: BatchStage,
+        execution_time: ExecutionTime,
+        replica_id: int,
+        stage_id: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+        stage_end_time: float,
+    ) -> dict[str, Any]:
+        batch_stage_id = self._exact_batch_stage_id(batch_stage)
+        component_ledger_ms = self._build_frontier_stage_batch_component_ledger(execution_time)
+        diagnostic_component_ledger_ms = (
+            self._build_frontier_stage_batch_diagnostic_component_ledger(execution_time)
+        )
+        total_time_ms = _round_ledger_ms(execution_time.total_time * 1e3)
+        component_sum_ms = _round_ledger_ms(sum(component_ledger_ms.values()))
+        if abs(component_sum_ms - total_time_ms) > 1e-6:
+            raise ValueError(
+                "Frontier stage-batch component ledger must sum to total_time_ms: "
+                f"component_sum_ms={component_sum_ms}, total_time_ms={total_time_ms}, "
+                f"batch_id={batch_stage._batch_id}, stage_id={stage_id}"
+            )
+        diagnostic_total_time_ms = _round_ledger_ms(execution_time.diagnostic_total_time_ms)
+        diagnostic_component_sum_ms = _round_ledger_ms(
+            total_time_ms + sum(diagnostic_component_ledger_ms.values())
+        )
+        if abs(diagnostic_component_sum_ms - diagnostic_total_time_ms) > 1e-6:
+            raise ValueError(
+                "Frontier stage-batch diagnostic ledger must sum to diagnostic_total_time_ms: "
+                f"diagnostic_component_sum_ms={diagnostic_component_sum_ms}, "
+                f"diagnostic_total_time_ms={diagnostic_total_time_ms}, "
+                f"batch_id={batch_stage._batch_id}, stage_id={stage_id}"
+            )
+
+        row = {
+            "batch_id": int(batch_stage._batch_id),
+            "batch_stage_id": batch_stage_id,
+            "stage_id": int(stage_id),
+            "cluster_type": cluster_type.name,
+            "replica_id": int(replica_id),
+            "execution_scope": self._get_frontier_stage_execution_scope(
+                cluster_type,
+                replica_local_id,
+            ),
+            "replica_local_id": (
+                None if replica_local_id is None else int(replica_local_id)
+            ),
+            "request_ids": [str(request_id) for request_id in batch_stage.request_ids],
+            "request_runtime_epochs": [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.request_runtime_epochs
+            ],
+            "request_num_tokens": [int(token_count) for token_count in batch_stage.num_tokens],
+            "stage_start_ts": float(batch_stage.scheduled_at),
+            "stage_end_ts": float(stage_end_time),
+            "execution_time": {
+                "total_time_ms": total_time_ms,
+                "diagnostic_total_time_ms": diagnostic_total_time_ms,
+                "model_time_ms": _round_ledger_ms(execution_time.model_time_ms),
+                "component_ledger_ms": component_ledger_ms,
+                "diagnostic_component_ledger_ms": diagnostic_component_ledger_ms,
+            },
+        }
+        runtime_identity = getattr(batch_stage, "runtime_identity", None)
+        if runtime_identity is not None:
+            row.update(runtime_identity)
+        request_num_prefill_tokens = batch_stage.request_num_prefill_tokens
+        if request_num_prefill_tokens is not None:
+            row["request_num_prefill_tokens"] = [
+                int(token_count) for token_count in request_num_prefill_tokens
+            ]
+        if hasattr(batch_stage, "source_batch_ids"):
+            row["source_batch_ids"] = [
+                int(batch_id) for batch_id in batch_stage.source_batch_ids
+            ]
+        if hasattr(batch_stage, "source_request_ids"):
+            row["source_request_ids"] = [
+                str(request_id) for request_id in batch_stage.source_request_ids
+            ]
+        if hasattr(batch_stage, "source_request_runtime_epochs"):
+            row["source_request_runtime_epochs"] = [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.source_request_runtime_epochs
+            ]
+        if hasattr(batch_stage, "source_request_num_tokens"):
+            row["source_request_num_tokens"] = [
+                int(token_count)
+                for token_count in batch_stage.source_request_num_tokens
+            ]
+        if hasattr(batch_stage, "source_batch_arrival_times"):
+            row["source_batch_arrival_times"] = [
+                float(arrival_time)
+                for arrival_time in batch_stage.source_batch_arrival_times
+            ]
+        if hasattr(batch_stage, "source_group_ready_ts"):
+            row["source_group_ready_ts"] = float(batch_stage.source_group_ready_ts)
+        if replica_local_id is not None and hasattr(batch_stage, "ep_id"):
+            row["ep_id"] = int(batch_stage.ep_id)
+        lane_workload = getattr(batch_stage, "lane_workload", None)
+        if lane_workload is not None:
+            row["per_expert_tokens"] = {
+                str(expert_id): int(token_count)
+                for expert_id, token_count in lane_workload.per_expert_tokens.items()
+            }
+        return row
+
+    def _build_frontier_stage_batch_ledger_capture_row(
+        self,
+        *,
+        batch_stage: BatchStage,
+        execution_time: ExecutionTime,
+        replica_id: int,
+        stage_id: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+        stage_end_time: float,
+    ) -> dict[str, Any]:
+        if getattr(self._config, "store_frontier_stage_batch_ledger", True):
+            return self._build_frontier_stage_batch_ledger_row(
+                batch_stage=batch_stage,
+                execution_time=execution_time,
+                replica_id=replica_id,
+                stage_id=stage_id,
+                cluster_type=cluster_type,
+                replica_local_id=replica_local_id,
+                stage_end_time=stage_end_time,
+            )
+        return self._build_frontier_stage_batch_ledger_summary_row(
+            batch_stage=batch_stage,
+            execution_time=execution_time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            cluster_type=cluster_type,
+            replica_local_id=replica_local_id,
+            stage_end_time=stage_end_time,
+        )
+
+    @staticmethod
+    def _exact_batch_stage_id(batch_stage: BatchStage) -> int:
+        batch_stage_id = getattr(batch_stage, "id", None)
+        if type(batch_stage_id) is not int or batch_stage_id < 0:
+            raise ValueError(
+                "Frontier stage-batch ledger requires a non-negative "
+                f"batch_stage_id, got {batch_stage_id!r}"
+            )
+        return batch_stage_id
+
+    def _build_frontier_stage_batch_ledger_summary_row(
+        self,
+        *,
+        batch_stage: BatchStage,
+        execution_time: ExecutionTime,
+        replica_id: int,
+        stage_id: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+        stage_end_time: float,
+    ) -> dict[str, Any]:
+        row = {
+            "batch_id": int(batch_stage._batch_id),
+            "batch_stage_id": self._exact_batch_stage_id(batch_stage),
+            "stage_id": int(stage_id),
+            "cluster_type": cluster_type.name,
+            "replica_id": int(replica_id),
+            "execution_scope": self._get_frontier_stage_execution_scope(
+                cluster_type,
+                replica_local_id,
+            ),
+            "replica_local_id": (
+                None if replica_local_id is None else int(replica_local_id)
+            ),
+            "stage_start_ts": float(batch_stage.scheduled_at),
+            "stage_end_ts": float(stage_end_time),
+            "execution_time": {
+                "total_time_ms": _round_ledger_ms(execution_time.total_time * 1e3),
+            },
+        }
+        runtime_identity = getattr(batch_stage, "runtime_identity", None)
+        if runtime_identity is not None:
+            row.update(runtime_identity)
+        if hasattr(batch_stage, "source_batch_ids"):
+            row["source_batch_ids"] = [
+                int(batch_id) for batch_id in batch_stage.source_batch_ids
+            ]
+        if hasattr(batch_stage, "source_request_ids"):
+            row["source_request_ids"] = [
+                str(request_id) for request_id in batch_stage.source_request_ids
+            ]
+        if hasattr(batch_stage, "source_request_runtime_epochs"):
+            row["source_request_runtime_epochs"] = [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.source_request_runtime_epochs
+            ]
+        if hasattr(batch_stage, "source_batch_arrival_times"):
+            row["source_batch_arrival_times"] = [
+                float(arrival_time)
+                for arrival_time in batch_stage.source_batch_arrival_times
+            ]
+        if hasattr(batch_stage, "source_group_ready_ts"):
+            row["source_group_ready_ts"] = float(batch_stage.source_group_ready_ts)
+        return row
+
+    def _should_capture_frontier_stage_batch_ledger(self) -> bool:
+        return bool(
+            getattr(self._config, "store_frontier_stage_batch_ledger", True)
+            or getattr(self._config, "store_frontier_stage_batch_ledger_summary", False)
+        )
+
+    def _complete_frontier_stage_batch_ledger_row(self, row: dict[str, Any]) -> None:
+        if getattr(self._config, "store_frontier_stage_batch_ledger_summary", False):
+            self._update_frontier_stage_batch_ledger_summary(row)
+        if getattr(self._config, "store_frontier_stage_batch_ledger", True):
+            self._frontier_stage_batch_ledger_rows.append(row)
+
+    def _new_frontier_stage_batch_ledger_summary(self) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "total_rows": 0,
+            "cluster_counts": {},
+            "decode_ffn": {
+                "rows": 0,
+                "completion_sources": {},
+                "missing_source_rows": 0,
+                "rows_missing_required_metadata": 0,
+                "negative_queue_groups": 0,
+            },
+        }
+
+    def _increment_frontier_stage_batch_summary_counter(
+        self,
+        container: dict[str, int],
+        key: str,
+    ) -> None:
+        container[key] = int(container.get(key, 0)) + 1
+
+    def _update_frontier_stage_batch_ledger_summary(
+        self, row: dict[str, Any]
+    ) -> None:
+        summary = self._frontier_stage_batch_ledger_summary
+        summary["total_rows"] += 1
+        cluster_type = str(row["cluster_type"])
+        self._increment_frontier_stage_batch_summary_counter(
+            summary["cluster_counts"], cluster_type
+        )
+
+        if cluster_type != ClusterType.DECODE_FFN.name:
+            return
+
+        decode_ffn = summary["decode_ffn"]
+        decode_ffn["rows"] += 1
+        completion_source = row.get("stage_completion_observed_source")
+        if completion_source:
+            self._increment_frontier_stage_batch_summary_counter(
+                decode_ffn["completion_sources"], str(completion_source)
+            )
+        else:
+            decode_ffn["missing_source_rows"] += 1
+
+        required_metadata_present = self._decode_ffn_summary_required_metadata_present(
+            row
+        )
+        if not required_metadata_present:
+            decode_ffn["rows_missing_required_metadata"] += 1
+            return
+
+        source_batch_ids = tuple(int(batch_id) for batch_id in row["source_batch_ids"])
+        group_key = (
+            int(row["replica_id"]),
+            int(row["stage_id"]),
+            float(row["source_group_ready_ts"]),
+            source_batch_ids,
+        )
+        group = self._frontier_stage_batch_ledger_summary_groups.setdefault(
+            group_key,
+            {
+                "rows": 0,
+                "max_source_arrival_ts": float("-inf"),
+                "source_group_ready_ts": float(row["source_group_ready_ts"]),
+                "stage_start_ts": float(row["stage_start_ts"]),
+                "observed_stage_duration_ms": 0.0,
+                "model_stage_time_ms": 0.0,
+                "source_request_ids": set(),
+            },
+        )
+        group["rows"] += 1
+        for arrival_ts in row["source_batch_arrival_times"]:
+            group["max_source_arrival_ts"] = max(
+                group["max_source_arrival_ts"], float(arrival_ts)
+            )
+        group["observed_stage_duration_ms"] = max(
+            group["observed_stage_duration_ms"],
+            float(row.get("observed_stage_duration_ms", 0.0)),
+        )
+        group["model_stage_time_ms"] = max(
+            group["model_stage_time_ms"],
+            float(row["execution_time"]["total_time_ms"]),
+        )
+        group["source_request_ids"].update(
+            str(request_id) for request_id in row.get("source_request_ids", [])
+        )
+
+    def _decode_ffn_summary_required_metadata_present(
+        self, row: dict[str, Any]
+    ) -> bool:
+        return (
+            bool(row.get("source_batch_ids"))
+            and bool(row.get("source_batch_arrival_times"))
+            and row.get("source_group_ready_ts") is not None
+            and row.get("stage_start_ts") is not None
+            and row.get("observed_stage_duration_ms") is not None
+            and row.get("execution_time", {}).get("total_time_ms") is not None
+        )
+
+    def _summarize_frontier_stage_batch_values(
+        self, values: list[float]
+    ) -> dict[str, float | int]:
+        if not values:
+            return {"count": 0, "p50": None, "p95": None, "max": None}
+        sorted_values = sorted(values)
+        return {
+            "count": len(sorted_values),
+            "p50": self._percentile_from_sorted_values(sorted_values, 50.0),
+            "p95": self._percentile_from_sorted_values(sorted_values, 95.0),
+            "max": sorted_values[-1],
+        }
+
+    def _percentile_from_sorted_values(
+        self, sorted_values: list[float], percentile: float
+    ) -> float:
+        if len(sorted_values) == 1:
+            return sorted_values[0]
+        position = (len(sorted_values) - 1) * percentile / 100.0
+        lower_index = int(position)
+        upper_index = min(lower_index + 1, len(sorted_values) - 1)
+        if lower_index == upper_index:
+            return sorted_values[lower_index]
+        fraction = position - lower_index
+        return (
+            sorted_values[lower_index] * (1.0 - fraction)
+            + sorted_values[upper_index] * fraction
+        )
+
+    def _build_frontier_stage_batch_ledger_summary_output(self) -> dict[str, Any]:
+        summary = json.loads(json.dumps(self._frontier_stage_batch_ledger_summary))
+        row_counts_per_group: dict[str, int] = {}
+        source_request_counts_per_group: dict[str, int] = {}
+        grouping_barrier_wait_ms: list[float] = []
+        ffn_replica_queue_residence_ms: list[float] = []
+        observed_decode_ffn_stage_duration_ms: list[float] = []
+        model_decode_ffn_stage_time_ms: list[float] = []
+        event_level_residual_ms: list[float] = []
+        negative_queue_groups = 0
+
+        for group in self._frontier_stage_batch_ledger_summary_groups.values():
+            row_count_key = str(int(group["rows"]))
+            row_counts_per_group[row_count_key] = (
+                row_counts_per_group.get(row_count_key, 0) + 1
+            )
+            source_request_count_key = str(len(group["source_request_ids"]))
+            source_request_counts_per_group[source_request_count_key] = (
+                source_request_counts_per_group.get(source_request_count_key, 0) + 1
+            )
+            grouping_barrier_wait_ms.append(
+                (group["source_group_ready_ts"] - group["max_source_arrival_ts"])
+                * 1e3
+            )
+            queue_residence_ms = (
+                group["stage_start_ts"] - group["source_group_ready_ts"]
+            ) * 1e3
+            ffn_replica_queue_residence_ms.append(queue_residence_ms)
+            if queue_residence_ms < -1e-9:
+                negative_queue_groups += 1
+            observed_decode_ffn_stage_duration_ms.append(
+                group["observed_stage_duration_ms"]
+            )
+            model_decode_ffn_stage_time_ms.append(group["model_stage_time_ms"])
+            event_level_residual_ms.append(
+                group["observed_stage_duration_ms"] - group["model_stage_time_ms"]
+            )
+
+        decode_ffn = summary["decode_ffn"]
+        decode_ffn["groups"] = len(self._frontier_stage_batch_ledger_summary_groups)
+        decode_ffn["rows_per_group_histogram"] = row_counts_per_group
+        decode_ffn["rows_per_group_unique"] = sorted(
+            int(row_count) for row_count in row_counts_per_group
+        )
+        decode_ffn["source_request_count_per_group_histogram"] = (
+            source_request_counts_per_group
+        )
+        decode_ffn["source_request_count_per_group_unique"] = sorted(
+            int(request_count) for request_count in source_request_counts_per_group
+        )
+        decode_ffn["negative_queue_groups"] = negative_queue_groups
+        decode_ffn["group_metrics"] = {
+            "grouping_barrier_wait_ms": self._summarize_frontier_stage_batch_values(
+                grouping_barrier_wait_ms
+            ),
+            "ffn_replica_queue_residence_ms": self._summarize_frontier_stage_batch_values(
+                ffn_replica_queue_residence_ms
+            ),
+            "observed_decode_ffn_stage_duration_ms": self._summarize_frontier_stage_batch_values(
+                observed_decode_ffn_stage_duration_ms
+            ),
+            "model_decode_ffn_stage_time_ms": self._summarize_frontier_stage_batch_values(
+                model_decode_ffn_stage_time_ms
+            ),
+            "event_level_residual_ms": self._summarize_frontier_stage_batch_values(
+                event_level_residual_ms
+            ),
+        }
+        return summary
+
+    def _write_frontier_stage_batch_ledger(self) -> None:
+        if self._frontier_ep_wave_lane_ledger_rows:
+            os.makedirs(self._config.output_dir, exist_ok=True)
+            path = os.path.join(self._config.output_dir, "frontier_ep_wave_lane_ledger.jsonl")
+            with open(path, "w", encoding="utf-8") as handle:
+                for row in self._frontier_ep_wave_lane_ledger_rows:
+                    handle.write(json.dumps(row, sort_keys=True) + "\n")
+        if (
+            not self._frontier_stage_batch_ledger_rows
+            and self._frontier_stage_batch_ledger_summary["total_rows"] == 0
+        ):
+            return
+        os.makedirs(self._config.output_dir, exist_ok=True)
+        if getattr(self._config, "store_frontier_stage_batch_ledger", True):
+            output_path = os.path.join(
+                self._config.output_dir, "frontier_stage_batch_ledger.jsonl"
+            )
+            with open(output_path, "w", encoding="utf-8") as handle:
+                for row in self._frontier_stage_batch_ledger_rows:
+                    handle.write(json.dumps(row, sort_keys=True) + "\n")
+        if getattr(self._config, "store_frontier_stage_batch_ledger_summary", False):
+            summary_output_path = os.path.join(
+                self._config.output_dir, "frontier_stage_batch_ledger_summary.json"
+            )
+            with open(summary_output_path, "w", encoding="utf-8") as handle:
+                json.dump(
+                    self._build_frontier_stage_batch_ledger_summary_output(),
+                    handle,
+                    indent=2,
+                    sort_keys=True,
+                )
+                handle.write("\n")
+
+    def _build_transfer_ledger_row(
+        self,
+        *,
+        transfer_info: Any,
+        transfer_kind: str,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+        target_cluster_type: ClusterType,
+        byte_count: int,
+        start_time: float,
+    ) -> dict[str, Any]:
+        if type(source_replica_id) is not int or source_replica_id < 0:
+            raise ValueError(
+                "Transfer ledger requires an exact non-negative source Replica "
+                f"ID, got {source_replica_id!r}"
+            )
+        batch = getattr(transfer_info, "batch", None)
+        requests = list(getattr(batch, "requests", ()) or ())
+        request_ids = [int(request.id) for request in requests]
+        request_runtime_epochs = list(
+            getattr(batch, "request_runtime_epochs", ()) or ()
+        )
+        if (
+            len(request_runtime_epochs) != len(request_ids)
+            or any(
+                type(runtime_epoch) is not int or runtime_epoch < 0
+                for runtime_epoch in request_runtime_epochs
+            )
+        ):
+            raise ValueError(
+                "Transfer ledger requires request_runtime_epochs aligned with "
+                "request_ids"
+            )
+        iteration_ids: list[int | None] = []
+        for request in requests:
+            token_index = getattr(request, "current_decode_token_index", None)
+            iteration_ids.append(
+                token_index - 1
+                if type(token_index) is int and token_index >= 1
+                else None
+            )
+
+        source_cluster_type = getattr(transfer_info, "source_cluster_type", None)
+        if not isinstance(source_cluster_type, ClusterType):
+            raise ValueError(
+                "Transfer ledger requires a valid source ClusterType, "
+                f"got {source_cluster_type!r}"
+            )
+        if not isinstance(target_cluster_type, ClusterType):
+            raise ValueError(
+                "Transfer ledger requires a valid target ClusterType, "
+                f"got {target_cluster_type!r}"
+            )
+
+        if transfer_kind == "kv_cache":
+            target_replica_id = getattr(transfer_info, "target_replica_id", None)
+            target_replica_local_id = getattr(
+                transfer_info, "target_replica_local_id", None
+            )
+            source_batch_stage_id = getattr(
+                transfer_info, "source_batch_stage_id", None
+            )
+            target_batch_stage_id = getattr(
+                transfer_info, "target_batch_stage_id", None
+            )
+            if (
+                type(source_batch_stage_id) is not int
+                or source_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer ledger requires an exact non-negative "
+                    "source_batch_stage_id, got "
+                    f"{source_batch_stage_id!r}"
+                )
+            if target_batch_stage_id is not None and (
+                type(target_batch_stage_id) is not int
+                or target_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer ledger requires an exact non-negative "
+                    "target_batch_stage_id or None, got "
+                    f"{target_batch_stage_id!r}"
+                )
+            attention_owner_replica_id = None
+            attention_owner_replica_local_id = None
+            layer_id = None
+            afd_stage_idx = None
+            pipeline_stage = None
+        elif transfer_kind == "m2n":
+            target_replica_id = getattr(
+                transfer_info, "target_execution_replica_id", None
+            )
+            target_replica_local_id = getattr(
+                transfer_info, "target_execution_replica_local_id", None
+            )
+            layer_id = getattr(transfer_info, "layer_id", None)
+            afd_stage_idx = getattr(transfer_info, "afd_stage_idx", None)
+            pipeline_stage = getattr(transfer_info, "pipeline_stage", None)
+            attention_owner_replica_id = getattr(
+                transfer_info, "source_replica_id", None
+            )
+            attention_owner_replica_local_id = getattr(
+                transfer_info, "source_replica_local_id", None
+            )
+            source_batch_stage_id = None
+            target_batch_stage_id = None
+            if (
+                type(attention_owner_replica_id) is not int
+                or attention_owner_replica_id < 0
+            ):
+                raise ValueError(
+                    "M2N transfer ledger requires an exact non-negative "
+                    "Attention owner Replica ID, got "
+                    f"{attention_owner_replica_id!r}"
+                )
+            if attention_owner_replica_local_id is not None and (
+                type(attention_owner_replica_local_id) is not int
+                or attention_owner_replica_local_id < 0
+            ):
+                raise ValueError(
+                    "M2N transfer ledger requires a non-negative Attention "
+                    "owner local Replica ID or None, got "
+                    f"{attention_owner_replica_local_id!r}"
+                )
+        else:
+            raise ValueError(
+                f"Unsupported transfer ledger kind: {transfer_kind!r}"
+            )
+
+        batch_id = getattr(batch, "id", None)
+        batch_global_id = getattr(batch, "global_id", None)
+        transfer_id = f"{transfer_kind}-{self._transfer_ledger_next_id}"
+        self._transfer_ledger_next_id += 1
+        return {
+            "transfer_id": transfer_id,
+            "transfer_kind": transfer_kind,
+            "request_ids": request_ids,
+            "request_runtime_epochs": request_runtime_epochs,
+            "batch_id": batch_id,
+            "batch_global_id": batch_global_id,
+            "source_cluster": source_cluster_type.name,
+            "target_cluster": target_cluster_type.name,
+            "source_replica_id": source_replica_id,
+            "source_replica_local_id": source_replica_local_id,
+            "attention_owner_replica_id": attention_owner_replica_id,
+            "attention_owner_replica_local_id": (
+                attention_owner_replica_local_id
+            ),
+            "target_replica_id": target_replica_id,
+            "target_replica_local_id": target_replica_local_id,
+            "source_batch_stage_id": source_batch_stage_id,
+            "target_batch_stage_id": target_batch_stage_id,
+            "target_bound": False,
+            "layer_id": layer_id,
+            "afd_stage_idx": afd_stage_idx,
+            "pipeline_stage": pipeline_stage,
+            "iteration_ids": iteration_ids,
+            "bytes": int(byte_count),
+            "start_ts_s": float(start_time),
+            "end_ts_s": None,
+            "duration_ms": None,
+            "status": "started",
+        }
+
+    def _register_transfer_ledger_start(
+        self,
+        *,
+        transfer_info: Any,
+        transfer_kind: str,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+        target_cluster_type: ClusterType,
+        byte_count: int,
+        start_time: float,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        transfer_key = id(transfer_info)
+        if transfer_key in self._transfer_ledger_rows_by_info_id:
+            raise ValueError(
+                "Transfer ledger received a duplicate start for the same "
+                f"transfer object: kind={transfer_kind}"
+            )
+        row = self._build_transfer_ledger_row(
+            transfer_info=transfer_info,
+            transfer_kind=transfer_kind,
+            source_replica_id=source_replica_id,
+            source_replica_local_id=source_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=byte_count,
+            start_time=start_time,
+        )
+        self._transfer_ledger_rows.append(row)
+        self._transfer_ledger_rows_by_info_id[transfer_key] = row
+        self._transfer_info_objects[transfer_key] = transfer_info
+
+    def _bind_transfer_target_replica(
+        self,
+        transfer_info: Any,
+        target_replica_id: int | None,
+        target_replica_local_id: int | None = None,
+        target_batch_stage_id: int | None = None,
+    ) -> None:
+        if not self._config.write_metrics or target_replica_id is None:
+            return
+        if type(target_replica_id) is not int or target_replica_id < 0:
+            raise ValueError(
+                "Transfer target Replica ID must be a non-negative int, "
+                f"got {target_replica_id!r}"
+            )
+        if target_replica_local_id is not None and (
+            type(target_replica_local_id) is not int or target_replica_local_id < 0
+        ):
+            raise ValueError(
+                "Transfer target local Replica ID must be a non-negative int or "
+                f"None, got {target_replica_local_id!r}"
+            )
+
+        row = self._transfer_ledger_rows_by_info_id.get(id(transfer_info))
+        if row is None:
+            raise ValueError(
+                "Transfer target binding has no corresponding transfer start"
+            )
+        transfer_kind = row["transfer_kind"]
+        if transfer_kind == "kv_cache":
+            if (
+                type(target_batch_stage_id) is not int
+                or target_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer target binding requires an exact non-negative "
+                    "target_batch_stage_id, got "
+                    f"{target_batch_stage_id!r}"
+                )
+        elif target_batch_stage_id is not None:
+            raise ValueError(
+                "Only KV transfer target binding accepts target_batch_stage_id"
+            )
+        existing_target = row.get("target_replica_id")
+        if existing_target is not None and int(existing_target) != target_replica_id:
+            raise ValueError(
+                "Transfer target Replica changed after binding: "
+                f"existing={existing_target}, new={target_replica_id}"
+            )
+        existing_local = row.get("target_replica_local_id")
+        if (
+            existing_local is not None
+            and target_replica_local_id is not None
+            and int(existing_local) != target_replica_local_id
+        ):
+            raise ValueError(
+                "Transfer target local Replica changed after binding: "
+                f"existing={existing_local}, new={target_replica_local_id}"
+            )
+        existing_target_batch_stage_id = row.get("target_batch_stage_id")
+        if (
+            existing_target_batch_stage_id is not None
+            and existing_target_batch_stage_id != target_batch_stage_id
+        ):
+            raise ValueError(
+                "Transfer target BatchStage changed after binding: "
+                f"existing={existing_target_batch_stage_id}, "
+                f"new={target_batch_stage_id}"
+            )
+
+        row["target_replica_id"] = target_replica_id
+        row["target_replica_local_id"] = target_replica_local_id
+        row["target_batch_stage_id"] = target_batch_stage_id
+        row["target_bound"] = True
+        if transfer_kind == "kv_cache":
+            transfer_info.target_replica_id = target_replica_id
+            transfer_info.target_replica_local_id = target_replica_local_id
+            transfer_info.target_batch_stage_id = target_batch_stage_id
+        elif transfer_kind == "m2n":
+            transfer_info.target_execution_replica_id = target_replica_id
+            transfer_info.target_execution_replica_local_id = (
+                target_replica_local_id
+            )
+            if transfer_info.target_cluster_type == ClusterType.DECODE_FFN:
+                transfer_info.target_ffn_replica_id = target_replica_id
+        else:
+            raise ValueError(
+                f"Unsupported transfer ledger kind during target binding: "
+                f"{transfer_kind!r}"
+            )
+        self._refresh_transfer_ledger_status(row)
+        if row["status"] == "completed":
+            transfer_key = id(transfer_info)
+            del self._transfer_ledger_rows_by_info_id[transfer_key]
+            del self._transfer_info_objects[transfer_key]
+
+    @staticmethod
+    def _refresh_transfer_ledger_status(row: dict[str, Any]) -> None:
+        if row.get("end_ts_s") is None:
+            row["status"] = "started"
+        elif row.get("target_bound") is not True:
+            row["status"] = "pending_target"
+        else:
+            row["status"] = "completed"
+
+    def _complete_transfer_ledger_end(
+        self,
+        *,
+        transfer_info: Any,
+        end_time: float,
+        duration_ms: float,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        row = self._transfer_ledger_rows_by_info_id.get(id(transfer_info))
+        if row is None:
+            raise ValueError(
+                "Transfer ledger received an end without a recorded start"
+            )
+        if row.get("end_ts_s") is not None:
+            raise ValueError(
+                f"Transfer ledger received a duplicate end: {row['transfer_id']}"
+            )
+        row["end_ts_s"] = float(end_time)
+        row["duration_ms"] = float(duration_ms)
+        self._refresh_transfer_ledger_status(row)
+        if row["status"] == "completed":
+            transfer_key = id(transfer_info)
+            del self._transfer_ledger_rows_by_info_id[transfer_key]
+            del self._transfer_info_objects[transfer_key]
+
+    def on_m2n_transfer_target_bound(self, transfer_info: Any) -> None:
+        """Bind the physical target after M2N arrival routing is resolved."""
+        if not self._config.write_metrics:
+            return
+        target_replica_id = getattr(
+            transfer_info, "target_execution_replica_id", None
+        )
+        target_replica_local_id = getattr(
+            transfer_info, "target_execution_replica_local_id", None
+        )
+        if target_replica_id is None:
+            raise ValueError(
+                "M2N transfer target binding requires an explicit physical "
+                "target Replica"
+            )
+        self._bind_transfer_target_replica(
+            transfer_info,
+            target_replica_id,
+            target_replica_local_id,
+        )
+
+    def _bind_pending_kv_transfer_target(
+        self,
+        *,
+        time: float,
+        batch_stage: BatchStage,
+        cluster_type: ClusterType,
+        replica_id: int,
+        replica_local_id: int | None,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        target_batch_stage_id = self._exact_batch_stage_id(batch_stage)
+        request_ids = list(batch_stage.request_ids)
+        request_runtime_epochs = list(batch_stage.request_runtime_epochs)
+        if (
+            len(request_runtime_epochs) != len(request_ids)
+            or any(
+                type(runtime_epoch) is not int or runtime_epoch < 0
+                for runtime_epoch in request_runtime_epochs
+            )
+        ):
+            raise ValueError(
+                "KV target stage requires request_runtime_epochs aligned with "
+                "request_ids"
+            )
+        request_identity = {
+            (int(request_id), runtime_epoch)
+            for request_id, runtime_epoch in zip(
+                request_ids,
+                request_runtime_epochs,
+            )
+        }
+        candidates = []
+        for transfer_info_id, row in self._transfer_ledger_rows_by_info_id.items():
+            if row.get("transfer_kind") != "kv_cache":
+                continue
+            if row.get("target_bound") is True:
+                continue
+            if row.get("target_cluster") != cluster_type.name:
+                continue
+            transfer_request_ids = list(row.get("request_ids", ()))
+            transfer_runtime_epochs = list(
+                row.get("request_runtime_epochs", ())
+            )
+            if (
+                not transfer_request_ids
+                or len(transfer_runtime_epochs) != len(transfer_request_ids)
+                or any(
+                    type(runtime_epoch) is not int or runtime_epoch < 0
+                    for runtime_epoch in transfer_runtime_epochs
+                )
+            ):
+                raise ValueError(
+                    "Pending KV transfer requires request_runtime_epochs aligned "
+                    "with request_ids"
+                )
+            transfer_identity = {
+                (int(request_id), runtime_epoch)
+                for request_id, runtime_epoch in zip(
+                    transfer_request_ids,
+                    transfer_runtime_epochs,
+                )
+            }
+            if not transfer_identity.issubset(
+                request_identity
+            ):
+                continue
+            end_time = row.get("end_ts_s")
+            if end_time is None or float(end_time) > float(time) + 1e-12:
+                continue
+            candidates.append((transfer_info_id, row, transfer_identity))
+        if not candidates:
+            return
+
+        # A target stage may legitimately receive several independent transfers
+        # (for example, one transfer per request), but two pending transfers must
+        # never claim the same request/runtime-epoch identity.  Matching only on
+        # subset membership would otherwise bind duplicate or stale transfer rows
+        # to the same stage and corrupt source/target lineage.  Detect the full
+        # ambiguity before mutating any row so the ledger remains transactional.
+        for index, (_, first_row, first_identity) in enumerate(candidates):
+            for _, second_row, second_identity in candidates[index + 1 :]:
+                overlap = first_identity & second_identity
+                if overlap:
+                    raise ValueError(
+                        "ambiguous KV transfer target: pending transfers "
+                        f"{first_row['transfer_id']!r} and "
+                        f"{second_row['transfer_id']!r} share request/runtime "
+                        f"identity {sorted(overlap)!r}"
+                    )
+
+        for transfer_info_id, _, _ in candidates:
+            transfer_info = self._transfer_info_objects.get(transfer_info_id)
+            if transfer_info is None:
+                raise ValueError(
+                    "KV transfer target binding lost its transfer object identity"
+                )
+            self._bind_transfer_target_replica(
+                transfer_info,
+                replica_id,
+                replica_local_id,
+                target_batch_stage_id,
+            )
+
+    def _write_frontier_transfer_ledger(self) -> None:
+        if not self._transfer_ledger_rows:
+            return
+        os.makedirs(self._config.output_dir, exist_ok=True)
+        output_path = os.path.join(
+            self._config.output_dir, "frontier_transfer_ledger.jsonl"
+        )
+        with open(output_path, "w", encoding="utf-8") as handle:
+            for row in self._transfer_ledger_rows:
+                handle.write(json.dumps(row, sort_keys=True) + "\n")
+
+    def on_kv_cache_transfer_start(
+        self,
+        time: float,
+        source_replica_id: int,
+        source_replica_local_id: int,
+        target_cluster_type: ClusterType,
+        kv_cache_size_bytes: int,
+        transfer_info: Any,
+    ) -> None:
+        if self._trace_store and self._config.enable_op_level_tracing:
+            from frontier.metrics.trace_store import TraceEvent
+
+            batch_id = transfer_info.batch.id if transfer_info.batch else None
+            request_ids = (
+                [str(req.id) for req in transfer_info.batch.requests]
+                if transfer_info.batch and transfer_info.batch.requests
+                else []
+            )
+
+            cluster_config = self._cluster_configs.get(transfer_info.source_cluster_type)
+            if cluster_config is None:
+                raise ValueError(
+                    f"Cluster config not found for {transfer_info.source_cluster_type}"
+                )
+            transfer_meta = build_kv_cache_transfer_meta(
+                transfer_info.batch,
+                cluster_config.replica_config,
+                transfer_info.source_cluster_type,
+                kv_cache_size_bytes,
+                transfer_info=transfer_info,
+                block_size=cluster_config.replica_scheduler_config.block_size,
+            )
+            total_tokens = transfer_meta["total_tokens"]
+            trace_context = OpTraceContext(
+                cluster_type=transfer_info.source_cluster_type,
+                model_config=cluster_config.replica_config.model_config,
+                replica_config=cluster_config.replica_config,
+                total_tokens=total_tokens,
+                effective_tokens_compute=total_tokens,
+                effective_tokens_transfer=total_tokens,
+                effective_tokens_rounded=(total_tokens + 7) // 8 * 8,
+                tokens_are_post_routing=False,
+            )
+            transfer_meta["parallel_context"] = build_parallel_context(trace_context)
+            transfer_meta["model_name"] = cluster_config.replica_config.model_name
+            transfer_meta["request_ids"] = request_ids
+            transfer_meta["source_replica_local_id"] = source_replica_local_id
+
+            event = TraceEvent(
+                type="TRANSFER",
+                name="kv_cache_transfer",
+                ts_start=time,
+                duration_ms=transfer_info.transfer_time_ms,
+                cluster=transfer_info.source_cluster_type.name,
+                replica_id=source_replica_id,
+                batch_id=batch_id,
+                target_cluster=target_cluster_type.name,
+                meta=transfer_meta,
+            )
+            self._trace_store.log_event(event)
+
+        if not self._config.write_metrics:
+            return
+
+        self._register_transfer_ledger_start(
+            transfer_info=transfer_info,
+            transfer_kind="kv_cache",
+            source_replica_id=source_replica_id,
+            source_replica_local_id=source_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=kv_cache_size_bytes,
+            start_time=time,
+        )
+        self._kv_cache_transfer_metrics["transfer_count"] += 1
+
+    def on_kv_cache_transfer_end(
+        self,
+        time: float,
+        duration: float,
+        size_bytes: int,
+        target_cluster_type: ClusterType,
+        transfer_info: Any,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+
+        self._kv_cache_transfer_metrics["total_transfer_time"] += duration
+        self._kv_cache_transfer_metrics["total_data_transferred"] += size_bytes
+
+        request_info = ""
+        if transfer_info.batch and transfer_info.batch.requests:
+            request_ids = [str(req.id) for req in transfer_info.batch.requests]
+            request_info = f"_req_{'_'.join(request_ids)}"
+
+        transfer_id = (
+            f"transfer_{self._kv_cache_transfer_metrics['transfer_count']}"
+            f"{request_info}"
+        )
+        self._kv_cache_transfer_metrics["transfer_times"].put(transfer_id, duration)
+        self._kv_cache_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
+        self._complete_transfer_ledger_end(
+            transfer_info=transfer_info,
+            end_time=time,
+            duration_ms=duration,
+        )
+
+    def on_m2n_transfer_start(
+        self,
+        time: float,
+        source_replica_id: int,
+        source_cluster_type: ClusterType,
+        target_cluster_type: ClusterType,
+        activation_size_bytes: int,
+        transfer_info: Any,
+    ) -> None:
+        if self._trace_store and self._config.enable_op_level_tracing:
+            from frontier.metrics.trace_store import TraceEvent
+
+            cluster_config = self._cluster_configs.get(source_cluster_type)
+            if cluster_config is None:
+                raise ValueError(
+                    f"Cluster config not found for {source_cluster_type}"
+                )
+            transfer_meta = build_m2n_transfer_meta(
+                transfer_info.batch,
+                cluster_config.replica_config,
+                source_cluster_type,
+                activation_size_bytes,
+            )
+            total_tokens = transfer_meta["total_tokens"]
+            trace_context = OpTraceContext(
+                cluster_type=source_cluster_type,
+                model_config=cluster_config.replica_config.model_config,
+                replica_config=cluster_config.replica_config,
+                total_tokens=total_tokens,
+                effective_tokens_compute=total_tokens,
+                effective_tokens_transfer=total_tokens,
+                effective_tokens_rounded=(total_tokens + 7) // 8 * 8,
+                tokens_are_post_routing=False,
+            )
+            request_ids = [
+                str(request.id) for request in transfer_info.batch.requests
+            ]
+            transfer_meta.update(
+                {
+                    "parallel_context": build_parallel_context(trace_context),
+                    "model_name": cluster_config.replica_config.model_name,
+                    "request_ids": request_ids,
+                    "source_replica_local_id": transfer_info.source_replica_local_id,
+                }
+            )
+            transfer_name = (
+                "m2n_transfer_attn_to_ffn"
+                if transfer_info.is_attn_to_ffn
+                else "m2n_transfer_ffn_to_attn"
+            )
+            self._trace_store.log_event(
+                TraceEvent(
+                    type="TRANSFER",
+                    name=transfer_name,
+                    ts_start=time,
+                    duration_ms=transfer_info.transfer_time_ms,
+                    cluster=source_cluster_type.name,
+                    replica_id=source_replica_id,
+                    batch_id=transfer_info.batch.id,
+                    target_cluster=target_cluster_type.name,
+                    layer_id=transfer_info.layer_id,
+                    meta=transfer_meta,
+                )
+            )
+
+        if not self._config.write_metrics:
+            return
+
+        source_execution_replica_id = transfer_info.source_execution_replica_id
+        source_execution_replica_local_id = (
+            transfer_info.source_execution_replica_local_id
+        )
+        if (
+            type(source_execution_replica_id) is not int
+            or source_execution_replica_id < 0
+        ):
+            raise ValueError(
+                "M2N transfer ledger requires an exact non-negative source "
+                f"execution Replica ID, got {source_execution_replica_id!r}"
+            )
+        self._register_transfer_ledger_start(
+            transfer_info=transfer_info,
+            transfer_kind="m2n",
+            source_replica_id=source_execution_replica_id,
+            source_replica_local_id=source_execution_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=activation_size_bytes,
+            start_time=time,
+        )
+        if not hasattr(self, "_m2n_transfer_metrics"):
+            self._m2n_transfer_metrics = {
+                "transfer_count": 0,
+                "total_transfer_time": 0.0,
+                "total_data_transferred": 0,
+                "transfer_times": DataSeries(
+                    "Transfer ID",
+                    "Transfer Time (ms)",
+                    self._config.subsamples,
+                    self._config.save_table_to_wandb,
+                    self._config.store_plots,
+                ),
+                "transfer_sizes": DataSeries(
+                    "Transfer ID",
+                    "Transfer Size (bytes)",
+                    self._config.subsamples,
+                    self._config.save_table_to_wandb,
+                    self._config.store_plots,
+                ),
+                "attn_to_ffn_transfers": 0,
+                "ffn_to_attn_transfers": 0,
+            }
+
+        self._m2n_transfer_metrics["transfer_count"] += 1
+        if source_cluster_type == ClusterType.DECODE_ATTN:
+            self._m2n_transfer_metrics["attn_to_ffn_transfers"] += 1
+        else:
+            self._m2n_transfer_metrics["ffn_to_attn_transfers"] += 1
+
+    def on_m2n_transfer_end(
+        self,
+        time: float,
+        duration: float,
+        size_bytes: int,
+        source_cluster_type: ClusterType,
+        target_cluster_type: ClusterType,
+        transfer_info: Any,
+    ) -> None:
+        if (
+            self._trace_store
+            and self._config.enable_op_level_tracing
+            and transfer_info.is_ffn_to_attn
+            and target_cluster_type == ClusterType.DECODE_ATTN
+        ):
+            from frontier.metrics.trace_store import TraceEvent
+
+            cluster_config = self._cluster_configs.get(target_cluster_type)
+            if cluster_config is None:
+                raise ValueError(
+                    f"Cluster config not found for {target_cluster_type}"
+                )
+            transfer_meta = build_m2n_transfer_meta(
+                transfer_info.batch,
+                cluster_config.replica_config,
+                target_cluster_type,
+                size_bytes,
+            )
+            total_tokens = transfer_meta["total_tokens"]
+            trace_context = OpTraceContext(
+                cluster_type=target_cluster_type,
+                model_config=cluster_config.replica_config.model_config,
+                replica_config=cluster_config.replica_config,
+                total_tokens=total_tokens,
+                effective_tokens_compute=total_tokens,
+                effective_tokens_transfer=total_tokens,
+                effective_tokens_rounded=(total_tokens + 7) // 8 * 8,
+                tokens_are_post_routing=False,
+            )
+            request_ids = [
+                str(request.id) for request in transfer_info.batch.requests
+            ]
+            transfer_meta.update(
+                {
+                    "parallel_context": build_parallel_context(trace_context),
+                    "model_name": cluster_config.replica_config.model_name,
+                    "request_ids": request_ids,
+                    "source_replica_local_id": transfer_info.source_replica_local_id,
+                    "source_cluster": source_cluster_type.name,
+                }
+            )
+            self._trace_store.log_event(
+                TraceEvent(
+                    type="TRANSFER",
+                    name="m2n_transfer_ffn_to_attn_recv",
+                    ts_start=transfer_info.transfer_start_time,
+                    duration_ms=transfer_info.transfer_time_ms,
+                    cluster=target_cluster_type.name,
+                    replica_id=transfer_info.source_replica_id,
+                    batch_id=transfer_info.batch.id,
+                    target_cluster=target_cluster_type.name,
+                    layer_id=transfer_info.layer_id,
+                    meta=transfer_meta,
+                )
+            )
+
+        if not self._config.write_metrics:
+            return
+        if not hasattr(self, "_m2n_transfer_metrics"):
+            raise ValueError(
+                "M2N transfer ended without a recorded transfer start"
+            )
+
+        self._m2n_transfer_metrics["total_transfer_time"] += duration
+        self._m2n_transfer_metrics["total_data_transferred"] += size_bytes
+
+        request_info = ""
+        if transfer_info.batch and transfer_info.batch.requests:
+            request_ids = [str(req.id) for req in transfer_info.batch.requests]
+            request_info = f"_req_{'_'.join(request_ids)}"
+        transfer_id = (
+            f"m2n_transfer_{self._m2n_transfer_metrics['transfer_count']}"
+            f"{request_info}"
+        )
+        self._m2n_transfer_metrics["transfer_times"].put(transfer_id, duration)
+        self._m2n_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
+        self._complete_transfer_ledger_end(
+            transfer_info=transfer_info,
+            end_time=time,
+            duration_ms=duration,
+        )

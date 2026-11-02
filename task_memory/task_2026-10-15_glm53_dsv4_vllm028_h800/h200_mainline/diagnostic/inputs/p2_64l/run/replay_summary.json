@@ -1,0 +1,1155 @@
+{
+ "mode": "clean",
+ "engine_config": {
+  "async_scheduling": true,
+  "block_size": null,
+  "data_parallel_size": 4,
+  "distributed_executor_backend": "mp",
+  "dtype": "bfloat16",
+  "enable_chunked_prefill": false,
+  "enable_expert_parallel": true,
+  "enable_prefix_caching": false,
+  "enforce_eager": false,
+  "gpu_memory_utilization": 0.85,
+  "kv_cache_dtype": "fp8",
+  "kv_transfer": {
+   "decode_side_channel_port": 5700,
+   "kv_buffer_device": "cuda",
+   "prefill_side_channel_port": 5600
+  },
+  "load_format": "dummy",
+  "max_model_len": 7168,
+  "max_num_batched_tokens": 8192,
+  "max_num_seqs": 128,
+  "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+  "moe_gating_routing_runtime_path": "balanced_topk",
+  "native_reference": {
+   "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+   "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+   "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+  },
+  "pipeline_parallel_size": 1,
+  "seed": 1234,
+  "shutdown_timeout": 30,
+  "skip_tokenizer_init": true,
+  "tensor_parallel_size": 8,
+  "vllm_version": "0.28.0",
+  "worker_extension_cls": "native_full_structure.FullModelInventory",
+  "scheduler_cls": "native_scheduler_lifecycle.LifecycleObservedScheduler"
+ },
+ "trace_dir": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_lifecycle/package_01/trace",
+ "devices": {},
+ "kv_addresses": {},
+ "proxy_command": [
+  "/usr/bin/python3",
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_lifecycle/package_01/tests/comparison/calibration/pd_proxy.py",
+  "--port",
+  "8000",
+  "--prefill-url",
+  "http://10.204.4.55:8100",
+  "--decode-url",
+  "http://10.204.18.34:8200",
+  "--log-path",
+  "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_lifecycle_20261026_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-lifecycle-20261026-01/run/proxy_requests.jsonl",
+  "--vllm-version",
+  "0.28.0"
+ ],
+ "instances": {
+  "prefill": {
+   "http_url": "http://10.204.4.55:8100",
+   "lifecycle_owner": "external",
+   "health_wait_s": 0.02444009017199278,
+   "observer_evidence": {
+    "declared_native_reference": {
+     "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+     "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+    },
+    "installed_runtime_verified": false,
+    "qualification_verified": false,
+    "process_expectations": {
+     "declared_dp_size": 4,
+     "declared_worker_ranks": null,
+     "engine_owner_inventory": null,
+     "worker_inventory": null,
+     "inventory_verified": false
+    },
+    "observer": null,
+    "trace_directory_exists": false,
+    "trace_files": [],
+    "collection_errors": [],
+    "native_close_and_device_completion": "unverified"
+   }
+  },
+  "decode": {
+   "http_url": "http://10.204.18.34:8200",
+   "lifecycle_owner": "external",
+   "health_wait_s": 0.0013605919666588306,
+   "observer_evidence": {
+    "declared_native_reference": {
+     "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "instrumentation_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+     "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+    },
+    "installed_runtime_verified": false,
+    "qualification_verified": false,
+    "process_expectations": {
+     "declared_dp_size": 4,
+     "declared_worker_ranks": null,
+     "engine_owner_inventory": null,
+     "worker_inventory": null,
+     "inventory_verified": false
+    },
+    "observer": null,
+    "trace_directory_exists": false,
+    "trace_files": [],
+    "collection_errors": [],
+    "native_close_and_device_completion": "unverified"
+   }
+  }
+ },
+ "vllm_version": "0.28.0",
+ "qualification_verified": false,
+ "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+ "canonical_repetitions": {
+  "repetitions": [
+   {
+    "repeat": 1,
+    "phases": {
+     "warmup": {
+      "origin_monotonic": 2921259.478668773,
+      "origin_wall": 1792991721.6097155,
+      "planned_requests": 16,
+      "recorded_requests": 16,
+      "failed_request_ids": []
+     },
+     "formal": {
+      "origin_monotonic": 2921362.508110119,
+      "origin_wall": 1792991824.6391575,
+      "planned_requests": 128,
+      "recorded_requests": 128,
+      "failed_request_ids": []
+     }
+    },
+    "client_workload_verified": true,
+    "metrics": {
+     "first_submission_monotonic": 2921362.508330824,
+     "last_token_monotonic": 2921515.874058352,
+     "window_s": 153.3657275279984,
+     "total_tokens": 917504,
+     "total_thpt_tokens_s": 5982.457846277949,
+     "ttft_ms": {
+      "mean": 796.145800526574,
+      "p50": 740.6164619605988,
+      "p95": 1008.4096761420369
+     },
+     "tpot_ms": {
+      "mean": 25.03176424546506,
+      "p50": 24.929123760391306,
+      "p95": 25.53375060774772
+     },
+     "e2e_ms": {
+      "mean": 26403.64062363733,
+      "p50": 26311.91270169802,
+      "p95": 27047.240077983588
+     }
+    }
+   },
+   {
+    "repeat": 2,
+    "phases": {
+     "warmup": {
+      "origin_monotonic": 2921517.20546001,
+      "origin_wall": 1792991979.3365064,
+      "planned_requests": 16,
+      "recorded_requests": 16,
+      "failed_request_ids": []
+     },
+     "formal": {
+      "origin_monotonic": 2921559.774446986,
+      "origin_wall": 1792992021.9054935,
+      "planned_requests": 128,
+      "recorded_requests": 128,
+      "failed_request_ids": []
+     }
+    },
+    "client_workload_verified": true,
+    "metrics": {
+     "first_submission_monotonic": 2921559.774706636,
+     "last_token_monotonic": 2921712.951946955,
+     "window_s": 153.17724031908438,
+     "total_tokens": 917504,
+     "total_thpt_tokens_s": 5989.819362777017,
+     "ttft_ms": {
+      "mean": 740.9357132928562,
+      "p50": 756.4637863542885,
+      "p95": 964.270472060889
+     },
+     "tpot_ms": {
+      "mean": 24.86654318246881,
+      "p50": 24.87107040815762,
+      "p95": 24.95655054836475
+     },
+     "e2e_ms": {
+      "mean": 26179.409388958447,
+      "p50": 26183.47108946182,
+      "p95": 26433.062627911568
+     }
+    }
+   },
+   {
+    "repeat": 3,
+    "phases": {
+     "warmup": {
+      "origin_monotonic": 2921714.324310773,
+      "origin_wall": 1792992176.4553576,
+      "planned_requests": 16,
+      "recorded_requests": 16,
+      "failed_request_ids": []
+     },
+     "formal": {
+      "origin_monotonic": 2921757.094775693,
+      "origin_wall": 1792992219.225823,
+      "planned_requests": 128,
+      "recorded_requests": 128,
+      "failed_request_ids": []
+     }
+    },
+    "client_workload_verified": true,
+    "metrics": {
+     "first_submission_monotonic": 2921757.095081767,
+     "last_token_monotonic": 2921910.244711168,
+     "window_s": 153.14962940104306,
+     "total_tokens": 917504,
+     "total_thpt_tokens_s": 5990.899250545304,
+     "ttft_ms": {
+      "mean": 736.0686395659286,
+      "p50": 758.4525309503078,
+      "p95": 969.2156631499529
+     },
+     "tpot_ms": {
+      "mean": 24.989611402754736,
+      "p50": 24.966443225856096,
+      "p95": 25.209103243467368
+     },
+     "e2e_ms": {
+      "mean": 26300.441104584024,
+      "p50": 26287.848407402635,
+      "p95": 26697.09246698767
+     }
+    }
+   }
+  ],
+  "idle_boundaries": [
+   {
+    "verified": true,
+    "observations": [
+     {
+      "monotonic": 2921258.34141019,
+      "roles": {
+       "prefill": {
+        "lanes": {
+         "0": {},
+         "1": {},
+         "2": {},
+         "3": {}
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 0.0,
+        "idle": false
+       },
+       "decode": {
+        "lanes": {
+         "0": {},
+         "1": {},
+         "2": {},
+         "3": {}
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 0.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 0.0,
+        "idle": false
+       }
+      },
+      "errors": []
+     }
+    ],
+    "proof": "dedicated_services_ready_client_zero_native_counters_zero",
+    "fresh_services": {
+     "run_manifest_sha256": "9eb977725336a65f228079de007d8403a17eb2481dec750b771935822e8c9bdc",
+     "run_generation": "v4-native-v028-h200-p2-64-lifecycle-20261026-01",
+     "services": {
+      "prefill": {
+       "role": "prefill",
+       "url": "http://10.204.4.55:8100",
+       "server_pid": 745,
+       "server_started_at_utc": "2026-10-26T05:04:18.950614+00:00",
+       "run_manifest_sha256": "9eb977725336a65f228079de007d8403a17eb2481dec750b771935822e8c9bdc",
+       "run_generation": "v4-native-v028-h200-p2-64-lifecycle-20261026-01",
+       "ready_at_utc": "2026-10-26T05:14:40.607053+00:00",
+       "health_status": 200
+      },
+      "decode": {
+       "role": "decode",
+       "url": "http://10.204.18.34:8200",
+       "server_pid": 733,
+       "server_started_at_utc": "2026-10-26T05:04:00.990989+00:00",
+       "run_manifest_sha256": "9eb977725336a65f228079de007d8403a17eb2481dec750b771935822e8c9bdc",
+       "run_generation": "v4-native-v028-h200-p2-64-lifecycle-20261026-01",
+       "ready_at_utc": "2026-10-26T05:15:00.858982+00:00",
+       "health_status": 200
+      }
+     }
+    },
+    "client_dispatched_requests": 0,
+    "boundary": "before_repeat01_warmup"
+   },
+   {
+    "verified": true,
+    "observations": [
+     {
+      "monotonic": 2921360.960114695,
+      "roles": {
+       "decode": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 16.0,
+        "idle": true
+       },
+       "prefill": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 4.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 16.0,
+        "idle": true
+       }
+      },
+      "errors": []
+     }
+    ],
+    "completed_after": {
+     "prefill": 16.0,
+     "decode": 16.0
+    },
+    "boundary": "after_repeat01_warmup"
+   },
+   {
+    "verified": true,
+    "observations": [
+     {
+      "monotonic": 2921515.986371138,
+      "roles": {
+       "prefill": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 36.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 36.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 36.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 36.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 144.0,
+        "idle": true
+       },
+       "decode": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 36.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 35.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 36.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 37.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 144.0,
+        "idle": true
+       }
+      },
+      "errors": []
+     }
+    ],
+    "completed_after": {
+     "prefill": 144.0,
+     "decode": 144.0
+    },
+    "boundary": "after_repeat01_formal"
+   },
+   {
+    "verified": true,
+    "observations": [
+     {
+      "monotonic": 2921558.363624043,
+      "roles": {
+       "prefill": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 40.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 40.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 40.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 40.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 160.0,
+        "idle": true
+       },
+       "decode": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 38.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 39.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 41.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 42.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 160.0,
+        "idle": true
+       }
+      },
+      "errors": []
+     }
+    ],
+    "completed_after": {
+     "prefill": 160.0,
+     "decode": 160.0
+    },
+    "boundary": "after_repeat02_warmup"
+   },
+   {
+    "verified": true,
+    "observations": [
+     {
+      "monotonic": 2921713.084867119,
+      "roles": {
+       "prefill": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 72.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 73.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 72.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 71.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 288.0,
+        "idle": true
+       },
+       "decode": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 71.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 70.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 73.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 74.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 288.0,
+        "idle": true
+       }
+      },
+      "errors": []
+     }
+    ],
+    "completed_after": {
+     "prefill": 288.0,
+     "decode": 288.0
+    },
+    "boundary": "after_repeat02_formal"
+   },
+   {
+    "verified": true,
+    "observations": [
+     {
+      "monotonic": 2921755.694170563,
+      "roles": {
+       "prefill": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 76.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 77.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 76.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 75.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 304.0,
+        "idle": true
+       },
+       "decode": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 75.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 75.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 76.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 78.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 304.0,
+        "idle": true
+       }
+      },
+      "errors": []
+     }
+    ],
+    "completed_after": {
+     "prefill": 304.0,
+     "decode": 304.0
+    },
+    "boundary": "after_repeat03_warmup"
+   },
+   {
+    "verified": true,
+    "observations": [
+     {
+      "monotonic": 2921910.374684112,
+      "roles": {
+       "prefill": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 107.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 108.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 108.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 109.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 432.0,
+        "idle": true
+       },
+       "decode": {
+        "lanes": {
+         "0": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "1": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "2": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         },
+         "3": {
+          "num_requests_running": 0.0,
+          "num_requests_waiting": 0.0,
+          "kv_cache_usage_perc": 0.0
+         }
+        },
+        "completion_counters": {
+         "0": {
+          "stop": 0.0,
+          "length": 107.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "1": {
+          "stop": 0.0,
+          "length": 107.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "2": {
+          "stop": 0.0,
+          "length": 108.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         },
+         "3": {
+          "stop": 0.0,
+          "length": 110.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+         }
+        },
+        "completed_requests": 432.0,
+        "idle": true
+       }
+      },
+      "errors": []
+     }
+    ],
+    "completed_after": {
+     "prefill": 432.0,
+     "decode": 432.0
+    },
+    "boundary": "after_repeat03_formal"
+   }
+  ],
+  "observation_errors": [],
+  "reference_admission": "UNVERIFIED",
+  "client_workload_verified": true,
+  "status": "CLIENT_WORKLOAD_VERIFIED"
+ },
+ "process_stop": {
+  "proxy": {
+   "signal": "SIGINT",
+   "returncode": 0
+  }
+ },
+ "num_requests": 432,
+ "failed_request_ids": [],
+ "native_transfer_verification": {
+  "status": "UNVERIFIED",
+  "expected_protocol": "NixlConnector pull READ",
+  "native_done": "unobserved",
+  "device_completion": "unobserved",
+  "decode_readiness": "unobserved",
+  "metric_normalization": "not_applied"
+ },
+ "status": 0
+}

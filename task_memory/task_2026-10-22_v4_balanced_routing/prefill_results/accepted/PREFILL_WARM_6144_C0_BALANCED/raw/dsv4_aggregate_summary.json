@@ -1,0 +1,97 @@
+{
+  "plan": {
+    "schema_version": "dsv4_attention_plan.v1",
+    "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+    "heads_per_rank": 8,
+    "target_tensor_parallel_size": 8,
+    "reduced_layers": [
+      [
+        0,
+        "uncompressed",
+        true
+      ],
+      [
+        1,
+        "uncompressed",
+        false
+      ],
+      [
+        2,
+        "csa",
+        true
+      ],
+      [
+        3,
+        "hca",
+        true
+      ],
+      [
+        4,
+        "csa",
+        false
+      ],
+      [
+        5,
+        "hca",
+        false
+      ]
+    ],
+    "num_engines": 1,
+    "num_cases": 1,
+    "num_prefill_cases": 1,
+    "num_decode_cases": 0,
+    "estimated_steps": 5,
+    "engines": [
+      {
+        "engine_index": 0,
+        "chunk_budget": 8192,
+        "prefill_cases": 1,
+        "decode_cases": 0,
+        "estimated_steps": 5
+      }
+    ],
+    "hf_overrides": {
+      "num_hidden_layers": 6,
+      "num_attention_heads": 8,
+      "o_groups": 1,
+      "compress_ratios": [
+        0,
+        0,
+        4,
+        128,
+        4,
+        128
+      ]
+    },
+    "short_context_max_seq_len": 2051,
+    "kv_cache_dtype": "fp8"
+  },
+  "identity": {
+    "runtime_fingerprint": "80b7753fb935a8e0",
+    "runtime_versions": "{\"deep_gemm\":null,\"flashinfer\":\"0.6.16.post3\",\"torch\":\"2.13.0+cu130\",\"torch_cuda\":\"13.0\",\"triton\":\"3.7.1\",\"vllm\":\"0.28.0\"}",
+    "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+    "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+    "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+    "weight_source": "dummy",
+    "device_name": "NVIDIA H800",
+    "device_capability": "sm90",
+    "schema_version": "dsv4_attention.v1",
+    "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|scale_fmt=ue8m0",
+    "parallel_groups": {
+      "target_tensor_parallel": 8,
+      "engine_tensor_parallel": 1
+    },
+    "graph_mode": "eager"
+  },
+  "missing_engines": [],
+  "outputs": {
+    "CUDA_EVENT": {
+      "path": "/tmp/glm_producers/out/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "rows": 6
+    },
+    "KERNEL_ONLY": {
+      "path": "/tmp/glm_producers/out/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "rows": 6
+    }
+  }
+}

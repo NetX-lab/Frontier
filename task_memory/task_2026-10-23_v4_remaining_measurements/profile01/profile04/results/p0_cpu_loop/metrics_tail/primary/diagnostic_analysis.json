@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "analysis_state": "COMPLETE",
+  "correction_state": "pending",
+  "observed_utc": "2026-10-24T20:14:57.782263+00:00",
+  "receipt_sha256": "11d1dd153629469f7856edcc9fc18f176c3953ff9b92e4fbdae261ac2b00cfcc",
+  "returncode": 124,
+  "enclosing_seconds": 60.307500164955854,
+  "diagnostic_invocations_used": 1,
+  "diagnostic_invocation_ceiling": 1,
+  "new_controls_or_affected_invocations": 0,
+  "actual_memory_limit_bytes": 32212254720,
+  "key": [
+    "prefill",
+    0,
+    0
+  ],
+  "stage_times": {
+    "instrumented": 0.072,
+    "enter": 0.076,
+    "metadata_loaded": 0.488,
+    "header_start": 0.492,
+    "header_done": 0.492,
+    "load_gc_disabled": 0.492,
+    "load_start": 0.492,
+    "load_done": 30.315,
+    "freeze_after_load": 30.694,
+    "events_ready": 30.694,
+    "annotations_named": 31.241,
+    "event_pass_done": 37.026,
+    "correlation_done": 39.952,
+    "kernel_pass_start": 39.952,
+    "kernel_pass_done": 54.806,
+    "DEBUG-V4-METRICS-TAIL-01:batch_start": 55.267,
+    "DEBUG-V4-METRICS-TAIL-01:group_construction_start": 55.267
+  },
+  "load_seconds": 29.823,
+  "kernel_pass_seconds": 14.854,
+  "caller_group_construction_gap_seconds": 0.4610000000000056,
+  "batch_events": 1215919,
+  "batch_groups": 240,
+  "batch_memberships": 5331778,
+  "construction_observed_open_through_t": 58.61935535259545,
+  "construction_conservative_lower_bound_seconds": 3.3523553525954455,
+  "construction_completed": false,
+  "sort_or_union_reached": false,
+  "completed_gen2_collections": 17,
+  "completed_gen2_seconds": 5.053709322586656,
+  "construction_gen2": [
+    {
+      "start": 55.771495966706425,
+      "end": 56.813963250722736,
+      "seconds": 1.0424672840163112,
+      "collected": 0
+    },
+    {
+      "start": 57.480574865825474,
+      "end": 58.61935535259545,
+      "seconds": 1.1387804867699742,
+      "collected": 0
+    }
+  ],
+  "construction_gen2_seconds": 2.1812477707862854,
+  "remaining_nominal_seconds_at_batch_start": 4.732999999999997,
+  "nominal_budget_limit": "60s minus rounded stage time is a projection; enclosing launcher time is not the exact stage-clock deadline.",
+  "max_sparse_rss_mib": 6367.1,
+  "final_json_exists": false,
+  "kernel_index": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.kernels.jsonl.gz",
+    "bytes": 5383865,
+    "sha256": "cda63d5f150301c60fce64713a5ac8b7854e94aae5883a5c64b997acfb3a7306",
+    "validation": "Existence/hash only; no new complete-index or useful-step acceptance."
+  },
+  "hypotheses": {
+    "group_construction": "SUPPORTED_CENSORED_BEFORE_SORT",
+    "union_updates": "NOT_MEASURED_NOT_REACHED",
+    "gen2_overlap": "SUPPORTED_TWO_COMPLETED_PAUSES",
+    "pre_metrics_budget": "OBSERVED_KERNEL_PASS_DONE_54.806S"
+  },
+  "source_cause_inference": "The accepted memberships.setdefault(id(event), []).append(state) constructs per-event mutable lists and eagerly allocates defaults for 5,331,778 memberships. Two gen2 scans overlap this unchanged construction. A representation that avoids per-event lists targets the observed allocation cost; exact end-to-end improvement remains unverified.",
+  "next_action": "Allocate a fresh non-core group-metrics adapter with numeric order positions and original-order count/sum; preserve the exact union recurrence, then exact controls before a new affected pilot.",
+  "limits": [
+    "No final JSON/useful-step metrics; R5 remains24/32.",
+    "Sort/union durations are unknown because their start markers were not reached.",
+    "This measures the offline CPU auditor only, not serving CPU overhead or GPU performance.",
+    "No native ownership, dependencies, timing/non-perturbation, cost or reference admission."
+  ],
+  "verdict": "PASS_DIAGNOSIS_WITH_CENSORED_CONSTRUCTION"
+}

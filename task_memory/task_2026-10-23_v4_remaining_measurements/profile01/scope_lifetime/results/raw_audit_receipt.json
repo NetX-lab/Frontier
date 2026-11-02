@@ -1,0 +1,27 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_scope_lifetime_audit.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/results/primary_raw_audit.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_utc": "2026-10-24T19:09:41.697533+00:00",
+  "end_utc": "2026-10-24T19:09:41.811696+00:00",
+  "returncode": 0,
+  "seconds": 0.11415005195885897,
+  "python": "3.10.6",
+  "source_sha256": "0cec6d93c28408c46c07078c40a5293ffd9974470428841bad368a0a0a1f7414",
+  "stdout_sha256": "39b65701de4a0944361e9e539be5119777fb3dc127767a845879b0f704672ac2",
+  "stderr_sha256": "28710f1810b12c13a004ccac5ca1a3e4eb6ec6631becc1ce51def35a540e16fb",
+  "gpu_operations": 0
+}

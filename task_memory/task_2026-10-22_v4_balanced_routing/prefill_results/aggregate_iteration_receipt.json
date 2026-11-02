@@ -1,0 +1,134 @@
+{
+  "CLI_exit": 0,
+  "Modification History": [
+    {
+      "change": "Preserved initial Python3.10 exact-byte mismatch and recorded the targeted interpreter hypothesis before retry.",
+      "date": "2026-10-23"
+    }
+  ],
+  "attempt": "Python3.10.6",
+  "comparisons": [
+    {
+      "byte_equal": false,
+      "differences": [
+        {
+          "absolute_difference": 1.0842021724855044e-19,
+          "column": "time_stats.dsv4_fused_qkv_rmsnorm.std",
+          "original": "0.0005935112155497518",
+          "rebuilt": "0.0005935112155497519",
+          "row": 0
+        },
+        {
+          "absolute_difference": 2.168404344971009e-19,
+          "column": "time_stats.dsv4_index_prepare.std",
+          "original": "0.0017198811228028592",
+          "rebuilt": "0.001719881122802859",
+          "row": 1
+        },
+        {
+          "absolute_difference": 1.734723475976807e-18,
+          "column": "time_stats.dsv4_attention_layer.std",
+          "original": "0.009582663267420112",
+          "rebuilt": "0.009582663267420114",
+          "row": 2
+        },
+        {
+          "absolute_difference": 1.734723475976807e-18,
+          "column": "time_stats.dsv4_sparse_attention.std",
+          "original": "0.007948605996068517",
+          "rebuilt": "0.007948605996068519",
+          "row": 4
+        },
+        {
+          "absolute_difference": 2.168404344971009e-19,
+          "column": "time_stats.dsv4_fused_q_kv_prepare.std",
+          "original": "0.0010460953290341397",
+          "rebuilt": "0.00104609532903414",
+          "row": 5
+        }
+      ],
+      "original": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "original_sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f",
+      "rebuilt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "rebuilt_sha256": "fbdfad04346ea651a671ddfbc3399b4e9f00bdc4db21a6fc976c6e9e36d923e0"
+    },
+    {
+      "byte_equal": false,
+      "differences": [
+        {
+          "absolute_difference": 6.776263578034403e-21,
+          "column": "time_stats.dsv4_fused_qkv_rmsnorm.std",
+          "original": "5.3932056021132636e-05",
+          "rebuilt": "5.393205602113263e-05",
+          "row": 0
+        },
+        {
+          "absolute_difference": 1.0842021724855044e-19,
+          "column": "time_stats.dsv4_q_projection.std",
+          "original": "0.0009560808891859892",
+          "rebuilt": "0.000956080889185989",
+          "row": 0
+        },
+        {
+          "absolute_difference": 4.336808689942018e-19,
+          "column": "time_stats.dsv4_index_prepare.std",
+          "original": "0.0031065479591054434",
+          "rebuilt": "0.003106547959105443",
+          "row": 0
+        },
+        {
+          "absolute_difference": 8.673617379884035e-19,
+          "column": "time_stats.dsv4_sparse_attention.std",
+          "original": "0.004598337114895143",
+          "rebuilt": "0.004598337114895142",
+          "row": 0
+        },
+        {
+          "absolute_difference": 8.673617379884035e-19,
+          "column": "time_stats.dsv4_index_prepare.std",
+          "original": "0.004124427421540538",
+          "rebuilt": "0.0041244274215405385",
+          "row": 1
+        },
+        {
+          "absolute_difference": 1.0842021724855044e-19,
+          "column": "time_stats.dsv4_parallel_input_projections.std",
+          "original": "0.0005981543836391025",
+          "rebuilt": "0.0005981543836391026",
+          "row": 2
+        },
+        {
+          "absolute_difference": 1.0842021724855044e-19,
+          "column": "time_stats.dsv4_compressor.std",
+          "original": "0.0006031032710535978",
+          "rebuilt": "0.0006031032710535979",
+          "row": 2
+        },
+        {
+          "absolute_difference": 4.336808689942018e-19,
+          "column": "time_stats.dsv4_parallel_input_projections.std",
+          "original": "0.0023612155061888376",
+          "rebuilt": "0.002361215506188838",
+          "row": 3
+        },
+        {
+          "absolute_difference": 1.0842021724855044e-19,
+          "column": "time_stats.dsv4_q_projection.std",
+          "original": "0.0005584749074239809",
+          "rebuilt": "0.0005584749074239808",
+          "row": 3
+        }
+      ],
+      "original": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "original_sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43",
+      "rebuilt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "rebuilt_sha256": "dff438936b91f190cbf6cc105927bebdb9087350fdb0354035bf1f80aad06ffb"
+    }
+  ],
+  "csv_exact_bytes_pass": false,
+  "diagnosis_observed": "All14 changed cells are statistics.pstdev .std values; means/other fields and column order match. Existing local Python3.12.13 computes all94 .std strings exactly as collected worker Python3.12.3 CSVs.",
+  "input_changes": "None; only interpreter and local unpacked retained wheel path differ.",
+  "next_expected_result": "Both rebuilt CSVs byte-equal; otherwise stop and report unresolved exact-byte criterion.",
+  "next_hypothesis": "Executing the unchanged sealed CLI under existing local Python3.12.13 with retained pinned pandas2.3.3 wheel should remove the statistics.pstdev interpreter difference and yield exact CSV bytes.",
+  "task_id": "W128-V4-BALANCED-PREFILL-RESULTS"
+}

@@ -1,0 +1,20 @@
+{
+  "recorded_utc": "2026-10-24T18:08:45.710377+00:00",
+  "command": [
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "tests/unit/test_v4_trace_audit_metrics.py",
+    "-v"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "Python 3.10.6",
+  "scratch": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_owner_cpu_20261025_30lgigby",
+  "exit_code": 0,
+  "elapsed_seconds": 1.91348662879318,
+  "workload": "Small synthetic metrics and pinned source/AST controls only",
+  "full_trace_invocations": 0,
+  "memory_scope": "Not required for this small source/AST unit workload",
+  "pytest": "Unavailable in /usr/bin/python3; standard-library unittest used without installation"
+}

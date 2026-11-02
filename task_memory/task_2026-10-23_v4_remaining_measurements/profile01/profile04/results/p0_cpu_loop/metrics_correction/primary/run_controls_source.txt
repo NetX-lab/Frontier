@@ -1,0 +1,67 @@
+"""Run the two separately allocated complete controls exactly once."""
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+REPO = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028")
+TASK = REPO / "task_memory/task_2026-10-23_v4_remaining_measurements"
+RECORDS = TASK / "profile01/profile04/results/p0_cpu_loop/metrics_correction"
+SCRATCH = Path(__file__).resolve().parent
+BINDINGS = json.loads((RECORDS / "owner/complete_control_bindings.json").read_text())
+PINS = json.loads((RECORDS / "owner/input_source_bindings.json").read_text())["sources"]
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def execute(control):
+    role, lane, rank = control["key"]
+    prefix = SCRATCH / f"control_{role}_dp{lane}_rank{rank}"
+    bindings = control["input_bindings"]
+    for name in ("trace", "profile", "inventory"):
+        assert sha(Path(control["input_root"]) / bindings[name + "_path"]) == bindings[name + "_sha256"]
+    assert sha(control["retained_output_path"]) == control["retained_output_sha256"]
+    assert sha(control["retained_kernel_index_path"]) == control["retained_kernel_index_sha256"]
+    command = ["sudo", "-n", "systemd-run", "--scope", "-p", "MemoryMax=30G", "timeout", "60s",
+               "/usr/bin/python3", "-u", "-B", str(REPO / "tests/analysis/v4_trace_audit_metrics.py"),
+               bindings["trace_path"], str(prefix)]
+    receipt = {"allocation": "D-V4-P0-AUDIT-METRICS-CORRECTION", "key": control["key"],
+               "command": command, "cwd": str(REPO), "start_utc": datetime.now(timezone.utc).isoformat(),
+               "input_bindings": bindings, "baseline": control, "adapter_sha256": sha(command[11]),
+               "source_pins": PINS, "driver_sha256": sha(__file__), "attempt": "1/1", "status": "STARTING"}
+    record = prefix.with_suffix(".receipt.json")
+    with record.open("x") as output:
+        json.dump(receipt, output, indent=2)
+    started = time.monotonic()
+    with prefix.with_suffix(".stdout").open("x") as output, prefix.with_suffix(".stderr").open("x") as errors:
+        result = subprocess.run(command, cwd=REPO, stdout=output, stderr=errors)
+    receipt.update(returncode=result.returncode, enclosing_seconds=time.monotonic() - started,
+                   end_utc=datetime.now(timezone.utc).isoformat(), status="COMPLETE" if result.returncode == 0 else "FAILED")
+    cgroup_path = prefix.with_suffix(".cgroup.json")
+    if cgroup_path.exists():
+        receipt["actual_cgroup"] = json.loads(cgroup_path.read_text())
+    for path in sorted(SCRATCH.glob(prefix.name + ".*")):
+        if path != record:
+            receipt.setdefault("outputs", []).append({"path": str(path), "bytes": path.stat().st_size, "sha256": sha(path)})
+    record.write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps({"key": control["key"], "returncode": result.returncode, "seconds": receipt["enclosing_seconds"], "receipt": str(record)}), flush=True)
+    return result.returncode
+
+
+for pin in PINS:
+    assert sha(pin["path"]) == pin["expected_sha256"], pin
+assert sha(REPO / "tests/analysis/v4_trace_audit_metrics.py") == "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a"
+with ThreadPoolExecutor(max_workers=2) as pool:
+    results = list(pool.map(execute, BINDINGS["controls"]))
+assert results == [0, 0], results

@@ -1,0 +1,28 @@
+{
+  "command": "timeout 60s /usr/bin/python3 -B task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/owner/static_compile.py",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/usr/bin/python3",
+  "conda": "not used; /usr/bin/python3",
+  "elapsed_seconds": 0.005290464032441378,
+  "status": "PASS",
+  "compiled_sources": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics_timing.py",
+      "sha256": "fdce5eca10e0cea28af12b87d25a94ed68f0ce0de2eda77c6b5fa2ccb5b541b5",
+      "gross_lines": 98,
+      "expected": "Compiles without execution",
+      "actual": "Compiled without execution",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/owner/tiny_control.py",
+      "sha256": "6e6b69a9317cc6418aa7a39ec92a960e4007bf640d15b56990ce9e33e0b4c010",
+      "gross_lines": 257,
+      "expected": "Compiles without execution",
+      "actual": "Compiled without execution",
+      "status": "PASS"
+    }
+  ],
+  "equivalence_invocations": 0
+}

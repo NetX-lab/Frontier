@@ -1057,7 +1057,10 @@ class Request(BaseEntity):
         # reaches the length that samples once the sample is appended.
         if scheduler_num_computed_tokens is not None and self._preempted_step is None:
             if self.is_decoding:
-                sample_seq_len = self._num_processed_tokens + 1
+                # A decode step always samples. Its row ends at the computed
+                # frontier, which on MONOLITHIC excludes the sampled token
+                # still missing from the KV cache.
+                sample_seq_len = scheduler_num_computed_tokens
                 step_samples = True
             else:
                 if self._num_recomputed_tokens is not None:

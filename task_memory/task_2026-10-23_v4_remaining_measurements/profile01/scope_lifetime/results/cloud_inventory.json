@@ -1,0 +1,52 @@
+{
+  "bytes": 224883,
+  "cloud_writes": 0,
+  "effective_uid": 0,
+  "file_count": 5,
+  "files": [
+    {
+      "bytes": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "path": "diagnostics/fault.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uid": 0
+    },
+    {
+      "bytes": 15576,
+      "gid": 0,
+      "mode": "0o600",
+      "path": "diagnostics/stages.jsonl",
+      "sha256": "ee426997af0349e1510d3113525f1e6700781da4c536385e64744136aca6818e",
+      "uid": 0
+    },
+    {
+      "bytes": 18882,
+      "gid": 0,
+      "mode": "0o644",
+      "path": "probe/control_trace.json",
+      "sha256": "a3815882be30a2ac83b50577b508e74cb5211cc06e66fb81327cf60d5c8f32bc",
+      "uid": 0
+    },
+    {
+      "bytes": 18845,
+      "gid": 0,
+      "mode": "0o644",
+      "path": "probe/observe_trace.json",
+      "sha256": "fe8c03c857ec412fbb5dd02335b2454e4ac3b25d3fa88b72d504c0786a6fbee8",
+      "uid": 0
+    },
+    {
+      "bytes": 171580,
+      "gid": 0,
+      "mode": "0o644",
+      "path": "probe/probe_report.json",
+      "sha256": "e988ee758ae7e08a52ecd996277b8b574f7113511f58d3ef9d4ddad77812e586",
+      "uid": 0
+    }
+  ],
+  "observed_utc": "2026-10-24T18:16:51.777451+00:00",
+  "readonly_alias": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_scope_lifetime_20261024_01",
+  "ssh_user": "i-fengyicheng",
+  "worker_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_scope_lifetime_20261024_01"
+}

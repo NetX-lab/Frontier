@@ -1,0 +1,26 @@
+{
+  "tests_run": 9,
+  "failures": [],
+  "errors": [],
+  "success": true,
+  "capture_error": null,
+  "seconds": 0.5969840628094971,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/usr/bin/python3",
+  "environment": {
+    "PYTHONPATH": null,
+    "PYTHONHOME": null,
+    "PYTHONMALLOC": null,
+    "PYTHONMALLOCSTATS": null,
+    "PYTHONFAULTHANDLER": null,
+    "LD_PRELOAD": null,
+    "LD_LIBRARY_PATH": "/usr/local/nvidia/lib64",
+    "MALLOC_CHECK_": null,
+    "GLIBC_TUNABLES": null,
+    "MALLOC_PERTURB_": null,
+    "MALLOC_ARENA_MAX": null
+  },
+  "assertion_count": 90,
+  "used": 1,
+  "ceiling": 1
+}

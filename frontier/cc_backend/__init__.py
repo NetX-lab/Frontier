@@ -49,6 +49,7 @@ from frontier.cc_backend.cc_backend_config import (
     AnalyticalCCBackendConfig,
     CollectiveSimCCBackendConfig,
     AstraSimAnalyticalCCBackendConfig,
+    MeasuredCCBackendConfig,
 )
 
 # Import base class (no dependencies on config.config)
@@ -64,6 +65,10 @@ from frontier.cc_backend.backends.collective_sim_cc_backend import CollectiveSim
 from frontier.cc_backend.backends.astra_sim_analytical_cc_backend import (
     AstraSimAnalyticalCCBackend,
 )
+from frontier.cc_backend.backends.measured_cc_backend import (
+    MeasuredCCBackend,
+    MeasuredCCOutOfRangeError,
+)
 
 __all__ = [
     "BaseCCBackend",
@@ -73,8 +78,11 @@ __all__ = [
     "AnalyticalCCBackendConfig",
     "CollectiveSimCCBackendConfig",
     "AstraSimAnalyticalCCBackendConfig",
+    "MeasuredCCBackendConfig",
     "VidurCCBackend",
     "AnalyticalCCBackend",
     "CollectiveSimCCBackend",
     "AstraSimAnalyticalCCBackend",
+    "MeasuredCCBackend",
+    "MeasuredCCOutOfRangeError",
 ]

@@ -1,0 +1,77 @@
+{
+  "status": "PASS_PLATFORM_TERMINAL",
+  "job": "exp-1023-235250-540507",
+  "observed_at_utc": "2026-10-23T16:24:24.606576+00:00",
+  "phase": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-23T15:54:35Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "creator": "i-fengyicheng",
+  "charged_group": "codesign",
+  "preemptible": false,
+  "platform_label_values": {
+    "quotagroup": "codesign",
+    "preemptible": "no"
+  },
+  "resources": {
+    "default": {
+      "replicas": 1,
+      "nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-moe-local-run:/data/ycfeng/Frontier/.worktrees/v4-moe-local-run",
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "16",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "16",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "replicas": [
+    {
+      "name": "exp-1023-235250-540507-cfcd2084",
+      "phase": "Succeeded",
+      "node": null,
+      "containers": [
+        {
+          "name": "default",
+          "restart_count": 0,
+          "state": {
+            "terminated": {
+              "exitCode": 0,
+              "reason": "Completed",
+              "startedAt": "2026-10-23T15:53:00Z",
+              "finishedAt": "2026-10-23T15:54:32Z",
+              "containerID": "containerd://0cfd85861317cb1d6bf3532bbe1cbc2afe7997858ce2f0901cf5de6506dbcd5b"
+            }
+          },
+          "image_id": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+        }
+      ]
+    }
+  ],
+  "launcher_alive": false,
+  "input_hashes_unchanged": 1003,
+  "manifest_sha256": "2ce8333148675cbec721c7f0f9710f70c1b031032be971ffcf7b1e754a1377f4",
+  "previous_inspector_failure": "Expected fully qualified quota label and false; API uses codesign and no as documented. Launcher had already exited after Succeeded. First snapshot preserved; no workload/config change."
+}

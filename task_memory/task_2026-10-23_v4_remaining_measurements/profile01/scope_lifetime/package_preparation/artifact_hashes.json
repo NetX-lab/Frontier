@@ -1,0 +1,199 @@
+{
+  "task_id": "W128-SCOPE-LIFETIME-PACKAGE",
+  "source_package_commit": "106779954d1e804feabe0db6bd9de3515d58b01c",
+  "records_commit": "15b1d1974e7c73440632e66976a4f8fac4cfc892",
+  "files": {
+    "archive_budget.json": {
+      "sha256": "85d95e530b8aa493e778276185a26c6a119af9ee457c6157a582d9498a9f0b91",
+      "bytes": 1330,
+      "lines": 50
+    },
+    "build_package.py": {
+      "sha256": "a42524884ce480001f3cd44c2e348da94ae77b941d12a9283409926353ed7711",
+      "bytes": 8432,
+      "lines": 140
+    },
+    "checkpoint.md": {
+      "sha256": "a03ddb07869e8cf80f8c4835c0d287cfe5858803895af25fa202067cd3c1edc7",
+      "bytes": 2347,
+      "lines": 43
+    },
+    "closure_01.execution.json": {
+      "sha256": "b994b50bda5aed4bd3a6ad3fab22888aaa9f281d5b81323a887248d372be91f3",
+      "bytes": 553,
+      "lines": 12
+    },
+    "closure_01.json": {
+      "sha256": "f7d848bfccce0823a3d6018d2dd237bcf30201566b25bc963db7697c61a6a61f",
+      "bytes": 1039,
+      "lines": 22
+    },
+    "closure_01.stdin.txt": {
+      "sha256": "a617e8592e05d01a6997221ee76efeca0b88cf1be1b7aab374f3903be6f19dd5",
+      "bytes": 5718,
+      "lines": 59
+    },
+    "closure_01.stdout.log": {
+      "sha256": "b38794cba10ca15f822acde58b74c857c115198abadb68c571a2a5cb2b1f2b53",
+      "bytes": 1040,
+      "lines": 23
+    },
+    "closure_initial_failure.json": {
+      "sha256": "4a436088ca8a603f5e5df36479479529c18090300ffa80234cb8d0e9de33b26e",
+      "bytes": 634,
+      "lines": 9
+    },
+    "commands.json": {
+      "sha256": "c522ef7f8ff102640a7e1eb14f11e61ac1a195001ab5238e836144df65862b9a",
+      "bytes": 6288,
+      "lines": 199
+    },
+    "cpu_candidate_01.execution.json": {
+      "sha256": "2c2a09ac5ce9cc79bf7102f79952182450969a6c11817d71cec92b9cfcfde4f5",
+      "bytes": 710,
+      "lines": 25
+    },
+    "cpu_candidate_01.stderr.log": {
+      "sha256": "af7737638f13b69e359a2a9375b8b9a05b0cb90601df3497b3263210a01b8474",
+      "bytes": 101,
+      "lines": 3
+    },
+    "cpu_candidate_01.stdin.txt": {
+      "sha256": "246d31ebd0e8772ddcf0adc9d30b59085383c5eba43a7410c1979e2d677595be",
+      "bytes": 6639,
+      "lines": 97
+    },
+    "cpu_candidate_01.stdout.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "lines": 0
+    },
+    "cpu_candidate_02.execution.json": {
+      "sha256": "56842ae8df5083c0521cf88ad5c089ffd10a221d7bb25aa8662692367c49295f",
+      "bytes": 707,
+      "lines": 25
+    },
+    "cpu_candidate_02.json": {
+      "sha256": "033eaf47d3505e9f5d0026c4b4418b48a4108eea373be7ec106725b4a1e3879c",
+      "bytes": 25399,
+      "lines": 365
+    },
+    "cpu_candidate_02.stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "lines": 0
+    },
+    "cpu_candidate_02.stdin.txt": {
+      "sha256": "5d97b4bad35759cd6c6de9bb59c59ae4370f3d8b4240ba48cd7412be54972dfd",
+      "bytes": 6621,
+      "lines": 97
+    },
+    "cpu_candidate_02.stdout.log": {
+      "sha256": "c6012e870e7f7407821375c94705377860d06281cfe43f5d8807ed1b71a1df5a",
+      "bytes": 23441,
+      "lines": 1
+    },
+    "generated_launcher.diff": {
+      "sha256": "d0f8713d0ee03d9f96e22a5d66afff66c8962df35c9cc9874ee583f07dce3c93",
+      "bytes": 2325,
+      "lines": 34
+    },
+    "generation_01.execution.json": {
+      "sha256": "41a6e37a270384e1c3301802a7c3964fb73566d0d95c4c83370cd4d07a365551",
+      "bytes": 663,
+      "lines": 16
+    },
+    "generation_01.stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "lines": 0
+    },
+    "generation_01.stdout.log": {
+      "sha256": "ddea09d123f4a57768ef872b9508c87254c490ff064a9a14186567644fed1add",
+      "bytes": 339,
+      "lines": 1
+    },
+    "image_check.py": {
+      "sha256": "002fb52b9b08c246fe01fcedefd4002d14cfea690540680de40feec481fe2639",
+      "bytes": 4102,
+      "lines": 78
+    },
+    "original_input_pins.json": {
+      "sha256": "8eb6fc8dc7dc11f8cd6520fcb1e0a776337eb2ca918690eea2dfc513f7dd1531",
+      "bytes": 19477,
+      "lines": 277
+    },
+    "package_inventory.json": {
+      "sha256": "dafbcb7cc266e018ba4c41efc4fe52e73c4ac47fc6fcd7aa8928d2a187f90165",
+      "bytes": 4522,
+      "lines": 125
+    },
+    "plan.md": {
+      "sha256": "38bd972cd054c21b57aced0b65745f17873ae6ec9898d25ee8701e51b41d1a9c",
+      "bytes": 1561,
+      "lines": 15
+    },
+    "profile_plan.json": {
+      "sha256": "90800cbed3a90453b045a5fdfbd4517be4201972e8e136e0c29187ebd85abc97",
+      "bytes": 1027,
+      "lines": 27
+    },
+    "progress.md": {
+      "sha256": "f6b03efb72e512f1a75c3504c460c62b5d47880841a70e84bf4a6944efd38cdb",
+      "bytes": 3822,
+      "lines": 21
+    },
+    "requirements.md": {
+      "sha256": "ad24bdaa2d757f63384cb433da3bbe5b93fee41dbdf340fef30a583d8d4b91d2",
+      "bytes": 7019,
+      "lines": 18
+    },
+    "source_budget.json": {
+      "sha256": "f445e0768bf4a47a1cd231e59f425684a50164bc3dcc8e9cc895012a43d06e5c",
+      "bytes": 841,
+      "lines": 39
+    },
+    "source_changes.diff": {
+      "sha256": "ac5cd232d3329045807763dfeacb52e812d96e450e23741cc8cf7aefe747d2fb",
+      "bytes": 14265,
+      "lines": 254
+    },
+    "source_numstat.txt": {
+      "sha256": "2a563ebe407794c7e354601dc33979a8448b830cba8626259a51c8c0cdbdda41",
+      "bytes": 363,
+      "lines": 3
+    },
+    "source_step.diff": {
+      "sha256": "f35c2002f470d517ee2ed5332984e8b52a6e53dfaef5b15e93b178a30612350f",
+      "bytes": 213220,
+      "lines": 3848
+    },
+    "source_step_numstat.txt": {
+      "sha256": "f91cc6f30c0b07fddda85f51bd50cdf186e2d78fe605fa0573f92039b79a5b0e",
+      "bytes": 3214,
+      "lines": 22
+    },
+    "source_step_paths.txt": {
+      "sha256": "2659f43d78b75a26b855096fa906f41619210c34026da4ab803327d1b19838e1",
+      "bytes": 3094,
+      "lines": 22
+    },
+    "summary.md": {
+      "sha256": "135da9cf61f96c2f7165255f2860cf2a3d5a09d180b6f217a718b6cbb8618f81",
+      "bytes": 3032,
+      "lines": 20
+    },
+    "test_report_2026-10-24_scope_lifetime_package.md": {
+      "sha256": "8249d04816634ab0dd58d9456609efd3c5cfbeadd47c2dcc0db4b57cf3a3667a",
+      "bytes": 3959,
+      "lines": 23
+    },
+    "whitespace_initial_failure.json": {
+      "sha256": "920c0ab675410d64e1bf7961aa0a2925fc31523b19e316af5a30bb41c5bfd431",
+      "bytes": 778,
+      "lines": 9
+    }
+  },
+  "manifest_excludes_self": true,
+  "raw_writers_closed": true
+}

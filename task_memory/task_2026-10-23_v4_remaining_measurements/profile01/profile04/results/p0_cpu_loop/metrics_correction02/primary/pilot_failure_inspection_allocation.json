@@ -1,0 +1,27 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "purpose": "Once-only closed failure/archive/index inspection; no raw trace audit or old driver import",
+  "recorded_utc": "2026-10-24T20:47:36.462547+00:00",
+  "driver_path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/inspect_failed_pilot.py",
+  "driver_sha256": "233bfeec1ed7054399f44bd3953e96dd091d780723725cd7b1684e841b79219b",
+  "driver_lines": 70,
+  "driver_line_cap": 180,
+  "artifact_validation_invocation_ceiling": 1,
+  "raw_trace_audit_invocations": 0,
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/inspect_failed_pilot.py"
+  ]
+}

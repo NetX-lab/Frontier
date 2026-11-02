@@ -1,0 +1,80 @@
+{
+  "status": "FAILED_SYNTHETIC_ARGV_TRANSPORT",
+  "observed_utc": "2026-10-25T04:01:43.421372+00:00",
+  "control_used": 1,
+  "control_ceiling": 1,
+  "full_diagnostic_used": 0,
+  "returncode": 1,
+  "enclosing_seconds": 1.7025562380440533,
+  "actual_controller_memory_bytes": 32212254720,
+  "synthetic_metadata_rows": 0,
+  "expected_signal_behavior": "UNMEASURED",
+  "observed_inferior_exit_codes": [
+    1,
+    1
+  ],
+  "error": "SyntaxError: unexpected EOF while parsing; received first source line import\\",
+  "cause_scope": "GDB no-shell startup did not preserve multiline Python -c argument. The full audit already uses a file path; no full trace was invoked.",
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py",
+      "bytes": 6430,
+      "sha256": "d867c9e15a05ae581cb592a24ea0e309d2f26d04f610de094c00f97f6f1a2c14"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_command.json",
+      "bytes": 997,
+      "sha256": "91fba8a7c7a465dbce2e26fe7e437598febc4be9869ebc1dd6710f788715d520"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control_result.json",
+      "bytes": 2689,
+      "sha256": "71712c94def2e34f8c0e33bf91a830be8f0b7098e577c10faf28298238e8412d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.command.json",
+      "bytes": 2099,
+      "sha256": "d6c1aa170829067da6f28787b58ca6716c4bf0d2d8e1f50e632108a696a8e4e9"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.result.json",
+      "bytes": 103,
+      "sha256": "28f70efea96d3a500f357401dbe221fa338a16e837c2025243c8e981cafa2b27"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stderr",
+      "bytes": 93,
+      "sha256": "dbbd1474800c85d0985c3938df990e03c416351273fa4317a6fc12e3dd1764d4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/exit0.stdout",
+      "bytes": 434,
+      "sha256": "0e08fec851e7f7f97dc6574970c768f7c55c686a7fbeb81e1d5246cdf0f33972"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.command.json",
+      "bytes": 2124,
+      "sha256": "cf99dba6180035c99ffc7b85f72c5714255ec1bb3d202f3547a9f8bf4465230a"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.result.json",
+      "bytes": 103,
+      "sha256": "28f70efea96d3a500f357401dbe221fa338a16e837c2025243c8e981cafa2b27"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stderr",
+      "bytes": 93,
+      "sha256": "dbbd1474800c85d0985c3938df990e03c416351273fa4317a6fc12e3dd1764d4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/sigabrt.stdout",
+      "bytes": 434,
+      "sha256": "9cf983e74379cf5a646a2b4198205a5726826d12032656f4f86294eb0ccaa03b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/control_launch.receipt.json",
+      "bytes": 1135,
+      "sha256": "d750c2a6fc4fc2e327ad170e7007a47f663b33ad1aadde1299c3f600530c5c72"
+    }
+  ]
+}

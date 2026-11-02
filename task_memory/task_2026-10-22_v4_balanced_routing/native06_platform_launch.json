@@ -1,0 +1,45 @@
+{
+  "observed_utc": "2026-10-22T20:36:55.458656+00:00",
+  "job": "exp-1023-043123-830898",
+  "created_utc": "2026-10-22T20:31:23Z",
+  "creator": "i-fengyicheng",
+  "charged_group": "codesign",
+  "preemptible_label": "no",
+  "phase": "Running",
+  "tasks": [
+    {
+      "name": "default",
+      "replicas": 4,
+      "images": [
+        "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+      ],
+      "resources": [
+        {
+          "limits": {
+            "cpu": "64",
+            "mellanox.com/mlnx_rdma": "1",
+            "memory": "500Gi",
+            "nvidia.com/gpu": "8",
+            "rdma/mlnx_shared": "8"
+          },
+          "requests": {
+            "cpu": "64",
+            "memory": "500Gi",
+            "nvidia.com/gpu": "8"
+          }
+        }
+      ],
+      "source_mounts": {
+        "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06:/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06"
+      }
+    }
+  ],
+  "local_hostname": "kun-workspace-vgen2",
+  "local_resolved_ip": "100.96.128.195",
+  "status_counts": {
+    "default": {
+      "active": 4
+    }
+  },
+  "initial_receipt_error": "Rejected valid platform preemptible=no because first check expected false; actual yes/no encoding verified before this check."
+}

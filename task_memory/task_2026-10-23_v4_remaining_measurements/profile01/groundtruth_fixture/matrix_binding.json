@@ -1,0 +1,23 @@
+{
+  "status": "PASS_EXPLICIT_EXISTING_77_CASE_BINDING",
+  "source_revision": "6abd2d8e5a99f948236f062b69589a91fc511437",
+  "source_sha256": "d5f702efe9d108ee0ef34594f3d61f459a14268a7fa55b7a68134d30aa4e5b43",
+  "base_revision": "c4b59b65f177619223c7e0c8466bf852ee9c8083",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "comparison_source": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "identical_cases": 77,
+  "new_capture": false,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "domain_git_tree_sha256": {
+    "4a1b53e6033134c59b4561306eb2d586bd3d8300": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62",
+    "c4b59b65f177619223c7e0c8466bf852ee9c8083": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62",
+    "6abd2d8e5a99f948236f062b69589a91fc511437": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62"
+  }
+}

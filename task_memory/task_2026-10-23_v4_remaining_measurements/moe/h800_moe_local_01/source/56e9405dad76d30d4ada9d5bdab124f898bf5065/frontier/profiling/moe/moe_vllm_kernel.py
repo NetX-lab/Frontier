@@ -1,0 +1,1277 @@
+"""
+vLLM fused MoE kernel wrapper for accurate load imbalance profiling.
+
+This module provides a wrapper around vLLM's optimized fused_moe_kernel,
+which is necessary for accurately capturing the performance impact of
+expert load imbalance in grouped GEMM operations.
+
+Design rationale:
+- Per-expert loop implementation (moe_impl.py) cannot capture true load imbalance effects
+- vLLM's fused_moe_kernel uses optimized grouped GEMM with real parallelism
+- Only used when --enable_load_imbalance is specified for accurate profiling
+
+Supported vLLM APIs:
+- vLLM 0.10.x low-level fused kernel entry point
+- Current vLLM functional ``fused_experts`` entry point
+
+Note: vLLM 0.3.x support has been removed. Please use vLLM >= 0.10.0.
+"""
+
+import json
+import math
+
+import torch
+import triton
+import triton.language as tl
+from types import SimpleNamespace
+from typing import Any, Dict, List, Optional, Tuple
+
+from frontier.profiling.common.accelerator import accelerator_platform
+from frontier.profiling.common.timer_stats_store import TimerStatsStore
+from frontier.profiling.moe.fp8_block_experts import (
+    expert_parallel_layout,
+    get_fp8_block_routed_experts,
+)
+from frontier.profiling.moe.mxfp4_marlin_experts import (
+    get_mxfp4_marlin_routed_experts,
+)
+from frontier.profiling.utils import (
+    normalize_profile_method,
+    validate_profile_method_platform,
+)
+
+VLLM_AVAILABLE = False
+VLLM_VERSION = None
+VLLM_API_VERSION = None
+FP8_QUANT_AVAILABLE = False
+_functional_fused_experts = None
+# Bound only by the low-level import below, like `_functional_fused_experts`.
+_vllm_custom_ops = None
+_FUNCTIONAL_MXFP4_STATES: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
+
+
+def validate_moe_quantization_mode(*, use_fp8: bool, use_mxfp4: bool) -> str:
+    """Return the selected grouped-GEMM quantization mode.
+
+    The standard MoE producer has one physical weight path per measurement.
+    FP8 W8A8 and MXFP4/AITER therefore cannot be enabled for the same run.
+    Keeping this validation independent of vLLM makes invalid CLI/configuration
+    combinations fail on the CPU master before a worker is allocated.
+    """
+
+    if use_fp8 and use_mxfp4:
+        raise ValueError("use_fp8 and use_mxfp4 are mutually exclusive.")
+    if use_mxfp4:
+        return "mxfp4"
+    if use_fp8:
+        return "fp8"
+    return "bf16"
+
+
+def plan_mxfp4_weight_layout(
+    *,
+    num_experts: int,
+    hidden_dim: int,
+    expert_hidden_dim: int,
+    use_gated: bool,
+    group_size: int = 32,
+) -> Dict[str, object]:
+    """Describe the physical MXFP4/AITER expert-weight representation.
+
+    MXFP4 stores two 4-bit values in each byte.  E8M0 carries one byte per
+    group of ``group_size`` input values.  The returned shapes are a CPU-safe
+    planning contract; current vLLM's ``OnlineQuantizationConfig`` materializes
+    the actual packed tensors in ``_get_functional_mxfp4_state``.
+    """
+
+    dimensions = {
+        "num_experts": num_experts,
+        "hidden_dim": hidden_dim,
+        "expert_hidden_dim": expert_hidden_dim,
+        "group_size": group_size,
+    }
+    for name, value in dimensions.items():
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            raise ValueError(f"{name} must be a positive integer, got {value!r}")
+    if group_size != 32:
+        raise ValueError(f"MXFP4 profiling requires group_size=32, got {group_size}")
+    if hidden_dim % 2:
+        raise ValueError("hidden_dim must be divisible by 2 for packed FP4 weights")
+    if expert_hidden_dim % 2:
+        raise ValueError(
+            "expert_hidden_dim must be divisible by 2 for packed FP4 weights"
+        )
+    if hidden_dim % group_size:
+        raise ValueError("hidden_dim must be divisible by group_size")
+    if expert_hidden_dim % group_size:
+        raise ValueError("expert_hidden_dim must be divisible by group_size")
+
+    w13_rows = expert_hidden_dim * (2 if use_gated else 1)
+    return {
+        "weight_dtype": "uint8",
+        "scale_dtype": "uint8",
+        "scale_format": "E8M0",
+        "packing": "two_fp4_values_per_byte",
+        "group_size": group_size,
+        "w13_shape": (num_experts, w13_rows, hidden_dim // 2),
+        "w2_shape": (num_experts, hidden_dim, expert_hidden_dim // 2),
+        "w13_scale_shape": (num_experts, w13_rows, hidden_dim // group_size),
+        "w2_scale_shape": (
+            num_experts,
+            hidden_dim,
+            expert_hidden_dim // group_size,
+        ),
+    }
+
+try:
+    import vllm
+    VLLM_VERSION = vllm.__version__
+
+    try:
+        # vLLM 0.10.x low-level API.
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            fused_moe_kernel,
+            invoke_fused_moe_kernel,
+            moe_align_block_size,
+            try_get_optimal_moe_config,
+            get_config_dtype_str,
+        )
+        # The local top-k reduction calls `_custom_ops.moe_sum`. `fused_moe`
+        # already imports this module, so this import cannot change which API
+        # branch is selected.
+        from vllm import _custom_ops as _vllm_custom_ops
+
+        VLLM_API_VERSION = "0.10.x"
+    except ImportError:
+        # Current vLLM intentionally exposes the complete fused operation
+        # rather than the two private kernel invocations Frontier used before.
+        from vllm.model_executor.layers.fused_moe import (
+            fused_experts as _functional_fused_experts,
+        )
+
+        VLLM_API_VERSION = "functional_fused_experts"
+    VLLM_AVAILABLE = True
+    print(f"vLLM {VLLM_VERSION} loaded successfully (API: {VLLM_API_VERSION})")
+
+    # Try to import FP8 quantization utilities
+    try:
+        from vllm.model_executor.layers.fused_moe.utils import (
+            moe_kernel_quantize_input as _moe_kernel_quantize_input,
+        )
+        from vllm.utils.deep_gemm import (
+            per_block_cast_to_fp8 as _per_block_cast_to_fp8,
+        )
+        FP8_QUANT_AVAILABLE = True
+        print("FP8 quantization utilities loaded successfully")
+    except ImportError:
+        FP8_QUANT_AVAILABLE = False
+        _per_block_cast_to_fp8 = None
+        print("Warning: FP8 quantization utilities not available")
+
+except ImportError as e:
+    print(f"vLLM import error: {e}")
+    VLLM_AVAILABLE = False
+    VLLM_API_VERSION = None
+    _per_block_cast_to_fp8 = None
+    print("Warning: vLLM >= 0.10.0 required. Load imbalance profiling will not work.")
+
+
+def check_vllm_available():
+    """Check if vLLM is available for fused MoE kernel."""
+    return VLLM_AVAILABLE
+
+
+def check_fp8_available():
+    """Check if FP8 quantization is available."""
+    return FP8_QUANT_AVAILABLE
+
+
+# FP8 E4M3 max value
+FP8_E4M3_MAX = 448.0
+
+
+def _validate_block_shape(
+    block_shape: Optional[List[int]],
+) -> Optional[Tuple[int, int]]:
+    if block_shape is None:
+        return None
+    if len(block_shape) != 2:
+        raise ValueError(
+            f"block_shape must have 2 elements, got {len(block_shape)}."
+        )
+    block_n, block_k = block_shape
+    if block_n <= 0 or block_k <= 0:
+        raise ValueError(
+            f"block_shape must be positive, got {block_shape}."
+        )
+    return block_n, block_k
+
+
+def quantize_weights_to_fp8(
+    weights: torch.Tensor,
+    per_channel: bool = False,
+    block_shape: Optional[List[int]] = None,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Convert weights to FP8 and compute scales.
+
+    Args:
+        weights: Weight tensor to quantize
+        per_channel: Whether to use per-channel quantization
+        block_shape: Block dimensions for block-wise quantization (e.g., [128, 128])
+
+    Returns:
+        Tuple of (quantized_weights, scales)
+    """
+    block_dims = _validate_block_shape(block_shape)
+    if block_dims is not None:
+        if per_channel:
+            raise ValueError(
+                "Block-wise FP8 quantization does not support per-channel quantization."
+            )
+        if _per_block_cast_to_fp8 is None:
+            raise ImportError(
+                "Block-wise FP8 quantization requires vLLM deep_gemm utilities."
+            )
+        block_n, block_k = block_dims
+        if weights.ndim == 2:
+            w_fp8, w_scale = _per_block_cast_to_fp8(
+                weights, block_size=[block_n, block_k]
+            )
+            return w_fp8, w_scale
+        if weights.ndim != 3:
+            raise ValueError(
+                f"Expected 2D or 3D weight tensor, got shape {tuple(weights.shape)}."
+            )
+        w_list = []
+        s_list = []
+        for expert_idx in range(weights.size(0)):
+            w_fp8, w_scale = _per_block_cast_to_fp8(
+                weights[expert_idx].contiguous(),
+                block_size=[block_n, block_k],
+            )
+            w_list.append(w_fp8)
+            s_list.append(w_scale)
+        return torch.stack(w_list), torch.stack(s_list)
+    if per_channel:
+        # Per-channel: scale per output channel (dim 1 for MoE weights)
+        # weights shape: [num_experts, out_dim, in_dim]
+        absmax = weights.abs().amax(dim=-1, keepdim=True)
+        scale = absmax / FP8_E4M3_MAX
+        # Avoid division by zero
+        scale = torch.where(scale == 0, torch.ones_like(scale), scale)
+        w_fp8 = (weights / scale).clamp(
+            -FP8_E4M3_MAX, FP8_E4M3_MAX
+        ).to(torch.float8_e4m3fn)
+        return w_fp8, scale.squeeze(-1)
+    else:
+        # Per-tensor: single scale per expert
+        # weights shape: [num_experts, out_dim, in_dim]
+        absmax = weights.abs().amax(dim=(-2, -1), keepdim=True)
+        scale = absmax / FP8_E4M3_MAX
+        # Avoid division by zero
+        scale = torch.where(scale == 0, torch.ones_like(scale), scale)
+        w_fp8 = (weights / scale).clamp(
+            -FP8_E4M3_MAX, FP8_E4M3_MAX
+        ).to(torch.float8_e4m3fn)
+        # Return scale as [num_experts] for per-tensor
+        return w_fp8, scale.squeeze(-1).squeeze(-1)
+
+
+def quantize_activations_to_fp8(
+    activations: torch.Tensor,
+    per_channel_quant: bool,
+    block_shape: Optional[List[int]],
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Quantize one expert GEMM input to FP8 with dynamic scales, as vLLM does.
+
+    vLLM's `moe_kernel_quantize_input` gives a block shape per-token-group
+    scales and otherwise per-token or per-tensor scales, the layouts the
+    fused kernel reads in each mode.
+    """
+    if not FP8_QUANT_AVAILABLE:
+        raise ImportError(
+            "vLLM FP8 activation quantization utilities are required for FP8 "
+            "MoE activation profiling. Install the profiling environment from "
+            "environment_profiling.yml or use an existing vLLM environment with "
+            "moe_kernel_quantize_input available."
+        )
+    return _moe_kernel_quantize_input(
+        activations, None, torch.float8_e4m3fn, per_channel_quant, block_shape
+    )
+
+
+def _invoke_kernel(
+    A: torch.Tensor,
+    B: torch.Tensor,
+    C: torch.Tensor,
+    topk_weights: torch.Tensor,
+    sorted_token_ids: torch.Tensor,
+    expert_ids: torch.Tensor,
+    num_tokens_post_padded: torch.Tensor,
+    mul_routed_weight: bool,
+    top_k: int,
+    config: Dict,
+    A_scale: Optional[torch.Tensor] = None,
+    B_scale: Optional[torch.Tensor] = None,
+    use_fp8: bool = False,
+    per_channel_quant: bool = False,
+    block_shape: Optional[List[int]] = None,
+) -> None:
+    """
+    Wrapper for vLLM 0.10.x invoke_fused_moe_kernel.
+
+    Args:
+        A: Input activations tensor
+        B: Expert weights tensor
+        C: Output tensor
+        topk_weights: Routing weights for top-k experts
+        sorted_token_ids: Sorted token indices for kernel
+        expert_ids: Expert indices for each token block
+        num_tokens_post_padded: Number of tokens after padding
+        mul_routed_weight: Whether to multiply by routing weights
+        top_k: Number of experts per token
+        config: Kernel configuration (BLOCK_SIZE_M, BLOCK_SIZE_N, etc.)
+        A_scale: Activation scale for FP8 quantization
+        B_scale: Weight scale for FP8 quantization
+        use_fp8: Whether to use FP8 W8A8 quantization
+        per_channel_quant: Whether to use per-channel quantization
+        block_shape: Block dimensions for block-wise quantization
+    """
+    # vLLM's `fused_experts_impl` derives compute_type from the unquantized
+    # hidden-state dtype, which is the output buffer's dtype here. Under FP8 the
+    # input `A` is already quantized, so its dtype does not name it.
+    dtype = C.dtype
+    if dtype == torch.bfloat16:
+        compute_type = tl.bfloat16
+    elif dtype == torch.float16:
+        compute_type = tl.float16
+    elif dtype == torch.float32:
+        compute_type = tl.float32
+    else:
+        raise ValueError(f"Unsupported dtype for fused MoE compute_type: {dtype}")
+
+    invoke_fused_moe_kernel(
+        A=A,
+        B=B,
+        C=C,
+        A_scale=A_scale,
+        B_scale=B_scale,
+        B_zp=None,
+        topk_weights=topk_weights,
+        sorted_token_ids=sorted_token_ids,
+        expert_ids=expert_ids,
+        num_tokens_post_padded=num_tokens_post_padded,
+        mul_routed_weight=mul_routed_weight,
+        top_k=top_k,
+        config=config,
+        compute_type=compute_type,
+        use_fp8_w8a8=use_fp8,
+        use_int8_w8a8=False,
+        use_int8_w8a16=False,
+        use_int4_w4a16=False,
+        per_channel_quant=per_channel_quant,
+        block_shape=block_shape,
+        B_bias=None,
+    )
+
+
+def _run_fused_moe_iteration(
+    A: torch.Tensor,
+    w1: torch.Tensor,
+    w2: torch.Tensor,
+    intermediate_cache1: torch.Tensor,
+    intermediate_cache2: torch.Tensor,
+    intermediate_cache3: torch.Tensor,
+    out_hidden_states: torch.Tensor,
+    topk_weights: torch.Tensor,
+    sorted_token_ids: torch.Tensor,
+    expert_ids: torch.Tensor,
+    num_tokens_post_padded: torch.Tensor,
+    top_k: int,
+    config: Dict,
+    w1_scale: Optional[torch.Tensor] = None,
+    w2_scale: Optional[torch.Tensor] = None,
+    use_fp8: bool = False,
+    per_channel_quant: bool = False,
+    block_shape: Optional[List[int]] = None,
+) -> None:
+    """Run one complete local expert computation, as vLLM's own path does.
+
+    Reference: `fused_experts_impl` in vLLM 0.10.x `fused_moe.py`, which runs
+    the first expert GEMM, a gated activation, the optional activation
+    quantization, the second expert GEMM with the routing weights, and a local
+    reduction of the top-k expert outputs. The buffers follow the same naming:
+
+    ```text
+    intermediate_cache1  (M, top_k, 2 * E)  first GEMM output, gate | up
+    intermediate_cache2  (M * top_k, E)     gated activation output
+    intermediate_cache3  (M, top_k, H)      second GEMM output, per expert
+    out_hidden_states    (M, H)             local top-k reduction
+    ```
+
+    The reduction is a local sum over the `top_k` expert outputs of one token.
+    It is not a collective and adds no communication cost.
+
+    Under FP8, `A` is the unquantized hidden state. Both GEMM inputs are
+    quantized inside the step, because vLLM quantizes them inside
+    `fused_experts_impl` and the profiled cost includes that work.
+    """
+
+    first_input, first_A_scale = A.contiguous(), None
+    if use_fp8:
+        first_input, first_A_scale = quantize_activations_to_fp8(
+            first_input, per_channel_quant, block_shape
+        )
+
+    _invoke_kernel(
+        A=first_input,
+        B=w1.contiguous(),
+        C=intermediate_cache1,
+        topk_weights=topk_weights.contiguous(),
+        sorted_token_ids=sorted_token_ids.contiguous(),
+        expert_ids=expert_ids.contiguous(),
+        num_tokens_post_padded=num_tokens_post_padded.contiguous(),
+        mul_routed_weight=False,
+        top_k=top_k,
+        config=config,
+        A_scale=first_A_scale,
+        B_scale=w1_scale,
+        use_fp8=use_fp8,
+        per_channel_quant=per_channel_quant,
+        block_shape=block_shape,
+    )
+
+    # Gated SiLU over the two halves of the first projection. Taking the gate
+    # half alone would skip this kernel and feed the wrong operand to the second
+    # GEMM. The caller always materializes `w1` with `2 * E` rows, so the gated
+    # layout is the only one this path can produce.
+    torch.ops._C.silu_and_mul(
+        intermediate_cache2,
+        intermediate_cache1.view(-1, intermediate_cache1.shape[-1]),
+    )
+    second_input, second_A_scale = intermediate_cache2, None
+    if use_fp8:
+        second_input, second_A_scale = quantize_activations_to_fp8(
+            second_input, per_channel_quant, block_shape
+        )
+
+    _invoke_kernel(
+        A=second_input,
+        B=w2.contiguous(),
+        C=intermediate_cache3,
+        topk_weights=topk_weights.contiguous(),
+        sorted_token_ids=sorted_token_ids.contiguous(),
+        expert_ids=expert_ids.contiguous(),
+        num_tokens_post_padded=num_tokens_post_padded.contiguous(),
+        mul_routed_weight=True,
+        top_k=1,
+        config=config,
+        A_scale=second_A_scale,
+        B_scale=w2_scale,
+        use_fp8=use_fp8,
+        per_channel_quant=per_channel_quant,
+        block_shape=block_shape,
+    )
+
+    # Local reduction of one token's top-k expert outputs.
+    _vllm_custom_ops.moe_sum(intermediate_cache3, out_hidden_states)
+
+
+def _run_functional_fused_experts_iteration(
+    A: torch.Tensor,
+    w1: torch.Tensor,
+    w2: torch.Tensor,
+    topk_weights: torch.Tensor,
+    topk_ids: torch.Tensor,
+    global_num_experts: int,
+    expert_map: Optional[torch.Tensor],
+) -> None:
+    """Run the complete fused expert op exposed by current vLLM."""
+    if _functional_fused_experts is None:  # pragma: no cover - import invariant
+        raise RuntimeError("Current vLLM fused_experts API is unavailable.")
+    _functional_fused_experts(
+        hidden_states=A,
+        w1=w1,
+        w2=w2,
+        topk_weights=topk_weights,
+        topk_ids=topk_ids,
+        global_num_experts=global_num_experts,
+        expert_map=expert_map,
+    )
+
+
+MXFP4_WEIGHT_SOURCES = ("checkpoint", "online")
+
+
+def validate_mxfp4_quantization(*, use_mxfp4: bool, mxfp4_weight_source: Optional[str]) -> None:
+    """Require a weight source exactly when the experts are MXFP4."""
+
+    if use_mxfp4 != (mxfp4_weight_source is not None):
+        raise ValueError(
+            "mxfp4_weight_source must be given exactly when use_mxfp4 is set; "
+            f"got use_mxfp4={use_mxfp4}, mxfp4_weight_source={mxfp4_weight_source!r}"
+        )
+    if mxfp4_weight_source is not None and mxfp4_weight_source not in MXFP4_WEIGHT_SOURCES:
+        raise ValueError(
+            f"mxfp4_weight_source must be one of {MXFP4_WEIGHT_SOURCES}, "
+            f"got {mxfp4_weight_source!r}"
+        )
+
+
+def validate_mxfp4_runtime(
+    *, model_type: Optional[str], mxfp4_weight_source: Optional[str] = "online"
+) -> None:
+    """Admit only the model/platform each MXFP4 weight source implements.
+
+    Checkpoints that store MXFP4 experts (DeepSeek-V4) are loaded through vLLM's
+    ``Mxfp4MoEMethod``, which selects MARLIN on Hopper from the weights alone;
+    the online adapter quantizes a dense checkpoint and selects AITER on ROCm.
+    """
+    # Resolve this dependency after the architecture/config bootstrap cycle.
+    from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
+
+    if mxfp4_weight_source == "checkpoint":
+        if accelerator_platform(torch) != "cuda":
+            raise ValueError("Checkpoint-MXFP4/MARLIN profiling requires CUDA")
+        if VLLM_API_VERSION != "functional_fused_experts":
+            raise NotImplementedError(
+                "MXFP4 profiling requires current vLLM's modular fused MoE API."
+            )
+        return
+    if not MODEL_ARCHITECTURE_REGISTRY.supports_mxfp4_moe(model_type):
+        raise ValueError("MXFP4 profiling requires model_type='qwen3_5_moe_text'")
+    if accelerator_platform(torch) != "rocm":
+        raise ValueError("MXFP4/AITER profiling requires ROCm")
+    if VLLM_API_VERSION != "functional_fused_experts":
+        raise NotImplementedError(
+            "MXFP4 profiling requires current vLLM's modular fused MoE API."
+        )
+
+
+def validate_mxfp4_materialized_layout(layer: Any, layout: Dict[str, object]) -> None:
+    """Check packed storage after native quantization, allowing AITER reshapes.
+
+    AITER can shuffle or view packed bytes as native FP4/FP8 dtypes. Those
+    transformations preserve byte counts, so logical tensor shapes alone are
+    not the physical storage contract.
+    """
+    for name, shape_key in (
+        ("w13_weight", "w13_shape"), ("w2_weight", "w2_shape"),
+        ("w13_weight_scale", "w13_scale_shape"),
+        ("w2_weight_scale", "w2_scale_shape"),
+    ):
+        tensor = getattr(layer, name, None)
+        expected_bytes = math.prod(layout[shape_key])
+        if (tensor is None or tensor.element_size() != 1
+                or tensor.numel() != expected_bytes):
+            raise ValueError(
+                f"MXFP4 materialized {name} must contain {expected_bytes} packed bytes"
+            )
+
+
+def _get_functional_mxfp4_state(
+    *,
+    num_experts: int,
+    hidden_dim: int,
+    expert_hidden_dim: int,
+    top_k: int,
+    dtype: torch.dtype,
+    model_type: str,
+) -> Dict[str, Any]:
+    """Build and cache current-vLLM's online MXFP4 AITER expert kernel."""
+    cache_key = (
+        torch.cuda.current_device(),
+        num_experts,
+        hidden_dim,
+        expert_hidden_dim,
+        top_k,
+        dtype,
+        model_type,
+    )
+    cached = _FUNCTIONAL_MXFP4_STATES.get(cache_key)
+    if cached is not None:
+        return cached
+
+    # The packed expert tensors are large (tens of GiB for some EP layouts).
+    # Frontier profiles one layout at a time, so retaining states for prior
+    # shapes can exhaust HBM while sweeping EP sizes.
+    if _FUNCTIONAL_MXFP4_STATES:
+        _FUNCTIONAL_MXFP4_STATES.clear()
+        torch.cuda.empty_cache()
+
+    from vllm.config.quantization import QuantizationConfigArgs
+    from vllm.model_executor.layers.fused_moe import FusedMoEFactory
+    from vllm.model_executor.layers.quantization.online.base import (
+        OnlineQuantizationConfig,
+    )
+    from vllm.v1.worker.workspace import (
+        init_workspace_manager,
+        is_workspace_manager_initialized,
+    )
+
+    from frontier.profiling.common.vllm_compat import vllm_config_context
+
+    quantization_args = QuantizationConfigArgs(moe="mxfp4")
+    standalone_model_config = SimpleNamespace(
+        dtype=dtype,
+        hf_config=SimpleNamespace(model_type=model_type),
+        quantization_config=quantization_args,
+    )
+    with vllm_config_context(model_config=standalone_model_config):
+        if not is_workspace_manager_initialized():
+            init_workspace_manager(torch.device("cuda"))
+        quantization_config = OnlineQuantizationConfig(quantization_args)
+        runner = FusedMoEFactory(
+            num_experts=num_experts,
+            top_k=top_k,
+            hidden_size=hidden_dim,
+            intermediate_size=expert_hidden_dim,
+            params_dtype=dtype,
+            quant_config=quantization_config,
+            tp_size=1,
+            dp_size=1,
+            pcp_size=1,
+            prefix=(
+                f"frontier_mxfp4_e{num_experts}_h{hidden_dim}_"
+                f"i{expert_hidden_dim}_k{top_k}"
+            ),
+        )
+        layer = runner.routed_experts
+        layer.w13_weight = torch.nn.Parameter(
+            torch.empty(
+                layer.w13_weight.shape,
+                device="cuda",
+                dtype=dtype,
+            ).normal_(mean=0.0, std=0.02),
+            requires_grad=False,
+        )
+        layer.w2_weight = torch.nn.Parameter(
+            torch.empty(
+                layer.w2_weight.shape,
+                device="cuda",
+                dtype=dtype,
+            ).normal_(mean=0.0, std=0.02),
+            requires_grad=False,
+        )
+        quant_method = layer.quant_method
+        quant_method.process_weights_after_loading(layer)
+
+    backend = str(getattr(quant_method, "mxfp4_backend", "unknown"))
+    if not backend.rsplit(".", 1)[-1].startswith("AITER"):
+        raise RuntimeError(
+            "MXFP4 profiling on ROCm did not select an AITER backend. Set "
+            "VLLM_ROCM_USE_AITER=1 and VLLM_ROCM_USE_AITER_MOE=1 before "
+            f"starting Frontier. Selected backend: {backend}."
+        )
+
+    layout = plan_mxfp4_weight_layout(
+        num_experts=num_experts, hidden_dim=hidden_dim,
+        expert_hidden_dim=expert_hidden_dim, use_gated=True, group_size=32,
+    )
+    validate_mxfp4_materialized_layout(layer, layout)
+    state = {
+        "backend": backend,
+        "layer": layer,
+        "quant_method": quant_method,
+        "layout": layout,
+    }
+    _FUNCTIONAL_MXFP4_STATES[cache_key] = state
+    return state
+
+
+def _collect_cuda_event_stats(step_fn, active_steps: int) -> Dict:
+    """Collect device-event samples through PyTorch's CUDA-compatible HIP API."""
+    times = []
+    for _ in range(active_steps):
+        start_event = torch.cuda.Event(enable_timing=True)
+        end_event = torch.cuda.Event(enable_timing=True)
+        start_event.record()
+        step_fn()
+        end_event.record()
+        torch.cuda.synchronize()
+        elapsed_ms = float(start_event.elapsed_time(end_event))
+        if not math.isfinite(elapsed_ms) or elapsed_ms < 0.0:
+            raise ValueError(f"Invalid device-event timing sample: {elapsed_ms!r}")
+        times.append(elapsed_ms)
+
+    # Use the shared population statistics contract, including std=0 for one
+    # sample and the midpoint median for an even number of samples.
+    summary = TimerStatsStore.get_stats_from_times({"moe_grouped_gemm": times})[
+        "moe_grouped_gemm"
+    ]
+    result = {name: float(value) for name, value in summary.items() if name != "count"}
+    if not all(math.isfinite(value) for value in result.values()):
+        raise ValueError("Non-finite device-event timing statistics")
+    return result
+
+
+def _collect_record_function_stats(
+    step_fn,
+    active_steps: int,
+    output_dir: Optional[str],
+    operation_name: str,
+) -> Dict:
+    if not output_dir:
+        raise ValueError(
+            "output_dir is required for record_function profiling of fused MoE grouped GEMM."
+        )
+
+    from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
+
+    tracer = RecordFunctionTracer(output_dir)
+    with tracer:
+        for _ in range(active_steps):
+            with torch.profiler.record_function(f"vidur_{operation_name}"):
+                step_fn()
+
+    time_stats = tracer.get_operation_time_stats()
+    if operation_name not in time_stats:
+        raise ValueError(
+            f"RecordFunctionTracer did not capture '{operation_name}' in fused MoE profiling."
+        )
+    return time_stats[operation_name]
+
+
+def block_size_m_ranges(
+    *,
+    w1_shape: Tuple[int, ...],
+    w2_shape: Tuple[int, ...],
+    top_k: int,
+    dtype: Optional[str],
+    block_shape: Optional[List[int]],
+    max_tokens: int,
+) -> List[List[int]]:
+    """``[first_num_tokens, last_num_tokens, block_size_m]`` ranges of vLLM's kernel config.
+
+    The ranges cover 1..``max_tokens``. vLLM selects BLOCK_SIZE_M per step from
+    the step's token count, so the simulator needs the selection at every count
+    between profiled rows, not only at the rows themselves.
+    """
+    ranges: List[List[int]] = []
+    for num_tokens in range(1, max_tokens + 1):
+        block_size_m = try_get_optimal_moe_config(
+            w1_shape=w1_shape,
+            w2_shape=w2_shape,
+            top_k=top_k,
+            dtype=dtype,
+            M=num_tokens,
+            block_shape=block_shape,
+        )["BLOCK_SIZE_M"]
+        if ranges and ranges[-1][2] == block_size_m:
+            ranges[-1][1] = num_tokens
+        else:
+            ranges.append([num_tokens, num_tokens, block_size_m])
+    return ranges
+
+
+def profile_fused_moe_kernel(
+    num_tokens: int,
+    num_experts: int,
+    hidden_dim: int,
+    expert_hidden_dim: int,
+    top_k: int,
+    topk_weights: torch.Tensor,
+    topk_ids: torch.Tensor,
+    tensor_parallel_size: int = 1,
+    dtype: torch.dtype = torch.float16,
+    warmup_steps: int = 2,
+    active_steps: int = 20,
+    use_fp8: bool = False,
+    use_mxfp4: bool = False,
+    mxfp4_weight_source: Optional[str] = None,
+    swiglu_limit: Optional[float] = None,
+    per_channel_quant: bool = False,
+    block_shape: Optional[List[int]] = None,
+    profile_method: str = "cuda_event",
+    output_dir: Optional[str] = None,
+    global_num_experts: Optional[int] = None,
+    expert_map: Optional[torch.Tensor] = None,
+    model_type: Optional[str] = None,
+) -> Dict:
+    """
+    Profile vLLM's fused MoE kernel with given routing decisions.
+
+    This function directly profiles the optimized grouped GEMM kernel,
+    capturing the true performance impact of load imbalance.
+
+    Args:
+        num_tokens: Number of input tokens.
+        num_experts: Number of local experts materialized in ``w1``/``w2``.
+        hidden_dim: Model hidden dimension (FULL dimension, will be partitioned by TP).
+        expert_hidden_dim: Expert FFN hidden dimension (FULL dimension, will be partitioned by TP).
+        top_k: Number of experts selected per token.
+        topk_weights: Routing weights with shape ``[num_tokens, top_k]``.
+        topk_ids: Expert indices with shape ``[num_tokens, top_k]``. When ``expert_map`` is
+            provided these are interpreted as global expert ids; otherwise they are local ids.
+        tensor_parallel_size: Tensor parallel size (for dimension partitioning).
+        dtype: Data type for computation (ignored if ``use_fp8=True``).
+        warmup_steps: Number of warmup iterations.
+        active_steps: Number of active profiling iterations.
+        use_fp8: Whether to use FP8 W8A8 quantization.
+        use_mxfp4: Whether the routed experts are stored in MXFP4.
+        mxfp4_weight_source: ``'checkpoint'`` when the checkpoint itself holds
+            MXFP4 experts (vLLM selects MARLIN on Hopper) or ``'online'`` when a
+            dense checkpoint is quantized to MXFP4 at load time (AITER on ROCm).
+            Required exactly when ``use_mxfp4`` is set.
+        swiglu_limit: SwiGLU clamp limit the model applies after the first GEMM.
+        per_channel_quant: Whether to use per-channel quantization (only for FP8).
+        block_shape: Block dimensions for block-wise quantization.
+        profile_method: Profiling method (``cuda_event``, ``device_event``, or
+            ``record_function``).
+        output_dir: Trace output directory for ``record_function`` profiling.
+        global_num_experts: Global expert count for alignment when profiling EP-local workloads.
+        expert_map: Optional mapping from global expert ids to local expert ids.
+        model_type: Actual model identity required by the pinned MXFP4 adapter.
+
+    Returns:
+        Dictionary containing timing statistics. On the vLLM 0.10.x path it also
+        holds the kernel config's ``block_size_m``, moe_align_block_size's
+        ``num_tokens_post_padded`` (each expert's routed tokens rounded up to a
+        multiple of ``block_size_m``), the row count the grouped GEMM computes,
+        and ``block_size_m_ranges``, the JSON-encoded result of
+        ``block_size_m_ranges`` for this weight layout up to ``num_tokens``.
+
+    Raises:
+        RuntimeError: If vLLM is not available.
+    """
+    quantization_mode = validate_moe_quantization_mode(
+        use_fp8=use_fp8,
+        use_mxfp4=use_mxfp4,
+    )
+    if type(active_steps) is not int or active_steps <= 0:
+        raise ValueError("active_steps must be a positive integer")
+    if type(warmup_steps) is not int or warmup_steps < 0:
+        raise ValueError("warmup_steps must be a non-negative integer")
+    profile_method = normalize_profile_method(profile_method)
+    if profile_method not in {"cuda_event", "device_event", "record_function"}:
+        raise ValueError(
+            "profile_fused_moe_kernel only supports 'cuda_event', 'device_event', "
+            f"and 'record_function'. Got profile_method={profile_method!r}."
+        )
+    validate_profile_method_platform(profile_method, accelerator_platform(torch))
+    if not VLLM_AVAILABLE:
+        raise RuntimeError(
+            "vLLM is not available. Cannot use fused_moe_kernel for load imbalance profiling. "
+            "Please install vLLM or disable --enable_load_imbalance."
+        )
+
+    validate_mxfp4_quantization(
+        use_mxfp4=use_mxfp4, mxfp4_weight_source=mxfp4_weight_source
+    )
+    if use_mxfp4:
+        validate_mxfp4_runtime(
+            model_type=model_type, mxfp4_weight_source=mxfp4_weight_source
+        )
+    fp8_block_experts = use_fp8 and VLLM_API_VERSION == "functional_fused_experts"
+    # Both adapters shard experts by expert parallelism only: block-FP8 keeps the
+    # kernel's GEMM shapes whole, and a checkpoint's packed MXFP4 weights are
+    # loaded for the expert-parallel domain vLLM selected.
+    shards_by_expert_parallelism = fp8_block_experts or mxfp4_weight_source == "checkpoint"
+    if shards_by_expert_parallelism and tensor_parallel_size != 1:
+        raise ValueError(
+            "Block-FP8 and checkpoint-MXFP4 expert profiling with current vLLM "
+            "shards experts by expert parallelism only; got "
+            f"tensor_parallel_size={tensor_parallel_size}."
+        )
+    if fp8_block_experts:
+        if per_channel_quant or block_shape is None:
+            raise NotImplementedError(
+                "FP8 profiling with current vLLM supports block-scaled weights "
+                "only; per-tensor and per-channel FP8 experts have no adapter."
+            )
+        _validate_block_shape(block_shape)
+
+    align_num_experts = int(global_num_experts) if global_num_experts is not None else int(num_experts)
+    if align_num_experts <= 0:
+        raise ValueError(f"global_num_experts must be positive, got {align_num_experts}")
+    if num_experts <= 0:
+        raise ValueError(f"num_experts must be positive, got {num_experts}")
+    if expert_map is not None:
+        if expert_map.numel() != align_num_experts:
+            raise ValueError(
+                "expert_map size must match global_num_experts. "
+                f"Got expert_map.numel()={expert_map.numel()}, global_num_experts={align_num_experts}"
+            )
+        expert_map = expert_map.to(device=topk_ids.device, dtype=torch.int32)
+
+    device = "cuda"
+
+    if type(tensor_parallel_size) is not int or tensor_parallel_size < 1:
+        raise ValueError("tensor_parallel_size must be a positive integer")
+    expert_hidden_dim_per_partition = expert_hidden_dim // tensor_parallel_size
+    if expert_hidden_dim % tensor_parallel_size != 0:
+        raise ValueError(
+            f"expert_hidden_dim ({expert_hidden_dim}) must be divisible by "
+            f"tensor_parallel_size ({tensor_parallel_size})"
+        )
+    if use_mxfp4:
+        if swiglu_limit is not None and mxfp4_weight_source != "checkpoint":
+            raise ValueError(
+                "swiglu_limit is only wired for checkpoint-MXFP4 experts; "
+                "the online MXFP4 adapter does not carry a clamp limit."
+            )
+        plan_mxfp4_weight_layout(
+            num_experts=num_experts, hidden_dim=hidden_dim,
+            expert_hidden_dim=expert_hidden_dim_per_partition, use_gated=True,
+        )
+
+    base_dtype = torch.bfloat16 if quantization_mode in {"fp8", "mxfp4"} else dtype
+    A = torch.randn(num_tokens, hidden_dim, dtype=base_dtype, device=device)
+
+    w1 = None
+    w2 = None
+    if not (use_mxfp4 or fp8_block_experts):
+        w1 = torch.randn(
+            num_experts,
+            2 * expert_hidden_dim_per_partition,
+            hidden_dim,
+            dtype=base_dtype,
+            device=device,
+        )
+        w2 = torch.randn(
+            num_experts,
+            hidden_dim,
+            expert_hidden_dim_per_partition,
+            dtype=base_dtype,
+            device=device,
+        )
+
+    w1_scale = None
+    w2_scale = None
+
+    if VLLM_API_VERSION == "functional_fused_experts":
+        functional_topk_weights = topk_weights.to(
+            device=device,
+            dtype=torch.float32,
+        ).contiguous()
+        functional_topk_ids = topk_ids.to(
+            device=device,
+            dtype=torch.int32,
+        ).contiguous()
+
+        if mxfp4_weight_source == "checkpoint":
+            ep_size, ep_rank = expert_parallel_layout(
+                expert_map,
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+            )
+            routed_experts = get_mxfp4_marlin_routed_experts(
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+                hidden_dim=hidden_dim,
+                intermediate_dim=expert_hidden_dim_per_partition,
+                top_k=top_k,
+                swiglu_limit=swiglu_limit,
+                expert_parallel_size=ep_size,
+                expert_parallel_rank=ep_rank,
+                expert_map=expert_map,
+                dtype=base_dtype,
+                model_type=model_type,
+            )
+            routed_output = torch.empty_like(A)
+            workspace13, workspace2 = routed_experts.workspaces(A, functional_topk_ids)
+
+            def _step() -> None:
+                routed_experts.apply(
+                    routed_output,
+                    A,
+                    functional_topk_weights,
+                    functional_topk_ids,
+                    workspace13,
+                    workspace2,
+                )
+        elif use_mxfp4:
+            mxfp4_state = _get_functional_mxfp4_state(
+                num_experts=num_experts,
+                hidden_dim=hidden_dim,
+                expert_hidden_dim=expert_hidden_dim_per_partition,
+                top_k=top_k,
+                dtype=base_dtype,
+                model_type=model_type,
+            )
+            mxfp4_layer = mxfp4_state["layer"]
+            mxfp4_method = mxfp4_state["quant_method"]
+
+            def _step() -> None:
+                mxfp4_method.moe_kernel.apply(
+                    A,
+                    mxfp4_layer.w13_weight,
+                    mxfp4_layer.w2_weight,
+                    functional_topk_weights,
+                    functional_topk_ids,
+                    activation=mxfp4_layer.activation,
+                    global_num_experts=align_num_experts,
+                    expert_map=expert_map,
+                    apply_router_weight_on_input=False,
+                    shared_experts=None,
+                    shared_experts_input=None,
+                )
+        elif fp8_block_experts:
+            ep_size, ep_rank = expert_parallel_layout(
+                expert_map,
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+            )
+            routed_experts = get_fp8_block_routed_experts(
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+                hidden_dim=hidden_dim,
+                intermediate_dim=expert_hidden_dim_per_partition,
+                top_k=top_k,
+                block_shape=block_shape,
+                expert_parallel_size=ep_size,
+                expert_parallel_rank=ep_rank,
+                dtype=base_dtype,
+                model_type=model_type,
+            )
+            routed_output = torch.empty_like(A)
+
+            def _step() -> None:
+                routed_experts.apply(
+                    routed_output,
+                    A,
+                    functional_topk_weights,
+                    functional_topk_ids,
+                )
+        else:
+            assert w1 is not None and w2 is not None
+
+            def _step() -> None:
+                _run_functional_fused_experts_iteration(
+                    A=A,
+                    w1=w1,
+                    w2=w2,
+                    topk_weights=functional_topk_weights,
+                    topk_ids=functional_topk_ids,
+                    global_num_experts=align_num_experts,
+                    expert_map=expert_map,
+                )
+
+        from frontier.profiling.common.vllm_compat import vllm_config_context
+
+        with vllm_config_context():
+            for _ in range(warmup_steps):
+                _step()
+            torch.cuda.synchronize()
+
+            if profile_method == "record_function":
+                stats = _collect_record_function_stats(
+                    step_fn=_step,
+                    active_steps=active_steps,
+                    output_dir=output_dir,
+                    operation_name="moe_grouped_gemm",
+                )
+            else:
+                stats = _collect_cuda_event_stats(
+                    step_fn=_step,
+                    active_steps=active_steps,
+                )
+            if mxfp4_weight_source == "checkpoint" or fp8_block_experts:
+                stats["native_backend"] = routed_experts.backend
+            elif use_mxfp4:
+                stats["native_backend"] = mxfp4_state["backend"]
+            return stats
+
+    _validate_block_shape(block_shape)
+    assert w1 is not None and w2 is not None
+    if use_fp8:
+        w1, w1_scale = quantize_weights_to_fp8(
+            w1,
+            per_channel=per_channel_quant,
+            block_shape=block_shape,
+        )
+        w2, w2_scale = quantize_weights_to_fp8(
+            w2,
+            per_channel=per_channel_quant,
+            block_shape=block_shape,
+        )
+
+    config_dtype = get_config_dtype_str(base_dtype, use_fp8_w8a8=use_fp8)
+    config = try_get_optimal_moe_config(
+        w1_shape=w1.shape,
+        w2_shape=w2.shape,
+        top_k=top_k,
+        dtype=config_dtype,
+        M=num_tokens,
+        block_shape=block_shape,
+    )
+
+    sorted_token_ids, expert_ids, num_tokens_post_padded = moe_align_block_size(
+        topk_ids,
+        config["BLOCK_SIZE_M"],
+        align_num_experts,
+        expert_map=expert_map,
+    )
+
+    output_dtype = base_dtype
+    intermediate_cache1 = torch.empty(
+        num_tokens,
+        top_k,
+        w1.shape[1],
+        device=device,
+        dtype=output_dtype,
+    )
+    intermediate_cache2 = torch.empty(
+        num_tokens * top_k,
+        expert_hidden_dim_per_partition,
+        device=device,
+        dtype=output_dtype,
+    )
+    intermediate_cache3 = torch.empty(
+        num_tokens,
+        top_k,
+        hidden_dim,
+        device=device,
+        dtype=output_dtype,
+    )
+    out_hidden_states = torch.empty(
+        num_tokens,
+        hidden_dim,
+        device=device,
+        dtype=output_dtype,
+    )
+
+    def _step() -> None:
+        _run_fused_moe_iteration(
+            A=A,
+            w1=w1,
+            w2=w2,
+            intermediate_cache1=intermediate_cache1,
+            intermediate_cache2=intermediate_cache2,
+            intermediate_cache3=intermediate_cache3,
+            out_hidden_states=out_hidden_states,
+            topk_weights=topk_weights,
+            sorted_token_ids=sorted_token_ids,
+            expert_ids=expert_ids,
+            num_tokens_post_padded=num_tokens_post_padded,
+            top_k=top_k,
+            config=config,
+            w1_scale=w1_scale,
+            w2_scale=w2_scale,
+            use_fp8=use_fp8,
+            per_channel_quant=per_channel_quant,
+            block_shape=block_shape,
+        )
+
+    for _ in range(warmup_steps):
+        _step()
+    torch.cuda.synchronize()
+
+    if profile_method == "record_function":
+        stats = _collect_record_function_stats(
+            step_fn=_step,
+            active_steps=active_steps,
+            output_dir=output_dir,
+            operation_name="moe_grouped_gemm",
+        )
+    else:
+        stats = _collect_cuda_event_stats(
+            step_fn=_step,
+            active_steps=active_steps,
+        )
+    stats["block_size_m"] = config["BLOCK_SIZE_M"]
+    stats["num_tokens_post_padded"] = int(num_tokens_post_padded.item())
+    stats["block_size_m_ranges"] = json.dumps(
+        block_size_m_ranges(
+            w1_shape=w1.shape,
+            w2_shape=w2.shape,
+            top_k=top_k,
+            dtype=config_dtype,
+            block_shape=block_shape,
+            max_tokens=num_tokens,
+        )
+    )
+    return stats
+
+
+def generate_expert_weights(
+    num_experts: int,
+    hidden_dim: int,
+    expert_hidden_dim: int,
+    dtype: torch.dtype = torch.float16,
+    use_gated: bool = True,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Generate random expert weights for profiling.
+    
+    Args:
+        num_experts: Number of experts
+        hidden_dim: Model hidden dimension
+        expert_hidden_dim: Expert FFN hidden dimension
+        dtype: Data type
+        use_gated: Whether to use gated FFN (SwiGLU)
+    
+    Returns:
+        Tuple of (w1, w2) weight tensors
+    """
+    device = "cuda"
+    
+    if use_gated:
+        # Gated FFN: w1 produces 2x intermediate_size
+        w1 = torch.randn(
+            num_experts, 2 * expert_hidden_dim, hidden_dim,
+            dtype=dtype, device=device
+        )
+    else:
+        w1 = torch.randn(
+            num_experts, expert_hidden_dim, hidden_dim,
+            dtype=dtype, device=device
+        )
+    
+    w2 = torch.randn(
+        num_experts, hidden_dim, expert_hidden_dim,
+        dtype=dtype, device=device
+    )
+    
+    return w1, w2
+
+
+if __name__ == "__main__":
+    # Simple test
+    print("Testing vLLM fused MoE kernel wrapper...")
+    
+    if not check_vllm_available():
+        print("❌ vLLM not available, skipping test")
+        exit(1)
+    
+    # Test configuration
+    num_tokens = 1024
+    num_experts = 8
+    hidden_dim = 4096
+    expert_hidden_dim = 11008
+    top_k = 2
+    
+    # Generate routing data (uniform distribution)
+    from frontier.profiling.moe.load_distribution import generate_expert_routing
+    
+    topk_weights, topk_ids = generate_expert_routing(
+        num_tokens=num_tokens,
+        num_experts=num_experts,
+        top_k=top_k,
+        load_distribution="uniform",
+        seed=42
+    )
+
+    print(topk_ids)
+
+    # Count the token number of each expert
+    from frontier.profiling.moe.load_distribution import compute_expert_token_counts
+    expert_token_counts = compute_expert_token_counts(topk_ids, num_experts)
+    print(f"Expert token counts: {expert_token_counts}")
+    
+    # Profile
+    print(f"Profiling with {num_tokens} tokens, {num_experts} experts, top_k={top_k}")
+    stats = profile_fused_moe_kernel(
+        num_tokens=num_tokens,
+        num_experts=num_experts,
+        hidden_dim=hidden_dim,
+        expert_hidden_dim=expert_hidden_dim,
+        top_k=top_k,
+        topk_weights=topk_weights,
+        topk_ids=topk_ids,
+    )
+    
+    print(f"✅ Profiling completed:")
+    print(f"  - Mean: {stats['mean']:.3f} ms")
+    print(f"  - Median: {stats['median']:.3f} ms")
+    print(f"  - Std: {stats['std']:.3f} ms")

@@ -1,0 +1,802 @@
+{
+  "baseline": {
+    "git_head": "bfa82de80413b5f4b38e4990a80b5108f9521f50",
+    "label": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline",
+    "repo_root": "/data/ycfeng/Frontier/.worktrees/baseline-bfa82de"
+  },
+  "baseline_failures": [],
+  "candidate": {
+    "git_head": "5f907f660912e694ad366830603b7f09b3a27bfd",
+    "label": "candidate_5f907f66",
+    "repo_root": "/data/ycfeng/Frontier/.worktrees/fidelity-candidate-5f907f66"
+  },
+  "candidate_only_failures": [],
+  "case_table_size": 77,
+  "cases_absent_from_both_sides": [],
+  "cases_compared": 77,
+  "cases_missing_from_one_side": [],
+  "cases_not_compared": [],
+  "cases_not_compared_without_explanation": [],
+  "cases_with_differing_definitions": [],
+  "cases_with_missing_evidence": [],
+  "complete_comparison": true,
+  "identical_cases": [],
+  "mismatched_cases": [
+    {
+      "case_id": "coloc_dense_offline_attn_dp2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_cuda_graph_piecewise",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_dummy_time_quarter",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_long_prefill",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_many_requests",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_no_chunked_prefill",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_pp2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_pp4",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_sarathi",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_sglang",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_small",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_tp1",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_offline_two_replicas",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_online_qps0p5",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_online_qps2p0",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_dense_online_qps8p0",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_cuda_graph_none",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_ep1",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_ep4",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_long_prefill",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_many_requests",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_moe_tp1",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_random",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_skewed",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_zipf",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_offline_topk4",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_online_qps0p5",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_online_qps2p0",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_moe_online_qps8p0",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_mtp_offline_pp2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_prefix_cache_offline",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_prefix_cache_online",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_spec_dec_offline",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_spec_dec_offline_ntokens4",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_spec_dec_online",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_thinking_offline",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "coloc_thinking_online",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "dp_dense_offline_lanes2_replicas2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "dp_dense_online_lanes2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "dp_dense_online_lanes2_replicas2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "dp_dense_online_lanes4",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "dp_moe_coloc_online_lanes2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "dp_moe_pdd_online_lanes2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "dp_moe_pdd_online_lanes2_trained",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_dense_offline_cuda_graph",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_dense_offline_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_dense_online_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_moe_offline_cuda_graph",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_moe_offline_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_moe_offline_ep2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_moe_offline_ep2_many",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_moe_online_cuda_graph",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_moe_online_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdaf_moe_online_ep2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_offline_astra_sim_analytical",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_offline_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_offline_no_chunked_prefill",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_offline_tp2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_offline_two_decode_replicas",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_offline_two_prefill_replicas",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_online_qps2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_dense_online_qps8",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_moe_offline_default",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_moe_offline_ep1",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_moe_offline_routing_skewed",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_moe_online_qps2",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_prefix_cache_offline",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_spec_dec_offline",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "pdd_thinking_offline",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "trained_coloc_dense_h800",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "trained_coloc_dense_h800_cuda_graph",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "trained_coloc_moe_phi_h800",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "trained_coloc_moe_qwen3_h800",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "trained_dense_csv_smoke",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    },
+    {
+      "case_id": "trained_moe_csv_smoke",
+      "differences": [
+        {
+          "artifact": "config.json",
+          "detail": "/kv_cache_transfer_config/nixl_read_completion: missing in baseline",
+          "kind": "content"
+        }
+      ]
+    }
+  ],
+  "predictor_cache_compared": true,
+  "predictor_cache_files_only_in_baseline": [],
+  "predictor_cache_files_only_in_candidate": [],
+  "predictor_cache_findings": [],
+  "predictor_cache_populated_cleanly": true,
+  "provenance_findings": []
+}

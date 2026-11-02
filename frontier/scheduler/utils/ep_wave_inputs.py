@@ -17,6 +17,25 @@ class EPWaveInputs(NamedTuple):
     total_step_tokens: int
     total_step_prefill_tokens: int
 
+    def padded_lane_token_counts(self, cluster_type: Any) -> dict[int, int]:
+        """Return T_pad_d, including DP synchronization for graph forwards."""
+
+        return padded_ep_wave_lane_token_counts(self.source_batches, cluster_type)
+
+
+def padded_ep_wave_lane_token_counts(
+    source_batches: Mapping[int, Batch], cluster_type: Any,
+) -> dict[int, int]:
+    """Resolve each source lane's physical width before the SP split."""
+
+    widths = {
+        lane_id: int(batch.get_effective_total_tokens_for_compute(cluster_type))
+        for lane_id, batch in source_batches.items()
+    }
+    if any(batch.decode_cuda_graph_metadata is not None for batch in source_batches.values()):
+        widths = dict.fromkeys(widths, max(widths.values()))
+    return widths
+
 
 def prepare_ep_wave_inputs(
     *,
@@ -66,16 +85,11 @@ def prepare_ep_wave_inputs(
     )
     total_tokens = sum(int(source_batch.total_num_tokens) for source_batch in lane_batches)
     total_prefill_tokens = sum(int(source_batch.num_prefill_tokens) for source_batch in lane_batches)
-    lane_compute_tokens = [
-        int(source_batch.get_effective_total_tokens_for_compute(cluster_type))
-        for source_batch in lane_batches
-    ]
-    if any(source_batch.decode_cuda_graph_metadata is not None for source_batch in lane_batches):
-        lane_compute_tokens = [max(lane_compute_tokens)] * len(lane_batches)
+    lane_compute_tokens = padded_ep_wave_lane_token_counts(normalized, cluster_type)
     aggregate_batch = (
         sample_batch
         if len(lane_batches) == 1
-        else aggregate_batch_builder(sample_batch, sum(lane_compute_tokens), total_prefill_tokens)
+        else aggregate_batch_builder(sample_batch, sum(lane_compute_tokens.values()), total_prefill_tokens)
     )
     return EPWaveInputs(
         source_batches=normalized,

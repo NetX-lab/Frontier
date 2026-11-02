@@ -1,0 +1,17 @@
+{
+  "status": "EXPECTED_RED",
+  "command": [
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/test_native_serve_profile.py",
+    "-k",
+    "torch_loaded_cupti_soname",
+    "--junitxml=/data/ycfeng/tmp/glm53_dsv4/profile03_cupti_red_993f0qh0/result.xml"
+  ],
+  "returncode": 1,
+  "observed_at_utc": "2026-10-23T17:11:22.384477+00:00",
+  "symptom": "Actual stream() call retains trace_stream_id=None when only the Torch-loaded versioned CUPTI SONAME is available."
+}

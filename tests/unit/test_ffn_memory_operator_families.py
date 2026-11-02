@@ -243,6 +243,8 @@ def test_predictor_linear_tp_mapping_uses_declared_ffn_family_membership() -> No
     predictor._replica_config = SimpleNamespace(
         attn_tensor_parallel_size=2,
         moe_tensor_parallel_size=4,
+        attn_dp=1,
+        num_pipeline_stages=1,
     )
 
     assert predictor._get_linear_op_tp_key("mlp_up_proj") == 2

@@ -1,0 +1,20 @@
+{
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+  "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "preemptible": false,
+  "charged_group": "codesign",
+  "positive_tags": ["H800"],
+  "cpu": 16,
+  "mem_gb": 64,
+  "timeout_seconds": 600,
+  "cloud_run_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01",
+  "job_tag": "dsv4-h800-graph-payload-probe-20261024-01",
+  "worker_tmp_dir": "/tmp/w128_graph_payload_probe_20261024_01",
+  "envs": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "XDG_CACHE_HOME": "/tmp/w128_graph_payload_probe_20261024_01/cache",
+    "CUDA_CACHE_PATH": "/tmp/w128_graph_payload_probe_20261024_01/cuda-cache"
+  }
+}

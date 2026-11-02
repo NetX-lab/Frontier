@@ -169,6 +169,7 @@ def test_vllm_v1_scheduler_reaches_every_extracted_mixin() -> None:
         "PrefixCacheLedger",
         "TargetEmbeddedMtpWaitPolicy",
         "PipelineTerminalRelease",
+        "NixlReadCompletion",
         "DecodeAttentionCohort",
         "DisaggregatedRoleScheduling",
     ]

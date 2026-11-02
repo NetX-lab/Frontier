@@ -15,10 +15,12 @@ from frontier.cc_backend.backends.collective_sim_cc_backend import CollectiveSim
 from frontier.cc_backend.backends.astra_sim_analytical_cc_backend import (
     AstraSimAnalyticalCCBackend,
 )
+from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend
 
 __all__ = [
     "VidurCCBackend",
     "AnalyticalCCBackend",
     "CollectiveSimCCBackend",
     "AstraSimAnalyticalCCBackend",
+    "MeasuredCCBackend",
 ]

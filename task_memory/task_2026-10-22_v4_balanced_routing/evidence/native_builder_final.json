@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "builder_sha256": "d4d9da2e85544a8ae442b9869f33978460788bae39f19bdc8d7f4d2077e1418e",
+  "baseline_sha256": "21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560",
+  "added": 29,
+  "deleted": 7,
+  "dispatch_lines": 3,
+  "builder_routing_lines": 33,
+  "B_routing_lines": 316,
+  "aggregate_routing_lines": 950,
+  "ceiling": 952,
+  "R3_sha256": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+  "R2_sha256": "29523700ac8492fa6e192ce272f8ab5a7a48d1528bd4064417e26e811533d10a",
+  "host_bindings_preserved": true,
+  "hermetic_RED_GREEN_receipt": "evidence/native_checker_mount.json",
+  "full_new_package_check": "PENDING"
+}

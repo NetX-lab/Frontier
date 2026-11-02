@@ -1,0 +1,21 @@
+{
+  "status": "PASS_STATIC_NO_EXECUTION",
+  "gdb_lines": 78,
+  "gdb_cap": 90,
+  "controller_lines": 70,
+  "controller_cap": 100,
+  "gdb_source_sha256": "08f20aedbf55c9b79a2a0350b21a854ba873d6ecd871143fa8a5acc99051a2ea",
+  "controller_sha256": "3e1e725678e2ae61381a11a62f03eb9966f3288f9e04694147dce2b96fcf6390",
+  "original_gdb_sha256": "4d0b05a1c1aa4125d5e8faf93da0dbd0f8955e83a75446f88aff6eb0707217b3",
+  "exact_accepted_event_and_status_capture": true,
+  "permitted_GDB_differences": [
+    "SIGSEGV stop/print/nopass",
+    "stopped native PC instruction/symbol queries",
+    "new distinct status marker"
+  ],
+  "all_original_pins_match": true,
+  "prefix_absent": true,
+  "source_AST_parse": true,
+  "automatic_retry": false,
+  "review_pending": true
+}

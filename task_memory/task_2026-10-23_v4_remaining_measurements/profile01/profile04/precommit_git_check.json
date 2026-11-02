@@ -1,0 +1,22 @@
+{
+  "status": "PASS_MAINTAINED_SOURCE_AND_MARKDOWN",
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json",
+    "tests/unit/test_native_pd_worker.py",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/requirements.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/plan.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/progress.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/checkpoint_pre_generation.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/test_report_2026-10-24_profile04_package.md"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "",
+  "raw_evidence": "Initial whole-index check reported trailing spaces in byte-preserved pytest logs/XML and unified-diff blank context lines. Those generated evidence bytes are intentionally retained unchanged; scoped check covers all maintained source/plan/test and Markdown records."
+}

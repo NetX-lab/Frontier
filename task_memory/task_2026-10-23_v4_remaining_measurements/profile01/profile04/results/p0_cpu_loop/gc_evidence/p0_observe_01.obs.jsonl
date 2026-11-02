@@ -1,0 +1,28 @@
+{"t": 0.016, "stage": "instrumented", "rss_mb": 15.4, "hits": ["after:data = reader.load_trace(path)", "after:events = data['traceEvents']", "after:header = reader.trace_header(path)", "after:in calls.items():", "after:in enumerate(events):", "after:in enumerate(syn):", "after:in profile['steps']:", "after:in streams.items():", "after:inventory = read(inventory_path)", "after:names = collections.Counter", "after:output.write_text(", "after:print(json.dumps({", "after:result = {", "after:start = time.monotonic()", "after:with gzip.open(raw_path,", "before:data = reader.load_trace(path)", "before:header = reader.trace_header(path)", "before:step_rows = []", "before:with gzip.open(raw_path,", "loop:in enumerate(events):", "loop:in kernels:"], "auditor_sha": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8", "reader_sha": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52", "trace": "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz", "output": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.json"}
+{"t": 0.02, "stage": "enter", "rss_mb": 16.0}
+{"t": 0.456, "stage": "metadata_loaded", "rss_mb": 136.6}
+{"t": 0.459, "stage": "header_start", "rss_mb": 136.9}
+{"t": 0.46, "stage": "header_done", "rss_mb": 136.9}
+{"t": 0.46, "stage": "load_start", "rss_mb": 136.9, "trace_gz_bytes": 142288791}
+{"t": 44.919, "stage": "load_done", "rss_mb": 5899.8}
+{"t": 44.92, "stage": "events_ready", "rss_mb": 5899.8, "events": 5062740}
+{"t": 45.489, "stage": "annotations_named", "rss_mb": 5899.8, "names": 63944}
+{"t": 45.49, "stage": "event_pass_progress", "rss_mb": 5899.8, "idx": 0}
+{"t": 45.678, "stage": "event_pass_progress", "rss_mb": 5901.6, "idx": 500000}
+{"t": 45.873, "stage": "event_pass_progress", "rss_mb": 5904.2, "idx": 1000000}
+{"t": 46.147, "stage": "event_pass_progress", "rss_mb": 5910.6, "idx": 1500000}
+{"t": 46.703, "stage": "event_pass_progress", "rss_mb": 5932.8, "idx": 2000000}
+{"t": 47.257, "stage": "event_pass_progress", "rss_mb": 5955.0, "idx": 2500000}
+{"t": 47.846, "stage": "event_pass_progress", "rss_mb": 5977.4, "idx": 3000000}
+{"t": 48.542, "stage": "event_pass_progress", "rss_mb": 5999.8, "idx": 3500000}
+{"t": 49.095, "stage": "event_pass_progress", "rss_mb": 6028.4, "idx": 4000000}
+{"t": 52.353, "stage": "event_pass_progress", "rss_mb": 6051.4, "idx": 4500000}
+{"t": 52.867, "stage": "event_pass_progress", "rss_mb": 6071.5, "idx": 5000000}
+{"t": 52.886, "stage": "event_pass_done", "rss_mb": 6071.5, "events": 5062740, "kernels": 1215919, "calls": 512220, "ranges": 63944}
+{"t": 56.554, "stage": "correlation_done", "rss_mb": 6256.8, "launch_owner_rows": 512220, "correlations": 512220}
+{"t": 56.554, "stage": "kernel_pass_start", "rss_mb": 6256.8}
+{"t": 57.098, "stage": "kernel_pass_progress", "rss_mb": 6258.0, "idx": 1450000}
+{"t": 57.454, "stage": "kernel_pass_progress", "rss_mb": 6258.6, "idx": 1475000}
+{"t": 58.166, "stage": "kernel_pass_progress", "rss_mb": 6260.1, "idx": 1525000}
+{"t": 58.382, "stage": "kernel_pass_progress", "rss_mb": 6260.6, "idx": 1550000}
+{"t": 58.594, "stage": "kernel_pass_progress", "rss_mb": 6262.2, "idx": 1625000}

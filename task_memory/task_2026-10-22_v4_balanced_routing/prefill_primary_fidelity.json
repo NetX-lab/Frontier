@@ -1,0 +1,21 @@
+{
+  "task_id": "W128-V4-BALANCED-PREFILL-PRIMARY",
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "comparison": "/data/ycfeng/tmp/glm53_dsv4/balanced_prefill_39b2bf8_20261023/comparison.json",
+  "comparison_sha256": "135494258bb972dc29cc794bab50f8e6aacc064ef6cb53008cab4d7bf12ece35",
+  "fixed_clean_cases": 77,
+  "identical_cases": 77,
+  "artifact_entries": 451,
+  "unit_xml": "/data/ycfeng/tmp/glm53_dsv4/balanced_prefill_39b2bf8_units.xml",
+  "unit_counts": {
+    "tests": 184,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "merged_affected_tests": 26,
+  "prefill_routing_files": 5,
+  "prefill_routing_lines": 202,
+  "status": "PASS_SOURCE_CPU_FIDELITY",
+  "gpu_runtime_admission": false
+}

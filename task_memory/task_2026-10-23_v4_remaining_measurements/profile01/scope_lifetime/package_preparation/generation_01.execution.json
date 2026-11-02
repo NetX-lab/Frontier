@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/build_package.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package",
+  "returncode": 0,
+  "wall_seconds": 0.07111977599561214,
+  "generation_invocations": 1,
+  "raw": {
+    "generation_01.stdout.log": "ddea09d123f4a57768ef872b9508c87254c490ff064a9a14186567644fed1add",
+    "generation_01.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "retry_allowed": false
+}

@@ -1,0 +1,80 @@
+{
+  "status": "ACCEPTED_ISOLATED_KERNEL_DATA_WITH_LIMITS",
+  "created_at_utc": "2026-10-23T16:44:06.384559+00:00",
+  "job": "exp-1023-235250-540507",
+  "audit": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/results/data_audit.json",
+    "sha256": "6fdf1b7f9285660b2a6140fa56a79bae353045ae9647efa8fccec5b1c378cba9"
+  },
+  "root_verification": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/results/root_verification.json",
+    "sha256": "dcc48e105be80717e10593de9a198e950585cfede6a07c78dfb53acbc642de63"
+  },
+  "run_check": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/root_run_check.json",
+    "sha256": "d5ee3b530a7e291d9576019786f20afffca8b00973051e4be57c0164631a7a8d"
+  },
+  "seal": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/moe/root_seal.json",
+    "sha256": "b552a3a05aef5fbe92dedeb1974e851f83e9b158d874de2875f52bdb1bd01d07"
+  },
+  "download": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/receipt.json",
+    "sha256": "b6000e126edf70a4ad981b39da74fd652174d1e80da4ec175cb95c1aed1a1c7b"
+  },
+  "review": {
+    "session": "ses_e965ee8deffeuFCnTBzuV47mvH",
+    "result": "NO_FINDINGS",
+    "reviewer_reran_audit": false
+  },
+  "scope": {
+    "physical_tp": 1,
+    "producer_ep": 16,
+    "ep_rank": 0,
+    "global_experts": 256,
+    "local_experts": 16,
+    "num_tokens": [
+      16,
+      32,
+      6152,
+      12288
+    ],
+    "operator": "moe_grouped_gemm",
+    "routing_runtime_path": "balanced_topk",
+    "load_distribution": "balanced",
+    "backend": "MXFP4_MARLIN",
+    "measured_graph": false
+  },
+  "verified": {
+    "files": 19,
+    "bytes": 3261347,
+    "rows_per_method": 4,
+    "traces": 12,
+    "reconstructed_statistic_fields": 112,
+    "max_csv_abs_delta_ms": 0.0,
+    "grouped_gemm_samples_per_M": 20,
+    "kernels_per_grouped_gemm_call": 7,
+    "kernel_only_means_ms": {
+      "16": 0.10179370000000001,
+      "12288": 1.29869045,
+      "6152": 0.7557434,
+      "32": 0.1022997
+    }
+  },
+  "cuda_event": "Retained finite diagnostic aggregates only; grouped-GEMM count and raw individual durations unavailable",
+  "limitations": [
+    "CUDA_EVENT grouped-GEMM count is absent in CSV; 20 is source-configured, not retained raw-sample proof.",
+    "CUDA_EVENT individual elapsed samples are not retained; aggregate recomputation and outlier-retention verification are unavailable.",
+    "RecordFunctionTracer is reused unchanged through AST-only CPU methods; no Torch/vLLM/GPU calls.",
+    "Trace-to-M mapping uses unique statistics and source row order, not trace tensor-shape labels; routing arrays and weights are not retained.",
+    "CSV source/model labels plus sealed inputs are provenance evidence; worker does not rehash imported source/binaries during execution.",
+    "MXFP4/MARLIN are operator identities; BF16 is activation/profiling precision, FP8 quant_signature is model-level metadata.",
+    "Only rank0 grouped-GEMM envelope is a candidate; gating M differs from native L and standalone shuffle overlaps.",
+    "M6152 corresponds to mixed-prefill/dummy source population; no steady-state-serving equivalence.",
+    "No other EP rank, TP8, EP communication, graph, serving, random-weight parity, additive layer total, or blanket cost admission."
+  ],
+  "native_tuple_cost_admission": false,
+  "serving_admission": false,
+  "simulator_consumption": false,
+  "next_action": "Use only the measured rank0 envelope as isolated evidence; prove native tuple/rank population and dependency comparability before cost consumption."
+}

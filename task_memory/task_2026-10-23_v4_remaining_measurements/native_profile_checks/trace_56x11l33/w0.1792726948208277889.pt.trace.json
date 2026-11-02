@@ -1,0 +1,81 @@
+
+{
+  "schemaVersion": 1,
+  "deviceProperties": [
+  ],
+  "traceEvents": [
+  {
+    "ph": "X", "cat": "user_annotation", "name": "window2", "pid": 2222898, "tid": 2222898,
+    "ts": 1792726948207824, "dur": 55,
+    "args": {
+      "External id": 513,"Ev Idx": 0
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1792726948207746, "pid": 2222898, "tid": 0,
+    "args": {
+      "name": "python3"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1792726948207746, "pid": 2222898, "tid": 0,
+    "args": {
+      "labels": "CPU"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1792726948207746, "pid": 2222898, "tid": 0,
+    "args": {
+      "sort_index": 2222898
+    }
+  },
+  {
+    "name": "thread_name", "ph": "M", "ts": 1792726948207746, "pid": 2222898, "tid": 2222898,
+    "args": {
+      "name": "thread 2222898 (python3)"
+    }
+  },
+  {
+    "name": "thread_sort_index", "ph": "M", "ts": 1792726948207746, "pid": 2222898, "tid": 2222898,
+    "args": {
+      "sort_index": 2222898
+    }
+  },
+  {
+    "name": "thread_name", "ph": "M", "ts": 1792726948207746, "pid": 2222898, "tid": 2222898,
+    "args": {
+      "name": "thread 2222898 (python3)"
+    }
+  },
+  {
+    "name": "thread_sort_index", "ph": "M", "ts": 1792726948207746, "pid": 2222898, "tid": 2222898,
+    "args": {
+      "sort_index": 2222898
+    }
+  },
+  {
+    "ph": "X", "cat": "Trace", "ts": 1792726948207667, "dur": 229,
+    "pid": "Spans", "tid": "PyTorch Profiler",
+    "name": "PyTorch Profiler (0)",
+    "args": {
+      "Op count": 0
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1792726948207667,
+    "pid": "Spans", "tid": 0,
+    "args": {
+      "sort_index": 536870912
+    }
+  },
+  {
+    "name": "Iteration Start: PyTorch Profiler", "ph": "i", "s": "g",
+    "pid": "Traces", "tid": "Trace PyTorch Profiler", "ts": 1792726948207667
+  },
+  {
+    "name": "Record Window End", "ph": "i", "s": "g",
+    "pid": "", "tid": "", "ts": 1792726948208043
+  }
+  ],
+  "traceName": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/native_profile_checks/trace_56x11l33/w0.1792726948208277889.pt.trace.json"
+}

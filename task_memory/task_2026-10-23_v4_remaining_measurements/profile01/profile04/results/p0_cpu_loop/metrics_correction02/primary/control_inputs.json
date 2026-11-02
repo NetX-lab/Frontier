@@ -1,0 +1,81 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "recorded_utc": "2026-10-24T20:20:59.103743+00:00",
+  "status": "PENDING_NEW_SOURCE_AND_UNIT",
+  "controls": [
+    {
+      "key": [
+        "decode",
+        1,
+        0
+      ],
+      "attempt_ceiling": 1,
+      "input_root": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04",
+      "input_bindings": {
+        "trace_path": "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz",
+        "trace_sha256": "f74ee4b7d9ed36e91c26bd9042fc04152fc4fda5293cc8f8c1cca535b90b2f1e",
+        "profile_path": "nodes/gpu-h800-0574.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+        "profile_sha256": "272879bfa3fd5c8f4273835f2b7e5e49ff1ac796760c4c440facaf4026401f37",
+        "inventory_path": "nodes/gpu-h800-0574.host.platform.shaipower.com/serving/rank0.json",
+        "inventory_sha256": "c005bf58930bc9dd54421da6d61a30978fce51e68ae08b7e2ede8dbd5daf5678",
+        "reader_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+        "trace_bytes": 12794369,
+        "profile_bytes": 312934,
+        "inventory_bytes": 1227897
+      },
+      "retained_output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json",
+      "retained_output_sha256": "fd5f94dc2aa14ded6e9694237b966148163bb79a84e52d2778a90b316ddb380d",
+      "retained_kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.kernels.jsonl.gz",
+      "retained_kernel_index_sha256": "12abf8644255d59215d2bfebec74ae0b23ee86a8d082c0d333d0861cf33c7de5",
+      "expected_kernel_total": {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      },
+      "expected_useful_steps": 61,
+      "old_receipt_sha256": "55934da94e0d454ce3b9bdfeb48298acf9198e7999f8d27b18cf2f55a36b29e5",
+      "new_invocation_status": "NOT_RUN"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        0
+      ],
+      "attempt_ceiling": 1,
+      "input_root": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04",
+      "input_bindings": {
+        "trace_path": "torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842747939163438.pt.trace.json.gz",
+        "trace_sha256": "56f904bbf0da55413a682bbfb29d2ecf62569593fc1d4643354777fbf43cbf51",
+        "profile_path": "nodes/gpu-h800-0158.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+        "profile_sha256": "5b06829dfd1ddcf7759104d773ed44fc913e620368d2cd80284be4e43c562012",
+        "inventory_path": "nodes/gpu-h800-0158.host.platform.shaipower.com/serving/rank0.json",
+        "inventory_sha256": "a7216c84b192b2b3d67a2b97fb723ec4642618a2d21572a262a3d6e6ba7dd422",
+        "reader_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+        "trace_bytes": 56937303,
+        "profile_bytes": 7173354,
+        "inventory_bytes": 835109
+      },
+      "retained_output_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank0.json",
+      "retained_output_sha256": "668aef53e51bd42bb3186453f9d3a7e6745d845fd3e13839fb79cb5f195df10b",
+      "retained_kernel_index_path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank0.kernels.jsonl.gz",
+      "retained_kernel_index_sha256": "3c04ef2d3b6ad161c58819dc2e6c918fc172971848e38b87a0aa97c039846c5b",
+      "expected_kernel_total": {
+        "count": 570964,
+        "sum_ms": 8427.020689000585,
+        "union_ms": 7639.143890869141
+      },
+      "expected_useful_steps": 4,
+      "old_receipt_sha256": "22ed4eb19eb5a6026de0e8e151ef82896d6f3d4f466cf23bec9649849aef5064",
+      "new_invocation_status": "NOT_RUN"
+    }
+  ],
+  "complete_control_invocations_used": 0,
+  "complete_control_invocation_ceiling": 2,
+  "old_controls_reexecuted": 0,
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "max_rank_concurrency": 2,
+  "fresh_root": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01",
+  "projection": "Only elapsed_seconds/maxrss_kib and fresh kernel_sample_index path/compressed SHA are excluded from cross-run equality. All remaining JSON fields and every decompressed kernel index byte must be exact; excluded fresh paths/hashes are validated independently."
+}

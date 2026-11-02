@@ -1,0 +1,13 @@
+dp0 ps1-formal-r001-repeat01 execute_context_1(1)_generation_0(0) handoff 149.48 resp->cpu 78.93 cpu->gpu 26.61 step 33.91 next->byte 10.03 pause None
+dp0 ps1-formal-r002-repeat01 execute_context_2(2)_generation_1(1) handoff 9699.52 resp->cpu 9671.73 cpu->gpu 20.28 step 63.84 next->byte -56.34 pause 10041.12
+dp0 ps1-formal-r003-repeat01 execute_context_2(2)_generation_1(1) handoff 8725.38 resp->cpu 8632.74 cpu->gpu 20.28 step 63.84 next->byte 8.52 pause 10041.12
+dp0 ps1-formal-r004-repeat01 execute_context_2(2)_generation_1(1) handoff 7728.75 resp->cpu 7635.69 cpu->gpu 20.28 step 63.84 next->byte 8.93 pause 10041.12
+dp0 ps1-formal-r006-repeat01 execute_context_2(2)_generation_1(1) handoff 5754.35 resp->cpu 5611.99 cpu->gpu 20.28 step 63.84 next->byte 58.24 pause 10041.12
+dp0 ps1-formal-r007-repeat01 execute_context_2(2)_generation_1(1) handoff 4774.50 resp->cpu 4634.62 cpu->gpu 20.28 step 63.84 next->byte 55.76 pause 10041.12
+dp0 ps1-formal-r005-repeat01 execute_context_2(2)_generation_1(1) handoff 6778.61 resp->cpu 6638.80 cpu->gpu 20.28 step 63.84 next->byte 55.69 pause 10041.12
+dp0 ps1-formal-r003-repeat01 execute_context_1(1)_generation_3(3) handoff 8725.38 resp->cpu 8684.80 cpu->gpu 32.06 step 49.46 next->byte -40.94 pause 10041.12
+dp0 ps1-formal-r004-repeat01 execute_context_1(1)_generation_3(3) handoff 7728.75 resp->cpu 7687.75 cpu->gpu 32.06 step 49.46 next->byte -40.52 pause 10041.12
+dp0 ps1-formal-r006-repeat01 execute_context_1(1)_generation_3(3) handoff 5754.35 resp->cpu 5664.06 cpu->gpu 32.06 step 49.46 next->byte 8.78 pause 10041.12
+dp0 ps1-formal-r007-repeat01 execute_context_1(1)_generation_3(3) handoff 4774.50 resp->cpu 4686.68 cpu->gpu 32.06 step 49.46 next->byte 6.30 pause 10041.12
+dp0 ps1-formal-r005-repeat01 execute_context_1(1)_generation_3(3) handoff 6778.61 resp->cpu 6690.86 cpu->gpu 32.06 step 49.46 next->byte 6.23 pause 10041.12
+dp1 ps1-formal-r000-repeat01 execute_context_1(1)_generation_0(0) handoff 111.28 resp->cpu 50.34 cpu->gpu 32.61 step 21.66 next->byte 6.68 pause None

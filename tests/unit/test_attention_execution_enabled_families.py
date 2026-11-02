@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     iter_attention_families,
@@ -16,9 +17,10 @@ from frontier.attention.families import (
 )
 
 
-def test_iter_execution_enabled_families_excludes_frozen_dsa() -> None:
+def test_iter_execution_enabled_families_includes_measured_dsa() -> None:
     enabled_ids = {family.family_id for family in iter_execution_enabled_families()}
-    assert DSA_ATTENTION_FAMILY.family_id not in enabled_ids
+    assert DSA_ATTENTION_FAMILY.family_id in enabled_ids
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.family_id not in enabled_ids
     assert DENSE_ATTENTION_FAMILY.family_id in enabled_ids
     assert LATENT_MLA_ATTENTION_FAMILY.family_id in enabled_ids
 
@@ -33,16 +35,17 @@ def test_iter_execution_enabled_families_returns_only_runtime_enabled() -> None:
 def test_iter_execution_enabled_families_is_order_preserving_subset() -> None:
     full_ids = [family.family_id for family in iter_attention_families()]
     enabled_ids = [family.family_id for family in iter_execution_enabled_families()]
+    unsupported = {DEEPSEEK_V4_ATTENTION_FAMILY.family_id}
     assert enabled_ids == [
-        family_id for family_id in full_ids if family_id != DSA_ATTENTION_FAMILY.family_id
+        family_id for family_id in full_ids if family_id not in unsupported
     ]
     excluded = set(full_ids) - set(enabled_ids)
-    assert excluded == {DSA_ATTENTION_FAMILY.family_id}
+    assert excluded == unsupported
 
 
 def test_quantization_registry_attention_ops_match_execution_enabled_helper() -> None:
     """The default quant registry's attention ops are exactly the execution-enabled
-    families' profiling ops; the frozen family (no operators) never contributes."""
+    families' profiling ops; structural-only targets do not contribute."""
     from frontier.config.quantization_manager import QuantizationManager
 
     QuantizationManager.reset()
@@ -57,13 +60,13 @@ def test_quantization_registry_attention_ops_match_execution_enabled_helper() ->
         assert expected_attention_ops.issubset(compute_ops)
         for op_name in expected_attention_ops:
             assert manager.is_compute_operation(op_name)
-        # The frozen family carries no operators, so it can leak none.
+        # Structural targets stay outside the measured precision registry.
         frozen_ops = {
             operator.name
             for family in iter_attention_families()
             if family.dsa_frozen
             for operator in family.profiling_ops()
         }
-        assert frozen_ops == set()
+        assert frozen_ops.isdisjoint(compute_ops)
     finally:
         QuantizationManager.reset()

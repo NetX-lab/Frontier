@@ -1,0 +1,674 @@
+{
+  "status": "PASS_ROOT_SOURCE_PACKAGE_BINDING",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03",
+  "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_root_binding_corrected_wg1kuvmw",
+  "initial_failure": "Root checker KeyError: 'package_files'; corrected to the inspected package_hashes field. No package/source changes.",
+  "owner_commit": "438ddfc4918945b3c1bb12af586b31ef07d19773",
+  "runtime_revision": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "package_files": 45,
+  "package_bytes": 6983474,
+  "prospective_manifest_sha256": "4e827ca74e26abfba5816b61f6bac095ca1da326957b80d0f5e4d5c0c59423b7",
+  "checks": [
+    {
+      "name": "owner stopped and clean",
+      "pass": true
+    },
+    {
+      "name": "owner final revision",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/engine.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/frontier.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/native_config.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/trace/SHA256SUMS",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/trace/manifest.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/trace/request_ids.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/trace/trace.csv",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/trace/warmup_pool.csv",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/manifest.yaml",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/config.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/engine.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/evidence_readiness.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/launch.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/model/config.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/model/generation_config.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/model/tokenizer.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/model/tokenizer_config.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/native_dummy_bootstrap.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/native_pd_worker.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/overlay.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/overlay_model.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/probe_nixl_read.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/probe_runtime_inventory.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/seal.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/serve_observers.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/source_lock.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/submit_native_diagnostic.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/balanced_routing.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/client_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/e2e_metrics_gap.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/native_dummy_initialization.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/native_full_structure.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/pd_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/pd_proxy.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/pd_replay.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/dp_placement_pp/vllm_replay.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/integration/native_extension_startup_probe.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/trace/SHA256SUMS",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/trace/manifest.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/trace/request_ids.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/trace/trace.csv",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/trace/warmup_pool.csv",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/analysis/run_check_status.groundtruth_clean.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/engine.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/frontier.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/native_config.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/SHA256SUMS",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/manifest.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/request_ids.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/trace.csv",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/inputs/trace/warmup_pool.csv",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/manifest.yaml",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/launcher_receipt.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/drained.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/native_stopped.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/ready.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/replay.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/result.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/server.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/server_ready.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank0.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank1.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank2.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank3.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank4.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank5.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank6.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank7.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/worker.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/drained.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/native_stopped.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/ready.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/result.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/server.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank0.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank1.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank2.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank3.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank4.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank5.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank6.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank7.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0310.host.platform.shaipower.com/worker.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/drained.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/native_stopped.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/ready.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/result.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/server.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/server_ready.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank0.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank1.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank2.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank3.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank4.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank5.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank6.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank7.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0346.host.platform.shaipower.com/worker.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/drained.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/native_stopped.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/ready.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/result.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/server.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank0.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank1.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank2.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank3.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank4.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank5.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank6.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank7.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0399.host.platform.shaipower.com/worker.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/platform_terminal_receipt.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/replay_finished.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/run/canonical_repetitions.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/run/client_requests.jsonl",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/run/proxy.log",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/run/proxy_requests.jsonl",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/run/replay_summary.json",
+      "pass": true
+    },
+    {
+      "name": "original /data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/run_manifest.json",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package frontier/profiling/moe/balanced_routing.py",
+      "pass": true
+    },
+    {
+      "name": "git blob frontier/profiling/moe/balanced_routing.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/client_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/client_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/e2e_metrics_gap.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/e2e_metrics_gap.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/native_dummy_initialization.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/native_dummy_initialization.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/native_full_structure.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/native_full_structure.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/native_pd_worker.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/native_pd_worker.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/native_serve_profile.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/native_serve_profile.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/pd_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/pd_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/pd_proxy.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/pd_proxy.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/calibration/pd_replay.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/calibration/pd_replay.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/dp_placement_pp/vllm_replay.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/dp_placement_pp/vllm_replay.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+      "pass": true
+    },
+    {
+      "name": "git/runtime/package tests/integration/native_extension_startup_probe.py",
+      "pass": true
+    },
+    {
+      "name": "git blob tests/integration/native_extension_startup_probe.py",
+      "pass": true
+    },
+    {
+      "name": "13 runtime modules",
+      "pass": true
+    },
+    {
+      "name": "45 unchanged package files",
+      "pass": true
+    },
+    {
+      "name": "bytes",
+      "pass": true
+    },
+    {
+      "name": "prospective manifest",
+      "pass": true
+    },
+    {
+      "name": "historical inventory",
+      "pass": true
+    },
+    {
+      "name": "review evidence source_changes.diff",
+      "pass": true
+    },
+    {
+      "name": "review evidence source_changes.numstat",
+      "pass": true
+    },
+    {
+      "name": "review evidence source_budget.receipt.json",
+      "pass": true
+    },
+    {
+      "name": "68 gross source lines",
+      "pass": true
+    },
+    {
+      "name": "recorded raw diff",
+      "pass": true
+    },
+    {
+      "name": "maintained whitespace",
+      "pass": true
+    },
+    {
+      "name": "image PASS",
+      "pass": true
+    },
+    {
+      "name": "five actual-image checks",
+      "pass": true
+    },
+    {
+      "name": "sdk PASS",
+      "pass": true
+    }
+  ],
+  "check_count": 165
+}

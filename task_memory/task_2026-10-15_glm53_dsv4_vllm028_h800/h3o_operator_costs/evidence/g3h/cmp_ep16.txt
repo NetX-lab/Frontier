@@ -1,0 +1,21 @@
+native shapes not in G3h:
+G3h shapes not in native:
+  grid=[192, 2, 1] _swiglu_limit_pad_aware_kernel  (2 traces)
+  grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLB  (2 traces)
+  grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLB  (2 traces)
+  grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLB  (2 traces)
+  grid=[1, 1, 1] void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arang  (10 traces)
+  grid=[72, 1, 1] void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arang  (3 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long  (10 traces)
+  grid=[5, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long  (3 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_  (10 traces)
+  grid=[5, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_  (3 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_  (26 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>  (10 traces)
+  grid=[5, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>  (3 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>,   (13 traces)
+  grid=[1, 2, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int  (4 traces)
+  grid=[64, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*,  (2 traces)
+  grid=[96, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*,  (2 traces)
+  grid=[128, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*,  (2 traces)
+shared shapes: 13

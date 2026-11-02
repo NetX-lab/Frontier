@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-I",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/integrity_controls.py"
+  ],
+  "cwd": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128",
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "started_utc": "2026-10-24T05:37:31.494950+00:00",
+  "returncode": 1,
+  "script_sha256": "d4f1568797b2a64332af1bfd92da87e7f9db6adcd797fa168ddb0d84bd40a81f",
+  "python_driver": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "cpu_only": true,
+  "submitted": false
+}

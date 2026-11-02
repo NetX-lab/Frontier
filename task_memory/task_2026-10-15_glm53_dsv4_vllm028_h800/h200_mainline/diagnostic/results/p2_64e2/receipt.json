@@ -1,0 +1,116 @@
+{
+ "status": "FINISHED",
+ "label": "DIAGNOSTIC",
+ "case": "p2_64",
+ "source_commit": "9b8aaf17e8ee84bea12ac7737295ad718bd1415a",
+ "source_dirty_paths": [
+  " M frontier/config/cluster_config.py",
+  " M frontier/config/cluster_role_config.py",
+  " M frontier/config/kv_cache_transfer_config.py",
+  " M frontier/config/replica_scheduler_config.py",
+  " M frontier/entities/batch.py",
+  " M frontier/events/replica_stage_schedule_event.py",
+  " M frontier/scheduler/replica_scheduler/base_replica_scheduler.py",
+  " M frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py",
+  " M frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py",
+  " M frontier/scheduler/utils/replica_config.py",
+  "?? frontier/scheduler/replica_scheduler/vllm_v1_nixl_reads.py"
+ ],
+ "input": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/inputs/frontier.json",
+ "input_sha256": "3aac0a3f6b829a478b4a350614722d386398271d5eb0cf670299bc9a533c8cf4",
+ "step_cost_table": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/step_cost_attn_dp4/dsv4_step_cost.json",
+ "step_cost_table_sha256": "b452351a7945aac9af36ec1841bd81add8fdafccdff1acbbb0991f4c501fac9d",
+ "python": "3.10.6",
+ "added_fields": {
+  "analytical_kv_cache_transfer_config_nixl_read_completion": "transfer_end",
+  "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": null
+ },
+ "override_diff": {
+  "vllm_v1_scheduler_config_num_blocks_mode": {
+   "input": "memory_planner_profiled",
+   "h4a4": "explicit"
+  },
+  "replica_config_attention_backend": {
+   "input": null,
+   "h4a4": "FLASHMLA_SPARSE_DSV4"
+  },
+  "replica_config_kv_cache_dtype": {
+   "input": null,
+   "h4a4": "fp8"
+  },
+  "replica_config_indexer_kv_cache_dtype": {
+   "input": null,
+   "h4a4": "fp8"
+  },
+  "metrics_config_store_frontier_stage_batch_ledger": {
+   "input": true,
+   "h4a4": false
+  },
+  "decode_cuda_graph_mode": {
+   "input": "full_decode_only",
+   "h4a4": "none"
+  },
+  "vllm_v1_scheduler_config_num_blocks": {
+   "input": 0,
+   "h4a4": 112914
+  },
+  "random_forrest_execution_time_predictor_config_atten_input_file": {
+   "input": "./data/profiling/compute/{DEVICE}/{MODEL}/attention.csv",
+   "h4a4": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/step_cost_attn_dp4/attention.csv"
+  },
+  "metrics_config_output_dir": {
+   "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/metrics",
+   "h4a4": "/data/ycfeng/tmp/glm53_dsv4/h4b_item2/diag/p2_64_d2/metrics"
+  },
+  "metrics_config_cache_dir": {
+   "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/cache",
+   "h4a4": "/data/ycfeng/tmp/glm53_dsv4/h4b_item2/diag/p2_64_d2/cache"
+  },
+  "metrics_config_run_id": {
+   "input": "v4_balanced_native06",
+   "h4a4": "h4a4_p2_64_step_cost"
+  },
+  "measured_cc_backend_config_cache_dir": {
+   "input": "/data/ycfeng/tmp/glm53_dsv4/frontier_p0_probe_20261021/cc_cache",
+   "h4a4": "/data/ycfeng/tmp/glm53_dsv4/h4b_item2/diag/p2_64_d2/cc_cache"
+  },
+  "analytical_kv_cache_transfer_config_nixl_read_completion": {
+   "input": "transfer_end",
+   "h4a4": "engine_step"
+  },
+  "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": {
+   "input": null,
+   "h4a4": 2
+  }
+ },
+ "kv_admission": {
+  "decode_replica1_lane0": {
+   "num_blocks": 112914,
+   "admission_blocks_at_max_model_len": 2940,
+   "max_concurrency": 38.406122448979595
+  },
+  "decode_replica1_lane1": {
+   "num_blocks": 112914,
+   "admission_blocks_at_max_model_len": 2940,
+   "max_concurrency": 38.406122448979595
+  },
+  "decode_replica1_lane2": {
+   "num_blocks": 112914,
+   "admission_blocks_at_max_model_len": 2940,
+   "max_concurrency": 38.406122448979595
+  },
+  "decode_replica1_lane3": {
+   "num_blocks": 112914,
+   "admission_blocks_at_max_model_len": 2940,
+   "max_concurrency": 38.406122448979595
+  },
+  "native": 38.35,
+  "native_admission_blocks": [
+   2944,
+   2944
+  ],
+  "status": "DIFFERS"
+ },
+ "run_wall_s": 1103.9580671661533,
+ "metrics_dir": "/data/ycfeng/tmp/glm53_dsv4/h4b_item2/diag/p2_64_d2/metrics/deepseek_ai_deepseek_v4_flash/online_serving/h4a4_p2_64_step_cost"
+}

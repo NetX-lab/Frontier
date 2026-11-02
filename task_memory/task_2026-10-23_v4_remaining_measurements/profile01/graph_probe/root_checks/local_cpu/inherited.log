@@ -1,0 +1,8 @@
+ERROR: file or directory not found: not callback_fields_are_copied_only_while_native_data_is_valid and not callback_never_propagates_python_exceptions_across_c and not callback_layout_matches_compiled_cuda13_header
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AssertionError
+
+no tests ran in 0.00s
+{"candidate_loads": 0}

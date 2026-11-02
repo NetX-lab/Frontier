@@ -1,0 +1,89 @@
+{
+  "status": "FAIL",
+  "candidate_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "test_sha256": "b8077244a04978f5e11c76ee8dd9a8fd3da8cfd04c44b7f271054bae8cb74c5d",
+  "results": [
+    {
+      "mode": "red",
+      "command": [
+        "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_cupti_graph_resource_payload.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/red_tmp",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/red.xml",
+        "-k",
+        "resource_envelope_exact_handles_ids_and_copy"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe",
+      "source_override": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py",
+      "start_utc": "2026-10-24T05:19:45.899913+00:00",
+      "end_utc": "2026-10-24T05:19:46.617805+00:00",
+      "returncode": 1,
+      "counts": {
+        "tests": 2,
+        "errors": 0,
+        "failures": 2,
+        "skipped": 0
+      },
+      "expected_match": true,
+      "log": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/red.log"
+    },
+    {
+      "mode": "green",
+      "command": [
+        "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_cupti_graph_resource_payload.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/green_tmp",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/green.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe",
+      "source_override": null,
+      "start_utc": "2026-10-24T05:19:45.900381+00:00",
+      "end_utc": "2026-10-24T05:19:46.718867+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 16,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected_match": true,
+      "log": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/green.log"
+    },
+    {
+      "mode": "inherited",
+      "command": [
+        "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+        "-B",
+        "-c",
+        "import json,runpy,pytest;from pathlib import Path;g=runpy.run_path('/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/tests/run_cpu_checks.py');g['DiagnosticCopy'].pytest_sessionstart.__globals__['HERE']=Path('/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe');p=g['DiagnosticCopy']();r=pytest.main(['/data/ycfeng/Frontier/.worktrees/glm-full-dummy-h200/tests/profiling/test_cuda_graph_probe_attempt1.py', '/data/ycfeng/Frontier/.worktrees/glm-full-dummy-h200/tests/unit/test_cuda_graph_scope_probe.py', 'not callback_fields_are_copied_only_while_native_data_is_valid and not callback_never_propagates_python_exceptions_across_c and not callback_layout_matches_compiled_cuda13_header', '--basetemp=/data/ycfeng/tmp/w128_graph_payload_inherited', '-q', '-p', 'no:cacheprovider', '--basetemp=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/inherited_tmp', '--junitxml=/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/inherited.xml'],plugins=[p]);print(json.dumps({'candidate_loads':p.loads}));assert p.loads==71;raise SystemExit(int(r))"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe",
+      "source_override": null,
+      "start_utc": "2026-10-24T05:19:46.617948+00:00",
+      "end_utc": "2026-10-24T05:19:47.234302+00:00",
+      "returncode": 1,
+      "counts": {
+        "tests": 0,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected_match": false,
+      "log": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em/inherited.log"
+    }
+  ],
+  "output": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_cpu_m_cwt8em",
+  "limits": "CPU controls only; no native CUPTI calls or runtime/crash-cause qualification."
+}

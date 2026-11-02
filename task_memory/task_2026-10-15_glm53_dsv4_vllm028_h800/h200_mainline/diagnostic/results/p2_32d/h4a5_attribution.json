@@ -1,0 +1,342 @@
+{
+ "label": "DIAGNOSTIC",
+ "case": "p2_32",
+ "frontier_run": "/data/ycfeng/tmp/glm53_dsv4/h200/diag/p2_32d_run1",
+ "step_table": {
+  "PREFILL": [
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 6144,
+    "num_decode_requests": {
+     "min": 0,
+     "max": 0
+    },
+    "time_ms": 281.4170033670962
+   }
+  ],
+  "DECODE": [
+   {
+    "num_prefill_requests": 0,
+    "num_prefill_tokens": 0,
+    "num_decode_requests": {
+     "min": 1,
+     "max": 128
+    },
+    "time_ms": 18.36976416015625
+   },
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 1,
+    "num_decode_requests": {
+     "min": 0,
+     "max": 0
+    },
+    "time_ms": 25.28460852050781
+   },
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 1,
+    "num_decode_requests": {
+     "min": 1,
+     "max": 128
+    },
+    "time_ms": 34.247385986328126
+   }
+  ]
+ },
+ "native": {
+  "repeat01": {
+   "client_to_proxy": {
+    "mean": 0.4878020044998266,
+    "median": 0.4210788756608963,
+    "min": 0.32231584191322327,
+    "max": 1.0542599484324455,
+    "n": 128
+   },
+   "p_service": {
+    "mean": 234.3701843492454,
+    "median": 230.3984952159226,
+    "min": 224.9896265566349,
+    "max": 257.5389603152871,
+    "n": 128
+   },
+   "handoff": {
+    "mean": 126.95997392438585,
+    "median": 121.04011327028275,
+    "min": 92.05204527825117,
+    "max": 342.8431237116456,
+    "n": 128
+   },
+   "decode_byte_to_client": {
+    "mean": 0.15680370415793732,
+    "median": 0.10393839329481125,
+    "min": 0.04904530942440033,
+    "max": 0.6287908181548119,
+    "n": 128
+   },
+   "ttft": {
+    "mean": 361.974763982289,
+    "median": 354.3551107868552,
+    "min": 324.6065368875861,
+    "max": 599.3846291676164,
+    "n": 128
+   },
+   "tpot": {
+    "mean": 19.90684459997105,
+    "median": 20.07861973040483,
+    "min": 18.617340948938857,
+    "max": 20.36680731893256,
+    "n": 128
+   },
+   "decoding_at_once": {
+    "mean": 17.783932754236446,
+    "max_observed": 21
+   }
+  },
+  "repeat02": {
+   "client_to_proxy": {
+    "mean": 0.43769563490059227,
+    "median": 0.37680845707654953,
+    "min": 0.3091702237725258,
+    "max": 0.9804973378777504,
+    "n": 128
+   },
+   "p_service": {
+    "mean": 236.01901422080118,
+    "median": 229.69783563166857,
+    "min": 224.65994022786617,
+    "max": 284.53688230365515,
+    "n": 128
+   },
+   "handoff": {
+    "mean": 128.16787417250453,
+    "median": 121.18887202814221,
+    "min": 96.37930803000927,
+    "max": 253.172030672431,
+    "n": 128
+   },
+   "decode_byte_to_client": {
+    "mean": 0.12391195195959881,
+    "median": 0.07834238931536674,
+    "min": 0.05312170833349228,
+    "max": 0.41902530938386917,
+    "n": 128
+   },
+   "ttft": {
+    "mean": 364.7484959801659,
+    "median": 357.7805384993553,
+    "min": 332.3511555790901,
+    "max": 494.21865586191416,
+    "n": 128
+   },
+   "tpot": {
+    "mean": 19.88859159321239,
+    "median": 19.903618210557035,
+    "min": 19.38701818040768,
+    "max": 20.188062144070134,
+    "n": 128
+   },
+   "decoding_at_once": {
+    "mean": 17.747117648856015,
+    "max_observed": 21
+   }
+  },
+  "repeat03": {
+   "client_to_proxy": {
+    "mean": 0.44980645179748535,
+    "median": 0.38748234510421753,
+    "min": 0.29127951711416245,
+    "max": 1.2582922354340553,
+    "n": 128
+   },
+   "p_service": {
+    "mean": 236.10146521969,
+    "median": 230.4223165847361,
+    "min": 224.785671569407,
+    "max": 300.4118148237467,
+    "n": 128
+   },
+   "handoff": {
+    "mean": 128.63614922389388,
+    "median": 123.19231918081641,
+    "min": 89.83613830059767,
+    "max": 193.125793710351,
+    "n": 128
+   },
+   "decode_byte_to_client": {
+    "mean": 0.17826773546403274,
+    "median": 0.14186231419444084,
+    "min": 0.05445349961519241,
+    "max": 0.4692133516073227,
+    "n": 128
+   },
+   "ttft": {
+    "mean": 365.3656886308454,
+    "median": 357.15411929413676,
+    "min": 330.50669729709625,
+    "max": 438.2282355800271,
+    "n": 128
+   },
+   "tpot": {
+    "mean": 19.961462032743437,
+    "median": 19.99272684678654,
+    "min": 19.16493665525291,
+    "max": 20.289229471254675,
+    "n": 128
+   },
+   "decoding_at_once": {
+    "mean": 17.793763127452884,
+    "max_observed": 21
+   }
+  }
+ },
+ "native_mean_of_repeats": {
+  "client_to_proxy": 0.45843469706596807,
+  "p_service": 235.4968879299122,
+  "handoff": 127.92133244026142,
+  "decode_byte_to_client": 0.15299446386052296,
+  "ttft": 364.0296495311001,
+  "tpot": 19.91896607530896
+ },
+ "frontier": {
+  "p_wait": {
+   "mean": 0.0,
+   "median": 0.0,
+   "min": 0.0,
+   "max": 0.0,
+   "n": 128
+  },
+  "p_compute": {
+   "mean": 281.4170033669983,
+   "median": 281.4170033669692,
+   "min": 281.4170033668546,
+   "max": 281.41700336716013,
+   "n": 128
+  },
+  "p_residual": {
+   "mean": -2.248867758680717e-12,
+   "median": -2.8421709430404007e-13,
+   "min": -5.7980287238024175e-12,
+   "max": 1.5347723092418164e-12,
+   "n": 128
+  },
+  "kv_wait": {
+   "mean": -4.319655744211559e-12,
+   "median": 0.0,
+   "min": -1.4551915228366852e-11,
+   "max": 5.684341886080802e-14,
+   "n": 128
+  },
+  "kv_transfer": {
+   "mean": 2.570035277340608,
+   "median": 2.5700352773410096,
+   "min": 2.5700352773370128,
+   "max": 2.570035277344118,
+   "n": 128
+  },
+  "d_first_step": {
+   "mean": 43.24288229601571,
+   "median": 43.16805790356011,
+   "min": 25.284608520508243,
+   "max": 52.47609791062132,
+   "n": 128
+  },
+  "ttft": {
+   "mean": 327.22992094035743,
+   "median": 327.1550965477654,
+   "min": 309.2716471649418,
+   "max": 336.46313655511767,
+   "n": 128
+  },
+  "tpot": {
+   "mean": 18.641549544468663,
+   "median": 18.664656452189615,
+   "min": 18.369764160212277,
+   "max": 18.66465645219529,
+   "n": 128
+  },
+  "preemptions": {
+   "mean": 0.0,
+   "median": 0.0,
+   "min": 0.0,
+   "max": 0.0,
+   "n": 128
+  },
+  "decoding_at_once": {
+   "mean": 16.741416074781394,
+   "max_observed": 20
+  }
+ },
+ "comparison": {
+  "ttft_gap_ms": -36.79972859074269,
+  "p_side_gap_ms": 45.92011543708384,
+  "handoff_gap_ms": -82.10841486690943,
+  "client_edges_gap_ms": -0.611429160926491,
+  "tpot_gap_ms": -1.277416530840295
+ },
+ "profile": {
+  "steps": {
+   "decode_only": {
+    "1": {
+     "median_ms": 18.328514526367186,
+     "samples": 68
+    },
+    "2": {
+     "median_ms": 18.4026279296875,
+     "samples": 47
+    }
+   },
+   "first_step_after_kv": {
+    "0": {
+     "median_ms": 25.28460852050781,
+     "samples": 2
+    },
+    "1": {
+     "median_ms": 34.247385986328126,
+     "samples": 1
+    }
+   }
+  },
+  "client_tpot_mean_ms": {
+   "repeat01 (profiled)": 22.8351270173922,
+   "repeat02": 19.08539023455761,
+   "repeat03": 19.081093086319964
+  },
+  "handoff_samples": [
+   {
+    "trace": "dp0",
+    "request_id": "fixed-6144-1024-req128-qps1-formal-r001-repeat01",
+    "step": "execute_context_1(1)_generation_0(0)",
+    "handoff_ms": 144.36745643615723,
+    "prefill_response_to_k1_cpu_start_ms": 82.59296417236328,
+    "k1_cpu_start_to_gpu_start_ms": 26.281356811523438,
+    "k1_gpu_step_ms": 29.642581939697266,
+    "next_step_start_to_first_byte_ms": 5.850553512573242,
+    "longest_lane_pause_ms": null
+   },
+   {
+    "trace": "dp0",
+    "request_id": "fixed-6144-1024-req128-qps1-formal-r002-repeat01",
+    "step": "execute_context_1(1)_generation_1(1)",
+    "handoff_ms": 18542.345762252808,
+    "prefill_response_to_k1_cpu_start_ms": 18488.351583480835,
+    "k1_cpu_start_to_gpu_start_ms": 16.124963760375977,
+    "k1_gpu_step_ms": 34.247398376464844,
+    "next_step_start_to_first_byte_ms": 3.621816635131836,
+    "longest_lane_pause_ms": 19094.438552856445
+   },
+   {
+    "trace": "dp1",
+    "request_id": "fixed-6144-1024-req128-qps1-formal-r000-repeat01",
+    "step": "execute_context_1(1)_generation_0(0)",
+    "handoff_ms": 120.49221992492676,
+    "prefill_response_to_k1_cpu_start_ms": 58.46261978149414,
+    "k1_cpu_start_to_gpu_start_ms": 36.591529846191406,
+    "k1_gpu_step_ms": 20.926713943481445,
+    "next_step_start_to_first_byte_ms": 4.511356353759766,
+    "longest_lane_pause_ms": null
+   }
+  ],
+  "unassigned_k1_steps": 0
+ }
+}

@@ -1,0 +1,132 @@
+WARNING 12:55:56 model_architectures.py:1301] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported; measured execution is limited to a diagnostic whole-step table (dsv4_step_cost.json) for PREFILL and unified DECODE lanes of its measured topology
+WARNING 12:55:56 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+WARNING 12:55:56 measured_cc_backend.py:171] Non-monotone measured collective ('all_gatherv', 'ep', 32): bytes=(98816, 197632), us=(316.38479828834534, 316.103994846344)
+WARNING 12:55:56 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(24576, 49152), us=(12.561599910259247, 11.432000063359737)
+WARNING 12:55:56 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(196608, 393216), us=(18.622399866580963, 18.25440004467964)
+WARNING 12:55:56 measured_cc_backend.py:171] Non-monotone measured collective ('all_gatherv', 'ep', 32): bytes=(98816, 197632), us=(316.38479828834534, 316.103994846344)
+WARNING 12:55:56 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(24576, 49152), us=(12.561599910259247, 11.432000063359737)
+WARNING 12:55:56 measured_cc_backend.py:171] Non-monotone measured collective ('all_reduce', 'tp', 8): bytes=(196608, 393216), us=(18.622399866580963, 18.25440004467964)
+simulated time s 19.063143487559536
+         228173152 function calls (226500081 primitive calls) in 177.331 seconds
+
+   Ordered by: cumulative time
+   List reduced from 941 to 45 due to restriction <45>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000  180.000  180.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/simulator.py:423(run)
+        1    1.677    1.677  180.000  180.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/simulator.py:595(_run_sequential)
+    41409    0.119    0.000   88.711    0.002 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/events/decode_sync_collective_event.py:31(handle_event)
+    41409    0.207    0.000   88.556    0.002 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py:1312(on_decode_sync_collective)
+    41409    1.573    0.000   88.349    0.002 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/decode_collective.py:18(handle_decode_sync_collective)
+   137018    0.856    0.000   85.310    0.001 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py:1391(predict_stage_execution_time)
+   137018    0.506    0.000   84.274    0.001 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:1298(predict_stage_execution_time)
+   137018    0.495    0.000   61.069    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:1313(<listcomp>)
+   215645    0.333    0.000   60.575    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/kernel_gap.py:185(_predict_layer_with_kernel_gap)
+   215645    1.740    0.000   60.241    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:1325(_predict_moe_layer_execution_time)
+   215645    1.034    0.000   54.515    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:95(_predict_dsv4_structural_execution)
+   215645    2.333    0.000   53.481    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/deepseek_v4.py:411(predict_step_cost_execution)
+   215645    9.061    0.000   48.471    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py:71(__init__)
+   135125    1.897    0.000   37.494    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/sync_entry.py:34(enter_layer_sync)
+    67562    1.690    0.000   30.404    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/ep_wave_schedule.py:52(schedule_layer_wave)
+    82818    1.351    0.000   27.062    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/events/decode_sync_event.py:36(handle_event)
+    82818    0.178    0.000   24.817    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py:1284(on_decode_sync)
+    82818    0.101    0.000   24.639    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/sync_entry.py:191(enter_decode_sync)
+    26153    0.071    0.000   24.285    0.001 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/events/prefill_sync_collective_event.py:31(handle_event)
+    26153    0.057    0.000   24.194    0.001 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py:1222(on_prefill_sync_collective)
+    26153    0.545    0.000   24.137    0.001 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/prefill_collective.py:17(handle_prefill_sync_collective)
+   137017    0.928    0.000   22.699    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/base_execution_time_predictor.py:79(_assemble_stage)
+    53716    0.233    0.000   22.114    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/dp_dummy_forward.py:138(advance_dummy_forward)
+1447768/1045193    6.953    0.000   21.768    0.000 {built-in method builtins.sum}
+    41409    0.176    0.000   20.322    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py:1111(_on_decode_ep_wave_ready)
+    53717    0.117    0.000   19.506    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/dp_dummy_forward.py:20(_predict_layer)
+   215641    0.911    0.000   18.741    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py:1182(as_single_layer)
+     3249    0.070    0.000   18.435    0.006 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/events/replica_schedule_event.py:29(handle_event)
+     3249    0.008    0.000   18.150    0.006 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:506(on_schedule)
+     3231    0.018    0.000   18.142    0.006 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:528(_run_dp_iterations)
+     3182    0.020    0.000   18.059    0.006 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:574(_schedule_iteration)
+     3182    0.062    0.000   18.029    0.006 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/base_replica_scheduler.py:922(on_schedule)
+     3182    0.025    0.000   17.783    0.006 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:1419(_get_next_batch)
+    67562    0.374    0.000   17.675    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py:1037(_prepare_moe_ep_wave_plan)
+    67562    0.797    0.000   17.302    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/ep_wave.py:80(prepare_moe_wave_from_inputs)
+     1926    0.072    0.000   17.224    0.009 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_role_schedules.py:176(_schedule_decode_only)
+     3182    0.194    0.000   15.975    0.005 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:940(_schedule_running_requests)
+  1740845    5.171    0.000   15.848    0.000 /usr/lib/python3.10/copy.py:66(copy)
+     9490    0.038    0.000   15.527    0.002 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py:949(_try_allocate_with_preemption)
+   431282    0.371    0.000   14.985    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py:1242(finalized_copy)
+    52307    0.549    0.000   13.978    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/events/prefill_sync_event.py:36(handle_event)
+  1940804    3.635    0.000   13.098    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/time_components.py:111(normalize_execution_op_times)
+    52307    0.048    0.000   13.064    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py:1193(on_prefill_sync)
+    52307    0.060    0.000   13.016    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/sync_entry.py:169(enter_prefill_sync)
+    19152    0.055    0.000   12.015    0.001 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/replica_scheduler/vllm_v1_prefix_cache.py:58(_sync_prefix_cache_allocation_state)
+
+
+         228173152 function calls (226500081 primitive calls) in 177.331 seconds
+
+   Ordered by: internal time
+   List reduced from 941 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  1940803    9.128    0.000    9.128    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/time_components.py:131(<dictcomp>)
+   215645    9.061    0.000   48.471    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py:71(__init__)
+1447768/1045193    6.953    0.000   21.768    0.000 {built-in method builtins.sum}
+ 50838111    5.910    0.000    5.910    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/kv_cache/base_kv_cache_manager.py:97(<genexpr>)
+  1740845    5.171    0.000   15.848    0.000 /usr/lib/python3.10/copy.py:66(copy)
+  1902773    4.281    0.000   11.697    0.000 /usr/lib/python3.10/copy.py:259(_reconstruct)
+1834148/862580    3.671    0.000    7.743    0.000 /usr/lib/python3.10/copy.py:128(deepcopy)
+  1940804    3.635    0.000   13.098    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/time_components.py:111(normalize_execution_op_times)
+   619023    2.865    0.000   11.215    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/deepseek_v4.py:17(timing_operator_times)
+9209251/9207379    2.851    0.000    3.379    0.000 {built-in method builtins.getattr}
+13473102/13337978    2.576    0.000    4.829    0.000 {built-in method builtins.isinstance}
+   781754    2.508    0.000    4.370    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/deepseek_v4.py:65(<genexpr>)
+  6900640    2.485    0.000    3.098    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py:214(read_op_time_attr)
+   215645    2.333    0.000   53.481    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/deepseek_v4.py:411(predict_step_cost_execution)
+   619023    2.067    0.000    2.067    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/deepseek_v4.py:60(<setcomp>)
+  8508016    2.065    0.000    2.065    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py:691(op_times)
+ 16732550    2.057    0.000    2.057    0.000 {method 'get' of 'dict' objects}
+   135125    1.897    0.000   37.494    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/sync_entry.py:34(enter_layer_sync)
+   135124    1.818    0.000    5.744    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/ep_trace.py:412(log_barrier_trace)
+   215645    1.752    0.000    1.752    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/time_components.py:168(<dictcomp>)
+   215645    1.740    0.000   60.241    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:1325(_predict_moe_layer_execution_time)
+    67562    1.690    0.000   30.404    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/ep_wave_schedule.py:52(schedule_layer_wave)
+        1    1.677    1.677  180.000  180.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/simulator.py:595(_run_sequential)
+   619023    1.603    0.000    1.603    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/deepseek_v4.py:64(<setcomp>)
+  1257837    1.586    0.000    4.399    0.000 {built-in method builtins.any}
+  1902773    1.576    0.000    1.577    0.000 {method '__reduce_ex__' of 'object' objects}
+    41409    1.573    0.000   88.349    0.002 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/scheduler/utils/decode_collective.py:18(handle_decode_sync_collective)
+  2037897    1.571    0.000    1.571    0.000 {method 'update' of 'dict' objects}
+   646945    1.475    0.000    2.228    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/operators/spec.py:370(e2e_trace_ops)
+   215641    1.397    0.000   11.987    0.000 /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/entities/execution_time.py:1216(_clone_mutable_components)
+
+
+rc=0

@@ -1,0 +1,20 @@
+{
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/usr/bin/python3",
+  "resolved_executable": "/usr/bin/python3.10",
+  "python_sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2",
+  "environment": {
+    "PYTHONPATH": null,
+    "PYTHONHOME": null,
+    "PYTHONMALLOC": null,
+    "PYTHONMALLOCSTATS": null,
+    "PYTHONFAULTHANDLER": null,
+    "LD_PRELOAD": null,
+    "LD_LIBRARY_PATH": "/usr/local/nvidia/lib64",
+    "MALLOC_CHECK_": null,
+    "GLIBC_TUNABLES": null,
+    "MALLOC_PERTURB_": null,
+    "MALLOC_ARENA_MAX": null
+  },
+  "kind": "read-only interpreter/environment metadata; not a unit invocation"
+}

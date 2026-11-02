@@ -1,0 +1,38 @@
+{
+  "status": "FAILED_NATIVE_SIGSEGV_BEFORE_METRICS",
+  "recorded_utc": "2026-10-25T04:26:24.412861+00:00",
+  "child_returncode": -11,
+  "parent_returncode": 1,
+  "enclosing_seconds": 20.366353378631175,
+  "actual_memory_limit_bytes": 32212254720,
+  "last_observation": {
+    "t": 19.943,
+    "stage": "kernel_pass_progress",
+    "rss_mb": 2440.4,
+    "idx": 1175000
+  },
+  "observations": 29,
+  "kernel_done": false,
+  "metrics_start": false,
+  "final_JSON": false,
+  "core_pattern": "core",
+  "current_parent_core_limit": "0                    unlimited            bytes",
+  "core_files_here": [],
+  "coredumpctl": "UNAVAILABLE/FileNotFoundError; retained in task transcript",
+  "expected_kernel_rows": 570964,
+  "partial_index_EOF": "UNVERIFIED",
+  "corruption_writer": "UNKNOWN",
+  "used": 1,
+  "ceiling": 1,
+  "complete_controls_used": 2,
+  "complete_controls_ceiling": 2,
+  "source_acceptance": "BLOCKED_ON_COMPLETE_PREFILL_CONTROL",
+  "affected_allowance": 0,
+  "GPU_allowance": 0,
+  "earlier_results": "All preserved, no rerun",
+  "evidence": {
+    "result_sha256": "21d727bfcfec694daeff3b18af8f4b9f39c77de6839305aebe8a3e366fd16059",
+    "execution_sha256": "4df3fced9966a7b08016baa8897ef75459100bae3c7154ddc83048106c4847a1",
+    "archive_sha256": "aa572fc6b6d530c0ad1782e1ca8c8007b5ac0ceac7cc96e9547c993ccf85de5f"
+  }
+}

@@ -105,6 +105,7 @@ def dataclass_to_dict(obj):
         return [dataclass_to_dict(item) for item in obj]
     elif is_dataclass(obj):
         data = {}
+        omitted_fields = set()
         for field in fields(obj):
             # Internal caches and resolved runtime snapshots are implementation
             # details even when dataclasses declares them as fields.  Persist
@@ -113,10 +114,13 @@ def dataclass_to_dict(obj):
             if field.name.startswith("_"):
                 continue
             value = getattr(obj, field.name)
+            if value is None and field.metadata.get("omit_if_none"):
+                omitted_fields.add(field.name)
+                continue
             data[field.name] = dataclass_to_dict(value)
         # Include members created in __post_init__
         for key, value in obj.__dict__.items():
-            if key.startswith("_"):
+            if key.startswith("_") or key in omitted_fields:
                 continue
             if key not in data:
                 data[key] = dataclass_to_dict(value)

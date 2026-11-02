@@ -1,0 +1,14 @@
+{
+  "signal": "SIGINT",
+  "returncode": 0,
+  "shutdown_order": {
+    "drained_before_stop": true,
+    "all_nodes_drained_before_head_stop": [
+      "gpu-h800-0133.host.platform.shaipower.com",
+      "gpu-h800-0179.host.platform.shaipower.com",
+      "gpu-h800-0209.host.platform.shaipower.com",
+      "gpu-h800-0339.host.platform.shaipower.com"
+    ],
+    "native_returned_before_requested_stop": false
+  }
+}

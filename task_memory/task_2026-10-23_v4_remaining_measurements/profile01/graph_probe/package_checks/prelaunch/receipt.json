@@ -1,0 +1,33 @@
+{
+  "status": "PASS_PRELAUNCH_READS",
+  "observed_at_utc": "2026-10-24T05:40:58.194090+00:00",
+  "host": "kun-workspace-vgen2",
+  "nfs_ip": "100.96.128.195",
+  "local_source": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01",
+  "cloud_destination": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01",
+  "remote_destination": {
+    "path": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01",
+    "exists": false
+  },
+  "ssh_command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "python3",
+    "-"
+  ],
+  "quota_path": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_prelaunch_s3a7de8d/quota.json",
+  "quota_source_sha256": "19746066439f539ff889dd154cac6f32bffd5467a63f892e8dd87f3ca784f275",
+  "quota_source_overrides": {
+    "OUTPUT": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_prelaunch_s3a7de8d/quota.json",
+    "GROUPS": {
+      "codesign": "H800"
+    }
+  },
+  "personal_list_continues": false,
+  "auth_scope": "Existing personal credential files passed explicitly to RJobClient; no credential changes or values emitted.",
+  "submissions_or_controls": 0
+}

@@ -1,0 +1,242 @@
+{
+  "status": "ACCEPTED_SINGLE_IMAGE_SCOPE_LIFETIME_WITH_LIMITS",
+  "phase": "S5 standalone bounded GPU diagnostic",
+  "accepted_utc": "2026-10-24T19:52:04.775773+00:00",
+  "primary_head_before_commit": "0d0fe6487f194dd58a2e63adad60d476fa53efa4",
+  "authority": [
+    "D-V4-SCOPE-LIFETIME-PROBE",
+    "D-V4-CONTINUE-FRESH-GATES"
+  ],
+  "job": "exp-1025-021228-212042",
+  "host": "gpu-h800-0158.host.platform.shaipower.com",
+  "gpu_uuid": "NVIDIA H800 (UUID: GPU-4c9987eb-19e6-793f-0326-c502be48abcd)",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "probe_source_sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+  "audit_source_path": "tests/analysis/v4_scope_lifetime_audit.py",
+  "audit_source_sha256": "539da5af58b362d0ecdea09af8e9c6c3157f21af7f530fb12c3629ffce658f93",
+  "audit_source_gross_lines": 152,
+  "audit_source_cap": 190,
+  "frozen_executable_package": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "resource": {
+    "gpu": 1,
+    "cpu": 16,
+    "mem_gb": 64,
+    "platform_memory": "64000Mi",
+    "charged_group": "codesign",
+    "preemptible": false,
+    "timeout_seconds": 600
+  },
+  "execution": {
+    "creator": "i-fengyicheng",
+    "platform": "Succeeded",
+    "replica": "Succeeded",
+    "container": "Completed",
+    "container_exit": 0,
+    "container_restarts": 0,
+    "launcher_exit": 0,
+    "gpu_attempts_used": 1,
+    "gpu_attempt_ceiling": 1,
+    "gpu_attempts_remaining": 0
+  },
+  "measured_shape": {
+    "elements": 1024,
+    "warmup": 3,
+    "scopes": [
+      "add_a",
+      "mul_b",
+      "add_c",
+      "mul_d",
+      "sub_out"
+    ],
+    "source_constructor": "torch.cuda.CUDAGraph() with default keep_graph=False"
+  },
+  "predicates": {
+    "P1": {
+      "status": "PASS_THIS_PROBE",
+      "evidence": "Copied scalar resource payloads and valid-ID/type queries remain inside callbacks13/20/18;11 created/5 clone/1 exec rows;five selected original tuples cover all clones."
+    },
+    "P2": {
+      "status": "PASS_THREAD_OBSERVATIONS_ONLY",
+      "evidence": "OS native_id and Python get_ident recorded separately for all five selected rows. Their equality to the capture frame is observed; it supplies no TLS freshness proof."
+    },
+    "P3": {
+      "status": "PASS_THIS_PROBE",
+      "evidence": "Each selected callback monotonic_ns is inside exactly one retained op start/end window and reads its exact scope name;five scopes cover the five selected source nodes."
+    },
+    "P4": {
+      "status": "PASS_THIS_PROBE",
+      "evidence": "Frozen full-source review plus raw boolean: default keep_graph=False, one discarded raw_cuda_graph() expected-RuntimeError observation after capture_end per graph, no source-handle query/dereference after capture, secondary raw_exec equals copied exec handle."
+    },
+    "P5": {
+      "status": "PASS_THIS_PROBE",
+      "evidence": "Full(created.node,created.node_id) equals full(clone.original_node,clone.original_node_id);exactly five unique source/clone handles and full IDs. No creation-order selection or numeric remapping."
+    },
+    "P6": {
+      "status": "PASS_THIS_PROBE",
+      "evidence": "One observe target annotation and contained graph launch;five unique kernel full graph-node IDs join directly to clone IDs and selected source tuples;zero unmatched or duplicate target kernels."
+    }
+  },
+  "direct_joins": [
+    {
+      "scope": "add_a",
+      "source_node": 905808832,
+      "source_full_id": 4294967296,
+      "clone_node": 905818312,
+      "clone_full_id": 8589934592,
+      "callback_ns": 3250936458839103,
+      "window_start": 3250936453094248,
+      "window_end": 3250936466228408
+    },
+    {
+      "scope": "mul_b",
+      "source_node": 905810728,
+      "source_full_id": 4294967297,
+      "clone_node": 905820208,
+      "clone_full_id": 8589934593,
+      "callback_ns": 3250936496865374,
+      "window_start": 3250936490868376,
+      "window_end": 3250936501622389
+    },
+    {
+      "scope": "add_c",
+      "source_node": 905812624,
+      "source_full_id": 4294967298,
+      "clone_node": 905822104,
+      "clone_full_id": 8589934594,
+      "callback_ns": 3250936510753501,
+      "window_start": 3250936506736101,
+      "window_end": 3250936515910810
+    },
+    {
+      "scope": "mul_d",
+      "source_node": 905814520,
+      "source_full_id": 4294967299,
+      "clone_node": 905824000,
+      "clone_full_id": 8589934595,
+      "callback_ns": 3250936523806533,
+      "window_start": 3250936520355510,
+      "window_end": 3250936529051860
+    },
+    {
+      "scope": "sub_out",
+      "source_node": 905816416,
+      "source_full_id": 4294967300,
+      "clone_node": 905825896,
+      "clone_full_id": 8589934596,
+      "callback_ns": 3250936537104465,
+      "window_start": 3250936533063081,
+      "window_end": 3250936542416982
+    }
+  ],
+  "created_rows": 11,
+  "unmatched_created_rows": 6,
+  "unmatched_created_cause": "UNKNOWN",
+  "same_run_control": {
+    "accepted_scope": "TOPOLOGY_AND_EXACT_OUTPUT_IDENTITY_ONLY",
+    "producer_verdict_preserved": "UNVERIFIED",
+    "kernels": 5,
+    "subscription": "ABSENT",
+    "timing": "NOT_MEASURED",
+    "non_perturbation": "NOT_ESTABLISHED"
+  },
+  "validation": {
+    "primary_raw_checks": 60,
+    "primary_raw_seconds": 0.12284475704655051,
+    "execution_source_gpu_checks": 20,
+    "independent_scalar_checks": 73,
+    "independent_ast_negative_controls_rejected": 17,
+    "r1_findings_closed": 3,
+    "fresh_retained_binding_checks": 79,
+    "immutable_review_artifacts_rehashed": 49,
+    "frozen_package_inputs_rehashed_and_archive_matched": 18,
+    "full_audit_or_gpu_reruns_at_closeout": 0
+  },
+  "raw_artifacts": {
+    "files": [
+      {
+        "bytes": 0,
+        "gid": 0,
+        "mode": "0o600",
+        "path": "diagnostics/fault.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "uid": 0
+      },
+      {
+        "bytes": 15576,
+        "gid": 0,
+        "mode": "0o600",
+        "path": "diagnostics/stages.jsonl",
+        "sha256": "ee426997af0349e1510d3113525f1e6700781da4c536385e64744136aca6818e",
+        "uid": 0
+      },
+      {
+        "bytes": 18882,
+        "gid": 0,
+        "mode": "0o644",
+        "path": "probe/control_trace.json",
+        "sha256": "a3815882be30a2ac83b50577b508e74cb5211cc06e66fb81327cf60d5c8f32bc",
+        "uid": 0
+      },
+      {
+        "bytes": 18845,
+        "gid": 0,
+        "mode": "0o644",
+        "path": "probe/observe_trace.json",
+        "sha256": "fe8c03c857ec412fbb5dd02335b2454e4ac3b25d3fa88b72d504c0786a6fbee8",
+        "uid": 0
+      },
+      {
+        "bytes": 171580,
+        "gid": 0,
+        "mode": "0o644",
+        "path": "probe/probe_report.json",
+        "sha256": "e988ee758ae7e08a52ecd996277b8b574f7113511f58d3ef9d4ddad77812e586",
+        "uid": 0
+      }
+    ],
+    "file_count": 5,
+    "bytes": 224883
+  },
+  "trace_telemetry": {
+    "driver_api": 13000,
+    "runtime_api": 13000,
+    "cupti_version": 130001,
+    "host_driver_release": "UNRECORDED",
+    "fresh_worker_driver_or_library_binary_hashes": "NOT_MEASURED"
+  },
+  "excluded_admissions": {
+    "native_serving_captured_ownership": false,
+    "general_graph_ownership_strategies": false,
+    "gpu_dependency_accounting": false,
+    "timing_non_perturbation": false,
+    "operator_cost": false,
+    "serving_cost": false,
+    "clean_e2e": false,
+    "native_reference_replacement": false
+  },
+  "evidence_sha256": {
+    "results/primary_raw_audit_r2.json": "a7dcdcbed3ac1fa50fe8fcd97a1142184df117faf3fa34bff8b90cefbbdf3584",
+    "results/raw_audit_receipt_r2.json": "a5b768ba05179d5a0eeceb3159390ef7bd3c397823eb380bf7ea9fd8fe39851c",
+    "results/execution_source_binding.json": "a8bcd4e22bb5816c1d244947040f37b19fdce6ae5759fe2aa641c88eb37cad6c",
+    "results/review_runtime.md": "cd6c20af15680efc32a3fc7e7e8864fb0245239d6e0e542f630f432c854c4524",
+    "results/review_runtime_r2.json": "064089ba8d7adc8f1448e03486af62f678ac71aa090c04599f759aef674f77bf",
+    "results/review_runtime_r1.md": "8bf113280df85ac05bd2986e6e0f1e5a0afe3e7bda96c14d59df8ebe1df6f242",
+    "results/retained_binding.json": "968969ad3105d3f60f6d22313e4fb29176f305893d772dd4ae898db657ce854c",
+    "results/retained_binding_receipt.json": "8bba4f7dd0e084c87722ef4da75858cca1726d1b494fdf6e9ff1a625c120e4eb",
+    "results/cloud_inventory.json": "9eb11fbd97ecce24b0b7c7e41219fd2c10be4a8a6c4757abd7f630778cf99809",
+    "results/download_receipt.json": "3be010ccd8cb5664f8b1802a18ef4443e9e6e593cca2fdb50095de730d6f38c4",
+    "package_primary/root_seal.json": "44871474bc9018d2b3c0256a5e43f648b489c3a5ea71214c8956b7067490580a",
+    "package_primary/execution/platform_02.json": "f036a63b0f2dad146c58a9d2c5ce8c1ceb558ba0305c90d8bb2a5a7a06c67416",
+    "package_primary/execution/platform_02.exp-1025-021228-212042-cfcd2084.log": "fc18505c0803a545303d87e1d205da21e9390d80ba95d74b235a7a3980417d1c",
+    "package_primary/execution/launcher_result.json": "e6fd33630b4792b705e10b47517298c223a86890d8a7418b2d88e9c47ee3b7eb"
+  },
+  "limits": [
+    "This result supports only the tested sealed image/H800/1024-element ordinary pointwise live-TLS route with default keep_graph=False.",
+    "Control retains its original UNVERIFIED field and supports topology/output identity only.",
+    "Six unmatched-created causes and host driver release remain unknown; trace versions are telemetry.",
+    "The original executable worktree, frozen package paths/bytes, earlier CPU acceptance and every failed run remain unchanged.",
+    "No native serving integration, compiled/breakable ownership, dependencies, timing/cost/reference or full32 trace admission follows."
+  ],
+  "next_action": "Continue the separately allocated P0 metrics-tail diagnosis; native serving ownership needs a separate concrete source/configuration/acceptance scope."
+}

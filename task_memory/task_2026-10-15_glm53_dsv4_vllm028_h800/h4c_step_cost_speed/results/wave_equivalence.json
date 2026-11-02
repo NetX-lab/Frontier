@@ -1,0 +1,13 @@
+{
+ "table_priced_waves": 63376,
+ "full_path_waves": 0,
+ "mismatches": [],
+ "by_cluster": {
+  "PREFILL": 24768,
+  "DECODE": 38608
+ },
+ "finished": false,
+ "wall_s": 1200.0002440139651,
+ "simulated_s": 17.795149644937958,
+ "verdict": "PASS"
+}

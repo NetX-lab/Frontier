@@ -1,0 +1,64 @@
+{
+  "status": "PLATFORM_SUBMISSION_CONFIRMED",
+  "observed_utc": "2026-10-23T13:40:46.964106+00:00",
+  "job_name": "exp-1023-213905-916183",
+  "created_at_utc": "2026-10-23T13:39:05Z",
+  "labels": {
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-codesign",
+    "quotagroup.brainpp.cn/preemptible": "no",
+    "quotagroup.brainpp.cn/quotagroup": "codesign"
+  },
+  "tasks": [
+    {
+      "name": "default",
+      "replicas": 1,
+      "filestore": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run:/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run",
+      "containers": [
+        {
+          "name": "default",
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "16",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "16",
+              "memory": "125Gi",
+              "nvidia.com/gpu": "1"
+            }
+          },
+          "command": [
+            "bash",
+            "-lc",
+            "cd /data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 1800 python3 /data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/launch/glm_producer_worker.py --config /data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/jobs/Q1_WARM_6143_7166_BALANCED.json'"
+          ],
+          "args": null
+        }
+      ]
+    }
+  ],
+  "platform_status": {
+    "phase": "Running",
+    "reason": "RJobRunning",
+    "message": "Tasks is running: [default]",
+    "taskStatuses": {
+      "default": {
+        "active": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "profile02_phase": "Pending",
+  "launchers_alive": {
+    "profile02": true,
+    "balanced_decode02": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "actual_adapter": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/profile_dsv4_prefill.py",
+  "source_snapshot": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/source/39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "strategy_origin": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/balanced_routing.py",
+  "native_registry_origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+  "strategy_type": "register_balanced_topk.<locals>.BalancedTopKRouting",
+  "routing_config_bound": true,
+  "engine_construction_intercepted": true,
+  "cuda_initialized": false,
+  "python": "3.12.3"
+}

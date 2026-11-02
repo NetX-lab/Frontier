@@ -1,0 +1,3379 @@
+{
+  "status": "CENSORED_SEGMENT_OBSERVATIONS",
+  "source_path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.obs.jsonl",
+  "source_sha256": "bf11db54f54724f8cabb8bcc5c38484a12ea62db522bf087fe00d875afd8e8cc",
+  "segments": [
+    {
+      "segment": "count_sum",
+      "completed": [
+        {
+          "group": "('total', None)",
+          "members": 1215919,
+          "start": 54.13,
+          "end": 54.412,
+          "seconds": 0.282
+        },
+        {
+          "group": "('per_stream', '23')",
+          "members": 156868,
+          "start": 55.778,
+          "end": 55.845,
+          "seconds": 0.067
+        },
+        {
+          "group": "('per_stream', '47')",
+          "members": 1935,
+          "start": 56.082,
+          "end": 56.084,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '35')",
+          "members": 6642,
+          "start": 56.087,
+          "end": 56.091,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '39')",
+          "members": 2394,
+          "start": 56.102,
+          "end": 56.104,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '43')",
+          "members": 2016,
+          "start": 56.108,
+          "end": 56.109,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22032')",
+          "members": 106640,
+          "start": 56.113,
+          "end": 56.156,
+          "seconds": 0.043
+        },
+        {
+          "group": "('per_stream', '22030')",
+          "members": 13392,
+          "start": 56.323,
+          "end": 56.327,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22031')",
+          "members": 3968,
+          "start": 56.344,
+          "end": 56.346,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22034')",
+          "members": 5456,
+          "start": 56.351,
+          "end": 56.354,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22036')",
+          "members": 41664,
+          "start": 56.362,
+          "end": 56.387,
+          "seconds": 0.025
+        },
+        {
+          "group": "('per_stream', '22037')",
+          "members": 41664,
+          "start": 56.466,
+          "end": 56.488,
+          "seconds": 0.022
+        },
+        {
+          "group": "('per_stream', '22039')",
+          "members": 992,
+          "start": 56.559,
+          "end": 56.56,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22038')",
+          "members": 11408,
+          "start": 56.562,
+          "end": 56.565,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22035')",
+          "members": 3968,
+          "start": 56.579,
+          "end": 56.581,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22042')",
+          "members": 3472,
+          "start": 56.586,
+          "end": 56.587,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22040')",
+          "members": 10912,
+          "start": 56.592,
+          "end": 56.596,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22045')",
+          "members": 4464,
+          "start": 56.61,
+          "end": 56.612,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22043')",
+          "members": 3968,
+          "start": 56.619,
+          "end": 56.62,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22047')",
+          "members": 3472,
+          "start": 56.625,
+          "end": 56.627,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22050')",
+          "members": 10912,
+          "start": 56.632,
+          "end": 56.635,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22048')",
+          "members": 3968,
+          "start": 56.648,
+          "end": 56.65,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22053')",
+          "members": 3472,
+          "start": 56.655,
+          "end": 56.657,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22051')",
+          "members": 10416,
+          "start": 56.661,
+          "end": 56.665,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22056')",
+          "members": 4464,
+          "start": 56.678,
+          "end": 56.681,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22054')",
+          "members": 3968,
+          "start": 56.688,
+          "end": 56.689,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22058')",
+          "members": 3472,
+          "start": 56.694,
+          "end": 56.696,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22061')",
+          "members": 10912,
+          "start": 56.701,
+          "end": 56.704,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22059')",
+          "members": 3968,
+          "start": 56.718,
+          "end": 56.719,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22064')",
+          "members": 3472,
+          "start": 56.724,
+          "end": 56.726,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22062')",
+          "members": 10416,
+          "start": 56.731,
+          "end": 56.734,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22067')",
+          "members": 4464,
+          "start": 56.747,
+          "end": 56.75,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22065')",
+          "members": 3968,
+          "start": 56.757,
+          "end": 56.758,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22069')",
+          "members": 3472,
+          "start": 56.763,
+          "end": 56.765,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22072')",
+          "members": 10912,
+          "start": 56.77,
+          "end": 56.773,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22070')",
+          "members": 3968,
+          "start": 56.786,
+          "end": 56.787,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22075')",
+          "members": 3472,
+          "start": 56.793,
+          "end": 56.794,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22073')",
+          "members": 10416,
+          "start": 56.799,
+          "end": 56.803,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22078')",
+          "members": 4464,
+          "start": 56.816,
+          "end": 56.818,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22076')",
+          "members": 3968,
+          "start": 56.825,
+          "end": 56.826,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22080')",
+          "members": 3472,
+          "start": 56.831,
+          "end": 56.833,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22083')",
+          "members": 10912,
+          "start": 56.838,
+          "end": 56.841,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22081')",
+          "members": 3968,
+          "start": 56.855,
+          "end": 56.857,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22086')",
+          "members": 3472,
+          "start": 56.862,
+          "end": 56.863,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22084')",
+          "members": 10416,
+          "start": 56.868,
+          "end": 56.872,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22089')",
+          "members": 4464,
+          "start": 56.885,
+          "end": 56.887,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22087')",
+          "members": 3968,
+          "start": 56.894,
+          "end": 56.896,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22091')",
+          "members": 3472,
+          "start": 56.901,
+          "end": 56.902,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22094')",
+          "members": 10912,
+          "start": 56.907,
+          "end": 56.911,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22092')",
+          "members": 3968,
+          "start": 56.924,
+          "end": 56.926,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22097')",
+          "members": 3472,
+          "start": 56.931,
+          "end": 56.933,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22095')",
+          "members": 10416,
+          "start": 56.938,
+          "end": 56.941,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22100')",
+          "members": 4464,
+          "start": 56.955,
+          "end": 56.957,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22098')",
+          "members": 3968,
+          "start": 56.964,
+          "end": 56.965,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22102')",
+          "members": 3472,
+          "start": 56.97,
+          "end": 56.972,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22105')",
+          "members": 10912,
+          "start": 56.977,
+          "end": 56.98,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22103')",
+          "members": 3968,
+          "start": 56.994,
+          "end": 56.995,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22108')",
+          "members": 3472,
+          "start": 57.0,
+          "end": 57.002,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22106')",
+          "members": 10416,
+          "start": 57.007,
+          "end": 57.01,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22111')",
+          "members": 4464,
+          "start": 57.023,
+          "end": 57.026,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22109')",
+          "members": 3968,
+          "start": 57.033,
+          "end": 57.034,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22113')",
+          "members": 3472,
+          "start": 57.039,
+          "end": 57.041,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22116')",
+          "members": 10912,
+          "start": 57.046,
+          "end": 57.05,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22114')",
+          "members": 3968,
+          "start": 57.064,
+          "end": 57.065,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22119')",
+          "members": 3472,
+          "start": 57.07,
+          "end": 57.072,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22117')",
+          "members": 10416,
+          "start": 57.077,
+          "end": 57.081,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22122')",
+          "members": 4464,
+          "start": 57.094,
+          "end": 57.096,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22120')",
+          "members": 3968,
+          "start": 57.103,
+          "end": 57.105,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22124')",
+          "members": 3472,
+          "start": 57.11,
+          "end": 57.112,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22127')",
+          "members": 10912,
+          "start": 57.117,
+          "end": 57.12,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22125')",
+          "members": 3968,
+          "start": 57.135,
+          "end": 57.136,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22130')",
+          "members": 3472,
+          "start": 57.142,
+          "end": 57.143,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22128')",
+          "members": 10416,
+          "start": 57.148,
+          "end": 57.152,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22133')",
+          "members": 4464,
+          "start": 57.165,
+          "end": 57.168,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22131')",
+          "members": 3968,
+          "start": 57.175,
+          "end": 57.176,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22135')",
+          "members": 3472,
+          "start": 57.182,
+          "end": 57.183,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22138')",
+          "members": 10912,
+          "start": 57.188,
+          "end": 57.192,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22136')",
+          "members": 3968,
+          "start": 57.206,
+          "end": 57.207,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22141')",
+          "members": 3472,
+          "start": 57.212,
+          "end": 57.214,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22139')",
+          "members": 10416,
+          "start": 57.219,
+          "end": 57.222,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22144')",
+          "members": 4464,
+          "start": 57.235,
+          "end": 57.238,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22142')",
+          "members": 3968,
+          "start": 57.245,
+          "end": 57.246,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22146')",
+          "members": 3472,
+          "start": 57.251,
+          "end": 57.253,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22149')",
+          "members": 10912,
+          "start": 57.258,
+          "end": 57.261,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22147')",
+          "members": 3968,
+          "start": 57.275,
+          "end": 57.276,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22152')",
+          "members": 3472,
+          "start": 57.281,
+          "end": 57.283,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22150')",
+          "members": 10416,
+          "start": 57.288,
+          "end": 57.291,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22155')",
+          "members": 4464,
+          "start": 57.304,
+          "end": 57.307,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22153')",
+          "members": 3968,
+          "start": 57.314,
+          "end": 57.315,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22157')",
+          "members": 3472,
+          "start": 57.32,
+          "end": 57.322,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22160')",
+          "members": 10912,
+          "start": 57.326,
+          "end": 57.33,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22158')",
+          "members": 3968,
+          "start": 57.343,
+          "end": 57.345,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22163')",
+          "members": 3472,
+          "start": 57.35,
+          "end": 57.351,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22161')",
+          "members": 10416,
+          "start": 57.356,
+          "end": 57.36,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22166')",
+          "members": 4464,
+          "start": 57.373,
+          "end": 57.375,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22164')",
+          "members": 3968,
+          "start": 57.382,
+          "end": 57.383,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22168')",
+          "members": 3472,
+          "start": 57.388,
+          "end": 57.39,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22171')",
+          "members": 10912,
+          "start": 57.395,
+          "end": 57.398,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22169')",
+          "members": 3968,
+          "start": 57.412,
+          "end": 57.413,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22174')",
+          "members": 3472,
+          "start": 57.418,
+          "end": 57.42,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22172')",
+          "members": 10416,
+          "start": 57.425,
+          "end": 57.428,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22177')",
+          "members": 4464,
+          "start": 57.442,
+          "end": 57.444,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22175')",
+          "members": 3968,
+          "start": 57.451,
+          "end": 57.453,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22179')",
+          "members": 3472,
+          "start": 57.458,
+          "end": 57.46,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22182')",
+          "members": 10912,
+          "start": 57.465,
+          "end": 57.468,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22180')",
+          "members": 3968,
+          "start": 57.482,
+          "end": 57.483,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22185')",
+          "members": 3472,
+          "start": 57.489,
+          "end": 57.49,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22183')",
+          "members": 10416,
+          "start": 57.495,
+          "end": 57.499,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22188')",
+          "members": 4464,
+          "start": 57.512,
+          "end": 57.514,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22186')",
+          "members": 3968,
+          "start": 57.521,
+          "end": 57.523,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22190')",
+          "members": 3472,
+          "start": 57.528,
+          "end": 57.529,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22193')",
+          "members": 10912,
+          "start": 57.534,
+          "end": 57.537,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22191')",
+          "members": 3968,
+          "start": 57.551,
+          "end": 57.552,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22196')",
+          "members": 3472,
+          "start": 57.558,
+          "end": 57.559,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22194')",
+          "members": 10416,
+          "start": 57.564,
+          "end": 57.568,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22199')",
+          "members": 4464,
+          "start": 57.58,
+          "end": 57.583,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22197')",
+          "members": 3968,
+          "start": 57.59,
+          "end": 57.591,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22201')",
+          "members": 3472,
+          "start": 57.596,
+          "end": 57.598,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22204')",
+          "members": 10912,
+          "start": 57.603,
+          "end": 57.606,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22202')",
+          "members": 3968,
+          "start": 57.619,
+          "end": 57.621,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22207')",
+          "members": 3472,
+          "start": 57.626,
+          "end": 57.628,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22205')",
+          "members": 10416,
+          "start": 57.632,
+          "end": 57.636,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22210')",
+          "members": 4464,
+          "start": 57.649,
+          "end": 57.651,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22208')",
+          "members": 3968,
+          "start": 57.658,
+          "end": 57.659,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22212')",
+          "members": 3472,
+          "start": 57.665,
+          "end": 57.666,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22215')",
+          "members": 10912,
+          "start": 57.671,
+          "end": 57.674,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22213')",
+          "members": 3968,
+          "start": 57.688,
+          "end": 57.689,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22218')",
+          "members": 3472,
+          "start": 57.694,
+          "end": 57.696,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22216')",
+          "members": 10416,
+          "start": 57.701,
+          "end": 57.704,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22221')",
+          "members": 4464,
+          "start": 57.717,
+          "end": 57.72,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22219')",
+          "members": 3968,
+          "start": 57.727,
+          "end": 57.728,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22223')",
+          "members": 3472,
+          "start": 57.734,
+          "end": 57.735,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22226')",
+          "members": 10912,
+          "start": 57.74,
+          "end": 57.744,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22224')",
+          "members": 3968,
+          "start": 57.757,
+          "end": 57.759,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22229')",
+          "members": 3472,
+          "start": 57.764,
+          "end": 57.766,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22227')",
+          "members": 10416,
+          "start": 57.771,
+          "end": 57.774,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22232')",
+          "members": 4464,
+          "start": 57.788,
+          "end": 57.79,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22230')",
+          "members": 3968,
+          "start": 57.797,
+          "end": 57.798,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22234')",
+          "members": 3472,
+          "start": 57.804,
+          "end": 57.805,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22237')",
+          "members": 10912,
+          "start": 57.81,
+          "end": 57.813,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22235')",
+          "members": 3968,
+          "start": 57.827,
+          "end": 57.829,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22240')",
+          "members": 3472,
+          "start": 57.834,
+          "end": 57.835,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22238')",
+          "members": 10416,
+          "start": 57.84,
+          "end": 57.844,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22243')",
+          "members": 4464,
+          "start": 57.857,
+          "end": 57.859,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22241')",
+          "members": 3968,
+          "start": 57.866,
+          "end": 57.867,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22245')",
+          "members": 3472,
+          "start": 57.873,
+          "end": 57.874,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22248')",
+          "members": 10912,
+          "start": 57.879,
+          "end": 57.882,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22246')",
+          "members": 3968,
+          "start": 57.896,
+          "end": 57.897,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22251')",
+          "members": 3472,
+          "start": 57.903,
+          "end": 57.904,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22249')",
+          "members": 10416,
+          "start": 57.909,
+          "end": 57.913,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22254')",
+          "members": 4464,
+          "start": 57.926,
+          "end": 57.928,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22252')",
+          "members": 3968,
+          "start": 57.935,
+          "end": 57.936,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22256')",
+          "members": 3472,
+          "start": 57.941,
+          "end": 57.943,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22259')",
+          "members": 10912,
+          "start": 57.948,
+          "end": 57.951,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22257')",
+          "members": 3968,
+          "start": 57.965,
+          "end": 57.966,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22261')",
+          "members": 2976,
+          "start": 57.971,
+          "end": 57.973,
+          "seconds": 0.002
+        },
+        {
+          "group": "('status', 'unowned')",
+          "members": 11385,
+          "start": 57.977,
+          "end": 57.981,
+          "seconds": 0.004
+        },
+        {
+          "group": "('status', 'unique_leaf')",
+          "members": 138134,
+          "start": 57.996,
+          "end": 58.061,
+          "seconds": 0.065
+        },
+        {
+          "group": "('status', 'captured_segment_unknown')",
+          "members": 1066400,
+          "start": 58.269,
+          "end": 58.482,
+          "seconds": 0.213
+        },
+        {
+          "group": "('hierarchy', 'metadata|attention_metadata')",
+          "members": 31086,
+          "start": 59.627,
+          "end": 59.649,
+          "seconds": 0.022
+        }
+      ],
+      "open_starts": []
+    },
+    {
+      "segment": "sort",
+      "completed": [
+        {
+          "group": "('total', None)",
+          "members": 1215919,
+          "start": 54.412,
+          "end": 54.853,
+          "seconds": 0.441
+        },
+        {
+          "group": "('per_stream', '23')",
+          "members": 156868,
+          "start": 55.845,
+          "end": 55.926,
+          "seconds": 0.081
+        },
+        {
+          "group": "('per_stream', '47')",
+          "members": 1935,
+          "start": 56.084,
+          "end": 56.085,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '35')",
+          "members": 6642,
+          "start": 56.091,
+          "end": 56.096,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '39')",
+          "members": 2394,
+          "start": 56.104,
+          "end": 56.106,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '43')",
+          "members": 2016,
+          "start": 56.109,
+          "end": 56.111,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22032')",
+          "members": 106640,
+          "start": 56.156,
+          "end": 56.215,
+          "seconds": 0.059
+        },
+        {
+          "group": "('per_stream', '22030')",
+          "members": 13392,
+          "start": 56.327,
+          "end": 56.334,
+          "seconds": 0.007
+        },
+        {
+          "group": "('per_stream', '22031')",
+          "members": 3968,
+          "start": 56.346,
+          "end": 56.348,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22034')",
+          "members": 5456,
+          "start": 56.354,
+          "end": 56.357,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22036')",
+          "members": 41664,
+          "start": 56.387,
+          "end": 56.42,
+          "seconds": 0.033
+        },
+        {
+          "group": "('per_stream', '22037')",
+          "members": 41664,
+          "start": 56.488,
+          "end": 56.516,
+          "seconds": 0.028
+        },
+        {
+          "group": "('per_stream', '22039')",
+          "members": 992,
+          "start": 56.56,
+          "end": 56.56,
+          "seconds": 0.0
+        },
+        {
+          "group": "('per_stream', '22038')",
+          "members": 11408,
+          "start": 56.565,
+          "end": 56.57,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22035')",
+          "members": 3968,
+          "start": 56.581,
+          "end": 56.583,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22042')",
+          "members": 3472,
+          "start": 56.588,
+          "end": 56.589,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22040')",
+          "members": 10912,
+          "start": 56.596,
+          "end": 56.601,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22045')",
+          "members": 4464,
+          "start": 56.612,
+          "end": 56.615,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22043')",
+          "members": 3968,
+          "start": 56.62,
+          "end": 56.622,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22047')",
+          "members": 3472,
+          "start": 56.627,
+          "end": 56.629,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22050')",
+          "members": 10912,
+          "start": 56.635,
+          "end": 56.639,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22048')",
+          "members": 3968,
+          "start": 56.65,
+          "end": 56.652,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22053')",
+          "members": 3472,
+          "start": 56.657,
+          "end": 56.658,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22051')",
+          "members": 10416,
+          "start": 56.665,
+          "end": 56.669,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22056')",
+          "members": 4464,
+          "start": 56.681,
+          "end": 56.683,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22054')",
+          "members": 3968,
+          "start": 56.689,
+          "end": 56.691,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22058')",
+          "members": 3472,
+          "start": 56.696,
+          "end": 56.698,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22061')",
+          "members": 10912,
+          "start": 56.704,
+          "end": 56.709,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22059')",
+          "members": 3968,
+          "start": 56.719,
+          "end": 56.721,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22064')",
+          "members": 3472,
+          "start": 56.726,
+          "end": 56.728,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22062')",
+          "members": 10416,
+          "start": 56.734,
+          "end": 56.739,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22067')",
+          "members": 4464,
+          "start": 56.75,
+          "end": 56.752,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22065')",
+          "members": 3968,
+          "start": 56.758,
+          "end": 56.76,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22069')",
+          "members": 3472,
+          "start": 56.765,
+          "end": 56.766,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22072')",
+          "members": 10912,
+          "start": 56.773,
+          "end": 56.777,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22070')",
+          "members": 3968,
+          "start": 56.788,
+          "end": 56.789,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22075')",
+          "members": 3472,
+          "start": 56.794,
+          "end": 56.796,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22073')",
+          "members": 10416,
+          "start": 56.803,
+          "end": 56.807,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22078')",
+          "members": 4464,
+          "start": 56.818,
+          "end": 56.821,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22076')",
+          "members": 3968,
+          "start": 56.826,
+          "end": 56.828,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22080')",
+          "members": 3472,
+          "start": 56.833,
+          "end": 56.835,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22083')",
+          "members": 10912,
+          "start": 56.841,
+          "end": 56.846,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22081')",
+          "members": 3968,
+          "start": 56.857,
+          "end": 56.858,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22086')",
+          "members": 3472,
+          "start": 56.863,
+          "end": 56.865,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22084')",
+          "members": 10416,
+          "start": 56.872,
+          "end": 56.876,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22089')",
+          "members": 4464,
+          "start": 56.887,
+          "end": 56.89,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22087')",
+          "members": 3968,
+          "start": 56.896,
+          "end": 56.898,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22091')",
+          "members": 3472,
+          "start": 56.903,
+          "end": 56.904,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22094')",
+          "members": 10912,
+          "start": 56.911,
+          "end": 56.915,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22092')",
+          "members": 3968,
+          "start": 56.926,
+          "end": 56.928,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22097')",
+          "members": 3472,
+          "start": 56.933,
+          "end": 56.934,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22095')",
+          "members": 10416,
+          "start": 56.941,
+          "end": 56.946,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22100')",
+          "members": 4464,
+          "start": 56.957,
+          "end": 56.96,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22098')",
+          "members": 3968,
+          "start": 56.965,
+          "end": 56.967,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22102')",
+          "members": 3472,
+          "start": 56.972,
+          "end": 56.974,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22105')",
+          "members": 10912,
+          "start": 56.98,
+          "end": 56.985,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22103')",
+          "members": 3968,
+          "start": 56.995,
+          "end": 56.997,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22108')",
+          "members": 3472,
+          "start": 57.002,
+          "end": 57.004,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22106')",
+          "members": 10416,
+          "start": 57.01,
+          "end": 57.015,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22111')",
+          "members": 4464,
+          "start": 57.026,
+          "end": 57.028,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22109')",
+          "members": 3968,
+          "start": 57.034,
+          "end": 57.036,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22113')",
+          "members": 3472,
+          "start": 57.041,
+          "end": 57.043,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22116')",
+          "members": 10912,
+          "start": 57.05,
+          "end": 57.055,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22114')",
+          "members": 3968,
+          "start": 57.065,
+          "end": 57.067,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22119')",
+          "members": 3472,
+          "start": 57.072,
+          "end": 57.074,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22117')",
+          "members": 10416,
+          "start": 57.081,
+          "end": 57.085,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22122')",
+          "members": 4464,
+          "start": 57.096,
+          "end": 57.099,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22120')",
+          "members": 3968,
+          "start": 57.105,
+          "end": 57.107,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22124')",
+          "members": 3472,
+          "start": 57.112,
+          "end": 57.113,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22127')",
+          "members": 10912,
+          "start": 57.12,
+          "end": 57.125,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22125')",
+          "members": 3968,
+          "start": 57.136,
+          "end": 57.138,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22130')",
+          "members": 3472,
+          "start": 57.143,
+          "end": 57.145,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22128')",
+          "members": 10416,
+          "start": 57.152,
+          "end": 57.157,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22133')",
+          "members": 4464,
+          "start": 57.168,
+          "end": 57.171,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22131')",
+          "members": 3968,
+          "start": 57.176,
+          "end": 57.178,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22135')",
+          "members": 3472,
+          "start": 57.183,
+          "end": 57.185,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22138')",
+          "members": 10912,
+          "start": 57.192,
+          "end": 57.197,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22136')",
+          "members": 3968,
+          "start": 57.207,
+          "end": 57.209,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22141')",
+          "members": 3472,
+          "start": 57.214,
+          "end": 57.216,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22139')",
+          "members": 10416,
+          "start": 57.222,
+          "end": 57.227,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22144')",
+          "members": 4464,
+          "start": 57.238,
+          "end": 57.241,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22142')",
+          "members": 3968,
+          "start": 57.246,
+          "end": 57.248,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22146')",
+          "members": 3472,
+          "start": 57.253,
+          "end": 57.255,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22149')",
+          "members": 10912,
+          "start": 57.261,
+          "end": 57.266,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22147')",
+          "members": 3968,
+          "start": 57.276,
+          "end": 57.278,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22152')",
+          "members": 3472,
+          "start": 57.283,
+          "end": 57.285,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22150')",
+          "members": 10416,
+          "start": 57.291,
+          "end": 57.296,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22155')",
+          "members": 4464,
+          "start": 57.307,
+          "end": 57.309,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22153')",
+          "members": 3968,
+          "start": 57.315,
+          "end": 57.317,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22157')",
+          "members": 3472,
+          "start": 57.322,
+          "end": 57.323,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22160')",
+          "members": 10912,
+          "start": 57.33,
+          "end": 57.334,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22158')",
+          "members": 3968,
+          "start": 57.345,
+          "end": 57.347,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22163')",
+          "members": 3472,
+          "start": 57.352,
+          "end": 57.353,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22161')",
+          "members": 10416,
+          "start": 57.36,
+          "end": 57.364,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22166')",
+          "members": 4464,
+          "start": 57.375,
+          "end": 57.378,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22164')",
+          "members": 3968,
+          "start": 57.383,
+          "end": 57.385,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22168')",
+          "members": 3472,
+          "start": 57.39,
+          "end": 57.392,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22171')",
+          "members": 10912,
+          "start": 57.398,
+          "end": 57.403,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22169')",
+          "members": 3968,
+          "start": 57.413,
+          "end": 57.415,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22174')",
+          "members": 3472,
+          "start": 57.42,
+          "end": 57.422,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22172')",
+          "members": 10416,
+          "start": 57.428,
+          "end": 57.433,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22177')",
+          "members": 4464,
+          "start": 57.444,
+          "end": 57.447,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22175')",
+          "members": 3968,
+          "start": 57.453,
+          "end": 57.455,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22179')",
+          "members": 3472,
+          "start": 57.46,
+          "end": 57.461,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22182')",
+          "members": 10912,
+          "start": 57.468,
+          "end": 57.473,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22180')",
+          "members": 3968,
+          "start": 57.483,
+          "end": 57.485,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22185')",
+          "members": 3472,
+          "start": 57.49,
+          "end": 57.492,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22183')",
+          "members": 10416,
+          "start": 57.499,
+          "end": 57.503,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22188')",
+          "members": 4464,
+          "start": 57.514,
+          "end": 57.517,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22186')",
+          "members": 3968,
+          "start": 57.523,
+          "end": 57.524,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22190')",
+          "members": 3472,
+          "start": 57.529,
+          "end": 57.531,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22193')",
+          "members": 10912,
+          "start": 57.538,
+          "end": 57.542,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22191')",
+          "members": 3968,
+          "start": 57.552,
+          "end": 57.554,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22196')",
+          "members": 3472,
+          "start": 57.559,
+          "end": 57.561,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22194')",
+          "members": 10416,
+          "start": 57.568,
+          "end": 57.572,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22199')",
+          "members": 4464,
+          "start": 57.583,
+          "end": 57.585,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22197')",
+          "members": 3968,
+          "start": 57.591,
+          "end": 57.593,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22201')",
+          "members": 3472,
+          "start": 57.598,
+          "end": 57.599,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22204')",
+          "members": 10912,
+          "start": 57.606,
+          "end": 57.61,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22202')",
+          "members": 3968,
+          "start": 57.621,
+          "end": 57.623,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22207')",
+          "members": 3472,
+          "start": 57.628,
+          "end": 57.629,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22205')",
+          "members": 10416,
+          "start": 57.636,
+          "end": 57.64,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22210')",
+          "members": 4464,
+          "start": 57.651,
+          "end": 57.654,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22208')",
+          "members": 3968,
+          "start": 57.659,
+          "end": 57.661,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22212')",
+          "members": 3472,
+          "start": 57.666,
+          "end": 57.668,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22215')",
+          "members": 10912,
+          "start": 57.674,
+          "end": 57.679,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22213')",
+          "members": 3968,
+          "start": 57.689,
+          "end": 57.691,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22218')",
+          "members": 3472,
+          "start": 57.696,
+          "end": 57.697,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22216')",
+          "members": 10416,
+          "start": 57.704,
+          "end": 57.709,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22221')",
+          "members": 4464,
+          "start": 57.72,
+          "end": 57.723,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22219')",
+          "members": 3968,
+          "start": 57.728,
+          "end": 57.73,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22223')",
+          "members": 3472,
+          "start": 57.735,
+          "end": 57.737,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22226')",
+          "members": 10912,
+          "start": 57.744,
+          "end": 57.748,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22224')",
+          "members": 3968,
+          "start": 57.759,
+          "end": 57.761,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22229')",
+          "members": 3472,
+          "start": 57.766,
+          "end": 57.768,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22227')",
+          "members": 10416,
+          "start": 57.774,
+          "end": 57.779,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22232')",
+          "members": 4464,
+          "start": 57.79,
+          "end": 57.793,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22230')",
+          "members": 3968,
+          "start": 57.798,
+          "end": 57.8,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22234')",
+          "members": 3472,
+          "start": 57.805,
+          "end": 57.807,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22237')",
+          "members": 10912,
+          "start": 57.813,
+          "end": 57.818,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22235')",
+          "members": 3968,
+          "start": 57.829,
+          "end": 57.83,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22240')",
+          "members": 3472,
+          "start": 57.835,
+          "end": 57.837,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22238')",
+          "members": 10416,
+          "start": 57.844,
+          "end": 57.848,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22243')",
+          "members": 4464,
+          "start": 57.859,
+          "end": 57.862,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22241')",
+          "members": 3968,
+          "start": 57.867,
+          "end": 57.869,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22245')",
+          "members": 3472,
+          "start": 57.874,
+          "end": 57.876,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22248')",
+          "members": 10912,
+          "start": 57.883,
+          "end": 57.887,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22246')",
+          "members": 3968,
+          "start": 57.898,
+          "end": 57.899,
+          "seconds": 0.001
+        },
+        {
+          "group": "('per_stream', '22251')",
+          "members": 3472,
+          "start": 57.904,
+          "end": 57.906,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22249')",
+          "members": 10416,
+          "start": 57.913,
+          "end": 57.917,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22254')",
+          "members": 4464,
+          "start": 57.928,
+          "end": 57.931,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22252')",
+          "members": 3968,
+          "start": 57.936,
+          "end": 57.938,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22256')",
+          "members": 3472,
+          "start": 57.943,
+          "end": 57.945,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22259')",
+          "members": 10912,
+          "start": 57.951,
+          "end": 57.956,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22257')",
+          "members": 3968,
+          "start": 57.966,
+          "end": 57.968,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22261')",
+          "members": 2976,
+          "start": 57.973,
+          "end": 57.974,
+          "seconds": 0.001
+        },
+        {
+          "group": "('status', 'unowned')",
+          "members": 11385,
+          "start": 57.981,
+          "end": 57.986,
+          "seconds": 0.005
+        },
+        {
+          "group": "('status', 'unique_leaf')",
+          "members": 138134,
+          "start": 58.061,
+          "end": 58.127,
+          "seconds": 0.066
+        },
+        {
+          "group": "('status', 'captured_segment_unknown')",
+          "members": 1066400,
+          "start": 58.482,
+          "end": 58.834,
+          "seconds": 0.352
+        }
+      ],
+      "open_starts": [
+        {
+          "t": 59.649,
+          "stage": "DEBUG-V4-GROUP-METRICS-SEGMENTS-01:group_sort_start",
+          "rss_mb": 6511.3,
+          "group": "('hierarchy', 'metadata|attention_metadata')",
+          "members": 31086
+        }
+      ]
+    },
+    {
+      "segment": "union",
+      "completed": [
+        {
+          "group": "('total', None)",
+          "members": 1215919,
+          "start": 54.853,
+          "end": 55.778,
+          "seconds": 0.925
+        },
+        {
+          "group": "('per_stream', '23')",
+          "members": 156868,
+          "start": 55.926,
+          "end": 56.082,
+          "seconds": 0.156
+        },
+        {
+          "group": "('per_stream', '47')",
+          "members": 1935,
+          "start": 56.085,
+          "end": 56.087,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '35')",
+          "members": 6642,
+          "start": 56.096,
+          "end": 56.102,
+          "seconds": 0.006
+        },
+        {
+          "group": "('per_stream', '39')",
+          "members": 2394,
+          "start": 56.106,
+          "end": 56.108,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '43')",
+          "members": 2016,
+          "start": 56.111,
+          "end": 56.113,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22032')",
+          "members": 106640,
+          "start": 56.216,
+          "end": 56.323,
+          "seconds": 0.107
+        },
+        {
+          "group": "('per_stream', '22030')",
+          "members": 13392,
+          "start": 56.334,
+          "end": 56.344,
+          "seconds": 0.01
+        },
+        {
+          "group": "('per_stream', '22031')",
+          "members": 3968,
+          "start": 56.348,
+          "end": 56.351,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22034')",
+          "members": 5456,
+          "start": 56.357,
+          "end": 56.362,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22036')",
+          "members": 41664,
+          "start": 56.42,
+          "end": 56.466,
+          "seconds": 0.046
+        },
+        {
+          "group": "('per_stream', '22037')",
+          "members": 41664,
+          "start": 56.516,
+          "end": 56.559,
+          "seconds": 0.043
+        },
+        {
+          "group": "('per_stream', '22039')",
+          "members": 992,
+          "start": 56.561,
+          "end": 56.561,
+          "seconds": 0.0
+        },
+        {
+          "group": "('per_stream', '22038')",
+          "members": 11408,
+          "start": 56.57,
+          "end": 56.579,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22035')",
+          "members": 3968,
+          "start": 56.583,
+          "end": 56.586,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22042')",
+          "members": 3472,
+          "start": 56.589,
+          "end": 56.592,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22040')",
+          "members": 10912,
+          "start": 56.601,
+          "end": 56.61,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22045')",
+          "members": 4464,
+          "start": 56.615,
+          "end": 56.619,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22043')",
+          "members": 3968,
+          "start": 56.622,
+          "end": 56.625,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22047')",
+          "members": 3472,
+          "start": 56.629,
+          "end": 56.632,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22050')",
+          "members": 10912,
+          "start": 56.639,
+          "end": 56.648,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22048')",
+          "members": 3968,
+          "start": 56.652,
+          "end": 56.655,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22053')",
+          "members": 3472,
+          "start": 56.658,
+          "end": 56.661,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22051')",
+          "members": 10416,
+          "start": 56.67,
+          "end": 56.678,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22056')",
+          "members": 4464,
+          "start": 56.683,
+          "end": 56.688,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22054')",
+          "members": 3968,
+          "start": 56.691,
+          "end": 56.694,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22058')",
+          "members": 3472,
+          "start": 56.698,
+          "end": 56.701,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22061')",
+          "members": 10912,
+          "start": 56.709,
+          "end": 56.717,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22059')",
+          "members": 3968,
+          "start": 56.721,
+          "end": 56.724,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22064')",
+          "members": 3472,
+          "start": 56.728,
+          "end": 56.731,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22062')",
+          "members": 10416,
+          "start": 56.739,
+          "end": 56.747,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22067')",
+          "members": 4464,
+          "start": 56.752,
+          "end": 56.756,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22065')",
+          "members": 3968,
+          "start": 56.76,
+          "end": 56.763,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22069')",
+          "members": 3472,
+          "start": 56.766,
+          "end": 56.77,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22072')",
+          "members": 10912,
+          "start": 56.777,
+          "end": 56.786,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22070')",
+          "members": 3968,
+          "start": 56.789,
+          "end": 56.793,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22075')",
+          "members": 3472,
+          "start": 56.796,
+          "end": 56.799,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22073')",
+          "members": 10416,
+          "start": 56.807,
+          "end": 56.816,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22078')",
+          "members": 4464,
+          "start": 56.821,
+          "end": 56.825,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22076')",
+          "members": 3968,
+          "start": 56.828,
+          "end": 56.831,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22080')",
+          "members": 3472,
+          "start": 56.835,
+          "end": 56.838,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22083')",
+          "members": 10912,
+          "start": 56.846,
+          "end": 56.855,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22081')",
+          "members": 3968,
+          "start": 56.858,
+          "end": 56.862,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22086')",
+          "members": 3472,
+          "start": 56.865,
+          "end": 56.868,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22084')",
+          "members": 10416,
+          "start": 56.876,
+          "end": 56.885,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22089')",
+          "members": 4464,
+          "start": 56.89,
+          "end": 56.894,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22087')",
+          "members": 3968,
+          "start": 56.898,
+          "end": 56.901,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22091')",
+          "members": 3472,
+          "start": 56.904,
+          "end": 56.907,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22094')",
+          "members": 10912,
+          "start": 56.916,
+          "end": 56.924,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22092')",
+          "members": 3968,
+          "start": 56.928,
+          "end": 56.931,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22097')",
+          "members": 3472,
+          "start": 56.934,
+          "end": 56.937,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22095')",
+          "members": 10416,
+          "start": 56.946,
+          "end": 56.955,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22100')",
+          "members": 4464,
+          "start": 56.96,
+          "end": 56.964,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22098')",
+          "members": 3968,
+          "start": 56.967,
+          "end": 56.97,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22102')",
+          "members": 3472,
+          "start": 56.974,
+          "end": 56.977,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22105')",
+          "members": 10912,
+          "start": 56.985,
+          "end": 56.994,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22103')",
+          "members": 3968,
+          "start": 56.997,
+          "end": 57.0,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22108')",
+          "members": 3472,
+          "start": 57.004,
+          "end": 57.007,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22106')",
+          "members": 10416,
+          "start": 57.015,
+          "end": 57.023,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22111')",
+          "members": 4464,
+          "start": 57.029,
+          "end": 57.033,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22109')",
+          "members": 3968,
+          "start": 57.036,
+          "end": 57.039,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22113')",
+          "members": 3472,
+          "start": 57.043,
+          "end": 57.046,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22116')",
+          "members": 10912,
+          "start": 57.055,
+          "end": 57.064,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22114')",
+          "members": 3968,
+          "start": 57.067,
+          "end": 57.07,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22119')",
+          "members": 3472,
+          "start": 57.074,
+          "end": 57.077,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22117')",
+          "members": 10416,
+          "start": 57.085,
+          "end": 57.094,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22122')",
+          "members": 4464,
+          "start": 57.099,
+          "end": 57.103,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22120')",
+          "members": 3968,
+          "start": 57.107,
+          "end": 57.11,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22124')",
+          "members": 3472,
+          "start": 57.113,
+          "end": 57.117,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22127')",
+          "members": 10912,
+          "start": 57.125,
+          "end": 57.135,
+          "seconds": 0.01
+        },
+        {
+          "group": "('per_stream', '22125')",
+          "members": 3968,
+          "start": 57.138,
+          "end": 57.141,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22130')",
+          "members": 3472,
+          "start": 57.145,
+          "end": 57.148,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22128')",
+          "members": 10416,
+          "start": 57.157,
+          "end": 57.165,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22133')",
+          "members": 4464,
+          "start": 57.171,
+          "end": 57.175,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22131')",
+          "members": 3968,
+          "start": 57.178,
+          "end": 57.182,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22135')",
+          "members": 3472,
+          "start": 57.185,
+          "end": 57.188,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22138')",
+          "members": 10912,
+          "start": 57.197,
+          "end": 57.205,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22136')",
+          "members": 3968,
+          "start": 57.209,
+          "end": 57.212,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22141')",
+          "members": 3472,
+          "start": 57.216,
+          "end": 57.219,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22139')",
+          "members": 10416,
+          "start": 57.227,
+          "end": 57.235,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22144')",
+          "members": 4464,
+          "start": 57.241,
+          "end": 57.245,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22142')",
+          "members": 3968,
+          "start": 57.248,
+          "end": 57.251,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22146')",
+          "members": 3472,
+          "start": 57.255,
+          "end": 57.258,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22149')",
+          "members": 10912,
+          "start": 57.266,
+          "end": 57.275,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22147')",
+          "members": 3968,
+          "start": 57.278,
+          "end": 57.281,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22152')",
+          "members": 3472,
+          "start": 57.285,
+          "end": 57.288,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22150')",
+          "members": 10416,
+          "start": 57.296,
+          "end": 57.304,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22155')",
+          "members": 4464,
+          "start": 57.309,
+          "end": 57.313,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22153')",
+          "members": 3968,
+          "start": 57.317,
+          "end": 57.32,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22157')",
+          "members": 3472,
+          "start": 57.323,
+          "end": 57.326,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22160')",
+          "members": 10912,
+          "start": 57.334,
+          "end": 57.343,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22158')",
+          "members": 3968,
+          "start": 57.347,
+          "end": 57.35,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22163')",
+          "members": 3472,
+          "start": 57.353,
+          "end": 57.356,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22161')",
+          "members": 10416,
+          "start": 57.364,
+          "end": 57.372,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22166')",
+          "members": 4464,
+          "start": 57.378,
+          "end": 57.382,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22164')",
+          "members": 3968,
+          "start": 57.385,
+          "end": 57.388,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22168')",
+          "members": 3472,
+          "start": 57.392,
+          "end": 57.395,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22171')",
+          "members": 10912,
+          "start": 57.403,
+          "end": 57.411,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22169')",
+          "members": 3968,
+          "start": 57.415,
+          "end": 57.418,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22174')",
+          "members": 3472,
+          "start": 57.422,
+          "end": 57.425,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22172')",
+          "members": 10416,
+          "start": 57.433,
+          "end": 57.442,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22177')",
+          "members": 4464,
+          "start": 57.447,
+          "end": 57.451,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22175')",
+          "members": 3968,
+          "start": 57.455,
+          "end": 57.458,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22179')",
+          "members": 3472,
+          "start": 57.462,
+          "end": 57.464,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22182')",
+          "members": 10912,
+          "start": 57.473,
+          "end": 57.482,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22180')",
+          "members": 3968,
+          "start": 57.485,
+          "end": 57.489,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22185')",
+          "members": 3472,
+          "start": 57.492,
+          "end": 57.495,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22183')",
+          "members": 10416,
+          "start": 57.503,
+          "end": 57.512,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22188')",
+          "members": 4464,
+          "start": 57.517,
+          "end": 57.521,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22186')",
+          "members": 3968,
+          "start": 57.524,
+          "end": 57.528,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22190')",
+          "members": 3472,
+          "start": 57.531,
+          "end": 57.534,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22193')",
+          "members": 10912,
+          "start": 57.542,
+          "end": 57.551,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22191')",
+          "members": 3968,
+          "start": 57.554,
+          "end": 57.558,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22196')",
+          "members": 3472,
+          "start": 57.561,
+          "end": 57.564,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22194')",
+          "members": 10416,
+          "start": 57.572,
+          "end": 57.58,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22199')",
+          "members": 4464,
+          "start": 57.585,
+          "end": 57.59,
+          "seconds": 0.005
+        },
+        {
+          "group": "('per_stream', '22197')",
+          "members": 3968,
+          "start": 57.593,
+          "end": 57.596,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22201')",
+          "members": 3472,
+          "start": 57.6,
+          "end": 57.602,
+          "seconds": 0.002
+        },
+        {
+          "group": "('per_stream', '22204')",
+          "members": 10912,
+          "start": 57.61,
+          "end": 57.619,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22202')",
+          "members": 3968,
+          "start": 57.623,
+          "end": 57.626,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22207')",
+          "members": 3472,
+          "start": 57.629,
+          "end": 57.632,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22205')",
+          "members": 10416,
+          "start": 57.64,
+          "end": 57.649,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22210')",
+          "members": 4464,
+          "start": 57.654,
+          "end": 57.658,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22208')",
+          "members": 3968,
+          "start": 57.661,
+          "end": 57.664,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22212')",
+          "members": 3472,
+          "start": 57.668,
+          "end": 57.671,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22215')",
+          "members": 10912,
+          "start": 57.679,
+          "end": 57.688,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22213')",
+          "members": 3968,
+          "start": 57.691,
+          "end": 57.694,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22218')",
+          "members": 3472,
+          "start": 57.698,
+          "end": 57.701,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22216')",
+          "members": 10416,
+          "start": 57.709,
+          "end": 57.717,
+          "seconds": 0.008
+        },
+        {
+          "group": "('per_stream', '22221')",
+          "members": 4464,
+          "start": 57.723,
+          "end": 57.727,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22219')",
+          "members": 3968,
+          "start": 57.73,
+          "end": 57.733,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22223')",
+          "members": 3472,
+          "start": 57.737,
+          "end": 57.74,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22226')",
+          "members": 10912,
+          "start": 57.748,
+          "end": 57.757,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22224')",
+          "members": 3968,
+          "start": 57.761,
+          "end": 57.764,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22229')",
+          "members": 3472,
+          "start": 57.768,
+          "end": 57.771,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22227')",
+          "members": 10416,
+          "start": 57.779,
+          "end": 57.788,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22232')",
+          "members": 4464,
+          "start": 57.793,
+          "end": 57.797,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22230')",
+          "members": 3968,
+          "start": 57.8,
+          "end": 57.803,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22234')",
+          "members": 3472,
+          "start": 57.807,
+          "end": 57.81,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22237')",
+          "members": 10912,
+          "start": 57.818,
+          "end": 57.827,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22235')",
+          "members": 3968,
+          "start": 57.83,
+          "end": 57.834,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22240')",
+          "members": 3472,
+          "start": 57.837,
+          "end": 57.84,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22238')",
+          "members": 10416,
+          "start": 57.848,
+          "end": 57.857,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22243')",
+          "members": 4464,
+          "start": 57.862,
+          "end": 57.866,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22241')",
+          "members": 3968,
+          "start": 57.869,
+          "end": 57.873,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22245')",
+          "members": 3472,
+          "start": 57.876,
+          "end": 57.879,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22248')",
+          "members": 10912,
+          "start": 57.887,
+          "end": 57.896,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22246')",
+          "members": 3968,
+          "start": 57.899,
+          "end": 57.903,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22251')",
+          "members": 3472,
+          "start": 57.906,
+          "end": 57.909,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22249')",
+          "members": 10416,
+          "start": 57.917,
+          "end": 57.926,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22254')",
+          "members": 4464,
+          "start": 57.931,
+          "end": 57.935,
+          "seconds": 0.004
+        },
+        {
+          "group": "('per_stream', '22252')",
+          "members": 3968,
+          "start": 57.938,
+          "end": 57.941,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22256')",
+          "members": 3472,
+          "start": 57.945,
+          "end": 57.948,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22259')",
+          "members": 10912,
+          "start": 57.956,
+          "end": 57.965,
+          "seconds": 0.009
+        },
+        {
+          "group": "('per_stream', '22257')",
+          "members": 3968,
+          "start": 57.968,
+          "end": 57.971,
+          "seconds": 0.003
+        },
+        {
+          "group": "('per_stream', '22261')",
+          "members": 2976,
+          "start": 57.974,
+          "end": 57.977,
+          "seconds": 0.003
+        },
+        {
+          "group": "('status', 'unowned')",
+          "members": 11385,
+          "start": 57.986,
+          "end": 57.996,
+          "seconds": 0.01
+        },
+        {
+          "group": "('status', 'unique_leaf')",
+          "members": 138134,
+          "start": 58.127,
+          "end": 58.269,
+          "seconds": 0.142
+        },
+        {
+          "group": "('status', 'captured_segment_unknown')",
+          "members": 1066400,
+          "start": 58.834,
+          "end": 59.626,
+          "seconds": 0.792
+        }
+      ],
+      "open_starts": []
+    }
+  ]
+}

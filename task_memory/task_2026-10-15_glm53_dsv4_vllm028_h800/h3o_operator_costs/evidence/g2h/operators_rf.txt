@@ -1,0 +1,227 @@
+== profiler_traces/profiler_trace_3a7bdd62.json scopes {'vidur_dsv4_mhc_first_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[1, 1, 1] med=    4.90 mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[16, 1, 1] med=    2.69 void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 16u, 128u, 12u, 128u, 128u>(unsigned
+== profiler_traces/profiler_trace_a3ecd96a.json scopes {'vidur_dsv4_mhc_first_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[2, 1, 1] med=    4.70 mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[16, 1, 1] med=    2.77 void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 16u, 128u, 12u, 128u, 128u>(unsigned
+== profiler_traces/profiler_trace_b1c28f43.json scopes {'vidur_dsv4_mhc_first_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.93 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[3, 1, 1] med=    4.86 mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[16, 1, 1] med=    2.81 void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 16u, 128u, 12u, 128u, 128u>(unsigned
+== profiler_traces/profiler_trace_84115953.json scopes {'vidur_dsv4_mhc_first_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[4, 1, 1] med=    4.80 mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[16, 1, 1] med=    2.78 void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 16u, 128u, 12u, 128u, 128u>(unsigned
+== profiler_traces/profiler_trace_d3755f64.json scopes {'vidur_dsv4_mhc_first_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.98 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[768, 1, 1] med=   11.97 mhc_pre_big_fuse_broadcast_with_norm_tilelang_kernel
+   vidur_dsv4_mhc_first_pre         x 1.00 grid=[132, 1, 1] med=    5.82 void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 4096u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u>(unsigned
+== profiler_traces/profiler_trace_d6d94f1f.json scopes {'vidur_dsv4_mhc_ffn_post_attn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.83 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[1, 12, 8] med=    2.46 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[1, 1, 1] med=    4.77 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_9140bf6f.json scopes {'vidur_dsv4_mhc_ffn_post_attn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[2, 12, 8] med=    2.72 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[2, 1, 1] med=    4.83 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_f26578c8.json scopes {'vidur_dsv4_mhc_ffn_post_attn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[3, 12, 8] med=    2.88 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[3, 1, 1] med=    4.96 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_9debf303.json scopes {'vidur_dsv4_mhc_ffn_post_attn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[4, 12, 8] med=    2.96 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[4, 1, 1] med=    5.25 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_93b1f8a7.json scopes {'vidur_dsv4_mhc_ffn_post_attn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[768, 1, 1] med=   15.28 mhc_post_tilelang_kernel
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[768, 1, 1] med=   12.22 mhc_pre_big_fuse_with_norm_tilelang_kernel
+   vidur_dsv4_mhc_ffn_post_attn_pre x 1.00 grid=[132, 1, 1] med=   13.18 void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u>(unsigne
+== profiler_traces/profiler_trace_1a32c8ad.json scopes {'vidur_dsv4_mhc_attn_post_ffn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[1, 12, 8] med=    2.46 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[1, 1, 1] med=    4.67 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_00293339.json scopes {'vidur_dsv4_mhc_attn_post_ffn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.91 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[2, 12, 8] med=    2.75 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[2, 1, 1] med=    4.80 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_9233f867.json scopes {'vidur_dsv4_mhc_attn_post_ffn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[3, 12, 8] med=    2.85 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[3, 1, 1] med=    5.02 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_b08f7e75.json scopes {'vidur_dsv4_mhc_attn_post_ffn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[4, 12, 8] med=    2.98 mhc_fused_tilelang_kernel
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[4, 1, 1] med=    4.90 mhc_pre_big_fuse_with_norm_tilelang_kernel
+== profiler_traces/profiler_trace_040336d4.json scopes {'vidur_dsv4_mhc_attn_post_ffn_pre': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.02 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[768, 1, 1] med=   15.42 mhc_post_tilelang_kernel
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[768, 1, 1] med=   12.64 mhc_pre_big_fuse_with_norm_tilelang_kernel
+   vidur_dsv4_mhc_attn_post_ffn_pre x 1.00 grid=[132, 1, 1] med=   13.25 void deep_gemm::sm90_tf32_hc_prenorm_gemm_impl<24u, 16384u, 64u, 32u, 64u, 11u, 128u, 12u, 128u, 128u>(unsigne
+== profiler_traces/profiler_trace_78fd8f99.json scopes {'vidur_dsv4_mhc_final_post': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_final_post        x 1.00 grid=[1, 1, 1] med=    2.24 mhc_post_tilelang_kernel
+== profiler_traces/profiler_trace_df8a9a2b.json scopes {'vidur_dsv4_mhc_final_post': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_final_post        x 1.00 grid=[2, 1, 1] med=    2.30 mhc_post_tilelang_kernel
+== profiler_traces/profiler_trace_7a4cd841.json scopes {'vidur_dsv4_mhc_final_post': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.91 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_final_post        x 1.00 grid=[3, 1, 1] med=    2.37 mhc_post_tilelang_kernel
+== profiler_traces/profiler_trace_c98e3a2e.json scopes {'vidur_dsv4_mhc_final_post': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.93 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_final_post        x 1.00 grid=[4, 1, 1] med=    2.37 mhc_post_tilelang_kernel
+== profiler_traces/profiler_trace_ed6732cf.json scopes {'vidur_dsv4_mhc_final_post': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.96 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_final_post        x 1.00 grid=[768, 1, 1] med=   15.34 mhc_post_tilelang_kernel
+== profiler_traces/profiler_trace_12941dd6.json scopes {'vidur_dsv4_embedding': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.91 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_embedding             x 1.00 grid=[1, 1, 1] med=    0.80 triton_poi_fused_add_bitwise_and_bitwise_or_ge_lt_mul_sub_0
+   vidur_dsv4_embedding             x 1.00 grid=[1, 1, 1] med=    0.80 triton_poi_fused_bitwise_and_bitwise_not_bitwise_or_ge_lt_1
+   vidur_dsv4_embedding             x 1.00 grid=[32, 1, 1] med=    1.60 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   vidur_dsv4_embedding             x 1.00 grid=[8, 1, 1] med=    1.90 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespac
+== profiler_traces/profiler_trace_ec771aef.json scopes {'vidur_dsv4_embedding': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_embedding             x 1.00 grid=[1, 1, 1] med=    0.83 triton_poi_fused_add_bitwise_and_bitwise_not_bitwise_or_ge_lt_mul_sub_0
+   vidur_dsv4_embedding             x 1.00 grid=[32, 1, 1] med=    1.84 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   vidur_dsv4_embedding             x 1.00 grid=[16, 1, 1] med=    1.90 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespac
+== profiler_traces/profiler_trace_4ef19755.json scopes {'vidur_dsv4_embedding': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.91 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_embedding             x 1.00 grid=[2, 1, 1] med=    0.83 triton_poi_fused_add_bitwise_and_bitwise_not_bitwise_or_ge_lt_mul_sub_0
+   vidur_dsv4_embedding             x 1.00 grid=[32, 1, 1] med=    2.43 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   vidur_dsv4_embedding             x 1.00 grid=[32, 1, 1] med=    2.11 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespac
+== profiler_traces/profiler_trace_e315055c.json scopes {'vidur_dsv4_embedding': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.91 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_embedding             x 1.00 grid=[4, 1, 1] med=    0.91 triton_poi_fused_add_bitwise_and_bitwise_not_bitwise_or_ge_lt_mul_sub_0
+   vidur_dsv4_embedding             x 1.00 grid=[32, 1, 1] med=    3.65 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   vidur_dsv4_embedding             x 1.00 grid=[64, 1, 1] med=    2.14 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespac
+== profiler_traces/profiler_trace_ce7a9bd2.json scopes {'vidur_dsv4_embedding': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_embedding             x 1.00 grid=[8, 1, 1] med=    0.93 triton_poi_fused_add_bitwise_and_bitwise_not_bitwise_or_ge_lt_mul_sub_0
+   vidur_dsv4_embedding             x 1.00 grid=[32, 1, 1] med=    5.89 void at::native::(anonymous namespace)::indexSelectSmallIndex<c10::BFloat16, long, unsigned int, 2, 2, -2>(at:
+   vidur_dsv4_embedding             x 1.00 grid=[128, 1, 1] med=    2.24 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespac
+== profiler_traces/profiler_trace_f2b63f1f.json scopes {'vidur_dsv4_embedding': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.91 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_embedding             x 1.00 grid=[12, 1, 1] med=    0.94 triton_poi_fused_add_bitwise_and_bitwise_not_bitwise_or_ge_lt_mul_sub_0
+   vidur_dsv4_embedding             x 1.00 grid=[192, 1, 1] med=    2.32 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespac
+   vidur_dsv4_embedding             x 1.00 grid=[24, 2, 1] med=    1.22 void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)
+== profiler_traces/profiler_trace_57bb7a1b.json scopes {'vidur_dsv4_embedding': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.04 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_embedding             x 1.00 grid=[3072, 1, 1] med=    3.04 triton_poi_fused_add_bitwise_and_bitwise_not_bitwise_or_ge_lt_mul_sub_0
+   vidur_dsv4_embedding             x 1.00 grid=[49152, 1, 1] med=   59.57 void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespac
+   vidur_dsv4_embedding             x 1.00 grid=[6144, 2, 1] med=   17.68 void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)
+== profiler_traces/profiler_trace_d3c3385a.json scopes {'vidur_dsv4_mhc_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_head              x 1.00 grid=[1, 1, 1] med=    5.34 hc_head_fuse_tilelang_kernel
+== profiler_traces/profiler_trace_c0643a13.json scopes {'vidur_dsv4_mhc_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_head              x 1.00 grid=[2, 1, 1] med=    5.38 hc_head_fuse_tilelang_kernel
+== profiler_traces/profiler_trace_bdf132de.json scopes {'vidur_dsv4_mhc_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_head              x 1.00 grid=[4, 1, 1] med=    5.54 hc_head_fuse_tilelang_kernel
+== profiler_traces/profiler_trace_d49d8a09.json scopes {'vidur_dsv4_mhc_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_head              x 1.00 grid=[8, 1, 1] med=    5.60 hc_head_fuse_tilelang_kernel
+== profiler_traces/profiler_trace_e4779fa7.json scopes {'vidur_dsv4_mhc_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.91 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_head              x 1.00 grid=[16, 1, 1] med=    5.54 hc_head_fuse_tilelang_kernel
+== profiler_traces/profiler_trace_2cbdbbad.json scopes {'vidur_dsv4_mhc_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_head              x 1.00 grid=[24, 1, 1] med=    5.62 hc_head_fuse_tilelang_kernel
+== profiler_traces/profiler_trace_421643cd.json scopes {'vidur_dsv4_mhc_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.98 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_mhc_head              x 1.00 grid=[6144, 1, 1] med=  174.43 hc_head_fuse_tilelang_kernel
+== profiler_traces/profiler_trace_2a43227a.json scopes {'vidur_dsv4_final_norm': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_final_norm            x 1.00 grid=[1, 1, 1] med=    1.70 void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, 
+== profiler_traces/profiler_trace_ea85ad48.json scopes {'vidur_dsv4_final_norm': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_final_norm            x 1.00 grid=[2, 1, 1] med=    1.70 void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, 
+== profiler_traces/profiler_trace_97eb939b.json scopes {'vidur_dsv4_final_norm': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_final_norm            x 1.00 grid=[4, 1, 1] med=    1.76 void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, 
+== profiler_traces/profiler_trace_aaedd388.json scopes {'vidur_dsv4_final_norm': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_final_norm            x 1.00 grid=[8, 1, 1] med=    1.76 void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, 
+== profiler_traces/profiler_trace_167ae8f0.json scopes {'vidur_dsv4_final_norm': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_final_norm            x 1.00 grid=[16, 1, 1] med=    1.76 void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, 
+== profiler_traces/profiler_trace_97530df6.json scopes {'vidur_dsv4_final_norm': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.90 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_final_norm            x 1.00 grid=[24, 1, 1] med=    1.76 void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, 
+== profiler_traces/profiler_trace_4211d2e3.json scopes {'vidur_dsv4_final_norm': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_final_norm            x 1.00 grid=[6144, 1, 1] med=   29.01 void vllm::rms_norm_kernel<c10::BFloat16, 8, 2, true>(c10::BFloat16*, c10::BFloat16 const*, long, long, long, 
+== profiler_traces/profiler_trace_d710bcca.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.26 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_44792bf2.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.96 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   34.22 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_9bf50cf3.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.96 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   34.43 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_41825ef3.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.07 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   34.13 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_bbb7a733.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   32.72 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_6768e3cf.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.02 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.84 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_c0a90220.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.04 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   34.02 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_f34a3c1a.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.01 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.70 nvjet_sm90_tst_128x8_64x12_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_88c28583.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.98 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   32.70 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_dd30f791.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.04 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.34 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_902cc953.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.96 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.55 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_2b34350b.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.89 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_11912400.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.01 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.71 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_205c75bf.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.01 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.89 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_0caeff27.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.10 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.86 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_131d2ccd.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.09 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.87 nvjet_sm90_tst_128x16_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_83a0948c.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.04 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.94 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_3d960dee.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.02 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.62 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_adb6eb20.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.14 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.52 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_a0c49b04.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.98 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.76 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_329f0889.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.96 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.82 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_cc3af78e.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    1.12 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.78 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_93d41810.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.99 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.79 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT
+== profiler_traces/profiler_trace_a5f03d45.json scopes {'vidur_dsv4_lm_head': 20}
+   <unowned>                        x 4.00 grid=[1, 1, 1] med=    0.98 void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, std::array<char*, 
+   vidur_dsv4_lm_head               x 1.00 grid=[2, 64, 1] med=   33.98 nvjet_sm90_tst_128x24_64x11_2x1_v_bz_TNT

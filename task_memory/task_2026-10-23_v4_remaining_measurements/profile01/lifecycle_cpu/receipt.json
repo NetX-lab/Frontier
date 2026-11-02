@@ -1,0 +1,229 @@
+{
+  "status": "PASS_REPRODUCED_CPU_CONTROLS",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+  "worker_source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_pd_worker.py",
+  "worker_sha256": "9ec701ec12f7a5da0f442f994a353f98c5ae1d2880b9feca38106ea536fd5cab",
+  "script_sha256": "2ac40a250571695dad80b821519d0d10aef6fd1d1b5b52e57d3c9e1eaaf01a33",
+  "marker_delay": {
+    "stop_timeout_s": 10,
+    "peer_wait_seconds": 60,
+    "marker_available_at": 20,
+    "wait_returned_at": 10,
+    "result": {
+      "case": "canonical_clean_natural_headless_exit",
+      "worker_returncode": 0,
+      "events": [
+        "server_launch",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "head_native_stopped",
+        "server_stop_called"
+      ],
+      "native_server_returncode": 0,
+      "native_server_stop_signal": null,
+      "failed_sentinel": false,
+      "observation_errors": [
+        "Head shutdown marker missing; native stop order unverified"
+      ],
+      "replay_commands": [],
+      "shutdown_order": {
+        "drained_before_stop": true,
+        "all_nodes_drained_before_head_stop": [],
+        "native_returned_before_requested_stop": true,
+        "head_stopped_before_headless_stop": false
+      },
+      "server_environments": [
+        {
+          "VLLM_ENGINE_READY_TIMEOUT_S": "10"
+        }
+      ],
+      "server_env_set": {
+        "VLLM_ENGINE_READY_TIMEOUT_S": "10"
+      },
+      "serving_instrumentation": null,
+      "child_imports": [],
+      "server_pid": null,
+      "server_ready": null
+    }
+  },
+  "enumeration_delay": {
+    "visibility_at": 20,
+    "head_wait_returned_at": 20,
+    "samples": [
+      {
+        "at": 0,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 1,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 2,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 3,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 4,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 5,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 6,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 7,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 8,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 9,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 10,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 11,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 12,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 13,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 14,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 15,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 16,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 17,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 18,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 19,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 20,
+        "direct_paths_exist": true
+      },
+      {
+        "at": 20,
+        "direct_paths_exist": true
+      }
+    ],
+    "result": {
+      "case": "canonical_clean",
+      "worker_returncode": 0,
+      "events": [
+        "server_launch",
+        "native_health_200",
+        "replay_launch",
+        "replay_completed",
+        "server_stop_called"
+      ],
+      "native_server_returncode": 0,
+      "native_server_stop_signal": "SIGINT",
+      "failed_sentinel": false,
+      "observation_errors": [],
+      "replay_commands": [
+        [
+          "/data/ycfeng/envs/frontier-py310/bin/python",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/canonical_clean_2wffhlis/pd_replay.py",
+          "--engine-config",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/canonical_clean_2wffhlis/engine.json",
+          "--trace-dir",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/canonical_clean_2wffhlis/trace",
+          "--output-dir",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/canonical_clean_2wffhlis/output/replay",
+          "--mode",
+          "clean",
+          "--observer-config",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/canonical_clean_2wffhlis/serve_observers.json",
+          "--model-dir",
+          "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/canonical_clean_2wffhlis/model",
+          "--prefill-url",
+          "http://10.0.0.1:30300",
+          "--decode-url",
+          "http://10.0.0.3:30400",
+          "--proxy-port",
+          "30500",
+          "--startup-timeout-s",
+          "10",
+          "--drain-s",
+          "0",
+          "--idle-timeout-s",
+          "180",
+          "--idle-poll-s",
+          "1"
+        ]
+      ],
+      "shutdown_order": {
+        "drained_before_stop": true,
+        "all_nodes_drained_before_head_stop": [
+          "host0",
+          "host1",
+          "host2",
+          "host3"
+        ],
+        "native_returned_before_requested_stop": false
+      },
+      "server_environments": [
+        {
+          "VLLM_ENGINE_READY_TIMEOUT_S": "10"
+        }
+      ],
+      "server_env_set": {
+        "VLLM_ENGINE_READY_TIMEOUT_S": "10"
+      },
+      "serving_instrumentation": null,
+      "child_imports": [],
+      "server_pid": null,
+      "server_ready": {
+        "role": "prefill",
+        "url": "http://10.0.0.1:30300"
+      }
+    }
+  },
+  "limits": [
+    "CPU process/filesystem/time stand-ins, not GPU or cloud measurements.",
+    "First control uses the existing naturally completed headless fixture.",
+    "Second control demonstrates a possible enumeration delay; it does not identify the real cloud-delay cause.",
+    "No source or configuration file was changed."
+  ]
+}

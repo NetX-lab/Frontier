@@ -1,0 +1,27 @@
+== native06: lifecycle repetitions [1, 2, 3], 378 requests
+  native lifecycle: b+c+d+e 79.20  f 41.80  a+g 4.90  handoff 125.91
+  frontier item 2  : kv_transfer 66.70  d_first_step mean 49.00 median 49.45 (expected 49.45)  handoff 115.70  tpot 19.48  handoff gap -7.79  P-side gap +12.69  preemptions max 0
+  frontier repriced: kv_transfer 66.92  d_first_step mean 40.38 median 40.69 (expected 40.69)  handoff 107.30  tpot 19.34  handoff gap -16.19  P-side gap +12.69  preemptions max 0
+  repriced minus item 2: kv_transfer +0.22  d_first_step -8.62  handoff -8.40  tpot -0.150  (k=1 entry -8.76)
+  repriced minus lifecycle: handoff -18.60  (b+c+d+e) vs kv_transfer -12.28  f vs d_first_step -1.42
+  target handoff 123.49
+  gate item 2   PASS: ttft_ms 403.058 vs 398.822 (+4.235, 1.06%) PASS  tpot_ms 19.485 vs 19.009 (+0.475, 2.50%) PASS  request_e2e_time_ms 20336.154 vs 19845.486 (+490.668, 2.47%) PASS  token_throughput_tps 6235.657 vs 6272.078 (-36.421, 0.58%) PASS
+  gate repriced PASS: ttft_ms 394.658 vs 398.822 (-4.164, 1.04%) PASS  tpot_ms 19.335 vs 19.009 (+0.326, 1.71%) PASS  request_e2e_time_ms 20174.427 vs 19845.486 (+328.941, 1.66%) PASS  token_throughput_tps 6235.801 vs 6272.078 (-36.276, 0.58%) PASS
+== p2_32: lifecycle repetitions [1, 2, 3], 378 requests
+  native lifecycle: b+c+d+e 91.79  f 42.05  a+g 4.63  handoff 138.47
+  frontier item 2  : kv_transfer 63.66  d_first_step mean 52.19 median 52.62 (expected 52.62)  handoff 115.85  tpot 18.64  handoff gap -12.07  P-side gap +45.92  preemptions max 0
+  frontier repriced: kv_transfer 63.67  d_first_step mean 39.86 median 40.09 (expected 40.09)  handoff 103.54  tpot 18.42  handoff gap -24.38  P-side gap +45.92  preemptions max 0
+  repriced minus item 2: kv_transfer +0.02  d_first_step -12.33  handoff -12.31  tpot -0.217  (k=1 entry -12.52)
+  repriced minus lifecycle: handoff -34.94  (b+c+d+e) vs kv_transfer -28.12  f vs d_first_step -2.19
+  target handoff 127.92
+  gate item 2   PASS: ttft_ms 397.265 vs 364.030 (+33.235, 9.13%) PASS  tpot_ms 18.642 vs 19.919 (-1.277, 6.41%) PASS  request_e2e_time_ms 19467.570 vs 20741.132 (-1273.562, 6.14%) PASS  token_throughput_tps 6276.160 vs 6231.415 (+44.744, 0.72%) PASS
+  gate repriced PASS: ttft_ms 384.954 vs 364.030 (+20.924, 5.75%) PASS  tpot_ms 18.424 vs 19.919 (-1.495, 7.50%) PASS  request_e2e_time_ms 19233.138 vs 20741.132 (-1507.993, 7.27%) PASS  token_throughput_tps 6276.871 vs 6231.415 (+45.456, 0.73%) PASS
+== p2_64: lifecycle repetitions [2, 3], 248 requests
+  native lifecycle: b+c+d+e 104.18  f 51.53  a+g 3.95  handoff 159.66
+  frontier item 2  : kv_transfer 85.29  d_first_step mean 50.71 median 51.48 (expected 51.48)  handoff 136.00  tpot 24.77  handoff gap -51.77  P-side gap +6.82  preemptions max 0
+  frontier repriced: kv_transfer 85.25  d_first_step mean 49.96 median 50.71 (expected 50.71)  handoff 135.21  tpot 24.75  handoff gap -52.55  P-side gap +6.82  preemptions max 0
+  repriced minus item 2: kv_transfer -0.04  d_first_step -0.74  handoff -0.78  tpot -0.017  (k=1 entry -0.77)
+  repriced minus lifecycle: handoff -24.45  (b+c+d+e) vs kv_transfer -18.92  f vs d_first_step -1.57
+  target handoff 187.76
+  gate item 2   FAIL: ttft_ms 695.453 vs 741.216 (-45.763, 6.17%) PASS  tpot_ms 24.768 vs 25.871 (-1.103, 4.26%) PASS  request_e2e_time_ms 26032.868 vs 27206.770 (-1173.901, 4.31%) PASS  token_throughput_tps 5997.030 vs 5963.206 (+33.824, 0.57%) PASS
+  gate repriced FAIL: ttft_ms 694.670 vs 741.216 (-46.546, 6.28%) PASS  tpot_ms 24.751 vs 25.871 (-1.120, 4.33%) PASS  request_e2e_time_ms 26014.849 vs 27206.770 (-1191.920, 4.38%) PASS  token_throughput_tps 5996.892 vs 5963.206 (+33.685, 0.56%) PASS

@@ -1,0 +1,263 @@
+{
+  "task_id": "W128-NATIVE-COLD-START",
+  "fixture_only": true,
+  "captured_responses": {
+    "/data/ycfeng/tmp/glm53_dsv4/v4_p0_native03_snapshot_20261021a/prefill_metrics.txt": "bc06a573f5dc7272e4345f13e3dd385d8859bb15098463baedcf652c0375ac4d",
+    "/data/ycfeng/tmp/glm53_dsv4/v4_p0_native03_snapshot_20261021a/decode_metrics.txt": "bc06a573f5dc7272e4345f13e3dd385d8859bb15098463baedcf652c0375ac4d"
+  },
+  "replay_scenarios": [
+    {
+      "fault": null,
+      "client_workload_verified": true,
+      "boundaries_verified": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "completion_targets": [
+        {
+          "prefill": 16.0,
+          "decode": 16.0
+        },
+        {
+          "prefill": 144.0,
+          "decode": 144.0
+        },
+        {
+          "prefill": 160.0,
+          "decode": 160.0
+        },
+        {
+          "prefill": 288.0,
+          "decode": 288.0
+        },
+        {
+          "prefill": 304.0,
+          "decode": 304.0
+        },
+        {
+          "prefill": 432.0,
+          "decode": 432.0
+        }
+      ]
+    },
+    {
+      "fault": "missing_lane",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "completion_targets": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "fault": "missing_reason",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "completion_targets": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "fault": "wrong_lane",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "completion_targets": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "fault": "nonzero",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "completion_targets": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "fault": "existing_client",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "completion_targets": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "fault": "stale_completion",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "completion_targets": [
+        {
+          "prefill": 16.0,
+          "decode": 16.0
+        },
+        {
+          "prefill": 144.0,
+          "decode": 144.0
+        },
+        {
+          "prefill": 160.0,
+          "decode": 160.0
+        },
+        {
+          "prefill": 288.0,
+          "decode": 288.0
+        },
+        {
+          "prefill": 304.0,
+          "decode": 304.0
+        },
+        {
+          "prefill": 432.0,
+          "decode": 432.0
+        }
+      ]
+    },
+    {
+      "fault": "failed_warmup",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "completion_targets": [
+        {
+          "prefill": 16.0,
+          "decode": 16.0
+        },
+        {
+          "prefill": 144.0,
+          "decode": 144.0
+        },
+        {
+          "prefill": 160.0,
+          "decode": 160.0
+        },
+        {
+          "prefill": 288.0,
+          "decode": 288.0
+        },
+        {
+          "prefill": 304.0,
+          "decode": 304.0
+        },
+        {
+          "prefill": 432.0,
+          "decode": 432.0
+        }
+      ]
+    },
+    {
+      "fault": "missing_baseline",
+      "client_workload_verified": false,
+      "boundaries_verified": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "completion_targets": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "final_tests": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "21",
+    "tests": "262",
+    "time": "113.613",
+    "timestamp": "2026-10-21T23:06:56.409874+08:00",
+    "hostname": "kun-workspace-vgen2"
+  }
+}

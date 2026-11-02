@@ -1,0 +1,10 @@
+{
+  "signal": "SIGINT",
+  "returncode": 0,
+  "shutdown_order": {
+    "drained_before_stop": true,
+    "all_nodes_drained_before_head_stop": [],
+    "native_returned_before_requested_stop": false,
+    "head_stopped_before_headless_stop": false
+  }
+}

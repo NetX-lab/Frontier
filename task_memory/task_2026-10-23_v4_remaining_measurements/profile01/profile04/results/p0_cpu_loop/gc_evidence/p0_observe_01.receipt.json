@@ -1,0 +1,80 @@
+{
+  "status": "RECORDED_ONE_GC_OBSERVATION",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "/usr/bin/python3",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+    "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01"
+  ],
+  "start": "2026-10-24T13:30:22.349988+00:00",
+  "end": "2026-10-24T13:31:22.724549+00:00",
+  "wall_seconds": 60.37455891817808,
+  "exit": 124,
+  "source_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+  "cgroup": {
+    "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope\n0::/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope\n",
+    "memory_mount_root": "/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c",
+    "group": "/sys/fs/cgroup/memory/system.slice/run-r0dbcc4c350634d109da4faa779f549e7.scope",
+    "limits": {
+      "memory.limit_in_bytes": "32212254720",
+      "memory.usage_in_bytes": "6397952",
+      "memory.failcnt": "0"
+    }
+  },
+  "controls": {
+    "payload_equal": true,
+    "kernel_rows_equal": true,
+    "rows": [
+      142567,
+      142567
+    ],
+    "kernel_total": [
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      },
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      }
+    ],
+    "useful_steps": [
+      61,
+      61
+    ],
+    "status": "PASS_GC_TELEMETRY_OUTPUT_EQUIVALENCE",
+    "cgroup": {
+      "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope\n0::/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope\n",
+      "memory_mount_root": "/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c",
+      "group": "/sys/fs/cgroup/memory/system.slice/run-ra1d6f0668ef64f8d8b099434026fd702.scope",
+      "limits": {
+        "memory.limit_in_bytes": "32212254720",
+        "memory.usage_in_bytes": "6594560",
+        "memory.failcnt": "0"
+      }
+    }
+  },
+  "files": {
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.stderr": "1d8088e173c333da25ba2f88d590917788129f5dc83a3b4d0c7b7500bd716bfd",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.gc.jsonl": "15e08906ec4afb0c6220dee8288a29f89c2e3a837bf2d010ddd2d479e59d1327",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.cgroup.json": "467f8e42553dccb0e191d81723750caf4a90038696cb6997769ac7a95b8c5130",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.obs.jsonl": "d012c7fbb7b0cbb6697e6bd0d21bca7f0027f2f037d8616292420ec44175cd18",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.hb.log": "18d5a45da8a8258960c36529f711b57bda5114c000fc4230259d178493b5e5c1",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.kernels.jsonl.gz": "f0f3751a6012b3e12310ad5e8c77fe7671118341ea083ebc456c6cb82c912e17"
+  },
+  "algorithm_changed": false,
+  "gpu_operations": 0
+}

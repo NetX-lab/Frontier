@@ -60,8 +60,8 @@ def test_attention_runtime_layout_rejects_invalid_dimensions() -> None:
         )
 
 
-def test_frozen_dsa_layout_fails_fast() -> None:
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
+def test_dsa_layout_requires_component_capacity() -> None:
+    with pytest.raises(NotImplementedError, match="kv_factor"):
         get_attention_runtime_kv_layout(
             DSA_ATTENTION_FAMILY,
             runtime_num_kv_heads_per_worker=1,

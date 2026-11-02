@@ -1,0 +1,15 @@
+{
+  "command": [
+    "findmnt",
+    "-T",
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+    "-o",
+    "TARGET,SOURCE,FSTYPE,OPTIONS",
+    "--json"
+  ],
+  "start_utc": "2026-10-24T18:05:33.637146+00:00",
+  "end_utc": "2026-10-24T18:05:33.644942+00:00",
+  "exit": 0,
+  "stdout": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/local_findmnt.stdout",
+  "stderr": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/local_findmnt.stderr"
+}

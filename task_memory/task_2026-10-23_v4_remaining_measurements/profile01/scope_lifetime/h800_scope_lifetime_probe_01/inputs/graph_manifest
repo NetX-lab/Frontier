@@ -1,0 +1,17 @@
+{
+  "generated_at_utc": "2026-10-24T05:20:23.611446+00:00",
+  "status": "PREPARED_NOT_SEALED",
+  "source_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "files": {
+    "config.json": "1cb84a7581ceb8392b62a557eee9f75eccc0eb24cebf0fd79a6216f033a75074",
+    "inputs/build_package.py": "0b3e0be75be817f519c8bde12ca2cd70884c5d8ac99cc8792ca70d1ec52b5e1e",
+    "inputs/launcher_template.py": "2d84970c4bec06533942ceafbfd6a7a6eb729c6ee12e73fe594faaf797ee493d",
+    "inputs/profile_plan.json": "19616949299a12aa72e4950ee85ef9c71eeaacfa5572e6ca3a76179bc77c8c9d",
+    "inputs/template_config.json": "6c94d88d6b24e09093dc9b90f5e2b48f41c661f0c22d858c2c0059738929d25e",
+    "launch.py": "5dea2c75c3f04ddba9a35a72bcc63c6a8cd12c283eeccf72a7e83fa547ac3c1d",
+    "probe_diagnostic.py": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+    "source_lock.json": "3aeb2a5a103e7b2bc57001c5c4df575cf68af06dd97b2ce5d2a8d0f8b41e3db9"
+  },
+  "input_count": 8,
+  "submitted": false
+}

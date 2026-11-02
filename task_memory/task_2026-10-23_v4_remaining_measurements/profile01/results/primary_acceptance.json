@@ -1,0 +1,63 @@
+{
+  "status": "ACCEPTED_DIAGNOSTIC_AUDIT_WITH_GAPS",
+  "created_at_utc": "2026-10-23T16:44:06.384559+00:00",
+  "job": "exp-1023-180821-373637",
+  "audit": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/results/data_audit.json",
+    "sha256": "5dbdd16b882f285da51e31f18ed1200b44c22829b596c5a405792a342687da9e"
+  },
+  "audit_cloud_path": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/analysis/profile02_cpu_audit_20261024/results/data_audit.json",
+  "archive": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/results/archive_receipt.json",
+    "sha256": "baa771badda070a99c1139de69a682227572d87cd2723726f50735c944d02389"
+  },
+  "root_verification": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/results/root_verification.json",
+    "sha256": "832820fa2aa4623e66c6f4123b6a99d49d4f8d0ae06444edd8106e463a0d7e9d"
+  },
+  "platform": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile02_terminal_ewudq62n/receipt.json",
+    "sha256": "36079738c6205871a36d19f8a74b9cee75af5e47144a0362c29d22a979d4bcdb"
+  },
+  "review": {
+    "session": "ses_e9675587dffeIWGJYaI5zf2t1f",
+    "audit_findings": [],
+    "upstream_document_corrections": [
+      "filename rank is local0..7; distributed/EP rank0..15",
+      "only decodeDP1 reports shutdown marker error"
+    ]
+  },
+  "verified": {
+    "files": 226,
+    "bytes": 4549518256,
+    "traces": 32,
+    "annotations": 326328,
+    "kernels": 7600008,
+    "useful_steps_per_lane": {
+      "prefill_dp0": 23,
+      "prefill_dp1": 2,
+      "decode_dp0": 61,
+      "decode_dp1": 61
+    },
+    "kernel_partition": {
+      "unique_non_graph_leaf": 732792,
+      "captured_segment_unknown": 6802600,
+      "unowned": 64616
+    },
+    "host_wait_generation_source_pairs": 44800,
+    "client_complete": 432
+  },
+  "open_evidence": {
+    "prefill_dp1_at_least_three_useful_steps": false,
+    "collector_trace_stream_ids": "0/192; libcupti.so could not load",
+    "captured_per_operator_ownership": "UNKNOWN",
+    "cross_dp_iteration_alignment": "UNKNOWN",
+    "gpu_event_dependencies": "UNKNOWN",
+    "shutdown_order": "decodeDP1 receipt false; cross-host timeline is not clock-aligned proof"
+  },
+  "native_reference_admission": false,
+  "operator_cost_admission": false,
+  "serving_total_admission": false,
+  "e2e_admission": false,
+  "next_action": "Repair the bounded collection environment/window/lifecycle gaps after source-backed design; establish captured ownership and shared iteration identity before matched serving costs."
+}

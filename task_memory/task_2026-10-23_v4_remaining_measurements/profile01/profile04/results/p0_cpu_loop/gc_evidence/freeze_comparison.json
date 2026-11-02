@@ -1,0 +1,805 @@
+{
+  "status": "ONE_VARIABLE_POST_LOAD_FREEZE_INCOMPLETE",
+  "results": {
+    "p0_observe_01": {
+      "exit": 124,
+      "load_seconds": 44.458999999999996,
+      "load_done": {
+        "t": 44.919,
+        "stage": "load_done",
+        "rss_mb": 5899.8
+      },
+      "kernel_start": {
+        "t": 56.554,
+        "stage": "kernel_pass_start",
+        "rss_mb": 6256.8
+      },
+      "last_kernel_progress": {
+        "t": 58.594,
+        "stage": "kernel_pass_progress",
+        "rss_mb": 6262.2,
+        "idx": 1625000
+      },
+      "completed_gen2_count": 21,
+      "completed_gen2_seconds": 15.835609389003366,
+      "after_load_completed_gen2_seconds": 2.7019150885753334,
+      "kernel_completed_gen2_seconds": 0,
+      "censored_gen2_start": 58.669869667850435,
+      "complete_gzip": false,
+      "partial_complete_jsonl_lines": 89878,
+      "freeze": null,
+      "pairs": [
+        {
+          "start": 0.2502722996287048,
+          "end": 0.27565658697858453,
+          "seconds": 0.02538428734987974,
+          "collected": 0
+        },
+        {
+          "start": 9.344421796035022,
+          "end": 9.397834114730358,
+          "seconds": 0.05341231869533658,
+          "collected": 0
+        },
+        {
+          "start": 9.533359973691404,
+          "end": 9.611860097851604,
+          "seconds": 0.07850012416020036,
+          "collected": 0
+        },
+        {
+          "start": 9.746157542802393,
+          "end": 9.843414107803255,
+          "seconds": 0.09725656500086188,
+          "collected": 0
+        },
+        {
+          "start": 9.980137747712433,
+          "end": 10.090033848769963,
+          "seconds": 0.10989610105752945,
+          "collected": 0
+        },
+        {
+          "start": 10.26169834472239,
+          "end": 10.394731977954507,
+          "seconds": 0.1330336332321167,
+          "collected": 0
+        },
+        {
+          "start": 10.606540038716048,
+          "end": 10.764969303738326,
+          "seconds": 0.15842926502227783,
+          "collected": 0
+        },
+        {
+          "start": 11.034373779781163,
+          "end": 11.227332051843405,
+          "seconds": 0.19295827206224203,
+          "collected": 0
+        },
+        {
+          "start": 11.563042189925909,
+          "end": 11.801185666583478,
+          "seconds": 0.2381434766575694,
+          "collected": 0
+        },
+        {
+          "start": 12.216449186671525,
+          "end": 12.500723251607269,
+          "seconds": 0.2842740649357438,
+          "collected": 0
+        },
+        {
+          "start": 13.015230065677315,
+          "end": 13.364844155032188,
+          "seconds": 0.3496140893548727,
+          "collected": 0
+        },
+        {
+          "start": 14.008210508618504,
+          "end": 14.435365831013769,
+          "seconds": 0.4271553223952651,
+          "collected": 0
+        },
+        {
+          "start": 15.251412353944033,
+          "end": 16.091478001791984,
+          "seconds": 0.8400656478479505,
+          "collected": 0
+        },
+        {
+          "start": 18.340887426864356,
+          "end": 19.4015083136037,
+          "seconds": 1.0606208867393434,
+          "collected": 0
+        },
+        {
+          "start": 21.25615421961993,
+          "end": 22.06987583776936,
+          "seconds": 0.8137216181494296,
+          "collected": 0
+        },
+        {
+          "start": 23.687874312046915,
+          "end": 24.69219515658915,
+          "seconds": 1.0043208445422351,
+          "collected": 0
+        },
+        {
+          "start": 26.66122213471681,
+          "end": 27.8768051979132,
+          "seconds": 1.2155830631963909,
+          "collected": 0
+        },
+        {
+          "start": 30.620806437917054,
+          "end": 32.34350077668205,
+          "seconds": 1.7226943387649953,
+          "collected": 0
+        },
+        {
+          "start": 35.62689224071801,
+          "end": 37.59259120002389,
+          "seconds": 1.9656989593058825,
+          "collected": 0
+        },
+        {
+          "start": 41.50940876174718,
+          "end": 43.87234018370509,
+          "seconds": 2.36293142195791,
+          "collected": 0
+        },
+        {
+          "start": 49.10315465601161,
+          "end": 51.805069744586945,
+          "seconds": 2.7019150885753334,
+          "collected": 0
+        }
+      ],
+      "all_observations": [
+        {
+          "t": 0.016,
+          "stage": "instrumented",
+          "rss_mb": 15.4,
+          "hits": [
+            "after:data = reader.load_trace(path)",
+            "after:events = data['traceEvents']",
+            "after:header = reader.trace_header(path)",
+            "after:in calls.items():",
+            "after:in enumerate(events):",
+            "after:in enumerate(syn):",
+            "after:in profile['steps']:",
+            "after:in streams.items():",
+            "after:inventory = read(inventory_path)",
+            "after:names = collections.Counter",
+            "after:output.write_text(",
+            "after:print(json.dumps({",
+            "after:result = {",
+            "after:start = time.monotonic()",
+            "after:with gzip.open(raw_path,",
+            "before:data = reader.load_trace(path)",
+            "before:header = reader.trace_header(path)",
+            "before:step_rows = []",
+            "before:with gzip.open(raw_path,",
+            "loop:in enumerate(events):",
+            "loop:in kernels:"
+          ],
+          "auditor_sha": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+          "reader_sha": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+          "trace": "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+          "output": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_observe_01.json"
+        },
+        {
+          "t": 0.02,
+          "stage": "enter",
+          "rss_mb": 16.0
+        },
+        {
+          "t": 0.456,
+          "stage": "metadata_loaded",
+          "rss_mb": 136.6
+        },
+        {
+          "t": 0.459,
+          "stage": "header_start",
+          "rss_mb": 136.9
+        },
+        {
+          "t": 0.46,
+          "stage": "header_done",
+          "rss_mb": 136.9
+        },
+        {
+          "t": 0.46,
+          "stage": "load_start",
+          "rss_mb": 136.9,
+          "trace_gz_bytes": 142288791
+        },
+        {
+          "t": 44.919,
+          "stage": "load_done",
+          "rss_mb": 5899.8
+        },
+        {
+          "t": 44.92,
+          "stage": "events_ready",
+          "rss_mb": 5899.8,
+          "events": 5062740
+        },
+        {
+          "t": 45.489,
+          "stage": "annotations_named",
+          "rss_mb": 5899.8,
+          "names": 63944
+        },
+        {
+          "t": 45.49,
+          "stage": "event_pass_progress",
+          "rss_mb": 5899.8,
+          "idx": 0
+        },
+        {
+          "t": 45.678,
+          "stage": "event_pass_progress",
+          "rss_mb": 5901.6,
+          "idx": 500000
+        },
+        {
+          "t": 45.873,
+          "stage": "event_pass_progress",
+          "rss_mb": 5904.2,
+          "idx": 1000000
+        },
+        {
+          "t": 46.147,
+          "stage": "event_pass_progress",
+          "rss_mb": 5910.6,
+          "idx": 1500000
+        },
+        {
+          "t": 46.703,
+          "stage": "event_pass_progress",
+          "rss_mb": 5932.8,
+          "idx": 2000000
+        },
+        {
+          "t": 47.257,
+          "stage": "event_pass_progress",
+          "rss_mb": 5955.0,
+          "idx": 2500000
+        },
+        {
+          "t": 47.846,
+          "stage": "event_pass_progress",
+          "rss_mb": 5977.4,
+          "idx": 3000000
+        },
+        {
+          "t": 48.542,
+          "stage": "event_pass_progress",
+          "rss_mb": 5999.8,
+          "idx": 3500000
+        },
+        {
+          "t": 49.095,
+          "stage": "event_pass_progress",
+          "rss_mb": 6028.4,
+          "idx": 4000000
+        },
+        {
+          "t": 52.353,
+          "stage": "event_pass_progress",
+          "rss_mb": 6051.4,
+          "idx": 4500000
+        },
+        {
+          "t": 52.867,
+          "stage": "event_pass_progress",
+          "rss_mb": 6071.5,
+          "idx": 5000000
+        },
+        {
+          "t": 52.886,
+          "stage": "event_pass_done",
+          "rss_mb": 6071.5,
+          "events": 5062740,
+          "kernels": 1215919,
+          "calls": 512220,
+          "ranges": 63944
+        },
+        {
+          "t": 56.554,
+          "stage": "correlation_done",
+          "rss_mb": 6256.8,
+          "launch_owner_rows": 512220,
+          "correlations": 512220
+        },
+        {
+          "t": 56.554,
+          "stage": "kernel_pass_start",
+          "rss_mb": 6256.8
+        },
+        {
+          "t": 57.098,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6258.0,
+          "idx": 1450000
+        },
+        {
+          "t": 57.454,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6258.6,
+          "idx": 1475000
+        },
+        {
+          "t": 58.166,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6260.1,
+          "idx": 1525000
+        },
+        {
+          "t": 58.382,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6260.6,
+          "idx": 1550000
+        },
+        {
+          "t": 58.594,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6262.2,
+          "idx": 1625000
+        }
+      ]
+    },
+    "p0_freeze_01": {
+      "exit": 124,
+      "load_seconds": 47.129,
+      "load_done": {
+        "t": 47.591,
+        "stage": "load_done",
+        "rss_mb": 5899.8
+      },
+      "kernel_start": {
+        "t": 57.089,
+        "stage": "kernel_pass_start",
+        "rss_mb": 6256.8
+      },
+      "last_kernel_progress": {
+        "t": 59.789,
+        "stage": "kernel_pass_progress",
+        "rss_mb": 6278.2,
+        "idx": 2275000
+      },
+      "completed_gen2_count": 25,
+      "completed_gen2_seconds": 16.13258289778605,
+      "after_load_completed_gen2_seconds": 1.9427497652359307,
+      "kernel_completed_gen2_seconds": 0,
+      "censored_gen2_start": null,
+      "complete_gzip": false,
+      "partial_complete_jsonl_lines": 363354,
+      "freeze": {
+        "t": 47.96,
+        "stage": "freeze_after_load",
+        "rss_mb": 5899.8,
+        "seconds": 1.2017320841550827e-05,
+        "objects": 6993229
+      },
+      "pairs": [
+        {
+          "start": 0.2542568086646497,
+          "end": 0.28144318563863635,
+          "seconds": 0.027186376973986626,
+          "collected": 0
+        },
+        {
+          "start": 10.111064578872174,
+          "end": 10.201045752037317,
+          "seconds": 0.08998117316514254,
+          "collected": 0
+        },
+        {
+          "start": 10.33569448068738,
+          "end": 10.426501316018403,
+          "seconds": 0.09080683533102274,
+          "collected": 0
+        },
+        {
+          "start": 10.559817488770932,
+          "end": 10.674388690851629,
+          "seconds": 0.11457120208069682,
+          "collected": 0
+        },
+        {
+          "start": 10.807372428942472,
+          "end": 10.93768823100254,
+          "seconds": 0.13031580206006765,
+          "collected": 0
+        },
+        {
+          "start": 11.107656818814576,
+          "end": 11.24768383288756,
+          "seconds": 0.14002701407298446,
+          "collected": 0
+        },
+        {
+          "start": 11.455163784790784,
+          "end": 11.620495359878987,
+          "seconds": 0.16533157508820295,
+          "collected": 0
+        },
+        {
+          "start": 11.885902118869126,
+          "end": 12.09868338983506,
+          "seconds": 0.2127812709659338,
+          "collected": 0
+        },
+        {
+          "start": 12.425430786795914,
+          "end": 12.677232021000236,
+          "seconds": 0.2518012342043221,
+          "collected": 0
+        },
+        {
+          "start": 13.081841581035405,
+          "end": 13.380349726881832,
+          "seconds": 0.2985081458464265,
+          "collected": 0
+        },
+        {
+          "start": 13.896339083090425,
+          "end": 14.33229576703161,
+          "seconds": 0.4359566839411855,
+          "collected": 0
+        },
+        {
+          "start": 14.982450367882848,
+          "end": 15.46275489591062,
+          "seconds": 0.4803045280277729,
+          "collected": 0
+        },
+        {
+          "start": 16.335140520706773,
+          "end": 16.91458509908989,
+          "seconds": 0.5794445783831179,
+          "collected": 0
+        },
+        {
+          "start": 17.922116484027356,
+          "end": 18.63614141382277,
+          "seconds": 0.7140249297954142,
+          "collected": 0
+        },
+        {
+          "start": 19.922922622878104,
+          "end": 20.794048429001123,
+          "seconds": 0.8711258061230183,
+          "collected": 0
+        },
+        {
+          "start": 22.390343532897532,
+          "end": 23.46098383376375,
+          "seconds": 1.0706403008662164,
+          "collected": 0
+        },
+        {
+          "start": 25.429336385801435,
+          "end": 26.749774890951812,
+          "seconds": 1.3204385051503778,
+          "collected": 0
+        },
+        {
+          "start": 29.53896645270288,
+          "end": 31.17178326100111,
+          "seconds": 1.6328168082982302,
+          "collected": 0
+        },
+        {
+          "start": 34.4327920707874,
+          "end": 36.54207667801529,
+          "seconds": 2.1092846072278917,
+          "collected": 0
+        },
+        {
+          "start": 43.050173254683614,
+          "end": 46.50465900963172,
+          "seconds": 3.4544857549481094,
+          "collected": 0
+        },
+        {
+          "start": 52.203809899743646,
+          "end": 52.441256920807064,
+          "seconds": 0.2374470210634172,
+          "collected": 0
+        },
+        {
+          "start": 53.216824310831726,
+          "end": 53.51637482875958,
+          "seconds": 0.29955051792785525,
+          "collected": 0
+        },
+        {
+          "start": 54.37375752488151,
+          "end": 54.75147683592513,
+          "seconds": 0.3777193110436201,
+          "collected": 0
+        },
+        {
+          "start": 55.308682046830654,
+          "end": 55.77241764497012,
+          "seconds": 0.46373559813946486,
+          "collected": 0
+        },
+        {
+          "start": 56.47645875765011,
+          "end": 57.04075607471168,
+          "seconds": 0.5642973170615733,
+          "collected": 0
+        }
+      ],
+      "all_observations": [
+        {
+          "t": 0.016,
+          "stage": "instrumented",
+          "rss_mb": 15.7,
+          "hits": [
+            "after:data = reader.load_trace(path)",
+            "after:events = data['traceEvents']",
+            "after:header = reader.trace_header(path)",
+            "after:in calls.items():",
+            "after:in enumerate(events):",
+            "after:in enumerate(syn):",
+            "after:in profile['steps']:",
+            "after:in streams.items():",
+            "after:inventory = read(inventory_path)",
+            "after:names = collections.Counter",
+            "after:output.write_text(",
+            "after:print(json.dumps({",
+            "after:result = {",
+            "after:start = time.monotonic()",
+            "after:with gzip.open(raw_path,",
+            "before:data = reader.load_trace(path)",
+            "before:header = reader.trace_header(path)",
+            "before:step_rows = []",
+            "before:with gzip.open(raw_path,",
+            "loop:in enumerate(events):",
+            "loop:in kernels:"
+          ],
+          "auditor_sha": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+          "reader_sha": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+          "trace": "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+          "output": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_freeze_01.json"
+        },
+        {
+          "t": 0.02,
+          "stage": "enter",
+          "rss_mb": 16.1
+        },
+        {
+          "t": 0.459,
+          "stage": "metadata_loaded",
+          "rss_mb": 136.7
+        },
+        {
+          "t": 0.462,
+          "stage": "header_start",
+          "rss_mb": 136.9
+        },
+        {
+          "t": 0.462,
+          "stage": "header_done",
+          "rss_mb": 136.9
+        },
+        {
+          "t": 0.462,
+          "stage": "load_start",
+          "rss_mb": 136.9,
+          "trace_gz_bytes": 142288791
+        },
+        {
+          "t": 47.591,
+          "stage": "load_done",
+          "rss_mb": 5899.8
+        },
+        {
+          "t": 47.96,
+          "stage": "freeze_after_load",
+          "rss_mb": 5899.8,
+          "seconds": 1.2017320841550827e-05,
+          "objects": 6993229
+        },
+        {
+          "t": 47.96,
+          "stage": "events_ready",
+          "rss_mb": 5899.8,
+          "events": 5062740
+        },
+        {
+          "t": 48.558,
+          "stage": "annotations_named",
+          "rss_mb": 5899.8,
+          "names": 63944
+        },
+        {
+          "t": 48.558,
+          "stage": "event_pass_progress",
+          "rss_mb": 5899.8,
+          "idx": 0
+        },
+        {
+          "t": 48.75,
+          "stage": "event_pass_progress",
+          "rss_mb": 5901.6,
+          "idx": 500000
+        },
+        {
+          "t": 48.95,
+          "stage": "event_pass_progress",
+          "rss_mb": 5904.2,
+          "idx": 1000000
+        },
+        {
+          "t": 49.228,
+          "stage": "event_pass_progress",
+          "rss_mb": 5910.6,
+          "idx": 1500000
+        },
+        {
+          "t": 49.789,
+          "stage": "event_pass_progress",
+          "rss_mb": 5932.8,
+          "idx": 2000000
+        },
+        {
+          "t": 50.342,
+          "stage": "event_pass_progress",
+          "rss_mb": 5955.0,
+          "idx": 2500000
+        },
+        {
+          "t": 50.935,
+          "stage": "event_pass_progress",
+          "rss_mb": 5977.4,
+          "idx": 3000000
+        },
+        {
+          "t": 51.638,
+          "stage": "event_pass_progress",
+          "rss_mb": 5999.9,
+          "idx": 3500000
+        },
+        {
+          "t": 52.193,
+          "stage": "event_pass_progress",
+          "rss_mb": 6028.5,
+          "idx": 4000000
+        },
+        {
+          "t": 52.99,
+          "stage": "event_pass_progress",
+          "rss_mb": 6051.4,
+          "idx": 4500000
+        },
+        {
+          "t": 53.81,
+          "stage": "event_pass_progress",
+          "rss_mb": 6071.5,
+          "idx": 5000000
+        },
+        {
+          "t": 53.829,
+          "stage": "event_pass_done",
+          "rss_mb": 6071.5,
+          "events": 5062740,
+          "kernels": 1215919,
+          "calls": 512220,
+          "ranges": 63944
+        },
+        {
+          "t": 57.089,
+          "stage": "correlation_done",
+          "rss_mb": 6256.8,
+          "launch_owner_rows": 512220,
+          "correlations": 512220
+        },
+        {
+          "t": 57.089,
+          "stage": "kernel_pass_start",
+          "rss_mb": 6256.8
+        },
+        {
+          "t": 57.224,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6258.1,
+          "idx": 1450000
+        },
+        {
+          "t": 57.307,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6258.6,
+          "idx": 1475000
+        },
+        {
+          "t": 57.475,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6259.9,
+          "idx": 1525000
+        },
+        {
+          "t": 57.559,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6260.6,
+          "idx": 1550000
+        },
+        {
+          "t": 57.767,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6262.2,
+          "idx": 1625000
+        },
+        {
+          "t": 58.024,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6264.3,
+          "idx": 1700000
+        },
+        {
+          "t": 58.283,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6266.3,
+          "idx": 1800000
+        },
+        {
+          "t": 58.452,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6267.6,
+          "idx": 1850000
+        },
+        {
+          "t": 58.536,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6268.4,
+          "idx": 1875000
+        },
+        {
+          "t": 58.783,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6270.2,
+          "idx": 1950000
+        },
+        {
+          "t": 59.022,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6272.0,
+          "idx": 2025000
+        },
+        {
+          "t": 59.108,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6272.8,
+          "idx": 2050000
+        },
+        {
+          "t": 59.277,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6274.1,
+          "idx": 2100000
+        },
+        {
+          "t": 59.536,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6276.1,
+          "idx": 2200000
+        },
+        {
+          "t": 59.789,
+          "stage": "kernel_pass_progress",
+          "rss_mb": 6278.2,
+          "idx": 2275000
+        }
+      ]
+    }
+  },
+  "clock": "GC callback and observations use the same stage.T0 monotonic clock",
+  "control": "freeze_control_equivalence.json",
+  "limits": "Both P0 commands retain exit124 at60s/30GiB; partial gzip lines are diagnostic only, not audit completion. Loading unchanged; no loading speedup inference, GPU rerun or full32 acceptance."
+}

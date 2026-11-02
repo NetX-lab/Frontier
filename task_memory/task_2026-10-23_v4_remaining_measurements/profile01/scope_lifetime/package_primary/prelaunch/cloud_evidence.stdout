@@ -1,0 +1,17 @@
+{
+  "destination_exists": false,
+  "destination_lexists": false,
+  "filesystem_available_bytes": 38517024747520,
+  "filesystem_free_inodes": 198248616,
+  "limits": "One cloud filesystem snapshot, not reserved bytes. All cloud paths remain under the personal ycfeng directory.",
+  "observed_utc": "2026-10-24T18:06:38.590348+00:00",
+  "parent_exists": true,
+  "parent_gid": 0,
+  "parent_mode": "0o755",
+  "parent_uid": 0,
+  "parent_writable": false,
+  "readonly_alias": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_scope_lifetime_20261024_01",
+  "user": "i-fengyicheng",
+  "worker_path": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_scope_lifetime_20261024_01",
+  "writes": 0
+}

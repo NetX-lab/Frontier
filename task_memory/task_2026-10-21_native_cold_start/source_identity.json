@@ -1,0 +1,22 @@
+{
+  "task_id": "W128-NATIVE-COLD-START",
+  "correction": "P1",
+  "production_test_files": 5,
+  "changed_lines": 495,
+  "changed_checker_functions": [
+    "native_idle_evidence",
+    "check_native_canonical"
+  ],
+  "root_checker_sha256": "9116ab7c83da2b4e7cafb871c272af56c8322954eccd56abf2eeac1b55906b55",
+  "successor_sha256": "5efd00ea6544d64440c535d06ad415b6a4d1a25b96ce8863cf4944568f37ec36",
+  "canonical_sha256": {
+    "SHA256SUMS": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+    "manifest.json": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+    "request_ids.json": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+    "trace.csv": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+    "warmup_pool.csv": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e"
+  },
+  "native_full_structure_unchanged": true,
+  "parent_base": "e55c83c263f86f48972f137858723a07c6f5e691",
+  "p1_fix_base": "746b744d3382ad1c49a1741c6dea7f5fdfee4c41"
+}

@@ -1,0 +1,124 @@
+{
+  "schema_version": "cuda_graph_scope_probe.v3",
+  "command": "inspect-api",
+  "script_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "image_digest_from_launcher": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "torch_version": "2.13.0+cu130",
+  "torch_cuda_version": "13.0",
+  "api": {
+    "python_api": {
+      "raw_cuda_graph": true,
+      "raw_cuda_graph_exec": true,
+      "instantiate": true
+    },
+    "mapping_api": "CUDA13_topology_and_CUPTI_ID_queries",
+    "cuda_bindings_version": "13.3.1",
+    "runtime_api": {
+      "cudaGraphGetNodes": true,
+      "cudaGraphGetEdges": true,
+      "cudaGraphNodeGetType": true,
+      "cudaGraphEventRecordNodeGetEvent": true
+    },
+    "cuda_runtime_version": "13.0.96",
+    "runtime_header": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include/cuda_runtime_api.h",
+    "runtime_declarations": [
+      {
+        "line": 10533,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphEventRecordNodeGetEvent(cudaGraphNode_t node, cudaEvent_t *event_out);"
+      },
+      {
+        "line": 11264,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphNodeGetType(cudaGraphNode_t node, enum cudaGraphNodeType *pType);"
+      },
+      {
+        "line": 11295,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphGetNodes(cudaGraph_t graph, cudaGraphNode_t *nodes, size_t *numNodes);"
+      },
+      {
+        "line": 11366,
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphGetEdges(cudaGraph_t graph, cudaGraphNode_t *from, cudaGraphNode_t *to, cudaGraphEdgeData *edgeData, size_t *numEdges);"
+      }
+    ],
+    "cupti_version": "13.0.85",
+    "cupti_library": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+    "cupti_header": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include/cupti_activity.h",
+    "cupti_declarations": [
+      {
+        "line": 7380,
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphNodeId(CUgraphNode node, uint64_t *nodeId);"
+      },
+      {
+        "line": 7394,
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphId(CUgraph graph, uint32_t *pId);"
+      },
+      {
+        "line": 7408,
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphExecId(CUgraphExec graphExec, uint32_t *pId);"
+      }
+    ],
+    "cupti_missing_python_bindings": {
+      "cuptiGetGraphNodeId": true,
+      "cuptiGetGraphId": true,
+      "cuptiGetGraphExecId": true
+    },
+    "cupti_typed_exports": {
+      "cuptiGetGraphNodeId": true,
+      "cuptiGetGraphId": true,
+      "cuptiGetGraphExecId": true
+    },
+    "callback_abi": {
+      "size": 56,
+      "alignment": 8,
+      "offsets": {
+        "graph": 0,
+        "originalGraph": 8,
+        "node": 16,
+        "originalNode": 24,
+        "nodeType": 32,
+        "dependency": 40,
+        "graphExec": 48
+      },
+      "resource_domain": 3,
+      "node_cloned": 20,
+      "exec_created": 18,
+      "resource_data": {
+        "size": 24,
+        "alignment": 8,
+        "offsets": {
+          "context": 0,
+          "resourceHandle": 8,
+          "resourceDescriptor": 16
+        }
+      },
+      "resource_handle": {
+        "size": 8,
+        "alignment": 8,
+        "offsets": {
+          "stream": 0
+        }
+      }
+    },
+    "callback_missing_python_bindings": {
+      "cuptiSubscribe": true,
+      "cuptiEnableCallback": true,
+      "cuptiUnsubscribe": true
+    },
+    "callback_typed_exports": {
+      "cuptiSubscribe": true,
+      "cuptiEnableCallback": true,
+      "cuptiUnsubscribe": true
+    },
+    "mapped_cupti_libraries": [
+      "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13"
+    ],
+    "event_cuda_event_descriptor": true,
+    "rejected_get_graph_data_source": "    def get_graph_data(self) -> dict:\n        r\"\"\"Return a dictionary describing the graph's topology and node metadata.\n\n        ``keep_graph`` must be True.  The graph must have been instantiated\n        (via :meth:`instantiate`) before calling this method.\n        Requires the ``cuda.bindings`` package.\n\n        Returns a dictionary with structure::\n\n            {\n                \"exec_graph_id\": int,\n                \"nodes\": [\n                    {\n                        \"index\": int,\n                        \"node_type\": str,\n                        \"tools_id\": int,\n                        \"graph_id\": int,\n                        \"node_id\": int,\n                        \"kernel_name\": str or None,\n                        \"dependencies\": [int, ...],\n                        \"dependents\": [int, ...],\n                    },\n                    ...,\n                ],\n            }\n\n        Each node's ``graph_id`` is remapped to the exec graph id so that\n        ``tools_id`` values match those reported by CUPTI-based profilers.\n        ``dependencies`` and ``dependents`` are lists of node indices within\n        the ``nodes`` list.\n\n        This structure is useful for inspecting a profiler trace and\n        establishing whether a particular dependency observed in the profile\n        is a true dependency (encoded in the graph) or a fake dependency\n        caused by mapping of independent streams to the same hardware\n        channel.\n        \"\"\"\n        from torch.cuda._graph_annotations import _is_tools_id_unavailable\n\n        if _cuda_runtime is None or _cuda_driver is None:\n            raise RuntimeError(\"get_graph_data requires the cuda.bindings package\")\n\n        if _is_tools_id_unavailable():\n            raise RuntimeError(\n                \"get_graph_data requires cudaGraphNodeGetToolsId which needs \"\n                \"cuda.bindings >= 13.1 and CUDA driver >= 13.1 \"\n                \"(or cuda-compat >= 13.1 in LD_LIBRARY_PATH)\"\n            )\n\n        node_type_names = {\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeKernel: \"kernel\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemcpy: \"memcpy\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemset: \"memset\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeHost: \"host\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeGraph: \"child_graph\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeEmpty: \"empty\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeWaitEvent: \"wait_event\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeEventRecord: \"event_record\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemAlloc: \"mem_alloc\",\n            _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeMemFree: \"mem_free\",\n        }\n\n        raw = self.raw_cuda_graph()\n\n        _, num = _check_cuda_bindings(_cuda_runtime.cudaGraphGetNodes(raw, numNodes=0))\n        nodes, num = _check_cuda_bindings(\n            _cuda_runtime.cudaGraphGetNodes(raw, numNodes=num)\n        )\n\n        handle_to_idx: dict[int, int] = {}\n        node_infos: list[dict] = []\n\n        for i in range(num):\n            node = nodes[i]\n            handle_to_idx[int(node)] = i\n\n            ntype = _check_cuda_bindings(_cuda_runtime.cudaGraphNodeGetType(node))\n            tools_id = _check_cuda_bindings(_cuda_runtime.cudaGraphNodeGetToolsId(node))\n            graph_id = tools_id >> 32\n            node_id = tools_id & 0xFFFFFFFF\n\n            kernel_name = None\n            if ntype == _cuda_runtime.cudaGraphNodeType.cudaGraphNodeTypeKernel:\n                cu_node = _cuda_driver.CUgraphNode(init_value=int(node))\n                err, params = _cuda_driver.cuGraphKernelNodeGetParams(cu_node)\n                if err == _cuda_driver.CUresult.CUDA_SUCCESS and int(params.func):\n                    cu_func = _cuda_driver.CUfunction(init_value=int(params.func))\n                    err, name = _cuda_driver.cuFuncGetName(cu_func)\n                    if err == _cuda_driver.CUresult.CUDA_SUCCESS:\n                        kernel_name = name.decode() if isinstance(name, bytes) else name\n\n            node_infos.append(\n                {\n                    \"index\": i,\n                    \"node_type\": node_type_names.get(ntype, str(ntype)),\n                    \"tools_id\": tools_id,\n                    \"graph_id\": graph_id,\n                    \"node_id\": node_id,\n                    \"kernel_name\": kernel_name,\n                    \"dependencies\": [],\n                    \"dependents\": [],\n                }\n            )\n\n        _, _, _, num_edges = _check_cuda_bindings(\n            _cuda_runtime.cudaGraphGetEdges(raw, numEdges=0)\n        )\n        if num_edges > 0:\n            from_nodes, to_nodes, _edge_data, num_edges = _check_cuda_bindings(\n                _cuda_runtime.cudaGraphGetEdges(raw, numEdges=num_edges)\n            )\n            for i in range(num_edges):\n                src = handle_to_idx.get(int(from_nodes[i]))\n                dst = handle_to_idx.get(int(to_nodes[i]))\n                if src is not None and dst is not None:\n                    node_infos[src][\"dependents\"].append(dst)\n                    node_infos[dst][\"dependencies\"].append(src)\n\n        exec_handle = _cuda_runtime.cudaGraphExec_t(\n            init_value=self.raw_cuda_graph_exec()\n        )\n        exec_graph_id = _check_cuda_bindings(\n            _cuda_runtime.cudaGraphExecGetId(exec_handle)\n        )\n        for info in node_infos:\n            info[\"tools_id\"] = (exec_graph_id << 32) | info[\"node_id\"]\n            info[\"graph_id\"] = exec_graph_id\n\n        return {\n            \"exec_graph_id\": exec_graph_id,\n            \"nodes\": node_infos,\n        }\n",
+    "cuda_initialized": false
+  },
+  "performance_acceptance": false,
+  "consumer_admission": false,
+  "U1": "NOT_RUN",
+  "U2": "NOT_RUN",
+  "U3": "NOT_RUN",
+  "U4": "NOT_RUN"
+}

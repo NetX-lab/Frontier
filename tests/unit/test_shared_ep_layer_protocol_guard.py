@@ -28,6 +28,9 @@ class _MixedModelConfig:
     def is_moe_layer(self, layer_id: int) -> bool:
         return layer_id == 2
 
+    def get_model_architecture_profile(self):
+        return SimpleNamespace(profile_id="generic")
+
 
 class _ExecutionTime:
     def __init__(self, post_attention_ms: float) -> None:
@@ -127,6 +130,9 @@ def _schedule_stage_one(
         _execution_time_predictor=predictor,
     )
     cluster_scheduler = SimpleNamespace(
+        _config=SimpleNamespace(
+            replica_config=SimpleNamespace(model_config=_MixedModelConfig())
+        ),
         get_replica_stage_scheduler=Mock(return_value=stage_scheduler),
         get_replica=Mock(return_value=SimpleNamespace(is_moe=True)),
     )

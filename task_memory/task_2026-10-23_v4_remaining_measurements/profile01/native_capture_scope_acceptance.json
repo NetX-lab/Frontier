@@ -1,0 +1,147 @@
+{
+  "status": "ACCEPTED_CAPTURE_SCOPE_PREREQUISITE_WITH_LIMITS",
+  "observed_at_utc": "2026-10-24T11:07:58.788995+00:00",
+  "bindings": {
+    "native_capture_scope.md": "f4dd9698cdb260af1ec01e3bf2e2a6f25a82a7a63f051d3e510c2bb170e313a6",
+    "native_capture_scope_census.json": "0f2f6776e99560f6632e5155cdd7817a77eb6f30c072a626f37585c846dd3678",
+    "native_capture_scope_limits.json": "dc68cf69c3e94b05200190ecb0fcdadf80d4c2138d9fef112e8640bf07657813",
+    "test_report_2026-10-24_native_capture_prerequisite.md": "5ef84393732c7b8140d8d57163bd4009ba59b9ed50b9a04a4bbbd63a7bf0c397"
+  },
+  "census_source": "/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/nodes/gpu-h800-0216.host.platform.shaipower.com/serving_profile/rank0.before_profile.json",
+  "census_source_sha256": "147c37ec6cd822f4dc5d72673bbc1a53dfb59ae5b9f53ee226f7014f6773fa41",
+  "census_bytes": 105492191,
+  "python_census": "3.10.6",
+  "counts": {
+    "capture_annotations": 159748,
+    "capture_stream_true": 72798,
+    "capture_breakable_true": 49035,
+    "capture_both_true": 43120,
+    "capture_stream_true_breakable_false": 29678,
+    "stream_capture_layer_max": 42,
+    "stream_capture_graph_modes": {
+      "None": 72798
+    },
+    "dropped": 0
+  },
+  "scope_counts": {
+    "all_capture": 31,
+    "stream_capture": 29
+  },
+  "limits": {
+    "bytes": 268435456,
+    "records": 250000
+  },
+  "census_execution": {
+    "argv": [
+      "sudo",
+      "-n",
+      "systemd-run",
+      "--scope",
+      "-p",
+      "MemoryMax=30G",
+      "timeout",
+      "60s",
+      "/usr/bin/python3",
+      "-B",
+      "/data/ycfeng/tmp/glm53_dsv4/native_capture_scope_root_20261024.py"
+    ],
+    "script_sha256": "10a383a669679e16c064bf80fdcdc4649b979d04d95b86095ba084579c5ae71c",
+    "full_script": "from collections import Counter\nfrom pathlib import Path\nimport hashlib\nimport json\nimport sys\nimport tempfile\n\nsource = Path('/data/ycfeng/tmp/glm53_dsv4/profile02_results_readonly_7ba56n6z/artifacts/nodes/gpu-h800-0216.host.platform.shaipower.com/serving_profile/rank0.before_profile.json')\nout = Path(tempfile.mkdtemp(prefix='native_capture_scope_root_', dir='/data/ycfeng/tmp/glm53_dsv4'))\nraw = source.read_bytes()\nartifact = json.loads(raw)\nrows = artifact['annotations']\ncapture = [row for row in rows if row.get('execution') == 'capture']\nstream = [row for row in capture if row.get('stream_capturing') is True]\nbreakable = [row for row in capture if row.get('breakable_capture_active') is True]\nboth = [row for row in stream if row.get('breakable_capture_active') is True]\nnonbreakable = [row for row in stream if row.get('breakable_capture_active') is False]\nresult = {\n    'source': str(source),\n    'source_sha256': hashlib.sha256(raw).hexdigest(),\n    'bytes': len(raw),\n    'python': sys.version.split()[0],\n    'capture_annotations': len(capture),\n    'capture_stream_true': len(stream),\n    'capture_breakable_true': len(breakable),\n    'capture_both_true': len(both),\n    'capture_stream_true_breakable_false': len(nonbreakable),\n    'capture_scopes': dict(Counter(row['scope'] for row in capture)),\n    'stream_capture_scopes': dict(Counter(row['scope'] for row in stream)),\n    'nonbreakable_stream_capture_scopes': dict(Counter(row['scope'] for row in nonbreakable)),\n    'stream_capture_layer_max': max(row['layer'] for row in stream if row.get('layer') is not None),\n    'stream_capture_graph_modes': dict(Counter(str(row.get('graph_mode')) for row in stream)),\n    'replay_eager_scopes': dict(Counter(row['scope'] for row in rows if row.get('execution') == 'replay_eager_segment')),\n    'serving_dispatch_scopes': dict(Counter(row['scope'] for row in rows if row.get('kind') == 'serving' and row['scope'].startswith('model_dispatch_'))),\n    'dropped': artifact.get('dropped'),\n    'context': artifact.get('context'),\n    'scope': 'One retained profile02 decode rank0 startup artifact; no native stack execution or node-owner join.',\n    'script_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),\n}\nresult['checks'] = {\n    'capture_annotations': result['capture_annotations'] == 159748,\n    'capture_stream_true': result['capture_stream_true'] == 72798,\n    'capture_breakable_true': result['capture_breakable_true'] == 49035,\n    'stream_capture_layer_max': result['stream_capture_layer_max'] == 42,\n    'all_capture_scopes': len(result['capture_scopes']) == 31,\n}\nresult['status'] = ('PASS_LIMITED_CAPTURE_ANNOTATION_CENSUS' if all(result['checks'].values())\n                    else 'FAIL_LIMITED_CAPTURE_ANNOTATION_CENSUS')\n(out / 'receipt.json').write_text(json.dumps(result, indent=2) + '\\n')\nprint(json.dumps(result, indent=2))\nprint('OUTPUT', out)\nassert all(result['checks'].values()), result['checks']\n"
+  },
+  "limit_execution": {
+    "argv": [
+      "sudo",
+      "-n",
+      "systemd-run",
+      "--scope",
+      "-p",
+      "MemoryMax=30G",
+      "timeout",
+      "60s",
+      "python3",
+      "-B",
+      "-"
+    ],
+    "stdin": "from pathlib import Path\nimport hashlib,json,os\ncensus=Path('/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/native_capture_scope_census.json'); bound=json.loads(census.read_text()); source=Path(bound['source']); raw=source.read_bytes(); assert hashlib.sha256(raw).hexdigest()==bound['source_sha256']; artifact=json.loads(raw)\nlimits=artifact['limits']; assert limits=={'records':250000,'bytes':268435456},limits\nreceipt={'status':'PASS_BOUND_CAPTURE_LIMITS','source':str(source),'source_sha256':bound['source_sha256'],'limits':limits,'scope':'Only configured retention limits read from the same retained startup artifact; no node correspondence or completeness claim.','command':['sudo','-n','systemd-run','--scope','-p','MemoryMax=30G','timeout','60s','python3','-B','-']}\npath=census.with_name('native_capture_scope_limits.json'); fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o644)\nwith os.fdopen(fd,'w') as output: output.write(json.dumps(receipt,indent=2)+'\\n')\nprint(json.dumps(receipt,indent=2))\n"
+  },
+  "image_source_execution": {
+    "original_receipt": "/data/ycfeng/tmp/glm53_dsv4/native_capture_graph_image_7xt30mlq/receipt.json",
+    "sha256": "83515e901d4a937dedaf3a368679197e949cbfd28b69f927801c4b098f7a71be",
+    "receipt": {
+      "argv": [
+        "sudo",
+        "-n",
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "--pull=never",
+        "--network=none",
+        "--cap-drop=ALL",
+        "--cap-add=DAC_OVERRIDE",
+        "--memory=6g",
+        "--cpus=2",
+        "--pids-limit=128",
+        "-e",
+        "OPENBLAS_NUM_THREADS=1",
+        "-e",
+        "OMP_NUM_THREADS=1",
+        "-e",
+        "MKL_NUM_THREADS=1",
+        "-e",
+        "TORCH_GRAPH_SOURCE=/usr/local/lib/python3.12/dist-packages/torch/cuda/graphs.py",
+        "-v",
+        "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04:/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04:ro",
+        "--entrypoint",
+        "python3",
+        "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        "-I",
+        "-B",
+        "-"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "stdin_sha256": "7fa010bc990e976c5fe5857a2cabd9512a2b649e865bccc7455d2f3c8a914935",
+      "returncode": 0,
+      "scope": "CPU static-source inspection; sealed package mounted read-only and not imported.",
+      "witness": {
+        "status": "PASS_LOCKED_IMAGE_GRAPH_SOURCE",
+        "python": "3.12.3",
+        "source": "/usr/local/lib/python3.12/dist-packages/torch/cuda/graphs.py",
+        "source_sha256": "15b535903f0832cbfbf83070c663ed899a9fd87b5499befde5087b4c2962ed81",
+        "keep_graph_default": false,
+        "constructor_line": 107,
+        "methods": {
+          "raw_cuda_graph": {
+            "line": 217,
+            "doc": "Returns the underlying cudaGraph_t. ``keep_graph`` must be True.\n\nSee the following for APIs for how to manipulate this object: `Graph Management <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__GRAPH.html>`_ and `cuda-python Graph Management bindings <https://nvidia.github.io/cuda-python/cuda-bindings/latest/module/runtime.html#graph-management>`_",
+            "source": "def raw_cuda_graph(self) -> int:\n        r\"\"\"Returns the underlying cudaGraph_t. ``keep_graph`` must be True.\n\n        See the following for APIs for how to manipulate this object: `Graph Management <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__GRAPH.html>`_ and `cuda-python Graph Management bindings <https://nvidia.github.io/cuda-python/cuda-bindings/latest/module/runtime.html#graph-management>`_\n        \"\"\"\n        return super().raw_cuda_graph()"
+          },
+          "raw_cuda_graph_exec": {
+            "line": 224,
+            "doc": "Returns the underlying cudaGraphExec_t. ``instantiate`` must have been called if ``keep_graph`` is True, or ``capture_end`` must have been called if ``keep_graph`` is False. If you call ``instantiate()`` after ``raw_cuda_graph_exec()``, the previously returned cudaGraphExec_t will be destroyed. It is your responsibility not to use this object after destruction.\n\nSee the following for APIs for how to manipulate this object: `Graph Execution <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__GRAPH__EXEC.html>`_ and `cuda-python Graph Execution bindings <https://nvidia.github.io/cuda-python/cuda-bindings/latest/module/runtime.html#graph-execution>`_",
+            "source": "def raw_cuda_graph_exec(self) -> int:\n        r\"\"\"Returns the underlying cudaGraphExec_t. ``instantiate`` must have been called if ``keep_graph`` is True, or ``capture_end`` must have been called if ``keep_graph`` is False. If you call ``instantiate()`` after ``raw_cuda_graph_exec()``, the previously returned cudaGraphExec_t will be destroyed. It is your responsibility not to use this object after destruction.\n\n        See the following for APIs for how to manipulate this object: `Graph Execution <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__GRAPH__EXEC.html>`_ and `cuda-python Graph Execution bindings <https://nvidia.github.io/cuda-python/cuda-bindings/latest/module/runtime.html#graph-execution>`_\n        \"\"\"\n        return super().raw_cuda_graph_exec()"
+          }
+        },
+        "torch_vllm_imported": false,
+        "scope": "Static installed source only; no CUDA graph allocation, capture, callback subscription or handle-lifetime execution."
+      },
+      "status": "PASS"
+    }
+  },
+  "review": {
+    "task": "W128-NATIVE-CAPTURE-PREREQUISITE-REVIEW",
+    "session": "ses_e9280cb35ffeiJS7PwP8sKRM1Z",
+    "verdict": "NO_FINDINGS",
+    "receipt_read_gap": "CLOSED",
+    "scope": "Static whole report/readable census; no execution/rehash. Original inaccessible receipt and root EACCES preserved."
+  },
+  "report_post_review_change": "Only added readable evidence links/history and clarified PIECEWISE eager attention separately from graph-replayed kernels.",
+  "limitations": [
+    "One retained profile02 decode rank0 startup artifact; flags overlap and all stream-capture graph_mode values are None, not FULL-only.",
+    "Positive scope entries do not prove node correspondence or completeness.",
+    "Exact-image keep_graph=False/source/exec API contracts are AST/docstrings only; no runtime lifetime execution.",
+    "Live callback thread/TLS freshness and source-to-clone-to-exec-to-kernel ownership are UNKNOWN.",
+    "Old9-node tiny probe remains independently limited; no cross-run join to native evidence.",
+    "No implementation/resource allocation or additional GPU run selected by this prerequisite acceptance."
+  ]
+}

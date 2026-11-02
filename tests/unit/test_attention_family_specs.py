@@ -121,14 +121,22 @@ def test_mla_family_lists_exact_physical_ops_and_projection_ownership() -> None:
     )
 
 
-def test_dsa_family_is_frozen_and_has_no_enabled_operator_targets() -> None:
+def test_dsa_family_enables_measured_execution_and_declares_structural_scopes() -> None:
     family = DSA_ATTENTION_FAMILY
 
     assert family.family_id == "dsa_attention"
-    assert family.dsa_frozen is True
-    assert family.operators == ()
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        family.require_enabled_for_execution()
+    assert family.dsa_frozen is False
+    assert family.execution_enabled is True
+    assert family.structural_execution_enabled is True
+    assert tuple(op.name for op in family.operators) == (
+        "attn_dsa_indexer", "attn_dsa_mla",
+    )
+    assert tuple(op.execution_time_attr for op in family.operators) == (
+        "attn_dsa_indexer_time", "attn_dsa_mla_time",
+    )
+    assert family.kv_cache_capacity_resolver is not None
+    family.require_enabled_for_execution(structural=True)
+    family.require_enabled_for_execution()
 
 
 def test_family_lookup_rejects_unknown_family_without_fallback() -> None:
@@ -520,7 +528,7 @@ def test_predictor_metric_name_lookup_supports_mla_kernel_roles_and_keeps_dsa_ga
             AttentionOperatorRole.PROJECTION,
         )
 
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
+    with pytest.raises(ValueError, match="Expected exactly one predictor operator"):
         profiling_mapping.get_enabled_predictor_metric_name_by_role(
             DSA_ATTENTION_FAMILY,
             AttentionOperatorRole.DECODE_KERNEL,
@@ -743,14 +751,17 @@ def test_mla_shared_predictor_feature_columns_use_same_imported_schema_contract(
     ) == expected_features
 
 
-def test_dsa_enabled_predictor_feature_columns_remain_frozen() -> None:
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        get_enabled_predictor_feature_columns(DSA_ATTENTION_FAMILY)
+def test_dsa_enabled_predictor_feature_columns_use_causal_and_selected_work() -> None:
+    from frontier.attention.dsa_features import dsa_predictor_feature_columns
+
+    assert get_enabled_predictor_feature_columns(DSA_ATTENTION_FAMILY) == dsa_predictor_feature_columns()
 
 
-def test_dsa_enabled_predictor_required_feature_columns_remain_frozen() -> None:
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        get_enabled_predictor_required_feature_columns(DSA_ATTENTION_FAMILY)
+def test_dsa_enabled_predictor_required_feature_columns_use_causal_and_selected_work() -> None:
+    assert set(get_enabled_predictor_required_feature_columns(DSA_ATTENTION_FAMILY)) == {
+        "num_query_tokens", "sum_key_len", "sum_causal_key_pairs",
+        "sum_selected_key_len", "sum_selected_causal_key_pairs",
+    }
 
 
 def test_catalog_alignment_fails_fast_when_a_metric_catalog_is_missing_family_op() -> None:
@@ -902,12 +913,12 @@ def test_attention_profiling_feature_schema_rejects_invalid_measurement_type() -
         )
 
 
-def test_attention_profiling_feature_schema_keeps_dsa_frozen() -> None:
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        profiling_mapping.get_attention_profiling_feature_schema(
-            DSA_ATTENTION_FAMILY,
-            measurement_type=MeasurementType.CUDA_EVENT,
-        )
+def test_attention_profiling_feature_schema_declares_dsa_lists() -> None:
+    schema = profiling_mapping.get_attention_profiling_feature_schema(
+        DSA_ATTENTION_FAMILY, measurement_type=MeasurementType.CUDA_EVENT,
+    )
+    assert "prefill_seq_lens" in schema.required_columns
+    assert "sum_selected_causal_key_pairs" in schema.predictor_feature_columns
 
 
 def test_profiling_schema_validation_accepts_both_measurement_families() -> None:
@@ -947,5 +958,4 @@ def test_profiling_schema_validation_rejects_missing_columns_and_frozen_dsa() ->
             LATENT_MLA_ATTENTION_FAMILY,
         )
 
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        get_required_profiling_columns(DSA_ATTENTION_FAMILY)
+    assert "time_stats.attn_dsa_mla.median" in get_required_profiling_columns(DSA_ATTENTION_FAMILY)

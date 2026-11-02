@@ -1,0 +1,28 @@
+{
+  "task_id": "W128-V4-MOE-PACKAGE",
+  "builder_commit": "737b631191542202c42b32c0c4a225058021ff92",
+  "base_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+  "maintained_non_core_files": 2,
+  "numstat": "153\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/moe/build_package.py\n51\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/moe/profile_plan.json\n",
+  "maintained_gross_lines": 204,
+  "budget_gross_lines": 300,
+  "generated_package_files_including_manifest": 1004,
+  "generated_package_bytes": 23680569,
+  "manifest_sha256": "2ce8333148675cbec721c7f0f9710f70c1b031032be971ffcf7b1e754a1377f4",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01",
+  "sealed": false,
+  "submitted": false,
+  "source_and_config_match_generated_inputs": true,
+  "separately_counted_records_commit_numstat": {
+    "generated_package": {
+      "files": 1004,
+      "gross_text_lines": 281898,
+      "binary_files": 3
+    },
+    "records": {
+      "files": 13,
+      "gross_text_lines": 956,
+      "binary_files": 0
+    }
+  }
+}

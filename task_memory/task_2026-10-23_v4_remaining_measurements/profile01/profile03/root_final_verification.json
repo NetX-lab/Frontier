@@ -1,0 +1,780 @@
+{
+  "status": "PASS_PHASE_RECORDS_AND_IMMUTABLE_INPUTS",
+  "observed_at_utc": "2026-10-24T06:33:39.338442+00:00",
+  "checks": [
+    {
+      "name": "sealed manifest identity",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/engine.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/frontier.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/native_config.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/trace/SHA256SUMS",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/trace/manifest.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/trace/request_ids.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/trace/trace.csv",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/inputs/trace/warmup_pool.csv",
+      "pass": true
+    },
+    {
+      "name": "live frozen input case/manifest.yaml",
+      "pass": true
+    },
+    {
+      "name": "live frozen input config.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input engine.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input evidence_readiness.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input launch.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input model/config.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input model/generation_config.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input model/tokenizer.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input model/tokenizer_config.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input native_dummy_bootstrap.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input native_pd_worker.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input overlay.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input overlay_model.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input probe_nixl_read.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input probe_runtime_inventory.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input profile_plan.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input seal.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input serve_observers.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input source_lock.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input submit_native_diagnostic.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/balanced_routing.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/client_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/e2e_metrics_gap.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/native_dummy_initialization.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/native_full_structure.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/native_serve_profile.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/pd_metrics.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/pd_proxy.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/calibration/pd_replay.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/dp_placement_pp/vllm_replay.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input tests/integration/native_extension_startup_probe.py",
+      "pass": true
+    },
+    {
+      "name": "live frozen input trace/SHA256SUMS",
+      "pass": true
+    },
+    {
+      "name": "live frozen input trace/manifest.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input trace/request_ids.json",
+      "pass": true
+    },
+    {
+      "name": "live frozen input trace/trace.csv",
+      "pass": true
+    },
+    {
+      "name": "live frozen input trace/warmup_pool.csv",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/image_stdin.py",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/hook_stdin.py",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/image_entry.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/image_entry.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position0.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position0.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position1.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position1.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position2.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position2.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position3.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/position3.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/image/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/sdk/input.py",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/sdk/stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/sdk/stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/sdk/execution.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/sdk/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/binding/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/prelaunch/read_quota.py",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/prelaunch/quota.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/prelaunch/quota.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/prelaunch/quota.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/prelaunch/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/platform/inspect.py",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/platform/stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/platform/stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/platform/isolated.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/platform/isolated.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/platform/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/affinity_cpu/read_affinity.py",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/affinity_cpu/stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/affinity_cpu/stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/affinity_cpu/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/placement/read_placement.py",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/placement/stdout.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/placement/stderr.log",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence root_checks/placement/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence execution/launcher_started.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence execution/run_manifest.json",
+      "pass": true
+    },
+    {
+      "name": "archived root evidence execution/sealed_inputs.json",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/hook_stdin.py",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/image_entry.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/image_entry.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/image_stdin.py",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position0.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position0.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position1.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position1.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position2.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position2.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position3.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position3.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/execution.json",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/input.py",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/stderr.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/stdout.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/binding/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/quota.json",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/quota.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/quota.stdout.log",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/read_quota.py",
+      "pass": true
+    },
+    {
+      "name": "seal check unchanged task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "scoped graph acceptance",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/raw/probe/probe_report.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/raw/probe/replay_trace.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/execution.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/binding/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/quota.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/platform/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/affinity_cpu/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/placement/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/execution/launcher_started.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/execution/run_manifest.json",
+      "pass": true
+    },
+    {
+      "name": "valid JSON task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/execution/sealed_inputs.json",
+      "pass": true
+    },
+    {
+      "name": "only expected maintained docs dirty",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md -> progress.md",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md -> progress.md",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md -> ../progress.md",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md -> ../../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md -> ../progress.md",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/root_verification.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/results/data_audit.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md -> ../task_2026-10-23_v4_remaining_measurements/profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md -> ../task_2026-10-23_v4_remaining_measurements/progress.md",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-23_v4_remaining_measurements/plan.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/plan.md -> profile01/profile03_design.md",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-23_v4_remaining_measurements/progress.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/progress.md -> profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/progress.md -> profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/progress.md -> profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/progress.md -> profile01/profile03/root_checks/placement/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/progress.md -> profile01/profile03/root_checks/affinity_cpu/receipt.json",
+      "pass": true
+    },
+    {
+      "name": "history task_memory/task_2026-10-23_v4_remaining_measurements/summary.md",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/summary.md -> profile01/graph_probe/results/primary_acceptance.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/summary.md -> profile01/graph_probe/results/root_verification.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/summary.md -> profile01/graph_probe/results/data_audit.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/summary.md -> profile01/profile03/root_seal.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/summary.md -> profile01/profile03/root_submission.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/summary.md -> profile01/profile03/platform_launch.json",
+      "pass": true
+    },
+    {
+      "name": "new link task_memory/task_2026-10-23_v4_remaining_measurements/summary.md -> progress.md",
+      "pass": true
+    },
+    {
+      "name": "requirements checked before phase handoff",
+      "pass": true
+    },
+    {
+      "name": "launcher preserved",
+      "pass": true
+    }
+  ],
+  "count": 193,
+  "limits": "No GPU workload/data acceptance; Starting/no assigned nodes is the latest explicit placement snapshot."
+}

@@ -14,6 +14,7 @@ from predictor_cache_fixtures import (
 from frontier.entities.execution_time import ExecutionTime
 
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
+    CommunicationTime,
     SklearnDisaggregationExecutionTimePredictor,
 )
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
@@ -196,7 +197,7 @@ def _install_non_dummy_lookup_spies(predictor: object) -> list[str]:
     )
     predictor._get_communication_time = lambda *_args, **_kwargs: (
         calls.append("communication_lookup")
-        or SimpleNamespace(tensor_parallel_time=0.0, pipeline_parallel_time=0.0)
+        or CommunicationTime()
     )
     predictor._get_overhead_time = lambda *_args, **_kwargs: (
         calls.append("overhead_lookup") or SimpleNamespace(
@@ -684,7 +685,7 @@ def test_disaggregation_aggregate_non_dummy_propagates_active_role_topology() ->
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
     predictor._emit_cuda_graph_activation_records = lambda *_args: None
-    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
+    predictor._get_communication_time = lambda *_args, **_kwargs: CommunicationTime(
         tensor_parallel_time=0.0,
         pipeline_parallel_time=0.0,
     )

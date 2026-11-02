@@ -8,7 +8,32 @@ UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH = "uniform_topk"
 SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {
     STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
     UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
+    "grouped_topk_sigmoid",
+    "balanced_topk",
 }
+
+# Only classified producer backends may change the standalone shuffle charge.
+MOE_BACKEND_FUSES_PERMUTATION = {
+    "FLASHINFER_CUTLASS": True,
+    "MARLIN": False,
+}
+
+
+def moe_permutation_is_fused(df: pd.DataFrame) -> bool:
+    """Return the selected expert rows' permutation ownership."""
+
+    if "moe_native_backend" not in df.columns:
+        return False
+    backends = set(df["moe_native_backend"].dropna().astype(str))
+    unknown = backends - MOE_BACKEND_FUSES_PERMUTATION.keys()
+    if unknown:
+        raise ValueError(f"Unclassified moe_native_backend values: {sorted(unknown)}")
+    fused = {MOE_BACKEND_FUSES_PERMUTATION[name] for name in backends}
+    if df["moe_native_backend"].isna().any():
+        fused.add(False)
+    if len(fused) != 1:
+        raise ValueError("MoE rows mix fused and standalone permutation measurements")
+    return fused.pop()
 
 
 def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str:
@@ -23,8 +48,18 @@ def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str
 
 def resolve_moe_gating_routing_runtime_path(
     moe_routing_distribution_type: str,
+    architecture_profile=None,
+    requested_runtime_path: str | None = None,
 ) -> str:
-    """Map the canonical routing distribution to profiling runtime metadata."""
+    """Use the model's router kernel independently of the workload distribution."""
+    if requested_runtime_path is not None:
+        path = validate_moe_gating_routing_runtime_path(requested_runtime_path)
+        if path == "balanced_topk" and str(moe_routing_distribution_type).strip().lower() != "balanced":
+            raise ValueError("balanced_topk requires moe_routing_distribution_type='balanced'")
+        return path
+    if architecture_profile is not None and architecture_profile.moe_gating_routing_runtime_path:
+        return validate_moe_gating_routing_runtime_path(
+            architecture_profile.moe_gating_routing_runtime_path)
     normalized_distribution = str(moe_routing_distribution_type).strip().lower()
     if normalized_distribution in {"balanced", "skewed", "zipf"}:
         return STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH

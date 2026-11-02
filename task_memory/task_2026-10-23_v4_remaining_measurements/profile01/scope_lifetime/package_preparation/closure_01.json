@@ -1,0 +1,22 @@
+{
+  "status": "PASS_STATIC_OFFICIAL_CLOSURE",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "generation_invocations": 1,
+  "input_count": 18,
+  "total_files": 19,
+  "total_bytes": 184495,
+  "source_sha256": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "source_lock_sha256": "cd6db51a0423a2b4cbb97a97db0f2954e2fdc090086da3eed1b85bf8d5e52f4b",
+  "original_input_count": 67,
+  "source_bindings": 7,
+  "runtime_modules": 13,
+  "sealed_profile04_inputs": 45,
+  "matrix_cases": 77,
+  "scratch_launcher_identical": true,
+  "scratch_config_and_argv_equal_after_path_relocation": true,
+  "original_inputs_unchanged": true,
+  "sealed": false,
+  "submitted": false,
+  "limits": "Static byte/hash/equality checks only; no additional CPU imports/argv invocation, image/SDK/GPU execution or seal."
+}

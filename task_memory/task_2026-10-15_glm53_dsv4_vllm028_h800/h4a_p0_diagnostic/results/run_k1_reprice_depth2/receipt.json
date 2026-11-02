@@ -1,0 +1,94 @@
+{
+ "status": "FINISHED",
+ "label": "DIAGNOSTIC",
+ "case": "native06",
+ "source_commit": "6dff75472d5ce0ca8673c33650b827824550737b",
+ "source_dirty_paths": [],
+ "input": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/case/inputs/frontier.json",
+ "input_sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+ "step_cost_table": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4b_d_side_model/k1_reprice/native06/dsv4_step_cost.json",
+ "step_cost_table_sha256": "2c8f83084d23d3ae77af00ab86f605b58cf3f4dca4c1fd4ed3a36c1bceac8382",
+ "python": "3.10.6",
+ "added_fields": {
+  "analytical_kv_cache_transfer_config_nixl_read_completion": "transfer_end",
+  "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": null
+ },
+ "override_diff": {
+  "vllm_v1_scheduler_config_num_blocks_mode": {
+   "input": "memory_planner_profiled",
+   "h4a4": "explicit"
+  },
+  "replica_config_attention_backend": {
+   "input": null,
+   "h4a4": "FLASHMLA_SPARSE_DSV4"
+  },
+  "replica_config_kv_cache_dtype": {
+   "input": null,
+   "h4a4": "fp8"
+  },
+  "replica_config_indexer_kv_cache_dtype": {
+   "input": null,
+   "h4a4": "fp8"
+  },
+  "metrics_config_store_frontier_stage_batch_ledger": {
+   "input": true,
+   "h4a4": false
+  },
+  "decode_cuda_graph_mode": {
+   "input": "full_decode_only",
+   "h4a4": "none"
+  },
+  "vllm_v1_scheduler_config_num_blocks": {
+   "input": 0,
+   "h4a4": 54740
+  },
+  "metrics_config_output_dir": {
+   "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/metrics",
+   "h4a4": "/data/ycfeng/tmp/glm53_dsv4/h4b_k1/diag/native06_k1d2/metrics"
+  },
+  "metrics_config_cache_dir": {
+   "input": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_frontier06/cache",
+   "h4a4": "/data/ycfeng/tmp/glm53_dsv4/h4b_k1/diag/native06_k1d2/cache"
+  },
+  "metrics_config_run_id": {
+   "input": "v4_balanced_native06",
+   "h4a4": "h4a4_native06_step_cost"
+  },
+  "measured_cc_backend_config_cache_dir": {
+   "input": "/data/ycfeng/tmp/glm53_dsv4/frontier_p0_probe_20261021/cc_cache",
+   "h4a4": "/data/ycfeng/tmp/glm53_dsv4/h4b_k1/diag/native06_k1d2/cc_cache"
+  },
+  "analytical_kv_cache_transfer_config_nixl_read_completion": {
+   "input": "transfer_end",
+   "h4a4": "engine_step"
+  },
+  "cluster_config_decode_replica_scheduler_config_max_concurrent_batches": {
+   "input": null,
+   "h4a4": 2
+  },
+  "random_forrest_execution_time_predictor_config_atten_input_file": {
+   "input": "./data/profiling/compute/{DEVICE}/{MODEL}/attention.csv",
+   "h4a4": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h4b_d_side_model/k1_reprice/native06/attention.csv"
+  }
+ },
+ "kv_admission": {
+  "decode_replica1_lane0": {
+   "num_blocks": 54740,
+   "admission_blocks_at_max_model_len": 2940,
+   "max_concurrency": 18.61904761904762
+  },
+  "decode_replica1_lane1": {
+   "num_blocks": 54740,
+   "admission_blocks_at_max_model_len": 2940,
+   "max_concurrency": 18.61904761904762
+  },
+  "native": 18.59,
+  "native_admission_blocks": [
+   2944,
+   2945
+  ],
+  "status": "DIFFERS"
+ },
+ "run_wall_s": 776.7206130679697,
+ "metrics_dir": "/data/ycfeng/tmp/glm53_dsv4/h4b_k1/diag/native06_k1d2/metrics/deepseek_ai_deepseek_v4_flash/online_serving/h4a4_native06_step_cost"
+}

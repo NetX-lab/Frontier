@@ -1,0 +1,39 @@
+{
+  "gross_new_lines": {
+    "build_package.py": 140,
+    "profile_plan.json": 27,
+    "image_check.py": 78
+  },
+  "total_gross": 245,
+  "caps": {
+    "builder": 155,
+    "plan": 40,
+    "image_check": 80,
+    "total": 275
+  },
+  "generated_launcher": 74,
+  "generated_launcher_cap": 100,
+  "package_categories": {
+    "payload": {
+      "files": 5,
+      "bytes": 129936,
+      "lines": 2513
+    },
+    "generated_launcher": {
+      "files": 1,
+      "bytes": 3801,
+      "lines": 74
+    },
+    "copied_input": {
+      "files": 10,
+      "bytes": 38073,
+      "lines": 655
+    },
+    "generated_json": {
+      "files": 3,
+      "bytes": 12685,
+      "lines": 229
+    }
+  },
+  "limits": "Payload/copy/generated JSON/diff/raw receipts excluded from maintained three-file new gross; Markdown budget recorded separately after final records."
+}

@@ -1,0 +1,39 @@
+{
+  "job_tag": "v4-h800-prefill-balanced-6144-c0-20261023-39b2bf8",
+  "phases": {
+    "PREFILL_WARM_6144_C0_BALANCED": {
+      "copied_files": [
+        "compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+        "compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+        "logs/accepted_c26_prefill.log",
+        "logs/aggregate_prefill.log",
+        "profiler_traces/e0-prefill-p6144.json",
+        "raw/dsv4_aggregate_summary.json",
+        "raw/dsv4_raw_e0.jsonl"
+      ],
+      "seconds": 479.7,
+      "state": "succeeded",
+      "trace_bytes_archived": 7702607,
+      "trace_bytes_left_on_worker": 0
+    }
+  },
+  "runtime": {
+    "cuda_available": true,
+    "device_count": 1,
+    "device_name": "NVIDIA H800",
+    "flashinfer": "0.6.16.post3",
+    "nvidia_smi": [
+      "0, NVIDIA H800, 81559 MiB, 570.124.06"
+    ],
+    "pandas": "2.3.3",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "vllm": "0.28.0"
+  },
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "unpacked_wheels": [
+    "pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+    "pytz-2026.5-py2.py3-none-any.whl",
+    "tzdata-2026.5-py2.py3-none-any.whl"
+  ]
+}

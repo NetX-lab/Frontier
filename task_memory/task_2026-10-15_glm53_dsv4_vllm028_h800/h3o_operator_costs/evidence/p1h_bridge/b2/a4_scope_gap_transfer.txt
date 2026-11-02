@@ -1,0 +1,13 @@
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b1-p256', 'csa') neighbour decode-b4-p2048: calls 16 median 0.004 p90 0.006 signed -0.003
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b1-p256', 'hca') neighbour decode-b4-p2048: calls 16 median 0.004 p90 0.007 signed +0.003
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b1-p256', 'uncompressed') neighbour decode-b4-p2048: calls 16 median 0.007 p90 0.012 signed +0.007
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b4-p2048', 'csa') neighbour decode-b8-p2052: calls 16 median 0.003 p90 0.006 signed +0.001
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b4-p2048', 'hca') neighbour decode-b8-p2052: calls 16 median 0.003 p90 0.007 signed -0.001
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b4-p2048', 'uncompressed') neighbour decode-b8-p2052: calls 16 median 0.003 p90 0.007 signed +0.001
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b8-p2052', 'csa') neighbour decode-b4-p2048: calls 16 median 0.002 p90 0.005 signed +0.001
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b8-p2052', 'hca') neighbour decode-b4-p2048: calls 16 median 0.003 p90 0.007 signed +0.001
+('FULL_AND_PIECEWISE', 'FULL', 'e0-decode-b8-p2052', 'uncompressed') neighbour decode-b4-p2048: calls 16 median 0.003 p90 0.007 signed -0.001
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b4-p2048', 'hca') neighbour decode-b8-p2052: calls 16 median 0.003 p90 0.008 signed -0.000
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b4-p2048', 'uncompressed') neighbour decode-b8-p2052: calls 8 median 0.003 p90 0.005 signed -0.001
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b8-p2052', 'hca') neighbour decode-b4-p2048: calls 16 median 0.003 p90 0.010 signed -0.001
+('PIECEWISE', 'PIECEWISE', 'e0-decode-b8-p2052', 'uncompressed') neighbour decode-b4-p2048: calls 8 median 0.002 p90 0.005 signed +0.002

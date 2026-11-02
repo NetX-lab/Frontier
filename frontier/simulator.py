@@ -27,7 +27,7 @@ from frontier.scheduler.global_scheduler.base_global_scheduler import (
     BaseGlobalScheduler,
 )
 from frontier.types import ClusterType
-from frontier.execution_time_predictor import ExecutionTimePredictorRegistry
+from frontier.execution_time_predictor.execution_time_predictor_registry import ExecutionTimePredictorRegistry
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )

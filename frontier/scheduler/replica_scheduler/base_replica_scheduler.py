@@ -9,7 +9,7 @@ from frontier.config import (
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.errors import FrontierMemoryOOMError
 from frontier.entities import Batch, EPBatchGroup, Replica, Request
-from frontier.execution_time_predictor import BaseExecutionTimePredictor
+from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_stage_scheduler import ReplicaStageScheduler
 from frontier.scheduler.utils.memory_planner import MemoryPlanner
@@ -49,6 +49,7 @@ class BaseReplicaScheduler(ABC):
         self._replica = replica
         self._replica_is_moe = replica.is_moe
         self._num_stages = replica.num_pipeline_stages
+        self._max_concurrent_batches = self._num_stages
         self._predictor = predictor
         self._cluster_type = cluster_type
         self._replica_local_id = replica_local_id
@@ -71,6 +72,12 @@ class BaseReplicaScheduler(ABC):
             # Use the largest scheduler-visible batch cap so automatic planning
             # reserves enough fixed state before any KV admission occurs.
             max_num_seqs=self._admitted_request_capacity,
+        )
+        # Resolve the immutable cache layout once for both explicit and
+        # planner-derived block counts.  The V1 scheduler consumes this exact
+        # object when the model uses grouped cache allocation.
+        self._kv_cache_capacity = memory_planner._get_component_kv_cache_capacity(
+            int(self._config.block_size)
         )
 
         num_blocks_mode = getattr(self._config, "num_blocks_mode", "memory_planner")
@@ -265,6 +272,14 @@ class BaseReplicaScheduler(ABC):
         scheduler_type = (
             self._config.get_type() if hasattr(self._config, "get_type") else None
         )
+        if (
+            self._kv_cache_capacity is not None
+            and self._kv_cache_capacity.is_grouped
+            and scheduler_type != ReplicaSchedulerType.VLLM_V1
+        ):
+            raise NotImplementedError(
+                "Grouped KV cache allocation initially requires the vllm_v1 scheduler"
+            )
         if scheduler_type in {
             ReplicaSchedulerType.VLLM_V1,
             ReplicaSchedulerType.SGLANG,
@@ -275,8 +290,16 @@ class BaseReplicaScheduler(ABC):
             watermark_blocks = int(
                 self._config.watermark_blocks_fraction * self._config.num_blocks
             )
+            reserved_blocks = int(
+                self._kv_cache_capacity.reserved_blocks
+                if self._kv_cache_capacity is not None
+                and self._kv_cache_capacity.is_grouped
+                else 0
+            )
             minimum_chunk_blocks = 1
-            minimum_required_total_blocks = watermark_blocks + minimum_chunk_blocks
+            minimum_required_total_blocks = (
+                reserved_blocks + watermark_blocks + minimum_chunk_blocks
+            )
             if int(self._config.num_blocks) < minimum_required_total_blocks:
                 raise FrontierMemoryOOMError(
                     "Derived KV cache budget cannot admit even a single block-sized chunk under the current watermark policy.",
@@ -289,6 +312,7 @@ class BaseReplicaScheduler(ABC):
                         ),
                         "total_blocks": int(self._config.num_blocks),
                         "watermark_blocks": watermark_blocks,
+                        "reserved_blocks": reserved_blocks,
                         "minimum_chunk_blocks": minimum_chunk_blocks,
                         "minimum_required_total_blocks": minimum_required_total_blocks,
                         "block_size": int(self._config.block_size),
@@ -477,6 +501,7 @@ class BaseReplicaScheduler(ABC):
         requests: List[Request],
         num_tokens: List[int],
         num_context_tokens: Optional[List[int]] = None,
+        num_output_placeholders: Optional[List[int]] = None,
     ) -> Batch:
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name if self._cluster_type else None)
@@ -487,6 +512,7 @@ class BaseReplicaScheduler(ABC):
             num_tokens,
             is_moe=self._replica_is_moe,
             num_context_tokens=num_context_tokens,
+            num_output_placeholders=num_output_placeholders,
         )
         self._assign_lane_identity(batch, self._batch_creation_counter)
         self._batch_creation_counter += 1
@@ -546,6 +572,12 @@ class BaseReplicaScheduler(ABC):
             return (
                 self._activation_bytes_allocated * 100
             ) / self._activation_memory_capacity_bytes
+        kv_cache_manager = getattr(self, "_kv_cache_manager", None)
+        if (
+            kv_cache_manager is not None
+            and kv_cache_manager.cache_capacity is not None
+        ):
+            return kv_cache_manager.usage * 100
         return (self._num_allocated_blocks * 100) / self._config.num_blocks
 
     @property
@@ -915,7 +947,7 @@ class BaseReplicaScheduler(ABC):
             # and different from the DP synchronization which happens at MoE layers
             scheduled_request_ids = set()
             self._continuation_request_ids = scheduled_request_ids
-            while self._num_running_batches < self._num_stages:
+            while self._num_running_batches < self._max_concurrent_batches:
                 batch = self._get_next_batch(is_micro_batch=False)
                 if not batch:
                     break
@@ -928,6 +960,10 @@ class BaseReplicaScheduler(ABC):
                 self._continuation_request_ids = scheduled_request_ids
                 scheduled_batches.append(batch)
                 self._num_running_batches += 1
+
+                self._cluster_scheduler.on_replica_batch_scheduled(
+                    time, self._replica_id, self._replica_local_id, batch
+                )
 
                 # DEBUG: Enhanced logging for batch scheduling
                 request_ids = [req.id for req in batch.requests] if batch.requests else []
@@ -1068,8 +1104,8 @@ class BaseReplicaScheduler(ABC):
 
             self._num_running_batches += len(scheduled_batches)
         else:
-            # For prefill and monolithic clusters: use original logic based on pipeline stages
-            while self._num_running_batches < self._num_stages:
+            # Prefill and monolithic admission use the engine queue capacity.
+            while self._num_running_batches < self._max_concurrent_batches:
                 batch = self._get_next_batch(is_micro_batch=False)
                 if not batch:
                     break

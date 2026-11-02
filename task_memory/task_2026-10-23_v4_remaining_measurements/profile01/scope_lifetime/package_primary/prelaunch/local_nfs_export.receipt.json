@@ -1,0 +1,11 @@
+{
+  "command": [
+    "cat",
+    "/proc/fs/nfsd/exports"
+  ],
+  "start_utc": "2026-10-24T18:05:33.642620+00:00",
+  "end_utc": "2026-10-24T18:05:33.645816+00:00",
+  "exit": 0,
+  "stdout": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/local_nfs_export.stdout",
+  "stderr": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/local_nfs_export.stderr"
+}

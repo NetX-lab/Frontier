@@ -1,0 +1,11 @@
+{
+  "passed": [
+    "explicit override and register before CLI",
+    "missing selector rejected",
+    "wrong selector rejected",
+    "wrong strategy hash rejected",
+    "winning same-name package rejected before import"
+  ],
+  "count": 5,
+  "hardware_qualification": false
+}

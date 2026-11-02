@@ -1,0 +1,40 @@
+{
+  "status": "LAUNCHER_STARTED",
+  "start_utc": "2026-10-24T05:44:43.482872+00:00",
+  "pid": 3103656,
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/launch.py",
+    "--launch"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/graph_payload01_launch_20261024.log",
+  "seal_sha256": "3226e380175e5b573e30d2367b7be3130725b70e6e12a98177929e5c1985f2ca",
+  "manifest_sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+  "authorization": "D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY",
+  "resources": {
+    "gpu": 1,
+    "replica": 1,
+    "cpu": 16,
+    "mem_gb": 64,
+    "preemptible": false,
+    "positive_tags": [
+      "H800"
+    ],
+    "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "mounts": [
+      "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "custom_resources": [
+      "mellanox.com/mlnx_rdma:1",
+      "rdma/mlnx_shared:8"
+    ],
+    "restart_on": null
+  },
+  "nfs_ip": "100.96.128.195",
+  "cloud_run_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/graph_payload_probe/1aa1e4a5_h800_20261024_01",
+  "attempt": 1,
+  "attempt_ceiling": 1
+}

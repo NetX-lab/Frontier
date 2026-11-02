@@ -169,9 +169,11 @@ class SimulationConfig(ABC):
         default="none",
         metadata={
             "help": "Decode CUDA Graph mode for co-location and pd-disaggregation. "
-            "Use full_decode_only to pad pure decode batches only, and piecewise "
-            "to model segmented CUDA graphs with eager attention.",
-            "choices": ["none", "full_decode_only", "piecewise"],
+            "Use full_decode_only to pad pure decode batches only, piecewise "
+            "to model segmented CUDA graphs with eager attention, and "
+            "full_and_piecewise for the vLLM V2 runner's FULL_AND_PIECEWISE "
+            "dispatch synchronized across DP lanes (DeepSeek V4 only).",
+            "choices": ["none", "full_decode_only", "piecewise", "full_and_piecewise"],
         },
     )
     allow_spec_decode_cuda_graph_diagnostic: bool = field(
@@ -618,12 +620,30 @@ class SimulationConfig(ABC):
             )
 
     def _validate_cuda_graph_config(self) -> None:
-        valid_decode_cuda_graph_modes = {"none", "full_decode_only", "piecewise"}
+        valid_decode_cuda_graph_modes = {
+            "none",
+            "full_decode_only",
+            "piecewise",
+            "full_and_piecewise",
+        }
         if self.decode_cuda_graph_mode not in valid_decode_cuda_graph_modes:
             raise ValueError(
                 "decode_cuda_graph_mode must be one of "
                 f"{sorted(valid_decode_cuda_graph_modes)}, got={self.decode_cuda_graph_mode!r}"
             )
+        if self.decode_cuda_graph_mode == "full_and_piecewise":
+            model_config = self._get_model_config_for_is_moe()
+            profile_id = model_config.get_model_architecture_profile().profile_id
+            if profile_id != "deepseek_v4":
+                raise ValueError(
+                    "decode_cuda_graph_mode='full_and_piecewise' is qualified for the "
+                    f"deepseek_v4 architecture profile only, got profile {profile_id!r}."
+                )
+            if self.cudagraph_capture_sizes is None:
+                raise ValueError(
+                    "decode_cuda_graph_mode='full_and_piecewise' requires explicit "
+                    "cudagraph_capture_sizes matching the vLLM deployment's captured sizes."
+                )
 
         speculative_replica_configs = [
             getattr(self.cluster_config, "replica_config", None),
@@ -643,6 +663,11 @@ class SimulationConfig(ABC):
             for replica_config in speculative_replica_configs
             if replica_config is not None
         )
+        if spec_decode_enabled and self.decode_cuda_graph_mode == "full_and_piecewise":
+            raise ValueError(
+                "decode_cuda_graph_mode='full_and_piecewise' models decode query length 1; "
+                "speculative decoding is not supported under it."
+            )
         if (
             spec_decode_enabled
             and self.decode_cuda_graph_mode != "none"

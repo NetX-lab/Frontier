@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py"
+  ],
+  "source_pins": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py",
+      "sha256": "d867c9e15a05ae581cb592a24ea0e309d2f26d04f610de094c00f97f6f1a2c14"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb",
+      "sha256": "4d0b05a1c1aa4125d5e8faf93da0dbd0f8955e83a75446f88aff6eb0707217b3"
+    }
+  ]
+}

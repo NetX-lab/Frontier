@@ -1,0 +1,70 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "recorded_utc": "2026-10-24T20:16:23.646616+00:00",
+  "authority": [
+    "D-V4-CONTINUE-FRESH-GATES",
+    "D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY"
+  ],
+  "primary_head": "2fbd5af68cfb6356001f7ec33ccad0b9769d4dbf",
+  "evidence": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/diagnostic_analysis.json",
+    "sha256": "335de2bea27c912fa66ba77863fcf4d79811aa5be9ebe4e4fa85f6f098fa1a46",
+    "construction_lower_bound_seconds": 3.3523553525954455,
+    "construction_gen2_seconds": 2.1812477707862854,
+    "memberships": 5331778,
+    "events": 1215919,
+    "groups": 240,
+    "sort_or_union_reached": false
+  },
+  "source_owner": "Hooke",
+  "source_paths": [
+    "tests/analysis/v4_trace_audit_group_metrics.py",
+    "tests/unit/test_v4_trace_audit_group_metrics.py"
+  ],
+  "source_gross_cap": 220,
+  "test_gross_cap": 200,
+  "owner_records": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner",
+  "owner_markdown_gross_cap": 100,
+  "algorithm": "One global stable (ts, ts+dur) order and numeric event-order positions; sort each existing group by integer positions, preserve original-order count/sum and exact per-group union recurrence. Avoid per-event mutable membership/state lists and eager default-list allocations. Keep all duplicate memberships.",
+  "gain": "Target measured allocation/GC cost of 5,331,778 membership insertions without changing audit fields or GC policy. Full speed improvement is not yet measured.",
+  "alternative_not_selected": "Compact numeric membership offsets require two construction passes and more source for the same allocation target; not implemented.",
+  "frozen_adapter_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+  "frozen_adapter_sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+  "owner_unit_invocation_ceiling": 1,
+  "primary_unit_invocation_ceiling": 1,
+  "complete_control_invocation_ceiling": 2,
+  "complete_controls": [
+    {
+      "role": "decode",
+      "lane": 1,
+      "rank": 0,
+      "attempt_ceiling": 1
+    },
+    {
+      "role": "prefill",
+      "lane": 1,
+      "rank": 0,
+      "attempt_ceiling": 1
+    }
+  ],
+  "affected_invocation_ceiling": 8,
+  "affected_rank_attempt_ceiling": 1,
+  "affected_pilot_rank": 0,
+  "remaining_seven_precondition": "Fresh complete P0rank0 final JSON, exact identity/fields/index and >=3 useful steps; primary acceptance required.",
+  "timeout_seconds": 60,
+  "actual_memory_limit_bytes": 32212254720,
+  "max_rank_concurrency": 2,
+  "automatic_retry": false,
+  "primary_scope": "New command receipts/control and affected allocations, exact complete-output checks, independent Spec/Standards reviews, final acceptance and commits.",
+  "controls_required": "Every non-clock JSON field, count/sum/union/hierarchy/leaf/per-stream and decompressed kernel index exactly equal to the retained completed outputs; preserve float hex and duplicate memberships.",
+  "forbidden": [
+    "Frozen auditor/reader/accepted adapter/timer/stage/loading-GC edits",
+    "Raw inputs, original outputs, sealed runtime/package or native/C26 changes",
+    "Timeout/memory increase, skipped events, changed attribution or raw-ID mapping",
+    "Spent drivers/tiny/full controls rerun or import",
+    "GPU/platform/network operations or publication",
+    "Native ownership/dependency/cost/reference admission"
+  ],
+  "scratch_controls": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01",
+  "scratch_affected": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01"
+}

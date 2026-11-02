@@ -1,0 +1,17 @@
+compared 77 complete True identical 0 mismatched 77
+difference kinds {('config.json', 'content', '/kv_cache_transfer_config/nixl_read_completion: missing in baseline'): 77}
+one difference per case True
+baseline_failures = []
+candidate_only_failures = []
+cases_missing_from_one_side = []
+cases_not_compared = []
+cases_not_compared_without_explanation = []
+cases_with_differing_definitions = []
+cases_with_missing_evidence = []
+cases_absent_from_both_sides = []
+predictor_cache_compared = True
+predictor_cache_files_only_in_baseline = []
+predictor_cache_files_only_in_candidate = []
+predictor_cache_findings = []
+predictor_cache_populated_cleanly = True
+identical []

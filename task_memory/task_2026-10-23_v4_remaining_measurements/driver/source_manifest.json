@@ -1,0 +1,24 @@
+{
+  "status": "CPU_CHECKED_REVIEW_PENDING",
+  "baseline": "313c8167af0289d058b625bda19282e851b950cf",
+  "diff_command": "git diff 313c8167 -- tests/comparison/calibration/native_pd_worker.py tests/comparison/calibration/native_serve_profile.py tests/comparison/calibration/pd_replay.py tests/unit/test_native_pd_worker.py tests/unit/test_native_serve_profile.py tests/unit/test_native_streaming_replay.py",
+  "commits_since_baseline": [],
+  "source_files": {
+    "tests/comparison/calibration/native_pd_worker.py": "ed52696f4672ad55658a143cb5a0491322a2794d93523a1eb202d7dada82ea20",
+    "tests/comparison/calibration/native_serve_profile.py": "76c5d137b392fd2ab2ee26e44e496015250a078cb48e4783939ebdf7ce2ef693",
+    "tests/comparison/calibration/pd_replay.py": "790e8d45d66803dea9bdafdd901ee480bd0aaaeb8c501d319506858c7a5159c9",
+    "tests/unit/test_native_pd_worker.py": "f8b19cb477f645f44941d7e9cf424011a9151491e8cd89c8b3cdacaf171c02c3",
+    "tests/unit/test_native_serve_profile.py": "5a04a9e3c7a7d37b10532d7e1567972c0bcf93730724fb241cb48c01d6b76b6a",
+    "tests/unit/test_native_streaming_replay.py": "90c7e612309a5b8d43e689825a15d804bb322a233f58bbea76e07989744290ba"
+  },
+  "changed_lines": {
+    "tests/comparison/calibration/native_pd_worker.py": 4,
+    "tests/comparison/calibration/native_serve_profile.py": 51,
+    "tests/comparison/calibration/pd_replay.py": 98,
+    "tests/unit/test_native_pd_worker.py": 14,
+    "tests/unit/test_native_serve_profile.py": 100,
+    "tests/unit/test_native_streaming_replay.py": 114
+  },
+  "total_changed_lines": 381,
+  "diff_sha256": "34372281a52dbe67ea9cb045a735d20679b4e9ed9f08cdc0e95d143ee298d3f6"
+}

@@ -1,0 +1,140 @@
+{
+  "Modification History": [
+    {
+      "change": "Rebuilt original real data CSVs with unchanged sealed CLI and existing local Python3.12 plus pinned retained pandas wheel.",
+      "date": "2026-10-23"
+    }
+  ],
+  "collected_originals_modified": false,
+  "command": {
+    "argv": [
+      "/data/ycfeng/envs/asyncopd-py312/bin/python",
+      "-m",
+      "frontier.profiling.attention.dsv4_attention_main",
+      "aggregate",
+      "--model_name",
+      "deepseek-ai/DeepSeek-V4-Flash",
+      "--model_config_path",
+      "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/model/config.json",
+      "--target_tensor_parallel_size",
+      "8",
+      "--num_layers",
+      "6",
+      "--block_size",
+      "256",
+      "--kv_cache_dtype",
+      "fp8",
+      "--max_context_len",
+      "7168",
+      "--max_kv_tokens_per_lane",
+      "7168",
+      "--max_num_seqs",
+      "128",
+      "--chunk_budgets",
+      "8192",
+      "--prefill_prompt_len",
+      "6144",
+      "--prefill_warmup_repeats",
+      "2",
+      "--prefill_measured_repeats",
+      "3",
+      "--raw_dir",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/raw",
+      "--output_root",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/out",
+      "--device",
+      "h800",
+      "--source_revision",
+      "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+      "--model_config_revision",
+      "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/source/39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/source/39b2bf8088dff40dc8b695b6927d6e6322c337e9:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/wheel_site",
+      "TMPDIR": "/data/ycfeng/tmp"
+    },
+    "returncode": 0,
+    "stderr": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/stderr.log",
+    "stdout": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/stdout.log",
+    "versions": {
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "pandas_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/wheel_site/pandas/__init__.py",
+      "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]"
+    }
+  },
+  "comparisons": [
+    {
+      "byte_equal": true,
+      "bytes": 43114,
+      "original": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "original_sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f",
+      "rebuilt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "rebuilt_sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f"
+    },
+    {
+      "byte_equal": true,
+      "bytes": 41635,
+      "original": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "original_sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43",
+      "rebuilt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "rebuilt_sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43"
+    }
+  ],
+  "csv_exact_bytes_pass": true,
+  "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+  "original_artifacts": {
+    "PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv": {
+      "bytes": 43114,
+      "sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv": {
+      "bytes": 41635,
+      "sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/logs/accepted_c26_prefill.log": {
+      "bytes": 23136,
+      "sha256": "bb76b180d2c00b95e77f84bb7fe631f90257f2c6c6b1de3091b3411e8d600b82"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/logs/aggregate_prefill.log": {
+      "bytes": 689,
+      "sha256": "f20683afd1279ea54b81b76514c7fe1727f4c24f86eee68ff9e71be295cd120e"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/profiler_traces/e0-prefill-p6144.json": {
+      "bytes": 7702607,
+      "sha256": "990dd2a7a4a4dd9adcd427dd047cb5bb34b65b791563bca7d0d76a3f4f54cdff"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/raw/dsv4_aggregate_summary.json": {
+      "bytes": 2390,
+      "sha256": "38a62d2b1209caa0e209eedde91789766afb09b507c0aa232646c9c2829648ce"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/raw/dsv4_raw_e0.jsonl": {
+      "bytes": 78669,
+      "sha256": "0330db5625e5d7a8b014ffa804d962b1798ddf05222109896c0f79e4fce61ec4"
+    },
+    "status.json": {
+      "bytes": 1208,
+      "sha256": "976182d88ce111639d8fde98acffa90002f8474471950be85aa2bf7c41cd75da"
+    }
+  },
+  "original_total_bytes": 7893448,
+  "package_files_verified": 529,
+  "retained_wheel_pins_used": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/launch/wheelhouse/pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+      "sha256": "b3d11d2fda7eb164ef27ffc14b4fcab16a80e1ce67e9f57e19ec0afaf715ba89"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/launch/wheelhouse/pytz-2026.5-py2.py3-none-any.whl",
+      "sha256": "e658af3757f9e26a9d25dd2aff38335acd92bc9104f890a894b2c1ba28311b03"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/launch/wheelhouse/tzdata-2026.5-py2.py3-none-any.whl",
+      "sha256": "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac"
+    }
+  ],
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "task_id": "W128-V4-BALANCED-PREFILL-RESULTS"
+}

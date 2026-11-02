@@ -1,0 +1,45 @@
+{
+  "status": "PASS_CLOSED_PILOT_EVIDENCE_ARCHIVE",
+  "observed_utc": "2026-10-24T19:53:39.239080+00:00",
+  "files": {
+    "prefill_dp0_rank0.receipt.json": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.receipt.json",
+      "bytes": 5407,
+      "sha256": "d8dbec83670af91d57b57da13e9bb9ff6efbebc5d960bce925b5683e57d4cc1a"
+    },
+    "prefill_dp0_rank0.cgroup.json": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.cgroup.json",
+      "bytes": 1947,
+      "sha256": "d990c4489c16758f5742930db8c9945dd00ae1f741f0effafcf8e9b867863a2b"
+    },
+    "prefill_dp0_rank0.gc.jsonl": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.gc.jsonl",
+      "bytes": 3263,
+      "sha256": "22b917883ca404e659e27d5c06a6d18f4efaa03dfd89ccfac936ced661a448b0"
+    },
+    "prefill_dp0_rank0.hb.log": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.hb.log",
+      "bytes": 10469,
+      "sha256": "f51f4fdd9a80bac51b8af735e4e22758c29751b33c2321748ba6d7cb23a18ee0"
+    },
+    "prefill_dp0_rank0.obs.jsonl": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.obs.jsonl",
+      "bytes": 7227,
+      "sha256": "e8883d242c9b776eeb3a8ef1b5a63cfae0a0158165477ebd69664e5b2715cd5b"
+    },
+    "prefill_dp0_rank0.stderr": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.stderr",
+      "bytes": 67,
+      "sha256": "75b4bbdf55202fcdd7c95d83827b492458e0e2694600e2ef7eb81d480f2b4193"
+    },
+    "prefill_dp0_rank0.stdout": {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "original_index_retained": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/prefill_dp0_rank0.kernels.jsonl.gz",
+  "index_sha256": "1bc09069db679759bce5f40d65c3ddc3c2e975f517ef19e2897bce2eee79f875",
+  "verification": "Exact closed-byte copy only; no full trace/audit/control/index decompression rerun.",
+  "new_full_invocations": 0
+}

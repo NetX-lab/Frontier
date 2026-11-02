@@ -1,0 +1,80 @@
+"""Execute the newly allocated group-metrics P0 ranks once without retry."""
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+REPO = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028")
+RECORDS = REPO / "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary"
+ALLOCATION = RECORDS / "affected_allocation.json"
+PLAN = json.loads(ALLOCATION.read_text())
+ROOT = Path(PLAN["input_root"])
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def execute(rank):
+    prefix = Path(rank["prefix"])
+    bindings = rank["input_bindings"]
+    for kind in ("trace", "profile", "inventory"):
+        path = ROOT / bindings[kind + "_path"]
+        assert path.stat().st_size == bindings[kind + "_bytes"]
+        assert sha(path) == bindings[kind + "_sha256"], str(path)
+    command = PLAN["command_prefix"] + [PLAN["source_path"], bindings["trace_path"], str(prefix)]
+    receipt = {"decision": PLAN["decision"], "key": rank["key"], "attempt": "1/1",
+               "allocation_sha256": sha(ALLOCATION), "adapter_sha256": sha(PLAN["source_path"]),
+               "source_commit": PLAN["source_commit"], "driver_sha256": sha(__file__),
+               "input_bindings": bindings, "command": command, "cwd": str(REPO), "python": sys.version,
+               "start_utc": datetime.now(timezone.utc).isoformat(), "status": "STARTING"}
+    record = prefix.with_suffix(".receipt.json")
+    with record.open("x") as stream:
+        json.dump(receipt, stream, indent=2)
+    started = time.monotonic()
+    with prefix.with_suffix(".stdout").open("x") as output, prefix.with_suffix(".stderr").open("x") as errors:
+        result = subprocess.run(command, cwd=REPO, stdout=output, stderr=errors)
+    receipt.update(returncode=result.returncode, enclosing_seconds=time.monotonic() - started,
+                   end_utc=datetime.now(timezone.utc).isoformat(),
+                   status="EXIT0_AWAITING_COMPLETE_VALIDATION" if result.returncode == 0 else "FAILED")
+    cgroup = prefix.with_suffix(".cgroup.json")
+    receipt["actual_cgroup"] = json.loads(cgroup.read_text())
+    for path in sorted(prefix.parent.glob(prefix.name + ".*")):
+        if path != record:
+            receipt.setdefault("outputs", []).append({"path": str(path), "bytes": path.stat().st_size,
+                                                       "sha256": sha(path)})
+    record.write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps({"key": rank["key"], "returncode": result.returncode,
+                      "seconds": receipt["enclosing_seconds"], "receipt": str(record)}), flush=True)
+    return result.returncode
+
+
+assert sha(PLAN["source_path"]) == PLAN["source_sha256"]
+assert sha(__file__) == PLAN["execution_driver_sha256"]
+assert sha(RECORDS / "source_acceptance.json") == PLAN["source_acceptance_sha256"]
+assert sha(RECORDS / "complete_controls.json") == PLAN["complete_controls_sha256"]
+committed = subprocess.run(["git", "show", PLAN["source_commit"] + ":tests/analysis/v4_trace_audit_group_metrics.py"],
+                           cwd=REPO, capture_output=True, check=True).stdout
+assert committed == Path(PLAN["source_path"]).read_bytes()
+for pin in PLAN["source_pins"]:
+    assert sha(pin["path"]) == pin["expected_sha256"], pin["path"]
+assert sha(PLAN["download_inventory_path"]) == PLAN["download_inventory_sha256"]
+if sys.argv[1] == "pilot":
+    results = [execute(PLAN["ranks"][0])]
+else:
+    assert sys.argv[1] == "remaining"
+    accepted = json.loads((RECORDS / "pilot_acceptance.json").read_text())
+    assert accepted["status"] == "PASS_COMPLETE_P0_PILOT"
+    assert accepted["allocation_sha256"] == sha(ALLOCATION)
+    assert accepted["source_commit"] == PLAN["source_commit"]
+    with ThreadPoolExecutor(max_workers=PLAN["rank_concurrency"]) as pool:
+        results = list(pool.map(execute, PLAN["ranks"][1:]))
+sys.exit(0 if all(code == 0 for code in results) else 1)

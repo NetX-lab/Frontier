@@ -1,0 +1,20 @@
+{
+  "_comment": "Example: recommended MoE operation precisions.",
+  "version": "1.0",
+  "default_precision": "FP16",
+  "profiling_precision": "FP16",
+  "operations": {
+    "moe_gating": {
+      "precision": "FP16",
+      "description": "Keep gating in higher precision for routing accuracy."
+    },
+    "moe_shuffling": {
+      "precision": "FP8",
+      "description": "Shuffling can use lower precision."
+    },
+    "moe_grouped_gemm": {
+      "precision": "FP8",
+      "description": "Grouped GEMM uses FP8 for throughput."
+    }
+  }
+}

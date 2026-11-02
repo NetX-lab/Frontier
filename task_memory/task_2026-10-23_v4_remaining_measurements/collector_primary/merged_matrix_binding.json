@@ -1,0 +1,35 @@
+{
+  "status": "H_MERGED_DEFAULT_MATRIX_GATE_PASS_BY_EXPLICIT_BINDING",
+  "merged_commit": "64f3c9509b09279f321d237e3a95cbe904c6dd22",
+  "collector_source_commit": "f8621a8258ffa445abfb51f5ea73258ad271494e",
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "non_record_delta": [
+    "tests/analysis/v4_kernel_coverage.py",
+    "tests/comparison/calibration/native_pd_worker.py",
+    "tests/comparison/calibration/native_serve_profile.py",
+    "tests/comparison/calibration/pd_replay.py",
+    "tests/comparison/dp_placement_pp/vllm_replay.py",
+    "tests/unit/test_native_serve_profile.py"
+  ],
+  "changed_domain": "Native vLLM diagnostic launch/collector, its unit test and standalone offline audit; not simulator execution",
+  "reachability_check": "No collector/native_pd_worker/pd_replay/vllm_replay imports in fidelity drivers or simulator; only pre-existing label/docstring mentions in cpu mapping/canonical manifest",
+  "new_capture": false,
+  "prior_input_binding_sha256": "48b202aee194973f0e09352356accbf837d5b52ee6c39b866081e922956504f6",
+  "source_files": {
+    "tests/comparison/calibration/native_serve_profile.py": "8f67a367650b40b67f7df82e337adefdc4784a4f3c0f75adc9aa36c4ab159ee1",
+    "tests/unit/test_native_serve_profile.py": "aa8239f0eda0ca7ab4f966e5385622f843320953f36797986be0fd72c43805a2",
+    "tests/comparison/calibration/native_pd_worker.py": "8bd540bcc3aea3f064fc0772c7ba6e3a586c8075d5f5c5bea38d30bf6769a199",
+    "tests/comparison/calibration/pd_replay.py": "673d23d1d725bc1636da066a8ac1a56966dce74aee047c7b974e15e7d9d17465",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901"
+  }
+}

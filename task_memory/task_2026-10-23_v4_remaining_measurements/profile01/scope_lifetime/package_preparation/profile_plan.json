@@ -1,0 +1,27 @@
+{
+  "cuda_compat_path": "/usr/local/cuda-13.0/compat",
+  "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "preemptible": false,
+  "charged_group": "codesign",
+  "positive_tags": ["H800"],
+  "gpu": 1,
+  "replica": 1,
+  "cpu": 16,
+  "mem_gb": 64,
+  "timeout_seconds": 600,
+  "attempt_ceiling": 1,
+  "authorization": "D-V4-BOUNDED-DIAGNOSTIC-AUTHORITY",
+  "gpu_authority": "D-V4-H800-RJOB-AUTHORITY",
+  "cloud_run_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_scope_lifetime_20261024_01",
+  "job_tag": "dsv4-h800-scope-lifetime-probe-20261024-01",
+  "worker_tmp_dir": "/tmp/w128_scope_lifetime_probe_20261024_01",
+  "elements": 1024,
+  "warmup": 3,
+  "envs": {
+    "FRONTIER_NATIVE_PROFILE_LIMITS": "{\"records\": 250000, \"bytes\": 268435456}",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "XDG_CACHE_HOME": "/tmp/w128_scope_lifetime_probe_20261024_01/cache",
+    "CUDA_CACHE_PATH": "/tmp/w128_scope_lifetime_probe_20261024_01/cuda-cache"
+  }
+}

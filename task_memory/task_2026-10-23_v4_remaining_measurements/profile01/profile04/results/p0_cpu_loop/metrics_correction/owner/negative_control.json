@@ -1,0 +1,18 @@
+{
+  "expected": {
+    "count": 3,
+    "sum_ms": 0.0006000000000000001,
+    "union_ms": 0.0006000000000000001
+  },
+  "actual": {
+    "count": 3,
+    "sum_ms": 0.0006000000000000001,
+    "union_ms": 0.0006000000000000001
+  },
+  "wrong_sorted_order": {
+    "count": 3,
+    "sum_ms": 0.0006,
+    "union_ms": 0.0006000000000000001
+  },
+  "wrong_sum_rejected": true
+}

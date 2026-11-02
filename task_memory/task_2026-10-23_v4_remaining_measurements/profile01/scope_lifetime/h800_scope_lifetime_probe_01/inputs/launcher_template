@@ -1,0 +1,65 @@
+"""Submit the native stream/capture probe through the existing backend."""
+
+import argparse
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import shlex
+
+
+HERE = Path(__file__).resolve().parent
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--launch", action="store_true")
+    args = parser.parse_args()
+    config = json.loads((HERE / "config.json").read_text())
+    script = Path(config["script"])
+    if hashlib.sha256(script.read_bytes()).hexdigest() != config["source_sha256"]:
+        raise ValueError("Reviewed native profile probe source changed")
+    argv = ["python3", str(script), "--output-dir", config["output_dir"]]
+    verify_and_run = (
+        "import hashlib,os,pathlib,sys; "
+        f"assert hashlib.sha256(pathlib.Path({str(script)!r}).read_bytes()).hexdigest()=={config['source_sha256']!r}; "
+        f"os.execv(sys.executable,[sys.executable]+{argv[1:]!r})"
+    )
+    command = ("export LD_LIBRARY_PATH=" + shlex.quote(config["cuda_compat_path"])
+               + '${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; mkdir -p '
+               + shlex.quote(config["worker_tmp_dir"]) + ' && nvidia-smi -L && '
+               + shlex.join(["timeout", str(config["timeout_seconds"]), "python3", "-c", verify_and_run]))
+    if not args.launch:
+        print(json.dumps({"config": config, "command": command, "submitted": False}, indent=2))
+        return
+    if os.environ["STEPMIND_BACKEND"] != "rjob":
+        raise ValueError("STEPMIND_BACKEND must be rjob")
+    from steptron.exp.base_exp import ResourceConfig
+    from steptron.utils.stepmind import spawn_tasks
+
+    os.chdir(config["workspace"])
+    os.environ["EXP_ID"] = config["job_tag"]
+    resource = ResourceConfig(
+        cpu=config["cpu"], gpu=1, mem_gb=config["mem_gb"], replica=1,
+        preemptible=config["preemptible"],
+        image=config["image"], positive_tags=config["positive_tags"], extra_requirements=[],
+        mounts=[config["cloud_mount"]], command="{COMMAND}",
+        task_specs={"default": {"is_critical": True}},
+        envs={"PYTHONDONTWRITEBYTECODE": "1", "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+              "VLLM_CUDA_COMPATIBILITY_PATH": config["cuda_compat_path"],
+              "TMPDIR": config["worker_tmp_dir"]} | config["envs"],
+    )
+    receipt = {"start_utc": datetime.now(timezone.utc).isoformat(), "config": config}
+    (HERE / "launcher_started.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    workers = spawn_tasks(resource, command="bash -c " + shlex.quote(command),
+                          charged_group=config["charged_group"], use_image=True,
+                          code_mount_point=config["workspace"])
+    receipt.update(job=workers.rjob.meta.name, status=str(workers.poll()),
+                   end_utc=datetime.now(timezone.utc).isoformat())
+    (HERE / "launcher_result.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps(receipt))
+
+
+if __name__ == "__main__":
+    main()

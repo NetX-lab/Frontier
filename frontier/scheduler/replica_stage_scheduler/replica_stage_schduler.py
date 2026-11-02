@@ -4,7 +4,7 @@ import logging
 
 from frontier.entities import Batch, BatchStage, ExecutionTime, EPBatchGroup
 from frontier.entities.batch import DenseFFNBatchGroup, DummyForwardBatch
-from frontier.execution_time_predictor import BaseExecutionTimePredictor
+from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     StageAdmissionTicket,
     StageExecutionContext,

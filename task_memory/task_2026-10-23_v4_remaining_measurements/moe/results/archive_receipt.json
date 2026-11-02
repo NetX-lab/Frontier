@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "start_utc": "2026-10-23T16:56:36.177607+00:00",
+  "end_utc": "2026-10-23T16:56:36.755196+00:00",
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=15",
+    "shai-ycfeng",
+    "sudo -n timeout 60s python3 -c 'import pathlib,tarfile,sys,json,hashlib; r=pathlib.Path(sys.argv[1]); r.mkdir(parents=True,exist_ok=False); t=tarfile.open(fileobj=sys.stdin.buffer,mode='\"'\"'r|'\"'\"'); t.extractall(r,filter='\"'\"'data'\"'\"'); m=json.loads((r/'\"'\"'manifest.json'\"'\"').read_text()); checks={k:hashlib.sha256((r/k).read_bytes()).hexdigest()==v['\"'\"'sha256'\"'\"'] and (r/k).stat().st_size==v['\"'\"'bytes'\"'\"'] for k,v in m.items()}; assert all(checks.values()),checks; print(json.dumps({'\"'\"'status'\"'\"':'\"'\"'PASS_ARCHIVE_HASHES'\"'\"','\"'\"'path'\"'\"':str(r),'\"'\"'files'\"'\"':len(m),'\"'\"'bytes'\"'\"':sum(v['\"'\"'bytes'\"'\"'] for v in m.values()),'\"'\"'manifest_sha256'\"'\"':hashlib.sha256((r/'\"'\"'manifest.json'\"'\"').read_bytes()).hexdigest()}))' /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/analysis/56e9405d_ep16_rank0_balanced_20261023_01"
+  ],
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/analysis/56e9405d_ep16_rank0_balanced_20261023_01",
+  "result": {
+    "status": "PASS_ARCHIVE_HASHES",
+    "path": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/analysis/56e9405d_ep16_rank0_balanced_20261023_01",
+    "files": 10,
+    "bytes": 217935,
+    "manifest_sha256": "93a984fea0a7fbf562e92dd0274e24e9f3ad10d7abafd5d12b856beacdbf1250"
+  },
+  "manifest": {
+    "audit/audit.py": {
+      "bytes": 16470,
+      "sha256": "9f15d8dc4d2397ade5d6e3efa181100cee76ea1ae1e03f6a252ca49e5fdfaf28",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/W128-MOE01-DATA/audit.py"
+    },
+    "audit/verify.py": {
+      "bytes": 1867,
+      "sha256": "d577f1ebb788b961a9df4f71010fa083635c0c3e2cb5683cf0602f97a17adc5b",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/W128-MOE01-DATA/verify.py"
+    },
+    "audit/output_hashes.json": {
+      "bytes": 1029,
+      "sha256": "cd0484ef5ce95dfc680e129af6242486595e9c6e6dc07eb04c1c6cdc2a600e6a",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/W128-MOE01-DATA/output_hashes.json"
+    },
+    "results/data_audit.json": {
+      "bytes": 170752,
+      "sha256": "6fdf1b7f9285660b2a6140fa56a79bae353045ae9647efa8fccec5b1c378cba9",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/results/data_audit.json"
+    },
+    "results/command.md": {
+      "bytes": 3192,
+      "sha256": "8142c4e80bc1c967ccea821c9fa8adc80fde2a61e044d73e01f3b3db04ed2566",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/results/command.md"
+    },
+    "results/test_report_2026-10-24_data.md": {
+      "bytes": 15528,
+      "sha256": "806a6ce316f094c6bf9469907c32455d00b75fbc771273e05d589486abe8c9f9",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/results/test_report_2026-10-24_data.md"
+    },
+    "results/root_verification.json": {
+      "bytes": 1022,
+      "sha256": "dcc48e105be80717e10593de9a198e950585cfede6a07c78dfb53acbc642de63",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/results/root_verification.json"
+    },
+    "root/run_check.json": {
+      "bytes": 2501,
+      "sha256": "d5ee3b530a7e291d9576019786f20afffca8b00973051e4be57c0164631a7a8d",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/moe/root_run_check.json"
+    },
+    "download/receipt.json": {
+      "bytes": 2001,
+      "sha256": "b6000e126edf70a4ad981b39da74fd652174d1e80da4ec175cb95c1aed1a1c7b",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/receipt.json"
+    },
+    "download/remote_inventory.json": {
+      "bytes": 3573,
+      "sha256": "267a4fa777d25983684b6968c6e74050b0e0e0a1e55f85ca847ab42bbc5b88e0",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/moe01_results_6uzgd6nx/remote_inventory.json"
+    }
+  },
+  "original_run_directory_modified": false
+}

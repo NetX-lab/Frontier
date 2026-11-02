@@ -1,0 +1,53 @@
+{
+  "csv": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+  "row_count": 505,
+  "by_phase": {
+    "decode": 400,
+    "dummy": 50,
+    "prefill": 5,
+    "first_tail": 50
+  },
+  "by_mode": {
+    "FULL": 345,
+    "PIECEWISE": 150,
+    "NONE": 10
+  },
+  "layer_call_count": 1925,
+  "calls_per_row": {
+    "1": 178,
+    "4": 89,
+    "3": 93,
+    "2": 89,
+    "8": 20,
+    "32": 10,
+    "24": 10,
+    "16": 10,
+    "12": 2,
+    "9": 2,
+    "6": 2
+  },
+  "identities": {
+    "schema_version": [
+      "dsv4_attention_replay.v1"
+    ],
+    "graph_mode": [
+      "FULL_AND_PIECEWISE"
+    ],
+    "source_revision": [
+      "230239c8"
+    ],
+    "model_config_revision": [
+      "package_03"
+    ]
+  },
+  "composition": {
+    "median_absolute_relative_error": 2.0820011083611275e-16,
+    "p90_absolute_relative_error": 0.007676581455487807,
+    "max_absolute_relative_error": 0.031937491401803485,
+    "single_call_row_count": 178,
+    "single_call_max_absolute_relative_error": 2.220029793664001e-16,
+    "rows_above_5_percent": 0,
+    "limits_pass": true
+  },
+  "above_5_percent": []
+}

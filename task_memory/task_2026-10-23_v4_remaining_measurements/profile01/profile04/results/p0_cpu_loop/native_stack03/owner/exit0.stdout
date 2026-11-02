@@ -1,0 +1,4 @@
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 590324) exited with code 01]
+V4_NATIVE_STATUS {"batch_quit_action": "none", "capture_commands": [], "capture_errors": {}, "inferior_exit_code": 1, "inferior_exited": true, "inferior_state": "exited", "observed_pid": 590324, "observed_stop_signal": null, "run_error": null, "stop_kind": null}

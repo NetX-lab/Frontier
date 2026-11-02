@@ -1,0 +1,46 @@
+{
+  "status": "PASS_EXPECTED_RED_AND_GREEN",
+  "source_sha256": "2830d15c79ccf8f3a6280bc388c93ac423ecacefe9d73e053412a405ae4fd7c3",
+  "control_sha256": "45dd28b31f951e86163e2312fe4564b78e0e662b5e3112756953dfe5cd089cbc",
+  "results": [
+    {
+      "phase": "RED",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_native_stream_probe_review_20261024/temporary_cpu_fault_controls.py",
+        "--source",
+        "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_native_stream_probe_review_20261024/original_native_profile_probe.py",
+        "--phase",
+        "RED",
+        "--output",
+        "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_root_controls_77f_hz2a/RED"
+      ],
+      "returncode": 1,
+      "passes": 2,
+      "failures": 6,
+      "receipt": "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_root_controls_77f_hz2a/RED/receipt.json",
+      "receipt_sha256": "a4c90e3c8d417b0adea8fcbae150b9eee94ee777875799852ab0e4fc3223e937"
+    },
+    {
+      "phase": "GREEN",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_native_stream_probe_review_20261024/temporary_cpu_fault_controls.py",
+        "--source",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_profile_probe.py",
+        "--phase",
+        "GREEN",
+        "--output",
+        "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_root_controls_77f_hz2a/GREEN"
+      ],
+      "returncode": 0,
+      "passes": 8,
+      "failures": 0,
+      "receipt": "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_root_controls_77f_hz2a/GREEN/receipt.json",
+      "receipt_sha256": "a86860d5ae2a140823b4114b5e820ad994c528659cffb7d0b467605e0b9394a1"
+    }
+  ],
+  "qualification": "Synthetic CPU verdict behavior only."
+}

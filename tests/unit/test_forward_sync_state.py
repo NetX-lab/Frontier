@@ -5,6 +5,11 @@ import pytest
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 
+_MOE_MODEL_CONFIG = SimpleNamespace(
+    is_moe=True,
+    get_model_architecture_profile=lambda: SimpleNamespace(profile_id="generic"),
+)
+
 
 @pytest.mark.parametrize("sync_kind", ["prefill", "decode"])
 def test_a_lone_lane_wakes_its_idle_sibling_engine_and_waits_for_its_dummy_forward(sync_kind):
@@ -18,7 +23,7 @@ def test_a_lone_lane_wakes_its_idle_sibling_engine_and_waits_for_its_dummy_forwa
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = getattr(ClusterType, sync_kind.upper())
     scheduler._config = SimpleNamespace(
-        replica_config=SimpleNamespace(model_config=SimpleNamespace(is_moe=True))
+        replica_config=SimpleNamespace(model_config=_MOE_MODEL_CONFIG)
     )
     initialize_sync_waiting_rooms(scheduler)
     scheduler._forward_sync_state = ForwardSyncState()
@@ -318,7 +323,7 @@ def test_a_one_lane_room_opens_at_the_lane_s_device_arrival():
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._config = SimpleNamespace(
-        replica_config=SimpleNamespace(model_config=SimpleNamespace(is_moe=True))
+        replica_config=SimpleNamespace(model_config=_MOE_MODEL_CONFIG)
     )
     initialize_sync_waiting_rooms(scheduler)
     scheduler._forward_sync_state = ForwardSyncState()

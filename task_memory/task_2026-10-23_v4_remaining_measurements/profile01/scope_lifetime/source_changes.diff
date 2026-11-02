@@ -1,0 +1,422 @@
+diff --git a/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py
+new file mode 100644
+index 00000000..567ecf0b
+--- /dev/null
++++ b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py
+@@ -0,0 +1,250 @@
++"""Standalone live-scope proof; importing this module calls no CUDA API."""
++
++import argparse
++import ctypes
++import hashlib
++import importlib.util
++import json
++import sys
++import threading
++import time
++import traceback
++from pathlib import Path
++from types import SimpleNamespace
++
++HERE = Path(__file__).resolve().parent
++FROZEN = HERE.parent / "graph_probe/probe_diagnostic.py"
++assert hashlib.sha256(FROZEN.read_bytes()).hexdigest() == "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0"
++spec = importlib.util.spec_from_file_location("scope_frozen_probe", FROZEN)
++probe = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(probe)
++NAMES = ("add_a", "mul_b", "add_c", "mul_d", "sub_out")
++
++
++def frame():
++    return dict(monotonic_ns=time.monotonic_ns(), native_id=threading.get_native_id(),
++                python_ident=threading.get_ident())
++
++
++def serving_profile():
++    root = HERE.parents[3]
++    bindings = {r["path"]: r["sha256"] for r in json.loads((HERE / "source_binding.json").read_text())["bindings"]}
++    for name in ("native_full_structure", "native_serve_profile"):
++        path = root / f"tests/comparison/calibration/{name}.py"
++        assert hashlib.sha256(path.read_bytes()).hexdigest() == bindings[str(path.relative_to(root))]
++        spec = importlib.util.spec_from_file_location(name, path)
++        module = importlib.util.module_from_spec(spec)
++        sys.modules[name] = module
++        spec.loader.exec_module(module)
++    sys.modules["vllm.compilation.breakable_cudagraph"] = SimpleNamespace(
++        BreakableCUDAGraphCapture=SimpleNamespace(is_active=lambda: False))
++    return module.ServingProfile(SimpleNamespace(local=threading.local()))
++
++
++class ScopeGraphCallbacks(probe.CuptiGraphCallbacks):
++    def __init__(self, ids, runtime, profile):
++        self.runtime, self.profile = runtime, profile
++        super().__init__(ids)
++
++    def start(self):
++        super().start()
++        if self.owned and not self.receipt["errors"]:
++            self._call("cuptiEnableCallback", 1, self.handle, probe.RESOURCE, 13)
++
++    def _callback(self, userdata, domain, callback_id, pointer):
++        row = dict(callback_id=callback_id, **frame(), scope=getattr(self.profile.local, "scope", None))
++        try:
++            if domain != probe.RESOURCE or callback_id not in (13, 20, 18) or not pointer:
++                raise ValueError("Unexpected or empty graph resource callback")
++            resource = ctypes.cast(pointer, ctypes.POINTER(probe.CuptiResourceData)).contents
++            if not resource.resourceDescriptor:
++                raise ValueError("Graph resource callback has no descriptor")
++            native = ctypes.cast(resource.resourceDescriptor, ctypes.POINTER(probe.CuptiGraphData)).contents
++            row.update(context=int(resource.context or 0), resource_handle=int(resource.resourceHandle.stream or 0),
++                       payload={name: int(getattr(native, name) or 0) for name, _ in probe.CuptiGraphData._fields_})
++            if callback_id == 13:
++                row.update(node=row["payload"]["node"], graph=row["payload"]["graph"], node_type=native.nodeType)
++                self.receipt["events"].append(row)
++                if not row["node"] or not row["graph"]:
++                    raise ValueError("Created callback has no node/graph handle")
++                row.update(node_id=self.ids.node_id(row["node"]), graph_id=self.ids.graph_id(row["graph"]))
++                node_type, = probe.checked(self.runtime.cudaGraphNodeGetType(row["node"]))
++                row["queried_type"] = int(node_type)
++            else:
++                before = len(self.receipt["events"])
++                super()._callback(userdata, domain, callback_id, pointer)
++                if len(self.receipt["events"]) > before:
++                    self.receipt["events"][-1].update(row)
++                    row = self.receipt["events"][-1]
++            probe._diagnostic_stage("callback", row)
++        except BaseException as error:
++            self.receipt["errors"].append(dict(callback_id=callback_id, error_type=type(error).__name__, message=str(error)))
++
++
++def capture_operations(operations, profile, report):
++    for slot, (name, operation) in enumerate(zip(NAMES, operations)):
++        with profile.range("component", name):
++            window = dict(scope=name, slot=slot, **frame())
++            window["start"] = window["monotonic_ns"]
++            report["windows"].append(window)
++            probe._diagnostic_stage("op.start", window)
++            try:
++                function, a, b, out = operation
++                function(a, b, out=out)
++            finally:
++                window["end"] = time.monotonic_ns()
++                probe._diagnostic_stage("op.end", window)
++
++
++def lifetime(graph, report):
++    try:
++        try:
++            graph.raw_cuda_graph()  # Discard any unexpected return without inspecting it.
++            report["raw_source_runtime_error"] = False
++        except RuntimeError:
++            report["raw_source_runtime_error"] = True
++        report["raw_exec"] = graph.raw_cuda_graph_exec()
++    except Exception:
++        report["errors"].append(traceback.format_exc())
++
++
++def analyze(report, events):
++    predicates = report["predicates"] = dict.fromkeys(("P1", "P2", "P3", "P4", "P5", "P6"), "UNVERIFIED")
++    try:
++        launch, kernels = probe.target_kernels(events)
++        report.update(target_launch=launch, target_kernels=kernels)
++        keys = [int(k["args"]["graph node id"]) for k in kernels]
++    except Exception:
++        report["errors"].append(traceback.format_exc())
++    capture = report["callback_capture"]
++    rows = capture["events"]
++    created = [r for r in rows if r["callback_id"] == 13]
++    clones = [r for r in rows if r["callback_id"] == 20]
++    execs = [r for r in rows if r["callback_id"] == 18]
++    originals = {r["original_node"] for r in clones}
++    report["unmatched_created_count"] = sum(r["node"] not in originals for r in created)
++    links = report["links"] = []
++    try:
++        if not capture["subscribed"] or not capture["unsubscribed"] or capture["subscription_active"] or capture["errors"] or report["profile_errors"]:
++            raise ValueError("Subscription, callback, close or real range observation failed")
++        if len(clones) != 5 or len(execs) != 1 or len(rows) != len(created) + len(clones) + len(execs):
++            raise ValueError("Expected five clones and one directly witnessed exec")
++        relation = execs[0]
++        for clone in clones:
++            selected = [r for r in created if r["node"] == clone["original_node"]]
++            if len(selected) != 1:
++                raise ValueError("Original handle does not select exactly one created row")
++            source = selected[0]
++            links.append(dict(source=source, clone=clone))
++            if (source["node_type"] != 0 or source["queried_type"] != 0 or source["node_id"] != clone["original_node_id"]
++                    or source["graph"] != relation["graph"] or source["graph_id"] != relation["graph_id"]):
++                raise ValueError("Source type, full original ID or direct source graph mismatch")
++        for field in ("node", "node_id"):
++            for kind in ("source", "clone"):
++                values = [link[kind][field] for link in links]
++                if len(set(values)) != 5 or any(v <= 0 for v in values):
++                    raise ValueError("Duplicate or invalid source/clone identity")
++        predicates.update(P1="PASS", P5="PASS", P2="PASS")
++        report["thread_observations"] = [{key: link["source"][key] == report["capture_frame"][key]
++                                        for key in ("native_id", "python_ident")} for link in links]
++        windows = report["windows"]
++        owners = []
++        for link in links:
++            source = link["source"]
++            matches = [w for w in windows if w["start"] <= source["monotonic_ns"] < w["end"]]
++            owners.append(matches[0]["scope"] if len(matches) == 1 and matches[0]["scope"] == source["scope"] else None)
++        fresh = (len(windows) == 5 and {w["slot"] for w in windows} == set(range(5))
++                 and set(owners) == set(NAMES) and {w["scope"] for w in windows} == set(NAMES))
++        predicates["P3"] = "PASS" if fresh else "NEGATIVE_LIVE_TLS_ROUTE"
++        predicates["P4"] = "PASS" if report["capture_complete"] and report["default_constructor"] and report.get("raw_source_runtime_error") is True and report["raw_exec"] == relation["graph_exec"] else "UNVERIFIED"
++        if report.get("target_kernels") and len(keys) == 5 and set(keys) == {r["clone"]["node_id"] for r in links} and {int(k["args"]["graph id"]) for k in kernels} == {relation["exec_graph_id"]}:
++            report["full_id_replay_join"] = "PASS"
++            predicates["P6"] = "PASS" if fresh and report["replay_complete"] else "UNVERIFIED"
++    except Exception:
++        report["errors"].append(traceback.format_exc())
++    report["verdict"] = ("PASS" if all(v == "PASS" for v in predicates.values()) and not report["errors"] else
++                         "NEGATIVE_LIVE_TLS_ROUTE" if predicates["P3"] == "NEGATIVE_LIVE_TLS_ROUTE" and report.get("full_id_replay_join") == "PASS" and predicates["P4"] == "PASS" and report["replay_complete"] and not report["errors"] else "UNVERIFIED")
++
++
++def run_phase(torch, runtime, output, elements, warmup, mode, report):
++    profile = serving_profile()
++    report.update(verdict="UNVERIFIED", errors=[], windows=[], profile_errors=profile.errors, capture_complete=False, replay_complete=False)
++    report["predicates"] = dict.fromkeys(("P1", "P2", "P3", "P4", "P5", "P6"), "UNVERIFIED")
++    stream, x = torch.cuda.Stream(), torch.ones(elements, device="cuda")
++    a, b, c, d, out = [torch.empty_like(x) for _ in NAMES]
++    operations = ((torch.add, x, x, a), (torch.mul, a, x, b), (torch.add, b, x, c),
++                  (torch.mul, c, x, d), (torch.sub, d, x, out))
++    stream.wait_stream(torch.cuda.current_stream())
++    with torch.cuda.stream(stream):
++        for _ in range(warmup):
++            for function, left, right, target in operations:
++                function(left, right, out=target)
++    torch.cuda.synchronize()
++    expected = [tensor.cpu().tolist() for tensor in (a, b, c, d, out)]
++    capture = ScopeGraphCallbacks(probe.CuptiGraphIds(probe.cupti_library()), runtime, profile) if mode == "observe" else None
++    report["callback_capture"] = None if capture is None else capture.receipt
++    try:
++        if capture is not None:
++            capture.start()
++        graph = torch.cuda.CUDAGraph()
++        report.update(default_constructor=True, capture_frame=frame())
++        probe._diagnostic_stage(mode + ".capture.start", report["capture_frame"])
++        with torch.cuda.graph(graph, stream=stream):
++            capture_operations(operations, profile, report)
++        report.update(capture_complete=True, capture_end=frame())
++        probe._diagnostic_stage(mode + ".capture.end", report["capture_end"])
++    finally:
++        released = True if capture is None else capture.close()
++        probe._diagnostic_stage(mode + ".close", released)
++    lifetime(graph, report)
++    if not released:
++        report["errors"].append("Owned subscriber release failed; Kineto and control are blocked")
++        return
++    probe._diagnostic_stage(mode + ".kineto.start")
++    with torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA]) as trace:
++        with torch.profiler.record_function(probe.TARGET):
++            graph.replay()
++        torch.cuda.synchronize()
++        report["replay_complete"] = True
++    path = output / (mode + "_trace.json")
++    trace.export_chrome_trace(str(path))
++    report["trace_path"] = str(path)
++    events = json.loads(path.read_text())["traceEvents"]
++    if capture is not None:
++        analyze(report, events)
++    else:
++        launch, kernels = probe.target_kernels(events)
++        report.update(target_launch=launch, target_kernels=kernels, topology=len(kernels) == len({k["args"]["graph node id"] for k in kernels}) == 5 and len({k["args"]["graph id"] for k in kernels}) == 1)
++    report["outputs"] = [tensor.cpu().tolist() for tensor in (a, b, c, d, out)]
++    report["numeric_identity"] = report["outputs"] == expected
++
++
++def main():
++    probe._diagnostic_start()
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--output-dir", type=Path, required=True)
++    parser.add_argument("--image-digest", required=True)
++    parser.add_argument("--elements", type=int, default=1024)
++    parser.add_argument("--warmup", type=int, default=3)
++    args = parser.parse_args()
++    if args.elements <= 0 or args.warmup <= 0:
++        parser.error("elements and warmup must be positive")
++    args.output_dir.mkdir(parents=True, exist_ok=False)
++    report = dict(image_digest=args.image_digest, elements=args.elements, warmup=args.warmup, errors=[])
++    try:
++        import torch
++        import cuda.bindings.runtime as runtime
++        with torch.inference_mode():
++            for mode in ("observe", "control"):
++                phase = report[mode] = {}
++                run_phase(torch, runtime, args.output_dir, args.elements, args.warmup, mode, phase)
++                if mode == "observe" and phase["callback_capture"]["subscription_active"]:
++                    break
++        report["control_identity"] = report["observe"]["outputs"] == report["control"]["outputs"] if "control" in report else "NOT_RUN"
++    except Exception:
++        report["errors"].append(traceback.format_exc())
++    (args.output_dir / "probe_report.json").write_text(json.dumps(report, indent=2) + "\n")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/tests/unit/test_cupti_scope_lifetime.py b/tests/unit/test_cupti_scope_lifetime.py
+new file mode 100644
+index 00000000..0c671cfc
+--- /dev/null
++++ b/tests/unit/test_cupti_scope_lifetime.py
+@@ -0,0 +1,160 @@
++"""CPU envelopes and source-backed live range controls; no CUDA initialization."""
++
++import ctypes
++import copy
++import importlib.util
++import threading
++from pathlib import Path
++from types import SimpleNamespace
++
++import pytest
++
++from tests.unit.test_cupti_graph_resource_payload import probe, capture, envelope, invoke
++
++SOURCE = Path(__file__).parents[2] / "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py"
++spec = importlib.util.spec_from_file_location("scope_subject", SOURCE)
++subject = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(subject)
++
++
++@pytest.fixture
++def case(capture, probe, monkeypatch):
++    import torch
++    monkeypatch.setattr(torch.cuda, "is_current_stream_capturing", lambda: False)
++    monkeypatch.setenv("FRONTIER_NATIVE_PROFILE_LIMITS", '{"records":10000,"bytes":10000000}')
++    profile = subject.serving_profile()
++    assert Path(profile.range.__wrapped__.__code__.co_filename).resolve() == SOURCE.parents[4] / "tests/comparison/calibration/native_serve_profile.py"
++    base, state = capture
++    sources, clones = (11, 31, 19, 47, 23), (111, 97, 203, 61, 143)
++    original_ids = (2**59 + 23, 2**59 + 701, 2**59 + 19, 2**59 + 202, 2**59 + 61)
++    full_ids = (2**60 + 999, 2**60 + 17, 2**60 + 8101, 2**60 + 33, 2**60 + 519)
++    mapping = dict(zip(sources + clones + (3030,), original_ids + full_ids + (2**58 + 7,)))
++    def node_id(handle):
++        assert state["in_callback"], "Post-capture/copied-handle query is forbidden"
++        if state.get("query_error"):
++            raise RuntimeError("actual query failure")
++        return mapping[handle]
++    def node_type(handle):
++        assert state["in_callback"], "NodeGetType outside callback is forbidden"
++        return (0, 0)
++    ids = SimpleNamespace(library=base.ids.library, node_id=node_id, graph_id=base.ids.graph_id, exec_id=base.ids.exec_id)
++    value = subject.ScopeGraphCallbacks(ids, SimpleNamespace(cudaGraphNodeGetType=node_type), profile)
++    def dispatch(callback_id, **fields):
++        native, storage, resource = envelope(probe, **fields)
++        invoke(probe, (value, state), callback_id, ctypes.byref(resource))
++        native.node = native.graph = native.originalNode = 999
++        resource.resourceDescriptor = None
++    report = dict(callback_capture=value.receipt, capture_frame=subject.frame(), windows=[], errors=[],
++                  profile_errors=profile.errors, default_constructor=True, capture_complete=True, replay_complete=True)
++    value.start()
++    ops = [(lambda a, b, out, node=node: dispatch(13, node=node, graph=701), 0, 0, 0) for node in sources]
++    subject.capture_operations(ops, profile, report)
++    dispatch(13, node=3030, graph=701)
++    for source, clone in reversed(tuple(zip(sources, clones))):
++        dispatch(20, node=clone, originalNode=source, graph=900, originalGraph=701)
++    dispatch(18, graph=701, graphExec=702)
++    assert value.close()
++    graph = SimpleNamespace(raw_cuda_graph=lambda: (_ for _ in ()).throw(RuntimeError("defaultFalse")), raw_cuda_graph_exec=lambda: 702)
++    subject.lifetime(graph, report)
++    events = [dict(name=probe.TARGET, ph="X", cat="user_annotation", pid=1, tid=2, ts=10, dur=20),
++              dict(name="cudaGraphLaunch", cat="cuda_runtime", pid=1, tid=2, ts=11, dur=1, args=dict(correlation=71))]
++    events += [dict(cat="kernel", args={"correlation":71,"graph id":202,"graph node id":key}) for key in reversed(full_ids)]
++    return SimpleNamespace(report=report, events=events, value=value, state=state, dispatch=dispatch, ops=ops, profile=profile)
++
++
++def test_actual_range_callback_and_full_ids_join(case):
++    subject.analyze(case.report, case.events)
++    assert case.report["verdict"] == "PASS" and case.report["unmatched_created_count"] == 1
++    assert case.report["links"][0]["source"]["node_id"] != case.report["links"][0]["clone"]["node_id"]
++    assert getattr(case.profile.local, "scope", None) is None
++    with pytest.raises(AssertionError, match="forbidden"):
++        case.value.ids.node_id(11)
++
++
++@pytest.mark.parametrize("kind,field,value", [
++    ("source", "scope", "stale_same_tid"), ("source", "monotonic_ns", "closed"),
++    ("window", "slot", 4), ("clone", "original_node_id", 2**62 + 1),
++    ("clone", "original_node", 999), ("source", "queried_type", 2),
++    ("source", "node_type", 2), ("source", "graph", 800), ("source", "graph_id", 102),
++    ("clone", "node_id", 2**60 + 33), ("exec", "graph_exec", 700),
++    ("kernel", "graph node id", 2**60 + 33), ("kernel", "graph node id", 2**63 + 71)])
++def test_wrong_scope_window_and_full_id_records(case, kind, field, value):
++    rows = case.report["callback_capture"]["events"]
++    selected = {name: next(r for r in rows if r["callback_id"] == callback) for name, callback in (("source",13),("clone",20),("exec",18))}
++    selected.update(window=case.report["windows"][0], kernel=case.events[-1]["args"])
++    selected[kind][field] = case.report["windows"][0]["end"] if value == "closed" else value
++    subject.analyze(case.report, case.events)
++    expected = "NEGATIVE_LIVE_TLS_ROUTE" if kind == "window" or field in ("scope", "monotonic_ns") else "UNVERIFIED"
++    assert case.report["verdict"] == expected
++
++
++@pytest.mark.parametrize("fault", ["ambiguous", "clone_missing", "clone_duplicate", "created_duplicate", "trace", "query", "descriptor", "stage"])
++def test_incomplete_callbacks_or_trace_preserve_evidence(case, fault, monkeypatch):
++    collection = case.report["windows"] if fault == "ambiguous" else case.events if fault == "trace" else case.report["callback_capture"]["events"]
++    if fault == "query":
++        case.state["query_error"] = True
++        case.dispatch(13, node=11, graph=701)
++    elif fault == "descriptor":
++        invoke(subject.probe, (case.value, case.state), 13, ctypes.byref(subject.probe.CuptiResourceData()))
++    elif fault == "stage":
++        monkeypatch.setattr(subject.probe, "_diagnostic_stage", lambda *args: (_ for _ in ()).throw(OSError("stage sink failure")))
++        case.dispatch(13, node=11, graph=701)
++    else:
++        row = collection[0] if fault in ("ambiguous", "trace") else next(r for r in collection if r["callback_id"] == (13 if fault == "created_duplicate" else 20))
++        if fault in ("clone_missing", "trace"):
++            collection.remove(row)
++        else:
++            collection.append(copy.deepcopy(row))
++    subject.analyze(case.report, case.events)
++    assert case.report["verdict"] == ("NEGATIVE_LIVE_TLS_ROUTE" if fault == "ambiguous" else "UNVERIFIED")
++
++
++def test_other_thread_has_distinct_identities_and_no_live_tls(case):
++    case.report["callback_capture"]["events"][:] = [r for r in case.report["callback_capture"]["events"] if r["callback_id"] != 13]
++    case.report["windows"] = []
++    def deferred(a, b, out):
++        thread = threading.Thread(target=lambda: case.dispatch(13, node=11, graph=701))
++        thread.start()
++        thread.join()
++    subject.capture_operations([(deferred, 0, 0, 0)] + case.ops[1:], case.profile, case.report)
++    subject.analyze(case.report, case.events)
++    assert case.report["verdict"] == "NEGATIVE_LIVE_TLS_ROUTE"
++    assert case.report["thread_observations"][-1] == {"native_id":False,"python_ident":False}
++
++
++@pytest.mark.parametrize("failure", [None, "cuptiSubscribe", "cuptiEnableCallback", "cuptiUnsubscribe", "enable13"])
++def test_owned_lifecycle_never_unsubscribes_foreign_slot(capture, failure):
++    base, state = capture
++    if failure == "enable13":
++        original = base.ids.library.cuptiEnableCallback
++        base.ids.library.cuptiEnableCallback = lambda *args: 7 if args[-1] == 13 else original(*args)
++    elif failure:
++        state["results"][failure] = 7
++    value = subject.ScopeGraphCallbacks(base.ids, None, SimpleNamespace(local=threading.local()))
++    value.start()
++    assert value.owned == (failure != "cuptiSubscribe")
++    assert value.close() == (failure != "cuptiUnsubscribe")
++    if failure == "cuptiSubscribe":
++        assert state["calls"] == [("cuptiSubscribe", None)]
++    state["results"]["cuptiUnsubscribe"] = 0
++    assert value.close() and value not in subject.probe._OWNED_CALLBACKS
++
++
++@pytest.mark.parametrize("result", ["runtime", "returned", "other", "exec_error"])
++def test_one_raw_source_observation_never_retains_or_queries_return(result):
++    calls, report = [], {"errors":[]}
++    def raw():
++        calls.append("source")
++        if result == "runtime":
++            raise RuntimeError("expected")
++        if result == "other":
++            raise ValueError("original failure")
++        return object()
++    def executable():
++        if result == "exec_error":
++            raise RuntimeError("secondary failure")
++        return 702
++    subject.lifetime(SimpleNamespace(raw_cuda_graph=raw, raw_cuda_graph_exec=executable), report)
++    assert calls == ["source"] and "raw_cuda_graph" not in report
++    assert report.get("raw_source_runtime_error") is (True if result == "runtime" else None if result == "other" else False)
++    assert bool(report["errors"]) == (result in ("other", "exec_error"))

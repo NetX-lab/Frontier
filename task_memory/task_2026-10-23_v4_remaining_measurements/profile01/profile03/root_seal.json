@@ -1,0 +1,133 @@
+{
+  "status": "SEALED_READY_DIAGNOSTIC",
+  "sealed_at_utc": "2026-10-24T06:12:21.142216+00:00",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03",
+  "merged_commit": "39e23132f6aa2c13afd5817c8e2e3a231436e607",
+  "accepted_runtime_revision": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "source_writer_stopped": true,
+  "manifest_sha256": "4e827ca74e26abfba5816b61f6bac095ca1da326957b80d0f5e4d5c0c59423b7",
+  "input_count": 45,
+  "checks": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/hook_stdin.py",
+      "sha256": "03cd107df4c57906a76a4c4ebe5b8459439b6f7e02c9abb65136427bb048ad0c"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/image_entry.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/image_entry.stdout.log",
+      "sha256": "5c38528283a22cce2dca604d42c49c27b49e3c554676f4a45c26dd37a7518d22"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/image_stdin.py",
+      "sha256": "5343147fb0b56983dd51b694f94abea2daf192aa7411b46fb10658789e10040f"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position0.stderr.log",
+      "sha256": "53285d37a50bae6fb0ddf4c44925bacb31a13dea9d5bf31e9d9686f5503f5a78"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position0.stdout.log",
+      "sha256": "9654f0b85319ae8a29907810f5eae1f6e627c6b8cb893c878a2c71b337650bd4"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position1.stderr.log",
+      "sha256": "53285d37a50bae6fb0ddf4c44925bacb31a13dea9d5bf31e9d9686f5503f5a78"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position1.stdout.log",
+      "sha256": "5e5ed70f671e68ba35011236ec8171bd782ce30ab95ec438c35ff58e40c9b1b7"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position2.stderr.log",
+      "sha256": "4fa642f3cbe14934abd70ed7228f8961a90da8b77614a604be0f1ecfeef37c30"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position2.stdout.log",
+      "sha256": "945a63b985710820484e53d73e1bc2f48cc7ffb4a4ce6b205b964ffa52162486"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position3.stderr.log",
+      "sha256": "6bd1cb441f17df706f6c2008d500040ca8abdf8968cf7c0ea925e8c57f20d7f8"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/position3.stdout.log",
+      "sha256": "9966a8bff57f63e8ea0f2bb434001c78ce96ee2708187a1ca935adb9207c6fab"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/image/receipt.json",
+      "sha256": "83d7fa9ac766e70830061019f9674811b605ac41644f34090c139d989d7c0214"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/execution.json",
+      "sha256": "d96273a5b2cc70ee9018e8597f6f94e7ba7b950bc57835a50313592ddc627210"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/input.py",
+      "sha256": "a78c066d793e2200a73e0d0723a22f41380729dd8eacaf444afea2892276587c"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/receipt.json",
+      "sha256": "28d50b62ddb477697d855a682441d23ba3aab207ebbfb406fd5ce73fe57538bc"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/sdk/stdout.log",
+      "sha256": "0a914592985c2df216762d637a6091faa670a2d95888b99b79a7a49947f6c791"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/binding/receipt.json",
+      "sha256": "04f4619dda48531669b84ee59776780c106941e157c77b96663ca6bf2681f9b3"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/quota.json",
+      "sha256": "31d388737de83407da75d85623ebc7a4275bebc3753fa468e9ea5a177423afe9"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/quota.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/quota.stdout.log",
+      "sha256": "31d388737de83407da75d85623ebc7a4275bebc3753fa468e9ea5a177423afe9"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/read_quota.py",
+      "sha256": "f9fc71e1cdbbff394383e7d81b1fa6612de4a6447195853f035035500e828187"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/receipt.json",
+      "sha256": "78b5b3a074b6c6c15da7c31fccf700f5203952e36c1e403c7afa0dc2bf2556b8"
+    }
+  ],
+  "prelaunch": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/root_checks/prelaunch/receipt.json",
+    "sha256": "78b5b3a074b6c6c15da7c31fccf700f5203952e36c1e403c7afa0dc2bf2556b8"
+  },
+  "resources": {
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "gpu": 8,
+    "replica": 4,
+    "cpu": 64,
+    "mem_gb": 512,
+    "timeout_seconds": 3600,
+    "cloud_mount": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+    "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-03"
+  },
+  "preemptible": false,
+  "authorization": "D-V4-H800-RJOB-AUTHORITY",
+  "preparation_decision": "D-V4-PROFILE03-PACKAGE",
+  "review": {
+    "spec": "No findings",
+    "standards": "P3 citation and fixed-diff evidence closed at438ddfc4; no remaining findings"
+  },
+  "runtime_admission": false,
+  "auxiliary_gates": "non-blocking soft observations",
+  "attempts": 1
+}

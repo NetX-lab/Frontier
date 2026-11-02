@@ -1,0 +1,59 @@
+
+import difflib, hashlib, json, pathlib, subprocess
+root = pathlib.Path.cwd()
+records = root / 'task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation'
+package = records.parent/'h800_scope_lifetime_probe_01'
+def sha(content):
+    return hashlib.sha256(content).hexdigest()
+def write(name, value):
+    (records/name).write_text(json.dumps(value,indent=2)+'\n')
+manifest = json.loads((package/'manifest.json').read_text())
+lock = json.loads((package/'source_lock.json').read_text())
+files = {str(path.relative_to(package)):path.read_bytes() for path in package.rglob('*') if path.is_file()}
+assert set(files) == set(manifest['files'])|{'manifest.json'}
+assert manifest['input_count'] == len(files)-1 == 18
+assert manifest['status'] == 'PREPARED_NOT_SEALED' and not manifest['submitted']
+for name, expected in manifest['files'].items():
+    assert sha(files[name]) == expected
+for name, pin in lock['payloads'].items():
+    assert files[name] == (root/name).read_bytes()
+    assert sha(files[name]) == pin['sha256']
+    assert files[name] == subprocess.check_output(['git','show',f"{lock['source_revision']}:{name}"],cwd=root)
+for name,pin in lock['inputs'].items():
+    assert sha(files['inputs/'+name]) == pin['sha256'] == sha(pathlib.Path(pin['path']).read_bytes())
+cpu = json.loads((records/'cpu_candidate_02.json').read_text())
+for name, pin in cpu['originals'].items():
+    path = pathlib.Path(name)
+    assert dict(sha256=sha(path.read_bytes()),bytes=path.stat().st_size) == pin
+scratch = pathlib.Path(cpu['scratch'])
+def scratch_bytes(name):
+    return subprocess.check_output(['sudo','-n','cat',str(scratch/name)])
+assert files['launch.py'] == scratch_bytes('launch.py')
+assert files['config.json'].replace(str(package).encode(),str(scratch).encode()) == scratch_bytes('config.json')
+assert files['source_lock.json'].replace(str(package).encode(),str(scratch).encode()) == scratch_bytes('source_lock.json')
+image_receipt = json.loads(files['inputs/graph_image_receipt'])
+image_report = json.loads(files['inputs/graph_image_report'])
+graph_seal = json.loads(files['inputs/graph_seal'])
+checks = {row['path']:row['sha256'] for row in graph_seal['checks']}
+for name in ('graph_image_receipt','graph_image_report'):
+    path = pathlib.Path(lock['inputs'][name]['path']).relative_to(root)
+    assert sha(files['inputs/'+name]) == checks[str(path)]
+assert lock['binaries'] == image_receipt['binaries'] and lock['callback_abi'] == image_report['api']['callback_abi']
+source = 'task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py'
+inventory = {name:dict(sha256=sha(content),bytes=len(content),lines=len(content.splitlines()),category='payload' if name in lock['payloads'] else 'generated_launcher' if name=='launch.py' else 'copied_input' if name.startswith('inputs/') else 'generated_json') for name,content in sorted(files.items())}
+write('package_inventory.json',dict(package=str(package),input_count=18,total_files=19,total_bytes=sum(map(len,files.values())),inventory=inventory,source_sha256=sha(files[source]),manifest_sha256=sha(files['manifest.json']),source_lock_sha256=sha(files['source_lock.json'])))
+write('closure_01.json',dict(status='PASS_STATIC_OFFICIAL_CLOSURE',package=str(package),generation_invocations=1,input_count=18,total_files=19,total_bytes=sum(map(len,files.values())),source_sha256=sha(files[source]),manifest_sha256=sha(files['manifest.json']),source_lock_sha256=sha(files['source_lock.json']),original_input_count=len(cpu['originals']),source_bindings=7,runtime_modules=13,sealed_profile04_inputs=45,matrix_cases=77,scratch_launcher_identical=True,scratch_config_and_argv_equal_after_path_relocation=True,original_inputs_unchanged=True,sealed=False,submitted=False,limits='Static byte/hash/equality checks only; no additional CPU imports/argv invocation, image/SDK/GPU execution or seal.'))
+write('original_input_pins.json',dict(status='PASS_BEFORE_AFTER_CONTENT_BINDING',files=cpu['originals'],source_bindings=7,runtime_modules=13,sealed_profile04_inputs=45,matrix_cases=77))
+changes=[]
+numstat=[]
+for name in ('build_package.py','profile_plan.json','image_check.py'):
+    rel = str((records/name).relative_to(root))
+    content = (records/name).read_text()
+    changes.append(''.join(difflib.unified_diff([],content.splitlines(True),fromfile='/dev/null',tofile='b/'+rel)))
+    numstat.append(f'{len(content.splitlines())}\t0\t{rel}\n')
+(records/'source_changes.diff').write_text(''.join(changes))
+(records/'source_numstat.txt').write_text(''.join(numstat))
+template = pathlib.Path(lock['inputs']['launcher_template']['path'])
+(records/'generated_launcher.diff').write_text(''.join(difflib.unified_diff(template.read_text().splitlines(True),files['launch.py'].decode().splitlines(True),fromfile=str(template),tofile=str(package/'launch.py'))))
+write('source_budget.json',dict(gross_new_lines={name:len((records/name).read_bytes().splitlines()) for name in ('build_package.py','profile_plan.json','image_check.py')},total_gross=245,caps=dict(builder=155,plan=40,image_check=80,total=275),generated_launcher=74,generated_launcher_cap=100,package_categories={category:dict(files=sum(row['category']==category for row in inventory.values()),bytes=sum(row['bytes'] for row in inventory.values() if row['category']==category),lines=sum(row['lines'] for row in inventory.values() if row['category']==category)) for category in ('payload','generated_launcher','copied_input','generated_json')},limits='Payload/copy/generated JSON/diff/raw receipts excluded from maintained three-file new gross; Markdown budget recorded separately after final records.'))
+print((records/'closure_01.json').read_text())

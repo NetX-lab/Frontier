@@ -1,0 +1,51 @@
+{
+  "status": "HASH_IDENTICAL_DOWNLOAD",
+  "start_utc": "2026-10-25T19:41:25.654823+00:00",
+  "end_utc": "2026-10-25T19:41:29.382345+00:00",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_lifecycle_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01",
+  "remote_root": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_lifecycle_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01",
+  "local_root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts",
+  "files": 70,
+  "bytes": 50276111,
+  "inventory_sha256": "a684038f271a1228f841971b27bc77e6c61471225af8e957be5d9f251767fe9e",
+  "mismatched": [],
+  "commands": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n timeout 900s python3 - /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_lifecycle_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01"
+      ],
+      "stdin": "from pathlib import Path\nimport hashlib,json,sys\nr=Path(sys.argv[1]); files=[]\nfor p in sorted(r.rglob('*')):\n if not p.is_file(): continue\n assert p.resolve().is_relative_to(r.resolve()),str(p)\n h=hashlib.sha256()\n with p.open('rb') as f:\n  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)\n files.append({'path':str(p.relative_to(r)),'bytes':p.stat().st_size,'sha256':h.hexdigest()})\nprint(json.dumps({'root':str(r),'files':files}))\n",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n tar -C /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_lifecycle_20261025_01/case/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01 -cf - ."
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "tar",
+        "--no-same-owner",
+        "--no-same-permissions",
+        "-xf",
+        "-",
+        "-C",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-lifecycle-20261025-01/artifacts"
+      ],
+      "returncode": 0
+    }
+  ]
+}

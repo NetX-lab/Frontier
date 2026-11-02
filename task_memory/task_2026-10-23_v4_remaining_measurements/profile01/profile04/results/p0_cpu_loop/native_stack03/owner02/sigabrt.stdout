@@ -1,0 +1,85 @@
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+V4_SYNTHETIC_META {"allocator": {"GLIBC_TUNABLES": null, "LD_LIBRARY_PATH": "/usr/local/nvidia/lib64", "LD_PRELOAD": null, "MALLOC_ARENA_MAX": null, "MALLOC_CHECK_": null, "MALLOC_PERTURB_": null, "PYTHONMALLOC": null, "PYTHONMALLOCSTATS": null}, "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n0::/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n", "gc_enabled": true, "gc_thresholds": [700, 10, 10], "group": "/sys/fs/cgroup/memory/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope", "memory_limit_bytes": 32212254720, "memory_mount_root": "/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c", "pid": 2755824, "python_executable": "/usr/bin/python3", "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]"}
+
+Program received signal SIGABRT, Aborted.
+0x00007fb1109c775b in kill () at ../sysdeps/unix/syscall-template.S:120
+
+Thread 1 (Thread 0x7fb110984280 (LWP 2755824) "python3"):
+#0  0x00007fb1109c775b in kill () at ../sysdeps/unix/syscall-template.S:120
+#1  0x0000561fdbb6bfa4 in ?? ()
+#2  0x0000561fdba47609 in ?? ()
+#3  0x0000561fdba35a72 in _PyEval_EvalFrameDefault ()
+#4  0x0000561fdba2c766 in ?? ()
+#5  0x0000561fdbb24456 in PyEval_EvalCode ()
+#6  0x0000561fdbb50f08 in ?? ()
+#7  0x0000561fdbb49d5b in ?? ()
+#8  0x0000561fdbb50c55 in ?? ()
+#9  0x0000561fdbb50138 in _PyRun_SimpleFileObject ()
+#10 0x0000561fdbb4fe33 in _PyRun_AnyFileObject ()
+#11 0x0000561fdbb410ae in Py_RunMain ()
+#12 0x0000561fdbb1734d in Py_BytesMain ()
+#13 0x00007fb1109aed90 in __libc_start_call_main (main=..., argc=..., argv=...) at ../sysdeps/nptl/libc_start_call_main.h:58
+#14 0x00007fb1109aee40 in __libc_start_main_impl (main=..., argc=..., argv=..., init=..., fini=..., rtld_fini=..., stack_end=...) at ../csu/libc-start.c:392
+#15 0x0000561fdbb17245 in _start ()
+From                To                  Syms Read   Shared Object Library
+0x00007fb110cee090  0x00007fb110d17335  Yes         /lib64/ld-linux-x86-64.so.2
+0x00007fb110c083a0  0x00007fb110c838e8  Yes         /lib/x86_64-linux-gnu/libm.so.6
+0x00007fb110bcd290  0x00007fb110beb5a7  Yes (*)     /lib/x86_64-linux-gnu/libexpat.so.1
+0x00007fb110baf280  0x00007fb110bbfc14  Yes (*)     /lib/x86_64-linux-gnu/libz.so.1
+0x00007fb1109ad700  0x00007fb110b3fabd  Yes         /lib/x86_64-linux-gnu/libc.so.6
+0x00007fb1103087c0  0x00007fb11030e485  Yes (*)     /usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so
+(*): Shared library is missing debugging information.
+process 2755824
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x561fdb8eb000     0x561fdb958000    0x6d000        0x0  r--p   /usr/bin/python3.10
+      0x561fdb958000     0x561fdbc0c000   0x2b4000    0x6d000  r-xp   /usr/bin/python3.10
+      0x561fdbc0c000     0x561fdbe4a000   0x23e000   0x321000  r--p   /usr/bin/python3.10
+      0x561fdbe4b000     0x561fdbe52000     0x7000   0x55f000  r--p   /usr/bin/python3.10
+      0x561fdbe52000     0x561fdbe91000    0x3f000   0x566000  rw-p   /usr/bin/python3.10
+      0x561fdbe91000     0x561fdbed7000    0x46000        0x0  rw-p   
+      0x561fdbfec000     0x561fdc0f2000   0x106000        0x0  rw-p   [heap]
+      0x7fb110306000     0x7fb110308000     0x2000        0x0  r--p   /usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so
+      0x7fb110308000     0x7fb11030f000     0x7000     0x2000  r-xp   /usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so
+      0x7fb11030f000     0x7fb110311000     0x2000     0x9000  r--p   /usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so
+      0x7fb110311000     0x7fb110312000     0x1000     0xa000  r--p   /usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so
+      0x7fb110312000     0x7fb110313000     0x1000     0xb000  rw-p   /usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so
+      0x7fb110313000     0x7fb11069a000   0x387000        0x0  rw-p   
+      0x7fb11069a000     0x7fb110983000   0x2e9000        0x0  r--p   /usr/lib/locale/locale-archive
+      0x7fb110983000     0x7fb110985000     0x2000        0x0  rw-p   
+      0x7fb110985000     0x7fb1109ad000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7fb1109ad000     0x7fb110b42000   0x195000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7fb110b42000     0x7fb110b9a000    0x58000   0x1bd000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7fb110b9a000     0x7fb110b9e000     0x4000   0x214000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7fb110b9e000     0x7fb110ba0000     0x2000   0x218000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7fb110ba0000     0x7fb110bad000     0xd000        0x0  rw-p   
+      0x7fb110bad000     0x7fb110baf000     0x2000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libz.so.1.2.11
+      0x7fb110baf000     0x7fb110bc0000    0x11000     0x2000  r-xp   /usr/lib/x86_64-linux-gnu/libz.so.1.2.11
+      0x7fb110bc0000     0x7fb110bc6000     0x6000    0x13000  r--p   /usr/lib/x86_64-linux-gnu/libz.so.1.2.11
+      0x7fb110bc6000     0x7fb110bc7000     0x1000    0x19000  ---p   /usr/lib/x86_64-linux-gnu/libz.so.1.2.11
+      0x7fb110bc7000     0x7fb110bc8000     0x1000    0x19000  r--p   /usr/lib/x86_64-linux-gnu/libz.so.1.2.11
+      0x7fb110bc8000     0x7fb110bc9000     0x1000    0x1a000  rw-p   /usr/lib/x86_64-linux-gnu/libz.so.1.2.11
+      0x7fb110bc9000     0x7fb110bcd000     0x4000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libexpat.so.1.8.7
+      0x7fb110bcd000     0x7fb110bec000    0x1f000     0x4000  r-xp   /usr/lib/x86_64-linux-gnu/libexpat.so.1.8.7
+      0x7fb110bec000     0x7fb110bf6000     0xa000    0x23000  r--p   /usr/lib/x86_64-linux-gnu/libexpat.so.1.8.7
+      0x7fb110bf6000     0x7fb110bf7000     0x1000    0x2d000  ---p   /usr/lib/x86_64-linux-gnu/libexpat.so.1.8.7
+      0x7fb110bf7000     0x7fb110bf9000     0x2000    0x2d000  r--p   /usr/lib/x86_64-linux-gnu/libexpat.so.1.8.7
+      0x7fb110bf9000     0x7fb110bfa000     0x1000    0x2f000  rw-p   /usr/lib/x86_64-linux-gnu/libexpat.so.1.8.7
+      0x7fb110bfa000     0x7fb110c08000     0xe000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libm.so.6
+      0x7fb110c08000     0x7fb110c84000    0x7c000     0xe000  r-xp   /usr/lib/x86_64-linux-gnu/libm.so.6
+      0x7fb110c84000     0x7fb110cdf000    0x5b000    0x8a000  r--p   /usr/lib/x86_64-linux-gnu/libm.so.6
+      0x7fb110cdf000     0x7fb110ce0000     0x1000    0xe4000  r--p   /usr/lib/x86_64-linux-gnu/libm.so.6
+      0x7fb110ce0000     0x7fb110ce1000     0x1000    0xe5000  rw-p   /usr/lib/x86_64-linux-gnu/libm.so.6
+      0x7fb110ce3000     0x7fb110cea000     0x7000        0x0  r--s   /usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache
+      0x7fb110cea000     0x7fb110cec000     0x2000        0x0  rw-p   
+      0x7fb110cec000     0x7fb110cee000     0x2000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fb110cee000     0x7fb110d18000    0x2a000     0x2000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fb110d18000     0x7fb110d23000     0xb000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fb110d24000     0x7fb110d26000     0x2000    0x37000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fb110d26000     0x7fb110d28000     0x2000    0x39000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffd1fcc2000     0x7ffd1fce5000    0x23000        0x0  rw-p   [stack]
+      0x7ffd1fd3c000     0x7ffd1fd40000     0x4000        0x0  r--p   [vvar]
+      0x7ffd1fd40000     0x7ffd1fd42000     0x2000        0x0  r-xp   [vdso]
+V4_NATIVE_STATUS {"batch_quit_action": "kill_stopped_inferior", "capture_commands": ["thread apply all bt 24", "info sharedlibrary", "info proc mappings"], "capture_errors": {}, "inferior_exit_code": null, "inferior_exited": false, "inferior_state": "stopped", "linux_cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n0::/system.slice/run-r6172a8bdea6f4b63864c03524ec28233.scope\n", "linux_limits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        0                    0                    bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             15654                15654                processes \nMax open files            1024                 1048576              files     \nMax locked memory         10647019520          10647019520          bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       15654                15654                signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         0                    0                    \nMax realtime priority     0                    0                    \nMax realtime timeout      unlimited            unlimited            us        \n", "observed_pid": 2755824, "observed_stop_signal": "SIGABRT", "run_error": null, "stop_kind": "SignalEvent"}

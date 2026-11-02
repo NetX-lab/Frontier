@@ -14,6 +14,7 @@ from frontier.config import global_vars
 from frontier.entities.batch import (
     Batch,
     DecodeCudaGraphMetadata,
+    DummyForwardBatch,
     Request,
     SpecDecodeBatchMetadata,
 )
@@ -43,7 +44,12 @@ class IterationSchedulingPolicy:
     def _build_decode_cuda_graph_metadata(
         self, batch: Batch
     ) -> Optional[DecodeCudaGraphMetadata]:
-        if self._cluster_type not in (ClusterType.MONOLITHIC, ClusterType.DECODE):
+        config_mode = global_vars.get_decode_cuda_graph_mode()
+        graph_roles = (ClusterType.MONOLITHIC, ClusterType.DECODE)
+        if config_mode == "full_and_piecewise":
+            # The V2 runner dispatches every forward, a prefill engine's included.
+            graph_roles += (ClusterType.PREFILL,)
+        if self._cluster_type not in graph_roles:
             return None
         if (
             getattr(self, "_spec_decode_enabled", False)
@@ -55,7 +61,6 @@ class IterationSchedulingPolicy:
             # can reintroduce method-specific CUDA graph semantics.
             return None
 
-        config_mode = global_vars.get_decode_cuda_graph_mode()
         if config_mode == "none":
             return None
 
@@ -67,6 +72,9 @@ class IterationSchedulingPolicy:
             for request, num_tokens in zip(batch.requests, batch.num_tokens)
             if request.is_decoding
         ]
+        if isinstance(batch, DummyForwardBatch):
+            # gpu_worker.execute_dummy_batch calls _dummy_run(1, uniform_decode=True).
+            decode_query_lens = list(batch.num_tokens)
         original_decode_batch_size = len(decode_query_lens)
 
         # Align with vLLM's uniform_decode_query_len semantics.
@@ -83,13 +91,35 @@ class IterationSchedulingPolicy:
 
         is_uniform_decode_batch = (
             bool(decode_query_lens)
-            and len(decode_query_lens) == len(batch.requests)
+            and len(decode_query_lens) == batch.size
             and all(
                 query_len == uniform_decode_query_len
                 for query_len in decode_query_lens
             )
         )
         is_mixed_batch = not is_uniform_decode_batch
+
+        if config_mode == "full_and_piecewise":
+            runtime_mode, padded_total_tokens, padded_num_reqs = (
+                self.dispatch_full_and_piecewise(
+                    batch.size,
+                    batch.total_num_tokens,
+                    uniform_decode_query_len if is_uniform_decode_batch else None,
+                )
+            )
+            return DecodeCudaGraphMetadata(
+                config_mode=config_mode,
+                runtime_mode=runtime_mode,
+                capture_hit=runtime_mode != "NONE",
+                is_mixed_batch=is_mixed_batch,
+                original_total_tokens=batch.total_num_tokens,
+                padded_total_tokens=padded_total_tokens,
+                original_decode_batch_size=original_decode_batch_size,
+                # FULL pads requests with one-token decode rows.
+                padded_decode_batch_size=(
+                    original_decode_batch_size + padded_num_reqs - batch.size
+                ),
+            )
 
         runtime_mode = "NONE"
         if config_mode == "full_decode_only":
@@ -117,6 +147,29 @@ class IterationSchedulingPolicy:
             original_decode_batch_size=original_decode_batch_size,
             padded_decode_batch_size=padded_decode_batch_size,
         )
+
+    def dispatch_full_and_piecewise(
+        self, num_reqs: int, num_tokens: int, uniform_token_count: Optional[int]
+    ) -> Tuple[str, int, int]:
+        """Dispatch like the vLLM V2 runner's FULL_AND_PIECEWISE graph manager.
+
+        Returns the runtime mode, padded tokens and padded requests. A batch
+        runs the graph of the smallest capture size holding its tokens: FULL,
+        with requests padded to that size, when every request decodes one
+        token and the size is within max_num_seqs; PIECEWISE, with tokens
+        padded only, otherwise; eager above the largest capture size
+        (v1/worker/gpu/cudagraph_utils.py, _init_candidates and dispatch).
+        No captured descriptor bounds the max query length, so it is not an
+        input.
+        """
+        capture_hit, capture_size = self._resolve_decode_cuda_graph_capture_size(
+            num_tokens
+        )
+        if not capture_hit:
+            return "NONE", num_tokens, num_reqs
+        if uniform_token_count == 1 and capture_size <= self._max_num_running_reqs:
+            return "FULL", capture_size, capture_size
+        return "PIECEWISE", capture_size, num_reqs
 
     def _resolve_decode_cuda_graph_capture_size(self, total_tokens: int) -> Tuple[bool, int]:
         cudagraph_capture_sizes = global_vars.get_cudagraph_capture_sizes()
@@ -559,12 +612,19 @@ class IterationSchedulingPolicy:
         Running counts every admitted request, including one that is admitted
         but not scheduled in the current iteration. Waiting reuses the
         decision-log accessor above so a load balancer and the decision log can
-        never disagree about what is waiting.
+        never disagree about what is waiting. The ordinary capacity is already
+        allocatable blocks; grouped managers exclude their reserved null block
+        when calculating usage. Neither path subtracts a second null block.
         """
 
         return RequestLoad(
             self._get_num_waiting_reqs_for_decision_log(),
             len(self._running_requests),
+            (
+                self._kv_cache_manager.usage
+                if self._kv_cache_manager is not None
+                else self._num_allocated_blocks / self._config.num_blocks
+            ),
         )
 
     def _apply_long_prefill_token_threshold(
@@ -588,12 +648,13 @@ class IterationSchedulingPolicy:
         request_num_tokens: Optional[List[int]] = None,
         batch_size: int = 0,
         batch_num_tokens: int = 0,
+        extra_fields: Optional[Dict[str, Any]] = None,
     ) -> None:
         if not schedule_decision_logging_enabled():
             return
 
         if available_blocks is None:
-            available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+            available_blocks = self._get_available_kv_blocks()
 
         cluster_name = self._cluster_type.name if self._cluster_type else "MONOLITHIC"
         request_load = self.get_request_load()
@@ -621,7 +682,7 @@ class IterationSchedulingPolicy:
             "simulation_time": float(self._current_schedule_time),
             "simulation_time_semantics": "frontier_event_time_seconds",
         }
-        if self._kv_cache_manager is not None:
+        if self._is_prefix_caching_enabled():
             prefix_cache_stats = self._kv_cache_manager.prefix_cache_stats
             payload.update(
                 {
@@ -633,4 +694,12 @@ class IterationSchedulingPolicy:
                     "prefix_cache_hits": int(prefix_cache_stats.hits),
                 }
             )
+        if extra_fields:
+            duplicate_fields = set(payload).intersection(extra_fields)
+            if duplicate_fields:
+                raise ValueError(
+                    "Schedule decision extra_fields cannot replace canonical fields: "
+                    f"{sorted(duplicate_fields)}"
+                )
+            payload.update(extra_fields)
         _log_frontier_vllm_v1_schedule_decision(payload)

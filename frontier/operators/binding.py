@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from frontier.operators.spec import (
     OperatorFamilySpec,
@@ -258,10 +258,92 @@ def _get_model_architecture_profile(config):
     return get_model_architecture_profile(config)
 
 
-def build_operator_manifest(config) -> OperatorManifest:
-    """Build the operator manifest for a model config."""
+def _deepseek_v4_layer_manifest(config, layer) -> OperatorManifest:
+    """Select reachable source scopes, without admitting runtime execution."""
 
-    from frontier.attention.model_binding import bind_attention_family
+    from frontier.attention.families import (
+        DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT,
+        get_attention_family,
+    )
+    from frontier.operators.families import (
+        DEEPSEEK_V4_MHC_FAMILY,
+        MOE_FAMILY,
+        SHARE_EXPERT_FAMILY,
+    )
+
+    attention_family = get_attention_family(layer.family_id)
+    attention_operators = DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT[layer.variant_id]
+    first = layer.global_layer_id == 0
+    last = layer.global_layer_id == config.num_layers - 1
+    mhc_names = {"dsv4_mhc_attn_post_ffn_pre"}
+    if first:
+        mhc_names.update(("dsv4_embedding", "dsv4_mhc_first_pre"))
+    else:
+        mhc_names.add("dsv4_mhc_ffn_post_attn_pre")
+    if last:
+        mhc_names.update((
+            "dsv4_mhc_final_post", "dsv4_mhc_head", "dsv4_final_norm", "dsv4_lm_head",
+        ))
+    mhc_variant = "first_last" if first and last else (
+        "first" if first else "last" if last else "middle"
+    )
+    reason = "DeepSeek-V4 layer scopes are source inventory; runtime execution is disabled"
+    bindings = [
+        FamilyBinding(
+            family_id=attention_family.family_id,
+            variant_id=layer.variant_id,
+            family=replace(attention_family, operators=attention_operators),
+            frozen=True,
+            reason=reason,
+        ),
+        FamilyBinding(
+            family_id=DEEPSEEK_V4_MHC_FAMILY.family_id,
+            variant_id=mhc_variant,
+            family=replace(
+                DEEPSEEK_V4_MHC_FAMILY,
+                operators=tuple(
+                    operator for operator in DEEPSEEK_V4_MHC_FAMILY.operators
+                    if operator.name in mhc_names
+                ),
+            ),
+            frozen=True,
+            reason=reason,
+        ),
+    ]
+    # Preserve the shared family identities, but do not expose their generic
+    # producer/predictor targets through this inventory-only model binding.
+    for family, variant in (
+        (MOE_FAMILY, "hash" if layer.global_layer_id < config.num_hash_layers else "score"),
+        (SHARE_EXPERT_FAMILY, "shared_dense"),
+    ):
+        bindings.append(FamilyBinding(
+            family_id=family.family_id,
+            variant_id=variant,
+            family=replace(
+                family,
+                supported_variants=(variant,),
+                operators=tuple(
+                    replace(operator, predictor_target=False, profiling_target=False,
+                            e2e_trace_target=False, execution_time_attr=None)
+                    for operator in family.operators
+                ),
+                profiling_order=(),
+            ),
+            frozen=True,
+            reason=reason,
+        ))
+    return OperatorManifest(family_bindings=tuple(bindings))
+
+
+def build_operator_manifest(config, *, global_layer_id: int | None = None) -> OperatorManifest:
+    """Build a model manifest, or select one explicit global backbone layer.
+
+    A per-layer manifest is a reachable-scope inventory. It does not establish
+    execution order or imply that mutually exclusive native branches both run.
+    """
+
+    from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
+    from frontier.attention.families import get_attention_family
     from frontier.operators.families import (
         FFN_FAMILY,
         MEMORY_FAMILY,
@@ -271,7 +353,20 @@ def build_operator_manifest(config) -> OperatorManifest:
 
     architecture_profile = _get_model_architecture_profile(config)
     architecture_profile.validate_structural_requirements(config)
-    attention_binding = bind_attention_family(config)
+    if global_layer_id is None:
+        attention_binding = bind_attention_family(config)
+    else:
+        layer = bind_layer_attention(config, global_layer_id)
+        if layer.family_id == "deepseek_v4_attention":
+            return _deepseek_v4_layer_manifest(config, layer)
+        family = get_attention_family(layer.family_id)
+        attention_binding = FamilyBinding(
+            family_id=layer.family_id,
+            variant_id=layer.variant_id,
+            family=family,
+            frozen=not family.execution_enabled,
+            reason=family.disabled_reason,
+        )
     bindings = [
         FamilyBinding(
             family_id=attention_binding.family_id,
@@ -286,7 +381,14 @@ def build_operator_manifest(config) -> OperatorManifest:
             family=MEMORY_FAMILY,
         ),
     ]
-    if bool(getattr(config, "is_moe", False)):
+    layer_is_moe = bool(getattr(config, "is_moe", False))
+    if global_layer_id is not None and layer_is_moe:
+        from frontier.model_architectures import parse_moe_layer_ids
+
+        layer_is_moe = global_layer_id in parse_moe_layer_ids(
+            config.moe_layers_enum, config.num_layers,
+        )
+    if layer_is_moe:
         bindings.append(
             FamilyBinding(
                 family_id=MOE_FAMILY.family_id,

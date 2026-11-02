@@ -1,0 +1,121 @@
+{
+  "phase": "baseline",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "CUDA_VISIBLE_DEVICES": ""
+  },
+  "results": [
+    {
+      "name": "native_v2_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_v2_serving_inventory.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_v2_serving_inventory.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:37:55.835530+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 45,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_v2_serving_inventory.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_v2_serving_inventory.xml",
+      "log_sha256": "356c8ad297e226285ece1d238a1b6388c1861f5bc5d909055ba40286c9af3bf0",
+      "xml_sha256": "cd4187df2da6bed089664f242b1bb427780663dee11339f5e7ef737d6ddabdec"
+    },
+    {
+      "name": "native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_serve_profile.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_serve_profile.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:38:05.867541+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_serve_profile.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_serve_profile.xml",
+      "log_sha256": "c751834aa59d6dd77a4b3f2ea28f8aa49f2911bbfc8f4c72938438788de3a40e",
+      "xml_sha256": "b0a080d8e2ac6d71a3a42791f9174c2dfa57e67019ecea0c499a5fa36826edb5"
+    },
+    {
+      "name": "native_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_serving_inventory.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_serving_inventory.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:38:08.336523+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 28,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_serving_inventory.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_serving_inventory.xml",
+      "log_sha256": "6c9740ef75947af256b31a23e3751bd959287f46e044b88652d9a88d207afa5e",
+      "xml_sha256": "221365f02adca88eba066aab508f451996b12519be748ffaa90f8e350442d994"
+    },
+    {
+      "name": "native_groundtruth_check",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/unit/test_native_groundtruth_check.py",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_groundtruth_check.xml"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/v4-dp-sequence-record",
+      "start_utc": "2026-10-23T18:38:09.853497+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 99,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 21
+      },
+      "log": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_groundtruth_check.log",
+      "xml": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-implementation/baseline_native_groundtruth_check.xml",
+      "log_sha256": "073922ae30f1866e15bef0d6d35e0f2481ecfb23cbdbcc1d256d87f27fbef8e6",
+      "xml_sha256": "9c9b28d08b1e95289cb026cbf4fc52b6ee48b358824bc6fb839ac19c5e8e8c37"
+    }
+  ]
+}

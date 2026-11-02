@@ -1,0 +1,201 @@
+{
+  "decision": "D-V4-P0-AUDIT-METRICS-GROUP-CORRECTION",
+  "delivery_state": "OWNER_DELIVERY_COMPLETE_PRIMARY_ACCEPTANCE_PENDING",
+  "recorded_utc": "2026-10-24T20:32:54.269591+00:00",
+  "source_frozen_utc": "2026-10-24T20:25:45.684380+00:00",
+  "source_frozen_local": "2026-10-25T04:25:45.684380+08:00",
+  "manifest_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/delivery_manifest.json",
+  "manifest_self_hash_omitted": true,
+  "written_during_final_closeout": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/test_report_2026-10-25_group_metrics.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/check_progress.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/delivery_manifest.json"
+  ],
+  "delivered_paths": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/ast_closure.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/check_progress.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/run_unit.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_check.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_check_result.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_freeze.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/test_report_2026-10-25_group_metrics.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/unit.log",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/unit_result.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/delivery_manifest.json"
+  ],
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+      "repository_relative_path": "tests/analysis/v4_trace_audit_group_metrics.py",
+      "sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+      "gross_lines": 80,
+      "bytes": 3208
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+      "repository_relative_path": "tests/unit/test_v4_trace_audit_group_metrics.py",
+      "sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827",
+      "gross_lines": 194,
+      "bytes": 10986
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/ast_closure.json",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/ast_closure.json",
+      "sha256": "678c2d88d2ba30eddd38bb83b14d9f91a2e340faf41d382ef183255f07117308",
+      "gross_lines": 8,
+      "bytes": 357751
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/check_progress.md",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/check_progress.md",
+      "sha256": "eb0742e21bc8ea4bff42dfff7cba764991f5ab9e6e4bde975ec708042fd29a09",
+      "gross_lines": 57,
+      "bytes": 4480
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/run_unit.py",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/run_unit.py",
+      "sha256": "58572fc04982951f2993f9e56537bcaa97073610a48cb66842a9fdfdaf8a1e7f",
+      "gross_lines": 55,
+      "bytes": 3022
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_check.py",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_check.py",
+      "sha256": "5232e0ca88c3aca8edd75fe9f113fcc0f7de3c45bc98532c4161dd8ee9f01e8d",
+      "gross_lines": 38,
+      "bytes": 1958
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_check_result.json",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_check_result.json",
+      "sha256": "b12daa42cb9e336876e096b738abac2eeb32ee72a4411d54eb703a8930dbe064",
+      "gross_lines": 37,
+      "bytes": 2319
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_freeze.json",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/source_freeze.json",
+      "sha256": "9677fd82be5c5049371af4a35db3b8a3572dc475908b2ffe9eceb0bf8d51abd2",
+      "gross_lines": 26,
+      "bytes": 1071
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/test_report_2026-10-25_group_metrics.md",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/test_report_2026-10-25_group_metrics.md",
+      "sha256": "50b405e171bef131358b4214fed04a3da5bf86187c5b7e9e071faeb2c05e6523",
+      "gross_lines": 43,
+      "bytes": 5227
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/unit.log",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/unit.log",
+      "sha256": "bfadc3be2592a5ad9034054b8f7cf83866d5cbe295dca4aabd9cd7fef5b1fb0c",
+      "gross_lines": 14,
+      "bytes": 947
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/unit_result.json",
+      "repository_relative_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/unit_result.json",
+      "sha256": "54ff3b0421108f5ba20aa0c6b33fd97f9fc41d7ed0e23c9d35a241f5c8522886",
+      "gross_lines": 1045,
+      "bytes": 490514
+    }
+  ],
+  "caps": {
+    "source_gross_lines": 80,
+    "source_gross_cap": 220,
+    "test_gross_lines": 194,
+    "test_gross_cap": 200,
+    "owner_markdown_gross_lines": 100,
+    "owner_markdown_gross_cap": 100,
+    "status": "PASS"
+  },
+  "retained_unit": {
+    "receipt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/unit_result.json",
+    "receipt_sha256": "54ff3b0421108f5ba20aa0c6b33fd97f9fc41d7ed0e23c9d35a241f5c8522886",
+    "owner_unit_invocations_used": 1,
+    "owner_unit_invocation_ceiling": 1,
+    "expected_tests": 9,
+    "tests_run": 9,
+    "evidence_count": 42,
+    "status": "PASS",
+    "elapsed_seconds": 0.2728235418908298,
+    "serialized_evidence_consistent": true,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "retained_owner_evidence_sha256": {
+    "source_check.py": "5232e0ca88c3aca8edd75fe9f113fcc0f7de3c45bc98532c4161dd8ee9f01e8d",
+    "run_unit.py": "58572fc04982951f2993f9e56537bcaa97073610a48cb66842a9fdfdaf8a1e7f",
+    "source_check_result.json": "b12daa42cb9e336876e096b738abac2eeb32ee72a4411d54eb703a8930dbe064",
+    "unit.log": "bfadc3be2592a5ad9034054b8f7cf83866d5cbe295dca4aabd9cd7fef5b1fb0c",
+    "ast_closure.json": "678c2d88d2ba30eddd38bb83b14d9f91a2e340faf41d382ef183255f07117308",
+    "unit_result.json": "54ff3b0421108f5ba20aa0c6b33fd97f9fc41d7ed0e23c9d35a241f5c8522886",
+    "source_freeze.json": "9677fd82be5c5049371af4a35db3b8a3572dc475908b2ffe9eceb0bf8d51abd2"
+  },
+  "owner_review": {
+    "reviewer": "Hooke",
+    "phase": "Group metrics source/composition",
+    "state": "COMPLETE",
+    "findings": [],
+    "evidence": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/test_report_2026-10-25_group_metrics.md",
+    "independent_primary_reviews": "PENDING"
+  },
+  "owner_self_check": {
+    "skill": "/data/ycfeng/stepcode-codex-home/.stepcode/codex/skills/check-progress/SKILL.md",
+    "evidence": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/check_progress.md",
+    "state": "COMPLETE",
+    "branch": "A",
+    "drift": {
+      "D1": "CLEAR",
+      "D2": "CLEAR",
+      "D3": "CLEAR",
+      "D4": "CLEAR",
+      "D5": "CLEAR",
+      "D6": "CLEAR",
+      "D7": "CLEAR"
+    },
+    "spec_checks": {
+      "S1": "CLEAR",
+      "S2": "CLEAR",
+      "S3": "CLEAR",
+      "S4": "CLEAR",
+      "S5": "CLEAR",
+      "S6": "CLEAR"
+    },
+    "progress_counts": {
+      "PASS": 5,
+      "BLOCKED": 2,
+      "FAILED": 0,
+      "SKIPPED": 0,
+      "TODO": 1
+    }
+  },
+  "final_closeout_execution": {
+    "unit_invocations": 0,
+    "complete_pipeline_invocations": 0,
+    "complete_trace_controls": 0,
+    "affected_invocations": 0,
+    "gpu_operations": 0,
+    "network_operations": 0,
+    "git_operations": 0
+  },
+  "primary_pending": [
+    "New primary unit",
+    "Two complete exact controls",
+    "Independent Spec/Standards reviews",
+    "Source/AST and command receipts",
+    "Fresh P0 pilot",
+    "Seven ranks conditional on complete pilot acceptance",
+    "R5 complete-output acceptance"
+  ],
+  "limitations": [
+    "Only retained tiny-fixture and AST evidence establishes owner verification.",
+    "Full P0 performance improvement is unmeasured; current shared R5 is 24/32.",
+    "No native ownership/dependency/timing/GPU/cost/reference admission."
+  ]
+}

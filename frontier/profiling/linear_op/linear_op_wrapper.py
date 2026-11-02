@@ -5,6 +5,11 @@ from collections.abc import Mapping
 import torch
 
 from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
+    build_fp8_linear_method_kernels,
+    linear_fp8_backends_by_operator,
+    linear_fp8_bindings_by_operator,
+)
 from frontier.profiling.common.parallel_utils.tensor_parallel_utils import (
     get_padded_vocab_size,
 )
@@ -24,6 +29,16 @@ from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
 
 WARMUP_STEPS = 3
 ACTIVE_STEPS = 20
+
+
+def linear_op_wrapper_class(profiling_plan: dict | None):
+    """Return the producer class that owns a plan's operators."""
+
+    if profiling_plan is not None and "row_axis" in profiling_plan:
+        from frontier.profiling.linear_op.deepseek_v4_operators import DeepseekV4OperatorWrapper
+
+        return DeepseekV4OperatorWrapper
+    return LinearOpWrapper
 
 
 class LinearOpWrapper:
@@ -86,6 +101,11 @@ class LinearOpWrapper:
         )
         initialize_dummy_weights(self.model)
         self.model = self.model.to(dtype=self.model_config.dtype).cuda().eval()
+        build_fp8_linear_method_kernels(
+            self.model,
+            model_config=self.model_config,
+        )
+        self.linear_backends = linear_fp8_backends_by_operator(self.model)
 
     def _get_expected_keys(self) -> list[str]:
         if self.profiling_plan is not None and "enabled_ops" in self.profiling_plan:
@@ -147,7 +167,6 @@ class LinearOpWrapper:
             "share_expert_dim": self.model_config.share_expert_dim,
             "share_q_dim": self.model_config.share_q_dim,
         }
-
         if self.profiling_plan is not None and "typed_operator_contracts" in self.profiling_plan:
             typed_contracts = self.profiling_plan["typed_operator_contracts"]
             if not isinstance(typed_contracts, Mapping):
@@ -246,6 +265,17 @@ class LinearOpWrapper:
 
 
         stats = self._build_profile_result(time_stats, num_tokens=num_tokens)
+        if self.linear_backends:
+            stats["linear_backends"] = self.linear_backends
+        bindings = linear_fp8_bindings_by_operator(self.model)
+        if bindings:
+            stats["linear_bindings"] = bindings
+        if self.profiling_plan is not None and "sequence_parallel_moe_topology" in self.profiling_plan:
+            from frontier.profiling.linear_op.deepseek_v4_plan import shared_expert_row_contracts
+
+            stats["typed_operator_contracts"] = shared_expert_row_contracts(
+                self.model_config, stats["typed_operator_contracts"], num_tokens,
+            )
         self.timer_stats_store.clear_stats()
 
         return stats

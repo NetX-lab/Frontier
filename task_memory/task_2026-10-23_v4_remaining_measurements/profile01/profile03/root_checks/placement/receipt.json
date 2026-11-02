@@ -1,0 +1,50 @@
+{
+  "observed_at_utc": "2026-10-24T06:30:36.957930+00:00",
+  "job": "exp-1024-141341-669621",
+  "replicas": [
+    {
+      "name": "default",
+      "process_id": "exp-1024-141341-669621-c4ca4238",
+      "state": "STARTING",
+      "ip": "",
+      "node_name": "",
+      "node_ip": ""
+    },
+    {
+      "name": "default",
+      "process_id": "exp-1024-141341-669621-c81e728d",
+      "state": "STARTING",
+      "ip": "",
+      "node_name": "",
+      "node_ip": ""
+    },
+    {
+      "name": "default",
+      "process_id": "exp-1024-141341-669621-cfcd2084",
+      "state": "STARTING",
+      "ip": "",
+      "node_name": "",
+      "node_ip": ""
+    },
+    {
+      "name": "default",
+      "process_id": "exp-1024-141341-669621-eccbc87e",
+      "state": "STARTING",
+      "ip": "",
+      "node_name": "",
+      "node_ip": ""
+    }
+  ],
+  "assigned_nodes": [],
+  "distinct_nodes": 0,
+  "placement_verified": false,
+  "scope": "Single actual-placement snapshot prompted by SDK-hard versus platform-preferred affinity; no completion loop or controls.",
+  "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_placement_qgirmfvc",
+  "command": [
+    "/usr/bin/bash",
+    "-c",
+    "set -euo pipefail; set +x; proxy_script=$(curl --noproxy \"*\" --fail --silent --show-error --max-time 15 http://deploy.i.shaipower.com/httpproxy); eval \"$proxy_script\"; export HTTP_PROXY=\"$http_proxy\" HTTPS_PROXY=\"$https_proxy\" ALL_PROXY=\"$all_proxy\" NO_PROXY=\"$no_proxy\"; exec /data/ycfeng/tmp/stepmind-env/bin/python -I -B \"$1\"",
+    "read-job",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_placement_qgirmfvc/read_placement.py"
+  ]
+}

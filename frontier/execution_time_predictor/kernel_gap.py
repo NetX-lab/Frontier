@@ -20,6 +20,7 @@ from typing import Any, Callable, Iterator, Sequence
 import pandas as pd
 
 from frontier.profiling.kernel_gap.schema import (
+    DSV4_EXECUTION_MODES,
     EXECUTION_MODE_COLUMN,
     EXECUTION_MODES,
     KERNEL_GAP_US_COLUMN,
@@ -40,12 +41,21 @@ def kernel_count_column(target_column: str) -> str | None:
 
 def read_kernel_gap_ms(path: str, tensor_parallel_size: int) -> dict[str, float]:
     """Mean device gap before a kernel, in milliseconds, by execution mode, at one attention TP size."""
+    return _read_gap_rows_ms(path, tensor_parallel_size, EXECUTION_MODES)
+
+
+def read_dsv4_kernel_gap_ms(path: str, tensor_parallel_size: int) -> dict[str, float]:
+    """Read all four V4 segment gaps at the target deployment's TP size."""
+    return _read_gap_rows_ms(path, tensor_parallel_size, DSV4_EXECUTION_MODES)
+
+
+def _read_gap_rows_ms(path: str, tensor_parallel_size: int, modes: Sequence[str]) -> dict[str, float]:
     table = pd.read_csv(path)
     if TENSOR_PARALLEL_COLUMN not in table.columns:
         raise ValueError(f"{path} has no {TENSOR_PARALLEL_COLUMN} column, the TP size each row was measured at")
     table = table[table[TENSOR_PARALLEL_COLUMN] == tensor_parallel_size]
     gaps_ms = {}
-    for mode in EXECUTION_MODES:
+    for mode in modes:
         gaps_us = table.loc[table[EXECUTION_MODE_COLUMN] == mode, KERNEL_GAP_US_COLUMN]
         if len(gaps_us) != 1 or not math.isfinite(gaps_us.iloc[0]) or gaps_us.iloc[0] < 0:
             raise ValueError(

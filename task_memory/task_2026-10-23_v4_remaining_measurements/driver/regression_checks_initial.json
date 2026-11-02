@@ -1,0 +1,209 @@
+{
+  "source_files": {
+    "tests/comparison/calibration/native_pd_worker.py": "ed52696f4672ad55658a143cb5a0491322a2794d93523a1eb202d7dada82ea20",
+    "tests/comparison/calibration/native_serve_profile.py": "76c5d137b392fd2ab2ee26e44e496015250a078cb48e4783939ebdf7ce2ef693",
+    "tests/comparison/calibration/pd_replay.py": "790e8d45d66803dea9bdafdd901ee480bd0aaaeb8c501d319506858c7a5159c9",
+    "tests/unit/test_native_pd_worker.py": "f8b19cb477f645f44941d7e9cf424011a9151491e8cd89c8b3cdacaf171c02c3",
+    "tests/unit/test_native_serve_profile.py": "5a04a9e3c7a7d37b10532d7e1567972c0bcf93730724fb241cb48c01d6b76b6a",
+    "tests/unit/test_native_streaming_replay.py": "90c7e612309a5b8d43e689825a15d804bb322a233f58bbea76e07989744290ba"
+  },
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "NATIVE_READER_BINDING_CHECKER": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py"
+  },
+  "suites": [
+    {
+      "suite": "test_native_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serving_inventory.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_native_serving_inventory.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 28,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_v2_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_v2_serving_inventory.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_native_v2_serving_inventory.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 45,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_reader_binding",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_reader_binding.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_native_reader_binding.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 135,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_dp_placement_harness",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_dp_placement_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_dp_placement_harness.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 75,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_calibration_pd_harness",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_calibration_pd_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_calibration_pd_harness.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 68,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_pd_manifest",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_manifest.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_native_pd_manifest.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 14,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_cold_start",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_cold_start.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_native_cold_start.xml"
+      ],
+      "returncode": 1,
+      "counts": {
+        "tests": 18,
+        "errors": 0,
+        "failures": 1,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_canonical_client_metrics",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_canonical_client_metrics.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_canonical_client_metrics.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 24,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_pd_canonical_http",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_canonical_http.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_regression01/test_native_pd_canonical_http.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 1,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    }
+  ]
+}

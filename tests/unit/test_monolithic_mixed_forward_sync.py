@@ -55,6 +55,9 @@ class _ModelConfig:
     def is_moe_layer(self, layer_id: int) -> bool:
         return layer_id not in self._dense_layers
 
+    def get_model_architecture_profile(self):
+        return SimpleNamespace(profile_id="generic")
+
 
 class _ExecutionTime:
     """A single-layer prediction whose value is a function of its own batch.

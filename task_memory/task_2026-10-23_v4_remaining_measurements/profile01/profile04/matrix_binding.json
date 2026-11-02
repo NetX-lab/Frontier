@@ -1,0 +1,21 @@
+{
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "limitations": "Domain identity only; no native/GPU/operator/reference qualification.",
+  "mismatched_cases": 0,
+  "new_capture": false,
+  "primary_integration_acceptance_sha256": "96d6e17cac8ca4ff1a8503ec525505c24cbc30690f7ad1d60d743fd5d6b67bc4",
+  "prior_binding_path": "task_memory/task_2026-10-23_v4_remaining_measurements/driver/matrix_binding_final.json",
+  "prior_binding_sha256": "e6d1b99ac31cd0c943c34f7ea4906aa1d73cc4abb0be7188309cca149b94346d",
+  "source_revision": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "status": "PROFILE03_77_CASE_GATE_PASS_BY_EXPLICIT_BINDING",
+  "unchanged_domain_trees": {
+    "data": "403e775810357805c4ce0eeb27553e68c56f58fc",
+    "examples": "eca48fdc0510b46f8ca9309d595737397be4d0cc",
+    "frontier": "e97fbcc69d3d183b93d9e21c6724170dadb5b9c6",
+    "tests/e2e/refactor_fidelity": "deebb8fcabc0bd82d3e8d410c742f49569133411",
+    "tests/integration/canonical_case": "96495912d547ffcf4c8fe0dec27d156cb5f9e717"
+  }
+}

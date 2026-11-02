@@ -1,0 +1,18 @@
+native shapes not in G3h:
+G3h shapes not in native:
+  grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLB  (2 traces)
+  grid=[256, 1, 1] kernel_cutlass_kernel_vllmmodel_executorkernelslinearcute_dsl_ll_bf16_dotprodLLB  (1 traces)
+  grid=[1, 1, 1] void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arang  (13 traces)
+  grid=[72, 1, 1] void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arang  (7 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long  (13 traces)
+  grid=[5, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long  (7 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_  (13 traces)
+  grid=[5, 1, 1] void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctorOnSelf_  (7 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_  (40 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>  (13 traces)
+  grid=[5, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>  (7 traces)
+  grid=[1, 1, 1] void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>,   (20 traces)
+  grid=[1, 3, 1] void vllm::moe::count_and_sort_expert_tokens_kernel<long>(long const*, int*, int  (3 traces)
+  grid=[192, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*,  (2 traces)
+  grid=[256, 1, 1] void vllm::moe::moe_sum_vec_kernel<c10::BFloat16, long, 6, true>(c10::BFloat16*,  (1 traces)
+shared shapes: 20

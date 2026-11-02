@@ -1,0 +1,5 @@
+cpu annotations of prefill steps (ms) [('execute_context_1(6144)_generation_0(0)', 334.907), ('execute_context_1(6144)_generation_0(0)', 329.772), ('execute_context_1(6144)_generation_0(0)', 331.098), ('execute_context_1(6144)_generation_0(0)', 333.618)]
+execute_context_1(6144)_generation_0(0) annotation 5.219 contiguous kernel span 445.876 kernels 2396
+execute_context_1(6144)_generation_0(0) annotation 3.535 contiguous kernel span 429.804 kernels 2396
+execute_context_1(6144)_generation_0(0) annotation 3.531 contiguous kernel span 409.859 kernels 2396
+execute_context_1(6144)_generation_0(0) annotation 3.59 contiguous kernel span 378.098 kernels 2396

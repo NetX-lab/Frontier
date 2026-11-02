@@ -1,0 +1,11 @@
+{
+  "task_id": "W128-NATIVE-COLD-START",
+  "baseline": "e55c83c",
+  "expected_approved_cold_start": true,
+  "observed_verified": false,
+  "first_errors": [
+    "prefill: ValueError: Missing native running/waiting/KV gauge for a declared lane",
+    "decode: ValueError: Missing native running/waiting/KV gauge for a declared lane"
+  ],
+  "status": "RED"
+}

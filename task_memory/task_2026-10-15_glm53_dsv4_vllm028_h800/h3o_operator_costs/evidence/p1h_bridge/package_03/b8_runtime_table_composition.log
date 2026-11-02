@@ -1,0 +1,14 @@
+{
+  "sha256": "277626cd766865bd0d006d73bf01b31292d7e3f536acce919b1c7ceca7f30ff6",
+  "rows": 505,
+  "models": 554,
+  "scope_mismatches": [],
+  "median_absolute_relative_error": 0.004909042604138507,
+  "p90_absolute_relative_error": 0.013427296634388455,
+  "maximum_absolute_relative_error": 0.06672723200168651,
+  "rows_above_five_percent": [
+    13,
+    204
+  ],
+  "b7_equal": true
+}

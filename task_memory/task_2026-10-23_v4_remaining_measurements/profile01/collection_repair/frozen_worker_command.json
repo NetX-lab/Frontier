@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "argv": [
+    "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/unit/test_native_pd_worker.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--junitxml=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_worker.xml",
+    "--basetemp=/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_worker_temp"
+  ],
+  "returncode": 0,
+  "start_utc": "2026-10-23T19:22:44.761354+00:00",
+  "end_utc": "2026-10-23T19:22:46.910783+00:00",
+  "source_sha256": {
+    "tests/comparison/calibration/native_pd_worker.py": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+    "tests/unit/test_native_pd_worker.py": "84fa7a4be7a8a957eb62671e652d6e00ff48d153c92671bea7a53fe6528cea4c"
+  },
+  "source_preserved": true,
+  "log": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/frozen_test_native_pd_worker.log",
+  "counts": {
+    "tests": 36,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "tail": [
+    "....................................                                     [100%]",
+    "36 passed in 1.69s"
+  ]
+}

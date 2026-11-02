@@ -1,0 +1,28 @@
+{
+  "status": "PASS_ACTUAL_NATIVE_DECORATOR_CLASS_VALIDATORS_AST",
+  "profiler_config": {
+    "delay_iterations": 0,
+    "ignore_frontend": true,
+    "max_iterations": 64,
+    "profiler": "torch",
+    "torch_profiler_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024_04/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/torch_traces",
+    "torch_profiler_dump_cuda_time_total": false,
+    "torch_profiler_record_shapes": false,
+    "torch_profiler_use_gzip": true,
+    "torch_profiler_with_flops": false,
+    "torch_profiler_with_memory": false,
+    "torch_profiler_with_stack": false,
+    "wait_iterations": 0,
+    "warmup_iterations": 0
+  },
+  "negative_controls": 3,
+  "role_configs": {
+    "prefill": 512,
+    "decode": 64
+  },
+  "non_native_standins": [
+    "logger",
+    "safe_hash"
+  ],
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]"
+}

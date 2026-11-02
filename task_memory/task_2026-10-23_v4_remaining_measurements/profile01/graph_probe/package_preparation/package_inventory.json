@@ -1,0 +1,99 @@
+{
+  "task_id": "W128-GRAPH-PAYLOAD-PACKAGE",
+  "status": "PASS_PREPARED_NOT_SEALED",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01",
+  "source_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "input_count": 8,
+  "total_files_including_manifest": 9,
+  "files": [
+    {
+      "path": "config.json",
+      "sha256": "1cb84a7581ceb8392b62a557eee9f75eccc0eb24cebf0fd79a6216f033a75074",
+      "bytes": 1814,
+      "lines": 29
+    },
+    {
+      "path": "inputs/build_package.py",
+      "sha256": "0b3e0be75be817f519c8bde12ca2cd70884c5d8ac99cc8792ca70d1ec52b5e1e",
+      "bytes": 6284,
+      "lines": 113
+    },
+    {
+      "path": "inputs/launcher_template.py",
+      "sha256": "2d84970c4bec06533942ceafbfd6a7a6eb729c6ee12e73fe594faaf797ee493d",
+      "bytes": 3037,
+      "lines": 65
+    },
+    {
+      "path": "inputs/profile_plan.json",
+      "sha256": "19616949299a12aa72e4950ee85ef9c71eeaacfa5572e6ca3a76179bc77c8c9d",
+      "bytes": 882,
+      "lines": 20
+    },
+    {
+      "path": "inputs/template_config.json",
+      "sha256": "6c94d88d6b24e09093dc9b90f5e2b48f41c661f0c22d858c2c0059738929d25e",
+      "bytes": 1328,
+      "lines": 25
+    },
+    {
+      "path": "launch.py",
+      "sha256": "5dea2c75c3f04ddba9a35a72bcc63c6a8cd12c283eeccf72a7e83fa547ac3c1d",
+      "bytes": 3710,
+      "lines": 73
+    },
+    {
+      "path": "manifest.json",
+      "sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+      "bytes": 984,
+      "lines": 17
+    },
+    {
+      "path": "probe_diagnostic.py",
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+      "bytes": 34078,
+      "lines": 669
+    },
+    {
+      "path": "source_lock.json",
+      "sha256": "3aeb2a5a103e7b2bc57001c5c4df575cf68af06dd97b2ce5d2a8d0f8b41e3db9",
+      "bytes": 4354,
+      "lines": 81
+    }
+  ],
+  "maintenance": [
+    {
+      "path": "build_package.py",
+      "sha256": "0b3e0be75be817f519c8bde12ca2cd70884c5d8ac99cc8792ca70d1ec52b5e1e",
+      "bytes": 6284,
+      "lines": 113
+    },
+    {
+      "path": "profile_plan.json",
+      "sha256": "19616949299a12aa72e4950ee85ef9c71eeaacfa5572e6ca3a76179bc77c8c9d",
+      "bytes": 882,
+      "lines": 20
+    }
+  ],
+  "maintenance_lines": 133,
+  "maintenance_limit": 220,
+  "generated_config_lines": 29,
+  "including_generated_config_lines": 162,
+  "generated_launcher_lines": 73,
+  "generated_launcher_limit": 100,
+  "generated_launcher_delta": {
+    "added": 12,
+    "deleted": 4,
+    "gross": 16
+  },
+  "unchanged_frozen_source_lines": 669,
+  "unchanged_frozen_source_bytes": 34078,
+  "original_pins_count": 33,
+  "original_pins_unchanged": true,
+  "tracked_package_files": 0,
+  "package_launch_receipts": false,
+  "config_cli_and_diagnostic_binding": true,
+  "diagnostic_start_source_line": 52,
+  "main_source_line": 621,
+  "scope": "Prepared immutable source/config only. Actual image, SDK, personal auth/quota/NFS/cloud destination, seal/launch and runtime acceptance belong to root."
+}

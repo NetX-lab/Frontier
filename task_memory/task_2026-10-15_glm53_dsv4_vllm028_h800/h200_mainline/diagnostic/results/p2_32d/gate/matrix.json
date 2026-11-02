@@ -1,0 +1,34 @@
+{
+ "cases": {
+  "dsv4-h200-p2-canonical-fixed128-qps1": {
+   "architecture": "pd-disaggregation",
+   "routing": {
+    "status": "NOT_APPLICABLE",
+    "reason": "Frontier prices whole native lane steps from dsv4_step_cost.json, measured on P2-32p with the same balanced_topk routing as P2-32r; Frontier's routing model does not enter this prediction (MoE and EP costs are zero)."
+   }
+  }
+ },
+ "cells": [
+  {
+   "cell_id": "dsv4-h200-p2-canonical-fixed128-qps1/h4a_step_cost",
+   "case_id": "dsv4-h200-p2-canonical-fixed128-qps1",
+   "status": "claimed",
+   "gate": "client",
+   "label": "DIAGNOSTIC: H4a, counts toward neither the 30% promotion gate nor the 10% final gate",
+   "trace": {
+    "request_ids": {
+     "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/request_ids.json",
+     "sha256": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6"
+    },
+    "workload": {
+     "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/manifest.json",
+     "sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3"
+    }
+   },
+   "run_check": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/h200/gate/p2_32d/p2_32_r4_case/analysis/run_check_status.groundtruth_clean.json",
+    "sha256": "8cc662e69a6f10c093e703e9280b6336fe910374e44953b48f2f8d1a119204a1"
+   }
+  }
+ ]
+}

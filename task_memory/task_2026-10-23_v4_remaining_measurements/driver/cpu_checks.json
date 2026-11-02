@@ -1,0 +1,83 @@
+{
+  "source_files": {
+    "tests/comparison/calibration/native_pd_worker.py": "ed52696f4672ad55658a143cb5a0491322a2794d93523a1eb202d7dada82ea20",
+    "tests/comparison/calibration/native_serve_profile.py": "76c5d137b392fd2ab2ee26e44e496015250a078cb48e4783939ebdf7ce2ef693",
+    "tests/comparison/calibration/pd_replay.py": "790e8d45d66803dea9bdafdd901ee480bd0aaaeb8c501d319506858c7a5159c9",
+    "tests/unit/test_native_pd_worker.py": "f8b19cb477f645f44941d7e9cf424011a9151491e8cd89c8b3cdacaf171c02c3",
+    "tests/unit/test_native_serve_profile.py": "5a04a9e3c7a7d37b10532d7e1567972c0bcf93730724fb241cb48c01d6b76b6a",
+    "tests/unit/test_native_streaming_replay.py": "90c7e612309a5b8d43e689825a15d804bb322a233f58bbea76e07989744290ba"
+  },
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "NATIVE_READER_BINDING_CHECKER": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py"
+  },
+  "suites": [
+    {
+      "suite": "test_native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serve_profile.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_cpu01/test_native_serve_profile.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 32,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_pd_worker",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_worker.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_cpu01/test_native_pd_worker.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 17,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_streaming_replay",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_streaming_replay.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_cpu01/test_native_streaming_replay.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 36,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+    "--generation",
+    "3",
+    "--profile-plan",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run",
+  "source_commit": "9946771815903f6cd6de8147765fd41395deee21",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "started_utc": "2026-10-24T05:35:56.904680+00:00",
+  "returncode": 0,
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/brainpp",
+    "LANG": "C.UTF-8",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "stdout": "{\"package\": \"/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03\", \"source_commit\": \"9946771815903f6cd6de8147765fd41395deee21\", \"native_source_pins\": 87, \"unsealed\": true, \"actual_submission_or_native_admission\": false}\n",
+  "stderr": ""
+}

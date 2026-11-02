@@ -1,0 +1,29 @@
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md
+index 0ba0cc14..545fa1af 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md
+@@ -3,10 +3,11 @@
+ 
+ ## Modification History
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | Recorded accepted scope/lifetime CPU-source and incomplete loading-GC pilot without GPU/native admission. |
+ | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
+ | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: synchronized one submitted profile04 attempt and dated Starting/unassigned snapshot; original profile03 FAILED, accepted evidence and all admission gates retained. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current profile03 FAILED and offline timeline/metadata/RPC controls recorded; Starting checkpoints, accepted captures and full-ticket boundaries preserved. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: synchronized limited graph correspondence acceptance and merged/sealed profile03 Starting; runtime, placement, transport and full-ticket gates remain open. |
+ | 2026-10-24 | W128-OCT24-REPAIR-DOCS: synchronized integrated collection repairs, sealed graph-probe launcher-start receipt and delivered unsealed profile03; native/cost/calibration gates unchanged. |
+@@ -200,11 +201,11 @@
+ - completed execution only: [terminal](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/terminal_platform.json) gives exp-1024-172225-512616/4Succeeded/exit0/restart0, actual H800 hosts0030/0158/0187/0574/32UUIDs; [group binding](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/platform_group_binding.json) confirms codesign/non-preemptible. GPU attempt1/1/original45inputs/runtime1437ace6 unchanged. [Download](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/download_receipt.json):202files/6,024,578,382B hash-identical, inventory85b0ef2339d9c5f999eb625972a7d582a6ed49f05fd528952c93e551cfb07c8c.
+ - completed R3 scoped audit/No findings:432success/0failed,1024recorded delta token IDs plus native usage each; [primary mechanical replay](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_01.json) PASS193checks/99bindings/token-negative and32metadata ranks.13native childSIGKILL escalations are not all-natural shutdown; NET/IB/Socket and workerbinary rehash UNKNOWN. This replay predates the R4 correction.
+ - completed limited R4 metadata acceptance: [decision](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json) and [corrected primary replay](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/root_cpu_replay_02_metadata_p2.json), P2 re-review CLOSED and output byte-identical8ba69802bdbef62f1dd8cd6e5c979cbf4a60f1a1eb317c84f060b5399712a587. Zero temporary categories/evidence,80 direct decode joins/1320 sampling unchanged; no whole DP alignment or actual trace-ID acceptance.
+ - failed/incomplete R5: [trace report](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/test_report_2026-10-24_trace.md),24ranks complete/all8P0 exit124 at60s; useful P1/D0/D1=4/61/61 per rank, P0 full coverage UNKNOWN. All32formal metadata exists/closed/0drops/errors, not whole-DP/vector alignment or complete kernel-stream mapping.
+ - completed P0 GC diagnosis and one post-load freeze experiment: [original stage diagnosis](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/diagnosis.md), telemetry15.836seconds completed gen2 pauses,13.108 during loading. Freeze's exact decode control passes, but P0 still exits124 at60s; loading47.129seconds and363354 partial lines do not establish completion. Frozen auditor/reader, raw inputs and45package unchanged; no limit increase/GPU retry.
+-- S1 source delivered5e2fe861/272db0bd: owner48 CPU PASS and original250source/160tests; independent reviews require exact handle/full-ID tuple selection and post-writer log hashes. Repair/re-review/primary replay pending under265source/185tests composed caps; [seven source bindings](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json) unchanged. Single1H800/600s observe/control NOT submitted; package/image/runtime/native gates separate.
++- S1/S2 [CPU/source accepted](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json): tuple/loghash findings and full13-file review gaps CLOSED; owner and merged roots each50PASS/25fixtures/30GiB/CUDAfalse,252source/179tests within265/185. [Seven bindings](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/source_binding.json), runtime and45sealed04 inputs unchanged. Separate mirrored S3package allocated; single1H800/600s observe/control NOT submitted, no actual TLS/lifetime/native ownership/cost qualification.
+ - current frontier: `bounded P0 load-cost follow-up decision ‖ S1 tuple/hash repair -> re-review -> primary CPU replay`; R5 -> R6 -> R7 NOT closed. R3/R4 acceptance is limited to retained run-data/metadata, not serving/reference/cost/captured-operator/dependency admission. Full05/09/19 OPEN, GLM PAUSED, CPU-overhead last; historical submission/failure/native06/tiny-probe evidence is preserved.
+ 
+ ### Historical submission checkpoint — 2026-10-24 09:49Z
+ 
+ ### Profile04 submission milestone — 2026-10-24

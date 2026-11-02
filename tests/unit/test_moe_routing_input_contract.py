@@ -1,5 +1,4 @@
 import pytest
-import torch
 
 from frontier.profiling.moe.moe_wrapper import MoEWrapper
 from frontier.profiling.moe.load_distribution import generate_expert_routing
@@ -7,6 +6,8 @@ from frontier.profiling.moe.load_distribution import generate_expert_routing
 
 def _cpu_wrapper(*, expert_parallel_size: int = 1) -> MoEWrapper:
     wrapper = MoEWrapper.__new__(MoEWrapper)
+    wrapper.rank = 0
+    wrapper.routing_runtime_path = "standard_fused_topk"
     wrapper.expert_parallel_size = expert_parallel_size
     wrapper.num_experts = 8
     wrapper.num_experts_per_device = 8 // expert_parallel_size

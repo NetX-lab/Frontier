@@ -1,0 +1,42 @@
+{
+  "status": "ACCEPTED_CPU_SOURCE_WITH_LIMITS",
+  "observed_at_utc": "2026-10-24T15:02:45.364610+00:00",
+  "source_accepted": true,
+  "source_commit": "d55782d7094be412b034a72600da55f47b4a4392",
+  "owner_delivery_commit": "e081d5e80218b2dd57c995cdc6b298d9d833f6c3",
+  "merged_candidate_commit": "d3f9bbcdc76d49067955b154bda9a1e2c2121b1a",
+  "source_test_sha256": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": "bc638fbdf0111a8ce78383d182d41e19a5799bacc6cc5a657aa79b1a34672685",
+    "tests/unit/test_cupti_scope_lifetime.py": "ae8451a37892884f1c16cc845661ac132ea51ca5169a09831553a25b5b079487"
+  },
+  "budgets": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py": 252,
+    "tests/unit/test_cupti_scope_lifetime.py": 179
+  },
+  "primary_cpu_receipts": {
+    "owner_worktree": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/root_cpu_replay_owner_worktree.json",
+      "sha256": "48ac7d2fb646037f6d2d53c7669a75d1009611033d2eb36b0fc966abd43c2883",
+      "candidate_commit": "e081d5e80218b2dd57c995cdc6b298d9d833f6c3"
+    },
+    "merged_worktree": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/root_cpu_replay_merged_worktree.json",
+      "sha256": "3e45423f6442420234566ac416b8a5c269d153df8317e73d0a38c9e1d3eedf26",
+      "candidate_commit": "d3f9bbcdc76d49067955b154bda9a1e2c2121b1a"
+    }
+  },
+  "raw_binding_closure_sha256": "2164f404d7b9a5e94ea14b2b1965aaa343c6215deb9dd7d72dfce70ad58852e0",
+  "reviewers": [
+    "ses_e91bf26dcffeCS9Wn2xqcwve6a",
+    "ses_e91bf27c3ffeBe4EpXbnNJWSR0"
+  ],
+  "review": "Standards/Spec No new findings; tuple/loghash findings and full13file aggregatecoverage gap closed",
+  "full_repair_diff_manifest": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_repair_full_diff_15lnuh_g/manifest.json",
+  "full_repair_diff_manifest_sha256": "2a5447360fa1be1ca373fe672161f4ad49e5c7c1d45233d3576230db814e76d1",
+  "image_qualified": false,
+  "gpu_tls_lifetime_verified": false,
+  "native_integration": false,
+  "ownership_admission": false,
+  "cost_reference_admission": false,
+  "limits": "S1/S2 CPU/source acceptance only; source frozen for separately allocated package. S3/S4 actualimage/SDK/TLS/lifetime and native ownership remain separate."
+}

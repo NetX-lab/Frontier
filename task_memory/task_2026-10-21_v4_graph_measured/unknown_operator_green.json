@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "scope": "share_expert_up_proj",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+      "error_type": "DeepSeekV4CoverageError",
+      "message": "V4 share_expert_up_proj measured coverage unavailable: Unknown typed operator 'unqualified_operator'",
+      "cause_type": "ValueError",
+      "cause_message": "Unknown typed operator 'unqualified_operator'",
+      "pass_condition": true
+    },
+    {
+      "scope": "moe_grouped_gemm",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "error_type": "DeepSeekV4CoverageError",
+      "message": "V4 moe_grouped_gemm measured coverage unavailable: Unknown typed operator 'unqualified_operator'",
+      "cause_type": "ValueError",
+      "cause_message": "Unknown typed operator 'unqualified_operator'",
+      "pass_condition": true
+    }
+  ]
+}

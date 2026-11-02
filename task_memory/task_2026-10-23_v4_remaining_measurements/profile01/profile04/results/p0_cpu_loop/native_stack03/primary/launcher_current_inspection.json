@@ -1,0 +1,26 @@
+{
+  "status": "PASS_CURRENT_NATIVE_LAUNCHER_STATIC",
+  "observed_utc": "2026-10-25T04:05:30.465479+00:00",
+  "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.py",
+  "sha256": "7289592b767038234b989f4b854a4e771b54ae980649235db9769439e0603cd2",
+  "gross_lines": 74,
+  "gross_cap": 110,
+  "checks": {
+    "syntax_and_cap": true,
+    "one_subprocess": true,
+    "no_task_import": true,
+    "no_environment_mutation": true,
+    "exclusive_outputs": true,
+    "all_evidence_pins": true,
+    "full_input_hashes": true,
+    "command_identity": true,
+    "inferior_exit_required": true,
+    "no_retry": true
+  },
+  "previous_receipt_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/launcher_static_inspection.json",
+  "previous_receipt_sha256": "749a08b4abbbf498f2d64fb693feb64c99aac5d59ca40c5fd83409fabf7674d9",
+  "previous_pin": "68f0d6dd2c9541ac3989f09ec4b4c8cd37638d893c27032452835c7a9b27bb78",
+  "binding_source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/source_inspection.json",
+  "binding_source_sha256": "3a4f87e8dd1e4d26000bbd2cd6c84bee4db854aa4d212ccd752591080cc8d664",
+  "note": "Read-only gate failed on the stale initial receipt hash; current bytes match the later source_inspection.json pin. Neither source nor frozen historical receipt changed. No diagnostic invocation occurred."
+}

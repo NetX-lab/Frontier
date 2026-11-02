@@ -1,0 +1,9 @@
+{
+  "status": "FAIL_STATIC_SCRATCH_READ_PERMISSION",
+  "stage": "Static post-generation comparison against CPU scratch launcher",
+  "observed_error": "PermissionError: [Errno 13] Permission denied: '/data/ycfeng/tmp/opencode-v2-tmp/opencode/scope_package_cpu_02_zoy7czg6/launch.py'",
+  "reason": "The bounded CPU check created its retained scratch directory under sudo with restrictive tempfile permissions.",
+  "correction": "Read those three exact scratch files with sudo cat; do not change permissions or package bytes, rerun imports/argv, or invoke generation again.",
+  "generation_invocations": 1,
+  "package_modified": false
+}

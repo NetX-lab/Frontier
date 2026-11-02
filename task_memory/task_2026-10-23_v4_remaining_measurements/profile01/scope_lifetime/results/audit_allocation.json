@@ -1,0 +1,18 @@
+{
+  "phase": "S5 bounded primary raw audit",
+  "authority": "D-V4-SCOPE-LIFETIME-PROBE and D-V4-CONTINUE-FRESH-GATES",
+  "owner": "primary",
+  "new_source": "tests/analysis/v4_scope_lifetime_audit.py",
+  "source_gross_cap": 190,
+  "scope": "Hash-check frozen inputs and local artifacts; copy only recorded scalar payload; independently rederive P1-P6, stage order and same-run control identity. No native handles, API calls, new GPU run, source edits or calibration changes.",
+  "persistent_tests": 0,
+  "recorded_utc": "2026-10-24T19:07:45.107440+00:00",
+  "review_repair": [
+    "explicit observe.errors check",
+    "exact op.start/end pair per window",
+    "successful unique close before unique Kineto start"
+  ],
+  "gain": "Close the three verification omissions identified by independent review; raw evidence, source primitives and GPU allocation are unchanged.",
+  "gross_source_lines": 152,
+  "source_sha256": "539da5af58b362d0ecdea09af8e9c6c3157f21af7f530fb12c3629ffce658f93"
+}

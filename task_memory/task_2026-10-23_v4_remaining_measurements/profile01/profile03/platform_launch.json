@@ -1,0 +1,91 @@
+{
+  "observed_at_utc": "2026-10-24T06:18:19.771506+00:00",
+  "job": "exp-1024-141341-669621",
+  "phase": "Starting",
+  "creator": "i-fengyicheng",
+  "charged_group": "codesign",
+  "preemptible": "no",
+  "tasks": {
+    "default": {
+      "replicas": 4,
+      "nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03:/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03",
+      "nodeSelector": null,
+      "affinity": {
+        "podAntiAffinity": {
+          "preferredDuringSchedulingIgnoredDuringExecution": [
+            {
+              "weight": 10,
+              "podAffinityTerm": {
+                "labelSelector": {
+                  "matchExpressions": [
+                    {
+                      "key": "rjob.brainpp.cn/rjob-task-id",
+                      "operator": "In",
+                      "values": [
+                        "exp-1024-141341-669621-default"
+                      ]
+                    }
+                  ]
+                },
+                "topologyKey": "kubernetes.io/hostname"
+              }
+            }
+          ]
+        }
+      },
+      "containers": [
+        {
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "64",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "64",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "replicas": [
+    {
+      "name": "exp-1024-141341-669621-eccbc87e",
+      "ip": "",
+      "phase": "Starting"
+    },
+    {
+      "name": "exp-1024-141341-669621-c4ca4238",
+      "ip": "",
+      "phase": "Starting"
+    },
+    {
+      "name": "exp-1024-141341-669621-c81e728d",
+      "ip": "",
+      "phase": "Starting"
+    },
+    {
+      "name": "exp-1024-141341-669621-cfcd2084",
+      "ip": "",
+      "phase": "Starting"
+    }
+  ],
+  "launcher_alive": true,
+  "package_unchanged": true,
+  "validation": "PASS_SUBMISSION_IDENTITY_RESOURCES",
+  "inspection_output": "/data/ycfeng/tmp/glm53_dsv4/profile03_platform_0zznukeh",
+  "initial_failure": "Inspector filename shadowed stdlib inspect; Python -I fixes import resolution. Original traceback retained in stderr.log; no job control or workload modification.",
+  "command": [
+    "/usr/bin/bash",
+    "-c",
+    "set -euo pipefail; set +x; proxy_script=$(curl --noproxy \"*\" --fail --silent --show-error --max-time 15 http://deploy.i.shaipower.com/httpproxy); eval \"$proxy_script\"; export HTTP_PROXY=\"$http_proxy\" HTTPS_PROXY=\"$https_proxy\" ALL_PROXY=\"$all_proxy\" NO_PROXY=\"$no_proxy\"; exec /data/ycfeng/tmp/stepmind-env/bin/python -I -B \"$1\"",
+    "read-job",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_platform_0zznukeh/inspect.py"
+  ]
+}

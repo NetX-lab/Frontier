@@ -1,0 +1,11 @@
+{
+  "device": "h200",
+  "fp16_tflops": 1979,
+  "total_memory_gb": 141,
+  "source_urls": [
+    "https://www.nvidia.com/en-gb/data-center/h200/",
+    "https://www.nvidia.com/en-us/data-center/hgx",
+    "https://developer.nvidia.com/cuda-gpus"
+  ],
+  "notes": "Values aligned to H200 SXM specs; total_memory_gb uses 141GB HBM3E."
+}

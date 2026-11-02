@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control.py"
+  ],
+  "inputs_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_inputs02.json",
+  "inputs_sha256": "3869591774c988e6c72fd9eb69a3090e94a38076b782b4b46891fbe6cefc422b",
+  "source_pins": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control.py": "b0cccc84c3a185b472ddbf41a4f9b3db3cc39874d44199a31a065cb05eff6c3e",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb": "4d0b05a1c1aa4125d5e8faf93da0dbd0f8955e83a75446f88aff6eb0707217b3"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "status": "SUBMITTED",
+  "job_name": "exp-1024-172225-512616",
+  "platform_created_at_local": "2026-10-24T17:22:25.676+08:00",
+  "platform_receipt": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_platform_e1jpb7ap/receipt.json",
+    "sha256": "cfbd7e74f5ed833ebb9b8c80e6224096ed8f21e151c3450fde3ce330034edef9"
+  },
+  "started_at_utc": "2026-10-24T09:22:20.084710+00:00",
+  "pid": 3950111,
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04",
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04/launch.py"
+  ],
+  "seal_sha256": "de66faae79b94d749214412d46c6f8b9f06d71ae3d3481bdf34306979bd79259",
+  "manifest_sha256": "25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f",
+  "authorization": "D-V4-H800-RJOB-AUTHORITY",
+  "launch_environment": {
+    "STEPMIND_BACKEND": "rjob",
+    "AUTHORIZATION": "D-V4-H800-RJOB-AUTHORITY",
+    "PYTHONPATH": "/data/ycfeng/steptron"
+  },
+  "gpu_attempt": 1,
+  "attempt_ceiling": 1,
+  "local_launch_number": 2,
+  "prior_local_failure": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_launch_01_presubmission_failure.json",
+    "sha256": "aa51a969c9befc10c52c7d365ae09b9ed75ab9e0d1a1fabe23b79de4738b4d87",
+    "error": "KeyError: 'AUTHORIZATION' before write_run_manifest/platform submission",
+    "log": "/data/ycfeng/tmp/glm53_dsv4/profile04_launch_20261024.log",
+    "gpu_job_created": false
+  },
+  "resources": {
+    "replicas": 4,
+    "gpus_per_replica": 8,
+    "gpu": "H800",
+    "group": "codesign",
+    "cpu_per_replica": 64,
+    "mem_gb_per_replica": 512,
+    "preemptible": false,
+    "timeout_seconds": 3600
+  },
+  "prelaunch": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_prelaunch_env_omcv47c3/receipt.json",
+    "sha256": "db5f50aea60c78c7f1c2cc08cb653c9b8c2e8d36997b6c95336f13c1bd54f1be"
+  },
+  "log": "/data/ycfeng/tmp/glm53_dsv4/profile04_launch_env_20261024.log"
+}

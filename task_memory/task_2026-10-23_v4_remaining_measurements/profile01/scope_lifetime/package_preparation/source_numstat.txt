@@ -1,0 +1,3 @@
+140	0	task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/build_package.py
+27	0	task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/profile_plan.json
+78	0	task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/image_check.py

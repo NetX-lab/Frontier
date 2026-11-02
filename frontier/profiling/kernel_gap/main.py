@@ -58,6 +58,7 @@ import pandas as pd
 
 from frontier.profiling.kernel_gap.schema import (EXECUTION_MODE_COLUMN, EXECUTION_MODES, KERNEL_GAP_US_COLUMN,
                                                 TENSOR_PARALLEL_COLUMN)
+from frontier.profiling.common.runtime_identity import collect_driver_version
 from frontier.profiling.utils import build_profiling_output_path
 
 # torch.cuda._sleep launches this kernel; it holds the stream and is not part of a chain.
@@ -247,16 +248,6 @@ def decoder_layer_chain(model: str, num_tensor_parallel_workers: int,
     return chain_launch
 
 
-def driver_version() -> str:
-    import pynvml
-
-    pynvml.nvmlInit()
-    try:
-        return pynvml.nvmlSystemGetDriverVersion()
-    finally:
-        pynvml.nvmlShutdown()
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--output_dir", type=str, default="data/profiling",
@@ -322,7 +313,7 @@ def main() -> None:
         "num_gaps": len(mode_gaps),
         "chain": sources[mode],
         "gpu_name": torch.cuda.get_device_name(),
-        "driver_version": driver_version(),
+        "driver_version": collect_driver_version(),
         "torch_version": torch.__version__,
         "cuda_version": torch.version.cuda,
     } for mode, mode_gaps in gaps.items()]

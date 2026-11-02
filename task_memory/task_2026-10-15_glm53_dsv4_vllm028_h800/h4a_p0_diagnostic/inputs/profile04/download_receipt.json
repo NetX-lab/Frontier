@@ -1,0 +1,42 @@
+{
+  "status": "HASH_IDENTICAL_DOWNLOAD",
+  "started_at_utc": "2026-10-24T12:10:34.091976+00:00",
+  "completed_at_utc": "2026-10-24T12:12:44.228283+00:00",
+  "root": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024_04",
+  "artifacts": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts",
+  "files": 202,
+  "bytes": 6024578382,
+  "inventory_sha256": "85b0ef2339d9c5f999eb625972a7d582a6ed49f05fd528952c93e551cfb07c8c",
+  "script_sha256": "c6887e7894dcb62718cc98561281d38a79d80f8b2c471246db763d12665a9f76",
+  "inventory_command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "test \"$(id -un)\" = i-fengyicheng && sudo -n timeout 60s python3 -B -"
+  ],
+  "archive_command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "test \"$(id -un)\" = i-fengyicheng && sudo -n tar -C /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024_04 -cf - ."
+  ],
+  "extract_command": [
+    "tar",
+    "--no-same-owner",
+    "--no-same-permissions",
+    "-xf",
+    "-",
+    "-C",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts"
+  ],
+  "remote_exit": 0,
+  "local_exit": 0,
+  "platform_controls": 0,
+  "scope": "Retained diagnostic run/input bytes only; no data, reference or cost admission."
+}

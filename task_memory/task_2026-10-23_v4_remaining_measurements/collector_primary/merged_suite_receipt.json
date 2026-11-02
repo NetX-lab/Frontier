@@ -1,0 +1,219 @@
+{
+  "status": "ROOT_SEPARATE_SUITES_PASS",
+  "source_commit": "64f3c9509b09279f321d237e3a95cbe904c6dd22",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "source_files": {
+    "tests/comparison/calibration/native_serve_profile.py": "8f67a367650b40b67f7df82e337adefdc4784a4f3c0f75adc9aa36c4ab159ee1",
+    "tests/comparison/calibration/native_pd_worker.py": "8bd540bcc3aea3f064fc0772c7ba6e3a586c8075d5f5c5bea38d30bf6769a199",
+    "tests/comparison/calibration/pd_replay.py": "673d23d1d725bc1636da066a8ac1a56966dce74aee047c7b974e15e7d9d17465",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901",
+    "tests/unit/test_native_serve_profile.py": "aa8239f0eda0ca7ab4f966e5385622f843320953f36797986be0fd72c43805a2",
+    "tests/comparison/calibration/native_full_structure.py": "e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa",
+    "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py": "67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b"
+  },
+  "suites": [
+    {
+      "suite": "test_native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serve_profile.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_native_serve_profile.xml"
+      ],
+      "start_utc": "2026-10-23T06:33:31.784143+00:00",
+      "end_utc": "2026-10-23T06:33:34.370433+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 28,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 28,
+      "xml_sha256": "0ceb62580374e7cc30e4ab9263982e15bae793f2155f4c1d5089e71b491b2772"
+    },
+    {
+      "suite": "test_native_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serving_inventory.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_native_serving_inventory.xml"
+      ],
+      "start_utc": "2026-10-23T06:33:34.370831+00:00",
+      "end_utc": "2026-10-23T06:33:35.733615+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 28,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 28,
+      "xml_sha256": "0d1f7431a310e0c830ae87435becc1e0cbd90b2edb712efe5bf945b037f6094b"
+    },
+    {
+      "suite": "test_native_v2_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_v2_serving_inventory.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_native_v2_serving_inventory.xml"
+      ],
+      "start_utc": "2026-10-23T06:33:35.733998+00:00",
+      "end_utc": "2026-10-23T06:33:44.344488+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 45,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 45,
+      "xml_sha256": "566d04c1a870d19c097d4a0fd6baf9e23a8c7ef2f95c6a3257bba877935a98b5"
+    },
+    {
+      "suite": "test_native_reader_binding",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_reader_binding.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_native_reader_binding.xml"
+      ],
+      "start_utc": "2026-10-23T06:33:44.344910+00:00",
+      "end_utc": "2026-10-23T06:34:46.530897+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 135,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 135,
+      "xml_sha256": "b1eefbe0d4dd58d7060dcbe12a029f96acf8f72b8ff53542fca28d216cfaaa49"
+    },
+    {
+      "suite": "test_native_pd_worker",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_worker.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_native_pd_worker.xml"
+      ],
+      "start_utc": "2026-10-23T06:34:46.531339+00:00",
+      "end_utc": "2026-10-23T06:34:48.960869+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 16,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 16,
+      "xml_sha256": "83578459e5ee7c1ee2662991c662119c284537d574b87c2b9ff3910b8f479bc8"
+    },
+    {
+      "suite": "test_dp_placement_harness",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_dp_placement_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_dp_placement_harness.xml"
+      ],
+      "start_utc": "2026-10-23T06:34:48.961235+00:00",
+      "end_utc": "2026-10-23T06:34:50.405276+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 75,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 75,
+      "xml_sha256": "280f17e440a286837ffe2b2838e3024dab669b9e9d07059f8595ad72281f013d"
+    },
+    {
+      "suite": "test_calibration_pd_harness",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_calibration_pd_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_calibration_pd_harness.xml"
+      ],
+      "start_utc": "2026-10-23T06:34:50.405641+00:00",
+      "end_utc": "2026-10-23T06:34:57.176554+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 68,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 68,
+      "xml_sha256": "df272763633d320516c0a436bcf6c578cd5a8b7b5e4ac166d6967b9c1561a991"
+    },
+    {
+      "suite": "test_native_pd_manifest",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_manifest.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/root_native_collector_merged_64f3c950/test_native_pd_manifest.xml"
+      ],
+      "start_utc": "2026-10-23T06:34:57.176910+00:00",
+      "end_utc": "2026-10-23T06:34:58.690283+00:00",
+      "returncode": 0,
+      "counts": {
+        "tests": 14,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 14,
+      "xml_sha256": "2f285db0817609501b81d15e06260c03c1bf43389a1295c625b7adffeba96ec1"
+    }
+  ],
+  "verifier_path": "/data/ycfeng/tmp/glm53_dsv4/verify_native_collector_source.py",
+  "verifier_sha256": "1d22027f79b6effe189b900e2384ae6d9744f4c2e1d2d7585e36b4b9facbc0e3"
+}

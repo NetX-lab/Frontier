@@ -1,0 +1,11 @@
+/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e0.jsonl
+  decode     FULL       expected   64 steps
+  decode     PIECEWISE  expected   16 steps
+  dummy      FULL       expected   40 steps
+  dummy      NONE       expected   8 steps
+  dummy      PIECEWISE  expected   8 steps
+  dummy      PIECEWISE  none       24 steps
+  prefill    NONE       none       3 steps
+/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/bridge/FULL_AND_PIECEWISE/raw/dsv4_raw_e1.jsonl
+  first_tail PIECEWISE  expected   12 steps
+planner_layers PASS 0

@@ -1,0 +1,133 @@
+{
+  "status": "ACCEPTED_CPU_GRAPH_PAYLOAD_CORRECTION",
+  "source_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "owner_revision": "a2c4ad87f231a113f0d4d543050e3697a208dcba",
+  "probe_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "probe_gross_lines": 26,
+  "probe_limit": 80,
+  "cpu_control_lines": 159,
+  "cpu_control_limit": 160,
+  "verification_checks": 72,
+  "frozen_pins": 37,
+  "independent_reviews": {
+    "standards": "NO_FINDINGS",
+    "spec": "NO_FINDINGS"
+  },
+  "root_tests": {
+    "passed": 87,
+    "intentional_old_source_failures": 2,
+    "inherited_replacements": 5,
+    "unexpected_test_failures": 0
+  },
+  "root_initial_inherited_error": "Missing -k caused0tests; corrected argv only and reran inherited71cases.",
+  "initial_copy_error": "Permission denied on root-owned0600 stages.jsonl; resumed byte-identical copy with read-only sudo cat for the two exact diagnostic files; originals and permissions unchanged.",
+  "image_status": "PASS_CPU_IMAGE_ENTRY_ABI_AND_BYTECODE",
+  "actual_image_python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "actual_graph_payload": "UNVERIFIED",
+  "actual_correspondence": "UNVERIFIED",
+  "old_crash_cause": "UNVERIFIED",
+  "matrix_cases": 77,
+  "new_matrix_capture": false,
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/local_cpu/receipt.json",
+      "sha256": "5df85114c688029554f7c9d9f62cb6665396e863a8bcd0311a98685b434368b8",
+      "bytes": 4319
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/local_cpu/red.log",
+      "sha256": "8db87fe0be2ca713667a270c96d026a183e7cb97f0df463e79db864dbdf91e72",
+      "bytes": 4015
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/local_cpu/red.xml",
+      "sha256": "a8431813df184934571aeab666aaadb577fd07ebc997a945ddfc73e0e6d24c68",
+      "bytes": 4412
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/local_cpu/green.log",
+      "sha256": "d8801bae6559019a0a1679a355f602b67dbf530166df2374d6890fc2d1117341",
+      "bytes": 99
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/local_cpu/green.xml",
+      "sha256": "2f26937e9d51d57c85425c82f3b72ea1f99a115a156b99a438e025f2ca9f07e6",
+      "bytes": 2543
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/local_cpu/inherited.log",
+      "sha256": "b221babafe24eda60cf6a70608bd2732a888b10a3048fb17a8784405ff984c21",
+      "bytes": 351
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/local_cpu/inherited.xml",
+      "sha256": "a5e26b5b85d7fb21749759462f10ccef537956c3077793e79aa5bf4733c1727c",
+      "bytes": 245
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/corrected_inherited/receipt.json",
+      "sha256": "3d0f929cb08ea561369abb02ddc2b990a33f903e91a0888a6f666de1d5ad4de9",
+      "bytes": 2479
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/corrected_inherited/inherited.xml",
+      "sha256": "897038915be444297bef4fbcb4e68fdd8a1ea1e3c80c8a573f756d0a28e4a9ff",
+      "bytes": 11491
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/corrected_inherited/inherited.log",
+      "sha256": "a96b06409d28799187b7fd25e63589b895f38e2386c34271219a6f95d5d446f2",
+      "bytes": 137
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/input.py",
+      "sha256": "5e3d73ec18b4c63de08789d84b8d28d2fbcec5ea60cfb2d9570b7d2166021225",
+      "bytes": 3396
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/stdout.log",
+      "sha256": "89b39e6382bb721ae1888ac5779c2f9dd5280e173e1c6d8e65af030fdeb75328",
+      "bytes": 1629
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/compiler_stdin.cpp",
+      "sha256": "0666d59db8902c26f35394e7a0930c22be4521a0c4a51ef432a53d77de8bc89e",
+      "bytes": 871
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/compiler_stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/receipt.json",
+      "sha256": "bc921dbf43c63b43d1a0dd41a65906415601641f45602508aa0fcffc6f7449ee",
+      "bytes": 1880
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/execution.json",
+      "sha256": "0ca2beef0c4d334af2ce5cc8ba3733091bfe7ddeeb85d84d06311d5e30383682",
+      "bytes": 1402
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/diagnostics/stages.jsonl",
+      "sha256": "601c74fb7444d12b41655712f6cbc3814f197901e5fec8a5383152bc5e6a8b4a",
+      "bytes": 1168
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/diagnostics/fault.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/image/inspect/probe_report.json",
+      "sha256": "00e17cb6c58b45cdfb3f93c4947de8ad750c4ae08bd5b4ec870b258f9a529528",
+      "bytes": 9945
+    }
+  ]
+}

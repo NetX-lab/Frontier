@@ -1,0 +1,354 @@
+diff --git a/tests/comparison/calibration/native_full_structure.py b/tests/comparison/calibration/native_full_structure.py
+index fdf971f5..5e0e923a 100644
+--- a/tests/comparison/calibration/native_full_structure.py
++++ b/tests/comparison/calibration/native_full_structure.py
+@@ -578,6 +578,12 @@ class NativeServingInventory:
+                     record('dp_post_all_reduce', tensor.tolist())
+ 
+                 observer.observe('dp_post_all_reduce', snapshot)
++
++                def sequence():
++                    if getattr(observer.local, 'dispatch_evidence', None) is not None:
++                        observer.local.dp_sequence = kwargs['group']._get_sequence_number_for_group()
++
++                observer.observe('dp_post_all_reduce_sequence', sequence)
+                 return result
+ 
+         wrap('get_uniform_decode_token_count', classified)
+@@ -691,6 +697,7 @@ def _install_native_serving_inventory():
+ 
+         def execute(original):
+             def call(worker, *args, **kwargs):
++                observer.local.dp_sequence = None
+                 previous = getattr(observer.local, 'context', None)
+                 output = args[0] if args else kwargs.get('scheduler_output')
+                 if not getattr(observer.local, 'startup_warmup', False):
+@@ -753,6 +760,7 @@ def _install_native_serving_inventory():
+                     return bound.arguments
+ 
+                 def call(model_runner, *args, **kwargs):
++                    observer.local.dp_sequence = None
+                     previous = getattr(observer.local, 'context', None)
+                     previous_runner = getattr(observer.local, 'runner', None)
+                     previous_dispatch = getattr(observer.local, 'dispatch_evidence', None)
+diff --git a/tests/comparison/calibration/native_serve_profile.py b/tests/comparison/calibration/native_serve_profile.py
+index f53f97c4..43c1e91a 100644
+--- a/tests/comparison/calibration/native_serve_profile.py
++++ b/tests/comparison/calibration/native_serve_profile.py
+@@ -144,6 +144,8 @@ class ServingProfile:
+         native = self.inventory.local
+         dispatch = getattr(native, 'dispatch_evidence', None)
+         step = getattr(self.local, 'step', None)
++        sequence = (getattr(native, 'dp_sequence', None) if dispatch is not None else
++            None if step is None else step.get('dp_post_all_reduce_sequence'))
+         if dispatch is None and step is not None:
+             dispatch = step.get('dispatch_evidence')
+         if dispatch is not None:
+@@ -157,7 +159,7 @@ class ServingProfile:
+         execution = ('capture' if kind == 'capture' or capture_active or stream_capturing else
+             'replay_eager_segment' if getattr(self.local, 'replaying', False) else
+             'eager_serving' if kind == 'serving' else kind)
+-        return dict(step=None if step is None else step['step'], kind=kind,
++        metadata = dict(step=None if step is None else step['step'], kind=kind,
+             repeat=context.get('repeat'), request_phase=context.get('phase'),
+             has_prefill=has_prefill, token_phase=None if has_prefill is None else
+                 'prefill' if has_prefill else 'decode', execution=execution,
+@@ -165,6 +167,9 @@ class ServingProfile:
+             startup_warmup=getattr(native, 'startup_warmup', False),
+             breakable_capture_active=capture_active, stream_capturing=stream_capturing,
+             layer=getattr(self.local, 'layer', None))
++        if sequence is not None:
++            metadata['dp_post_all_reduce_sequence'] = sequence
++        return metadata
+ 
+     @contextmanager
+     def range(self, category, scope, owner=None, arguments=None):
+@@ -488,6 +493,9 @@ class ServingProfile:
+             pending['has_prefill'] = dispatch.get('classifier', {}).get('inputs', {}).get('has_prefill')
+             pending['synchronized_descriptor'] = dispatch.get('dispatch', {}).get('descriptor')
+             pending['synchronized_mode'] = (pending['synchronized_descriptor'] or {}).get('cg_mode')
++        sequence = getattr(self.inventory.local, 'dp_sequence', None)
++        if sequence is not None:
++            pending['dp_post_all_reduce_sequence'] = sequence
+         return self.append(self.steps, json.loads(json.dumps(pending)))
+ 
+ 
+diff --git a/tests/unit/test_native_serve_profile.py b/tests/unit/test_native_serve_profile.py
+index 0e5b5a09..083c338d 100644
+--- a/tests/unit/test_native_serve_profile.py
++++ b/tests/unit/test_native_serve_profile.py
+@@ -11,7 +11,7 @@ from types import ModuleType, SimpleNamespace
+ import pytest
+ 
+ from tests.unit.test_native_serving_inventory import native, scheduled
+-from tests.unit.test_native_v2_serving_inventory import v2, native_function
++from tests.unit.test_native_v2_serving_inventory import v2, native_function, native_worker_boundary
+ from tests.unit.test_dp_placement_harness import native_engine
+ 
+ SOURCE = Path(__file__).parents[1] / 'comparison/calibration/native_serve_profile.py'
+@@ -66,7 +66,10 @@ def profile(v2, monkeypatch, request):
+ 
+     torch.cuda.Event, torch.cuda.current_stream, torch.cuda.stream = Event, lambda: current[0], stream
+     torch.cuda.is_current_stream_capturing = lambda: False
+-    monkeypatch.setattr(type(v2.worker), 'sample_tokens', lambda self: v2.state.result, raising=False)
++    def sample_tokens(worker):
++        v2.state.sample_context = collector.context()
++        return v2.state.result
++    monkeypatch.setattr(type(v2.worker), 'sample_tokens', sample_tokens, raising=False)
+     class Profiler:
+         is_running = False
+         iterations = 0
+@@ -228,6 +231,7 @@ def test_cuda_head512_local_import_target_is_owned(profile):
+ def test_step_enrichment_cannot_exceed_retention_bytes(profile):
+     c = profile.collector
+     initial = dict(step=0, request_ids=['req'], local_num_requests=1, local_num_tokens=1)
++    c.inventory.local.dp_sequence = 38
+     c.limits = dict(records=1000, bytes=len(json.dumps(initial).encode()) + 8)
+     initial['dispatch_evidence'] = dict(forwards=1, replays=0,
+         classifier=dict(inputs=dict(has_prefill=False)), dispatch=dict(descriptor=dict(num_tokens=16, cg_mode='FULL')))
+@@ -240,11 +244,61 @@ def test_step_enrichment_cannot_exceed_retention_bytes(profile):
+     assert c.local.step == dict(step=1)
+     c.limits['bytes'] = 10000
+     retained = c.finish_step(initial)
++    assert retained['dp_post_all_reduce_sequence'] == 38
++    c.inventory.local.dp_sequence = 999
+     initial['dispatch_evidence']['dispatch']['descriptor']['num_tokens'] = 999
+     assert retained['synchronized_descriptor']['num_tokens'] == 16
+     assert c.used == len(json.dumps(retained).encode())
+ 
+ 
++@pytest.mark.parametrize('failure', ['missing', 'throwing'])
++def test_dp_sequence_getter_failure_is_soft_and_does_not_reuse_previous_step(profile, monkeypatch, failure):
++    p, c = profile, profile.collector
++    p.native.state.mode = 'FULL'
++    assert p.native.worker.execute_model(scheduled(tokens=1)) is p.native.state.result
++    assert c.steps[-1]['dp_post_all_reduce_sequence'] == 38
++    group = p.native.state.dp_group
++    if failure == 'missing':
++        monkeypatch.delattr(type(group), '_get_sequence_number_for_group')
++    else:
++        monkeypatch.setattr(group, '_get_sequence_number_for_group', lambda: 1 / 0)
++    assert p.native.worker.execute_model(scheduled(tokens=1)) is p.native.state.result
++    assert 'dp_post_all_reduce_sequence' not in c.steps[-1]
++    assert 'dp_post_all_reduce_sequence' not in c.annotations[-1]
++    assert set(c.steps[-1]['dispatch_evidence']) == {'classifier', 'dispatch', 'dp_post_all_reduce'}
++    assert len(p.native.observer.rows) == 1 and p.native.observer.forwards == 2
++    assert p.native.observer.errors[0]['where'] == 'dp_post_all_reduce_sequence'
++    assert not c.errors and p.native.observer.local.dp_sequence is None
++
++
++def test_dp_sequence_reset_on_native_worker_failure_and_no_forward(native_worker_boundary, profile):
++    p, c, worker = profile, profile.collector, profile.native.worker
++    p.native.state.mode, worker.model_runner.is_pooling_model = 'FULL', False
++    worker.vllm_config.parallel_config = SimpleNamespace(pipeline_parallel_size=1)
++    assert worker.execute_model(scheduled(tokens=1)) is p.native.state.result
++    assert c.steps[-1]['dp_post_all_reduce_sequence'] == 38
++    error = RuntimeError('Pinned Worker pending-send failure before runner entry')
++    worker._pp_send_work = [SimpleNamespace(wait=lambda: (_ for _ in ()).throw(error))]
++    with pytest.raises(RuntimeError) as caught:
++        worker.execute_model(scheduled(tokens=1))
++    assert caught.value is error and 'dp_post_all_reduce_sequence' not in c.steps[-1]
++    worker._pp_send_work = []
++    assert worker.execute_model(scheduled(tokens=0)) is p.native.state.result
++    assert 'dp_post_all_reduce_sequence' not in c.steps[-1]
++    assert p.native.state.dp_group.reads == [38] and p.native.observer.local.dp_sequence is None
++    assert worker.execute_model(scheduled(tokens=1)) is p.native.state.result
++    assert c.steps[-1]['dp_post_all_reduce_sequence'] == 39
++    assert len(p.native.observer.rows) == 1 and p.native.observer.forwards == 2
++    assert not p.native.observer.errors and not c.errors
++    p.native.state.forward_error = error
++    with pytest.raises(RuntimeError) as caught:
++        worker.execute_model(scheduled(tokens=1))
++    assert caught.value is error and c.steps[-1]['dp_post_all_reduce_sequence'] == 40
++    assert worker.execute_model(scheduled(tokens=0)) is p.native.state.result
++    assert 'dp_post_all_reduce_sequence' not in c.steps[-1]
++    assert p.native.observer.local.dp_sequence is None
++
++
+ def test_nesting_uses_separate_parser_prefix_and_keyword_calls(profile, monkeypatch):
+     p = profile
+     monkeypatch.setattr(type(p.native.worker.model_runner.model), '__call__',
+@@ -361,6 +415,21 @@ def test_synced_descriptor_joins_existing_dispatch_without_collective(profile, t
+     inventory_row = next(iter(p.native.observer.rows.values()))
+     assert step['dispatch_evidence'] == inventory_row['dispatch_evidence']
+     assert 'dp_post_all_reduce' in step['dispatch_evidence']
++    assert step['dp_post_all_reduce_sequence'] == 38
++    assert 'dp_post_all_reduce_sequence' not in inventory_row
++    c = p.collector
++    assert c.annotations[-1]['dp_post_all_reduce_sequence'] == 38
++    dummy = native_function('vllm/v1/worker/gpu_worker.py', 'execute_dummy_batch', {}, 'Worker')
++    assert dummy(p.native.worker) is None
++    annotation = c.annotations[-1]
++    assert annotation['dp_post_all_reduce_sequence'] == 39 and annotation['step'] is None
++    assert c.steps == [step]
++    assert p.native.worker.sample_tokens() is p.native.state.result
++    assert p.native.state.sample_context['dp_post_all_reduce_sequence'] == 38
++    assert p.native.state.sample_context['step'] == step['step']
++    assert 'dp_post_all_reduce_sequence' not in c.context()
++    assert c.used == sum(len(json.dumps(row).encode()) for rows in
++                        (c.steps, c.annotations, c.synchronization) for row in rows)
+ 
+ 
+ def test_inventory_rpc_and_records_remain_unchanged(profile):
+diff --git a/tests/unit/test_native_v2_serving_inventory.py b/tests/unit/test_native_v2_serving_inventory.py
+index 0b9aad5c..f2018373 100644
+--- a/tests/unit/test_native_v2_serving_inventory.py
++++ b/tests/unit/test_native_v2_serving_inventory.py
+@@ -43,6 +43,15 @@ class Tensor:
+         return Tensor(key.stop)
+ 
+ 
++class DPGroup:
++    def __init__(self):
++        self.sequence, self.reads = 37, []
++
++    def _get_sequence_number_for_group(self):
++        self.reads.append(self.sequence)
++        return self.sequence
++
++
+ @pytest.fixture
+ def v2(native, monkeypatch):
+     state, worker = native.state, native.worker
+@@ -93,7 +102,7 @@ def v2(native, monkeypatch):
+                     dict(input_ids=Tensor(tokens), positions=Tensor(tokens)))
+             return self.model(input_ids=Tensor(tokens), positions=Tensor(tokens))
+ 
+-        def _dummy_run(self, num_tokens, *, is_profile=False):
++        def _dummy_run(self, num_tokens, *, is_profile=False, uniform_decode=False):
+             return self.execute_model(SimpleNamespace(total_num_scheduled_tokens=num_tokens),
+                 dummy_run=True, is_profile=is_profile)
+ 
+@@ -102,7 +111,11 @@ def v2(native, monkeypatch):
+     monkeypatch.setitem(sys.modules, module.__name__, module)
+     runner_module = ModuleType('vllm.v1.worker.gpu.model_runner')
+     dp_module = ModuleType('vllm.v1.worker.gpu.dp_utils')
+-    dp_module.dist = SimpleNamespace(all_reduce=lambda *args, **kwargs: None)
++    state.dp_group = DPGroup()
++    def reduce(tensor, *, group):
++        assert group is state.dp_group
++        group.sequence += 1
++    dp_module.dist = SimpleNamespace(all_reduce=reduce)
+ 
+     def classify(num_reqs, num_tokens, max_query_len, has_prefill):
+         return max_query_len if not has_prefill and num_tokens == num_reqs * max_query_len else None
+@@ -113,7 +126,7 @@ def v2(native, monkeypatch):
+             device = SimpleNamespace(type='cpu')
+         vector = np.array([[num_tokens] * dp_size, [Mode[state.mode].value] * dp_size,
+             [uniform_token_count or 0] * dp_size, [max_query_len or -1] * dp_size]).view(CPUVector)
+-        dp_module.dist.all_reduce(vector)
++        dp_module.dist.all_reduce(vector, group=state.dp_group)
+         return Descriptor(Mode[state.mode], num_tokens, 1, uniform_token_count,
+             max_query_len), vector[0]
+ 
+@@ -178,6 +191,8 @@ def test_v2_dummy_profile_capture_and_noop_are_not_serving(v2):
+     assert {row['kind'] for row in rows} == {'profile', 'dummy', 'capture'}
+     assert v2.observer.forwards == 3
+     assert not v2.observer.requests
++    assert v2.observer.local.dp_sequence is None
++    assert v2.state.dp_group.reads == [38, 39]
+ 
+ 
+ def test_v2_inventory_and_ordered_emission_use_actual_manager(v2):
+@@ -239,6 +254,22 @@ def native_function(relative, name, namespace, owner=None):
+     return namespace[name]
+ 
+ 
++@pytest.fixture
++def native_worker_boundary(monkeypatch):
++    """Execute the pinned Worker body, including failures before runner entry."""
++    from contextlib import nullcontext
++    original_load = base.load_collector
++    actual = native_function('vllm/v1/worker/gpu_worker.py', 'execute_model',
++        dict(get_pp_group=lambda: SimpleNamespace(is_first_rank=True),
++             ModelRunnerOutput=object, AsyncModelRunnerOutput=object, NoneType=type(None)), 'Worker')
++    def load_at_worker_boundary():
++        cls = sys.modules['vllm.v1.worker.gpu_worker'].Worker
++        cls.execute_model, cls.annotate_profile = actual, lambda *args: nullcontext()
++        cls._pp_send_work = []
++        return original_load()
++    monkeypatch.setattr(base, 'load_collector', load_at_worker_boundary)
++
++
+ @pytest.fixture
+ def native_warmup_boundary(monkeypatch):
+     """Use unedited native Worker/warmup bodies; only GPU operations/types are CPU carriers."""
+@@ -429,7 +460,9 @@ def dispatch_oracle():
+                   max_num_seqs=128, max_num_batched_tokens=8192)
+     manifest = {'groundtruth_checkout_path': root}
+     manager, _ = checker.native_v2_graph_dispatch(manifest, engine)
+-    return checker, engine, manager, checker.native_dispatch_oracle(manifest, manager)
++    native, group = checker.native_dispatch_oracle(manifest, manager), DPGroup()
++    native['get_dp_group'] = lambda: SimpleNamespace(cpu_group=group)
++    return checker, engine, manager, native
+ 
+ 
+ def dispatch_row(oracle, prefill, peer_uniform=1, peer_tokens=1):
+@@ -466,7 +499,7 @@ def test_actual_native_classification_and_dp_dispatch(dispatch_oracle, prefill,
+ 
+ 
+ @pytest.mark.parametrize('fault', ['missing', 'circular', 'classifier', 'owner', 'dp_local',
+-    'dp_shape', 'ambiguous', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token', 'query_bound'])
++    'dp_shape', 'ambiguous', 'sequence', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token', 'query_bound'])
+ def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle, fault):
+     checker, engine, manager, native = dispatch_oracle
+     row = dispatch_row(dispatch_oracle, fault == 'query_bound', peer_tokens=2 if fault == 'query_bound' else 1)
+@@ -478,6 +511,7 @@ def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle
+     if fault == 'dp_local': ev['dp_post_all_reduce'][0][0] = 2
+     if fault == 'dp_shape': ev['dp_post_all_reduce'].pop()
+     if fault == 'ambiguous': ev['extra_dispatch'] = ev['dispatch']
++    if fault == 'sequence': ev['dp_post_all_reduce_sequence'] = 38
+     if fault == 'descriptor': ev['dispatch']['descriptor']['num_tokens'] = 2
+     if fault == 'mode': row['graph_mode'] = 'PIECEWISE'
+     if fault == 'padding': ev['dispatch']['num_tokens_across_dp'] = [2, 2]
+@@ -539,9 +573,11 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
+     for name in ('get_uniform_decode_token_count', 'dispatch_cg_and_sync_dp'):
+         setattr(namespace, name, native[name])
+     vector = [[1, 2], [2, 2], [1, 1], [1, 1]]
+-    returned = object()
++    returned, group = object(), native['get_dp_group']().cpu_group
+     def reduce(tensor, **kwargs):
++        assert kwargs['group'] is group
+         tensor.copy_(torch.tensor(vector, dtype=tensor.dtype))
++        group.sequence += 1
+         return returned
+     dp.dist = SimpleNamespace(all_reduce=reduce, untouched=returned)
+     observer.install_v2_dispatch(namespace, dp)
+@@ -551,6 +587,7 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
+     desc, padded = namespace.dispatch_cg_and_sync_dp(manager, 1, 1, uniform, 2, 0, max_query_len=1)
+     assert desc.num_tokens == 2 and padded.tolist() == [2, 2]
+     assert observer.local.dispatch_evidence['dp_post_all_reduce'] == vector
++    assert observer.local.dp_sequence == 38 and group.reads == [38]
+     assert dp.dist.untouched is returned and not observer.errors
+     row = dispatch_row(dispatch_oracle, False, peer_tokens=2)
+     row.pop('dispatch_evidence')
+@@ -561,6 +598,15 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
+     observer.finish_v2_dispatch()
+     checker, engine, _, _ = dispatch_oracle
+     checker.verify_dispatch_row(next(iter(observer.rows.values())), engine, manager, native, 0)
++    for expected in (39, 40, 41):
++        vector = [[0, 0]] * 4
++        observer.local.dispatch_evidence = {'forwards': 0, 'replays': 0}
++        assert dp.dist.all_reduce(torch.zeros(4, 2, dtype=torch.int32), group=group) is returned
++        assert observer.local.dp_sequence == expected
++        assert observer.local.dispatch_evidence['dp_post_all_reduce'] == vector
++    observer.local.dispatch_evidence = None
++    assert dp.dist.all_reduce(torch.zeros(4, 2), group=group) is returned
++    assert group.reads == [38, 39, 40, 41]
+     error = RuntimeError('Native CPU all-reduce failed')
+     def fail(*args, **kwargs):
+         raise error
+@@ -576,6 +622,13 @@ def test_native_cpu_dp_vector_is_copied_before_padding_and_exceptions_pass_uncha
+     with pytest.raises(RuntimeError) as caught:
+         namespace2.dispatch_cg_and_sync_dp(manager, 1, 1, 1, 2, 0, max_query_len=1)
+     assert caught.value is error and 'dispatch' not in observer.local.dispatch_evidence
++    assert group.reads == [38, 39, 40, 41]
++    native_dist.all_reduce = lambda *args, **kwargs: returned
++    observer.local.dispatch_evidence, observer.local.dp_sequence = {}, None
++    assert dp2.dist.all_reduce(torch.zeros(4, 2, dtype=torch.int32)) is returned
++    assert observer.local.dispatch_evidence['dp_post_all_reduce'] == [[0, 0]] * 4
++    assert observer.local.dp_sequence is None
++    assert observer.errors[-1] == {'where': 'dp_post_all_reduce_sequence', 'error': "KeyError: 'group'"}
+ 
+ 
+ @pytest.mark.parametrize('fault', ['classifier', 'dispatch', 'finish'])

@@ -1,0 +1,20 @@
+{
+  "allocation_sha256": "3d145640dfe664366957bcaa83b5c88d4cb8f56725d8fbb72f60c7da97ab4375",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_interval_metrics.py"
+  ],
+  "pid": 2858144,
+  "used": 1,
+  "ceiling": 1
+}

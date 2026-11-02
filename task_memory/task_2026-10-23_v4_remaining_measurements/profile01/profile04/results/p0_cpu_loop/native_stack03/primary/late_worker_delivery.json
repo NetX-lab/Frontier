@@ -1,0 +1,28 @@
+{
+  "observed_utc": "2026-10-24T21:58:14.859319+00:00",
+  "status": "LATE_PARTIALS_FOUND_AFTER_WORKER_CLOSE",
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb",
+      "sha256": "0441280c95acb3c254fd30e24bec2edd78721a14561e54b4549b928414c28de2",
+      "lines": 70,
+      "archive": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/worker_partial_v4_trace_audit_native_stack.gdb.txt"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/control.py",
+      "sha256": "d867c9e15a05ae581cb592a24ea0e309d2f26d04f610de094c00f97f6f1a2c14",
+      "lines": 118,
+      "archive": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/worker_partial_control.py.txt"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner/source_notes.md",
+      "sha256": "9c60198619bbe8840b73ff1f272f789b833c98a538e82ddbe73ea60126be4c5e",
+      "lines": 37,
+      "archive": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/worker_partial_source_notes.md.txt"
+    }
+  ],
+  "primary_preparation_error": "Exclusive-source assertion prevented overwriting the late GDB file; no control/diagnostic was executed. Original takeover record reflects the earlier no-file check.",
+  "ownership": "Primary owns all three files after closure; retain original partial bytes and make only required source/command alignment edits.",
+  "control_used": 0,
+  "diagnostic_used": 0
+}

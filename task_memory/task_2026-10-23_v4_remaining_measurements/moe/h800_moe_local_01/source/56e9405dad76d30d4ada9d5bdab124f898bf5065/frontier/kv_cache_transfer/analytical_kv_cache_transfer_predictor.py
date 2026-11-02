@@ -1,0 +1,233 @@
+from typing import TYPE_CHECKING
+from math import ceil
+
+from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.gdn.guards import validate_gdn_runtime_support
+from frontier.attention.model_binding import bind_attention_family
+from frontier.config import get_quantization_manager
+from frontier.kv_cache_transfer.base_kv_cache_transfer_predictor import BaseKVCacheTransferPredictor
+from frontier.logger import init_logger
+from frontier.types import ClusterType
+
+if TYPE_CHECKING:
+    from frontier.attention.memory import AttentionKVCacheCapacity
+    from frontier.config import ReplicaConfig
+    from frontier.config.config import AnalyticalKVCacheTransferConfig
+    from frontier.entities import Batch, Request
+
+
+def get_grouped_nixl_payload(cache_capacity, prompt_tokens, source_groups, target_groups):
+    """Select native NIXL pull suffixes from real P/D logical block tables.
+
+    Source: pinned NIXL get_exchange_clipped_blocks and _apply_prefix_caching.
+    V4 compressor states use SlidingWindowMLASpec, not Mamba single-state slots.
+    Page bytes describe structural component payloads on one worker/lane, not
+    wire descriptors, backing-slab padding, or a sum over TP ranks.
+    """
+    if not cache_capacity.is_grouped or cache_capacity.family_id != "deepseek_v4_attention":
+        raise ValueError("Grouped NIXL requires the V4 component capacity")
+    expected_groups = {group.group_id for group in cache_capacity.groups}
+    if not isinstance(source_groups, dict) or not isinstance(target_groups, dict):
+        raise ValueError("Grouped NIXL requires source and target block tables")
+    if set(source_groups) != expected_groups or set(target_groups) != expected_groups:
+        raise ValueError("Grouped NIXL block tables must cover every cache group exactly")
+    for label, tables in (("source", source_groups), ("target", target_groups)):
+        live_ids = []
+        for group in cache_capacity.groups:
+            table = tables[group.group_id]
+            required = ceil(prompt_tokens / group.logical_block_size)
+            skipped = 0 if group.retention == "full_history" else max(
+                0, prompt_tokens - group.window_tokens + 1 - group.extra_retained_tokens,
+            ) // group.logical_block_size
+            if len(table) != required or tuple(table[:skipped]) != (None,) * skipped:
+                raise ValueError(f"NIXL {label} group {group.group_id} has incorrect prompt coverage")
+            ids = table[skipped:]
+            if not ids or any(type(block) is not int or block <= 0 for block in ids):
+                raise ValueError(f"NIXL {label} group {group.group_id} lacks live prompt pages")
+            live_ids.extend(ids)
+        if len(live_ids) != len(set(live_ids)):
+            raise ValueError(f"NIXL {label} group block IDs have duplicate ownership")
+    transferred = {}
+    payload_bytes = 0
+    for group in cache_capacity.groups:
+        source = source_groups[group.group_id]
+        target = tuple(block for block in target_groups[group.group_id] if block is not None)
+        if group.retention == "sliding_window":
+            limit = ceil(group.window_tokens / group.logical_block_size) + 1
+            source, target = source[-limit:], target[-limit:]
+        selected = tuple(source[-len(target):])
+        if any(block is None for block in selected):
+            raise ValueError(f"NIXL group {group.group_id} selected a null source page")
+        transferred[group.group_id] = selected
+        payload_bytes += len(selected) * cache_capacity.get_group_size_bytes(group)
+    return transferred, payload_bytes
+
+
+class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+    """Analytical KV cache transfer predictor using bandwidth and latency."""
+
+    def __init__(self, config: "AnalyticalKVCacheTransferConfig") -> None:
+        super().__init__(config)
+        self._config: "AnalyticalKVCacheTransferConfig" = config
+        self._logger = init_logger(__name__)
+
+    def get_transfer_time(
+        self,
+        source_cluster_type: ClusterType,
+        target_cluster_type: ClusterType,
+        batch: "Batch",
+        kv_cache_size_bytes: int,
+    ) -> float:
+        effective_size_bytes = kv_cache_size_bytes
+        if self._config.enable_compression:
+            effective_size_bytes = kv_cache_size_bytes / self._config.compression_ratio
+
+        bandwidth_bytes_per_ms = (self._config.network_bandwidth_gbps * 1e9) / (8 * 1000)
+        return self._config.network_latency_ms + (effective_size_bytes / bandwidth_bytes_per_ms)
+
+    def get_kv_cache_size(self, batch: "Batch", replica_config: "ReplicaConfig") -> int:
+        if self._config.kv_connector == "nixl":
+            raise NotImplementedError(
+                "NIXL size requires the reservation-backed structural payload path"
+            )
+        total_tokens = sum(req.num_prefill_tokens for req in batch.requests)
+        return self._calculate_kv_cache_size_for_tokens(total_tokens, replica_config)
+
+    def get_kv_cache_size_for_request(
+        self, request: "Request", replica_config: "ReplicaConfig"
+    ) -> int:
+        if self._config.kv_connector == "nixl":
+            raise NotImplementedError(
+                "NIXL size requires the reservation-backed structural payload path"
+            )
+        return self._calculate_kv_cache_size_for_tokens(
+            request.num_prefill_tokens, replica_config
+        )
+
+    def get_structural_nixl_transfer_info_for_request(
+        self,
+        *,
+        request: "Request",
+        replica_config: "ReplicaConfig",
+        cache_capacity: "AttentionKVCacheCapacity",
+        source_prompt_common_blocks: int | None = None,
+        target_reserved_common_blocks: int | None = None,
+        source_group_block_ids=None,
+        target_group_block_ids=None,
+    ) -> tuple[int, float]:
+        """Price source-backed component pages after a real D reservation.
+
+        This is a structural whole-page payload per worker/lane. It is
+        neither a native NIXL wire byte count nor an aggregate across ranks.
+        Empty lookahead capacity reserved by D is deliberately excluded.
+        """
+        if self._config.kv_connector != "nixl":
+            raise ValueError("Structural NIXL sizing requires kv_connector='nixl'")
+        if cache_capacity.is_grouped:
+            families = {spec.family_id for spec in replica_config.model_config.get_layer_attention_specs()}
+            if families != {cache_capacity.family_id}:
+                raise ValueError("V4 NIXL capacity does not match the model")
+            _, payload_bytes = get_grouped_nixl_payload(
+                cache_capacity, request.num_prefill_tokens,
+                source_group_block_ids, target_group_block_ids,
+            )
+            return payload_bytes, self.get_transfer_time(
+                ClusterType.PREFILL, ClusterType.DECODE, None, payload_bytes,
+            )
+        family = bind_attention_family(replica_config.model_config).family
+        if family.family_id != "dsa_attention":
+            raise NotImplementedError(
+                "NIXL structural sizing supports GLM DSA and grouped V4 only"
+            )
+        if cache_capacity.family_id != family.family_id or cache_capacity.is_grouped:
+            raise ValueError("GLM NIXL requires its non-grouped component capacity")
+        if cache_capacity.block_size != 64:
+            raise ValueError("GLM NIXL structural payload requires block size 64")
+        if (
+            type(source_prompt_common_blocks) is not int
+            or source_prompt_common_blocks <= 0
+        ):
+            raise ValueError("source_prompt_common_blocks must be a positive int")
+        if (
+            type(target_reserved_common_blocks) is not int
+            or target_reserved_common_blocks < source_prompt_common_blocks
+        ):
+            raise ValueError(
+                "D reservation does not cover every source-backed prompt common block"
+            )
+        payload_bytes = (
+            source_prompt_common_blocks
+            * cache_capacity.resident_bytes_per_common_block
+        )
+        transfer_time_ms = self.get_transfer_time(
+            ClusterType.PREFILL,
+            ClusterType.DECODE,
+            None,
+            payload_bytes,
+        )
+        return payload_bytes, transfer_time_ms
+
+    def _calculate_kv_cache_size_for_tokens(
+        self, num_tokens: int, replica_config: "ReplicaConfig"
+    ) -> int:
+        model_config = replica_config.model_config
+        validate_gdn_runtime_support(model_config, pd_enabled=True)
+        family = bind_attention_family(model_config).family
+        num_layers = (
+            self._config.override_num_layers
+            if self._config.override_num_layers is not None
+            else model_config.num_layers
+        )
+        # Runtime KV layout is family-aware: dense uses (num_kv_heads, head_dim, kv_factor=2);
+        # latent MLA collapses to (1, kv_lora_rank + qk_rope_head_dim, kv_factor=1). Overrides,
+        # when set, replace the head count / head size but the family still owns kv_factor.
+        num_heads = (
+            self._config.override_num_heads
+            if self._config.override_num_heads is not None
+            else model_config.get_runtime_num_kv_heads()
+        )
+        head_dim = (
+            self._config.override_head_dim
+            if self._config.override_head_dim is not None
+            else model_config.get_runtime_head_size()
+        )
+        layout = get_attention_runtime_kv_layout(
+            family,
+            runtime_num_kv_heads_per_worker=num_heads,
+            runtime_head_size=head_dim,
+        )
+        dtype_size = self._get_kv_cache_dtype_size_bytes()
+        return int(
+            num_tokens
+            * num_layers
+            * layout.runtime_num_kv_heads_per_worker
+            * layout.runtime_head_size
+            * layout.kv_factor
+            * dtype_size
+        )
+
+    def _get_kv_cache_dtype_size_bytes(self) -> float:
+        quant_manager = get_quantization_manager()
+        has_explicit_quant = quant_manager.has_explicit_precision("kv_cache_transfer")
+        quant_precision = quant_manager.get_precision("kv_cache_transfer")
+        quant_dtype_size = quant_precision.bytes_per_element
+
+        if has_explicit_quant:
+            if (
+                self._config.kv_cache_dtype_size_bytes is not None
+                and self._config.kv_cache_dtype_size_bytes != quant_dtype_size
+            ):
+                raise ValueError(
+                    "kv_cache_dtype_size_bytes is deprecated and conflicts with quantization "
+                    f"config for kv_cache_transfer (config={self._config.kv_cache_dtype_size_bytes}, "
+                    f"quantization={quant_dtype_size})."
+                )
+            return quant_dtype_size
+
+        if self._config.kv_cache_dtype_size_bytes is not None:
+            return self._config.kv_cache_dtype_size_bytes
+
+        return quant_dtype_size
+
+    def supports_latency_hiding(self) -> bool:
+        return self._config.enable_latency_hiding

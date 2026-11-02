@@ -1,0 +1,7 @@
+wrote /data/ycfeng/tmp/glm53_dsv4/h4b_k1/gate/native06_k1d2/rows
+ttft_ms                  vllm 398.8224 frontier 394.6583 rel 0.0104 PASS
+tpot_ms                  vllm 19.0094 frontier 19.3351 rel 0.0171 PASS
+request_e2e_time_ms      vllm 19845.4858 frontier 20174.4272 rel 0.0166 PASS
+token_throughput_tps     vllm 6272.0777 frontier 6235.8013 rel 0.0058 PASS
+dsv4-h800-p0-canonical-fixed128-qps1/h4a_step_cost: PASS (routing NOT_APPLICABLE)
+EXIT 0

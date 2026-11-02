@@ -1,0 +1,66 @@
+diff --git a/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py
+index 567ecf0b..e1aaa342 100644
+--- a/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py
++++ b/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/probe_scope_lifetime.py
+@@ -121,8 +121,9 @@ def analyze(report, events):
+     created = [r for r in rows if r["callback_id"] == 13]
+     clones = [r for r in rows if r["callback_id"] == 20]
+     execs = [r for r in rows if r["callback_id"] == 18]
+-    originals = {r["original_node"] for r in clones}
+-    report["unmatched_created_count"] = sum(r["node"] not in originals for r in created)
++    originals = {(r["original_node"], r["original_node_id"]) for r in clones
++                 if "original_node_id" in r}
++    report["unmatched_created_count"] = sum((r["node"], r.get("node_id")) not in originals for r in created)
+     links = report["links"] = []
+     try:
+         if not capture["subscribed"] or not capture["unsubscribed"] or capture["subscription_active"] or capture["errors"] or report["profile_errors"]:
+@@ -131,9 +132,10 @@ def analyze(report, events):
+             raise ValueError("Expected five clones and one directly witnessed exec")
+         relation = execs[0]
+         for clone in clones:
+-            selected = [r for r in created if r["node"] == clone["original_node"]]
++            selected = [r for r in created if (r["node"], r.get("node_id")) ==
++                        (clone["original_node"], clone["original_node_id"])]
+             if len(selected) != 1:
+-                raise ValueError("Original handle does not select exactly one created row")
++                raise ValueError("Original handle/full-ID tuple does not select exactly one created row")
+             source = selected[0]
+             links.append(dict(source=source, clone=clone))
+             if (source["node_type"] != 0 or source["queried_type"] != 0 or source["node_id"] != clone["original_node_id"]
+diff --git a/tests/unit/test_cupti_scope_lifetime.py b/tests/unit/test_cupti_scope_lifetime.py
+index 0c671cfc..d913e2bd 100644
+--- a/tests/unit/test_cupti_scope_lifetime.py
++++ b/tests/unit/test_cupti_scope_lifetime.py
+@@ -71,6 +71,22 @@ def test_actual_range_callback_and_full_ids_join(case):
+         case.value.ids.node_id(11)
+ 
+ 
++@pytest.mark.parametrize("different_id", [True, False])
++def test_created_tuple_disambiguates_same_handle_evidence(case, different_id):
++    rows = case.report["callback_capture"]["events"]
++    source = next(row for row in rows if row["callback_id"] == 13)
++    query = case.value.ids.node_id
++    def node_id(handle):
++        observed = query(handle)
++        return 2**62 + 31 if different_id else observed
++    case.value.ids.node_id = node_id
++    case.dispatch(13, node=source["node"], graph=source["graph"])
++    subject.analyze(case.report, case.events)
++    assert case.report["verdict"] == ("PASS" if different_id else "UNVERIFIED")
++    assert case.report["unmatched_created_count"] == (2 if different_id else 1)
++    assert len(rows) == 13
++
++
+ @pytest.mark.parametrize("kind,field,value", [
+     ("source", "scope", "stale_same_tid"), ("source", "monotonic_ns", "closed"),
+     ("window", "slot", 4), ("clone", "original_node_id", 2**62 + 1),
+@@ -107,6 +123,9 @@ def test_incomplete_callbacks_or_trace_preserve_evidence(case, fault, monkeypatc
+             collection.append(copy.deepcopy(row))
+     subject.analyze(case.report, case.events)
+     assert case.report["verdict"] == ("NEGATIVE_LIVE_TLS_ROUTE" if fault == "ambiguous" else "UNVERIFIED")
++    if fault == "query":
++        assert "node_id" not in collection[-1] and len(collection) == 13
++        assert case.report["unmatched_created_count"] == 2
+ 
+ 
+ def test_other_thread_has_distinct_identities_and_no_live_tls(case):

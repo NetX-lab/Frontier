@@ -33,6 +33,11 @@ def _stub_dense_attention_markers(model_config) -> None:
         "dsa_top_k",
         "dsa_index_topk",
         "dsa_indexer",
+        "index_topk",
+        "index_topk_freq",
+        "index_topk_pattern",
+        "index_skip_topk_offset",
+        "compress_ratios",
         "sliding_window_pattern",
         "dual_chunk_attention",
         "attention_chunk_size",
@@ -48,7 +53,11 @@ def _stub_mla_attention_markers(model_config) -> None:
     model_config.model_type = "deepseek_v2"
     model_config.use_mla = True
     model_config.use_mfa = False
-    for field in ("dsa_topk", "dsa_top_k", "dsa_index_topk", "dsa_indexer"):
+    for field in (
+        "dsa_topk", "dsa_top_k", "dsa_index_topk", "dsa_indexer",
+        "index_topk", "index_topk_freq", "index_topk_pattern",
+        "index_skip_topk_offset", "compress_ratios",
+    ):
         setattr(model_config, field, None)
     model_config.kv_lora_rank = 512
     model_config.qk_nope_head_dim = 128
@@ -60,11 +69,13 @@ def _stub_mla_attention_markers(model_config) -> None:
 
 def _build_context(is_moe: bool = False, tokens_are_post_routing: bool = False):
     from frontier.metrics.op_trace_utils import OpTraceContext
+    from frontier.model_architectures import ModelArchitectureProfile
     from frontier.types import ClusterType
 
     _reset_quantization()
 
     model_config = MagicMock()
+    model_config.get_model_architecture_profile.return_value = ModelArchitectureProfile.generic()
     model_config.embedding_dim = 8
     model_config.num_q_heads = 4
     model_config.num_kv_heads = 2

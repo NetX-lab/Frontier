@@ -1,0 +1,35 @@
+{
+  "status": "LAUNCHER_STARTED",
+  "started_at_utc": "2026-10-23T18:03:12.764906+00:00",
+  "pid": 478835,
+  "command": [
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01/launch.py",
+    "--launch"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe01_launch_20261024.log",
+  "seal_sha256": "faed39c2d00596dd7ec600508164d86e590384628202a64bb41dad15f4bd64f0",
+  "manifest_sha256": "0725941c3b433b2bd300c10a48c3d6f6d5316e1036e1e8efb5294b8c2845431d",
+  "authorization": "D-V4-H800-RJOB-AUTHORITY",
+  "resources": {
+    "gpu": 1,
+    "replica": 1,
+    "cpu": 16,
+    "mem_gb": 64,
+    "preemptible": false,
+    "positive_tags": [
+      "H800"
+    ],
+    "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "mounts": [
+      "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "custom_resources": [
+      "mellanox.com/mlnx_rdma:1",
+      "rdma/mlnx_shared:8"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "status": "FIXED_BASELINE_CAPTURE_BOUND",
+  "pre_change_commit": "972f0cb1db126ff893dfb1b5d5819a65d7d01963",
+  "capture_commit": "576d278156ea21b209da33791337bd195047ae3e",
+  "capture_directory": "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/candidate",
+  "prior_accounting": "task_memory/task_2026-10-23_v4_native_routing_reader/matrix_accounting.json",
+  "prior_accounting_sha256": "b4e83868f72ceca6c815fb9d0ccc4595cdc3bbc324646569a81faa9c69040337",
+  "source_equivalence": "d278659 to 972f0cb1 changes task records only; prior accounting binds 777 runtime/matrix inputs to 576d278",
+  "equivalent_doc_only_paths": [
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native06_acceptance_20261023/frozen_r4_result.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native06_acceptance_20261023/primary_acceptance_r4.json",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/18-native-ground-truth-h200.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+    "task_memory/task_2026-10-22_v4_balanced_routing/design.md",
+    "task_memory/task_2026-10-22_v4_balanced_routing/plan.md",
+    "task_memory/task_2026-10-22_v4_balanced_routing/progress.md",
+    "task_memory/task_2026-10-22_v4_balanced_routing/requirements.md",
+    "task_memory/task_2026-10-22_v4_balanced_routing/review.md",
+    "task_memory/task_2026-10-22_v4_balanced_routing/summary.md",
+    "task_memory/task_2026-10-22_v4_balanced_routing/test_report_2026-10-23_native_ready.md",
+    "task_memory/task_2026-10-22_v4_native_dispatch/FINAL_FREEZE_R4.json",
+    "task_memory/task_2026-10-23_v4_native_routing_reader/matrix_accounting.json",
+    "task_memory/task_2026-10-23_v4_native_routing_reader/plan.md",
+    "task_memory/task_2026-10-23_v4_native_routing_reader/progress.md",
+    "task_memory/task_2026-10-23_v4_native_routing_reader/requirements.md",
+    "task_memory/task_2026-10-23_v4_native_routing_reader/summary.md",
+    "task_memory/task_2026-10-23_v4_native_routing_reader/test_report_2026-10-23_primary.md"
+  ],
+  "evidence": {
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/comparison.json": "3d4d92454c6a492775d0ac847b36618382483e024fe310aa70bdb050ed62c57c",
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/candidate/manifest.json": "5d145735432517070ccca40193e3ad199fc7da1fa68f45e1ea94118a174c85ce",
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/candidate/results.jsonl": "c0438c158defadaa893c9d8e77a7f8b7c746f16daca12be429f00b937cda768d"
+  },
+  "new_candidate_capture_still_required": true
+}

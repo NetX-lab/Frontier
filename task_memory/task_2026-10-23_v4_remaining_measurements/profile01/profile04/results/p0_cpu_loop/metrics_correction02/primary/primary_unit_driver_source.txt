@@ -1,0 +1,74 @@
+"""Run the newly allocated primary unit once, preserving serialized evidence."""
+import copy
+from datetime import datetime, timezone
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import platform
+import sys
+import time
+import unittest
+
+ROOT = Path(__file__).resolve().parent
+PLAN = ROOT / "execution_allocation.json"
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def main():
+    plan = json.loads(PLAN.read_text())
+    assert sha(__file__) == plan["unit_driver_sha256"]
+    for pin in plan["source_pins"]:
+        assert sha(pin["path"]) == pin["expected_sha256"], pin["path"]
+    prefix = ROOT / "primary_unit"
+    receipt_path = prefix.with_suffix(".receipt.json")
+    receipt = dict(status="STARTING", command=plan["unit_command"], cwd=plan["repo"],
+                   python=sys.version, executable=sys.executable, conda="not used",
+                   platform=platform.platform(), start_utc=datetime.now(timezone.utc).isoformat(),
+                   primary_unit_invocations_used=1, primary_unit_invocation_ceiling=1,
+                   allocation_sha256=sha(PLAN), source_pins=plan["source_pins"],
+                   driver_sha256=sha(__file__), full_trace_invocations=0)
+    with receipt_path.open("x") as stream:
+        json.dump(receipt, stream, indent=2)
+    cgroup = Path("/proc/self/cgroup").read_text()
+    memory_path = next(line.split(":", 2)[2] for line in cgroup.splitlines()
+                       if "memory" in line.split(":", 2)[1].split(","))
+    mount = next(line.split() for line in Path("/proc/self/mountinfo").read_text().splitlines()
+                 if " - cgroup " in line and "memory" in line.split(" - ", 1)[1].split()[2].split(","))
+    group = Path(mount[4]) / Path(memory_path).relative_to(mount[3])
+    actual_limit = int((group / "memory.limit_in_bytes").read_text())
+    assert actual_limit == plan["actual_memory_limit_bytes"]
+    test_path = Path(plan["test_path"])
+    spec = importlib.util.spec_from_file_location("primary_group_metrics_tests", test_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    suite = unittest.defaultTestLoader.loadTestsFromModule(module)
+    assert suite.countTestCases() == plan["expected_unit_tests"]
+    started = time.monotonic()
+    with prefix.with_suffix(".log").open("x") as stream:
+        result = unittest.TextTestRunner(stream=stream, verbosity=2).run(suite)
+    evidence = json.loads(json.dumps(copy.deepcopy(module.EVIDENCE)))
+    consistent = all(row["expected"] == row["actual"] and row["status"] == "PASS" for row in evidence)
+    passed = result.wasSuccessful() and result.testsRun == plan["expected_unit_tests"] and consistent
+    receipt.update(status="PASS" if passed else "FAIL", tests_run=result.testsRun,
+                   failures=[dict(test=case.id(), detail=detail) for case, detail in result.failures],
+                   errors=[dict(test=case.id(), detail=detail) for case, detail in result.errors],
+                   skipped=[dict(test=case.id(), reason=reason) for case, reason in result.skipped],
+                   elapsed_seconds=time.monotonic() - started,
+                   actual_memory_limit_bytes=actual_limit, actual_cgroup=str(group),
+                   evidence_count=len(evidence), serialized_evidence_consistent=consistent,
+                   evidence=evidence, end_utc=datetime.now(timezone.utc).isoformat())
+    with prefix.with_suffix(".ast.json").open("x") as stream:
+        json.dump(copy.deepcopy(module.AST_EVIDENCE), stream, indent=2)
+        stream.write("\n")
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps({key: receipt[key] for key in ("status", "tests_run", "evidence_count",
+                                                   "elapsed_seconds", "actual_memory_limit_bytes")}))
+    sys.exit(0 if passed else 1)
+
+
+if __name__ == "__main__":
+    main()

@@ -34,6 +34,40 @@ class SiluAndMul(nn.Module):
         return out
 
 
+class SiluAndMulWithClamp(nn.Module):
+    """SwiGLU with clamped inputs, matching vLLM's ``SiluAndMulWithClamp``.
+
+    The function computes x -> g * sigmoid(alpha * g) * (u + beta), where
+    g = clamp(x[:d], max=swiglu_limit) and
+    u = clamp(x[d:], min=-swiglu_limit, max=swiglu_limit).
+
+    Shapes:
+        x: (num_tokens, 2 * d)
+        return: (num_tokens, d)
+    """
+
+    def __init__(self, swiglu_limit: float, alpha: float = 1.0, beta: float = 0.0) -> None:
+        super().__init__()
+        if not hasattr(torch.ops, "_C") or not hasattr(
+            torch.ops._C, "silu_and_mul_with_clamp"
+        ):
+            raise ImportError(
+                "vLLM silu_and_mul_with_clamp kernel is unavailable for profiling."
+            )
+        self._op = torch.ops._C.silu_and_mul_with_clamp
+        self.swiglu_limit = float(swiglu_limit)
+        self.alpha = float(alpha)
+        self.beta = float(beta)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass using vLLM's silu_and_mul_with_clamp kernel."""
+        d = x.shape[-1] // 2
+        output_shape = x.shape[:-1] + (d,)
+        out = torch.empty(output_shape, dtype=x.dtype, device=x.device)
+        self._op(out, x, self.swiglu_limit, self.alpha, self.beta)
+        return out
+
+
 class NewGELU(nn.Module):
     """GELU activation function with tanh approximation."""
 

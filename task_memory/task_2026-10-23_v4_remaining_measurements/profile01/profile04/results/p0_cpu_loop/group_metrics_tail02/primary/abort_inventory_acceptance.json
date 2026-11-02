@@ -1,0 +1,85 @@
+{
+  "status": "ACCEPTED_READ_ONLY_RUNTIME_INVENTORY_WITH_LIMITS",
+  "observed_utc": "2026-10-24T21:47:02.917916+00:00",
+  "report_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/abort_source_diagnosis.md",
+  "report_sha256": "7fb0d39a63475fa1d8c9690e3ab1cd14acb8a50c61d1369540c478e5c984ea78",
+  "report_maintained_lines": 84,
+  "report_line_cap": 100,
+  "primary_path_hash_checks": 10,
+  "bindings": [
+    {
+      "path": "/usr/bin/gdb",
+      "bytes": 10280680,
+      "sha256": "2a2f167b5f9c9053732f79a0f4418ed75c211e00275da6090ab64a05b81a12e0",
+      "pass": true
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libc.so.6",
+      "bytes": 2216304,
+      "sha256": "568740b06a8afa26db4874f8cf61985ecbc6dd127f4229416fe95da8f9ec13fb",
+      "pass": true
+    },
+    {
+      "path": "/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug",
+      "bytes": 4415848,
+      "sha256": "0e50c8edfdc06a29bdce9f787686db39e245a622fdabd1a1b9a430f30d5cf618",
+      "pass": true
+    },
+    {
+      "path": "/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so",
+      "bytes": 49160,
+      "sha256": "c97effb6e762e78af6eb451950283ebce4f6da82968ed53d51b8f5c252e77faf",
+      "pass": true
+    },
+    {
+      "path": "/usr/bin/python3.10",
+      "bytes": 5921160,
+      "sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2",
+      "pass": true
+    },
+    {
+      "path": "/usr/bin/gdb",
+      "bytes": 10280680,
+      "sha256": "2a2f167b5f9c9053732f79a0f4418ed75c211e00275da6090ab64a05b81a12e0",
+      "pass": true
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libc.so.6",
+      "bytes": 2216304,
+      "sha256": "568740b06a8afa26db4874f8cf61985ecbc6dd127f4229416fe95da8f9ec13fb",
+      "pass": true
+    },
+    {
+      "path": "/usr/lib/debug/.build-id/69/389d485a9793dbe873f0ea2c93e02efaa9aa3d.debug",
+      "bytes": 4415848,
+      "sha256": "0e50c8edfdc06a29bdce9f787686db39e245a622fdabd1a1b9a430f30d5cf618",
+      "pass": true
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libz.so.1",
+      "bytes": 108936,
+      "sha256": "64c206f0146cc58bbddc4f22054436f4ff278f5a554aa3ce6921ddf7e9133370",
+      "pass": true
+    },
+    {
+      "path": "/usr/lib/python3.10/lib-dynload/_json.cpython-310-x86_64-linux-gnu.so",
+      "bytes": 49160,
+      "sha256": "c97effb6e762e78af6eb451950283ebce4f6da82968ed53d51b8f5c252e77faf",
+      "pass": true
+    }
+  ],
+  "frozen_source_pins_checked": 10,
+  "closed_log_hash_checks": 6,
+  "sidecar_recorded_metadata_invocations": 8,
+  "sidecar_metadata_ceiling": 8,
+  "primary_new_metadata_or_task_invocations": 0,
+  "cause": "UNKNOWN",
+  "native_stack": "NOT_RETAINED",
+  "R5_complete_ranks": 24,
+  "metrics_hypotheses": "ALL_THREE_UNMEASURED",
+  "limits": [
+    "Readiness only; no installed Python source qualification or alternate-version numeric equivalence",
+    "No full trace/index parsing, old driver/control invocation, environment change or GPU operation",
+    "Same-version native-stack observation selected separately; PYTHONMALLOC debug remains unallocated"
+  ]
+}

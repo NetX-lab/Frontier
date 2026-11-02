@@ -1,0 +1,95 @@
+{
+  "status": "PASS_FRESH_AFFECTED_DRIVER_BINDING_NOT_EXECUTED",
+  "observed_utc": "2026-10-24T20:43:53.391692+00:00",
+  "source_commit": "8b4d6993d8daf738352c117a091cb4f801c0a429",
+  "source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+  "source_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+  "allocation_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/affected_allocation.json",
+  "allocation_sha256": "f5830ece5508b339bfe8de26695c28c9f8fe21d674e66a85683964e9e7b04511",
+  "driver_path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_affected_20261025_01/run_affected.py",
+  "driver_sha256": "c53aba29a70897cf44459a416d8fe2e23a0b101cf389fb74ba5f5f36b793eb31",
+  "driver_lines": 80,
+  "source_pins": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+      "expected_sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+      "expected_sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_metrics.py",
+      "expected_sha256": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "expected_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "expected_sha256": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+      "expected_sha256": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+      "expected_sha256": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "expected_sha256": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52"
+    }
+  ],
+  "rank_keys": [
+    [
+      "prefill",
+      0,
+      0
+    ],
+    [
+      "prefill",
+      0,
+      1
+    ],
+    [
+      "prefill",
+      0,
+      2
+    ],
+    [
+      "prefill",
+      0,
+      3
+    ],
+    [
+      "prefill",
+      0,
+      4
+    ],
+    [
+      "prefill",
+      0,
+      5
+    ],
+    [
+      "prefill",
+      0,
+      6
+    ],
+    [
+      "prefill",
+      0,
+      7
+    ]
+  ],
+  "original_rank_triplets_exact": true,
+  "fresh_rank_receipts": 0,
+  "artifact_validation_invocation_ceiling_per_rank": 1,
+  "rank_concurrency": 1,
+  "actual_memory_limit_required": 32212254720,
+  "timeout_seconds": 60,
+  "old_driver_imports_or_executions": 0
+}

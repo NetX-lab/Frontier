@@ -6,6 +6,7 @@ import pytest
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
@@ -51,7 +52,7 @@ def test_operator_registry_execution_enabled_view_excludes_frozen_families() -> 
     registry.register(DENSE_ATTENTION_FAMILY)
     registry.register(DSA_ATTENTION_FAMILY)
 
-    assert tuple(registry.iter_execution_enabled_families()) == (DENSE_ATTENTION_FAMILY,)
+    assert tuple(registry.iter_execution_enabled_families()) == (DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY)
 
 
 def test_operator_registry_uses_generic_execution_enabled_contract() -> None:
@@ -112,10 +113,12 @@ def test_attention_family_accessors_are_thin_registry_views() -> None:
         LATENT_MLA_ATTENTION_FAMILY,
         DSA_ATTENTION_FAMILY,
         GATED_DELTA_NET_ATTENTION_FAMILY,
+        DEEPSEEK_V4_ATTENTION_FAMILY,
     )
     assert tuple(iter_execution_enabled_families()) == (
         DENSE_ATTENTION_FAMILY,
         LATENT_MLA_ATTENTION_FAMILY,
+        DSA_ATTENTION_FAMILY,
         GATED_DELTA_NET_ATTENTION_FAMILY,
     )
 

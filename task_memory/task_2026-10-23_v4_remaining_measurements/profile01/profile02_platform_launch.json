@@ -1,0 +1,72 @@
+{
+  "utc": "2026-10-23T10:10:16.909547+00:00",
+  "name": "exp-1023-180821-373637",
+  "creator": "i-fengyicheng",
+  "charged_group": "codesign",
+  "preemptible": "no",
+  "created_utc": "2026-10-23T10:08:21Z",
+  "status": {
+    "phase": "Pending",
+    "reason": "RJob is queuing",
+    "message": "RJob is queuing",
+    "taskStatuses": {
+      "default": {
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "tasks": {
+    "default": {
+      "replicas": 4,
+      "mount": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02:/data/ycfeng/Frontier/.worktrees/v4-native-profile-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_02",
+      "containers": [
+        {
+          "name": "default",
+          "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+          "resources": {
+            "limits": {
+              "cpu": "64",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8",
+              "rdma/mlnx_shared": "8"
+            },
+            "requests": {
+              "cpu": "64",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8"
+            }
+          }
+        }
+      ],
+      "node_selector": null,
+      "affinity": {
+        "podAntiAffinity": {
+          "preferredDuringSchedulingIgnoredDuringExecution": [
+            {
+              "weight": 10,
+              "podAffinityTerm": {
+                "labelSelector": {
+                  "matchExpressions": [
+                    {
+                      "key": "rjob.brainpp.cn/rjob-task-id",
+                      "operator": "In",
+                      "values": [
+                        "exp-1023-180821-373637-default"
+                      ]
+                    }
+                  ]
+                },
+                "topologyKey": "kubernetes.io/hostname"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "replicas": [],
+  "launcher_pid": 3236764,
+  "launcher_alive": true
+}

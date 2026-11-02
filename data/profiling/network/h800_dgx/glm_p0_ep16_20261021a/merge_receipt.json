@@ -1,0 +1,28 @@
+{
+ "run_dir": "/data/ycfeng/Frontier/.worktrees/p0-input-binding/task_memory/task_2026-10-21_p0_input_binding/audited_sources",
+ "tables": {
+  "summary.csv": {
+   "rows": 1187,
+   "columns": 21,
+   "sha256": "232c70faf1a89201764436f567094248ad678087aa1282c0edbbad6355c4c4b5",
+   "sources": [
+    {
+     "path": "original_summary.csv",
+     "sha256": "3c0b5de1c853da75ff17548c160ebf42ddefe8174bbfeb4275b5a5c074fc3461",
+     "output_rows": [
+      0,
+      971
+     ]
+    },
+    {
+     "path": "ep16_summary.csv",
+     "sha256": "ea6011f49e4857d26ce5fd7f43e8a85560c43d65f099c8626e8cd0f48b3941bd",
+     "output_rows": [
+      971,
+      1187
+     ]
+    }
+   ]
+  }
+ }
+}

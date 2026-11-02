@@ -1,0 +1,367 @@
+{
+  "harness_commit": "9946771815903f6cd6de8147765fd41395deee21",
+  "roles": {
+    "prefill": {
+      "attn_tensor_parallel_size": 8,
+      "device": "h800",
+      "moe_tensor_parallel_size": 1,
+      "moe_expert_parallel_size": 16,
+      "num_pipeline_stages": 1,
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "moe_routing_distribution_type": "balanced",
+      "moe_gating_routing_runtime_path": "balanced_topk",
+      "attn_dp": 2,
+      "world_size": 16
+    },
+    "decode": {
+      "attn_tensor_parallel_size": 8,
+      "device": "h800",
+      "moe_tensor_parallel_size": 1,
+      "moe_expert_parallel_size": 16,
+      "num_pipeline_stages": 1,
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "moe_routing_distribution_type": "balanced",
+      "moe_gating_routing_runtime_path": "balanced_topk",
+      "attn_dp": 2,
+      "world_size": 16
+    }
+  },
+  "sources": {
+    "frontier/config/utils.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/utils.py",
+      "sha256": "74aa997b5580e4559b8da374d8484deb60d828e7f3b97e61a3b1232c399b90ec"
+    },
+    "frontier/config/base_poly_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/base_poly_config.py",
+      "sha256": "644ac9531d06c91a9b4d043b04c3cef1e5d80803eb55e8baed08bde105820cd3"
+    },
+    "frontier/config/base_fixed_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/base_fixed_config.py",
+      "sha256": "d6e74aa7ebeaa0c2458c68160704839106e92ac41b363e35f921f9f217486481"
+    },
+    "frontier/config/precision_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/precision_type.py",
+      "sha256": "936aab1951ca2d9261ce7871a0a511e7388b669ec35e66c205d8c4036bf86dab"
+    },
+    "frontier/attention/dsa_features.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/dsa_features.py",
+      "sha256": "a0e0552736bea2103f3f666ee6a3421bcd74db587508783890e9ac25a13fff16"
+    },
+    "frontier/operators/spec.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/operators/spec.py",
+      "sha256": "160886a46c76af26a9b544adc3ca46c804218a6ff126278b74b7f5829752d085"
+    },
+    "frontier/operators/binding.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/operators/binding.py",
+      "sha256": "f9b6bbc14bed812fcba8c430374c1f29840fb90e4f7968fd6eb1f3872f3fc041"
+    },
+    "frontier/operators/registry.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/operators/registry.py",
+      "sha256": "0e24cf1f47688c0da30c0d15f55b2d894cb6250f2b5f021a13ee79aac2ce9373"
+    },
+    "frontier/operators/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/operators/__init__.py",
+      "sha256": "1814a6e2694795b1677bb8c5c25714389d0c6fc6078e648804e4d8e6c5d7e386"
+    },
+    "frontier/attention/ops.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/ops.py",
+      "sha256": "2d0560cdeead34d79da0a249d05cfc6f7ec71846c36588f4b5fcb4209cb7d2ba"
+    },
+    "frontier/attention/families.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/families.py",
+      "sha256": "f88609d49c5259368b3e8fffd5542816fa56742af140fd7c5985e0da60fda1c8"
+    },
+    "frontier/attention/gdn/config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/gdn/config.py",
+      "sha256": "bc1987403180b29c2ee91c9eef7ac9aa38fa4d7064836b0645e926830fd33ecb"
+    },
+    "frontier/attention/gdn/memory.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/gdn/memory.py",
+      "sha256": "0d2070ff28f95a44563b1b096148d7332c765d9a4c2ecd068a411763fc7eabbc"
+    },
+    "frontier/attention/gdn/guards.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/gdn/guards.py",
+      "sha256": "922a4d1f4f8d67f0c087c750590741e70846dc5ded09b9413a9df4b5b81b7513"
+    },
+    "frontier/attention/gdn/state.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/gdn/state.py",
+      "sha256": "d57cd62ef15d7acee72dc94e94dba527757bee54d52682252206cf8208bd3dc7"
+    },
+    "frontier/types/base_int_enum.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/base_int_enum.py",
+      "sha256": "8e68dba06e3e2b35d87d09fa0e4a049527029041d4aff46598148ebac9a8f0f5"
+    },
+    "frontier/types/activation_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/activation_type.py",
+      "sha256": "f6a0658d32d16056ca6005ab9f34d0ac826b674a95ff87f56d5585dbdcf778b1"
+    },
+    "frontier/types/cc_backend_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/cc_backend_type.py",
+      "sha256": "3e289b4dca26b97f1b732013cbfdc3429e729699f32eb7ec59363482b303c0ee"
+    },
+    "frontier/types/cluster_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/cluster_type.py",
+      "sha256": "5dc7d0da9e416fa87804bbe7226ba81b62ff7aaa1508d275835aedf0bb9f73df"
+    },
+    "frontier/types/device_sku_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/device_sku_type.py",
+      "sha256": "88689c8e59cefaea13bcd2e6ce0bab6b2998c3235952a5e3650dd4c699b84e2a"
+    },
+    "frontier/types/event_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/event_type.py",
+      "sha256": "827309722f562ac1e2a233fb35bf739f60535b8b4548634b94cbb5191096e669"
+    },
+    "frontier/types/execution_time_predictor_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/execution_time_predictor_type.py",
+      "sha256": "81a65680ecb022745587655a3e0f7209fe9839b512baabc9f4a8ba6dbade2286"
+    },
+    "frontier/types/cluster_scheduler_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/cluster_scheduler_type.py",
+      "sha256": "c7b129e437d71bfe2daee0e2c5b9111db7de1c3becc9be7a9bf7b5e419d4db1c"
+    },
+    "frontier/types/kv_cache_transfer_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/kv_cache_transfer_type.py",
+      "sha256": "69f009e3665e268979763ef9122092147e165c12fd9d9a897f88bc6c2abd2cbb"
+    },
+    "frontier/types/m2n_transfer_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/m2n_transfer_type.py",
+      "sha256": "51a90fa53516804287be3639f9bc487373edb177f1a107fcd0a77c61257e7294"
+    },
+    "frontier/types/measurement_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/measurement_type.py",
+      "sha256": "1bfb53b95ad4f4dcba1402af060175bd2b07d958b3536af758798814c0a85437"
+    },
+    "frontier/types/node_sku_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/node_sku_type.py",
+      "sha256": "a6fb6e2df8f3b91360d1e15be88bd90884b18c2efef7fc5a8ac7c108a46614bc"
+    },
+    "frontier/types/norm_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/norm_type.py",
+      "sha256": "b82136a105af8234470acc9ae60409fc3f31c8b77c7f729edb2c70f323aa4afe"
+    },
+    "frontier/types/replica_scheduler_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/replica_scheduler_type.py",
+      "sha256": "c6ecf0dcf8111cb77713e45bc4a359ec03a9e6e2533286450ba1467289f59456"
+    },
+    "frontier/types/request_generator_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/request_generator_type.py",
+      "sha256": "da69c9f280f6f329f9f986bc9ddd260fa2f3ff1adf20a93a516b531d8387e029"
+    },
+    "frontier/types/request_interval_generator_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/request_interval_generator_type.py",
+      "sha256": "1e39fc147ea914b79bb4487f288eebb40824588af4f61041b6dcfb7dc4c8122b"
+    },
+    "frontier/types/request_length_generator_type.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/request_length_generator_type.py",
+      "sha256": "3e403088713515578b4717358675720ce6df66e36f5c396f3b2de7b97b22d509"
+    },
+    "frontier/types/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/types/__init__.py",
+      "sha256": "df40f86654c73f4bd96d71c27e010396ddd23cf136e291ca93a17048728bd776"
+    },
+    "frontier/attention/gdn/features.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/gdn/features.py",
+      "sha256": "62ce9bc0d982bd259fe6613b957442bd7c7f6785a57ef8438dcce6947b188e79"
+    },
+    "frontier/attention/gdn/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/gdn/__init__.py",
+      "sha256": "ec320b3e70dad7b0acf76508dd6cc6a0edd721a033c9f995b8994b2b0e8d68ec"
+    },
+    "frontier/attention/model_binding.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/model_binding.py",
+      "sha256": "1ed13b4fe0e741a25e61154fb505fca80e81e2934af5db6f6fb057dc0ac0f89f"
+    },
+    "frontier/attention/memory.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/memory.py",
+      "sha256": "68da66b1df6bef23198d7cab3d63928a557d314551d5f47a4d5042c8094276af"
+    },
+    "frontier/attention/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/attention/__init__.py",
+      "sha256": "ec1f1dc4a6410410d43199a443d00d36fc80a22362a58fa760bd2f5f785c23fa"
+    },
+    "frontier/logger.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/logger.py",
+      "sha256": "32ce5693a240e3c19f1852694d2462f3fc48d186852a77f536cca23a84766fc9"
+    },
+    "frontier/config/parallel_semantics.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/parallel_semantics.py",
+      "sha256": "d1520a0d1d6248d37f7a487a48ebeee73ba86aff4645682b245b73e06bdf7df9"
+    },
+    "frontier/moe_ep_workload.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/moe_ep_workload.py",
+      "sha256": "a0f42a232eaa73e19c1dee633479fabefb7ea234c54f6aa56a56d893a9eaa28b"
+    },
+    "frontier/operators/sequence_parallel_moe.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/operators/sequence_parallel_moe.py",
+      "sha256": "7ec1aa7b0a308c1003745e948de5ffc9ec51cc03c3b9684b3618c7aad47ba78a"
+    },
+    "frontier/operators/families.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/operators/families.py",
+      "sha256": "ab0e9aa5afb21fea8359dde86a4d4bedd9d6dc3ae96bdaaedcb3b7f7df6d0e4c"
+    },
+    "frontier/model_architectures.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/model_architectures.py",
+      "sha256": "4f1c4b824f276215b47de0ab022b96ab9facad59e38a0b75042c992cfb483088"
+    },
+    "frontier/config/model_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/model_config.py",
+      "sha256": "40e861a24386f31082f1ef8130d29a3c651078d807dfdb4d99fa3bfbeeebad5f"
+    },
+    "frontier/config/quantization_manager.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/quantization_manager.py",
+      "sha256": "de66f139cd9c75f7a6b8a97992d5c6cc483b19a05111673cdfdcd2809ed69474"
+    },
+    "frontier/config/global_vars.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/global_vars.py",
+      "sha256": "f998688332abd13dc45d6939154ac10de1cbbebaef58ddd09f60aee893d7d2b6"
+    },
+    "frontier/config/device_sku_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/device_sku_config.py",
+      "sha256": "e15c6495f9d43ee69af0f0e6ac1f0e356403283e203e9f9be771072c23efaa53"
+    },
+    "frontier/config/flat_dataclass.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/flat_dataclass.py",
+      "sha256": "24481c37deea901058b3da6612b162f6287e3ad045eb4cb721fe28c363ab9645"
+    },
+    "frontier/config/kv_cache_transfer_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/kv_cache_transfer_config.py",
+      "sha256": "edabf084affc3c2280ca57e729300db24410825072750a447d4bc92a0343c503"
+    },
+    "frontier/config/m2n_transfer_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/m2n_transfer_config.py",
+      "sha256": "b573df754d93fd836adc6e0db588e03d818f499bfeece20538e558378f487821"
+    },
+    "frontier/config/node_sku_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/node_sku_config.py",
+      "sha256": "e227520e1dd00e53fb243e532d77e68b642712af0865c2b413192fa3fc19f85a"
+    },
+    "frontier/spec_decode/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/spec_decode/__init__.py",
+      "sha256": "b041c2aece04cfa201cbc0f195184c350a70dfcb812c5c6a1c3cc6549a675cba"
+    },
+    "frontier/spec_decode/model_identity.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/spec_decode/model_identity.py",
+      "sha256": "d986adc552cefb2653ce79a4f1a78128fa5fc03a1388686a7e7def1d5684c50c"
+    },
+    "frontier/spec_decode/mtp_registry.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/spec_decode/mtp_registry.py",
+      "sha256": "8486ea314243d2b1ef42bca98e9f27a11604292951b8aa810752da58d3421ffd"
+    },
+    "frontier/spec_decode/proposer_profile.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/spec_decode/proposer_profile.py",
+      "sha256": "214ffc68638dcba3d1bf48d776ede05f4a982e15d484c5a971a70110adf825a3"
+    },
+    "frontier/utils/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/utils/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frontier/utils/output_paths.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/utils/output_paths.py",
+      "sha256": "a837b0b0c2efc3310d473fa72415e08fba69d1ef9eba565a08f94e4a7b1b0ca8"
+    },
+    "frontier/config/release_guards.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/release_guards.py",
+      "sha256": "c50506715620e86c70401eab3482082e4d949bdbe812d092a1a781e1b762891c"
+    },
+    "frontier/config/request_generator_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/request_generator_config.py",
+      "sha256": "3420602a8b71d17ca65d3742c1060649057fcbfa25ce782662f6080b46935c20"
+    },
+    "frontier/config/replica_scheduler_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/replica_scheduler_config.py",
+      "sha256": "53fe63dd64d046a3f018f0dc5bfd1859d0af0bba10898bdf8bc3c414347e1274"
+    },
+    "frontier/config/metrics_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/metrics_config.py",
+      "sha256": "524f9c407e671816431ff98ccda5fb9da99a8d9654c2359a8a7b471dd86fc5cd"
+    },
+    "frontier/config/speculative_decoding_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/speculative_decoding_config.py",
+      "sha256": "c24655a5b68b63b1916050f1fe2e5d31b32ca40108051b517a793d2545e230be"
+    },
+    "frontier/config/replica_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/replica_config.py",
+      "sha256": "35f2306d5ba14e2342a59032112ebaee9b4b49da2cde7b5b4055fc41ed9ecf29"
+    },
+    "frontier/config/cluster_scheduler_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/cluster_scheduler_config.py",
+      "sha256": "13c64ab098a6b7ad7f5b58bec1bd2a9d6143025a804884e7a35f05e49289f479"
+    },
+    "frontier/config/execution_time_predictor_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/execution_time_predictor_config.py",
+      "sha256": "37a9183658daebf3174841d64c3f383a0dc12e28d6dd0783ab9ddb713c9d6381"
+    },
+    "frontier/config/cluster_role_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/cluster_role_config.py",
+      "sha256": "ff8534bf5d7bed6cd30519b9028cf6fd2d515f2f333ca93ad4adf4582465a4aa"
+    },
+    "frontier/config/cluster_topology_summary.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/cluster_topology_summary.py",
+      "sha256": "1550fa058eca0a026ecc775d31d491224c4f3f5193baa3151c2f7535837b0a7a"
+    },
+    "frontier/config/cluster_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/cluster_config.py",
+      "sha256": "de56592fbc9aeccc69e2d1e4dbae9883e895f462d8765d845503b19fd8f306a5"
+    },
+    "frontier/config/config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/config.py",
+      "sha256": "f03aec143e22fc5132288e54be4ecb759e2d08b662379b3ff58b680144d63d86"
+    },
+    "frontier/config/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/config/__init__.py",
+      "sha256": "d1ed1be4105d36d3a4e4149dc9d004ea5d06e5305f9c11b6fd848511cb320459"
+    },
+    "frontier/cc_backend/cc_backend_config.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/cc_backend_config.py",
+      "sha256": "27dc23b9e70da0a0fbd8d536bfe27ead1a73c0d9272645314f8be46e760ce2d1"
+    },
+    "frontier/cc_backend/base_cc_backend.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/base_cc_backend.py",
+      "sha256": "f06e5a28dc54d29c97e9bc5fe11b528bd47e68711a3ada62b17177035e1a9528"
+    },
+    "frontier/utils/base_registry.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/utils/base_registry.py",
+      "sha256": "969381776960263d4b5cfc24b47ca8d488dbac8c1b7812a56c8b9af9b7e4b1f0"
+    },
+    "frontier/cc_backend/cc_backend_factory.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/cc_backend_factory.py",
+      "sha256": "272c45071fd9d5eef578b538cd85470973f665bdbd511190f592ba6bfce7285f"
+    },
+    "frontier/cc_backend/backends/vidur_cc_backend.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/backends/vidur_cc_backend.py",
+      "sha256": "4c9145ecd374616448056d2fd82de016b90e3a2407486ed119fd0d19ecdcca53"
+    },
+    "frontier/cc_backend/backends/analytical_cc_backend.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/backends/analytical_cc_backend.py",
+      "sha256": "79ca75f7570c6ff64833e8b66aa9222b28826144093fbf0533573886eced950a"
+    },
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "sha256": "6425b87c8f1cf34719b9b31f8dc269f87a04d35e29c9942b5ed9753d65d8dd3f"
+    },
+    "frontier/cc_backend/backends/astra_sim_analytical_cc_backend.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/backends/astra_sim_analytical_cc_backend.py",
+      "sha256": "a8104c3de111bcb2f9ae9bd8413835c2e1ca71918d28a291d5a5c51249609334"
+    },
+    "frontier/cc_backend/backends/measured_cc_backend.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/backends/measured_cc_backend.py",
+      "sha256": "5637b52684e0dfeeeb6ca603386bc1aa617cd409ba3e51e0d856f1cf63499480"
+    },
+    "frontier/cc_backend/backends/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/backends/__init__.py",
+      "sha256": "5698a42a0923e9a5ff3b89ae6f897f6bcf75401581219beb1f196dee90212c4b"
+    },
+    "frontier/cc_backend/__init__.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/cc_backend/__init__.py",
+      "sha256": "a27bb03f79afc46b899cefa82416eef3f9d775c9372670faf8b7d02452c1f0a7"
+    },
+    "frontier/moe_routing_runtime.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/moe_routing_runtime.py",
+      "sha256": "5280e3c4f69e835e01e940299fd45f5fa6c0d754b80b01785f8ecddeea324f8e"
+    },
+    "frontier/spec_decode/runtime.py": {
+      "origin": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/frontier/spec_decode/runtime.py",
+      "sha256": "0e5bd156517042758291678c86e27db875b6f5664dd5c5f08d901b7715fb8f4b"
+    }
+  }
+}

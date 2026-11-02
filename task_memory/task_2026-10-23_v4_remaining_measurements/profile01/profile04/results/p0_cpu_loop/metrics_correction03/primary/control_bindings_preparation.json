@@ -1,0 +1,67 @@
+{
+  "controls": [
+    {
+      "key": [
+        "decode",
+        1,
+        0
+      ],
+      "pins": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz",
+          "sha256": "f74ee4b7d9ed36e91c26bd9042fc04152fc4fda5293cc8f8c1cca535b90b2f1e"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+          "sha256": "272879bfa3fd5c8f4273835f2b7e5e49ff1ac796760c4c440facaf4026401f37"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0574.host.platform.shaipower.com/serving/rank0.json",
+          "sha256": "c005bf58930bc9dd54421da6d61a30978fce51e68ae08b7e2ede8dbd5daf5678"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.json",
+          "sha256": "fd5f94dc2aa14ded6e9694237b966148163bb79a84e52d2778a90b316ddb380d"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/decode_dp1_rank0.kernels.jsonl.gz",
+          "sha256": "12abf8644255d59215d2bfebec74ae0b23ee86a8d082c0d333d0861cf33c7de5"
+        }
+      ],
+      "status": "BINDINGS_PREPARED_NOT_RUN"
+    },
+    {
+      "key": [
+        "prefill",
+        1,
+        0
+      ],
+      "pins": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842747939163438.pt.trace.json.gz",
+          "sha256": "56f904bbf0da55413a682bbfb29d2ecf62569593fc1d4643354777fbf43cbf51"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/serving_profile/rank0.profile.json",
+          "sha256": "5b06829dfd1ddcf7759104d773ed44fc913e620368d2cd80284be4e43c562012"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_results_1u00cy05/artifacts/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261024-04/nodes/gpu-h800-0158.host.platform.shaipower.com/serving/rank0.json",
+          "sha256": "a7216c84b192b2b3d67a2b97fb723ec4642618a2d21572a262a3d6e6ba7dd422"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank0.json",
+          "sha256": "668aef53e51bd42bb3186453f9d3a7e6745d845fd3e13839fb79cb5f195df10b"
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_trace_of9lmcmi/prefill_dp1_rank0.kernels.jsonl.gz",
+          "sha256": "3c04ef2d3b6ad161c58819dc2e6c918fc172971848e38b87a0aa97c039846c5b"
+        }
+      ],
+      "status": "BINDINGS_PREPARED_NOT_RUN"
+    }
+  ],
+  "new_complete_invocations": 0,
+  "control_budget": 2,
+  "prerequisites": "unit and scale support followed by frozen commands"
+}

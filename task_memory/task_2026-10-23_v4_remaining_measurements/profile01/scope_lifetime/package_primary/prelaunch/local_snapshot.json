@@ -1,0 +1,12 @@
+{
+  "observed_utc": "2026-10-24T18:05:36.760086+00:00",
+  "hostname": "kun-workspace-vgen2",
+  "nfs_ip": "100.96.128.195",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "storage_available_bytes": 228644413440,
+  "storage_free_inodes": 101048733,
+  "package_device": 64784,
+  "scratch_device": 64784,
+  "same_filesystem": true,
+  "limits": "Shared /data storage is counted once; no reservation is inferred. Worker connectivity requires post-submission observation."
+}

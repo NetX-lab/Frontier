@@ -1,0 +1,19 @@
+{
+  "status": "ROOT_GATES_PASS_BEFORE_SUBMIT",
+  "timestamp_utc": "2026-10-22T20:31:20.006461+00:00",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06",
+  "manifest_sha256": "8eb3f794fb80ec98f9b76f8fe284b475a67d9e7b18b3e0ce0a2a0ec2daf2399e",
+  "freeze_sha256": "e7aff0c1e9f72be75e1e6e32b82eb21aa3db247684561028c1ffdaec86cfe2fe",
+  "config_sha256": "d133579c3dd03287ffa659c6d1114a366d2ac5d1e8e4611abd6f83acb714dcd4",
+  "quota_snapshot": "/data/ycfeng/tmp/glm53_dsv4/native06_quota_b62c155.json",
+  "quota_sha256": "27de62e7d9b1d07cc9e46e63b067efbbd112d94b1b511b3f894ed5eb90238e26",
+  "census_pages": 1,
+  "personal_live_jobs": [],
+  "personal_counts_before": {
+    "H800": 0,
+    "nonpreemptible_H200": 0
+  },
+  "approved_gpu_count": 32,
+  "approved_GPU_hours": 32,
+  "launch_log": "/data/ycfeng/tmp/v4-h800-p0-native-06-launch02.log"
+}

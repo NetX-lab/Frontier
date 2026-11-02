@@ -1,0 +1,14 @@
+{"stage": "manifest", "phase": "start", "t": 3322064.309332783}
+{"stage": "manifest", "phase": "end", "t": 3322064.310160764}
+{"stage": "launcher_dry_run", "phase": "start", "t": 3322064.310214323}
+{"stage": "launcher_dry_run", "phase": "end", "t": 3322064.315641607}
+{"stage": "probe_import", "phase": "start", "t": 3322064.316771881}
+{"stage": "probe_import", "phase": "end", "t": 3322064.335713929}
+{"stage": "serving_profile", "phase": "start", "t": 3322064.335815022}
+{"stage": "serving_profile", "phase": "end", "t": 3322064.358436341}
+{"stage": "torch_import", "phase": "start", "t": 3322064.358503112}
+{"stage": "torch_import", "phase": "end", "t": 3322067.811683643}
+{"stage": "cuda_bindings_import", "phase": "start", "t": 3322067.811745462}
+{"stage": "cuda_bindings_import", "phase": "end", "t": 3322067.811762942}
+{"stage": "binary_pins", "phase": "start", "t": 3322067.814344993}
+{"stage": "binary_pins", "phase": "end", "t": 3322067.942542502}

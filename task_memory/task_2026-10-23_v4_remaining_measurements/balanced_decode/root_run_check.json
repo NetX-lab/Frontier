@@ -1,0 +1,204 @@
+{
+  "status": "PASS_RUN_EXECUTION_DATA_ACCEPTANCE_PENDING",
+  "task_id": "W128-V4-BALANCED-DECODE-ROOT",
+  "created_at_utc": "2026-10-23T14:21:06.062774+00:00",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02",
+  "manifest_sha256": "9714cdb749e8504df32955bb62e080467434e33e20da1d23ae653da2ce8e09cf",
+  "inputs_rehashed": 530,
+  "originals_rehashed": [
+    {
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-q1-warm-remeasure/task_memory/task_2026-10-21_v4_q1_warm_remeasure/h800_decode",
+      "manifest_sha256": "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360",
+      "input_count": 527
+    },
+    {
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced",
+      "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+      "input_count": 529
+    },
+    {
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_01",
+      "manifest_sha256": "9ac0e6c09df9755d44980ff448f2e71244dde4b4c6772fc0525213a7f4899910",
+      "input_count": 530
+    }
+  ],
+  "terminal": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_terminal_gonqtfhz/receipt.json",
+    "sha256": "fccaa0f9008c192fd9031895410136fc9f2a4b41159d1324caa290f23f41585c",
+    "observation": {
+      "job": "exp-1023-213905-916183",
+      "observed_at_utc": "2026-10-23T14:18:36.932141+00:00",
+      "created_at": "2026-10-23T13:39:05Z",
+      "creator": "i-fengyicheng",
+      "status": {
+        "phase": "Succeeded",
+        "reason": "RJobSucceeded",
+        "message": "RJob succeeded",
+        "taskStatuses": {
+          "default": {
+            "succeeded": 1,
+            "taskStage": "stepmind-task-stage-1"
+          }
+        },
+        "finishTime": "2026-10-23T13:48:57Z",
+        "taskStage": "stepmind-task-stage-1"
+      },
+      "launcher_pid": 3647153,
+      "launcher_alive": false,
+      "replicas": [
+        {
+          "identity": {
+            "name": "default",
+            "process_id": "exp-1023-213905-916183-cfcd2084",
+            "state": "SUCCEED",
+            "ip": "10.191.5.56",
+            "node_name": "gpu-h800-0110.host.platform.shaipower.com",
+            "node_ip": "10.191.5.56"
+          },
+          "status_keys": [
+            "conditions",
+            "hostIP",
+            "podIP",
+            "podIPs",
+            "startTime",
+            "containerStatuses",
+            "qosClass",
+            "phase",
+            "nodeName",
+            "finishTimestamp"
+          ],
+          "phase": "Succeeded",
+          "node_name": "gpu-h800-0110.host.platform.shaipower.com",
+          "start_time": "2026-10-23T13:39:19Z",
+          "finish_timestamp": "2026-10-23T13:48:57Z",
+          "container_states": [
+            {
+              "name": "default",
+              "restart_count": 0,
+              "state": {
+                "terminated": {
+                  "exitCode": 0,
+                  "reason": "Completed",
+                  "startedAt": "2026-10-23T13:39:27Z",
+                  "finishedAt": "2026-10-23T13:48:56Z",
+                  "containerID": "containerd://b6a42cb8b772f236ab29eb868ad2f80f1f224cd2bf19fe0c497ca67bf9ddeba5"
+                }
+              },
+              "image_id": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "download": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_results_6zkg5vz4/download_receipt.json",
+    "sha256": "64922e4489ec717625e6ca66a1a786ce4b2f71827c0a35cc9ef4bb27bb6b9a67",
+    "files": [
+      {
+        "path": "Q1_WARM_6143_7166_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+        "bytes": 38983593,
+        "sha256": "d51ce6a312c3ce108d10377125b2f8d2ecfd9368fa77f3094f911a8d48b685be"
+      },
+      {
+        "path": "Q1_WARM_6143_7166_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+        "bytes": 37164812,
+        "sha256": "e92981d3fd5d910c7b333af5290cc0a8ac636a8a02ad4be2ca556d841e838399"
+      },
+      {
+        "path": "Q1_WARM_6143_7166_BALANCED/logs/accepted_c26_q1_balanced.log",
+        "bytes": 22628,
+        "sha256": "e2cc1bc6e07b8c4c292ee90fc57509381ce1f9f65d990b4bb1567f856e92bb38"
+      },
+      {
+        "path": "Q1_WARM_6143_7166_BALANCED/logs/aggregate_q1_balanced.log",
+        "bytes": 689,
+        "sha256": "88718a7b1bc9f5e0e58bd5ce57efa0ba6d7947bf2b265be520fc9f74741064bb"
+      },
+      {
+        "path": "Q1_WARM_6143_7166_BALANCED/profiler_traces/e0-decode-q1-c6143-7166.json",
+        "bytes": 1500192771,
+        "sha256": "d1207a5e3879202fc5c41cedf897495a62d6c2c09cd03935fb7a5a58ed105855"
+      },
+      {
+        "path": "Q1_WARM_6143_7166_BALANCED/raw/dsv4_aggregate_summary.json",
+        "bytes": 2396,
+        "sha256": "8a44630c4bbd7da55837391236c606777159925c0bb03da36d6a6d4d3c19a55b"
+      },
+      {
+        "path": "Q1_WARM_6143_7166_BALANCED/raw/dsv4_raw_e0.jsonl",
+        "bytes": 25497874,
+        "sha256": "df1cff6e31fee49f06f16c660c8d477b1da7c6739bfcb9fb56ff8b75ce68dfa2"
+      },
+      {
+        "path": "status.json",
+        "bytes": 1215,
+        "sha256": "ba13c4dda4dcb9884eb820e32ae1b3af7b2a1348c16165e45a2cfc940084df0f"
+      }
+    ],
+    "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_decode/97803f0_balanced_warm2_02/Q1_WARM_6143_7166_BALANCED",
+    "local_root": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_results_6zkg5vz4/artifacts/Q1_WARM_6143_7166_BALANCED"
+  },
+  "runtime": {
+    "cuda_available": true,
+    "device_count": 1,
+    "device_name": "NVIDIA H800",
+    "flashinfer": "0.6.16.post3",
+    "nvidia_smi": [
+      "0, NVIDIA H800, 81559 MiB, 570.124.06"
+    ],
+    "pandas": "2.3.3",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "vllm": "0.28.0"
+  },
+  "constructor_log": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_results_6zkg5vz4/artifacts/Q1_WARM_6143_7166_BALANCED/Q1_WARM_6143_7166_BALANCED/logs/accepted_c26_q1_balanced.log",
+    "sha256": "e2cc1bc6e07b8c4c292ee90fc57509381ce1f9f65d990b4bb1567f856e92bb38",
+    "witnesses": {
+      "llm_max_num_batched_tokens_6144": "'max_num_batched_tokens': 6144",
+      "resolved_scheduler_budget_6144": "Chunked prefill is enabled with max_num_batched_tokens=6144.",
+      "llm_max_num_seqs_1": "'max_num_seqs': 1",
+      "physical_tp1_dp1": "tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1",
+      "v2_runner": "Using V2 Model Runner",
+      "eager_graph_disabled": "Cudagraph is disabled under eager mode",
+      "balanced_router_observed": "Simulating MoE routing using a balanced_topk strategy.",
+      "cuda_event_steps": "CUDA_EVENT: 1024 steps",
+      "kernel_only_steps": "KERNEL_ONLY: 1024 steps"
+    }
+  },
+  "phase_seconds": 547.0,
+  "container_seconds": 569.0,
+  "submission_to_terminal_seconds": 592.0,
+  "submission_span_gpu_hours_upper_bound": 0.16444444444444445,
+  "billing_verified": false,
+  "queued_profile02": {
+    "job": "exp-1023-180821-373637",
+    "observed_at_utc": "2026-10-23T14:18:37.448263+00:00",
+    "created_at": "2026-10-23T10:08:21Z",
+    "creator": "i-fengyicheng",
+    "status": {
+      "phase": "Pending",
+      "reason": "RJob is queuing",
+      "message": "RJob is queuing",
+      "taskStatuses": {
+        "default": {
+          "taskStage": "stepmind-task-stage-1"
+        }
+      },
+      "taskStage": "stepmind-task-stage-1"
+    },
+    "launcher_pid": 3236764,
+    "launcher_alive": true,
+    "replicas": []
+  },
+  "pending": [
+    "independent per-row routing/source and raw-to-CSV validation",
+    "trace coverage/attribution inspection",
+    "root isolated-data admission; no serving/TP8/graph admission"
+  ],
+  "auxiliary_failures": [
+    "Initial scp source ending in /. was rejected as unexpected filename dot. Fresh download with the actual directory basename succeeded and all8 hashes matched.",
+    "Native tokenizer/chat-template warmup warns with skip_tokenizer_init=True; supplied token-ID measurement proceeds. Retained in original log; no code change."
+  ]
+}

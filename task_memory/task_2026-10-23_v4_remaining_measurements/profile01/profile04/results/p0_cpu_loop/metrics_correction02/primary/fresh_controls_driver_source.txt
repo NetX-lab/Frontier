@@ -1,0 +1,74 @@
+"""Execute each of the two newly allocated full controls once without retries."""
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parent
+PLAN = ROOT / "execution_allocation.json"
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def execute(control, plan):
+    role, lane, rank = control["key"]
+    prefix = ROOT / f"control_{role}_dp{lane}_rank{rank}"
+    bindings = control["input_bindings"]
+    for kind in ("trace", "profile", "inventory"):
+        path = Path(control["input_root"]) / bindings[kind + "_path"]
+        assert sha(path) == bindings[kind + "_sha256"], str(path)
+    for kind in ("retained_output", "retained_kernel_index"):
+        assert sha(control[kind + "_path"]) == control[kind + "_sha256"]
+    command = plan["command_prefix"] + [plan["source_path"], bindings["trace_path"], str(prefix)]
+    receipt_path = prefix.with_suffix(".receipt.json")
+    receipt = dict(status="STARTING", decision=plan["decision"], key=control["key"],
+                   command=command, cwd=plan["repo"], python=sys.version, executable=sys.executable,
+                   conda="not used", start_utc=datetime.now(timezone.utc).isoformat(),
+                   invocation=1, invocation_ceiling=1, source_pins=plan["source_pins"],
+                   input_bindings=bindings, retained_control=control,
+                   driver_sha256=sha(__file__), execution_allocation_sha256=sha(PLAN))
+    with receipt_path.open("x") as stream:
+        json.dump(receipt, stream, indent=2)
+    started = time.monotonic()
+    with prefix.with_suffix(".stdout").open("x") as output, prefix.with_suffix(".stderr").open("x") as errors:
+        result = subprocess.run(command, cwd=plan["repo"], stdout=output, stderr=errors)
+    receipt.update(returncode=result.returncode, enclosing_seconds=time.monotonic() - started,
+                   end_utc=datetime.now(timezone.utc).isoformat(),
+                   status="COMPLETE_PENDING_EQUALITY" if result.returncode == 0 else "FAILED")
+    cgroup_path = prefix.with_suffix(".cgroup.json")
+    if cgroup_path.exists():
+        receipt["actual_cgroup"] = json.loads(cgroup_path.read_text())
+    receipt["closed_outputs"] = [dict(path=str(path), bytes=path.stat().st_size, sha256=sha(path))
+                                 for path in sorted(ROOT.glob(prefix.name + ".*")) if path != receipt_path]
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps({key: receipt[key] for key in ("key", "returncode", "enclosing_seconds", "status")}), flush=True)
+    return result.returncode
+
+
+def main():
+    plan = json.loads(PLAN.read_text())
+    assert sha(__file__) == plan["control_driver_sha256"]
+    assert sha(plan["control_inputs_path"]) == plan["control_inputs_sha256"]
+    unit = json.loads((ROOT / "primary_unit.receipt.json").read_text())
+    assert unit["status"] == "PASS" and unit["tests_run"] == plan["expected_unit_tests"]
+    for pin in plan["source_pins"]:
+        assert sha(pin["path"]) == pin["expected_sha256"], pin["path"]
+    controls = json.loads(Path(plan["control_inputs_path"]).read_text())["controls"]
+    assert len(controls) == plan["complete_control_invocation_ceiling"]
+    with ThreadPoolExecutor(max_workers=plan["max_rank_concurrency"]) as pool:
+        codes = list(pool.map(lambda control: execute(control, plan), controls))
+    sys.exit(0 if all(code == 0 for code in codes) else 1)
+
+
+if __name__ == "__main__":
+    main()

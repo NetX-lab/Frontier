@@ -1,0 +1,51 @@
+{
+  "actual_binary_bytes_verified": 0,
+  "cpu_bytes_import_plan_and_recorder_checks_pass": true,
+  "existing_plan_cli_pass": true,
+  "fresh_package_ignored": true,
+  "git_head_index_branches_not_changed_by_task": true,
+  "git_status_porcelain": "",
+  "gpu_platform_auth_ssh_cloud_download_docker_operations": 0,
+  "matrix_inspection_poll_or_start_operations": 0,
+  "native_B_checker_is_not_prefill_dependency": true,
+  "no_more_writes_after_this_receipt_and_final_checkpoint": true,
+  "packages_reverified": {
+    "BASE": {
+      "manifest_file_pins_verified": 527,
+      "manifest_sha256": "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360",
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-q1-warm-remeasure/task_memory/task_2026-10-21_v4_q1_warm_remeasure/h800_decode",
+      "tool_pins_verified": 517,
+      "unchanged": true
+    },
+    "fresh_balanced_prefill": {
+      "manifest_file_pins_verified": 529,
+      "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced",
+      "tool_pins_verified": 519,
+      "unchanged": true
+    },
+    "h800_prefill": {
+      "manifest_file_pins_verified": 527,
+      "manifest_sha256": "f198ecece51961457ac69a66d8f2cf086f54301401ccc66dad0acbbefc57711e",
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-h800-prefill/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill",
+      "tool_pins_verified": 517,
+      "unchanged": true
+    },
+    "h800_prefill_capacity128": {
+      "manifest_file_pins_verified": 527,
+      "manifest_sha256": "ff7f37b0f7c78468a500bdedd20f3c168127820082c723a346898d40a253dff1",
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-h800-prefill/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_capacity128",
+      "tool_pins_verified": 517,
+      "unchanged": true
+    }
+  },
+  "retained_whole_package_verifiers_not_run_or_waived": true,
+  "root_owns_remaining_image_binary_quota_runtime_review_merge": true,
+  "source_builder_unchanged": true,
+  "source_clean": true,
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "status": "LOCAL_PACKAGE_COMPLETED_CPU_ONLY_UNSUBMITTED",
+  "successful_build": true,
+  "task_id": "W128-V4-BALANCED-PREFILL-PACKAGE",
+  "timestamp_utc": "2026-10-22T18:21:19.163212+00:00"
+}

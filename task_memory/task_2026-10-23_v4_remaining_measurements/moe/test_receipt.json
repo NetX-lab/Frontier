@@ -1,0 +1,79 @@
+{
+  "task_id": "W128-V4-MOE-PACKAGE",
+  "status": "172_PASS_1_MATCHING_BASELINE_ENV_FAILURE_2_NATIVE_SKIPS",
+  "results": {
+    "CPU_SUITE": {
+      "source": "/data/ycfeng/tmp/w128-v4-moe-cpu-20261023-04.xml",
+      "retained": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/cpu_test_results.xml",
+      "sha256": "04b8a72a15c4a0c148875584330e2faf784b73d93c57913d0fe56bb803a106d7",
+      "passed": 172,
+      "failures": [
+        {
+          "name": "test_checkpoint_mxfp4_runtime_requires_cuda",
+          "message": "NotImplementedError: MXFP4 profiling requires current vLLM's modular fused MoE API.",
+          "error": "tests/unit/test_dsv4_moe_profiling.py:77: in test_checkpoint_mxfp4_runtime_requires_cuda\n    kernel.validate_mxfp4_runtime(\nfrontier/profiling/moe/moe_vllm_kernel.py:546: in validate_mxfp4_runtime\n    raise NotImplementedError(\nE   NotImplementedError: MXFP4 profiling requires current vLLM's modular fused MoE API."
+        }
+      ],
+      "skipped": [
+        {
+          "name": "test_builder_configures_vllm_marlin_experts_on_cpu",
+          "reason": "could not import 'vllm': No module named 'vllm'",
+          "error": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/tests/unit/test_dsv4_moe_profiling.py:144: could not import 'vllm': No module named 'vllm'"
+        },
+        {
+          "name": "test_builder_rejects_backends_other_than_marlin",
+          "reason": "could not import 'vllm': No module named 'vllm'",
+          "error": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/tests/unit/test_dsv4_moe_profiling.py:206: could not import 'vllm': No module named 'vllm'"
+        }
+      ],
+      "suite_attributes": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "1",
+        "skipped": "2",
+        "tests": "175",
+        "time": "16.395",
+        "timestamp": "2026-10-23T22:19:24.127497+08:00",
+        "hostname": "kun-workspace-vgen2"
+      }
+    },
+    "PINNED_BASELINE": {
+      "source": "/data/ycfeng/tmp/w128-v4-moe-baseline-20261023-01.xml",
+      "retained": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/baseline_test_results.xml",
+      "sha256": "79b7c2ca4f19758217f387e74d7b3ac46d3b4dbfbe4e651673b9b82c57fb3ab8",
+      "passed": 5,
+      "failures": [
+        {
+          "name": "test_checkpoint_mxfp4_runtime_requires_cuda",
+          "message": "NotImplementedError: MXFP4 profiling requires current vLLM's modular fused MoE API.",
+          "error": "../../../../../../tests/unit/test_dsv4_moe_profiling.py:77: in test_checkpoint_mxfp4_runtime_requires_cuda\n    kernel.validate_mxfp4_runtime(\nfrontier/profiling/moe/moe_vllm_kernel.py:546: in validate_mxfp4_runtime\n    raise NotImplementedError(\nE   NotImplementedError: MXFP4 profiling requires current vLLM's modular fused MoE API."
+        }
+      ],
+      "skipped": [
+        {
+          "name": "test_builder_configures_vllm_marlin_experts_on_cpu",
+          "reason": "could not import 'vllm': No module named 'vllm'",
+          "error": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/tests/unit/test_dsv4_moe_profiling.py:144: could not import 'vllm': No module named 'vllm'"
+        },
+        {
+          "name": "test_builder_rejects_backends_other_than_marlin",
+          "reason": "could not import 'vllm': No module named 'vllm'",
+          "error": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/tests/unit/test_dsv4_moe_profiling.py:206: could not import 'vllm': No module named 'vllm'"
+        }
+      ],
+      "suite_attributes": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "1",
+        "skipped": "2",
+        "tests": "8",
+        "time": "3.353",
+        "timestamp": "2026-10-23T22:19:24.283874+08:00",
+        "hostname": "kun-workspace-vgen2"
+      }
+    }
+  },
+  "source_unchanged": true,
+  "persistent_tests_added": 0,
+  "actual_native_image_GPU_gate_completed": false
+}

@@ -1,0 +1,16 @@
+{
+  "status": "RETAINED_SELECTED_LOADING_GC_EVIDENCE",
+  "files": {
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/gc_evidence/load_without_gc.py": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/gc_evidence/load_gc_control_compare.json": "60996fc93f8a8bf04672d3c60621206d8882d75f24a2c5823a34f4e34ccf948e",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/gc_evidence/p0_load_gc_01.receipt.json": "60c046cf0ecd55557a7acb420b48373a287e3547680f74c0654ec966f99b5aa0",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/gc_evidence/p0_load_gc_01.cgroup.json": "60006b3328a30e8d8ec7a4f30a7336655c0ebe3accace91ffc3c039f15ea3370",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/gc_evidence/p0_load_gc_01.gc.jsonl": "62fce72e2e1d8b65bb1694c2161a76bac3f0d11f8cc044c1996435e4abda6d7c",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/gc_evidence/p0_load_gc_01.obs.jsonl": "22ca10b16a7b681c0114d7ef0b679bcd940c9ba5b1f854ecc6b397c92b393922",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/gc_evidence/p0_load_gc_01.stderr": "50031e889e852a7e6c74b411233cc11d51006d82bc237a3cef9f2646a2a165e5"
+  },
+  "full_kernel_prefix": "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/p0_load_gc_01.kernels.jsonl.gz",
+  "kernel_rows": 1215919,
+  "final_json_exists": false,
+  "limits": "Raw index EOF count only; P0/full32 still INCOMPLETE, no newlimit/GPU/native/costadmission."
+}

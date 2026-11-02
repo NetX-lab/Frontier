@@ -1,0 +1,108 @@
+{
+ "trace": "data/processed_traces/canonical_fixed_6144_1024_req128_qps1",
+ "metrics": {
+  "native06": {
+   "repeat01": {
+    "ttft_ms": 403.30500297932304,
+    "tpot_ms": 19.03109878276599,
+    "request_e2e_time_ms": 19872.119057748932,
+    "token_throughput_tps": 6273.332979026521
+   },
+   "repeat02": {
+    "ttft_ms": 393.21618992471485,
+    "tpot_ms": 19.016502763090102,
+    "request_e2e_time_ms": 19847.098516565893,
+    "token_throughput_tps": 6273.129500109898
+   },
+   "repeat03": {
+    "ttft_ms": 399.9459093065525,
+    "tpot_ms": 18.98073687169182,
+    "request_e2e_time_ms": 19817.239729047287,
+    "token_throughput_tps": 6269.771959563796
+   }
+  },
+  "profile02": {
+   "repeat01": {
+    "ttft_ms": 62767.97152432846,
+    "tpot_ms": 22.861225939295934,
+    "request_e2e_time_ms": 86155.0056602282,
+    "token_throughput_tps": 4694.869128889827
+   },
+   "repeat02": {
+    "ttft_ms": 406.17105943965726,
+    "tpot_ms": 19.848357800130056,
+    "request_e2e_time_ms": 20711.041088972706,
+    "token_throughput_tps": 6232.975430857404
+   },
+   "repeat03": {
+    "ttft_ms": 406.4154849911574,
+    "tpot_ms": 19.82614412270045,
+    "request_e2e_time_ms": 20688.560922513716,
+    "token_throughput_tps": 6233.79816360379
+   }
+  },
+  "profile04": {
+   "repeat01": {
+    "ttft_ms": 59549.31695031701,
+    "tpot_ms": 24.928935239404915,
+    "request_e2e_time_ms": 85051.61770022823,
+    "token_throughput_tps": 3665.5923250058045
+   },
+   "repeat02": {
+    "ttft_ms": 444.56392800202593,
+    "tpot_ms": 21.39717137194894,
+    "request_e2e_time_ms": 22333.870241505792,
+    "token_throughput_tps": 6200.003473474229
+   },
+   "repeat03": {
+    "ttft_ms": 486.0610744508449,
+    "tpot_ms": 23.288688108731037,
+    "request_e2e_time_ms": 24310.389009682694,
+    "token_throughput_tps": 6122.841778561123
+   }
+  }
+ },
+ "relative_to_native06": {
+  "profile02": {
+   "repeat01": {
+    "ttft_ms": 154.634001712462,
+    "tpot_ms": 0.20125622804282828,
+    "request_e2e_time_ms": 3.3354714919863024,
+    "token_throughput_tps": -0.2516148681114063
+   },
+   "repeat02": {
+    "ttft_ms": 0.03294592096379034,
+    "tpot_ms": 0.043743849613322894,
+    "request_e2e_time_ms": 0.043529918072694684,
+    "token_throughput_tps": -0.006400962908830521
+   },
+   "repeat03": {
+    "ttft_ms": 0.016176126656282763,
+    "tpot_ms": 0.04454027558168616,
+    "request_e2e_time_ms": 0.04396783837606222,
+    "token_throughput_tps": -0.005737656200578756
+   }
+  },
+  "profile04": {
+   "repeat01": {
+    "ttft_ms": 146.65330583655077,
+    "tpot_ms": 0.3099051990618551,
+    "request_e2e_time_ms": 3.2799470682047476,
+    "token_throughput_tps": -0.4156866314507952
+   },
+   "repeat02": {
+    "ttft_ms": 0.13058398762050483,
+    "tpot_ms": 0.1251896123339551,
+    "request_e2e_time_ms": 0.1252964871849782,
+    "token_throughput_tps": -0.011657024876401412
+   },
+   "repeat03": {
+    "ttft_ms": 0.21531702947932008,
+    "tpot_ms": 0.22696438321444545,
+    "request_e2e_time_ms": 0.22672931962616039,
+    "token_throughput_tps": -0.023434692992071127
+   }
+  }
+ },
+ "note": "repeat01 of each profiled run is the profiled repeat; its timings are not client-valid."
+}

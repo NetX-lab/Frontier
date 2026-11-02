@@ -1,0 +1,153 @@
+{
+  "task_id": "W128-V4-GROUPED-NIXL",
+  "source_commit": "1a65e4985091f5c85c14830f86385800a614e4e6",
+  "base_commit": "6d88700d5a01448041575ba5ae49940c80fd40b4",
+  "frontier_tree": "0d57d349defcc6bbdd9e29ec654ce009832dea29",
+  "tests_tree": "eaaee05db2e189ce802b6f1fd244e89d52f7a49b",
+  "python": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "python_version": "3.10.6",
+  "pytest_junit": "task_memory/task_2026-10-21_v4_grouped_nixl/cpu_tests.xml",
+  "pytest_totals": {
+    "tests": 371,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "complete_lifecycles": [
+    {
+      "prompt": 191,
+      "outputs": 1024,
+      "initial_source_groups": [
+        1,
+        3,
+        3,
+        48,
+        24
+      ],
+      "handoff_source_groups": [
+        1,
+        2,
+        2,
+        2,
+        16
+      ],
+      "destination_reserved_groups": [
+        1,
+        2,
+        2,
+        2,
+        16
+      ],
+      "transferred_groups": [
+        1,
+        2,
+        2,
+        2,
+        16
+      ],
+      "payload_bytes_per_worker_lane": 16470144,
+      "first_context": 190,
+      "last_context": 1213,
+      "computed_frontier": 1214,
+      "source_free_blocks": 3999,
+      "target_free_blocks": 3999,
+      "pool_blocks": 4000,
+      "reserved_null_blocks": 1,
+      "native_wire_bytes_known": false
+    },
+    {
+      "prompt": 6144,
+      "outputs": 1024,
+      "initial_source_groups": [
+        24,
+        96,
+        96,
+        1536,
+        768
+      ],
+      "handoff_source_groups": [
+        24,
+        2,
+        2,
+        2,
+        16
+      ],
+      "destination_reserved_groups": [
+        24,
+        2,
+        2,
+        2,
+        16
+      ],
+      "transferred_groups": [
+        24,
+        2,
+        2,
+        2,
+        16
+      ],
+      "payload_bytes_per_worker_lane": 39521664,
+      "first_context": 6143,
+      "last_context": 7166,
+      "computed_frontier": 7167,
+      "source_free_blocks": 3999,
+      "target_free_blocks": 3999,
+      "pool_blocks": 4000,
+      "reserved_null_blocks": 1,
+      "native_wire_bytes_known": false
+    },
+    {
+      "prompt": 6145,
+      "outputs": 1024,
+      "initial_source_groups": [
+        25,
+        97,
+        97,
+        1537,
+        769
+      ],
+      "handoff_source_groups": [
+        25,
+        3,
+        3,
+        3,
+        17
+      ],
+      "destination_reserved_groups": [
+        25,
+        3,
+        3,
+        3,
+        17
+      ],
+      "transferred_groups": [
+        25,
+        3,
+        3,
+        3,
+        17
+      ],
+      "payload_bytes_per_worker_lane": 43661376,
+      "first_context": 6144,
+      "last_context": 7167,
+      "computed_frontier": 7168,
+      "source_free_blocks": 3999,
+      "target_free_blocks": 3999,
+      "pool_blocks": 4000,
+      "reserved_null_blocks": 1,
+      "native_wire_bytes_known": false
+    }
+  ],
+  "native_rules": "task_memory/task_2026-10-21_v4_grouped_nixl/native_rules.json",
+  "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "execution_scope": "real per-owner scheduler/allocation/transfer/release components; no EP compute or four-owner DP busy loop",
+  "typed_execution_errors_preserved": [
+    "V4 measured/native execution remains unqualified",
+    "V4 structural serving requires eager co-location without PD",
+    "Grouped KV cache allocation supports MONOLITHIC or NIXL PREFILL/DECODE only"
+  ],
+  "native_wire_bytes_known": false,
+  "formal_accuracy_accepted": false,
+  "source_diff_matches_implementation_commit": true,
+  "frontier_and_tests_unchanged_after_measured_commit": true
+}

@@ -1,0 +1,59 @@
+{
+  "status": "FAILED",
+  "start_utc": "2026-10-24T21:18:33.144327+00:00",
+  "allocation_sha256": "0088c690d6eed547bc1374b52a44488f8248097c88d3f0ed072d9f0b551c129e",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "attempt": "1/1",
+  "driver_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "bindings": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426",
+      "bytes": 5041
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py",
+      "sha256": "e1f0450a6aebe1ba84944571a40f2a3e5a64d2b4fb92f26d0ddd9ff24031ddf5",
+      "bytes": 7101
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs.json",
+      "sha256": "8a2e90c821cc3286f7533077fb6a52797e8a2ba0e36fadb103bd910c56fd4edc",
+      "bytes": 6206
+    }
+  ],
+  "returncode": 1,
+  "enclosing_seconds": 0.06200661929324269,
+  "end_utc": "2026-10-24T21:18:33.206559+00:00",
+  "outputs": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_stdout.txt",
+      "bytes": 107,
+      "sha256": "f9440429784c7f9d4fa4ef6a639419a93f4d4ee7e0d1d8e0867330222e7adde4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_stderr.txt",
+      "bytes": 67,
+      "sha256": "79ec86e6aab0cdf91f5768595079eaecba6b9f2d7d02a812c7c8559752cb0c50"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_result.json",
+      "bytes": 2264,
+      "sha256": "2216990134aac3b12729fcd26a7a9cc75ebe38ac19a187bd107027a707089ac7"
+    }
+  ]
+}

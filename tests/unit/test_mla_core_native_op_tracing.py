@@ -672,7 +672,7 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
         num_layers=2,
         dense_kernel_times=(0.2, 0.4, 0.3),
     )
-    mapper_calls: list[tuple[str, int | None]] = []
+    mapper_calls: list[tuple[str, int | None, bool]] = []
 
     def _fake_get_attention_trace_op_times(
         mapped_execution_time,
@@ -680,12 +680,13 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
         *,
         per_layer_count=None,
         skip_zero=True,
+        allow_structural=False,
     ):
         assert mapped_execution_time in execution_time.layer_execution_times
         if family is not DENSE_ATTENTION_FAMILY:
             return ()
         assert skip_zero is True
-        mapper_calls.append((family.family_id, per_layer_count))
+        mapper_calls.append((family.family_id, per_layer_count, allow_structural))
         return (
             (
                 _fake_dense_attention_operator(
@@ -724,7 +725,7 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
         if name in {"attn_prefill", "attn_decode", "attn_kv_cache_save"}
     ]
 
-    assert mapper_calls == [("dense_attention", None)] * 2
+    assert mapper_calls == [("dense_attention", None, False)] * 2
     assert dense_rows == [
         ("attn_kv_cache_save", pytest.approx(9.2)),
         ("attn_prefill", pytest.approx(9.4)),
@@ -739,7 +740,7 @@ def test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper(
         num_layers=2,
         dense_kernel_times=(0.2, 0.4, 0.3),
     )
-    mapper_calls: list[tuple[str, int | None]] = []
+    mapper_calls: list[tuple[str, int | None, bool]] = []
 
     def _fake_get_attention_trace_op_times(
         mapped_execution_time,
@@ -747,12 +748,13 @@ def test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper(
         *,
         per_layer_count=None,
         skip_zero=True,
+        allow_structural=False,
     ):
         assert mapped_execution_time in execution_time.layer_execution_times
         if family is not DENSE_ATTENTION_FAMILY:
             return ()
         assert skip_zero is True
-        mapper_calls.append((family.family_id, per_layer_count))
+        mapper_calls.append((family.family_id, per_layer_count, allow_structural))
         return (
             (
                 _fake_dense_attention_operator(
@@ -791,7 +793,7 @@ def test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper(
         if name in {"attn_prefill", "attn_decode", "attn_kv_cache_save"}
     ]
 
-    assert mapper_calls == [("dense_attention", None)] * 2
+    assert mapper_calls == [("dense_attention", None, False)] * 2
     assert dense_rows == [
         ("attn_kv_cache_save", pytest.approx(9.2), 7),
         ("attn_prefill", pytest.approx(9.4), 7),

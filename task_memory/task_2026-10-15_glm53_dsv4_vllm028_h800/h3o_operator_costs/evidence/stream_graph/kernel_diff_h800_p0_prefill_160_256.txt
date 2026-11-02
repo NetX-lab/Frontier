@@ -1,0 +1,6 @@
+s23  129    0  ncclDevKernel_AllGatherV_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+s23   44   87  ncclDevKernel_AllGather_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+s23   43   86  ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+s23   43    0  ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)
+dispatch 160: first fused_q_kv_rmsnorm grid [6144, 2, 1]
+dispatch 256: first fused_q_kv_rmsnorm grid [6144, 2, 1]

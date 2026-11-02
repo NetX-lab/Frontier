@@ -114,7 +114,9 @@ class MoeRoutingWorkload:
 
     def _get_requested_moe_gating_routing_runtime_path(self) -> str:
         return resolve_moe_gating_routing_runtime_path(
-            getattr(self, "_moe_routing_distribution_type", "balanced")
+            getattr(self, "_moe_routing_distribution_type", "balanced"),
+            self._get_model_architecture_profile(),
+            getattr(self, "_moe_gating_routing_runtime_path", None),
         )
 
     @staticmethod

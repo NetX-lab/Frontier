@@ -1,0 +1,139 @@
+{
+ "arrivals": {
+  "inter_arrival_cv": 0.9562,
+  "realized_mean_qps": 4.0,
+  "realized_span_s": 63.75,
+  "rule": "arrived_at = (t_i - t_0) * scale, with t_i the source arrival_time_ns in seconds; scale makes the formal requests arrive at exactly the target mean rate (num_formal_requests - 1) / span; the raw arrival_time_ns is not replayed",
+  "scale": 2.590246128,
+  "seed": null,
+  "source_mean_qps_formal_set": 10.361,
+  "source_mean_qps_full_trace": 10.2619,
+  "target_qps": 4.0
+ },
+ "lengths": {
+  "distribution": {
+   "output_tokens": {
+    "full_trace": {
+     "count": 300,
+     "max": 769,
+     "mean": 277.78,
+     "min": 1,
+     "quantiles": {
+      "p10": 57.5,
+      "p25": 146.75,
+      "p50": 267.5,
+      "p75": 370.25,
+      "p90": 510.0,
+      "p95": 633.0,
+      "p99": 767.01
+     },
+     "sum": 83334
+    },
+    "ks_statistic_vs_full_trace": 0.0154,
+    "relative_mean_deviation": 0.007,
+    "selected": {
+     "count": 256,
+     "max": 769,
+     "mean": 279.715,
+     "min": 1,
+     "quantiles": {
+      "p10": 60.5,
+      "p25": 141.5,
+      "p50": 270.5,
+      "p75": 383.0,
+      "p90": 512.5,
+      "p95": 633.0,
+      "p99": 766.9
+     },
+     "sum": 71607
+    }
+   },
+   "prompt_tokens": {
+    "full_trace": {
+     "count": 300,
+     "max": 1998,
+     "mean": 224.423,
+     "min": 1,
+     "quantiles": {
+      "p10": 7.0,
+      "p25": 12.75,
+      "p50": 34.5,
+      "p75": 217.25,
+      "p90": 922.2,
+      "p95": 1115.1,
+      "p99": 1607.52
+     },
+     "sum": 67327
+    },
+    "ks_statistic_vs_full_trace": 0.0143,
+    "relative_mean_deviation": 0.0172,
+    "selected": {
+     "count": 256,
+     "max": 1998,
+     "mean": 228.289,
+     "min": 1,
+     "quantiles": {
+      "p10": 8.0,
+      "p25": 13.0,
+      "p50": 35.5,
+      "p75": 214.0,
+      "p90": 944.0,
+      "p95": 1137.5,
+      "p99": 1630.4
+     },
+     "sum": 58442
+    }
+   }
+  },
+  "edge_cases": {
+   "max_total_tokens": 2048,
+   "output_tokens_eq_1": 1,
+   "prompt_tokens_eq_1": 2,
+   "prompt_tokens_lt_16": 73
+  },
+  "head_prefix_means": {
+   "head128": {
+    "output_tokens": 276.578,
+    "prompt_tokens": 209.734
+   },
+   "head256": {
+    "output_tokens": 279.715,
+    "prompt_tokens": 228.289
+   },
+   "head300": {
+    "output_tokens": 277.78,
+    "prompt_tokens": 224.423
+   },
+   "head64": {
+    "output_tokens": 283.609,
+    "prompt_tokens": 260.938
+   }
+  },
+  "source": "token counts from the trace (input_toks, output_toks); the trace carries no text, so lengths are not re-tokenized and are identical for every model"
+ },
+ "metric_notes": {
+  "tpot_population": "requests with num_decode_tokens == 1 have no inter-token interval and are excluded from the TPOT mean only; they stay in TTFT, THPT and E2E"
+ },
+ "namespace": "sharegpt-canonical-h200",
+ "native_request_contract": "one /v1/completions request per row at its arrived_at offset, deterministic prompt token ids derived from request_id, max_tokens = min_tokens = num_decode_tokens, ignore_eos",
+ "schema": "frontier.canonical_sharegpt_workload.v1",
+ "selection": {
+  "num_formal_requests": 256,
+  "rule": "first 256 requests in trace order",
+  "source_indices": [
+   0,
+   255
+  ],
+  "warmup_pool": "source indices 256..299 (44 requests), disjoint from the formal set"
+ },
+ "source": {
+  "commit": "04bdeb8b6fb3609e8c6ce561fba18ef1b0e37479",
+  "license": "MIT",
+  "path": "dataset/sharegpt_req300_rate10_llama.jsonl",
+  "repository": "https://github.com/casys-kaist/LLMServingSim",
+  "sha256": "fad744ff3b25bff1e164cc210af4f29176e8d57d1be14c4f981a10bc32ddd61a",
+  "tag": "v1.0.0",
+  "tokenizer": "Llama (per the upstream dataset README)",
+  "url": "https://raw.githubusercontent.com/casys-kaist/LLMServingSim/v1.0.0/dataset/sharegpt_req300_rate10_llama.jsonl"
+ }
+}

@@ -1,0 +1,14 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/read_project_quota_legacy",
+    "/data"
+  ],
+  "start_utc": "2026-10-24T18:04:30.428254+00:00",
+  "end_utc": "2026-10-24T18:04:30.445824+00:00",
+  "exit": 0,
+  "stdout": "{\"quota_flags\":48,\"project_accounting\":true,\"project_enforcement\":true,\"project_id\":0,\"block_unit_bytes\":512,\"blocks_used\":1691315336,\"blocks_hardlimit\":0,\"blocks_softlimit\":0,\"inodes_used\":6325336,\"inodes_hardlimit\":0}\n",
+  "stderr": "",
+  "method": "Linux Q_XGETQSTATV/Q_XGETQUOTA read-only quotactl on the observed /dev/rbd1 device"
+}

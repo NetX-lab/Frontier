@@ -1,0 +1,76 @@
+{
+  "status": "PASS",
+  "returncode": 0,
+  "started_at_utc": "2026-10-24T08:02:22.870303+00:00",
+  "finished_at_utc": "2026-10-24T08:02:59.409421+00:00",
+  "argv": [
+    "docker",
+    "run",
+    "-i",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--cap-drop=ALL",
+    "--cap-add=DAC_OVERRIDE",
+    "--memory=6g",
+    "--cpus=2",
+    "--pids-limit=128",
+    "-v",
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69:/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69:ro",
+    "-e",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "-e",
+    "LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat",
+    "--entrypoint",
+    "python3",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "-I",
+    "-B",
+    "-",
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+  ],
+  "script_sha256": "522bd2b3da6912347ac32e3580053b860a323ac8a57ab9545dc665927f4c3137",
+  "witness": {
+    "status": "PASS_CPU_NATIVE_STOP_BRANCHES",
+    "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "native_wrapper_sha256": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+    "torch_sources": {
+      "/usr/local/lib/python3.12/dist-packages/torch/profiler/profiler.py": "2e7e248cba6f46787aeb693cd3fb82a1328936dc37e41be86a8e490ea1051eb9",
+      "/usr/local/lib/python3.12/dist-packages/torch/autograd/profiler.py": "e3c2bf21247a2b51cd47afa0804c9617cf6552517c74440465a248bc0d972357",
+      "/usr/local/lib/python3.12/dist-packages/torch/autograd/profiler_util.py": "f2d7f67f1df1821402d98120461de97e72eab349b0168c95be68ed858000ce31"
+    },
+    "cuda_initialized": false,
+    "results": [
+      {
+        "dump_cuda_time_total": true,
+        "actual_activities": [
+          "ProfilerActivity.CPU",
+          "ProfilerActivity.CUDA"
+        ],
+        "export_calls": 1,
+        "statistics_calls": 1,
+        "lazy_events_calls": 1,
+        "payload_annotations": 8,
+        "text_table_present": true,
+        "native_stdout_bytes": 1040
+      },
+      {
+        "dump_cuda_time_total": false,
+        "actual_activities": [
+          "ProfilerActivity.CPU",
+          "ProfilerActivity.CUDA"
+        ],
+        "export_calls": 1,
+        "statistics_calls": 0,
+        "lazy_events_calls": 0,
+        "payload_annotations": 8,
+        "text_table_present": false,
+        "native_stdout_bytes": 0
+      }
+    ],
+    "scope": "Actual native constructor/autostop and CPU trace export; no GPU cost, CUDA kernels, RPC timing or original failure reproduction."
+  },
+  "output": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv"
+}

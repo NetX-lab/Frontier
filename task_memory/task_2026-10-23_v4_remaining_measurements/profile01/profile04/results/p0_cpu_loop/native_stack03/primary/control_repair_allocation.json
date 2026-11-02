@@ -1,0 +1,33 @@
+{
+  "decision": "D-V4-P0-NATIVE-STACK-CONTROL-ARGV-REPAIR",
+  "recorded_utc": "2026-10-25T04:01:43.422159+00:00",
+  "authority": [
+    "D-V4-CONTINUE-FRESH-GATES",
+    "ordinary in-scope measured control repair"
+  ],
+  "evidence_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/control_failure.json",
+  "evidence_sha256": "b32289c68cd0f0da0cf7bf5f841016c6e7c023a9ce7f3867771b5280ad3ba00b",
+  "hypothesis": "The synthetic -c transport fails before its body executes; using the same source bytes in a fresh file will reach the metadata and intended exit/signal.",
+  "changes": [
+    "Fresh owner02/control.py<=140 gross lines, using the identical synthetic source in exclusive case .inferior.py files",
+    "Fresh primary/control_inputs02.json and owner02 outputs; keep original control/source/outputs immutable"
+  ],
+  "unchanged": [
+    "GDB source",
+    "original Python3.10.6",
+    "allocator/GC settings",
+    "synthetic metadata/body AST",
+    "full trace timing source and inputs",
+    "full diagnostic allocation0/1"
+  ],
+  "new_control_ceiling": 1,
+  "new_full_trace_or_affected_or_GPU_invocations": 0,
+  "existing_full_diagnostic_used": 0,
+  "existing_full_diagnostic_ceiling": 1,
+  "timeout_seconds": 60,
+  "memory_limit_bytes": 32212254720,
+  "max_rank_concurrency": 2,
+  "selected_rank_concurrency": 1,
+  "automatic_retry": false,
+  "status": "ALLOCATED_REPAIR_NOT_RUN"
+}

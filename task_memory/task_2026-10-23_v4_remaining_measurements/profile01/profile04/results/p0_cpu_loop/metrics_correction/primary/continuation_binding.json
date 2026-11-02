@@ -1,0 +1,124 @@
+{
+  "status": "PASS_RETAINED_SOURCE_CONTROL_BINDINGS",
+  "observed_utc": "2026-10-24T19:23:36.619055+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "checks": [
+    {
+      "name": "source_sha",
+      "pass": true
+    },
+    {
+      "name": "source_budget",
+      "pass": true
+    },
+    {
+      "name": "tests_sha",
+      "pass": true
+    },
+    {
+      "name": "tests_budget",
+      "pass": true
+    },
+    {
+      "name": "acceptance_binding:review_standards.md",
+      "pass": true
+    },
+    {
+      "name": "acceptance_binding:review_spec.md",
+      "pass": true
+    },
+    {
+      "name": "acceptance_binding:primary/complete_controls.json",
+      "pass": true
+    },
+    {
+      "name": "acceptance_binding:primary/unit_receipt.json",
+      "pass": true
+    },
+    {
+      "name": "acceptance_binding:primary/matrix_binding.json",
+      "pass": true
+    },
+    {
+      "name": "frozen_source:/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+      "pass": true
+    },
+    {
+      "name": "frozen_source:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/forward_device_timeline.py",
+      "pass": true
+    },
+    {
+      "name": "frozen_source:/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+      "pass": true
+    },
+    {
+      "name": "frozen_source:/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py",
+      "pass": true
+    },
+    {
+      "name": "frozen_source:/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py",
+      "pass": true
+    },
+    {
+      "name": "two_controls_complete",
+      "pass": true
+    },
+    {
+      "name": "decode_1_0_exact",
+      "pass": true
+    },
+    {
+      "name": "decode_1_0_actual_30GiB",
+      "pass": true
+    },
+    {
+      "name": "decode_1_0_final_output_sha",
+      "pass": true
+    },
+    {
+      "name": "decode_1_0_index_sha",
+      "pass": true
+    },
+    {
+      "name": "decode_1_0_counts",
+      "pass": true
+    },
+    {
+      "name": "decode_1_0_clock_under_60",
+      "pass": true
+    },
+    {
+      "name": "prefill_1_0_exact",
+      "pass": true
+    },
+    {
+      "name": "prefill_1_0_actual_30GiB",
+      "pass": true
+    },
+    {
+      "name": "prefill_1_0_final_output_sha",
+      "pass": true
+    },
+    {
+      "name": "prefill_1_0_index_sha",
+      "pass": true
+    },
+    {
+      "name": "prefill_1_0_counts",
+      "pass": true
+    },
+    {
+      "name": "prefill_1_0_clock_under_60",
+      "pass": true
+    },
+    {
+      "name": "primary_unit_exit0",
+      "pass": true
+    }
+  ],
+  "seconds": 0.03126618219539523,
+  "new_complete_control_invocations": 0,
+  "new_affected_rank_invocations": 0,
+  "gpu_operations": 0,
+  "scope": "Verify previously accepted source and complete-control byte bindings before local commit; no control, trace audit or experiment rerun."
+}

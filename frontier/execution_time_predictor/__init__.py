@@ -1,9 +1,6 @@
-from frontier.execution_time_predictor.base_execution_time_predictor import (
-    BaseExecutionTimePredictor,
-)
-from frontier.execution_time_predictor.execution_time_predictor_registry import (
-    ExecutionTimePredictorRegistry,
-)
-from frontier.execution_time_predictor.shared_prediction_model_manager import ExecutionTimePredictionModelManager
+"""Execution-time predictors.
 
-__all__ = ["ExecutionTimePredictorRegistry", "BaseExecutionTimePredictor", "ExecutionTimePredictionModelManager"]
+Import each class from its defining module. The package imports nothing, so
+the profilers can load a single predictor module, such as the DeepSeek-V4
+attention composition, without the sklearn predictor stack.
+"""

@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "python": "3.12.3",
+  "source_pins": 60,
+  "tool_pins": 519,
+  "binary_pins": 20,
+  "torch_vllm_imported": false,
+  "cuda_initialized": false,
+  "launch_executable": "/usr/bin/python3",
+  "stage": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
+}

@@ -1,0 +1,1060 @@
+{
+  "U1_U4_independent": {
+    "U1": "PASS",
+    "U2": "PASS",
+    "U3": "PASS",
+    "U4": "PASS"
+  },
+  "checks": {
+    "U1": "PASS",
+    "U2": "PASS",
+    "U3": "PASS",
+    "U4": "PASS",
+    "U4_negative_controls": "PASS",
+    "callback_lifecycle": "PASS",
+    "complete_unique_callback_witness": "PASS",
+    "diagnostic_stages": "PASS",
+    "exact_replay_join": "PASS",
+    "explicit_source_manifest_pins": "PASS",
+    "kineto_isolation": "PASS",
+    "manifest_binding": "PASS",
+    "matrix_binding_only": "PASS",
+    "package:config.json": "PASS",
+    "package:inputs/build_package.py": "PASS",
+    "package:inputs/launcher_template.py": "PASS",
+    "package:inputs/profile_plan.json": "PASS",
+    "package:inputs/template_config.json": "PASS",
+    "package:launch.py": "PASS",
+    "package:probe_diagnostic.py": "PASS",
+    "package:source_lock.json": "PASS",
+    "producer_summary_consistency_only": "PASS",
+    "raw_copy_binding": "PASS",
+    "reported_source_image_gpu_identity": "PASS",
+    "revision_binding": "PASS",
+    "seal_and_cpu_receipt_binding": "PASS",
+    "source_binding": "PASS",
+    "stable_full_source_identity": "PASS",
+    "stage_subscription_results": "PASS",
+    "trace_negative_control": "PASS",
+    "zero_recorded_errors": "PASS"
+  },
+  "clone_witnesses": [
+    {
+      "callback_id": 20,
+      "node": 292054696,
+      "node_id": 8589934592,
+      "original_node": 292037632,
+      "original_node_id": 4294967296
+    },
+    {
+      "callback_id": 20,
+      "node": 292056592,
+      "node_id": 8589934593,
+      "original_node": 292039528,
+      "original_node_id": 4294967297
+    },
+    {
+      "callback_id": 20,
+      "node": 292058488,
+      "node_id": 8589934594,
+      "original_node": 292041424,
+      "original_node_id": 4294967298
+    },
+    {
+      "callback_id": 20,
+      "node": 292060384,
+      "node_id": 8589934595,
+      "original_node": 292043320,
+      "original_node_id": 4294967299
+    },
+    {
+      "callback_id": 20,
+      "node": 292062280,
+      "node_id": 8589934596,
+      "original_node": 292045216,
+      "original_node_id": 4294967300
+    },
+    {
+      "callback_id": 20,
+      "node": 292064176,
+      "node_id": 8589934597,
+      "original_node": 292047112,
+      "original_node_id": 4294967301
+    },
+    {
+      "callback_id": 20,
+      "node": 292066072,
+      "node_id": 8589934598,
+      "original_node": 292049008,
+      "original_node_id": 4294967302
+    },
+    {
+      "callback_id": 20,
+      "node": 292067968,
+      "node_id": 8589934599,
+      "original_node": 292050904,
+      "original_node_id": 4294967303
+    },
+    {
+      "callback_id": 20,
+      "node": 292069864,
+      "node_id": 8589934600,
+      "original_node": 292052800,
+      "original_node_id": 4294967304
+    }
+  ],
+  "counts": {
+    "clone_callbacks": 9,
+    "event_boundaries": 4,
+    "exec_callbacks": 1,
+    "fault_bytes": 0,
+    "kernels": 5,
+    "nodes": 9,
+    "scopes": 2,
+    "stages": 52,
+    "target_kernels": 5,
+    "trace_kernels": 6
+  },
+  "evidence_notes": [
+    "Probe U1/U2/U3/U4 and replay_node_mapping were not used as decision inputs.",
+    "DAG and callback ID fields are live producer observations; native buffers and per-query callback timing were not retained.",
+    "Kernel identity uses exact callback IDs and correlation, never names, order, low bits, or ID arithmetic.",
+    "Snapshot stability covers full retained-source IDs before/after one replay, not separately queried clone IDs.",
+    "Source lines204-229 prove descriptor dereference and query order statically; source194-202/528-575 plus stages support close-before-Kineto.",
+    "GPU metadata labels GPU0..15 do not prove allocation count; platform receipt is adopted, not queried."
+  ],
+  "graph_exec_witness": {
+    "callback_id": 18,
+    "exec_graph_id": 2,
+    "graph": 292034848,
+    "graph_exec": 292280944,
+    "graph_id": 1
+  },
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "input_bindings": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/AGENTS.md": {
+      "bytes": 62494,
+      "sha256": "82354337fec8131194f31ad8f09d298d2ef6e3ad48282b0b4bd46e87b5a57249"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/plan.md": {
+      "bytes": 13491,
+      "sha256": "035ea2e3556f929ad2674c3de4a0c73e7b11454c13274074e35babc1ec791278"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/matrix_binding.json": {
+      "bytes": 1227,
+      "sha256": "8b697ae0596ce2f2a1d4febc863a6e9f18ed66af90648e6160b106b660eb2cde"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/plan.md": {
+      "bytes": 2122,
+      "sha256": "e7739e20fc7556faed63be0ce81af251ce5a7d60e1a2dac0ef2c9649aa948312"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/probe_diagnostic.py": {
+      "bytes": 34078,
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/progress.md": {
+      "bytes": 5061,
+      "sha256": "c6ad90fac24d1227e54729e15cb35f350205b806a27e946728efbc96a8208b2a"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/requirements.md": {
+      "bytes": 3350,
+      "sha256": "2b1e920be2eb2a992afaeedc62746d1fa536e99848c779049a007d9a7c8e368d"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_checks/primary_acceptance.json": {
+      "bytes": 6205,
+      "sha256": "2a282a4077cefb2c44166118a56982352bf8007442a604cd2ffe96a66b65560f"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_seal.json": {
+      "bytes": 5833,
+      "sha256": "3226e380175e5b573e30d2367b7be3130725b70e6e12a98177929e5c1985f2ca"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/root_submission.json": {
+      "bytes": 1541,
+      "sha256": "5c90ae6efb0ef20c5cf0a259929c51233b2c5cdf3b69316f885540a7c0e3a3f1"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/matrix_binding.json": {
+      "bytes": 741,
+      "sha256": "39e2435a25ef718dadafa0a8f0a67c4b91fe559f409aa929e5014338c901a57b"
+    },
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/requirements.md": {
+      "bytes": 25753,
+      "sha256": "1c899e94c9cf8045d2eae6d3ab21d9f9b8485b9fc40e41e23875dbbf2afee9ab"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/config.json": {
+      "bytes": 1814,
+      "sha256": "1cb84a7581ceb8392b62a557eee9f75eccc0eb24cebf0fd79a6216f033a75074"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/inputs/build_package.py": {
+      "bytes": 6284,
+      "sha256": "0b3e0be75be817f519c8bde12ca2cd70884c5d8ac99cc8792ca70d1ec52b5e1e"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/inputs/launcher_template.py": {
+      "bytes": 3037,
+      "sha256": "2d84970c4bec06533942ceafbfd6a7a6eb729c6ee12e73fe594faaf797ee493d"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/inputs/profile_plan.json": {
+      "bytes": 882,
+      "sha256": "19616949299a12aa72e4950ee85ef9c71eeaacfa5572e6ca3a76179bc77c8c9d"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/inputs/template_config.json": {
+      "bytes": 1328,
+      "sha256": "6c94d88d6b24e09093dc9b90f5e2b48f41c661f0c22d858c2c0059738929d25e"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/launch.py": {
+      "bytes": 3710,
+      "sha256": "5dea2c75c3f04ddba9a35a72bcc63c6a8cd12c283eeccf72a7e83fa547ac3c1d"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/manifest.json": {
+      "bytes": 984,
+      "sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/probe_diagnostic.py": {
+      "bytes": 34078,
+      "sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0"
+    },
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01/source_lock.json": {
+      "bytes": 4354,
+      "sha256": "3aeb2a5a103e7b2bc57001c5c4df575cf68af06dd97b2ce5d2a8d0f8b41e3db9"
+    },
+    "/data/ycfeng/codex-home/skills/check-progress/SKILL.md": {
+      "bytes": 12846,
+      "sha256": "4e0e2d01c3e60de79d653a9bfac3179e92157523409235fc1f27f00590099509"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_results_tl_k7ef9/artifacts/diagnostics/fault.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_results_tl_k7ef9/artifacts/diagnostics/stages.jsonl": {
+      "bytes": 5787,
+      "sha256": "cb6e471d5c817f403b9361dbe0310d4f4d778cde83b82b9afa9b809cd0b13e32"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_results_tl_k7ef9/artifacts/probe/probe_report.json": {
+      "bytes": 26253,
+      "sha256": "68f79e9b8eac14d3b4f45d39b1664a776483ce413aeaa8ab3749b10f537c7ae8"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_results_tl_k7ef9/artifacts/probe/replay_trace.json": {
+      "bytes": 21106,
+      "sha256": "53e9456ba603e0ef9ffa761272ed97b41d8fe2b6dd1446f497b8e912c547897d"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_results_tl_k7ef9/receipt.json": {
+      "bytes": 1222,
+      "sha256": "07faefb9b3130a64c8a8268ab49c935dbc3ea972899c6bb3600c8c40c377f020"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_terminal_e8iezk3j/receipt.json": {
+      "bytes": 6095,
+      "sha256": "da31a23522e314a8df870a09ccdf4826149bed5fa14653f03ca9f58cab3abd45"
+    },
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json": {
+      "bytes": 3803,
+      "sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6"
+    },
+    "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_graph_payload_data_audit.py": {
+      "bytes": 18653,
+      "sha256": "34b25b87148ad404d1f1361b6c1a4e060b1f00feb2fe76c6f51261195cc8bb04"
+    },
+    "/home/brainpp/.opencode-v2/xdg/config/opencode/AGENTS.md": {
+      "bytes": 20850,
+      "sha256": "52a7651f4f381f73e2951a211d8366419c213c9494e94a31741ca374f6667829"
+    }
+  },
+  "limits": {
+    "actual_run_python_version": "UNKNOWN_PREFLIGHT_ONLY_3.12.3",
+    "clone_ids_stable_across_repeated_replays": "UNKNOWN_ONE_TARGET_REPLAY_ONLY",
+    "full_V4_cost": "UNKNOWN_NOT_ESTABLISHED",
+    "general_native_captured_ownership": "UNKNOWN_NOT_ESTABLISHED",
+    "matrix": "EXISTING_77_CASE_RECEIPT_BINDING_NOT_RERUN",
+    "native_descriptor_bytes": "UNKNOWN_NOT_RETAINED",
+    "numerical_accuracy": "UNKNOWN_NOT_MEASURED",
+    "original_crash_cause": "INFERENCE_ONLY_NO_DIRECT_CRASH_PROOF",
+    "worker_binary_rehash": "UNKNOWN_NOT_PROVIDED"
+  },
+  "negative_U4_fixtures": {
+    "cycle": "PASS_REJECTED",
+    "duplicate_boundary": "PASS_REJECTED",
+    "extra_kernel": "PASS_REJECTED",
+    "inconsistent_edge": "PASS_REJECTED",
+    "missing_boundary": "PASS_REJECTED",
+    "overlapping_scopes": "PASS_REJECTED"
+  },
+  "platform_adoption": {
+    "charged_group": "codesign",
+    "creator": "i-fengyicheng",
+    "exit_code": 0,
+    "independently_queried": false,
+    "job": "exp-1024-134447-148581",
+    "nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01:/data/ycfeng/Frontier/.worktrees/v4-graph-payload-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_probe/h800_graph_probe_01",
+    "phase": "Succeeded",
+    "restart_count": 0
+  },
+  "raw_field_references": {
+    "U1": "replay_trace.json#/traceEvents/{marker_index,launch_index,replay_joins[].trace_event_index}/args",
+    "U2": "probe_report.json#/dag/nodes; /event_handles",
+    "U3": "probe_report.json#/callback_capture/{events,results,errors}; /raw_cuda_graph; /raw_cuda_graph_exec; /id_snapshots; replay_trace.json#/traceEvents/*/args/{correlation,graph id,graph node id}",
+    "U4": "probe_report.json#/dag/nodes/*/{event_handle,dependencies,dependents}; /event_handles",
+    "lifecycle": "diagnostics/stages.jsonl:20-38; fault.log byte length0"
+  },
+  "replay_joins": [
+    {
+      "clone_node_id": 8589934593,
+      "correlation": 14,
+      "exec_graph_id": 2,
+      "multiplicity": 1,
+      "source_index": 1,
+      "trace_event_index": 66
+    },
+    {
+      "clone_node_id": 8589934594,
+      "correlation": 14,
+      "exec_graph_id": 2,
+      "multiplicity": 1,
+      "source_index": 2,
+      "trace_event_index": 68
+    },
+    {
+      "clone_node_id": 8589934597,
+      "correlation": 14,
+      "exec_graph_id": 2,
+      "multiplicity": 1,
+      "source_index": 5,
+      "trace_event_index": 70
+    },
+    {
+      "clone_node_id": 8589934598,
+      "correlation": 14,
+      "exec_graph_id": 2,
+      "multiplicity": 1,
+      "source_index": 6,
+      "trace_event_index": 72
+    },
+    {
+      "clone_node_id": 8589934600,
+      "correlation": 14,
+      "exec_graph_id": 2,
+      "multiplicity": 1,
+      "source_index": 8,
+      "trace_event_index": 74
+    }
+  ],
+  "reported_api": {
+    "callback_abi": {
+      "alignment": 8,
+      "exec_created": 18,
+      "node_cloned": 20,
+      "offsets": {
+        "dependency": 40,
+        "graph": 0,
+        "graphExec": 48,
+        "node": 16,
+        "nodeType": 32,
+        "originalGraph": 8,
+        "originalNode": 24
+      },
+      "resource_data": {
+        "alignment": 8,
+        "offsets": {
+          "context": 0,
+          "resourceDescriptor": 16,
+          "resourceHandle": 8
+        },
+        "size": 24
+      },
+      "resource_domain": 3,
+      "resource_handle": {
+        "alignment": 8,
+        "offsets": {
+          "stream": 0
+        },
+        "size": 8
+      },
+      "size": 56
+    },
+    "callback_missing_python_bindings": {
+      "cuptiEnableCallback": true,
+      "cuptiSubscribe": true,
+      "cuptiUnsubscribe": true
+    },
+    "callback_typed_exports": {
+      "cuptiEnableCallback": true,
+      "cuptiSubscribe": true,
+      "cuptiUnsubscribe": true
+    },
+    "cuda_bindings_version": "13.3.1",
+    "cuda_initialized": false,
+    "cuda_runtime_version": "13.0.96",
+    "cupti_declarations": [
+      {
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphNodeId(CUgraphNode node, uint64_t *nodeId);",
+        "line": 7380
+      },
+      {
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphId(CUgraph graph, uint32_t *pId);",
+        "line": 7394
+      },
+      {
+        "declaration": "CUptiResult CUPTIAPI cuptiGetGraphExecId(CUgraphExec graphExec, uint32_t *pId);",
+        "line": 7408
+      }
+    ],
+    "cupti_header": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include/cupti_activity.h",
+    "cupti_library": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+    "cupti_missing_python_bindings": {
+      "cuptiGetGraphExecId": true,
+      "cuptiGetGraphId": true,
+      "cuptiGetGraphNodeId": true
+    },
+    "cupti_typed_exports": {
+      "cuptiGetGraphExecId": true,
+      "cuptiGetGraphId": true,
+      "cuptiGetGraphNodeId": true
+    },
+    "cupti_version": "13.0.85",
+    "event_cuda_event_descriptor": true,
+    "mapped_cupti_libraries": [
+      "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib/libcupti.so.13"
+    ],
+    "mapping_api": "CUDA13_topology_and_CUPTI_ID_queries",
+    "python_api": {
+      "instantiate": true,
+      "raw_cuda_graph": true,
+      "raw_cuda_graph_exec": true
+    },
+    "runtime_api": {
+      "cudaGraphEventRecordNodeGetEvent": true,
+      "cudaGraphGetEdges": true,
+      "cudaGraphGetNodes": true,
+      "cudaGraphNodeGetType": true
+    },
+    "runtime_declarations": [
+      {
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphEventRecordNodeGetEvent(cudaGraphNode_t node, cudaEvent_t *event_out);",
+        "line": 10533
+      },
+      {
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphNodeGetType(cudaGraphNode_t node, enum cudaGraphNodeType *pType);",
+        "line": 11264
+      },
+      {
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphGetNodes(cudaGraph_t graph, cudaGraphNode_t *nodes, size_t *numNodes);",
+        "line": 11295
+      },
+      {
+        "declaration": "extern __host__ cudaError_t CUDARTAPI cudaGraphGetEdges(cudaGraph_t graph, cudaGraphNode_t *from, cudaGraphNode_t *to, cudaGraphEdgeData *edgeData, size_t *numEdges);",
+        "line": 11366
+      }
+    ],
+    "runtime_header": "/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include/cuda_runtime_api.h"
+  },
+  "reported_versions": {
+    "device_name": "NVIDIA H800",
+    "driver_version": 13000,
+    "torch_cuda_version": "13.0",
+    "torch_version": "2.13.0+cu130"
+  },
+  "reproducibility": {
+    "byte_identical_non_clock_results": true,
+    "command": [
+      "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+      "-B",
+      "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_graph_payload_data_audit.py",
+      "--verify"
+    ],
+    "fresh_processes": 2,
+    "full_script": "\"\"\"Independent local audit; never import or execute the probe or its verdict functions.\"\"\"\nimport collections, copy, hashlib, json, pathlib, platform, subprocess, sys\n\nROOT = pathlib.Path('/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028')\nREL = pathlib.Path('task_memory/task_2026-10-23_v4_remaining_measurements')\nG = ROOT / REL / 'profile01/graph_probe'\nRAW = pathlib.Path('/data/ycfeng/tmp/glm53_dsv4/graph_payload_results_tl_k7ef9/artifacts')\nTERMINAL = pathlib.Path('/data/ycfeng/tmp/glm53_dsv4/graph_payload_terminal_e8iezk3j/receipt.json')\nSELF = pathlib.Path(__file__).resolve()\nBINDINGS, CHECKS = {}, {}\ndef digest(payload):\n    return hashlib.sha256(payload).hexdigest()\ndef read(path, structured=True):\n    path = pathlib.Path(path); payload = path.read_bytes()\n    BINDINGS[str(path)] = {'bytes': len(payload), 'sha256': digest(payload)}\n    return json.loads(payload) if structured else payload\ndef check(name, condition):\n    CHECKS[name] = 'PASS' if condition else 'FAIL'\ndef need(condition):\n    if not condition: raise AssertionError('Invalid boundary, topology, or scope ownership')\ndef scopes(dag, handles):\n    nodes = {n['index']: n for n in dag['nodes']}\n    need(len(nodes) == len(dag['nodes']) == 9)\n    need(collections.Counter(n['node_type'] for n in nodes.values()) == {'kernel': 5, 'event_record': 4})\n    need(all(len({n[k] for n in nodes.values()}) == 9 for k in ('handle', 'cupti_node_id')))\n    need(all(n['handle'] > 0 and n['cupti_node_id'] > 0 for n in nodes.values()))\n    reach = {}\n    for i, n in nodes.items():\n        need(len(n['dependents']) == len(set(n['dependents'])) and len(n['dependencies']) == len(set(n['dependencies'])))\n        need(all(j in nodes and i in nodes[j]['dependencies'] for j in n['dependents']))\n        need(all(j in nodes and i in nodes[j]['dependents'] for j in n['dependencies']))\n        reach[i] = set(n['dependents'])\n    for pivot in nodes:\n        for i in nodes:\n            if pivot in reach[i]: reach[i] |= reach[pivot]\n    need(all(i not in reach[i] for i in nodes))\n    need(set(handles) == {'scope_a.start', 'scope_a.end', 'scope_b.start', 'scope_b.end'})\n    need(len(set(handles.values())) == 4 and all(handles.values()))\n    bounds = {}\n    for label, handle in handles.items():\n        matches = [i for i, n in nodes.items() if n.get('event_handle') == handle]\n        need(len(matches) == 1 and nodes[matches[0]]['node_type'] == 'event_record')\n        bounds[label] = matches[0]\n    need(len(set(bounds.values())) == 4)\n    kernels = {i for i, n in nodes.items() if n['node_type'] == 'kernel'}\n    groups, owned = {}, set()\n    for label in ('scope_a', 'scope_b'):\n        start, end = bounds[label + '.start'], bounds[label + '.end']\n        need(end in reach[start])\n        members = {i for i in kernels if i in reach[start] and end in reach[i]}\n        need(len(members) == 2 and not members & owned); owned |= members\n        groups[label] = {'start_node_index': start, 'end_node_index': end, 'kernel_node_indices': sorted(members)}\n    need(len(kernels - owned) == 1)\n    return {'scopes': groups, 'unscoped_kernel_indices': sorted(kernels - owned)}\n\nr = read(RAW / 'probe/probe_report.json'); t = read(RAW / 'probe/replay_trace.json')\nstage_bytes = read(RAW / 'diagnostics/stages.jsonl', False); fault = read(RAW / 'diagnostics/fault.log', False)\nstages = [json.loads(line) for line in stage_bytes.splitlines()]\ncopy_receipt = read(RAW.parent / 'receipt.json'); terminal = read(TERMINAL)\nseal = read(G / 'root_seal.json'); submission = read(G / 'root_submission.json')\nacceptance = read(G / 'root_checks/primary_acceptance.json'); matrix = read(G / 'matrix_binding.json')\nprior_matrix = read(matrix['existing_binding']); comparison = read(matrix['comparison_path'])\nsource = read(G / 'probe_diagnostic.py', False); package = pathlib.Path(seal['package'])\nmanifest = read(package / 'manifest.json'); config = read(package / 'config.json'); lock = read(package / 'source_lock.json')\nfor name, expected in manifest['files'].items():\n    read(package / name, False); check('package:' + name, BINDINGS[str(package / name)]['sha256'] == expected)\nfor path in (ROOT / 'AGENTS.md', ROOT / REL / 'requirements.md', ROOT / REL / 'plan.md', G / 'requirements.md', G / 'plan.md', G / 'progress.md', '/home/brainpp/.opencode-v2/xdg/config/opencode/AGENTS.md', '/data/ycfeng/codex-home/skills/check-progress/SKILL.md', SELF): read(path, False)\ncheck('raw_copy_binding', len(copy_receipt['files']) == 4 and sum(f['bytes'] for f in copy_receipt['files']) == 53146 and all(BINDINGS[str(RAW / f['path'])] == {'bytes': f['bytes'], 'sha256': f['sha256']} for f in copy_receipt['files']))\ncheck('manifest_binding', BINDINGS[str(package / 'manifest.json')]['sha256'] == seal['manifest_sha256'] == submission['manifest_sha256'] and len(manifest['files']) == seal['input_count'] == 8)\ncheck('seal_and_cpu_receipt_binding', BINDINGS[str(G / 'root_seal.json')]['sha256'] == submission['seal_sha256'] and BINDINGS[str(G / 'root_checks/primary_acceptance.json')]['sha256'] == seal['source_cpu_acceptance']['sha256'])\ncheck('source_binding', digest(source) == r['script_sha256'] == config['source_sha256'] == acceptance['probe_sha256'] == matrix['candidate_probe_sha256'] == lock['probe']['sha256'])\ncheck('explicit_source_manifest_pins', digest(source) == 'a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0' and seal['manifest_sha256'] == 'ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146')\ncheck('revision_binding', seal['source_revision'] == manifest['source_revision'] == lock['source_revision'] == config['source_revision'] == acceptance['source_revision'] == terminal['launcher_result']['config']['source_revision'] == '1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077' and seal['merged_revision'] == '4add627d7afe001cd2b809598aec38cea9c54c7b')\ncheck('matrix_binding_only', BINDINGS[matrix['existing_binding']]['sha256'] == matrix['existing_binding_sha256'] and BINDINGS[matrix['comparison_path']]['sha256'] == matrix['comparison_sha256'] == prior_matrix['comparison_sha256'] and len(comparison['identical_cases']) == comparison['cases_compared'] == matrix['identical_cases'] == 77 and not comparison['mismatched_cases'])\nevents = t['traceEvents']; markers = [(i, e) for i, e in enumerate(events) if e.get('cat') == 'user_annotation' and e.get('ph') == 'X' and e.get('name') == 'frontier.graph_scope_probe.target_replay']\nneed(len(markers) == 1); marker_index, marker = markers[0]\nlaunches = [(i, e) for i, e in enumerate(events) if e.get('cat') == 'cuda_runtime' and e.get('ph') == 'X' and e.get('name') == 'cudaGraphLaunch' and (e['pid'], e['tid']) == (marker['pid'], marker['tid']) and marker['ts'] <= e['ts'] and e['ts'] + e['dur'] <= marker['ts'] + marker['dur']]\nneed(len(launches) == 1); launch_index, launch = launches[0]; correlation = launch['args']['correlation']\nall_kernels = [(i, e) for i, e in enumerate(events) if e.get('cat') == 'kernel']\ntarget = [(i, e) for i, e in all_kernels if e['args']['correlation'] == correlation]\ncheck('U1', len(target) == 5 and all(e['ph'] == 'X' and e['args']['graph id'] > 0 and e['args']['graph node id'] > 0 for _, e in target))\ndag = r['dag']; groups = scopes(dag, r['event_handles']); nodes = {n['index']: n for n in dag['nodes']}\ncheck('U2', len(nodes) == 9 and dag['source_graph_id'] > 0 and dag['exec_graph_id'] > 0)\ncheck('U4', groups['unscoped_kernel_indices'] == [8] and len(groups['scopes']) == 2)\nnegative = {}\nfor label in ('missing_boundary', 'duplicate_boundary', 'cycle', 'inconsistent_edge', 'overlapping_scopes', 'extra_kernel'):\n    bad, handles = copy.deepcopy(dag), dict(r['event_handles'])\n    if label == 'missing_boundary': handles['scope_a.start'] = 0\n    if label == 'duplicate_boundary': handles['scope_b.start'] = handles['scope_a.start']\n    if label == 'cycle': bad['nodes'][8]['dependents'].append(0); bad['nodes'][0]['dependencies'].append(8)\n    if label == 'inconsistent_edge': bad['nodes'][1]['dependencies'] = []\n    if label == 'overlapping_scopes':\n        for n in bad['nodes']: n['dependencies'], n['dependents'] = [], []\n        for a, b in ((0, 1), (4, 1), (1, 2), (2, 3), (1, 5), (5, 7)):\n            bad['nodes'][a]['dependents'].append(b); bad['nodes'][b]['dependencies'].append(a)\n    if label == 'extra_kernel': bad['nodes'][0]['node_type'] = 'kernel'\n    try: scopes(bad, handles); negative[label] = 'FAIL_ACCEPTED'\n    except AssertionError: negative[label] = 'PASS_REJECTED'\ncheck('U4_negative_controls', all(v == 'PASS_REJECTED' for v in negative.values()))\ncapture = r['callback_capture']; clones = [e for e in capture['events'] if e['callback_id'] == 20]; execs = [e for e in capture['events'] if e['callback_id'] == 18]\nby_handle = {n['handle']: n for n in nodes.values()}; links = {e['original_node']: e for e in clones}\nrelation = {'callback_id': 18, 'graph': r['raw_cuda_graph'], 'graph_exec': r['raw_cuda_graph_exec'], 'graph_id': dag['source_graph_id'], 'exec_graph_id': dag['exec_graph_id']}\ncheck('complete_unique_callback_witness', execs == [relation] and len(capture['events']) == 10 and len(clones) == len(links) == 9 and set(links) == set(by_handle) and len({e['node'] for e in clones}) == len({e['node_id'] for e in clones}) == 9 and all(e['node'] > 0 and e['node'] not in by_handle and e['node_id'] > 0 and e['original_node_id'] == by_handle[e['original_node']]['cupti_node_id'] for e in clones))\nexpected_snapshot = {'source_graph_id': dag['source_graph_id'], 'exec_graph_id': dag['exec_graph_id'], 'node_ids': {str(n['handle']): n['cupti_node_id'] for n in nodes.values()}}\ncheck('stable_full_source_identity', r['id_snapshots']['before'] == r['id_snapshots']['after'] == expected_snapshot)\nclone_kernels = {links[n['handle']]['node_id']: n for n in nodes.values() if n['node_type'] == 'kernel'}\nmultiplicity = collections.Counter(e['args']['graph node id'] for _, e in target)\ncheck('exact_replay_join', multiplicity == collections.Counter({i: 1 for i in clone_kernels}) and all(e['args']['graph id'] == relation['exec_graph_id'] for _, e in target))\nresults = [{'api': 'cuptiSubscribe', 'result': 0}, {'api': 'cuptiEnableCallback', 'result': 0, 'callback_id': 20}, {'api': 'cuptiEnableCallback', 'result': 0, 'callback_id': 18}, {'api': 'cuptiUnsubscribe', 'result': 0}]\ncheck('callback_lifecycle', capture['subscribed'] and capture['unsubscribed'] and not capture['subscription_active'] and not capture['errors'] and capture['results'] == results and capture['subscriber_handle'] > 0)\nstage_names = [s['event'] for s in stages]; pairs = 'import_torch import_cuda output_mkdir api_inspection device_name driver_version allocation warmup capture_setup graph_constructor capture instantiate retained_graph warmup_replay snapshot_before target_replay snapshot_after trace_export trace_analysis report_write'.split()\ncheck('diagnostic_stages', len(stages) == 52 and [s['sequence'] for s in stages] == list(range(1, 53)) and {s['pid'] for s in stages} == {marker['pid']} and all(a['monotonic_ns'] < b['monotonic_ns'] for a, b in zip(stages, stages[1:])) and all(stage_names.count(p + '.enter') == stage_names.count(p + '.exit') == 1 for p in pairs))\ncheck('kineto_isolation', stage_names.index('subscriber.cuptiUnsubscribe.exit') < stage_names.index('retained_graph.enter') < stage_names.index('kineto.enter') < stage_names.index('kineto.entered') < stage_names.index('target_replay.enter') < stage_names.index('kineto.exit') and stages[32]['result'] is True)\ncheck('zero_recorded_errors', not fault and not capture['errors'] and not [k for k in r if 'error' in k.lower()])\noutside = [(i, e) for i, e in all_kernels if e['args']['correlation'] != correlation]\ncheck('trace_negative_control', len(all_kernels) == 6 and len(outside) == 1 and outside[0][1]['args']['graph id'] == outside[0][1]['args']['graph node id'] == 0 and outside[0][1]['args']['correlation'] == 4)\nimage = config['image']; container = terminal['replicas'][0]['status']['containerStatuses'][0]\ncheck('reported_source_image_gpu_identity', r['image_digest_from_launcher'] == image.split('@')[1] and image == seal['resources']['image'] == submission['resources']['image'] == container['imageID'] and t['deviceProperties'][0]['name'] == r['device_name'] == 'NVIDIA H800' and t['host_name'] == terminal['replicas'][0]['status']['nodeName'] and r['driver_version'] == t['cuda_driver_version'] == 13000 and all(e['args']['device'] == 0 for _, e in all_kernels))\ncheck('stage_subscription_results', [(s['event'], s['result']) for s in stages if s['event'].startswith('subscriber.')] == [('subscriber.cuptiSubscribe.enter', None), ('subscriber.cuptiSubscribe.exit', 0), ('subscriber.cuptiEnableCallback.enter', 20), ('subscriber.cuptiEnableCallback.exit', 0), ('subscriber.cuptiEnableCallback.enter', 18), ('subscriber.cuptiEnableCallback.exit', 0), ('subscriber.cuptiUnsubscribe.enter', None), ('subscriber.cuptiUnsubscribe.exit', True)])\ncheck('U3', all(CHECKS[k] == 'PASS' for k in ('complete_unique_callback_witness', 'stable_full_source_identity', 'exact_replay_join', 'callback_lifecycle', 'kineto_isolation', 'U4')))\ncheck('producer_summary_consistency_only', r['scope_mapping'] == groups and r['target_launch'] == launch and r['target_kernels'] == [e for _, e in target] and r['all_kernel_count'] == len(all_kernels))\njoins = [{'trace_event_index': i, 'correlation': correlation, 'exec_graph_id': e['args']['graph id'], 'clone_node_id': e['args']['graph node id'], 'multiplicity': multiplicity[e['args']['graph node id']], 'source_index': clone_kernels[e['args']['graph node id']]['index']} for i, e in target]\ntransfers = {label: {**v, 'event_callback_witnesses': [links[nodes[v[k]]['handle']] for k in ('start_node_index', 'end_node_index')], 'kernel_clone_ids': [links[nodes[i]['handle']]['node_id'] for i in v['kernel_node_indices']]} for label, v in groups['scopes'].items()}\noutput = {'task_id': 'W128-GRAPH-PAYLOAD-DATA', 'status': 'PASS_SCOPED_LOCAL_RAW_DATA_AUDIT' if all(v == 'PASS' for v in CHECKS.values()) else 'FAIL', 'checks': CHECKS, 'input_bindings': BINDINGS, 'U1_U4_independent': {k: CHECKS[k] for k in ('U1', 'U2', 'U3', 'U4')}, 'counts': {'nodes': 9, 'kernels': 5, 'event_boundaries': 4, 'scopes': 2, 'clone_callbacks': len(clones), 'exec_callbacks': len(execs), 'trace_kernels': len(all_kernels), 'target_kernels': len(target), 'stages': len(stages), 'fault_bytes': len(fault)}, 'source_nodes': list(nodes.values()), 'clone_witnesses': clones, 'graph_exec_witness': relation, 'scope_derivation': transfers, 'unscoped_clone_ids': [links[nodes[i]['handle']]['node_id'] for i in groups['unscoped_kernel_indices']], 'replay_joins': joins, 'trace_selector': {'marker_index': marker_index, 'launch_index': launch_index, 'marker': marker, 'launch': launch}, 'negative_U4_fixtures': negative, 'snapshot_equality': expected_snapshot, 'stages_without_clock': [{k: v for k, v in s.items() if k != 'monotonic_ns'} for s in stages], 'stage_counts': dict(collections.Counter(stage_names)), 'reported_api': {k: v for k, v in r['api'].items() if k != 'rejected_get_graph_data_source'}, 'reported_versions': {k: r[k] for k in ('torch_version', 'torch_cuda_version', 'driver_version', 'device_name')}, 'image': image, 'platform_adoption': {'independently_queried': False, 'job': terminal['job'], 'phase': terminal['phase'], 'exit_code': container['state']['terminated']['exitCode'], 'restart_count': container['restartCount'], 'creator': terminal['creator'], 'charged_group': terminal['charged_group'], 'nfs': terminal['tasks']['default']['nfs']}, 'runtime': {'executable': sys.executable, 'python': platform.python_version(), 'version': sys.version}, 'limits': {'native_descriptor_bytes': 'UNKNOWN_NOT_RETAINED', 'worker_binary_rehash': 'UNKNOWN_NOT_PROVIDED', 'actual_run_python_version': 'UNKNOWN_PREFLIGHT_ONLY_3.12.3', 'numerical_accuracy': 'UNKNOWN_NOT_MEASURED', 'original_crash_cause': 'INFERENCE_ONLY_NO_DIRECT_CRASH_PROOF', 'general_native_captured_ownership': 'UNKNOWN_NOT_ESTABLISHED', 'full_V4_cost': 'UNKNOWN_NOT_ESTABLISHED', 'matrix': 'EXISTING_77_CASE_RECEIPT_BINDING_NOT_RERUN', 'clone_ids_stable_across_repeated_replays': 'UNKNOWN_ONE_TARGET_REPLAY_ONLY'}, 'evidence_notes': ['Probe U1/U2/U3/U4 and replay_node_mapping were not used as decision inputs.', 'DAG and callback ID fields are live producer observations; native buffers and per-query callback timing were not retained.', 'Kernel identity uses exact callback IDs and correlation, never names, order, low bits, or ID arithmetic.', 'Snapshot stability covers full retained-source IDs before/after one replay, not separately queried clone IDs.', 'Source lines204-229 prove descriptor dereference and query order statically; source194-202/528-575 plus stages support close-before-Kineto.', 'GPU metadata labels GPU0..15 do not prove allocation count; platform receipt is adopted, not queried.'], 'raw_field_references': {'U1': 'replay_trace.json#/traceEvents/{marker_index,launch_index,replay_joins[].trace_event_index}/args', 'U2': 'probe_report.json#/dag/nodes; /event_handles', 'U3': 'probe_report.json#/callback_capture/{events,results,errors}; /raw_cuda_graph; /raw_cuda_graph_exec; /id_snapshots; replay_trace.json#/traceEvents/*/args/{correlation,graph id,graph node id}', 'U4': 'probe_report.json#/dag/nodes/*/{event_handle,dependencies,dependents}; /event_handles', 'lifecycle': 'diagnostics/stages.jsonl:20-38; fault.log byte length0'}}\nserialized = json.dumps(output, sort_keys=True, indent=2) + '\\n'\nif len(sys.argv) == 1:\n    print(serialized, end='')\nelif sys.argv[1:] == ['--verify']:\n    runs = [subprocess.run([sys.executable, '-B', str(SELF)], check=True, capture_output=True).stdout for _ in range(2)]\n    need(runs[0] == runs[1]); result = json.loads(runs[0])\n    result['reproducibility'] = {'fresh_processes': 2, 'byte_identical_non_clock_results': True, 'result_sha256': [digest(v) for v in runs], 'script_path': str(SELF), 'script_sha256': digest(SELF.read_bytes()), 'full_script': SELF.read_text(), 'command': [sys.executable, '-B', str(SELF), '--verify']}\n    destination = G / 'results/data_audit.json'; destination.parent.mkdir(exist_ok=True)\n    with destination.open('x') as stream: json.dump(result, stream, sort_keys=True, indent=2); stream.write('\\n')\n    print(json.dumps({'status': result['status'], 'checks': len(CHECKS), 'failed': [k for k, v in CHECKS.items() if v != 'PASS'], 'results_sha256': digest(runs[0]), 'script_sha256': digest(SELF.read_bytes()), 'artifact_sha256': digest(destination.read_bytes()), 'destination': str(destination)}))\nelse:\n    raise SystemExit('Use no arguments for read-only replay or --verify for exclusive artifact creation.')\n",
+    "result_sha256": [
+      "1a56bb00bd7fa8bde329f2c9e9933e97fc237b2d70232659edc1021281235905",
+      "1a56bb00bd7fa8bde329f2c9e9933e97fc237b2d70232659edc1021281235905"
+    ],
+    "script_path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128_graph_payload_data_audit.py",
+    "script_sha256": "34b25b87148ad404d1f1361b6c1a4e060b1f00feb2fe76c6f51261195cc8bb04"
+  },
+  "runtime": {
+    "executable": "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "python": "3.12.13",
+    "version": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]"
+  },
+  "scope_derivation": {
+    "scope_a": {
+      "end_node_index": 3,
+      "event_callback_witnesses": [
+        {
+          "callback_id": 20,
+          "node": 292054696,
+          "node_id": 8589934592,
+          "original_node": 292037632,
+          "original_node_id": 4294967296
+        },
+        {
+          "callback_id": 20,
+          "node": 292060384,
+          "node_id": 8589934595,
+          "original_node": 292043320,
+          "original_node_id": 4294967299
+        }
+      ],
+      "kernel_clone_ids": [
+        8589934593,
+        8589934594
+      ],
+      "kernel_node_indices": [
+        1,
+        2
+      ],
+      "start_node_index": 0
+    },
+    "scope_b": {
+      "end_node_index": 7,
+      "event_callback_witnesses": [
+        {
+          "callback_id": 20,
+          "node": 292062280,
+          "node_id": 8589934596,
+          "original_node": 292045216,
+          "original_node_id": 4294967300
+        },
+        {
+          "callback_id": 20,
+          "node": 292067968,
+          "node_id": 8589934599,
+          "original_node": 292050904,
+          "original_node_id": 4294967303
+        }
+      ],
+      "kernel_clone_ids": [
+        8589934597,
+        8589934598
+      ],
+      "kernel_node_indices": [
+        5,
+        6
+      ],
+      "start_node_index": 4
+    }
+  },
+  "snapshot_equality": {
+    "exec_graph_id": 2,
+    "node_ids": {
+      "292037632": 4294967296,
+      "292039528": 4294967297,
+      "292041424": 4294967298,
+      "292043320": 4294967299,
+      "292045216": 4294967300,
+      "292047112": 4294967301,
+      "292049008": 4294967302,
+      "292050904": 4294967303,
+      "292052800": 4294967304
+    },
+    "source_graph_id": 1
+  },
+  "source_nodes": [
+    {
+      "cupti_node_id": 4294967296,
+      "dependencies": [],
+      "dependents": [
+        1
+      ],
+      "event_handle": 262820000,
+      "handle": 292037632,
+      "index": 0,
+      "node_type": "event_record"
+    },
+    {
+      "cupti_node_id": 4294967297,
+      "dependencies": [
+        0
+      ],
+      "dependents": [
+        2
+      ],
+      "handle": 292039528,
+      "index": 1,
+      "node_type": "kernel"
+    },
+    {
+      "cupti_node_id": 4294967298,
+      "dependencies": [
+        1
+      ],
+      "dependents": [
+        3
+      ],
+      "handle": 292041424,
+      "index": 2,
+      "node_type": "kernel"
+    },
+    {
+      "cupti_node_id": 4294967299,
+      "dependencies": [
+        2
+      ],
+      "dependents": [
+        4
+      ],
+      "event_handle": 284948128,
+      "handle": 292043320,
+      "index": 3,
+      "node_type": "event_record"
+    },
+    {
+      "cupti_node_id": 4294967300,
+      "dependencies": [
+        3
+      ],
+      "dependents": [
+        5
+      ],
+      "event_handle": 284948720,
+      "handle": 292045216,
+      "index": 4,
+      "node_type": "event_record"
+    },
+    {
+      "cupti_node_id": 4294967301,
+      "dependencies": [
+        4
+      ],
+      "dependents": [
+        6
+      ],
+      "handle": 292047112,
+      "index": 5,
+      "node_type": "kernel"
+    },
+    {
+      "cupti_node_id": 4294967302,
+      "dependencies": [
+        5
+      ],
+      "dependents": [
+        7
+      ],
+      "handle": 292049008,
+      "index": 6,
+      "node_type": "kernel"
+    },
+    {
+      "cupti_node_id": 4294967303,
+      "dependencies": [
+        6
+      ],
+      "dependents": [
+        8
+      ],
+      "event_handle": 284949312,
+      "handle": 292050904,
+      "index": 7,
+      "node_type": "event_record"
+    },
+    {
+      "cupti_node_id": 4294967304,
+      "dependencies": [
+        7
+      ],
+      "dependents": [],
+      "handle": 292052800,
+      "index": 8,
+      "node_type": "kernel"
+    }
+  ],
+  "stage_counts": {
+    "allocation.enter": 1,
+    "allocation.exit": 1,
+    "api_inspection.enter": 1,
+    "api_inspection.exit": 1,
+    "capture.enter": 1,
+    "capture.exit": 1,
+    "capture_setup.enter": 1,
+    "capture_setup.exit": 1,
+    "copy.enter": 1,
+    "device_name.enter": 1,
+    "device_name.exit": 1,
+    "driver_version.enter": 1,
+    "driver_version.exit": 1,
+    "graph_constructor.enter": 1,
+    "graph_constructor.exit": 1,
+    "import_cuda.enter": 1,
+    "import_cuda.exit": 1,
+    "import_torch.enter": 1,
+    "import_torch.exit": 1,
+    "instantiate.enter": 1,
+    "instantiate.exit": 1,
+    "kineto.enter": 1,
+    "kineto.entered": 1,
+    "kineto.exit": 1,
+    "output_mkdir.enter": 1,
+    "output_mkdir.exit": 1,
+    "report_write.enter": 1,
+    "report_write.exit": 1,
+    "retained_graph.enter": 1,
+    "retained_graph.exit": 1,
+    "snapshot_after.enter": 1,
+    "snapshot_after.exit": 1,
+    "snapshot_before.enter": 1,
+    "snapshot_before.exit": 1,
+    "subscriber.cuptiEnableCallback.enter": 2,
+    "subscriber.cuptiEnableCallback.exit": 2,
+    "subscriber.cuptiSubscribe.enter": 1,
+    "subscriber.cuptiSubscribe.exit": 1,
+    "subscriber.cuptiUnsubscribe.enter": 1,
+    "subscriber.cuptiUnsubscribe.exit": 1,
+    "target_replay.enter": 1,
+    "target_replay.exit": 1,
+    "trace_analysis.enter": 1,
+    "trace_analysis.exit": 1,
+    "trace_export.enter": 1,
+    "trace_export.exit": 1,
+    "warmup.enter": 1,
+    "warmup.exit": 1,
+    "warmup_replay.enter": 1,
+    "warmup_replay.exit": 1
+  },
+  "stages_without_clock": [
+    {
+      "event": "copy.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 1
+    },
+    {
+      "event": "import_torch.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 2
+    },
+    {
+      "event": "import_torch.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 3
+    },
+    {
+      "event": "import_cuda.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 4
+    },
+    {
+      "event": "import_cuda.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 5
+    },
+    {
+      "event": "output_mkdir.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 6
+    },
+    {
+      "event": "output_mkdir.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 7
+    },
+    {
+      "event": "api_inspection.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 8
+    },
+    {
+      "event": "api_inspection.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 9
+    },
+    {
+      "event": "device_name.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 10
+    },
+    {
+      "event": "device_name.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 11
+    },
+    {
+      "event": "driver_version.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 12
+    },
+    {
+      "event": "driver_version.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 13
+    },
+    {
+      "event": "allocation.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 14
+    },
+    {
+      "event": "allocation.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 15
+    },
+    {
+      "event": "warmup.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 16
+    },
+    {
+      "event": "warmup.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 17
+    },
+    {
+      "event": "capture_setup.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 18
+    },
+    {
+      "event": "capture_setup.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 19
+    },
+    {
+      "event": "subscriber.cuptiSubscribe.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 20
+    },
+    {
+      "event": "subscriber.cuptiSubscribe.exit",
+      "pid": 152,
+      "result": 0,
+      "sequence": 21
+    },
+    {
+      "event": "subscriber.cuptiEnableCallback.enter",
+      "pid": 152,
+      "result": 20,
+      "sequence": 22
+    },
+    {
+      "event": "subscriber.cuptiEnableCallback.exit",
+      "pid": 152,
+      "result": 0,
+      "sequence": 23
+    },
+    {
+      "event": "subscriber.cuptiEnableCallback.enter",
+      "pid": 152,
+      "result": 18,
+      "sequence": 24
+    },
+    {
+      "event": "subscriber.cuptiEnableCallback.exit",
+      "pid": 152,
+      "result": 0,
+      "sequence": 25
+    },
+    {
+      "event": "graph_constructor.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 26
+    },
+    {
+      "event": "graph_constructor.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 27
+    },
+    {
+      "event": "capture.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 28
+    },
+    {
+      "event": "capture.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 29
+    },
+    {
+      "event": "instantiate.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 30
+    },
+    {
+      "event": "instantiate.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 31
+    },
+    {
+      "event": "subscriber.cuptiUnsubscribe.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 32
+    },
+    {
+      "event": "subscriber.cuptiUnsubscribe.exit",
+      "pid": 152,
+      "result": true,
+      "sequence": 33
+    },
+    {
+      "event": "retained_graph.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 34
+    },
+    {
+      "event": "retained_graph.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 35
+    },
+    {
+      "event": "warmup_replay.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 36
+    },
+    {
+      "event": "warmup_replay.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 37
+    },
+    {
+      "event": "kineto.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 38
+    },
+    {
+      "event": "kineto.entered",
+      "pid": 152,
+      "result": null,
+      "sequence": 39
+    },
+    {
+      "event": "snapshot_before.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 40
+    },
+    {
+      "event": "snapshot_before.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 41
+    },
+    {
+      "event": "target_replay.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 42
+    },
+    {
+      "event": "target_replay.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 43
+    },
+    {
+      "event": "snapshot_after.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 44
+    },
+    {
+      "event": "snapshot_after.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 45
+    },
+    {
+      "event": "kineto.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 46
+    },
+    {
+      "event": "trace_export.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 47
+    },
+    {
+      "event": "trace_export.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 48
+    },
+    {
+      "event": "trace_analysis.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 49
+    },
+    {
+      "event": "trace_analysis.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 50
+    },
+    {
+      "event": "report_write.enter",
+      "pid": 152,
+      "result": null,
+      "sequence": 51
+    },
+    {
+      "event": "report_write.exit",
+      "pid": 152,
+      "result": null,
+      "sequence": 52
+    }
+  ],
+  "status": "PASS_SCOPED_LOCAL_RAW_DATA_AUDIT",
+  "task_id": "W128-GRAPH-PAYLOAD-DATA",
+  "trace_selector": {
+    "launch": {
+      "args": {
+        "cbid": 311,
+        "correlation": 14
+      },
+      "cat": "cuda_runtime",
+      "dur": 78.679,
+      "name": "cudaGraphLaunch",
+      "ph": "X",
+      "pid": 152,
+      "tid": 152,
+      "ts": 1963684034951.515
+    },
+    "launch_index": 76,
+    "marker": {
+      "args": {
+        "Ev Idx": 1,
+        "External id": 2,
+        "Record function id": 0
+      },
+      "cat": "user_annotation",
+      "dur": 7530.333,
+      "name": "frontier.graph_scope_probe.target_replay",
+      "ph": "X",
+      "pid": 152,
+      "tid": 152,
+      "ts": 1963684027576.811
+    },
+    "marker_index": 58
+  },
+  "unscoped_clone_ids": [
+    8589934600
+  ]
+}

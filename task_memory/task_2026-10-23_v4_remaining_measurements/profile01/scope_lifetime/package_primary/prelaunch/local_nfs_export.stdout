@@ -1,0 +1,4 @@
+# Version 1.1
+# Path Client(Flags) # IPs
+/data	*(rw,no_root_squash,async,wdelay,no_subtree_check,fsid=1,sec=1)
+/	*(rw,no_root_squash,async,wdelay,no_subtree_check,fsid=0,sec=1)

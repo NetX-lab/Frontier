@@ -574,16 +574,21 @@ class ClusterBatchEndEvent(BaseEvent):
         target_cluster = cluster_scheduler._get_decode_target_cluster()
 
         transfer_events: List[BaseEvent] = []
+        kv_connector = kv_pred._config.kv_connector
         for request in self._batch.requests:
             if request.is_prefill_complete and request.num_decode_tokens > 0:
-                kv_cache_size_bytes, transfer_time_ms = (
-                    kv_pred.get_transfer_info_for_request(
-                        source_cluster_type=self._cluster_type,
-                        target_cluster_type=target_cluster,
-                        request=request,
-                        replica_config=replica_config,
+                if kv_connector == "nixl":
+                    kv_cache_size_bytes = None
+                    transfer_time_ms = None
+                else:
+                    kv_cache_size_bytes, transfer_time_ms = (
+                        kv_pred.get_transfer_info_for_request(
+                            source_cluster_type=self._cluster_type,
+                            target_cluster_type=target_cluster,
+                            request=request,
+                            replica_config=replica_config,
+                        )
                     )
-                )
 
                 from frontier.entities.batch import Batch as SingleBatch
 
@@ -604,6 +609,7 @@ class ClusterBatchEndEvent(BaseEvent):
                         transfer_time_ms=transfer_time_ms,
                         source_cluster_type=self._cluster_type,
                         source_batch_stage_id=self._source_batch_stage_id,
+                        kv_connector=kv_connector,
                     )
                 )
         return transfer_events

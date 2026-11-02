@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "git",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-groundtruth-fixture",
+  "returncode": 2,
+  "reason": "Raw source.diff blank context lines are standard diff syntax and must remain byte-identical.",
+  "expected_scoped_command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/groundtruth_fixture/*.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/groundtruth_fixture/*.json"
+  ]
+}

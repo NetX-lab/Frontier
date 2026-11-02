@@ -1,0 +1,22 @@
+{
+  "status": "GREEN",
+  "standins": "installed source/binary/PathFinder only; generated bootstrap and13runtime bytes unchanged",
+  "generated_argv": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage/native_pd_worker.py",
+    "--config",
+    "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage/config.json"
+  ],
+  "generated_pythonpath": "/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage:/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage/tests/comparison/dp_placement_pp",
+  "child_command": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "-c",
+    "import json,pathlib,sys; import native_pd_worker; assert 'pd_replay' not in sys.modules; assert pathlib.Path(sys.modules['vllm_replay'].__file__)==pathlib.Path('tests/comparison/dp_placement_pp/vllm_replay.py').resolve(); print('BOOTSTRAP_CHILD_IMPORT_GREEN'); print(json.dumps(dict(worker=native_pd_worker.__file__,dependency=sys.modules['vllm_replay'].__file__,sys_path=sys.path,pd_replay_preloaded=False)))"
+  ],
+  "returncode": 0,
+  "stdout": "BOOTSTRAP_CHILD_IMPORT_GREEN\n{\"worker\": \"/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage/native_pd_worker.py\", \"dependency\": \"/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage/tests/comparison/dp_placement_pp/vllm_replay.py\", \"sys_path\": [\"/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage/tests/comparison/stage_admission_pp\", \"/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/dp_placement_pp\", \"\", \"/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage\", \"/data/ycfeng/tmp/glm53_dsv4/profile03_package_W128/bootstrap_standins/stage/tests/comparison/dp_placement_pp\", \"/usr/lib/python310.zip\", \"/usr/lib/python3.10\", \"/usr/lib/python3.10/lib-dynload\", \"/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages\", \"__editable__.frontier_simulator-0.1.0.finder.__path_hook__\"], \"pd_replay_preloaded\": false}\n",
+  "stderr": "",
+  "submitted": false
+}

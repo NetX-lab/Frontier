@@ -1,0 +1,25 @@
+{
+  "argv": [
+    "/usr/bin/gdb",
+    "--nx",
+    "--nh",
+    "--batch",
+    "-iex",
+    "set debuginfod enabled off",
+    "-iex",
+    "set auto-load off",
+    "-x",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb",
+    "--args",
+    "/usr/bin/python3",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.inferior.py"
+  ],
+  "inferior_source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/sigabrt.inferior.py",
+  "inferior_source_sha256": "e20d6d4439831714ef280f792020db627147a1eac434ff86ebd10804b56ee458",
+  "source_pins": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/owner02/control.py": "b0cccc84c3a185b472ddbf41a4f9b3db3cc39874d44199a31a065cb05eff6c3e",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.gdb": "4d0b05a1c1aa4125d5e8faf93da0dbd0f8955e83a75446f88aff6eb0707217b3"
+  }
+}

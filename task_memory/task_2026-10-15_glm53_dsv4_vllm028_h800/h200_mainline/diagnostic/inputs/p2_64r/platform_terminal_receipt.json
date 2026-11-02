@@ -1,0 +1,212 @@
+{
+ "observed_utc": "2026-10-25T16:21:28.268366+00:00",
+ "job": "exp-1025-155441-668927",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "no",
+ "status": {
+  "phase": "Succeeded",
+  "startTime": null,
+  "finishTime": "2026-10-25T16:19:44Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 8,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1025-155441-668927-1679091c",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0968.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:57:39Z",
+       "finishedAt": "2026-10-25T16:19:30Z",
+       "containerID": "containerd://ee9e5a514b96d62a2bf34bc206198794a3a95ff4dd6256a0fffc338bbaa7ebcc"
+      }
+     },
+     "duration_seconds": 1311.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-155441-668927-8f14e45f",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0040.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:55:12Z",
+       "finishedAt": "2026-10-25T16:19:24Z",
+       "containerID": "containerd://cd226f087c3b548482bda3c35bf5f8435aafb8767bdac950ae048c4c29f6492c"
+      }
+     },
+     "duration_seconds": 1452.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-155441-668927-a87ff679",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0760.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:57:38Z",
+       "finishedAt": "2026-10-25T16:19:32Z",
+       "containerID": "containerd://50abebca1246c412988e859d304757c913dcc44edee59499023248b207a61696"
+      }
+     },
+     "duration_seconds": 1314.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-155441-668927-c4ca4238",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0722.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:57:33Z",
+       "finishedAt": "2026-10-25T16:19:17Z",
+       "containerID": "containerd://a1819c2e2829d265398ccc4d7d820cfc7a2298b8926f18236fe2de8323cc3578"
+      }
+     },
+     "duration_seconds": 1304.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-155441-668927-c81e728d",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0938.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:55:20Z",
+       "finishedAt": "2026-10-25T16:19:32Z",
+       "containerID": "containerd://71e9107afec0de2065869be2a5114ab040cebfcbd55082c37d0dea603ffaee9a"
+      }
+     },
+     "duration_seconds": 1452.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-155441-668927-cfcd2084",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0710.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:55:04Z",
+       "finishedAt": "2026-10-25T16:19:37Z",
+       "containerID": "containerd://dbbd4f560e9d82221612890f4ac05442f7b66a2a015b2b234d1f3a4ebad129b3"
+      }
+     },
+     "duration_seconds": 1473.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-155441-668927-e4da3b7f",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0543.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:57:41Z",
+       "finishedAt": "2026-10-25T16:19:37Z",
+       "containerID": "containerd://f38e7bd54a919d7d20c9efc1cbe3b7126da0bffb88e5f5ee25c4781c4c372742"
+      }
+     },
+     "duration_seconds": 1316.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-155441-668927-eccbc87e",
+   "phase": "Succeeded",
+   "node": "gpu-h200-0716.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T15:57:39Z",
+       "finishedAt": "2026-10-25T16:19:42Z",
+       "containerID": "containerd://ec9ff853f59318c6a8389c24e3a499dd2e99325aa2147f821217b62d27fa0f1b"
+      }
+     },
+     "duration_seconds": 1323.0
+    }
+   ]
+  }
+ ],
+ "container_gpu_hours": 24.322222222222223
+}

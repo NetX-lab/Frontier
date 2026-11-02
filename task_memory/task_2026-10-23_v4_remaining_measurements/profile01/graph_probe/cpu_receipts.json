@@ -1,0 +1,121 @@
+{
+  "status": "PASS_CPU_SOURCE_COMPONENT_ONLY",
+  "task_id": "W128-GRAPH-PAYLOAD-PROBE",
+  "environment": {
+    "python_executable": "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+    "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+    "pytest": "9.1.1",
+    "conda": "No conda activation or dependency change; used the existing absolute Python executable.",
+    "workdir": "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode"
+    }
+  },
+  "runs": [
+    {
+      "kind": "red",
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "2",
+        "skipped": "0",
+        "tests": "2",
+        "time": "0.166",
+        "timestamp": "2026-10-24T13:04:13.171387+08:00",
+        "hostname": "kun-workspace-vgen2"
+      },
+      "log": "cpu_red.log",
+      "xml": "cpu_red.xml"
+    },
+    {
+      "kind": "green",
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "16",
+        "time": "0.251",
+        "timestamp": "2026-10-24T13:04:51.330317+08:00",
+        "hostname": "kun-workspace-vgen2"
+      },
+      "log": "cpu_green.log",
+      "xml": "cpu_green.xml"
+    },
+    {
+      "kind": "inherited",
+      "summary": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "71",
+        "time": "0.923",
+        "timestamp": "2026-10-24T13:04:51.399620+08:00",
+        "hostname": "kun-workspace-vgen2"
+      },
+      "log": "cpu_inherited.log",
+      "xml": "cpu_inherited.xml"
+    }
+  ],
+  "red_command": [
+    "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "-m",
+    "pytest",
+    "/data/ycfeng/Frontier/.worktrees/v4-graph-payload-probe/tests/unit/test_cupti_graph_resource_payload.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "-k",
+    "resource_envelope_exact_handles_ids_and_copy",
+    "--basetemp=/data/ycfeng/tmp/w128_graph_payload_red",
+    "--junitxml=/data/ycfeng/tmp/w128_graph_payload_red.xml"
+  ],
+  "red_env": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode",
+    "FRONTIER_GRAPH_PROBE_SOURCE": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py"
+  },
+  "red_exit": 1,
+  "red_expected_failures": 2,
+  "red_deselected": 14,
+  "green_command": [
+    "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "-m",
+    "pytest",
+    "tests/unit/test_cupti_graph_resource_payload.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=/data/ycfeng/tmp/w128_graph_payload_green",
+    "--junitxml=/data/ycfeng/tmp/w128_graph_payload_green.xml"
+  ],
+  "green_exit": 0,
+  "inherited_runner": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/tests/run_cpu_checks.py",
+  "inherited_runner_sha256": "20159681ea9f36ef8f18c50109b719ff92ee0baecbc480fa87fa25311ba203c8",
+  "injection": "runpy.run_path(runner)[DiagnosticCopy]; set plugin.pytest_sessionstart.__func__.__globals__[HERE] to candidate directory; pass existing plugin to pytest.main; never execute old main.",
+  "inherited_command_args": [
+    "/data/ycfeng/Frontier/.worktrees/glm-full-dummy-h200/tests/profiling/test_cuda_graph_probe_attempt1.py",
+    "/data/ycfeng/Frontier/.worktrees/glm-full-dummy-h200/tests/unit/test_cuda_graph_scope_probe.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "-k",
+    "not callback_fields_are_copied_only_while_native_data_is_valid and not callback_never_propagates_python_exceptions_across_c and not callback_layout_matches_compiled_cuda13_header",
+    "--basetemp=/data/ycfeng/tmp/w128_graph_payload_inherited",
+    "--junitxml=/data/ycfeng/tmp/w128_graph_payload_inherited.xml"
+  ],
+  "inherited_candidate_loads": 71,
+  "inherited_exit": 0,
+  "inherited_deselected": 5,
+  "deselection_reason": "Frozen tests pass bare GraphData, which is no longer the resource envelope, or compare the exact old ABI object. New allocated-envelope tests replace those five cases without editing frozen tests.",
+  "new_test_lines": 154,
+  "compiler_stdin_control_lines": 5,
+  "total_new_cpu_control_lines": 159,
+  "cpu_control_limit": 160,
+  "candidate_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "test_sha256": "b8077244a04978f5e11c76ee8dd9a8fd3da8cfd04c44b7f271054bae8cb74c5d",
+  "scope": "87 passing CPU cases,2 intentional old-source failures,5 inherited exclusions; no GPU/Docker/platform/package/native CUPTI execution; no runtime decode or crash-cause proof."
+}

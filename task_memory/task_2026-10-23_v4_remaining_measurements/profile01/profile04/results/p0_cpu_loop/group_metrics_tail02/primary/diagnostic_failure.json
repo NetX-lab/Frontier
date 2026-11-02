@@ -1,0 +1,296 @@
+{
+  "status": "FAILED_CPU_SIGABRT_BEFORE_METRICS",
+  "observed_utc": "2026-10-24T21:33:34.222777+00:00",
+  "source_commit": "e46cafe3",
+  "original_receipt_status": "CENSORED_DIAGNOSTIC",
+  "child_command_returncode": -6,
+  "driver_returncode": 1,
+  "enclosing_seconds": 40.333548916038126,
+  "start_utc": "2026-10-24T21:26:58.199458+00:00",
+  "end_utc": "2026-10-24T21:27:38.533337+00:00",
+  "actual_memory_limit_bytes": 32212254720,
+  "diagnostic_attempts_used": 1,
+  "diagnostic_attempt_ceiling": 1,
+  "final_json_exists": false,
+  "metrics_or_group_boundaries_observed": 0,
+  "expected_hypotheses_verdict": "UNMEASURED_ALL_THREE",
+  "error": "malloc(): unsorted double linked list corrupted",
+  "fatal_python_error": "Aborted",
+  "last_observation": {
+    "t": 39.935,
+    "stage": "kernel_pass_progress",
+    "rss_mb": 6266.1,
+    "idx": 1700000
+  },
+  "kernel_pass_done_observed": false,
+  "partial_kernel_index": "HASH_BOUND_PARTIAL_UNVERIFIED_EOF_NOT_R5",
+  "partial_index_count": null,
+  "useful_steps": null,
+  "full_audit_kernel_count": null,
+  "root_cause": "UNKNOWN; allocator corruption was detected, but no C-stack/corruption origin is retained.",
+  "original_receipt_path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.receipt.json",
+  "original_receipt_sha256": "58727d466e7a05131f43224d6bdc08b6d39fe8a7ea7f28709838192ca7db195f",
+  "archive_receipt_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/prefill_dp0_rank0_segments.receipt.json",
+  "files": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.cgroup.json",
+      "bytes": 1947,
+      "sha256": "9a7d12a02182e621f34fdb2098b6a72bb85aa88599df38ceda9c12bee7cf70e5",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/prefill_dp0_rank0_segments.cgroup.json"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.gc.jsonl",
+      "bytes": 2685,
+      "sha256": "d3e8c07a5a724732598bd71399c4618193cb46b6d920373f3aaa7cc2f8ceb3ae",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/prefill_dp0_rank0_segments.gc.jsonl"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.hb.log",
+      "bytes": 8851,
+      "sha256": "1dcbd13b50f9d31eb2a1ec703b7d508a0da25f4324d33c5a6ad9182569b242bd",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/prefill_dp0_rank0_segments.hb.log"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.kernels.jsonl.gz",
+      "bytes": 478079,
+      "sha256": "f3b9ca8f760c1426dc5585662146def8d049f913c39adc2b76e284daff76dc23",
+      "archive_path": null
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.obs.jsonl",
+      "bytes": 3500,
+      "sha256": "9d51918473f301ec87f5c4d001c9eb315d5bd69273324e810785538ede81eb4e",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/prefill_dp0_rank0_segments.obs.jsonl"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.stderr",
+      "bytes": 115,
+      "sha256": "b9c69d8104eb32979f211d26877b54fa82b846a7748465ea07b4b30ca625b42e",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/prefill_dp0_rank0_segments.stderr"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/prefill_dp0_rank0_segments.stdout"
+    }
+  ],
+  "observations": [
+    {
+      "t": 0.102,
+      "stage": "instrumented",
+      "rss_mb": 19.8,
+      "hits": [
+        "after:data = reader.load_trace(path)",
+        "after:events = data['traceEvents']",
+        "after:header = reader.trace_header(path)",
+        "after:in calls.items():",
+        "after:in enumerate(events):",
+        "after:in enumerate(syn):",
+        "after:in profile['steps']:",
+        "after:in streams.items():",
+        "after:inventory = read(inventory_path)",
+        "after:names = collections.Counter",
+        "after:output.write_text(",
+        "after:print(json.dumps({",
+        "after:result = {",
+        "after:start = time.monotonic()",
+        "after:with gzip.open(raw_path,",
+        "before:data = reader.load_trace(path)",
+        "before:header = reader.trace_header(path)",
+        "before:step_rows = []",
+        "before:with gzip.open(raw_path,",
+        "loop:in enumerate(events):",
+        "loop:in kernels:"
+      ],
+      "auditor_sha": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+      "reader_sha": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+      "trace": "torch_traces/prefill/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792842834745705872.pt.trace.json.gz",
+      "output": "/data/ycfeng/tmp/glm53_dsv4/p0_group_segments_20261025_01/prefill_dp0_rank0_segments.json"
+    },
+    {
+      "t": 0.107,
+      "stage": "enter",
+      "rss_mb": 20.1
+    },
+    {
+      "t": 0.516,
+      "stage": "metadata_loaded",
+      "rss_mb": 139.5
+    },
+    {
+      "t": 0.519,
+      "stage": "header_start",
+      "rss_mb": 139.8
+    },
+    {
+      "t": 0.52,
+      "stage": "header_done",
+      "rss_mb": 139.8
+    },
+    {
+      "t": 0.52,
+      "stage": "load_gc_disabled",
+      "rss_mb": 139.8,
+      "enabled": false
+    },
+    {
+      "t": 0.52,
+      "stage": "load_start",
+      "rss_mb": 139.8,
+      "trace_gz_bytes": 142288791
+    },
+    {
+      "t": 29.236,
+      "stage": "load_done",
+      "rss_mb": 5901.6
+    },
+    {
+      "t": 29.615,
+      "stage": "freeze_after_load",
+      "rss_mb": 5901.6,
+      "seconds": 1.0722782462835312e-05,
+      "objects": 6995156,
+      "gc_enabled": true
+    },
+    {
+      "t": 29.616,
+      "stage": "events_ready",
+      "rss_mb": 5901.6,
+      "events": 5062740
+    },
+    {
+      "t": 30.173,
+      "stage": "annotations_named",
+      "rss_mb": 5901.6,
+      "names": 63944
+    },
+    {
+      "t": 30.173,
+      "stage": "event_pass_progress",
+      "rss_mb": 5901.6,
+      "idx": 0
+    },
+    {
+      "t": 30.36,
+      "stage": "event_pass_progress",
+      "rss_mb": 5903.4,
+      "idx": 500000
+    },
+    {
+      "t": 30.565,
+      "stage": "event_pass_progress",
+      "rss_mb": 5906.0,
+      "idx": 1000000
+    },
+    {
+      "t": 30.863,
+      "stage": "event_pass_progress",
+      "rss_mb": 5912.5,
+      "idx": 1500000
+    },
+    {
+      "t": 31.505,
+      "stage": "event_pass_progress",
+      "rss_mb": 5934.6,
+      "idx": 2000000
+    },
+    {
+      "t": 32.342,
+      "stage": "event_pass_progress",
+      "rss_mb": 5956.8,
+      "idx": 2500000
+    },
+    {
+      "t": 33.079,
+      "stage": "event_pass_progress",
+      "rss_mb": 5979.2,
+      "idx": 3000000
+    },
+    {
+      "t": 33.928,
+      "stage": "event_pass_progress",
+      "rss_mb": 6001.7,
+      "idx": 3500000
+    },
+    {
+      "t": 34.719,
+      "stage": "event_pass_progress",
+      "rss_mb": 6030.3,
+      "idx": 4000000
+    },
+    {
+      "t": 35.532,
+      "stage": "event_pass_progress",
+      "rss_mb": 6053.2,
+      "idx": 4500000
+    },
+    {
+      "t": 36.053,
+      "stage": "event_pass_progress",
+      "rss_mb": 6073.3,
+      "idx": 5000000
+    },
+    {
+      "t": 36.072,
+      "stage": "event_pass_done",
+      "rss_mb": 6073.3,
+      "events": 5062740,
+      "kernels": 1215919,
+      "calls": 512220,
+      "ranges": 63944
+    },
+    {
+      "t": 39.016,
+      "stage": "correlation_done",
+      "rss_mb": 6258.6,
+      "launch_owner_rows": 512220,
+      "correlations": 512220
+    },
+    {
+      "t": 39.016,
+      "stage": "kernel_pass_start",
+      "rss_mb": 6258.6
+    },
+    {
+      "t": 39.149,
+      "stage": "kernel_pass_progress",
+      "rss_mb": 6259.9,
+      "idx": 1450000
+    },
+    {
+      "t": 39.231,
+      "stage": "kernel_pass_progress",
+      "rss_mb": 6260.4,
+      "idx": 1475000
+    },
+    {
+      "t": 39.397,
+      "stage": "kernel_pass_progress",
+      "rss_mb": 6261.7,
+      "idx": 1525000
+    },
+    {
+      "t": 39.48,
+      "stage": "kernel_pass_progress",
+      "rss_mb": 6262.5,
+      "idx": 1550000
+    },
+    {
+      "t": 39.684,
+      "stage": "kernel_pass_progress",
+      "rss_mb": 6264.0,
+      "idx": 1625000
+    },
+    {
+      "t": 39.935,
+      "stage": "kernel_pass_progress",
+      "rss_mb": 6266.1,
+      "idx": 1700000
+    }
+  ],
+  "source_pins_unchanged": true,
+  "new_control_or_affected_attempts": 0,
+  "R5_complete_ranks": 24,
+  "native_or_cost_reference_admission": false
+}

@@ -1,0 +1,66 @@
+{
+  "observed": {
+    "environment": "balanced_topk",
+    "runtime_path": "balanced_topk",
+    "strategy": "balanced_routing.BalancedTopKRouting",
+    "origin": "/data/ycfeng/tmp/prefill-routing-final-8j1qhldp/balanced_routing.py",
+    "sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+    "routers": {
+      "model.layers.0.mlp.experts": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter"
+    },
+    "runners": {
+      "model.layers.0.mlp.experts": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner"
+    },
+    "native_sources": {
+      "vllm/envs.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/envs.py",
+        "sha256": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9"
+      },
+      "vllm/forward_context.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/forward_context.py",
+        "sha256": "985adacc9e7ed2a7695819ac2e2ad9cb264a7d886806d3091ad75bfda7392242"
+      },
+      "vllm/distributed/parallel_state.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/distributed/parallel_state.py",
+        "sha256": "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c"
+      },
+      "vllm/model_executor/layers/fused_moe/router/router_factory.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+        "sha256": "64fb057329d35b585d8790d3b3ac33dbefd029343064588fa9c9cb1ad113162e"
+      },
+      "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+        "sha256": "a7345df5add00cf3bd93024492d6fc1189fd3ecf2754a11cef1b03a295d791f7"
+      },
+      "vllm/model_executor/layers/fused_moe/router/base_router.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/model_executor/layers/fused_moe/router/base_router.py",
+        "sha256": "47fa2324bcd9b6ebdc138d69ae6b6ecc0f2463d34bda8c5988bdb0a2a76d3fae"
+      },
+      "vllm/model_executor/layers/fused_moe/router/fused_moe_router.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/model_executor/layers/fused_moe/router/fused_moe_router.py",
+        "sha256": "f182f30712983f61815f8df947af597277d660cd2891066fcb13789d55f7353e"
+      },
+      "vllm/model_executor/layers/fused_moe/runner/moe_runner.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/model_executor/layers/fused_moe/runner/moe_runner.py",
+        "sha256": "a19ecf2417c80b93c0fe5594e74528f686665847732196f9b29ef967b38110b0"
+      },
+      "vllm/model_executor/layers/fused_moe/layer.py": {
+        "origin": "/data/ycfeng/tmp/opencode/vllm-v0.28.0/vllm/model_executor/layers/fused_moe/layer.py",
+        "sha256": "688711dd909e107c1712b81038cb1ed055fc4ecc9dce89bb4beef2d30f0541c5"
+      }
+    }
+  },
+  "passed": [
+    "actual native-code-origin inventory positive",
+    "env mismatch",
+    "wrong constructed router",
+    "native imported origin mismatch",
+    "no constructed MoERunner",
+    "strategy hash mismatch",
+    "missing native source pin",
+    "actual router callable origin mismatch",
+    "factory environment object mismatch"
+  ],
+  "count": 9,
+  "hardware_qualification": false
+}

@@ -1,0 +1,279 @@
+{
+  "engines": [
+    {
+      "engine_index": 0,
+      "prefill_query_len": 0
+    },
+    {
+      "engine_index": 1,
+      "prefill_query_len": 6143
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "e0-prefill-p6144",
+      "engine_index": 0,
+      "phase": "prefill",
+      "batch_size": 1,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-decode-b1-p6144",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 1,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-decode-b2-p6144",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 2,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-decode-b4-p6144",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 4,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-decode-b8-p6144",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 8,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-decode-b16-p6144",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 16,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-decode-b24-p6144",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 24,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-decode-b8-p6144-full16",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 8,
+      "prompt_len": 6144,
+      "dp_peer": {
+        "num_tokens": 16,
+        "cg_mode": "FULL",
+        "uniform_token_count": 1,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-decode-b2-p6144-piecewise4",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 2,
+      "prompt_len": 6144,
+      "dp_peer": {
+        "num_tokens": 4,
+        "cg_mode": "PIECEWISE",
+        "uniform_token_count": null,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-decode-b8-p6144-piecewise9",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 8,
+      "prompt_len": 6144,
+      "dp_peer": {
+        "num_tokens": 9,
+        "cg_mode": "PIECEWISE",
+        "uniform_token_count": null,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-decode-b4-p7150",
+      "engine_index": 0,
+      "phase": "decode",
+      "batch_size": 4,
+      "prompt_len": 7150,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e0-dummy-full1",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 1,
+        "cg_mode": "FULL",
+        "uniform_token_count": 1,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-full2",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 2,
+        "cg_mode": "FULL",
+        "uniform_token_count": 1,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-full4",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 4,
+        "cg_mode": "FULL",
+        "uniform_token_count": 1,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-full8",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 8,
+        "cg_mode": "FULL",
+        "uniform_token_count": 1,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-full16",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 16,
+        "cg_mode": "FULL",
+        "uniform_token_count": 1,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-piecewise1",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 1,
+        "cg_mode": "PIECEWISE",
+        "uniform_token_count": null,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-piecewise2",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 2,
+        "cg_mode": "PIECEWISE",
+        "uniform_token_count": null,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-piecewise4",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 4,
+        "cg_mode": "PIECEWISE",
+        "uniform_token_count": null,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-piecewise8",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 8,
+        "cg_mode": "PIECEWISE",
+        "uniform_token_count": null,
+        "max_query_len": 1
+      }
+    },
+    {
+      "case_id": "e0-dummy-none6144",
+      "engine_index": 0,
+      "phase": "dummy",
+      "batch_size": 1,
+      "prompt_len": 0,
+      "dp_peer": {
+        "num_tokens": 6144,
+        "cg_mode": "NONE",
+        "uniform_token_count": null,
+        "max_query_len": 6144
+      }
+    },
+    {
+      "case_id": "e1-first_tail-b0-p6144",
+      "engine_index": 1,
+      "phase": "first_tail",
+      "batch_size": 1,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e1-first_tail-b3-p6144",
+      "engine_index": 1,
+      "phase": "first_tail",
+      "batch_size": 4,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e1-first_tail-b7-p6144",
+      "engine_index": 1,
+      "phase": "first_tail",
+      "batch_size": 8,
+      "prompt_len": 6144,
+      "dp_peer": null
+    },
+    {
+      "case_id": "e1-first_tail-b10-p6144",
+      "engine_index": 1,
+      "phase": "first_tail",
+      "batch_size": 11,
+      "prompt_len": 6144,
+      "dp_peer": null
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "status": "PASS_HASH_IDENTICAL_CLOUD_DOWNLOAD",
+  "command": [
+    "timeout",
+    "60s",
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "sudo",
+    "-n",
+    "python3",
+    "-"
+  ],
+  "start_utc": "2026-10-24T18:16:51.244788+00:00",
+  "end_utc": "2026-10-24T18:16:51.813851+00:00",
+  "output_root": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_results_20261024_02",
+  "files": 5,
+  "bytes": 224883,
+  "inventory_sha256": "9eb11fbd97ecce24b0b7c7e41219fd2c10be4a8a6c4757abd7f630778cf99809",
+  "source_script_sha256": "8402f014277f987d0eff0629609b550e61a6ed62a57c14bf0757f55020913763",
+  "cloud_writes": 0,
+  "gpu_submissions": 0,
+  "prior_read_failure": "/data/ycfeng/tmp/glm53_dsv4/scope_lifetime_results_20261024_01/cloud_inventory.json"
+}

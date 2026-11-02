@@ -1,0 +1,6 @@
+dsv4-h800-p0-profile-20261024-04 prefill nodes=2 rows=30 forwards=19660 mismatched=0 synced modes: {'NONE': 748, 'PIECEWISE': 2, 'FULL': 18910}
+dsv4-h800-p0-profile-20261024-04 decode nodes=2 rows=865 forwards=47244 mismatched=0 synced modes: {'NONE': 4, 'PIECEWISE': 776, 'FULL': 46464}
+dsv4-h200-p2-profile-20261025-01 prefill nodes=2 rows=30 forwards=18892 mismatched=0 synced modes: {'NONE': 732, 'PIECEWISE': 2, 'FULL': 18158}
+dsv4-h200-p2-profile-20261025-01 decode nodes=2 rows=728 forwards=48268 mismatched=0 synced modes: {'NONE': 4, 'PIECEWISE': 724, 'FULL': 47540}
+dsv4-h200-p2-64-profile-20261025-01 prefill nodes=4 rows=85 forwards=34968 mismatched=0 synced modes: {'NONE': 1332, 'PIECEWISE': 4, 'FULL': 33632}
+dsv4-h200-p2-64-profile-20261025-01 decode nodes=4 rows=1850 forwards=76056 mismatched=0 synced modes: {'NONE': 8, 'PIECEWISE': 1240, 'FULL': 74808}

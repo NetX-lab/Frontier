@@ -1,0 +1,26 @@
+{
+  "frozen_utc": "2026-10-24T20:25:45.684380+00:00",
+  "frozen_local": "2026-10-25T04:25:45.684380+08:00",
+  "state": "SOURCE_AND_TESTS_FROZEN_FOR_OWNER_DELIVERY",
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics.py",
+      "sha256": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+      "gross_lines": 80,
+      "bytes": 3208,
+      "matches_executed_unit_source": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/unit/test_v4_trace_audit_group_metrics.py",
+      "sha256": "d9747f5b8bc4371a0ed60c309632a367bb7931ef8c6677d370ef88c10f713827",
+      "gross_lines": 194,
+      "bytes": 10986,
+      "matches_executed_unit_source": true
+    }
+  ],
+  "owner_unit_invocations_used": 1,
+  "owner_unit_status": "PASS",
+  "owner_unit_tests": 9,
+  "unit_result_sha256": "54ff3b0421108f5ba20aa0c6b33fd97f9fc41d7ed0e23c9d35a241f5c8522886",
+  "scope": "Source/hash binding only; no unit, pipeline, trace, GPU, network or Git operation."
+}

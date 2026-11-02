@@ -1,0 +1,32 @@
+{"@caller":"gitlab.basemind.com/basemind/brainpp/projects/kubebrain/cmd/worker-init/app/options.(*Options).Run","@file":"projects/kubebrain/cmd/worker-init/app/options/options.go:80","@level":"info","@msg":"SSHD not enabled","@timestamp":"2026-10-24T18:12:55.659Z"}
+2026-10-24 18:12:55: DEBUG: Calling worker_init, DISTRIBUTED_JOB_ENVS_INITIALIZED=
+2026-10-24 18:12:55: DEBUG: worker_init() function called
+2026-10-24 18:12:55: DEBUG: SCRIPT_PATH=/jobutils/scripts, BASE_DIR=/jobutils
+SOCKET_IP=10.191.8.42
+0 reranked to 0
+MASTER_NODE_NAME=gpu-h800-0158.host.platform.shaipower.com, LAST_NODE_NAME=gpu-h800-0158.host.platform.shaipower.com
+MASTER_SOCKET_ADDR=10.191.8.42, LAST_SOCKET_ADDR=10.191.8.42
+NODE_NAME=gpu-h800-0158.host.platform.shaipower.com
+GPU_TYPE=H800
+GPU_VENDOR=NVIDIA
+NODE_RANK=0
+MASTER_ADDR=10.191.8.42
+NODE_COUNT=1
+PROC_PER_NODE=1
+JOB_ID=exp-1025-021228-212042
+2026-10-24 18:12:59: [replica_labels] 2026-10-24 18:12:59.076 | WARNING  | utils:<module>:21 - clickhouse_connect 模块未安装，ClickHouse 功能将不可用。p2p_ping 等不需要 ClickHouse 的功能仍可正常使用。
+RDMA_NETWORK_LINK_TYPE=RoCE
+[33mWarning: Not a full machine job, skipped IB HCA auto detection[0m
+NCCL_SOCKET_IFNAME=ens22np0
+NVSHMEM_BOOTSTRAP_UID_SOCK_IFNAME=ens22np0
+NCCL_IB_HCA=
+NCCL_IB_GID_INDEX=
+NVSHMEM_HCA_PE_MAPPING=
+2026-10-24 18:12:59: Ready to go.
+2026/10/24 18:12:59 [DEBUG] packaging-url , packaging-dir /workdir/src/rjob, Starting packaging server
+GPU 0: NVIDIA H800 (UUID: GPU-4c9987eb-19e6-793f-0326-c502be48abcd)
+2026-10-24 18:13:02: [replica_labels] 2026-10-24 18:13:02.665 | WARNING  | utils:<module>:21 - clickhouse_connect 模块未安装，ClickHouse 功能将不可用。p2p_ping 等不需要 ClickHouse 的功能仍可正常使用。
+USDT:2026-10-24 18:13:07 110:110 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-24 18:13:07 110:110 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-24 18:13:07 110:110 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-24 18:13:07 110:110 SyncActivityProfilerHandler.cpp:59] profiler_stop

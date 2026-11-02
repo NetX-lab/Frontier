@@ -1,0 +1,23 @@
+{
+  "status": "LAUNCH_REQUESTED_NO_JOB_YET",
+  "start_utc": "2026-10-24T18:12:24.289020+00:00",
+  "command": [
+    "bash",
+    "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/with_personal_env_ready.sh",
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-u",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01/launch.py",
+    "--launch"
+  ],
+  "seal_sha256": "44871474bc9018d2b3c0256a5e43f648b489c3a5ea71214c8956b7067490580a",
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "executable_package": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/launcher_01.raw.log",
+  "gpu_attempt_ceiling": 1,
+  "gpu_submission_verified": false,
+  "limits": "One authorized original launcher invocation; platform creation and runtime acceptance remain unverified until exact API and business checks.",
+  "launcher_pid": 3299134,
+  "launcher_exit": 0,
+  "launcher_end_utc": "2026-10-24T18:13:11.335166+00:00"
+}

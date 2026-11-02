@@ -1,0 +1,96 @@
+{
+  "status": "BYTE_EXACT_SELECTED_ARCHIVE",
+  "recorded_utc": "2026-10-25T04:26:24.412408+00:00",
+  "selected_files": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.cgroup.json",
+      "bytes": 1948,
+      "sha256": "20af5867c8f7ba12f34ea155f3e0c0b4d22f04797361e6014bc8f048560ee4de",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_decode_dp1_rank0.cgroup.json"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.gc.jsonl",
+      "bytes": 767,
+      "sha256": "0890a90b9d1fd447aa170c5d8621820baa508b62f3a6cf0d590089df87b7bc6d",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_decode_dp1_rank0.gc.jsonl"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.hb.log",
+      "bytes": 884,
+      "sha256": "d69e0b357502e8a1e8ef39b664e20c008ed4c5da5356bfabdbf23f657007d83c",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_decode_dp1_rank0.hb.log"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.obs.jsonl",
+      "bytes": 3384,
+      "sha256": "ffcdd0e0345b1f0cc311cfede778b9591258c9d823fe273eaec68b16d1b27d0e",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_decode_dp1_rank0.obs.jsonl"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_decode_dp1_rank0.stderr"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.stdout",
+      "bytes": 124,
+      "sha256": "fd42d542e155ec7d5894fd38060722b0b45901531daef366f1247e4932972ced",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_decode_dp1_rank0.stdout"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_prefill_dp1_rank0.cgroup.json",
+      "bytes": 1948,
+      "sha256": "259abf56f86ba28b51b3a6f5b5e1ceaf7a36ffcbcc0afc2a4fe11e77fe975865",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_prefill_dp1_rank0.cgroup.json"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_prefill_dp1_rank0.gc.jsonl",
+      "bytes": 1734,
+      "sha256": "88fda81794b7e99a910d18a51559100362adaa5aa97778ff685173c885e01198",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_prefill_dp1_rank0.gc.jsonl"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_prefill_dp1_rank0.hb.log",
+      "bytes": 3873,
+      "sha256": "cab659d03703d3b50a65cbcf8537578ff86b7f12f1309d6e54713e34cc3166d4",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_prefill_dp1_rank0.hb.log"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_prefill_dp1_rank0.obs.jsonl",
+      "bytes": 3342,
+      "sha256": "37008d8b3c121b0cc3f8fd579383cceb56ae066d5dcab430a7385f5be794a12d",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_prefill_dp1_rank0.obs.jsonl"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_prefill_dp1_rank0.stderr",
+      "bytes": 168,
+      "sha256": "f5d3a3c9827fa6433fef5106e79296f749455563bb861076dfa089a247031fb8",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_prefill_dp1_rank0.stderr"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_prefill_dp1_rank0.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction03/primary/control_prefill_dp1_rank0.stdout"
+    }
+  ],
+  "large_files": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.json",
+      "bytes": 396849,
+      "sha256": "0f9465b88f108f537f1ac681a47f17b59923bb63244eb033aa4004d0c84344e4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_decode_dp1_rank0.kernels.jsonl.gz",
+      "bytes": 477556,
+      "sha256": "fa65c63265a15490fb26d9245dc55e18f9d9565514eec19fd399c69f7b9f00f3"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_interval_controls_20261025_01/control_prefill_dp1_rank0.kernels.jsonl.gz",
+      "bytes": 1230657,
+      "sha256": "6e4611e821f554003a3310c3ad1e375d252e052991a737909c9d4b9ece309975"
+    }
+  ],
+  "compressed_prefill_index": "HASH_ONLY; EOF/count/complete content NOT VERIFIED"
+}

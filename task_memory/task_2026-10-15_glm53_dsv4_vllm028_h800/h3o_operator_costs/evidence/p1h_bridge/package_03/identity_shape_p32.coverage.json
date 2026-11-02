@@ -1,0 +1,705 @@
+{
+ "verdict": "PASS",
+ "step_status_counts": {
+  "PASS": 46,
+  "FAIL": 0,
+  "NO_REFERENCE": 129
+ },
+ "shape_coverage": [
+  {
+   "shape_key": [
+    "decode",
+    "FULL",
+    1,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b1-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "native_forward_count": 68
+  },
+  {
+   "shape_key": [
+    "decode",
+    "FULL",
+    2,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b2-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "native_forward_count": 48
+  },
+  {
+   "shape_key": [
+    "decode",
+    "FULL",
+    4,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b4-p6144",
+    "e0-decode-b4-p7150"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 16
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "decode",
+    "FULL",
+    8,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b8-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "decode",
+    "FULL",
+    16,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b16-p6144",
+    "e0-decode-b8-p6144-full16"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 16
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "decode",
+    "FULL",
+    24,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b24-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "decode",
+    "PIECEWISE",
+    4,
+    2
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b2-p6144-piecewise4"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "decode",
+    "PIECEWISE",
+    16,
+    8
+   ],
+   "pilot_case_ids": [
+    "e0-decode-b8-p6144-piecewise9"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "FULL",
+    1,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-full1"
+   ],
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "native_forward_count": 257
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "FULL",
+    2,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-full2"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "FULL",
+    4,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-full4"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "FULL",
+    8,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-full8"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "FULL",
+    16,
+    null
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-full16"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "NONE",
+    1,
+    1
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-none6144"
+   ],
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "native_forward_count": 4
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "PIECEWISE",
+    1,
+    1
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-piecewise1"
+   ],
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "native_forward_count": 1
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "PIECEWISE",
+    2,
+    2
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-piecewise2"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "PIECEWISE",
+    4,
+    4
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-piecewise4"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "dummy",
+    "PIECEWISE",
+    8,
+    8
+   ],
+   "pilot_case_ids": [
+    "e0-dummy-piecewise8"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "first_tail_alone",
+    "PIECEWISE",
+    1,
+    1
+   ],
+   "pilot_case_ids": [
+    "e1-first_tail-b0-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "native_forward_count": 2
+  },
+  {
+   "shape_key": [
+    "first_tail_with_decodes",
+    "PIECEWISE",
+    4,
+    4
+   ],
+   "pilot_case_ids": [
+    "e1-first_tail-b3-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 3
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "first_tail_with_decodes",
+    "PIECEWISE",
+    8,
+    8
+   ],
+   "pilot_case_ids": [
+    "e1-first_tail-b7-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 3
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "first_tail_with_decodes",
+    "PIECEWISE",
+    16,
+    11
+   ],
+   "pilot_case_ids": [
+    "e1-first_tail-b10-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 3
+   },
+   "native_forward_count": 0
+  },
+  {
+   "shape_key": [
+    "prefill",
+    "NONE",
+    6144,
+    6144
+   ],
+   "pilot_case_ids": [
+    "e0-prefill-p6144"
+   ],
+   "step_status_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "native_forward_count": 26
+  }
+ ],
+ "cases": [
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-prefill-p6144",
+   "step_count": 3,
+   "pass_count": 3,
+   "step_status_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "status": "PASS"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b1-p6144",
+   "step_count": 8,
+   "pass_count": 8,
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "status": "PASS"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b2-p6144",
+   "step_count": 8,
+   "pass_count": 8,
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "status": "PASS"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b4-p6144",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b8-p6144",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b16-p6144",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b24-p6144",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b8-p6144-full16",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b2-p6144-piecewise4",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b8-p6144-piecewise9",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-decode-b4-p7150",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-full1",
+   "step_count": 8,
+   "pass_count": 8,
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "status": "PASS"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-full2",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-full4",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-full8",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-full16",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-piecewise1",
+   "step_count": 8,
+   "pass_count": 8,
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "status": "PASS"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-piecewise2",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-piecewise4",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-piecewise8",
+   "step_count": 8,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 8
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e0",
+   "case_id": "e0-dummy-none6144",
+   "step_count": 8,
+   "pass_count": 8,
+   "step_status_counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "status": "PASS"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e1",
+   "case_id": "e1-first_tail-b0-p6144",
+   "step_count": 3,
+   "pass_count": 3,
+   "step_status_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "NO_REFERENCE": 0
+   },
+   "status": "PASS"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e1",
+   "case_id": "e1-first_tail-b3-p6144",
+   "step_count": 3,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 3
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e1",
+   "case_id": "e1-first_tail-b7-p6144",
+   "step_count": 3,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 3
+   },
+   "status": "NO_REFERENCE"
+  },
+  {
+   "run": "FULL_AND_PIECEWISE/e1",
+   "case_id": "e1-first_tail-b10-p6144",
+   "step_count": 3,
+   "pass_count": 0,
+   "step_status_counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "NO_REFERENCE": 3
+   },
+   "status": "NO_REFERENCE"
+  }
+ ]
+}

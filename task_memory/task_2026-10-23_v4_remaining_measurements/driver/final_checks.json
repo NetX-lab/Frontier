@@ -1,0 +1,323 @@
+{
+  "status": "PASS",
+  "source_commit": "05952396b0b8e5a794c53e10f9a21213beb5193d",
+  "source_files": {
+    "tests/comparison/calibration/native_pd_worker.py": "9ec701ec12f7a5da0f442f994a353f98c5ae1d2880b9feca38106ea536fd5cab",
+    "tests/comparison/calibration/native_serve_profile.py": "ea810b91665ca9a804e1b0309ad03f0d50772a96585c66602945a7125cfc1ea5",
+    "tests/comparison/calibration/pd_replay.py": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+    "tests/unit/test_native_cold_start.py": "f4112a16ae089bf63b4a5bd28588743e74e95152ad57556a424f26c48df8ad06",
+    "tests/unit/test_native_pd_worker.py": "ed20f690b6d5515ac21bd1a238b14fbcf94a00f8f1d3c91ea21ef52d433161dc",
+    "tests/unit/test_native_serve_profile.py": "559dcf7bb63c48344cbffc542e580d29ff33196813f58e49786155cb923a9037",
+    "tests/unit/test_native_streaming_replay.py": "f4b552eafe50deb84def6cabb077f7f1a696306c22aed42fcfbd505a2455961e"
+  },
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "environment": {
+    "PYTHONPATH": ".:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode",
+    "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "NATIVE_READER_BINDING_CHECKER": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py"
+  },
+  "suites": [
+    {
+      "suite": "test_native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serve_profile.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_serve_profile.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 32,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 32,
+      "start_utc": "2026-10-23T08:25:32.479009+00:00",
+      "end_utc": "2026-10-23T08:25:34.892700+00:00",
+      "xml_sha256": "6f7033ca32be5af76f33ae657d9e8b1100738ecd536d2e8012a27d65f5a07d66"
+    },
+    {
+      "suite": "test_native_pd_worker",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_worker.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_pd_worker.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 19,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 19,
+      "start_utc": "2026-10-23T08:25:34.892876+00:00",
+      "end_utc": "2026-10-23T08:25:36.797393+00:00",
+      "xml_sha256": "a84670df68e4ac6cde35cf0cdf6ab13b52c60dc3f323da71ceef575f767b5774"
+    },
+    {
+      "suite": "test_native_streaming_replay",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_streaming_replay.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_streaming_replay.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 39,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 39,
+      "start_utc": "2026-10-23T08:25:36.797555+00:00",
+      "end_utc": "2026-10-23T08:26:35.388833+00:00",
+      "xml_sha256": "e1146e84b3b4f03a133b616209f573df26b564b1004e2b109401e7b222845aac"
+    },
+    {
+      "suite": "test_native_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serving_inventory.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_serving_inventory.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 28,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 28,
+      "start_utc": "2026-10-23T08:26:35.389018+00:00",
+      "end_utc": "2026-10-23T08:26:36.575405+00:00",
+      "xml_sha256": "c8199232fdf568c1f48d6e393348e19a8a40190ac75d8495e236557caf291cec"
+    },
+    {
+      "suite": "test_native_v2_serving_inventory",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_v2_serving_inventory.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_v2_serving_inventory.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 45,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 45,
+      "start_utc": "2026-10-23T08:26:36.575586+00:00",
+      "end_utc": "2026-10-23T08:26:41.429849+00:00",
+      "xml_sha256": "5d6de70f556bbc64607a37e958a16f8198040abb7ea6a295e38d21b4ba325a67"
+    },
+    {
+      "suite": "test_native_reader_binding",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_reader_binding.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_reader_binding.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 135,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 135,
+      "start_utc": "2026-10-23T08:26:41.430040+00:00",
+      "end_utc": "2026-10-23T08:27:38.113457+00:00",
+      "xml_sha256": "8e4c04c0daaadc59aed3d74c7467a8f271f7f23850e8e1ed2d83cd904e921521"
+    },
+    {
+      "suite": "test_dp_placement_harness",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_dp_placement_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_dp_placement_harness.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 75,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 75,
+      "start_utc": "2026-10-23T08:27:38.113704+00:00",
+      "end_utc": "2026-10-23T08:27:39.728493+00:00",
+      "xml_sha256": "27fc54be66440670d64beb65079c3324bee3f321a9031c54fcc2cb08e3063c18"
+    },
+    {
+      "suite": "test_calibration_pd_harness",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_calibration_pd_harness.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_calibration_pd_harness.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 68,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 68,
+      "start_utc": "2026-10-23T08:27:39.728673+00:00",
+      "end_utc": "2026-10-23T08:27:46.110649+00:00",
+      "xml_sha256": "eb0b339024bb95b89a0fa6ebbb96e07216561a092ca5d8456d6f242ab0cd71ee"
+    },
+    {
+      "suite": "test_native_pd_manifest",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_manifest.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_pd_manifest.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 14,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 14,
+      "start_utc": "2026-10-23T08:27:46.110845+00:00",
+      "end_utc": "2026-10-23T08:27:47.666818+00:00",
+      "xml_sha256": "16d9b23c88e1422c912403fac56630f220cb2bed2151596d6d67eeebe3251f4c"
+    },
+    {
+      "suite": "test_native_cold_start",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_cold_start.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_cold_start.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 18,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 18,
+      "start_utc": "2026-10-23T08:27:47.667005+00:00",
+      "end_utc": "2026-10-23T08:28:22.751655+00:00",
+      "xml_sha256": "f4fda60be434251aa33af37171d6eb7993d4bee82b349703d44d6ffe4b4224cd"
+    },
+    {
+      "suite": "test_canonical_client_metrics",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_canonical_client_metrics.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_canonical_client_metrics.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 24,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 24,
+      "start_utc": "2026-10-23T08:28:22.751851+00:00",
+      "end_utc": "2026-10-23T08:28:34.748387+00:00",
+      "xml_sha256": "25b27b9074806bf2233ae19002cd50037cab935d7fd75c227b9156e852c9f605"
+    },
+    {
+      "suite": "test_native_pd_canonical_http",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_canonical_http.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_driver_final_05952396/test_native_pd_canonical_http.xml"
+      ],
+      "returncode": 0,
+      "counts": {
+        "tests": 1,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "expected": 1,
+      "start_utc": "2026-10-23T08:28:34.748568+00:00",
+      "end_utc": "2026-10-23T08:28:42.367611+00:00",
+      "xml_sha256": "b90ae247f9f655cb2ff6ca4885553c8d9b9c5f4b8f91bddd9b97fa1f620c1cf1"
+    }
+  ]
+}

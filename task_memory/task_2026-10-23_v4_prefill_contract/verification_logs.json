@@ -1,0 +1,61 @@
+{
+  "Modification History": [
+    {
+      "date": "2026-10-23",
+      "change": "Retained final selected outputs, XML counts and exact source bounds."
+    }
+  ],
+  "task_id": "W128-V4-PREFILL-CONTRACT-DQ10",
+  "logs": {
+    "v4_prefill_contract_final_units": {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_prefill_contract_final_units.log",
+      "sha256": "e0d84173a58f21feb623e80496366baa968cb39d7a8184b112007476389df6d0",
+      "selected_output": "........................................................................ [ 50%]\n........................................................................ [100%]\n144 passed in 69.46s (0:01:09)\n"
+    },
+    "v4_prefill_contract_final_prefill": {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_prefill_contract_final_prefill.log",
+      "sha256": "3daf39ccd9fdf29774f203e7eb0727a7175d4b5fa8aede08106014d8fa46452f",
+      "selected_output": "...........................                                              [100%]\n27 passed, 117 deselected in 5.30s\n"
+    },
+    "v4_prefill_contract_accepted": {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_prefill_contract_accepted.log",
+      "sha256": "dea3490a02c7ea80e832479d089c84c818390009ac68a10c2753b4ab634a55c3",
+      "selected_output": "WARNING 04:28:01 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported\nPASS 94 accepted isolated prefill scopes; no serving admission\n"
+    },
+    "v4_prefill_contract_legacy": {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_prefill_contract_legacy.log",
+      "sha256": "1d5bbb5b1ec43404023020ed4f0eea151931627599217f17560e11160d919f82",
+      "selected_output": "PASS 102 isolated scopes, 72 typed negative controls; no serving admission\n"
+    },
+    "final_units_xml": {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_prefill_contract_final_units.xml",
+      "sha256": "ab7ca16eb5fe38fc9f696aed918260c17ee6e89149325d6d398ba35a0d9273d6",
+      "counts": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "144",
+        "time": "69.455",
+        "timestamp": "2026-10-23T04:31:02.059931+08:00",
+        "hostname": "kun-workspace-vgen2"
+      }
+    },
+    "final_prefill_xml": {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_prefill_contract_final_prefill.xml",
+      "sha256": "50fe2cb500f4b6707318aaa1038c3d455254b823eba2575a456b120ee563ad1a",
+      "counts": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "27",
+        "time": "5.296",
+        "timestamp": "2026-10-23T04:30:27.525339+08:00",
+        "hostname": "kun-workspace-vgen2"
+      }
+    }
+  },
+  "source_numstat": "50\t5\tfrontier/execution_time_predictor/deepseek_v4.py\n73\t3\ttests/integration/check_dsv4_measured_scopes.py\n66\t0\ttests/unit/test_dsv4_graph_measured.py\n",
+  "source_diff_sha256": "aa3450a980a046184cb2e4410cae9552b6646d22d19b2c98b977e6e3924e3fbf"
+}

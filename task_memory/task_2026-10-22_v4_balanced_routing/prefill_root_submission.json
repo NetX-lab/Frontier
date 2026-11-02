@@ -1,0 +1,23 @@
+{
+  "authorized_by": "YC D-V4-PREFILL-CONFIGURED-CAPACITY and D-V4-BALANCED-RUNTIME-SELECTOR",
+  "observed_utc": "2026-10-22T18:37:04.465975+00:00",
+  "status": "ROOT_GATES_PASS_BEFORE_SUBMIT",
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+  "job_sha256": "03949241a9885a7741c6c64b5abac6f8df8644447d9b8cb836cbebdc6acd3181",
+  "gpu": 1,
+  "gpu_type": "H800",
+  "charged_group": "codesign",
+  "preemptible": false,
+  "timeout_seconds": 900,
+  "planning_gpu_hours_cap": 0.25,
+  "expected_rows": [
+    6,
+    6
+  ],
+  "personal_census_pages": 1,
+  "personal_live_jobs": [],
+  "personal_H800_before": 0,
+  "quota_snapshot": "/data/ycfeng/tmp/glm53_dsv4/balanced_prefill_quota_20261023.json",
+  "launch_log": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_launch.log"
+}

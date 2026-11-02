@@ -1,0 +1,10 @@
+Timeout (0:00:05)!
+Thread 0x00007f530d276280 (most recent call first):
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 4 in <listcomp>
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 4 in batched_metrics
+  File "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py", line 3 in trace
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py", line 107 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py", line 36 in run
+  File "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py", line 32 in <module>
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py", line 77 in main
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_interval_metrics.py", line 81 in <module>

@@ -1,0 +1,54 @@
+{
+  "status": "PASS_EXACT_EVIDENCE_COPIES",
+  "scope": "Immutable source/CPU evidence snapshots only, not executed or installed. Archived lifecycle control must be rerun from a fresh temporary directory.",
+  "files": [
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/command.json",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/command.json",
+      "bytes": 1142,
+      "sha256": "48bf97a3ecfc3a0a733d3ef91d4ce0a46792062664825c7677e3180b87cadc61"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/receipt.json",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/receipt.json",
+      "bytes": 6219,
+      "sha256": "cad90bbc420a510c14612baac603fa2f537cfc7fc86548c585bea76866ed0f7b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/control.py",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/control.py",
+      "bytes": 3579,
+      "sha256": "2ac40a250571695dad80b821519d0d10aef6fd1d1b5b52e57d3c9e1eaaf01a33"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/profile03_lifecycle_control_jmg_ngi0/profile_capacity.json",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/profile_capacity.json",
+      "bytes": 10453,
+      "sha256": "1d85858d93a9a9377dc887795b1b50a77829ff04777104e7279399abf2546818"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/graph_api_source_ebaw9_yr/receipt.json",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_source_evidence/image_source_receipt.json",
+      "bytes": 1714,
+      "sha256": "e1858d64c5eb8a4bebdb6d986b4073c5a7de7bc84740905d112c5954ba9da624"
+    },
+    {
+      "source": "/data/ycfeng/tmp/cupti13_sample_src/cuda_cupti-linux-x86_64-13.0.85-archive/samples/cuda_graphs_trace/cuda_graphs_trace.cu",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_source_evidence/cuda_graphs_trace.cu",
+      "bytes": 10411,
+      "sha256": "0458254b6d8ada6c6db82492f14f6bf029f70cafaf97a07dfc6168c95dc312f8"
+    },
+    {
+      "source": "/data/ycfeng/tmp/cupti13_sample_src/cuda_cupti-linux-x86_64-13.0.85-archive/include/cupti_callbacks.h",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_source_evidence/cupti_callbacks.h",
+      "bytes": 34092,
+      "sha256": "b2f82221fb03ecb2b2a27afa2d64284babdf49fee1a3a2811258d473285e1105"
+    },
+    {
+      "source": "/data/ycfeng/tmp/cupti13_sample_src/cuda_cupti-linux-x86_64-13.0.85-archive/LICENSE",
+      "retained": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_source_evidence/LICENSE",
+      "bytes": 67875,
+      "sha256": "f176e5fd245a4ff1d7aee743e345e14b29c4b724f150e4858c4c6a313966d1fb"
+    }
+  ]
+}

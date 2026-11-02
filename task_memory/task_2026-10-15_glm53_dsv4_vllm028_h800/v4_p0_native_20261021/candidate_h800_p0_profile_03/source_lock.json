@@ -1,0 +1,199 @@
+{
+  "accepted_runtime_commit": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "adopted_import_prerequisite": "9c54f663da0b20ce7fe2dfe60319d7153b469dce",
+  "committed_files": {
+    "native_pd_worker.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/native_pd_worker.py",
+      "sha256": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b"
+    },
+    "tests/comparison/calibration/balanced_routing.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "frontier/profiling/moe/balanced_routing.py",
+      "sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea"
+    },
+    "tests/comparison/calibration/client_metrics.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/client_metrics.py",
+      "sha256": "ca91383caa9c5f60f5d942f5a561e2a90862e8c25451eff04f1f439b9776309d"
+    },
+    "tests/comparison/calibration/e2e_metrics_gap.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/e2e_metrics_gap.py",
+      "sha256": "2785c1f0580032bc2d6ed49aaa74f9d55cfbb73022f883597c450b6173c1bd3f"
+    },
+    "tests/comparison/calibration/native_dummy_initialization.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/native_dummy_initialization.py",
+      "sha256": "118b5feb8b3fb15f72f3736fbf0af166eaeebe99cba46245b2ddf5ddc2b6a8ca"
+    },
+    "tests/comparison/calibration/native_full_structure.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/native_full_structure.py",
+      "sha256": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c"
+    },
+    "tests/comparison/calibration/native_serve_profile.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/native_serve_profile.py",
+      "sha256": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58"
+    },
+    "tests/comparison/calibration/pd_metrics.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/pd_metrics.py",
+      "sha256": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857"
+    },
+    "tests/comparison/calibration/pd_proxy.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/pd_proxy.py",
+      "sha256": "ebc8d3c6f171368f85ac22e21e2bb6829eef670c6f6fe0d24615c657c11bd942"
+    },
+    "tests/comparison/calibration/pd_replay.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/calibration/pd_replay.py",
+      "sha256": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae"
+    },
+    "tests/comparison/dp_placement_pp/vllm_replay.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+      "sha256": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901"
+    },
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+      "sha256": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6"
+    },
+    "tests/integration/native_extension_startup_probe.py": {
+      "commit": "9946771815903f6cd6de8147765fd41395deee21",
+      "path": "tests/integration/native_extension_startup_probe.py",
+      "sha256": "8c04aad06417ddde7e33f11b41959b3330404f0a4106756318c95ff1700227a3"
+    }
+  },
+  "diagnostic_only": true,
+  "e2e_reference_admission": false,
+  "harness_commit": "9946771815903f6cd6de8147765fd41395deee21",
+  "native_checkout": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+  "native_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "native_profile_source_hashes": {
+    "vllm/config/profiler.py": "78af917ec2ea2ba3bacda15f58fda9782b8ff82c0b810fd5c9563f4203aa5ba8",
+    "vllm/distributed/utils.py": "792146b357139e705064a68d3b66858de8a0baaca4dc7db1232fa217d45db231",
+    "vllm/entrypoints/serve/profile/api_router.py": "b943c3a2201134e2d0b38bfa86d00e8b5685f5be6a54f6c7178dee784c1b78e5",
+    "vllm/model_executor/layers/layernorm.py": "3460eba01758849027bb59b8592626406e33ab25b23d2def729bb0ec42afce67",
+    "vllm/model_executor/layers/vocab_parallel_embedding.py": "b3e8a07296607153424b4b7ca5f75f00dcec1bce0f49e54b5eff6262fdf80201",
+    "vllm/models/common/ops/fused_qk_rmsnorm.py": "903511e62749934122d7256d2c0a059df734d59fba291646e0c326d6567d0b3f",
+    "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py": "afc182aab04103430d220d5e146da5389f98ec1a814c1477e27f700cc605de59",
+    "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py": "6fd578aad7989ba092cd3501b35a78fcb5f6dd3a7ba4d346cf72c4d256ddd60e",
+    "vllm/profiler/wrapper.py": "eb0db0fd1c0a95c320fbaf9bdd66b6222a2d26ba9c1ac97efbfe1b196b3fbf15",
+    "vllm/utils/multi_stream_utils.py": "3ee8bba03950f586175e718bdbab4a25bc51051a1a4c81bf58ce60ab723dc86f",
+    "vllm/v1/engine/async_llm.py": "bceed0b3f5f0c834fef79525f2462a092f082390f0070526280abc95945837dd",
+    "vllm/v1/executor/abstract.py": "7514edb4a569220851e43206dccfca92e5b36b4639fcfd27a2825f38990670f8",
+    "vllm/v1/worker/gpu/model_states/default.py": "ef4866fde8b3e0513a5d56f2fb80aabd809ac9e64d551175d9d9ca7c9cb7eec1"
+  },
+  "packaging_source": {
+    "commit": "9946771815903f6cd6de8147765fd41395deee21",
+    "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+    "sha256": "5191636b2d96bfcc3cbe4edd957744eff172dd80d1097777c279eec3d0dab1f6"
+  },
+  "profile_inputs": {
+    "final_freeze": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/input_freeze.json",
+      "sha256": "33877c9c9c976686a892b29e3950571f4a41a990761cfe72ba271b9e6de6f81f"
+    },
+    "primary_acceptance": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/primary_integration_acceptance.json",
+      "sha256": "96d6e17cac8ca4ff1a8503ec525505c24cbc30690f7ad1d60d743fd5d6b67bc4"
+    },
+    "proposal_inputs": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/proposal_inputs.json",
+      "sha256": "1621d400c4ad9014aa687be062c98ab73bf7fd27df6b6a0b0554695e3c2cf42a"
+    }
+  },
+  "profile_plan": {
+    "commit": "9946771815903f6cd6de8147765fd41395deee21",
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/profile_plan.json",
+    "sha256": "b5fd6627d16993af935eece36b1651c046bbcf1fc8375e7bbb014cd7aadc0884",
+    "staged_path": "profile_plan.json"
+  },
+  "qualification": "UNVERIFIED; source/CPU evidence only; primary review required",
+  "retained_files": {
+    "case/inputs/frontier.json": {
+      "sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/balanced_frontier_input/frontier.json"
+    },
+    "launch.py": {
+      "sha256": "bee2ca673e613e4acf4a83b04feb2194509a838dfd516f9ebc6a040fd05e907b",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_20261021/package/launch.py",
+      "source_sha256": "6bbd1cf8ee8aec27a23ce64dbbb2e72751475c4b326351b122a742ac4786e934",
+      "staged_sha256": "bee2ca673e613e4acf4a83b04feb2194509a838dfd516f9ebc6a040fd05e907b"
+    },
+    "native_dummy_bootstrap.py": {
+      "changed": true,
+      "sha256": "74cf0dec1c0b4d271abf2291252b9ca3cd6f6ce889a9f1f6485983eecb4393ec",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_g0b_20261021/native_dummy_bootstrap.py",
+      "source_sha256": "8571fb6b3d7ae888d48eceb9a0f05f4da0b3259e9f3a2601792572bea7942dfc",
+      "staged_sha256": "74cf0dec1c0b4d271abf2291252b9ca3cd6f6ce889a9f1f6485983eecb4393ec"
+    },
+    "overlay_model.py": {
+      "changed": false,
+      "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_g0b_20261021/overlay_model.py",
+      "source_sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee"
+    },
+    "probe_nixl_read.py": {
+      "changed": false,
+      "sha256": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_g0b_20261021/probe_nixl_read.py",
+      "source_sha256": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997"
+    },
+    "probe_runtime_inventory.py": {
+      "changed": false,
+      "sha256": "929498b5ba4db72f0d2aef8abf3f73d6c625c439bbe8c4a74774719602bdafa6",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_g0b_20261021/probe_runtime_inventory.py",
+      "source_sha256": "929498b5ba4db72f0d2aef8abf3f73d6c625c439bbe8c4a74774719602bdafa6"
+    },
+    "seal.py": {
+      "sha256": "851ff85b03c5684613f4ea2f4536796bfa971497556f94a6f6bb04a46b761619",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_20261021/package/seal.py",
+      "source_sha256": "5e07a741085b4c6e7b8fd4c05365fb08dca23fe2f55d13b184a224accf8caf3f",
+      "staged_sha256": "851ff85b03c5684613f4ea2f4536796bfa971497556f94a6f6bb04a46b761619"
+    },
+    "submit_native_diagnostic.py": {
+      "changed": true,
+      "sha256": "80effbbb5f0315b54ecdb2f3bb979dc33e00e94f8a10bcf416cc590d02424359",
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_g0b_20261021/submit_native_diagnostic.py",
+      "source_sha256": "6e7977fc975d2c87d6e8e905dd407516fee0846dbf352d5f43928d8ce3a31719"
+    }
+  },
+  "runtime_overlay": {
+    "binary_sha256": {
+      "/usr/local/cuda-13.0/compat/libcuda.so.580.95.05": "f27223c58d4c0d2ead3c2d747eb30a530c449f89c42e16b23e9bef04f3e6dc2e",
+      "/usr/local/lib/python3.12/dist-packages/nvidia/nccl/lib/libnccl.so.2": "618968ee277041751512e619190132a9bdf351c3ce7129c73484f6ef441ad692",
+      "/usr/local/lib/python3.12/dist-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3": "c43004bb93053aa70603a204fe0c9052bdd29f38822d3048599183f8d5930d8f",
+      "/usr/local/lib/python3.12/dist-packages/vllm/_C_stable_libtorch.abi3.so": "7347b38c7684297b0763037d81a98da0017d08b75a490c5d4e5c710ddeeceaf7",
+      "/usr/local/lib/python3.12/dist-packages/vllm/_flashkda_C.abi3.so": "873e0c9ac45dada9fd4724b7f2ae25b87aff7d6aba66862c3ea523409966f8ec",
+      "/usr/local/lib/python3.12/dist-packages/vllm/_flashmla_C.abi3.so": "2d8554a4be25ca849e999a65cf12a40425b25eea2812e9b363ec658acd4a0431",
+      "/usr/local/lib/python3.12/dist-packages/vllm/_flashmla_extension_C.abi3.so": "1b70c058c741d913b6fa81f99f6002521e797e4e7faab5f4cdc5b62ca9042565",
+      "/usr/local/lib/python3.12/dist-packages/vllm/_moe_C_stable_libtorch.abi3.so": "e03f95c557af8ded34eb0c6870271cba21e1ac03523bbe765dc3a07b386c9dc6",
+      "/usr/local/lib/python3.12/dist-packages/vllm/_qutlass_C.abi3.so": "8c491acd0ee844ec79346e153f61f876c475e1f62f0a177535148e0c0611d852",
+      "/usr/local/lib/python3.12/dist-packages/vllm/_rust_tool_parser.abi3.so": "d10a2db54811e971efa35fc96541334d0b03a99c1045fee9dcbbae4f28574d40",
+      "/usr/local/lib/python3.12/dist-packages/vllm/cumem_allocator.abi3.so": "6e74676bc7f1cc264cefd097992cfe39d8d5b859e6ee10bef20f6920463460d9",
+      "/usr/local/lib/python3.12/dist-packages/vllm/fs_io_C.abi3.so": "33a2230eee458b5585a1da6a02fa3a2927891e7c29608e2cab1490bec1e9a3f5",
+      "/usr/local/lib/python3.12/dist-packages/vllm/spinloop.abi3.so": "d9611e3b08ab8ed4ec80c28d483371aad10b212ab597603e60452ab0e8549b7f",
+      "/usr/local/lib/python3.12/dist-packages/vllm/third_party/deep_gemm/_C.cpython-310-x86_64-linux-gnu.so": "38b87140577c2d72c2b3a6407c5f07da53ef9362e18fe988162afa8f3f91746e",
+      "/usr/local/lib/python3.12/dist-packages/vllm/third_party/deep_gemm/_C.cpython-311-x86_64-linux-gnu.so": "1f3a3430c188295cf96a5ac977ec72258bccb525daaa7b0ad6642bf3a995d3da",
+      "/usr/local/lib/python3.12/dist-packages/vllm/third_party/deep_gemm/_C.cpython-312-x86_64-linux-gnu.so": "73824dc1312e98cf277ae6bc017becf7e963d5b0bfab81e0c6d475d9b769c9e7",
+      "/usr/local/lib/python3.12/dist-packages/vllm/third_party/deep_gemm/_C.cpython-313-x86_64-linux-gnu.so": "bd0124b39fb500378764bf0d1adb5fe30ea876e66ed65971d8f668de4a8dbe83",
+      "/usr/local/lib/python3.12/dist-packages/vllm/third_party/deep_gemm/_C.cpython-314-x86_64-linux-gnu.so": "0f9817dfe8a619dde56456c6e7a5a9d914fede0fb145bc48aad134e19c77fff0",
+      "/usr/local/lib/python3.12/dist-packages/vllm/vllm_flash_attn/_vllm_fa2_C.abi3.so": "24647f7a7b6856023a5930282fc94a356a7dd0b13728bf5df17e9c2061a4cc64",
+      "/usr/local/lib/python3.12/dist-packages/vllm/vllm_flash_attn/_vllm_fa3_C.abi3.so": "9b8e3081d793b426f0ccb1195476b571b2819e114274fd9a8014ac766d85adc4"
+    },
+    "files": {
+      "models/deepseek_v4/nvidia/model.py": {
+        "base_sha256": "c01be6d313f494eb38982c8f56c314267bbf67310e7f13ca53b596b31aef4e44",
+        "sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+        "source": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03/overlay_model.py"
+      }
+    },
+    "installed_package": "/usr/local/lib/python3.12/dist-packages/vllm",
+    "staged_dir": "/data/ycfeng/Frontier/.worktrees/v4-native-profile03-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_03"
+  }
+}

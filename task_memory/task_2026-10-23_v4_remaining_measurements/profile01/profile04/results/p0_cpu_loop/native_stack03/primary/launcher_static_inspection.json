@@ -1,0 +1,21 @@
+{
+  "status": "PRIMARY_LAUNCHER_STATIC_INSPECTION_PASS",
+  "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_native_stack.py",
+  "sha256": "68f0d6dd2c9541ac3989f09ec4b4c8cd37638d893c27032452835c7a9b27bb78",
+  "gross_lines": 74,
+  "gross_cap": 110,
+  "checks": {
+    "one_subprocess_run": true,
+    "no_old_driver_path": true,
+    "no_task_import": true,
+    "no_allocator_or_gc_change": true,
+    "exclusive_receipt_and_log_writes": true,
+    "normal_exit_requires_inferior_evidence": true,
+    "resource_command_from_frozen_allocation": true,
+    "no_shell_execution": true,
+    "within_driver_cap": true
+  },
+  "new_control_invocations": 0,
+  "new_diagnostic_invocations": 0,
+  "limits": "Static new-source inspection only; no claim that GDB/inferior execution works. Fresh control is required."
+}

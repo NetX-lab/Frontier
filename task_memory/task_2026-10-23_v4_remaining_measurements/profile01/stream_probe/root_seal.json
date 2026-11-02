@@ -1,0 +1,58 @@
+{
+  "status": "SEALED_READY_NATIVE_STREAM_PROBE",
+  "sealed_at_utc": "2026-10-23T18:02:53.161145+00:00",
+  "authorization": "D-V4-H800-RJOB-AUTHORITY",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01",
+  "manifest_sha256": "0725941c3b433b2bd300c10a48c3d6f6d5316e1036e1e8efb5294b8c2845431d",
+  "source_revision": "5f7d0950b78276a77a66b7330cf0041a9f380f12",
+  "source_writer_stopped": true,
+  "input_count": 7,
+  "source_gross_lines": 262,
+  "source_line_cap": 275,
+  "generated_launcher_lines": 65,
+  "checks": {
+    "cpu": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/root_cpu.json",
+      "sha256": "d395fd176577c2cc3dcc15f0dbf7ad121bceaa05cf27aecb6a5418bb38cbe6e3"
+    },
+    "verdict_controls": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/root_verdict_controls.json",
+      "sha256": "bad9884c609a71aeeefc93a935bebba498dfb3f4e1e1f002ee36e4cd746e3d35"
+    },
+    "prelaunch": {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/root_prelaunch.json",
+      "sha256": "704dbc2775e7a7f2dc86643a17aeb5da8a0ce4c5befa475b61aabd87e85fa95c"
+    }
+  },
+  "matrix": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/matrix_binding.json",
+    "sha256": "39e2435a25ef718dadafa0a8f0a67c4b91fe559f409aa929e5014338c901a57b"
+  },
+  "independent_review": {
+    "session": "ses_e962e4b01ffeqUa7O9uUTzGqSe",
+    "source_recheck": "BOTH_P2_CLOSED_NO_NEW_FINDINGS",
+    "package_review": "NO_FINDINGS"
+  },
+  "resources": {
+    "gpu": 1,
+    "replica": 1,
+    "cpu": 16,
+    "mem_gb": 64,
+    "preemptible": false,
+    "positive_tags": [
+      "H800"
+    ],
+    "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "mounts": [
+      "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "custom_resources": [
+      "mellanox.com/mlnx_rdma:1",
+      "rdma/mlnx_shared:8"
+    ]
+  },
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/native_stream_probe/5f7d0950_h800_20261024_01",
+  "timeout_seconds": 600,
+  "gpu_validated": false,
+  "qualification": "Targeted stream and capture evidence only; no native/reference/operator/serving cost admission."
+}

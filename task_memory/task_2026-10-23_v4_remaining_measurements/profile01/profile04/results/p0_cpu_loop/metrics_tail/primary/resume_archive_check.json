@@ -1,0 +1,95 @@
+{
+  "status": "PASS_READONLY_RESUME_ARCHIVE_CHECK",
+  "observed_utc": "2026-10-24T20:27:05.141507+00:00",
+  "head": "2fbd5af68cfb6356001f7ec33ccad0b9769d4dbf",
+  "command": "Inline /usr/bin/python3 read-only closed-artifact hash and byte-size verification",
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/prefill_dp0_rank0_timing.receipt.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.receipt.json",
+      "expected_sha256": "11d1dd153629469f7856edcc9fc18f176c3953ff9b92e4fbdae261ac2b00cfcc",
+      "retained_sha256": "11d1dd153629469f7856edcc9fc18f176c3953ff9b92e4fbdae261ac2b00cfcc",
+      "source_sha256": "11d1dd153629469f7856edcc9fc18f176c3953ff9b92e4fbdae261ac2b00cfcc",
+      "expected_bytes": 5683,
+      "retained_bytes": 5683,
+      "source_bytes": 5683,
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/prefill_dp0_rank0_timing.cgroup.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.cgroup.json",
+      "expected_sha256": "20ddf73fed4e35b8d90832f816c42b2d610429197029c521538e1ff74eb9f248",
+      "retained_sha256": "20ddf73fed4e35b8d90832f816c42b2d610429197029c521538e1ff74eb9f248",
+      "source_sha256": "20ddf73fed4e35b8d90832f816c42b2d610429197029c521538e1ff74eb9f248",
+      "expected_bytes": 1947,
+      "retained_bytes": 1947,
+      "source_bytes": 1947,
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/prefill_dp0_rank0_timing.gc.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.gc.jsonl",
+      "expected_sha256": "391026509551b89f6f04bd060a53733e88a4faf19b3bb9644a4844be85e07a89",
+      "retained_sha256": "391026509551b89f6f04bd060a53733e88a4faf19b3bb9644a4844be85e07a89",
+      "source_sha256": "391026509551b89f6f04bd060a53733e88a4faf19b3bb9644a4844be85e07a89",
+      "expected_bytes": 3262,
+      "retained_bytes": 3262,
+      "source_bytes": 3262,
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/prefill_dp0_rank0_timing.hb.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.hb.log",
+      "expected_sha256": "51d63c35d336682f46a29d37b220db61a449a64b8ddf0bb88bbeb6f2fcf1668d",
+      "retained_sha256": "51d63c35d336682f46a29d37b220db61a449a64b8ddf0bb88bbeb6f2fcf1668d",
+      "source_sha256": "51d63c35d336682f46a29d37b220db61a449a64b8ddf0bb88bbeb6f2fcf1668d",
+      "expected_bytes": 10527,
+      "retained_bytes": 10527,
+      "source_bytes": 10527,
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/prefill_dp0_rank0_timing.obs.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.obs.jsonl",
+      "expected_sha256": "23ed58b5e85b1c948a415ccc5fb6f35380b1653b2bace2867f3694e842dcafda",
+      "retained_sha256": "23ed58b5e85b1c948a415ccc5fb6f35380b1653b2bace2867f3694e842dcafda",
+      "source_sha256": "23ed58b5e85b1c948a415ccc5fb6f35380b1653b2bace2867f3694e842dcafda",
+      "expected_bytes": 7466,
+      "retained_bytes": 7466,
+      "source_bytes": 7466,
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/prefill_dp0_rank0_timing.stderr",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.stderr",
+      "expected_sha256": "d462e41408d3a9ac66c820e03ead1137cd4c1eec7a981be2be4aa2a96d50f618",
+      "retained_sha256": "d462e41408d3a9ac66c820e03ead1137cd4c1eec7a981be2be4aa2a96d50f618",
+      "source_sha256": "d462e41408d3a9ac66c820e03ead1137cd4c1eec7a981be2be4aa2a96d50f618",
+      "expected_bytes": 67,
+      "retained_bytes": 67,
+      "source_bytes": 67,
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/prefill_dp0_rank0_timing.stdout",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/prefill_dp0_rank0_timing.stdout",
+      "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expected_bytes": 0,
+      "retained_bytes": 0,
+      "source_bytes": 0,
+      "status": "PASS"
+    }
+  ],
+  "driver_source": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_tail_20261025_01/run_diagnostic.py",
+    "archived_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/diagnostic_driver_source.txt",
+    "sha256": "9ae88a4c94985731c80aaad62f1b34af057b08dd6dcab4792e7816da643ede4a",
+    "status": "PASS"
+  },
+  "new_unit_or_control_or_audit_invocations": 0,
+  "new_gpu_operations": 0,
+  "large_index_validation": "Not repeated; retained diagnostic existence/hash observation only",
+  "environment_note": "Shell has /usr/bin/python3; two initial read-only python commands returned127 before any artifact access. No experiment allowance was consumed."
+}

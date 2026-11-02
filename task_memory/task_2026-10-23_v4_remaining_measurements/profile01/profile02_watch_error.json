@@ -1,0 +1,12 @@
+{
+  "status": "AUXILIARY_WATCH_FORBIDDEN",
+  "job": "exp-1023-180821-373637",
+  "http_status": 403,
+  "message": "Personal principal cannot watch rjobs in shai-core; get/list snapshots are available.",
+  "job_control_operations": 0,
+  "launcher_control_operations": 0,
+  "original_output": "/home/brainpp/.opencode-v2/xdg/data/opencode/shell/1e16c1414e84507ddac054d99fb4b6d4b0d5aa0f/sh_1683edce7001QdjV5UqBdEzLsM.out",
+  "original_sha256": "c36e6116c9b5b4e8bcf07f38e6f0c0805d4c6b18127d5c0cc375f83ed63e1757",
+  "retained_error_sha256": "55684b3f403a1ff3db349aa39f4ba3bb4b1fc6fd19b6d4003fcb66bce4ef0b39",
+  "retention": "Personal principal redacted and trailing blank lines removed; original output hash retained."
+}

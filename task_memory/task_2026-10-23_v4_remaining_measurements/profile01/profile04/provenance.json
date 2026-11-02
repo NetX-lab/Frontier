@@ -1,0 +1,61 @@
+{
+  "controls": {
+    "native_virtual_duration_owner": {
+      "owned_copy": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/cpu_evidence/native_virtual_duration_owner.receipt.json",
+      "rerun_by_package_owner": false,
+      "scope": "Source-bound native RPC/virtual-duration mechanism only; no original GPU timing proof",
+      "sha256": "e56d760e6e2655f2bac70489a4a580834618d7ac28fe8c5c4625d07d10cd9397",
+      "source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/failure/statistics_control.json",
+      "source_sha256": "e56d760e6e2655f2bac70489a4a580834618d7ac28fe8c5c4625d07d10cd9397"
+    },
+    "root_actual_image_cpu": {
+      "owned_copy": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/cpu_evidence/root_actual_image_cpu.receipt.json",
+      "rerun_by_package_owner": false,
+      "scope": "Actual native constructor/CPU export only",
+      "sha256": "d898e65290ddd2ec2aed6cedbd15b38dfaf00bb47a1a6ec8188df4fcccbd49c4",
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_image_g8m3pvpv/receipt.json",
+      "source_sha256": "d898e65290ddd2ec2aed6cedbd15b38dfaf00bb47a1a6ec8188df4fcccbd49c4"
+    },
+    "root_rpc_mechanism_only": {
+      "owned_copy": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/cpu_evidence/root_rpc_mechanism_only.receipt.json",
+      "rerun_by_package_owner": false,
+      "scope": "Source-bound native RPC/virtual-duration mechanism only; no original GPU timing proof",
+      "sha256": "3b9a3327cd4a2fd65f8900cc7605ede7ccb71d38d70f30fd65113c570cc2fda7",
+      "source_path": "/data/ycfeng/tmp/glm53_dsv4/profile03_rpc_root_jgnthas4/receipt.json",
+      "source_sha256": "3b9a3327cd4a2fd65f8900cc7605ede7ccb71d38d70f30fd65113c570cc2fda7"
+    }
+  },
+  "decision": "D-V4-PROFILE04-PACKAGE",
+  "inherited": {
+    "input_freeze.json": {
+      "mode": "UNCHANGED_BYTES_HISTORICAL_RECORD_NOT_NEW_ACCEPTANCE",
+      "owned_copy": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/input_freeze.json",
+      "sha256": "33877c9c9c976686a892b29e3950571f4a41a990761cfe72ba271b9e6de6f81f",
+      "source_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/input_freeze.json",
+      "source_sha256": "33877c9c9c976686a892b29e3950571f4a41a990761cfe72ba271b9e6de6f81f"
+    },
+    "matrix_binding.json": {
+      "mode": "UNCHANGED_BYTES_HISTORICAL_RECORD_NOT_NEW_ACCEPTANCE",
+      "owned_copy": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/matrix_binding.json",
+      "sha256": "e90c4709ecfdbf5acbdd7f248e2e5de020dc46b8ad706cef40729456003fed2e",
+      "source_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/matrix_binding.json",
+      "source_sha256": "e90c4709ecfdbf5acbdd7f248e2e5de020dc46b8ad706cef40729456003fed2e"
+    },
+    "primary_integration_acceptance.json": {
+      "mode": "UNCHANGED_BYTES_HISTORICAL_RECORD_NOT_NEW_ACCEPTANCE",
+      "owned_copy": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/primary_integration_acceptance.json",
+      "sha256": "96d6e17cac8ca4ff1a8503ec525505c24cbc30690f7ad1d60d743fd5d6b67bc4",
+      "source_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/primary_integration_acceptance.json",
+      "source_sha256": "96d6e17cac8ca4ff1a8503ec525505c24cbc30690f7ad1d60d743fd5d6b67bc4"
+    },
+    "proposal_inputs.json": {
+      "mode": "DERIVED_PATHS_STATUS_LIMITATIONS_AND_EXPLICIT_PROVENANCE_ONLY",
+      "owned_copy": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/proposal_inputs.json",
+      "sha256": "a8c33c32c9ceed6244ff12c028e77f646d5a0fd2e4b27a1e197e0e6364fa3275",
+      "source_path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03/proposal_inputs.json",
+      "source_sha256": "1621d400c4ad9014aa687be062c98ab73bf7fd27df6b6a0b0554695e3c2cf42a"
+    }
+  },
+  "limits": "CPU source/configuration binding only; no original GPU timing, actual-image rerun, seal or runtime admission.",
+  "task_id": "W128-PROFILE04-PACKAGE"
+}

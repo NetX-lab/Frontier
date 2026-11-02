@@ -1,0 +1,18 @@
+{
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "new_capture": false,
+  "scope": "Non-core task-local package builder only; simulator and matrix domains unchanged",
+  "source_builder_commit": "64133239c4f4c7fdc50b1b0b85d57d2d72fe3097",
+  "source_commit": "97803f07f72454030a4d3fe538d7cdf473906b8a",
+  "status": "PASS_EXPLICIT_EXISTING_BINDING",
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ]
+}

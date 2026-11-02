@@ -1,0 +1,324 @@
+{
+  "status": "SEALED_READY_DIAGNOSTIC",
+  "sealed_at_utc": "2026-10-24T09:12:27.355835+00:00",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-native-profile04-run/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_profile_04",
+  "manifest_sha256": "25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f",
+  "source_writer_stopped": true,
+  "accepted_runtime": "1437ace6f4a438c1bb879d904e2bede0c777303c",
+  "source_commit": "8cbf7ab9dc0690b537bc95f07e30ec545e40779c",
+  "merged_head": "f0eafafb251c8510f73c37a3a0be12f69b7bce1d",
+  "inputs": 45,
+  "checks": {
+    "tests": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_root_tests_g2vtrw1t/receipt.json",
+      "sha256": "2a77ce36802782e242d290ba799971b1b088487f784ca9ef92e4f867eaccfca2",
+      "status": "PASS"
+    },
+    "image": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_root_image_egwpqxbz/receipt.json",
+      "sha256": "ec90d07e1cca983ab9536ffa02a20130e7687365ae34775ac65b4d73cdfcdb7f",
+      "status": "PASS"
+    },
+    "sdk": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_root_sdk_09unc5v7/receipt.json",
+      "sha256": "2aa61fc43f0faaa4b0ff3dc9147ce7435141eaaea950a41ee80373ca092de8e4",
+      "status": "PASS_ACTUAL_SDK_RESOURCE_CONSTRUCTOR"
+    },
+    "source_git": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_root_final_0esz0v_h/receipt.json",
+      "sha256": "f456f9e56c4329f1a6ee3a737a820224c28331bc95c74a6d40f25f4308a9ed78",
+      "status": "PASS_ROOT_SOURCE_GIT_PACKAGE_FREEZE"
+    },
+    "metadata": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile03_metadata_root_final_ipb_iyt3/receipt.json",
+      "sha256": "2f2cf5866cf56479f774f7dca6b183fcdd576e8eeb7402b2f68541b4b231c497",
+      "status": "PASS"
+    },
+    "statistics": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile03_statistics_root_final_4sfx78oy/receipt.json",
+      "sha256": "90450f1f5837df11c3d2392a473ea494409beb1e24b30b704189c23e94840cda",
+      "status": "PASS"
+    },
+    "prelaunch": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_prelaunch_72xjgp4d/receipt.json",
+      "sha256": "bcb035900c38058b648c6bd2dfa1ba446517f0ba947248bf933083522fac28e4",
+      "status": "PASS_PRELAUNCH_READS"
+    },
+    "review.md": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/review.md",
+      "sha256": "5d47d53f0e8ccbcd0f8366c30b43df5ec9f454783d738670e20b7713c684e548"
+    },
+    "source_changes.diff": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/source_changes.diff",
+      "sha256": "2873889d4c3ecebba3ef8f8801c45968749bbaf6847e8d0ee5afb3415e069043"
+    },
+    "source_budget.receipt.json": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/source_budget.receipt.json",
+      "sha256": "8d30378aae4faa3ba7612b6576013fea7b182274ab4e2586a7fd695cfbc313ff"
+    },
+    "matrix_binding.json": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/matrix_binding.json",
+      "sha256": "e90c4709ecfdbf5acbdd7f248e2e5de020dc46b8ad706cef40729456003fed2e"
+    }
+  },
+  "prelaunch": {
+    "status": "PASS_PRELAUNCH_READS",
+    "observed_at_utc": "2026-10-24T09:02:15.620865+00:00",
+    "quota_argv": [
+      "/usr/bin/bash",
+      "-c",
+      "set -euo pipefail; set +x; proxy_script=$(curl --noproxy \"*\" --fail --silent --show-error --max-time 15 http://deploy.i.shaipower.com/httpproxy); eval \"$proxy_script\"; export HTTP_PROXY=\"$http_proxy\" HTTPS_PROXY=\"$https_proxy\" ALL_PROXY=\"$all_proxy\" NO_PROXY=\"$no_proxy\"; exec \"$@\"",
+      "profile04-prelaunch",
+      "/data/ycfeng/tmp/stepmind-env/bin/python",
+      "-I",
+      "-B",
+      "/data/ycfeng/tmp/glm53_dsv4/profile04_prelaunch_72xjgp4d/read_quota.py"
+    ],
+    "destination_argv": [
+      "ssh",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=10",
+      "shai-ycfeng",
+      "python3",
+      "-B",
+      "-"
+    ],
+    "destination_probe": "from pathlib import Path\nimport json\np=Path('/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024_04')\nassert not p.exists(),str(p)\nprint(json.dumps(dict(status=\"ABSENT\",path=str(p))))\n",
+    "quota_snapshot": {
+      "finished_utc": "2026-10-24T09:02:15.337634+00:00",
+      "groups": {
+        "codesign": {
+          "gpu_tag": "H800",
+          "node_http_status": 200,
+          "nodes": {
+            "gpu_total": 1388.0,
+            "gpu_usable": 14.0,
+            "nodes_with_8_usable_gpus": 1,
+            "returned": 192,
+            "total_reported": 192
+          },
+          "quota": {
+            "gpuCardNum": null,
+            "nonPreemptibleUsedQuota": {
+              "4090": "0",
+              "4090-48g": "0",
+              "A100": "0",
+              "A800": "0",
+              "A800-MIG-1g-20GB": "0",
+              "A910X": "0",
+              "B300": "0",
+              "B300A": "0",
+              "B300S": "0",
+              "BI-V150": "0",
+              "BI-V150s": "0",
+              "H100": "0",
+              "H100-MIG-1g-10GB": "0",
+              "H20": "0",
+              "H20-MIG-1g-12GB": "0",
+              "H200": "0",
+              "H800": "90",
+              "L40S": "0",
+              "cpu": "1513",
+              "cpu-node-core": "0",
+              "cpu-node-memory": "0",
+              "ephemeral-storage": "0",
+              "gpu": "90",
+              "mellanox.com/mlnx_rdma": "54",
+              "memory": "13052674048k",
+              "nori": "0",
+              "oss": "0",
+              "pro5000-72g": "0",
+              "rdma/mlnx_shared": "288",
+              "spot-gpu": "0",
+              "storage@hdd": "0",
+              "storage@other": "0",
+              "storage@ssd": "0"
+            },
+            "preemptibleUsedQuota": {
+              "4090": "0",
+              "4090-48g": "0",
+              "A100": "0",
+              "A800": "0",
+              "A800-MIG-1g-20GB": "0",
+              "A910X": "0",
+              "B300": "0",
+              "B300A": "0",
+              "B300S": "0",
+              "BI-V150": "0",
+              "BI-V150s": "0",
+              "H100": "0",
+              "H100-MIG-1g-10GB": "0",
+              "H20": "0",
+              "H20-MIG-1g-12GB": "0",
+              "H200": "0",
+              "H800": "0",
+              "L40S": "0",
+              "cpu": "0",
+              "cpu-node-core": "0",
+              "cpu-node-memory": "0",
+              "ephemeral-storage": "0",
+              "gpu": "0",
+              "memory": "0",
+              "nori": "0",
+              "oss": "0",
+              "pro5000-72g": "0",
+              "spot-gpu": "0",
+              "storage@hdd": "0",
+              "storage@other": "0",
+              "storage@ssd": "0"
+            },
+            "queueInfo": {
+              "codesign-default": {
+                "highPriorityQueuePolicy": null,
+                "lowPriorityQueuePolicy": null,
+                "queueEnabled": true,
+                "standardPriorityQueuePolicy": null
+              }
+            },
+            "totalQuota": {
+              "A800": "0",
+              "A910X": "0",
+              "BI-V150": "0",
+              "H100": "0",
+              "H200": "0",
+              "H800": "128",
+              "L40S": "0",
+              "cpu": "3584",
+              "cpu-node-core": "0",
+              "cpu-node-memory": "0",
+              "ephemeral-storage": "0",
+              "gpu": "128",
+              "memory": "34634616274944",
+              "nori": "0",
+              "spot-gpu": "0",
+              "storage@hdd": "0",
+              "storage@ssd": "0"
+            },
+            "usedQuota": {
+              "4090": "0",
+              "4090-48g": "0",
+              "A100": "0",
+              "A800": "0",
+              "A800-MIG-1g-20GB": "0",
+              "A910X": "0",
+              "B300": "0",
+              "B300A": "0",
+              "B300S": "0",
+              "BI-V150": "0",
+              "BI-V150s": "0",
+              "H100": "0",
+              "H100-MIG-1g-10GB": "0",
+              "H20": "0",
+              "H20-MIG-1g-12GB": "0",
+              "H200": "0",
+              "H800": "0",
+              "L40S": "0",
+              "cpu": "1493",
+              "cpu-node-core": "0",
+              "cpu-node-memory": "0",
+              "ephemeral-storage": "0",
+              "gpu": "80",
+              "mellanox.com/mlnx_rdma": "52",
+              "memory": "12842958848k",
+              "nori": "0",
+              "oss": "0",
+              "pro5000-72g": "0",
+              "rdma/mlnx_shared": "272",
+              "spot-gpu": "0",
+              "storage@hdd": "0",
+              "storage@other": "0",
+              "storage@ssd": "0"
+            }
+          },
+          "quota_http_status": 200
+        }
+      },
+      "limits": [
+        "Quota and node usage are snapshots, not reservations.",
+        "Scheduling after submission is the only proof of capacity."
+      ],
+      "observed_utc": "2026-10-24T09:02:14.072995+00:00",
+      "operation": "read_only",
+      "personal_list_continues": false,
+      "personal_live_jobs": [
+        {
+          "charged_group": "step_main",
+          "gpus": 8.0,
+          "name": "exp-1024-155246-411851",
+          "phase": "Running",
+          "preemptible": "yes"
+        },
+        {
+          "charged_group": "step_main",
+          "gpus": 8.0,
+          "name": "exp-1024-170209-655536",
+          "phase": "Pending",
+          "preemptible": "yes"
+        },
+        {
+          "charged_group": "step_main",
+          "gpus": 8.0,
+          "name": "exp-1024-170153-846139",
+          "phase": "Pending",
+          "preemptible": "yes"
+        },
+        {
+          "charged_group": "step_main",
+          "gpus": 8.0,
+          "name": "exp-1024-164048-881296",
+          "phase": "Running",
+          "preemptible": "yes"
+        },
+        {
+          "charged_group": "step_main",
+          "gpus": 8.0,
+          "name": "exp-1024-165608-822976",
+          "phase": "Running",
+          "preemptible": "no"
+        },
+        {
+          "charged_group": "step_main",
+          "gpus": 8.0,
+          "name": "exp-1024-165454-003341",
+          "phase": "Running",
+          "preemptible": "yes"
+        },
+        {
+          "charged_group": "step_main",
+          "gpus": 8.0,
+          "name": "exp-1024-155829-875744",
+          "phase": "Running",
+          "preemptible": "yes"
+        }
+      ],
+      "python": "3.10.6",
+      "submissions_or_controls": 0
+    },
+    "nonpreemptible_h800_quota_available": 38.0,
+    "cloud_destination": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024_04",
+    "remote_destination": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261024_04",
+    "destination_absent": true,
+    "host": "kun-workspace-vgen2",
+    "nfs_ip": "100.96.128.195",
+    "source_sha256": "19746066439f539ff889dd154cac6f32bffd5467a63f892e8dd87f3ca784f275",
+    "platform_controls": 0,
+    "output": "/data/ycfeng/tmp/glm53_dsv4/profile04_prelaunch_72xjgp4d"
+  },
+  "attempt_ceiling": 1,
+  "authorization": "D-V4-H800-RJOB-AUTHORITY",
+  "correction": "Existing optional CUDA statistics table=false; raw export/window/native timeout unchanged.",
+  "resources": {
+    "replicas": 4,
+    "gpus_per_replica": 8,
+    "gpu": "H800",
+    "group": "codesign",
+    "cpu_per_replica": 64,
+    "mem_gb_per_replica": 512,
+    "preemptible": false,
+    "timeout_seconds": 3600
+  },
+  "scope": "Diagnostic collection only; no reference/serving/operator-cost admission.",
+  "seal_stdout": "{\"sealed_files\": 45}\n"
+}

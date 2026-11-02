@@ -1,0 +1,32 @@
+{
+  "status": "SUBMISSION_LAUNCHER_STARTED",
+  "started_at_utc": "2026-10-23T13:39:02.141537+00:00",
+  "launcher_pid": 3647153,
+  "argv": [
+    "bash",
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/launch/launch_glm_producers.sh",
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/jobs/Q1_WARM_6143_7166_BALANCED.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_launch_20261023.log",
+  "seal_sha256": "ff0d6daac9e0a0712035b290f91e2283da3b46f53412fecca4bd144e30885f7e",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02",
+  "manifest_sha256": "9714cdb749e8504df32955bb62e080467434e33e20da1d23ae653da2ce8e09cf",
+  "job_tag": "v4-h800-q1-balanced-6143-7166-20261023-02",
+  "resource": {
+    "gpu": 1,
+    "cpu": 16,
+    "mem_gb": 128,
+    "replica": 1,
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "preemptible": false,
+    "timeout_seconds": 1800
+  },
+  "authority": [
+    "D-V4-H800-RJOB-AUTHORITY",
+    "D-V4-QUEUE-PARALLEL-WORK",
+    "D-V4-KERNEL-ONLY-GPU-COST"
+  ],
+  "platform_job_name": null
+}

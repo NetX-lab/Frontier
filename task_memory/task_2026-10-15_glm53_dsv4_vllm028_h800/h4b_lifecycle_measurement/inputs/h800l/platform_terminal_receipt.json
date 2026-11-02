@@ -1,0 +1,124 @@
+{
+ "observed_utc": "2026-10-26T03:59:23.242198+00:00",
+ "job": "exp-1025-121318-827142",
+ "creator": "i-fengyicheng",
+ "charged_group": "codesign",
+ "preemptible_label": "no",
+ "status": {
+  "phase": "Succeeded",
+  "startTime": null,
+  "finishTime": "2026-10-25T20:52:14Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 4,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1025-121318-827142-c4ca4238",
+   "phase": "Succeeded",
+   "node": "gpu-h800-0339.host.platform.shaipower.com",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T20:29:45Z",
+       "finishedAt": "2026-10-25T20:52:12Z",
+       "containerID": "containerd://1a97dd5e7bfbcadf1ffc211ea76669b7daf8936d5df3d522d432e2e8df15b00d"
+      }
+     },
+     "duration_seconds": 1347.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-121318-827142-c81e728d",
+   "phase": "Succeeded",
+   "node": "gpu-h800-0209.host.platform.shaipower.com",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T20:27:51Z",
+       "finishedAt": "2026-10-25T20:51:56Z",
+       "containerID": "containerd://9dba7caac3b84ecb0616f637fce535719259b9167925380d2449eddde4ed0a61"
+      }
+     },
+     "duration_seconds": 1445.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-121318-827142-cfcd2084",
+   "phase": "Succeeded",
+   "node": "gpu-h800-0133.host.platform.shaipower.com",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T20:27:45Z",
+       "finishedAt": "2026-10-25T20:51:50Z",
+       "containerID": "containerd://e1253de7601da2b4f1d0fec89f2075c2a840e09148b5af8fa9d1f0f9cb56be0a"
+      }
+     },
+     "duration_seconds": 1445.0
+    }
+   ]
+  },
+  {
+   "name": "exp-1025-121318-827142-eccbc87e",
+   "phase": "Succeeded",
+   "node": "gpu-h800-0179.host.platform.shaipower.com",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "terminated": {
+       "exitCode": 0,
+       "reason": "Completed",
+       "startedAt": "2026-10-25T20:27:45Z",
+       "finishedAt": "2026-10-25T20:52:05Z",
+       "containerID": "containerd://9eb92d86906d76cf7f49772a923b03c64e2b7e23b78b5c59167876bbf80e1112"
+      }
+     },
+     "duration_seconds": 1460.0
+    }
+   ]
+  }
+ ],
+ "container_gpu_hours": 12.66
+}

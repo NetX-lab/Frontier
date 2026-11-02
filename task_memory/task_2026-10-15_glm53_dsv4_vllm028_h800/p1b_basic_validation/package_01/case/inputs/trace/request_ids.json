@@ -1,0 +1,1178 @@
+{
+ "formal_request_ids": [
+  "fixed-6144-1024-req128-qps1-formal-r000",
+  "fixed-6144-1024-req128-qps1-formal-r001",
+  "fixed-6144-1024-req128-qps1-formal-r002",
+  "fixed-6144-1024-req128-qps1-formal-r003",
+  "fixed-6144-1024-req128-qps1-formal-r004",
+  "fixed-6144-1024-req128-qps1-formal-r005",
+  "fixed-6144-1024-req128-qps1-formal-r006",
+  "fixed-6144-1024-req128-qps1-formal-r007",
+  "fixed-6144-1024-req128-qps1-formal-r008",
+  "fixed-6144-1024-req128-qps1-formal-r009",
+  "fixed-6144-1024-req128-qps1-formal-r010",
+  "fixed-6144-1024-req128-qps1-formal-r011",
+  "fixed-6144-1024-req128-qps1-formal-r012",
+  "fixed-6144-1024-req128-qps1-formal-r013",
+  "fixed-6144-1024-req128-qps1-formal-r014",
+  "fixed-6144-1024-req128-qps1-formal-r015",
+  "fixed-6144-1024-req128-qps1-formal-r016",
+  "fixed-6144-1024-req128-qps1-formal-r017",
+  "fixed-6144-1024-req128-qps1-formal-r018",
+  "fixed-6144-1024-req128-qps1-formal-r019",
+  "fixed-6144-1024-req128-qps1-formal-r020",
+  "fixed-6144-1024-req128-qps1-formal-r021",
+  "fixed-6144-1024-req128-qps1-formal-r022",
+  "fixed-6144-1024-req128-qps1-formal-r023",
+  "fixed-6144-1024-req128-qps1-formal-r024",
+  "fixed-6144-1024-req128-qps1-formal-r025",
+  "fixed-6144-1024-req128-qps1-formal-r026",
+  "fixed-6144-1024-req128-qps1-formal-r027",
+  "fixed-6144-1024-req128-qps1-formal-r028",
+  "fixed-6144-1024-req128-qps1-formal-r029",
+  "fixed-6144-1024-req128-qps1-formal-r030",
+  "fixed-6144-1024-req128-qps1-formal-r031",
+  "fixed-6144-1024-req128-qps1-formal-r032",
+  "fixed-6144-1024-req128-qps1-formal-r033",
+  "fixed-6144-1024-req128-qps1-formal-r034",
+  "fixed-6144-1024-req128-qps1-formal-r035",
+  "fixed-6144-1024-req128-qps1-formal-r036",
+  "fixed-6144-1024-req128-qps1-formal-r037",
+  "fixed-6144-1024-req128-qps1-formal-r038",
+  "fixed-6144-1024-req128-qps1-formal-r039",
+  "fixed-6144-1024-req128-qps1-formal-r040",
+  "fixed-6144-1024-req128-qps1-formal-r041",
+  "fixed-6144-1024-req128-qps1-formal-r042",
+  "fixed-6144-1024-req128-qps1-formal-r043",
+  "fixed-6144-1024-req128-qps1-formal-r044",
+  "fixed-6144-1024-req128-qps1-formal-r045",
+  "fixed-6144-1024-req128-qps1-formal-r046",
+  "fixed-6144-1024-req128-qps1-formal-r047",
+  "fixed-6144-1024-req128-qps1-formal-r048",
+  "fixed-6144-1024-req128-qps1-formal-r049",
+  "fixed-6144-1024-req128-qps1-formal-r050",
+  "fixed-6144-1024-req128-qps1-formal-r051",
+  "fixed-6144-1024-req128-qps1-formal-r052",
+  "fixed-6144-1024-req128-qps1-formal-r053",
+  "fixed-6144-1024-req128-qps1-formal-r054",
+  "fixed-6144-1024-req128-qps1-formal-r055",
+  "fixed-6144-1024-req128-qps1-formal-r056",
+  "fixed-6144-1024-req128-qps1-formal-r057",
+  "fixed-6144-1024-req128-qps1-formal-r058",
+  "fixed-6144-1024-req128-qps1-formal-r059",
+  "fixed-6144-1024-req128-qps1-formal-r060",
+  "fixed-6144-1024-req128-qps1-formal-r061",
+  "fixed-6144-1024-req128-qps1-formal-r062",
+  "fixed-6144-1024-req128-qps1-formal-r063",
+  "fixed-6144-1024-req128-qps1-formal-r064",
+  "fixed-6144-1024-req128-qps1-formal-r065",
+  "fixed-6144-1024-req128-qps1-formal-r066",
+  "fixed-6144-1024-req128-qps1-formal-r067",
+  "fixed-6144-1024-req128-qps1-formal-r068",
+  "fixed-6144-1024-req128-qps1-formal-r069",
+  "fixed-6144-1024-req128-qps1-formal-r070",
+  "fixed-6144-1024-req128-qps1-formal-r071",
+  "fixed-6144-1024-req128-qps1-formal-r072",
+  "fixed-6144-1024-req128-qps1-formal-r073",
+  "fixed-6144-1024-req128-qps1-formal-r074",
+  "fixed-6144-1024-req128-qps1-formal-r075",
+  "fixed-6144-1024-req128-qps1-formal-r076",
+  "fixed-6144-1024-req128-qps1-formal-r077",
+  "fixed-6144-1024-req128-qps1-formal-r078",
+  "fixed-6144-1024-req128-qps1-formal-r079",
+  "fixed-6144-1024-req128-qps1-formal-r080",
+  "fixed-6144-1024-req128-qps1-formal-r081",
+  "fixed-6144-1024-req128-qps1-formal-r082",
+  "fixed-6144-1024-req128-qps1-formal-r083",
+  "fixed-6144-1024-req128-qps1-formal-r084",
+  "fixed-6144-1024-req128-qps1-formal-r085",
+  "fixed-6144-1024-req128-qps1-formal-r086",
+  "fixed-6144-1024-req128-qps1-formal-r087",
+  "fixed-6144-1024-req128-qps1-formal-r088",
+  "fixed-6144-1024-req128-qps1-formal-r089",
+  "fixed-6144-1024-req128-qps1-formal-r090",
+  "fixed-6144-1024-req128-qps1-formal-r091",
+  "fixed-6144-1024-req128-qps1-formal-r092",
+  "fixed-6144-1024-req128-qps1-formal-r093",
+  "fixed-6144-1024-req128-qps1-formal-r094",
+  "fixed-6144-1024-req128-qps1-formal-r095",
+  "fixed-6144-1024-req128-qps1-formal-r096",
+  "fixed-6144-1024-req128-qps1-formal-r097",
+  "fixed-6144-1024-req128-qps1-formal-r098",
+  "fixed-6144-1024-req128-qps1-formal-r099",
+  "fixed-6144-1024-req128-qps1-formal-r100",
+  "fixed-6144-1024-req128-qps1-formal-r101",
+  "fixed-6144-1024-req128-qps1-formal-r102",
+  "fixed-6144-1024-req128-qps1-formal-r103",
+  "fixed-6144-1024-req128-qps1-formal-r104",
+  "fixed-6144-1024-req128-qps1-formal-r105",
+  "fixed-6144-1024-req128-qps1-formal-r106",
+  "fixed-6144-1024-req128-qps1-formal-r107",
+  "fixed-6144-1024-req128-qps1-formal-r108",
+  "fixed-6144-1024-req128-qps1-formal-r109",
+  "fixed-6144-1024-req128-qps1-formal-r110",
+  "fixed-6144-1024-req128-qps1-formal-r111",
+  "fixed-6144-1024-req128-qps1-formal-r112",
+  "fixed-6144-1024-req128-qps1-formal-r113",
+  "fixed-6144-1024-req128-qps1-formal-r114",
+  "fixed-6144-1024-req128-qps1-formal-r115",
+  "fixed-6144-1024-req128-qps1-formal-r116",
+  "fixed-6144-1024-req128-qps1-formal-r117",
+  "fixed-6144-1024-req128-qps1-formal-r118",
+  "fixed-6144-1024-req128-qps1-formal-r119",
+  "fixed-6144-1024-req128-qps1-formal-r120",
+  "fixed-6144-1024-req128-qps1-formal-r121",
+  "fixed-6144-1024-req128-qps1-formal-r122",
+  "fixed-6144-1024-req128-qps1-formal-r123",
+  "fixed-6144-1024-req128-qps1-formal-r124",
+  "fixed-6144-1024-req128-qps1-formal-r125",
+  "fixed-6144-1024-req128-qps1-formal-r126",
+  "fixed-6144-1024-req128-qps1-formal-r127"
+ ],
+ "qualification_only": false,
+ "rows": [
+  {
+   "arrived_at": 0.0,
+   "frontier_request_id": 0,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r000",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 1.0,
+   "frontier_request_id": 1,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r001",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 2.0,
+   "frontier_request_id": 2,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r002",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 3.0,
+   "frontier_request_id": 3,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r003",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 4.0,
+   "frontier_request_id": 4,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r004",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 5.0,
+   "frontier_request_id": 5,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r005",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 6.0,
+   "frontier_request_id": 6,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r006",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 7.0,
+   "frontier_request_id": 7,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r007",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 8.0,
+   "frontier_request_id": 8,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r008",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 9.0,
+   "frontier_request_id": 9,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r009",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 10.0,
+   "frontier_request_id": 10,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r010",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 11.0,
+   "frontier_request_id": 11,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r011",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 12.0,
+   "frontier_request_id": 12,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r012",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 13.0,
+   "frontier_request_id": 13,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r013",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 14.0,
+   "frontier_request_id": 14,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r014",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 15.0,
+   "frontier_request_id": 15,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r015",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 16.0,
+   "frontier_request_id": 16,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r016",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 17.0,
+   "frontier_request_id": 17,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r017",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 18.0,
+   "frontier_request_id": 18,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r018",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 19.0,
+   "frontier_request_id": 19,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r019",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 20.0,
+   "frontier_request_id": 20,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r020",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 21.0,
+   "frontier_request_id": 21,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r021",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 22.0,
+   "frontier_request_id": 22,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r022",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 23.0,
+   "frontier_request_id": 23,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r023",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 24.0,
+   "frontier_request_id": 24,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r024",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 25.0,
+   "frontier_request_id": 25,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r025",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 26.0,
+   "frontier_request_id": 26,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r026",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 27.0,
+   "frontier_request_id": 27,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r027",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 28.0,
+   "frontier_request_id": 28,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r028",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 29.0,
+   "frontier_request_id": 29,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r029",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 30.0,
+   "frontier_request_id": 30,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r030",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 31.0,
+   "frontier_request_id": 31,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r031",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 32.0,
+   "frontier_request_id": 32,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r032",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 33.0,
+   "frontier_request_id": 33,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r033",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 34.0,
+   "frontier_request_id": 34,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r034",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 35.0,
+   "frontier_request_id": 35,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r035",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 36.0,
+   "frontier_request_id": 36,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r036",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 37.0,
+   "frontier_request_id": 37,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r037",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 38.0,
+   "frontier_request_id": 38,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r038",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 39.0,
+   "frontier_request_id": 39,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r039",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 40.0,
+   "frontier_request_id": 40,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r040",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 41.0,
+   "frontier_request_id": 41,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r041",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 42.0,
+   "frontier_request_id": 42,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r042",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 43.0,
+   "frontier_request_id": 43,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r043",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 44.0,
+   "frontier_request_id": 44,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r044",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 45.0,
+   "frontier_request_id": 45,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r045",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 46.0,
+   "frontier_request_id": 46,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r046",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 47.0,
+   "frontier_request_id": 47,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r047",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 48.0,
+   "frontier_request_id": 48,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r048",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 49.0,
+   "frontier_request_id": 49,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r049",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 50.0,
+   "frontier_request_id": 50,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r050",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 51.0,
+   "frontier_request_id": 51,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r051",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 52.0,
+   "frontier_request_id": 52,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r052",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 53.0,
+   "frontier_request_id": 53,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r053",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 54.0,
+   "frontier_request_id": 54,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r054",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 55.0,
+   "frontier_request_id": 55,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r055",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 56.0,
+   "frontier_request_id": 56,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r056",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 57.0,
+   "frontier_request_id": 57,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r057",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 58.0,
+   "frontier_request_id": 58,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r058",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 59.0,
+   "frontier_request_id": 59,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r059",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 60.0,
+   "frontier_request_id": 60,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r060",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 61.0,
+   "frontier_request_id": 61,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r061",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 62.0,
+   "frontier_request_id": 62,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r062",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 63.0,
+   "frontier_request_id": 63,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r063",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 64.0,
+   "frontier_request_id": 64,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r064",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 65.0,
+   "frontier_request_id": 65,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r065",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 66.0,
+   "frontier_request_id": 66,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r066",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 67.0,
+   "frontier_request_id": 67,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r067",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 68.0,
+   "frontier_request_id": 68,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r068",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 69.0,
+   "frontier_request_id": 69,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r069",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 70.0,
+   "frontier_request_id": 70,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r070",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 71.0,
+   "frontier_request_id": 71,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r071",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 72.0,
+   "frontier_request_id": 72,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r072",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 73.0,
+   "frontier_request_id": 73,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r073",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 74.0,
+   "frontier_request_id": 74,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r074",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 75.0,
+   "frontier_request_id": 75,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r075",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 76.0,
+   "frontier_request_id": 76,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r076",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 77.0,
+   "frontier_request_id": 77,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r077",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 78.0,
+   "frontier_request_id": 78,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r078",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 79.0,
+   "frontier_request_id": 79,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r079",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 80.0,
+   "frontier_request_id": 80,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r080",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 81.0,
+   "frontier_request_id": 81,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r081",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 82.0,
+   "frontier_request_id": 82,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r082",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 83.0,
+   "frontier_request_id": 83,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r083",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 84.0,
+   "frontier_request_id": 84,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r084",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 85.0,
+   "frontier_request_id": 85,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r085",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 86.0,
+   "frontier_request_id": 86,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r086",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 87.0,
+   "frontier_request_id": 87,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r087",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 88.0,
+   "frontier_request_id": 88,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r088",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 89.0,
+   "frontier_request_id": 89,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r089",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 90.0,
+   "frontier_request_id": 90,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r090",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 91.0,
+   "frontier_request_id": 91,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r091",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 92.0,
+   "frontier_request_id": 92,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r092",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 93.0,
+   "frontier_request_id": 93,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r093",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 94.0,
+   "frontier_request_id": 94,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r094",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 95.0,
+   "frontier_request_id": 95,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r095",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 96.0,
+   "frontier_request_id": 96,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r096",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 97.0,
+   "frontier_request_id": 97,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r097",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 98.0,
+   "frontier_request_id": 98,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r098",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 99.0,
+   "frontier_request_id": 99,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r099",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 100.0,
+   "frontier_request_id": 100,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r100",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 101.0,
+   "frontier_request_id": 101,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r101",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 102.0,
+   "frontier_request_id": 102,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r102",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 103.0,
+   "frontier_request_id": 103,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r103",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 104.0,
+   "frontier_request_id": 104,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r104",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 105.0,
+   "frontier_request_id": 105,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r105",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 106.0,
+   "frontier_request_id": 106,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r106",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 107.0,
+   "frontier_request_id": 107,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r107",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 108.0,
+   "frontier_request_id": 108,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r108",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 109.0,
+   "frontier_request_id": 109,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r109",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 110.0,
+   "frontier_request_id": 110,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r110",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 111.0,
+   "frontier_request_id": 111,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r111",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 112.0,
+   "frontier_request_id": 112,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r112",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 113.0,
+   "frontier_request_id": 113,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r113",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 114.0,
+   "frontier_request_id": 114,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r114",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 115.0,
+   "frontier_request_id": 115,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r115",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 116.0,
+   "frontier_request_id": 116,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r116",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 117.0,
+   "frontier_request_id": 117,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r117",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 118.0,
+   "frontier_request_id": 118,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r118",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 119.0,
+   "frontier_request_id": 119,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r119",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 120.0,
+   "frontier_request_id": 120,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r120",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 121.0,
+   "frontier_request_id": 121,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r121",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 122.0,
+   "frontier_request_id": 122,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r122",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 123.0,
+   "frontier_request_id": 123,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r123",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 124.0,
+   "frontier_request_id": 124,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r124",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 125.0,
+   "frontier_request_id": 125,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r125",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 126.0,
+   "frontier_request_id": 126,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r126",
+   "role": "formal"
+  },
+  {
+   "arrived_at": 127.0,
+   "frontier_request_id": 127,
+   "num_decode_tokens": 1024,
+   "num_prefill_tokens": 6144,
+   "request_id": "fixed-6144-1024-req128-qps1-formal-r127",
+   "role": "formal"
+  }
+ ],
+ "sizing_request_ids": [],
+ "warmup_request_ids": [
+  "fixed-6144-1024-req128-qps1-warmup-r000",
+  "fixed-6144-1024-req128-qps1-warmup-r001",
+  "fixed-6144-1024-req128-qps1-warmup-r002",
+  "fixed-6144-1024-req128-qps1-warmup-r003",
+  "fixed-6144-1024-req128-qps1-warmup-r004",
+  "fixed-6144-1024-req128-qps1-warmup-r005",
+  "fixed-6144-1024-req128-qps1-warmup-r006",
+  "fixed-6144-1024-req128-qps1-warmup-r007",
+  "fixed-6144-1024-req128-qps1-warmup-r008",
+  "fixed-6144-1024-req128-qps1-warmup-r009",
+  "fixed-6144-1024-req128-qps1-warmup-r010",
+  "fixed-6144-1024-req128-qps1-warmup-r011",
+  "fixed-6144-1024-req128-qps1-warmup-r012",
+  "fixed-6144-1024-req128-qps1-warmup-r013",
+  "fixed-6144-1024-req128-qps1-warmup-r014",
+  "fixed-6144-1024-req128-qps1-warmup-r015"
+ ]
+}

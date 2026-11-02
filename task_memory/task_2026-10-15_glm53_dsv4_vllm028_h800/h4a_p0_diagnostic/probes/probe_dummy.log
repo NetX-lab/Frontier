@@ -1,0 +1,73 @@
+WARNING 06:08:09 model_architectures.py:1299] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: compressed attention, mHC and mixed precision are unsupported; shared FFN sequence-parallel token/collective execution is unsupported
+WARNING 06:08:09 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Applying dummy mode (time=0.01ms) to all clusters
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 256
+   Local Expert Num: 16
+--------------------------------------------------
+======================================================================
+
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/execution_time_predictor_registry.py", line 78, in get
+    return predictor_class(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/random_forrest_execution_time_predictor.py", line 100, in __new__
+    return _RandomForrestExecutionTimePredictor(**kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/random_forrest_execution_time_predictor.py", line 62, in __init__
+    super().__init__(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py", line 108, in __init__
+    super().__init__(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 447, in __init__
+    super().__init__(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_execution_time_predictor.py", line 443, in __init__
+    super().__init__(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/base_execution_time_predictor.py", line 48, in __init__
+    get_attention_kv_cache_capacity(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/attention/memory.py", line 251, in get_attention_kv_cache_capacity
+    capacity = family.kv_cache_capacity_resolver(config, block_size, selection)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/attention/families.py", line 142, in _deepseek_v4_kv_cache_capacity
+    raise NotImplementedError("DeepSeek-V4 cache requires FLASHMLA_SPARSE_DSV4")
+NotImplementedError: DeepSeek-V4 cache requires FLASHMLA_SPARSE_DSV4
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/glm53_dsv4/h4a1/probe_v4_pd.py", line 42, in <module>
+    runpy.run_module("frontier.main", run_name="__main__")
+  File "/usr/lib/python3.10/runpy.py", line 227, in run_module
+    return _run_code(code, {}, init_globals, run_name, mod_spec)
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/main.py", line 97, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/main.py", line 77, in main
+    simulator = Simulator(config)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/simulator.py", line 167, in __init__
+    self._predictors[cluster_type] = ExecutionTimePredictorRegistry.get(
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/execution_time_predictor_registry.py", line 91, in get
+    raise ValueError(
+ValueError: Failed to create predictor of type 'random_forrest': DeepSeek-V4 cache requires FLASHMLA_SPARSE_DSV4

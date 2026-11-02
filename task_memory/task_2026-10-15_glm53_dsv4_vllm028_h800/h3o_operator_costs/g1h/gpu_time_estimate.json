@@ -1,0 +1,82 @@
+{
+  "basis": {
+    "engine0_case_seconds": 90.0,
+    "engine0_estimated_steps": 280,
+    "engine0_measured_steps": 163,
+    "engine0_startup_compile_autotune_seconds": 431.78,
+    "engine0_total_seconds": 576.1036419617012,
+    "engine1_startup_compile_autotune_seconds": 25.23,
+    "engine1_total_seconds": 90.29085552506149,
+    "measured_hold_seconds": 0.2
+  },
+  "c1_g1h_share_gpu_hours": 1.5,
+  "engine_start_policy": "charge the observed cold process/start/recapture time to every engine",
+  "engines": [
+    {
+      "cases": 686,
+      "chunk_budget": 8192,
+      "engine_index": 0,
+      "estimated_steps": 6098,
+      "gpu_hours": 0.5203871227671392,
+      "measured_steps": 686,
+      "startup_seconds": 486.1036419617012,
+      "step_seconds": 1387.29,
+      "total_seconds": 1873.3936419617012
+    },
+    {
+      "cases": 296,
+      "chunk_budget": 8192,
+      "engine_index": 1,
+      "estimated_steps": 3016,
+      "gpu_hours": 0.32321767832269477,
+      "measured_steps": 296,
+      "startup_seconds": 486.1036419617012,
+      "step_seconds": 677.48,
+      "total_seconds": 1163.5836419617012
+    },
+    {
+      "cases": 7,
+      "chunk_budget": 24576,
+      "engine_index": 2,
+      "estimated_steps": 20,
+      "gpu_hours": 0.13655656721158366,
+      "measured_steps": 7,
+      "startup_seconds": 486.1036419617012,
+      "step_seconds": 5.5,
+      "total_seconds": 491.6036419617012
+    }
+  ],
+  "full_grid_envelope": [
+    {
+      "engine_index": 0,
+      "estimated_steps_envelope": 7286,
+      "gpu_hours_envelope": 0.5897037894338059,
+      "startup_seconds": 486.1036419617012,
+      "windows": 716
+    },
+    {
+      "engine_index": 1,
+      "estimated_steps_envelope": 3507,
+      "gpu_hours_envelope": 0.3523996227671392,
+      "startup_seconds": 486.1036419617012,
+      "windows": 318
+    },
+    {
+      "engine_index": 2,
+      "estimated_steps_envelope": 24,
+      "gpu_hours_envelope": 0.13678434498936146,
+      "startup_seconds": 486.1036419617012,
+      "windows": 7
+    }
+  ],
+  "full_grid_gpu_hours_envelope": 1.0788877571903066,
+  "g1h_g4h_cap_gpu_hours": 7,
+  "gpu_hours": 0.9801613683014176,
+  "limitations": [
+    "Full-grid envelope charges one case per requested window; the admitted run shares identical cases.",
+    "One-step cases provide no repeated-window variance; source warm-up/capture still occurs.",
+    "Profiler per-case overhead and larger-budget autotuning have not been GPU-qualified."
+  ],
+  "seconds_per_measured_step_including_hold": 0.405,
+  "unheld_seconds_per_estimated_step": 0.205
+}

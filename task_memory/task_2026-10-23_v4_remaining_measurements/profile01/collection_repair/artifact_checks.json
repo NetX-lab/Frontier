@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "task_id": "W128-PROFILE03-COLLECTION",
+  "source_commit": "20660f4c0776ddd75dc211f1f0819266b48ba23c",
+  "source_diff_sha256": "9e6410d6185e4f3c508af9cbad35d65eccc0a5498d67e4e80b583ed3c98c9420",
+  "diff_validation": [
+    {
+      "argv": [
+        "git",
+        "read-tree",
+        "44f2ddb9736f0abaaf6a52a5fb768519996b7da3"
+      ],
+      "environment": {
+        "GIT_INDEX_FILE": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/source_diff_validation.index"
+      },
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "apply",
+        "--cached",
+        "--check",
+        "--whitespace=error",
+        "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/collection_repair/source_changes.diff"
+      ],
+      "environment": {
+        "GIT_INDEX_FILE": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/source_diff_validation.index"
+      },
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "active_index_not_used": true,
+  "json_parse": "PASS",
+  "maintained_markdown_modification_history": "PASS",
+  "source_checks_matrix_binding": "PASS",
+  "gross_budget": "159/260",
+  "limits": "Artifact integrity and recorded progress, not an independent code review or GPU validation.",
+  "original_staged_whitespace_check": {
+    "returncode": 2,
+    "command": [
+      "git",
+      "diff",
+      "--cached",
+      "--check",
+      "--",
+      ".",
+      ":(exclude)task_memory/task_2026-10-23_v4_remaining_measurements/profile01/collection_repair/source_changes.diff"
+    ],
+    "diagnostic": "Raw pytest console output has trailing whitespace at red_worker.log:23 and :48; preserved unchanged.",
+    "reported_lines": {
+      "23": "E         ",
+      "48": "E         "
+    }
+  },
+  "raw_log_validation": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/collection_repair/red_worker.log",
+    "original_path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE03-COLLECTION/red_worker.log",
+    "sha256": "579fddbdefac5457c563d839f9e71531986d81ce7618c3ab39ae10c64af35a8c",
+    "byte_identical": true,
+    "reported_lines_are_original_console_format": true
+  },
+  "ordinary_whitespace_exclusions": [
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/collection_repair/source_changes.diff",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/collection_repair/red_worker.log"
+  ]
+}

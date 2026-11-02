@@ -1,0 +1,56 @@
+{
+  "task_id": "W128-V4-NATIVE-SERVE-PROFILE",
+  "status": "CPU_COLLECTOR_COMPLETE_GPU_UNVERIFIED",
+  "baseline": "993f05f59ef22bfab38433dd93e2fcf486fc113a",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile",
+  "python": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "python_version": "3.12.13",
+  "pytest_version": "9.0.2",
+  "source_files": {
+    "tests/comparison/calibration/native_serve_profile.py": {"added": 405, "deleted": 0, "limit": 450},
+    "tests/comparison/calibration/native_pd_worker.py": {"added": 9, "deleted": 2, "limit": 25},
+    "tests/comparison/calibration/pd_replay.py": {"added": 2, "deleted": 2, "limit": 4},
+    "tests/comparison/dp_placement_pp/vllm_replay.py": {"added": 7, "deleted": 1, "limit": 8},
+    "tests/unit/test_native_serve_profile.py": {"added": 300, "deleted": 0, "limit": 300}
+  },
+  "launch_results": [
+    {"probe": "balanced_routing", "outcome": "GREEN", "strategy": "balanced_topk"},
+    {"probe": "worker_pythonpath", "outcome": "GREEN", "pythonpath": "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/tests/comparison/calibration"},
+    {"probe": "profiler_config", "outcome": "GREEN", "forwarded": {"profiler": "torch", "torch_profiler_dir": "/not-written/trace"}},
+    {"probe": "single_extension_mapping", "outcome": "GREEN", "same_object": true}
+  ],
+  "launch_python_body": "import json\nfrom pathlib import Path\nfrom tests.unit.test_dp_placement_harness import native_engine\nfrom tests.comparison.calibration import pd_replay\nimport vllm_replay as launch\nfrom tests.comparison.calibration import native_pd_worker as worker\nassert worker.NATIVE_WORKER_EXTENSIONS is pd_replay.NATIVE_WORKER_EXTENSIONS is launch.NATIVE_WORKER_EXTENSIONS\nengine=native_engine() | dict(worker_extension_cls='native_serve_profile.NativeServeProfile',moe_gating_routing_runtime_path='balanced_topk',profiler_config=dict(profiler='torch',torch_profiler_dir='/not-written/trace'))\nenv,_=launch.server_env('clean',engine,Path('/not-written'),{'PATH':'/usr/bin'})\nprint(json.dumps(dict(probe='balanced_routing',outcome='GREEN',strategy=env['VLLM_MOE_ROUTING_SIMULATION_STRATEGY'])))\nengine['kv_transfer']=dict(kv_buffer_device='cuda',side_channel_host='10.0.0.1',prefill_side_channel_port=6200,decode_side_channel_port=6300)\nenv,_=pd_replay.instance_env('clean',engine,Path('/not-written'),{'PATH':'/usr/bin'},'0,1,2,3,4,5,6,7',role='prefill')\nprint(json.dumps(dict(probe='worker_pythonpath',outcome='GREEN',pythonpath=env['PYTHONPATH'])))\noriginal=launch.local_model_config\nlaunch.local_model_config=lambda path: dict(architectures=['DeepseekV4ForCausalLM'],vocab_size=129280)\ntry: command=launch.server_command(engine,Path('/not-written/model'),8100)\nfinally: launch.local_model_config=original\nprint(json.dumps(dict(probe='profiler_config',outcome='GREEN',forwarded=json.loads(command[command.index('--profiler-config')+1]))))\nprint(json.dumps(dict(probe='single_extension_mapping',outcome='GREEN',same_object=True)))",
+  "tests": [
+    {"suite": "tests/unit/test_native_serve_profile.py", "passed": 22, "seconds": 1.16, "exit": 0, "new_collector_evidence": true},
+    {"suite": "tests/unit/test_native_serving_inventory.py", "passed": 28, "seconds": 0.86, "exit": 0},
+    {"suite": "tests/unit/test_native_v2_serving_inventory.py", "passed": 45, "seconds": 5.65, "exit": 0},
+    {"suite": "tests/unit/test_native_reader_binding.py", "passed": 135, "seconds": 55.51, "exit": 0},
+    {"suite": "tests/unit/test_native_pd_worker.py", "passed": 16, "seconds": 3.34, "exit": 0},
+    {"suite": "tests/unit/test_dp_placement_harness.py", "passed": 75, "seconds": 0.63, "exit": 0},
+    {"suite": "tests/unit/test_calibration_pd_harness.py", "passed": 68, "seconds": 5.88, "exit": 0},
+    {"suite": "tests/unit/test_native_pd_manifest.py", "passed": 14, "seconds": 1.34, "exit": 0}
+  ],
+  "direct_controls": {
+    "decorated_callback": {"original_calls": 2, "annotation_count": 2, "errors": [], "verdict": "PASS"},
+    "local_vs_synchronized": {"steps": 11, "local_counts": [1,2,3,4,5,6,7,8,9,10,11], "synchronized_tokens": [16,16,16,16,16,16,16,16,16,16,16], "errors": [], "verdict": "PASS"}
+  },
+  "direct_callback_python_body": "import functools,importlib.util,sys,json\nfrom contextlib import contextmanager\nfrom pathlib import Path\nfrom types import ModuleType,SimpleNamespace\nsource=Path('tests/comparison/calibration/native_serve_profile.py').resolve()\nsys.path.insert(0,str(source.parent))\nspec=importlib.util.spec_from_file_location('direct_profile_control',source)\np=importlib.util.module_from_spec(spec); spec.loader.exec_module(p)\nstate=dict(capturing=True,callbacks=[],calls=0,annotations=[])\n@contextmanager\ndef record(name):\n state['annotations'].append(name)\n yield\nprofiler=ModuleType('torch.profiler');profiler.record_function=record;sys.modules['torch.profiler']=profiler\nbreakable=ModuleType('vllm.compilation.breakable_cudagraph')\ndef decorate(fn):\n @functools.wraps(fn)\n def call(*args,**kwargs):\n  if state['capturing']:\n   state['callbacks'].append(lambda: fn(*args,**kwargs))\n  return fn(*args,**kwargs)\n return call\nbreakable.eager_break_during_capture=decorate;sys.modules[breakable.__name__]=breakable\nmarker=object()\nclass Attention:\n @decorate\n def _sparse_indexer_and_attn(self,*,output):\n  state['calls']+=1\n  return output\ncollector=p.ServingProfile(SimpleNamespace(local=SimpleNamespace()))\ncollector.context=lambda: {}\ncollector.wrap(Attention,'_sparse_indexer_and_attn','outer','sparse_eager_segment')\nassert Attention()._sparse_indexer_and_attn(output=marker) is marker\nstate['capturing']=False\nassert state['callbacks'][0]() is marker\nassert state['calls']==2 and len(state['annotations'])==2 and not collector.errors\nprint(json.dumps(dict(control='decorated_breakable_callback_annotation_survives_python_replay',original_calls=state['calls'],annotation_count=len(state['annotations']),errors=collector.errors)))",
+  "direct_local_dispatch_python_body": "import importlib.util,sys,json\nfrom pathlib import Path\nfrom types import SimpleNamespace\nsource=Path('tests/comparison/calibration/native_serve_profile.py').resolve();sys.path.insert(0,str(source.parent))\nspec=importlib.util.spec_from_file_location('dispatch_profile_control',source);p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)\nimport os\nos.environ['FRONTIER_NATIVE_PROFILE_LIMITS']=json.dumps(dict(records=100,bytes=100000))\nobserver=SimpleNamespace(local=SimpleNamespace(),errors=[])\nc=p.ServingProfile(observer)\nmarker=object()\nclass Worker:\n rank=7\n def execute_model(self,scheduler_output):\n  observer.local.dispatch_evidence=dict(forwards=1,replays=1,classifier=dict(inputs=dict(has_prefill=False)),dispatch=dict(descriptor=dict(num_tokens=16,num_reqs=16,cg_mode='FULL')),dp_post_all_reduce=[[scheduler_output.total_num_scheduled_tokens,16],[2,2],[1,1],[1,1]])\n  c.local.step['dispatch_evidence']=observer.local.dispatch_evidence\n  return marker\n def load_model(self): return marker\n def sample_tokens(self): return marker\n def compile_or_warm_up_model(self): return marker\n def shutdown(self): return marker\nc.install_worker(Worker)\nfor n in range(1,12):\n scheduled={f'req{i}':1 for i in range(n)}\n assert Worker().execute_model(SimpleNamespace(num_scheduled_tokens=scheduled,total_num_scheduled_tokens=n)) is marker\n step=c.steps[-1]\n assert step['local_num_requests']==n and step['local_num_tokens']==n\n assert step['synchronized_descriptor']['num_tokens']==16 and step['has_prefill'] is False\nassert not c.errors\nprint(json.dumps(dict(control='local_requests_tokens_1_to_11_vs_padded_descriptor16',steps=len(c.steps),local_counts=[r['local_num_requests'] for r in c.steps],synchronized_tokens=[r['synchronized_descriptor']['num_tokens'] for r in c.steps],errors=c.errors)))",
+  "image": {
+    "digest": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "direct_native_imports": "INCOMPLETE_120_SECOND_TIMEOUT",
+    "source_symbols": {"found": 24, "total": 24, "verdict": "PASS", "root": "/usr/local/lib/python3.12/dist-packages/vllm", "torch_imported": false},
+    "torch_cpu_control": {"torch": "2.13.0+cu130", "cuda_initialized": false, "annotations": ["frontier_native_outer|0|model_forward", "frontier_native_component|1|input_projections"], "errors": [], "verdict": "PASS"},
+    "containers_remaining": 0,
+    "source_mount": "read_only",
+    "network": "none",
+    "pull": "never"
+  },
+  "image_source_python_body": "import ast, importlib.util, json, signal; from pathlib import Path; signal.alarm(45); import native_serve_profile as p; root=Path(importlib.util.find_spec('vllm').origin).parent; results=[]\nfor path,cls,name,category,scope in p.METHODS:\n file=root.parent/Path(path.replace('.','/')+'.py'); tree=ast.parse(file.read_text()); owner=next((n for n in tree.body if isinstance(n,ast.ClassDef) and n.name==cls),None); found=owner is not None and any(isinstance(n,ast.FunctionDef) and n.name==name for n in owner.body); results.append(dict(target=path+'.'+cls+'.'+name,resolved_source=found))\nfor path,name in p.FUNCTIONS:\n file=root.parent/Path(path.replace('.','/')+'.py'); tree=ast.parse(file.read_text()); found=any((isinstance(n,ast.FunctionDef) and n.name==name) or (isinstance(n,(ast.Import,ast.ImportFrom)) and any((a.asname or a.name)==name for a in n.names)) for n in tree.body); results.append(dict(target=path+'.'+name,resolved_source=found))\nprint(json.dumps(dict(vllm_root=str(root),source_symbols=results,all_resolved=all(r['resolved_source'] for r in results)),sort_keys=True))",
+  "image_torch_python_body": "import signal; signal.alarm(60); import os; os.environ['FRONTIER_NATIVE_PROFILE_LIMITS']='{\"records\":10,\"bytes\":10000}'; import json, torch, native_serve_profile as p; torch.cuda._lazy_init=lambda: (_ for _ in ()).throw(RuntimeError('CUDA initialization prohibited')); from types import SimpleNamespace; collector=p.ServingProfile(SimpleNamespace(local=SimpleNamespace())); collector.context=lambda: {}\nwith torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU]) as trace:\n with collector.range('outer','model_forward'):\n  with collector.range('component','input_projections'): sum(range(100))\nprint(json.dumps(dict(torch=torch.__version__, cuda_initialized=torch.cuda.is_initialized(), annotations=[e.name for e in trace.events() if e.name.startswith('frontier_native_')],errors=collector.errors,event_methods={n:callable(getattr(torch.cuda.Event,n)) for n in ('record','wait')})))",
+  "unknown_capabilities": ["GPU raw handle to trace stream mapping", "per-kernel PDL attributes", "compile/breakable annotation/event survival", "captured-segment replay kernel ownership", "GPU CUPTI restart"],
+  "driver_implemented": false,
+  "gpu_jobs": 0,
+  "parent_records_edited": false,
+  "root_commits_merged": false
+}

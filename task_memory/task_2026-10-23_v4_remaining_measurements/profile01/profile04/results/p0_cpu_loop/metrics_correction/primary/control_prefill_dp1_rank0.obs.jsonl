@@ -1,0 +1,46 @@
+{"t": 0.043, "stage": "instrumented", "rss_mb": 17.2, "hits": ["after:data = reader.load_trace(path)", "after:events = data['traceEvents']", "after:header = reader.trace_header(path)", "after:in calls.items():", "after:in enumerate(events):", "after:in enumerate(syn):", "after:in profile['steps']:", "after:in streams.items():", "after:inventory = read(inventory_path)", "after:names = collections.Counter", "after:output.write_text(", "after:print(json.dumps({", "after:result = {", "after:start = time.monotonic()", "after:with gzip.open(raw_path,", "before:data = reader.load_trace(path)", "before:header = reader.trace_header(path)", "before:step_rows = []", "before:with gzip.open(raw_path,", "loop:in enumerate(events):", "loop:in kernels:"], "auditor_sha": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8", "reader_sha": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52", "trace": "torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842747939163438.pt.trace.json.gz", "output": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_correction_20261025_01/control_prefill_dp1_rank0.json"}
+{"t": 0.047, "stage": "enter", "rss_mb": 17.4}
+{"t": 0.125, "stage": "metadata_loaded", "rss_mb": 46.3}
+{"t": 0.128, "stage": "header_start", "rss_mb": 46.5}
+{"t": 0.129, "stage": "header_done", "rss_mb": 46.5}
+{"t": 0.129, "stage": "load_gc_disabled", "rss_mb": 46.5, "enabled": false}
+{"t": 0.129, "stage": "load_start", "rss_mb": 46.5, "trace_gz_bytes": 56937303}
+{"t": 11.47, "stage": "load_done", "rss_mb": 2287.3}
+{"t": 11.63, "stage": "freeze_after_load", "rss_mb": 2287.3, "seconds": 1.1445023119449615e-05, "objects": 2858302, "gc_enabled": true}
+{"t": 11.63, "stage": "events_ready", "rss_mb": 2287.3, "events": 1843832}
+{"t": 11.838, "stage": "annotations_named", "rss_mb": 2288.9, "names": 11448}
+{"t": 11.838, "stage": "event_pass_progress", "rss_mb": 2288.9, "idx": 0}
+{"t": 12.129, "stage": "event_pass_progress", "rss_mb": 2297.4, "idx": 500000}
+{"t": 12.783, "stage": "event_pass_progress", "rss_mb": 2323.2, "idx": 1000000}
+{"t": 13.485, "stage": "event_pass_progress", "rss_mb": 2346.9, "idx": 1500000}
+{"t": 13.92, "stage": "event_pass_done", "rss_mb": 2361.1, "events": 1843832, "kernels": 570964, "calls": 132113, "ranges": 11448}
+{"t": 14.636, "stage": "correlation_done", "rss_mb": 2410.9, "launch_owner_rows": 132113, "correlations": 132113}
+{"t": 14.636, "stage": "kernel_pass_start", "rss_mb": 2410.9}
+{"t": 14.698, "stage": "kernel_pass_progress", "rss_mb": 2411.4, "idx": 375000}
+{"t": 14.952, "stage": "kernel_pass_progress", "rss_mb": 2413.5, "idx": 450000}
+{"t": 15.576, "stage": "kernel_pass_progress", "rss_mb": 2416.8, "idx": 600000}
+{"t": 15.662, "stage": "kernel_pass_progress", "rss_mb": 2417.6, "idx": 625000}
+{"t": 16.129, "stage": "kernel_pass_progress", "rss_mb": 2421.2, "idx": 775000}
+{"t": 16.214, "stage": "kernel_pass_progress", "rss_mb": 2422.0, "idx": 800000}
+{"t": 16.642, "stage": "kernel_pass_progress", "rss_mb": 2426.9, "idx": 950000}
+{"t": 16.896, "stage": "kernel_pass_progress", "rss_mb": 2429.2, "idx": 1025000}
+{"t": 17.107, "stage": "kernel_pass_progress", "rss_mb": 2432.8, "idx": 1100000}
+{"t": 17.193, "stage": "kernel_pass_progress", "rss_mb": 2433.6, "idx": 1125000}
+{"t": 17.364, "stage": "kernel_pass_progress", "rss_mb": 2437.4, "idx": 1175000}
+{"t": 17.706, "stage": "kernel_pass_progress", "rss_mb": 2443.1, "idx": 1300000}
+{"t": 18.172, "stage": "kernel_pass_progress", "rss_mb": 2444.7, "idx": 1350000}
+{"t": 18.258, "stage": "kernel_pass_progress", "rss_mb": 2445.4, "idx": 1375000}
+{"t": 18.429, "stage": "kernel_pass_progress", "rss_mb": 2446.7, "idx": 1425000}
+{"t": 18.739, "stage": "kernel_pass_progress", "rss_mb": 2451.4, "idx": 1525000}
+{"t": 19.818, "stage": "kernel_pass_progress", "rss_mb": 2453.6, "idx": 1600000}
+{"t": 21.046, "stage": "kernel_pass_progress", "rss_mb": 2455.9, "idx": 1700000}
+{"t": 21.751, "stage": "kernel_pass_progress", "rss_mb": 2460.8, "idx": 1775000}
+{"t": 21.851, "stage": "kernel_pass_done", "rss_mb": 2461.6, "streams": 155, "status_rows": {"unowned": 5372, "unique_leaf": 32392, "captured_segment_unknown": 533200}}
+{"t": 28.244, "stage": "per_stream_done", "rss_mb": 2482.4, "streams": 155}
+{"t": 28.247, "stage": "sync_done", "rss_mb": 2482.4, "rows": 3320, "pairs": 1824, "unpaired": 0}
+{"t": 28.247, "stage": "steps_start", "rss_mb": 2482.4}
+{"t": 28.252, "stage": "steps_done", "rss_mb": 2482.4, "steps": 512, "useful": 4}
+{"t": 28.884, "stage": "result_built", "rss_mb": 2488.6}
+{"t": 28.969, "stage": "output_written", "rss_mb": 2488.7}
+{"t": 28.969, "stage": "done", "rss_mb": 2488.7}
+{"t": 30.005, "stage": "process_end", "rss_mb": 479.5}

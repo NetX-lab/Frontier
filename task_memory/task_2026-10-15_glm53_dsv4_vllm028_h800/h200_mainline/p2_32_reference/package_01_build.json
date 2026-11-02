@@ -1,0 +1,163 @@
+{
+  "case": "p2_32_reference",
+  "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06",
+  "harness": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model",
+  "harness_commit": "b62c155abd981a71e12e62aa0c0fe3990741d2f8",
+  "native_commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_reference/package_01",
+  "manifest_sha256": "9640996d7be64ece15315e9c28afa0a183ac26ec5852ba97ddd9ee5e5a3c1055",
+  "sealed": {
+    "sealed_files": 43
+  },
+  "changes": {
+    "case/inputs/engine.json": [],
+    "case/inputs/frontier.json": [
+      "cluster_config_decode_replica_config_device",
+      "cluster_config_prefill_replica_config_device"
+    ],
+    "case/inputs/native_config.json": [
+      "charged_group",
+      "gpu_type",
+      "job_tag",
+      "output_dir",
+      "retained_files.case/inputs/frontier.json",
+      "retained_files.overlay.json",
+      "run_tag",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_reference/package_01/case/inputs/frontier.json"
+    ],
+    "case/manifest.yaml": [
+      "case_id",
+      "policy.H200_nonpreemptible_running_plus_queued_limit",
+      "policy.charged_group",
+      "policy.gpu_type",
+      "policy.priority",
+      "purpose",
+      "run_generation",
+      "runtime_source_overlay.sha256"
+    ],
+    "config.json": [
+      "charged_group",
+      "gpu_type",
+      "job_tag",
+      "output_dir",
+      "retained_files.case/inputs/frontier.json",
+      "retained_files.overlay.json",
+      "run_tag",
+      "tool_hashes./data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_reference/package_01/case/inputs/frontier.json"
+    ],
+    "engine.json": [],
+    "evidence_readiness.json": [
+      "purpose",
+      "target"
+    ],
+    "launch.py": [
+      "-assert (config['gpu_type'], config['charged_group'], config['gpu'], config['replica']) == ('H800', 'codesign', 8, 4)",
+      "+assert (config['gpu_type'], config['charged_group'], config['gpu'], config['replica']) == ('H200', 'step_main', 8, 4)"
+    ],
+    "overlay.json": [],
+    "source_lock.json": [
+      "retained_files.case/inputs/frontier.json.changed",
+      "retained_files.case/inputs/frontier.json.sha256",
+      "retained_files.case/inputs/frontier.json.source",
+      "retained_files.case/inputs/frontier.json.source_sha256"
+    ]
+  },
+  "changed_retained_files": [
+    "case/inputs/frontier.json",
+    "overlay.json"
+  ],
+  "preflight_scratch": "/data/ycfeng/tmp/glm53_dsv4/h200/p2_32_reference_preflight_t07u709v",
+  "frontier_roles": {
+    "prefill": {
+      "attn_tensor_parallel_size": 8,
+      "device": "h200",
+      "moe_tensor_parallel_size": 1,
+      "moe_expert_parallel_size": 16,
+      "num_pipeline_stages": 1,
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "moe_routing_distribution_type": "balanced",
+      "moe_gating_routing_runtime_path": "balanced_topk",
+      "attn_dp": 2,
+      "world_size": 16
+    },
+    "decode": {
+      "attn_tensor_parallel_size": 8,
+      "device": "h200",
+      "moe_tensor_parallel_size": 1,
+      "moe_expert_parallel_size": 16,
+      "num_pipeline_stages": 1,
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "moe_routing_distribution_type": "balanced",
+      "moe_gating_routing_runtime_path": "balanced_topk",
+      "attn_dp": 2,
+      "world_size": 16
+    }
+  },
+  "launch_path": {
+    "h0": {
+      "role": "prefill",
+      "lane": 0,
+      "headless": false,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": null,
+      "data_parallel_address": "10.0.0.1",
+      "data_parallel_rpc_port": "24471",
+      "profiler_config": null,
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_producer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    },
+    "h1": {
+      "role": "prefill",
+      "lane": 1,
+      "headless": true,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": "1",
+      "data_parallel_address": "10.0.0.1",
+      "data_parallel_rpc_port": "24471",
+      "profiler_config": null,
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_producer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    },
+    "h2": {
+      "role": "decode",
+      "lane": 0,
+      "headless": false,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": null,
+      "data_parallel_address": "10.0.0.3",
+      "data_parallel_rpc_port": "24571",
+      "profiler_config": null,
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_consumer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    },
+    "h3": {
+      "role": "decode",
+      "lane": 1,
+      "headless": true,
+      "data_parallel_size": "2",
+      "data_parallel_start_rank": "1",
+      "data_parallel_address": "10.0.0.3",
+      "data_parallel_rpc_port": "24571",
+      "profiler_config": null,
+      "kv_transfer_config": {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_consumer",
+        "kv_buffer_device": "cuda",
+        "kv_load_failure_policy": "fail"
+      }
+    }
+  },
+  "check_only": "INPUT_HASHES_PASS_NO_SUBMISSION"
+}

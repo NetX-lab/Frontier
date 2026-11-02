@@ -1,0 +1,1220 @@
+{
+  "status": "PASS_CPU_32_RANK_SNAPSHOT_AUDIT",
+  "files": [
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank0.json",
+      "sha256": "1ab101195c84f312704619f67387c4835c9cde7df8f344a1ed82f41e41b05bcf",
+      "role": "prefill",
+      "world_rank": 0,
+      "worker_rank": 0,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank1.json",
+      "sha256": "b5626f35f1e0418e7ce54aed6eac75e78e15092d97e158a66acfb62e75df63f6",
+      "role": "prefill",
+      "world_rank": 1,
+      "worker_rank": 1,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank2.json",
+      "sha256": "c34cb877cec928d5a4c676dc3bc3bccd2992147d47fdceb4c4028f6a494d7401",
+      "role": "prefill",
+      "world_rank": 2,
+      "worker_rank": 2,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank3.json",
+      "sha256": "5c6c4cc7f6fd2565a4c7a8e74a695f951cdf05142b472d5d6368beeefda2b3a5",
+      "role": "prefill",
+      "world_rank": 3,
+      "worker_rank": 3,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank4.json",
+      "sha256": "ad1881b9389f6de83b602ddd9e27aa7186e7ea9af3a93442eb5259454c67580a",
+      "role": "prefill",
+      "world_rank": 4,
+      "worker_rank": 4,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank5.json",
+      "sha256": "3d35471d0519e5e6ce79c44be493a06b705fcbfe818ac96c428e900d2b4c86d9",
+      "role": "prefill",
+      "world_rank": 5,
+      "worker_rank": 5,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank6.json",
+      "sha256": "5fb92c2e27f6f19e76339e66c21b181406a67247c8dcd902e24d35cb1755da74",
+      "role": "prefill",
+      "world_rank": 6,
+      "worker_rank": 6,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host0/serving/rank7.json",
+      "sha256": "0746b8f659082b13c0f5048dfcb17b87dfb918dfb31cb358d6ed4b58df68267b",
+      "role": "prefill",
+      "world_rank": 7,
+      "worker_rank": 7,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank0.json",
+      "sha256": "daa6f8d03a9627c68006ef67c553ecce68b765ae8d3dc09de7e9673b4591e74b",
+      "role": "prefill",
+      "world_rank": 8,
+      "worker_rank": 0,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank1.json",
+      "sha256": "9cb9c0ab99e51d08cd1e89f1e93ef21a6e8dfac29e10ad52344df0ee9597b3c8",
+      "role": "prefill",
+      "world_rank": 9,
+      "worker_rank": 1,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank2.json",
+      "sha256": "bb49d2bfde9e98ffb3122713f5ab41fa6b74a5c6de2642f4dffce346179eb57f",
+      "role": "prefill",
+      "world_rank": 10,
+      "worker_rank": 2,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank3.json",
+      "sha256": "fbd04aedc9ca821d7fc1ec3901e2e19bba0684ea5272755073e74e51d1cc796d",
+      "role": "prefill",
+      "world_rank": 11,
+      "worker_rank": 3,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank4.json",
+      "sha256": "cf1b4c6199d180d11987ca2ecad2060cbc865dd83bf47bc1a2b0c5cf5d955c97",
+      "role": "prefill",
+      "world_rank": 12,
+      "worker_rank": 4,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank5.json",
+      "sha256": "9aa6a540bdd4ad1fee61ba09c7b40392376a8b99328c7508513079f4c520d6e6",
+      "role": "prefill",
+      "world_rank": 13,
+      "worker_rank": 5,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank6.json",
+      "sha256": "d17c8819ef0825f558cab5626e929085ad0c807ea4e617a21881ac3b7be9c7ab",
+      "role": "prefill",
+      "world_rank": 14,
+      "worker_rank": 6,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host1/serving/rank7.json",
+      "sha256": "b0942bdb7d869b8742a61055491ca016f1a4842062db5ea227e94d7e569880f5",
+      "role": "prefill",
+      "world_rank": 15,
+      "worker_rank": 7,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank0.json",
+      "sha256": "fc463ff436e84eacdb66c522801f24b4b2851cc5345a7f6bb44c6add787963a0",
+      "role": "decode",
+      "world_rank": 0,
+      "worker_rank": 0,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank1.json",
+      "sha256": "0a844e102112f76f39b138e278cb3fc22bf3ca58fc57144bfe6046b737b6c988",
+      "role": "decode",
+      "world_rank": 1,
+      "worker_rank": 1,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank2.json",
+      "sha256": "b5c6a925cc5a442a0e1881346f25d895b4d1cd6bc8e304c521663a943ac982b8",
+      "role": "decode",
+      "world_rank": 2,
+      "worker_rank": 2,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank3.json",
+      "sha256": "8e47b33ffddc110574837deb7378d10b38d9a3337fd0616240545194ca4c3011",
+      "role": "decode",
+      "world_rank": 3,
+      "worker_rank": 3,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank4.json",
+      "sha256": "4d19fac9d3babb5ec497bd0194aad83825fd7425a58e1c34ceefd3947ac35937",
+      "role": "decode",
+      "world_rank": 4,
+      "worker_rank": 4,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank5.json",
+      "sha256": "b6a201168b48a5c03508bffaccb404ac7085a767e62f2e15d309fecc232f4a8a",
+      "role": "decode",
+      "world_rank": 5,
+      "worker_rank": 5,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank6.json",
+      "sha256": "c28cc1f7b59d1c5659d397aaa4b632cc557a8821023c84e28b5a52a9af16eb51",
+      "role": "decode",
+      "world_rank": 6,
+      "worker_rank": 6,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host2/serving/rank7.json",
+      "sha256": "04236f87576d784ee30d1b2ce3a75834fe69caef3d4fc6e476da6caf2548955b",
+      "role": "decode",
+      "world_rank": 7,
+      "worker_rank": 7,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank0.json",
+      "sha256": "bfa0813f23fe14c9f2a69741e76884f88524ea004e52f990dffed21b3a2a2f3b",
+      "role": "decode",
+      "world_rank": 8,
+      "worker_rank": 0,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank1.json",
+      "sha256": "e425946a4b78c0ab7061211de41787094e25b557a42973c21025934d9ad3d4ce",
+      "role": "decode",
+      "world_rank": 9,
+      "worker_rank": 1,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank2.json",
+      "sha256": "0a37d640b674291c7ca197cdc3e5c170bfcd4d1da32e4b37f873e4dcd6ded1ed",
+      "role": "decode",
+      "world_rank": 10,
+      "worker_rank": 2,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank3.json",
+      "sha256": "f8084b4dd99caf0c8d7853e8e8e64ce9e44a88719725b6b031f0b66e014f8ec6",
+      "role": "decode",
+      "world_rank": 11,
+      "worker_rank": 3,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank4.json",
+      "sha256": "f8c84a6c3668992b4f04d23cce528740d90905aa1963e21b978ab1a003d197fb",
+      "role": "decode",
+      "world_rank": 12,
+      "worker_rank": 4,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank5.json",
+      "sha256": "6669f37075ac2e60de16b5d235a058e86c3170c9fc88a2f0d30ddf53fa6b7992",
+      "role": "decode",
+      "world_rank": 13,
+      "worker_rank": 5,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank6.json",
+      "sha256": "de31b94ddbbbd040dc27e471e1ec66ccbc22c92a306858ac3661087f77642a73",
+      "role": "decode",
+      "world_rank": 14,
+      "worker_rank": 6,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    },
+    {
+      "path": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/positive_green_tmp/test_v2_native_auto_and_c26_ac0/case/runs/groundtruth_clean/fixture/nodes/fixture-host3/serving/rank7.json",
+      "sha256": "745ae753be4c20d4718f2e71b001156d02789396cfd423eb1d73c171b4c1e546",
+      "role": "decode",
+      "world_rank": 15,
+      "worker_rank": 7,
+      "phases": [
+        [
+          1,
+          "formal"
+        ],
+        [
+          1,
+          "warmup"
+        ],
+        [
+          2,
+          "formal"
+        ],
+        [
+          2,
+          "warmup"
+        ],
+        [
+          3,
+          "formal"
+        ],
+        [
+          3,
+          "warmup"
+        ]
+      ],
+      "hook_count": 14,
+      "serving_rows": 6,
+      "observation_errors": 0,
+      "dropped_rows": 0
+    }
+  ],
+  "hooks": [
+    "torch.cuda.graphs.CUDAGraph.replay",
+    "vllm.v1.worker.gpu.cudagraph_utils.ModelCudaGraphManager.capture",
+    "vllm.v1.worker.gpu.cudagraph_utils.ModelCudaGraphManager.run_fullgraph",
+    "vllm.v1.worker.gpu.cudagraph_utils.ModelCudaGraphManager.run_pw_graph",
+    "vllm.v1.worker.gpu.dp_utils.dist.all_reduce",
+    "vllm.v1.worker.gpu.model_runner.GPUModelRunner.execute_model",
+    "vllm.v1.worker.gpu.model_runner.dispatch_cg_and_sync_dp",
+    "vllm.v1.worker.gpu.model_runner.get_uniform_decode_token_count",
+    "vllm.v1.worker.gpu_model_runner.GPUModelRunner._dummy_run",
+    "vllm.v1.worker.gpu_model_runner.GPUModelRunner._model_forward",
+    "vllm.v1.worker.gpu_worker.Worker.compile_or_warm_up_model",
+    "vllm.v1.worker.gpu_worker.Worker.execute_model",
+    "vllm.v1.worker.gpu_worker.Worker.load_model",
+    "vllm.v1.worker.gpu_worker.Worker.shutdown"
+  ],
+  "totals": {
+    "prefill": {
+      "ranks": 16,
+      "serving_rows": 96,
+      "successful_forwards": 3456,
+      "successful_replays": 0
+    },
+    "decode": {
+      "ranks": 16,
+      "serving_rows": 96,
+      "successful_forwards": 3456,
+      "successful_replays": 3456
+    }
+  },
+  "scope": "Synthetic CPU fixture host returns only; not distributed/GPU completion or timing."
+}

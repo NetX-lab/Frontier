@@ -1,0 +1,8 @@
+{
+  "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_affected_20261025_01/run_affected.py",
+  "sha256": "37eb154a470f130bf825fc455f09b14c5710d871dce10b6816fb56058dca3813",
+  "gross_lines": 77,
+  "cap": 110,
+  "syntax": "PASS",
+  "allocation_sha256": "abe82da7d8c1cd70085b33374ec8e7bf2693d9fe305497d52e75100495a489c6"
+}

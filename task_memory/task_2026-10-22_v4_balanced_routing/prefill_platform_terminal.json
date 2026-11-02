@@ -1,0 +1,40 @@
+{
+  "job": "exp-1023-023708-916112",
+  "replica": "exp-1023-023708-916112-cfcd2084",
+  "observed_utc": "2026-10-22T18:49:23.502357+00:00",
+  "creator": "i-fengyicheng",
+  "platform_status": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-22T18:45:37Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "node": "gpu-h800-0570.host.platform.shaipower.com",
+  "replica_phase": "Succeeded",
+  "containers": [
+    {
+      "name": "default",
+      "restart_count": 0,
+      "image_id": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "terminated": {
+        "exitCode": 0,
+        "reason": "Completed",
+        "startedAt": "2026-10-22T18:37:15Z",
+        "finishedAt": "2026-10-22T18:45:35Z",
+        "containerID": "containerd://7925a4635737f98d7ce4b1a05bda6c7de4993223aa99df57be784124894d82c7"
+      },
+      "container_seconds": 500.0,
+      "container_GPU_hours": 0.1388888888888889
+    }
+  ],
+  "terminal_log": "/data/ycfeng/tmp/glm53_dsv4/exp-1023-023708-916112-cfcd2084_terminal.log",
+  "terminal_log_lines": 31,
+  "business_admission": "PENDING_ARTIFACT_CHECK"
+}

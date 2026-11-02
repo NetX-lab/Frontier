@@ -1,0 +1,53 @@
+{
+  "status": "PASS_ONE_FREEZE_CONTROL_EQUIVALENCE",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-B",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py",
+    "compare",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/decode_dp1_freeze_control_01.json",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/decode_dp1_control_02.json"
+  ],
+  "exit": 0,
+  "comparison": {
+    "payload_equal": true,
+    "kernel_rows_equal": true,
+    "rows": [
+      142567,
+      142567
+    ],
+    "kernel_total": [
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      },
+      {
+        "count": 142567,
+        "sum_ms": 1377.599441999903,
+        "union_ms": 1215.560419921875
+      }
+    ],
+    "useful_steps": [
+      61,
+      61
+    ]
+  },
+  "freeze": {
+    "t": 3.609,
+    "stage": "freeze_after_load",
+    "rss_mb": 513.6,
+    "seconds": 1.0624993592500687e-05,
+    "objects": 667560
+  },
+  "source_sha256": "72d9a7f8ea8598643d1c9e63c96931af000927f97fa514233a817d887547e333",
+  "limits": "Decode control only; loading is unchanged, P0 and full32 coverage are not established."
+}

@@ -1,0 +1,29 @@
+diff --git a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md
+index de12de44..ea3398c1 100644
+--- a/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md
++++ b/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md
+@@ -2,10 +2,11 @@
+ 
+ ## Modification History
+ 
+ | Date | Change |
+ | --- | --- |
++| 2026-10-24 | Advanced current pointers to scope/lifetime CPU-source acceptance and separate mirrored-package allocation; R5 remains incomplete. |
+ | 2026-10-24 | W128-CURRENT-POINTERS-OCT24: updated terminal/fixture acceptance and R4/P0/S1 frontier; submission snapshots, checklists and admission limits preserved. |
+ | 2026-10-24 | W128-PROFILE04-STAGE-DOCS: current dependency advances from reviewed/sealed profile04 to its single submitted attempt's placement/runtime/data verification; failed history and gates unchanged. |
+ | 2026-10-24 | W128-PROFILE03-FAILURE-STAGE-DOCS: current dependency advances from FAILED profile03/preserved outputs to offline synthesis and separately bounded repair decision; historical captures and gates unchanged. |
+ | 2026-10-24 | W128-GRAPH-ACCEPTANCE-STAGE-DOCS: advanced current dependency from source/package repairs to Starting profile03 runtime audit after limited graph acceptance; full05/09/19 unchanged. |
+ | 2026-10-24 | Replaced the stale queued-profile route with accepted diagnostic/isolated data and the next bounded collection repairs. |
+@@ -130,11 +131,11 @@
+ ## Final execution route — current (2026-10-24)
+ 
+ Current dependency: `{R3/R4 metadata limited acceptance} ‖ {measured P0 GC/load diagnosis -> bounded follow-up decision} ‖ {S1 tuple/hash repair -> independent re-review -> primary CPU replay}`; R5 -> R6 -> R7 remain unfinished. [Current evidence and limits](../task_2026-10-23_v4_remaining_measurements/summary.md#profile04-terminal-audit-frontier--current-2026-10-24) supersede the submission-only route, not its evidence.
+ Profile04 exp-1024-172225-512616 remains GPU attempt1/1, original45 inputs/runtime1437ace6 unchanged:4Succeeded/exit0/restart0, actual H800 hosts0030/0158/0187/0574/32UUIDs,432success/0failed and202 hash-identical files/6,024,578,382B. R3 scoped No findings and primary193checks/99bindings/token-negative plus32-rank mechanical replay PASS are not corrected R4 acceptance.
+ R3 retained run-data and R4 metadata lanes are [accepted with limits](../task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/run_metadata_acceptance.json): P2 re-review CLOSED and corrected primary32-rank replay byte-identical8ba69802…,80 direct decode joins/1320 sampling rows unchanged. Whole DP alignment and actual trace-ID correlation are not accepted. R5 remains FAILED/INCOMPLETE24/32, all8P0 exit124 at60s, useful P1/D0/D1=4/61/61 per rank.
+-Fixture acceptedb0856975 (source6abd2d8e/records0d5b0d6e): primary145PASS in each worktree/189immutable unchanged. Native capture prerequisite accepted5a580948 with limits only. S1 source delivered5e2fe861/272db0bd with owner48 CPU PASS, but tuple-selection and closed-log hash repairs/re-reviews/primary replay are pending; composed repair caps265source/185tests. Single1H800/600s observe/control NOT submitted; package/image/runtime gates separate and native integration not allocated.
++Fixture acceptedb0856975 (source6abd2d8e/records0d5b0d6e): primary145PASS in each worktree/189immutable unchanged. Native capture prerequisite accepted5a580948 with limits only. S1/S2 [CPU/source acceptance](../task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/primary_acceptance.json): both full13-file reviews close tuple/loghash findings; owner and merged roots each50PASS/25fixtureexports/actual30GiB/CUDAfalse,252source/179tests within265/185. Separate mirrored S3package is allocated, single1H800/600s observe/control NOT submitted; image/runtime/native ownership remains unverified.
+ No profile04 serving/reference/cost/captured-operator/dependency admission follows;13native childSIGKILL escalations are not all-natural shutdown, NET/IB/Socket/workerbinary rehash UNKNOWN. Full05/09/19 OPEN, GLM PAUSED, CPU-overhead last; immutable profile03 FAILED and native06 R4/isolated/tiny-probe acceptances retain their original limits.
+ 
+ ### Historical submission-only route — 2026-10-24 09:49Z
+ 
+ Current submission dependency at root records f4f4ab79: `unchanged runtime1437ace6 + existing optional CUDA statistics=false -> source8cbf7ab9/records6ec96b4c/mergedf0eafafb ->55tests/five image/153source-Git-package checks PASS ->45-input seal -> one GPU attempt1/1 exp-1024-172225-512616 -> actual placement/runtime -> terminal/raw-data acceptance`. [Detailed submission evidence](progress.md#profile04-submission-milestone--2026-10-24) binds manifest25bc61beca71021954aea4b875bd42ad4477e4482871d3422d0f35881ed3d58f and80archive checks PASS; local launch1 AUTHORIZATION error created NO job, local launch2 exported the existing decision.

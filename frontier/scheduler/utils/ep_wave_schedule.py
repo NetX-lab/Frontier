@@ -120,7 +120,7 @@ def schedule_layer_wave(
             stage_id=stage_id,
             layer_id=layer_id,
             cohort_id=cohort_id,
-            participant_ep_ids=tuple(layer_workload.participant_ep_ids),
+            participant_ep_ids=plan.participant_ep_ids,
         )
     else:
         event_cls = _load_dense_layer_event()

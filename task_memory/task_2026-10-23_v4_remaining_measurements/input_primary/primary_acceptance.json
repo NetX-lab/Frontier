@@ -1,0 +1,46 @@
+{
+  "status": "ACCEPTED_ISOLATED_INPUT_COMPONENT",
+  "merged_commit": "732406aa235ff63c97e7b9bbd6d5836fe1881de7",
+  "source_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "candidate": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_input_20261023_w128_candidate02",
+  "admission_sha256": "d666dd7f9b8470426e99a6f2731010b2b703c1dfd91357591c3f1399b9db8e55",
+  "source_files": {
+    "frontier/execution_time_predictor/dsv4_attention_input.py": "5dfe5a9bff174af19c2bc74836ddbf54811266f678718db1b6a491a7b4d2e04a",
+    "frontier/execution_time_predictor/deepseek_v4.py": "ab11024d018ce6b0bf1a2203518bd0b3ed8027c16afe41ec3176c95556213461",
+    "tests/comparison/calibration/prepare_dsv4_attention_input.py": "fdb91fd3e3845d3e4029545cc4a4e13827c63980f1eabed2b0491a39a848e272",
+    "tests/integration/check_dsv4_measured_scopes.py": "622cf7d368fcffc83106a67d679195e4cc54b1b7449c2e377fabbd4e6b4f6767",
+    "tests/unit/test_dsv4_graph_measured.py": "5ad32dd4eadb294f5f8bea6102e5e4eb533555d945ae97a4fa0dd713d4a5221b"
+  },
+  "merged_unit_count": 194,
+  "automatic_scope_count": 94,
+  "legacy_positive_count": 102,
+  "legacy_negative_count": 72,
+  "strict77_identical": 77,
+  "candidate_artifacts_rehashed": 451,
+  "matrix_capture_reused_after_merge": true,
+  "new_capture_after_merge": false,
+  "serving_admission": false,
+  "scope": {
+    "core_files": 2,
+    "core_changed_lines": 94,
+    "non_core_files": 3,
+    "non_core_changed_lines": 285
+  },
+  "evidence": {
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_merged_732406aa.json": "800588020a40509e159e588a2dc46489695ab6d54f5ec46e8988db1a5cd8fb27",
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_merged_732406aa_scopes.json": "09db5595a8702537cfa6e6a061fc1d4a1eddcea95741b7d62569e8b69a3a563f",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/input_admission.json": "bcc1ebfd20eea11b7234266433784d29df52004c2a785301d51398fe4331882f",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/representation_verification.json": "095abdb4e56b11b4aae3574a1eca8e6a10ce03c470b14a3c0cc3cb95ec82efe9",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/merged_matrix_binding.json": "48b202aee194973f0e09352356accbf837d5b52ee6c39b866081e922956504f6",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_input_source.md": "6c13f0ea279f31846df7d886db9c3b0136f6d46595c5fca496ffeafd1be04a04",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/input_primary/review_2026-10-23_representation.md": "a4df15f0cd72a7ba9c3e8feb2610c20d5d53d5939a75e580237f1b5a17008bee",
+    "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6"
+  },
+  "remaining": [
+    "H native collector implementation and CPU review",
+    "G2 driver integration and bounded GPU proposal",
+    "complete kernel ownership and GPU dependencies",
+    "serving/graph/TP8/PD cost qualification",
+    "four-metric calibration"
+  ]
+}

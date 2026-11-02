@@ -1,0 +1,53 @@
+{
+  "status": "PASS_ACTUAL_IMAGE_SOURCE_CAPTURE",
+  "command": [
+    "docker",
+    "run",
+    "-i",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--runtime=runc",
+    "--memory=2g",
+    "--cpus=1",
+    "--pids-limit=64",
+    "-e",
+    "NVIDIA_VISIBLE_DEVICES=void",
+    "-e",
+    "CUDA_VISIBLE_DEVICES=",
+    "--entrypoint",
+    "python3",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "-I",
+    "-B",
+    "-"
+  ],
+  "start_utc": "2026-10-23T18:49:52.838010+00:00",
+  "end_utc": "2026-10-23T18:49:56.476781+00:00",
+  "returncode": 0,
+  "torch": "2.13.0+cu130",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "torch_imported": false,
+  "source_comparisons": [
+    {
+      "path": "torch/cuda/graphs.py",
+      "image_sha256": "15b535903f0832cbfbf83070c663ed899a9fd87b5499befde5087b4c2962ed81",
+      "local_sha256": "15b535903f0832cbfbf83070c663ed899a9fd87b5499befde5087b4c2962ed81",
+      "equal": true
+    },
+    {
+      "path": "torch/cuda/_graph_annotations.py",
+      "image_sha256": "145ee86caaa3e6594a61cc96cd22022cc496a2e66273a337b9b190046e804d04",
+      "local_sha256": "145ee86caaa3e6594a61cc96cd22022cc496a2e66273a337b9b190046e804d04",
+      "equal": true
+    },
+    {
+      "path": "nvidia/cu13/include/cupti_callbacks.h",
+      "image_sha256": "b2f82221fb03ecb2b2a27afa2d64284babdf49fee1a3a2811258d473285e1105",
+      "local_sha256": "b2f82221fb03ecb2b2a27afa2d64284babdf49fee1a3a2811258d473285e1105",
+      "equal": true
+    }
+  ],
+  "output": "/data/ycfeng/tmp/glm53_dsv4/graph_api_source_ebaw9_yr",
+  "scope": "CPU-only file capture; API execution and callback semantics not tested."
+}

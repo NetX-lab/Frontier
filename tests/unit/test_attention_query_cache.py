@@ -24,6 +24,9 @@ class _Batch:
     padded_tokens: int = 8
     state_init_mode: str = "zero"
 
+    def get_effective_total_tokens_rounded(self, cluster_type):
+        return self.padded_tokens
+
 
 class _Predictor(CacheFixturePredictor):
     def __init__(self):
@@ -107,7 +110,7 @@ def test_stage_cache_matches_uncached_numerics_and_preserves_layer_ownership():
     assert predictor._attention_query_cache_hits == 6
     assert predictor._attention_query_cache_misses == 2
     assert set(predictor.observed_caches[0]) == {
-        (spec.family_id, spec.variant_id)
+        (spec.family_id, spec.variant_id, batch.padded_tokens)
         for spec in predictor._model_config.get_layer_attention_specs()
     }
     assert [item.total_time() for item in uncached] == [48, 48, 48, 72, 48, 48, 48, 72]
@@ -174,6 +177,33 @@ def test_attention_cache_lifetime_is_one_public_stage_call():
     assert predictor._attention_query_cache_misses == 64
     assert predictor._attention_query_cache_hits == 192
     assert "attention_query_cache" not in inspect.signature(predictor.predict_stage_execution_time).parameters
+
+
+def test_glm_attention_cache_separates_sequence_parallel_input_norm_widths(monkeypatch):
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.execution_time_predictor.sequence_parallel_moe import input_layernorm_tokens
+
+    predictor = CacheFixturePredictor()
+    predictor._model_config = BaseModelConfig.create_from_name("zai-org/GLM-5.3")
+    predictor._replica_config.model_config = predictor._model_config
+    predictor._replica_config.attn_tensor_parallel_size = 8
+    predictor._replica_config.attn_dp = 2
+    predictor._replica_config.moe_expert_parallel_size = 16
+    batch = Batch(0, [Request(0.0, 512, 4)], [512], is_moe=True)
+
+    def attention(*, batch, layer_id, cluster_type):
+        return AttentionTime(attn_norm_time=float(input_layernorm_tokens(predictor, batch, layer_id)))
+
+    monkeypatch.setattr(predictor, "predict_attention_layer_time", attention)
+    cache = {}
+    layers = (0, 3, 4, 6)
+    cached = [predictor._predict_attention_layer_time_with_query_cache(
+        batch=batch, layer_id=layer, cluster_type=ClusterType.MONOLITHIC, cache=cache,
+    ).attn_norm_time for layer in layers]
+    uncached = [attention(batch=batch, layer_id=layer, cluster_type=ClusterType.MONOLITHIC).attn_norm_time
+                for layer in layers]
+    assert cached == uncached == [512.0, 512.0, 64.0, 64.0]
+    assert len(cache) == 4
 
 
 @pytest.mark.parametrize("disaggregated", [False, True])

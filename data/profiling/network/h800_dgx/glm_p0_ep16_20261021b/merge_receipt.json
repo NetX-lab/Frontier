@@ -1,0 +1,30 @@
+{
+ "base_dir": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h800_dgx/glm_p0_ep16_20261021a",
+ "run_dir": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-21_p0_input_binding/published_ep16",
+ "tables": {
+  "summary.csv": {
+   "rows": 1241,
+   "columns": 21,
+   "sha256": "b710372e80c5d77d949915903823f7cfb7f31fc1c315b2a58902fab11c8a1b44",
+   "sources": [
+    {
+     "path": "summary.csv",
+     "sha256": "d10668927e5a5d5a56aa1fc1305db1887b629dd52b6bdd988ff2bad94ab537b3",
+     "output_rows": [
+      1187,
+      1241
+     ]
+    }
+   ],
+   "base": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h800_dgx/glm_p0_ep16_20261021a/summary.csv",
+    "sha256": "232c70faf1a89201764436f567094248ad678087aa1282c0edbbad6355c4c4b5",
+    "output_rows": [
+     0,
+     1187
+    ]
+   },
+   "repeated_base_rows": []
+  }
+ }
+}

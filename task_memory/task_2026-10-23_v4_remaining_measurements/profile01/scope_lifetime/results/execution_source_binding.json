@@ -1,0 +1,43 @@
+{
+  "status": "PASS_EXECUTION_SOURCE_GPU_BINDING",
+  "observed_utc": "2026-10-24T19:12:59.474354+00:00",
+  "checks": {
+    "personal_creator": true,
+    "codesign_nonpreemptible": true,
+    "single_job": true,
+    "succeeded_platform_and_launcher": true,
+    "completed_exit0_restart0": true,
+    "actual_gpu_witness": true,
+    "actual_image": true,
+    "gpu_cpu_memory_request": true,
+    "one_replica_never_restart": true,
+    "original_nfs": true,
+    "frozen_launcher_config": true,
+    "source_binding": true,
+    "image_report_binding": true,
+    "shape_binding": true,
+    "ceiling_binding": true,
+    "cloud_personal_root": true,
+    "observe_actual_host_and_gpu": true,
+    "observe_trace_path": true,
+    "control_actual_host_and_gpu": true,
+    "control_trace_path": true
+  },
+  "job": "exp-1025-021228-212042",
+  "gpu_uuid": "NVIDIA H800 (UUID: GPU-4c9987eb-19e6-793f-0326-c502be48abcd)",
+  "host": "gpu-h800-0158.host.platform.shaipower.com",
+  "actual_image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "original_nfs": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01:/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "gpu_attempts_used": 1,
+  "gpu_attempts_remaining": 0,
+  "trace_reported_cuda_driver_api": 13000,
+  "trace_reported_cuda_runtime_api": 13000,
+  "trace_reported_cupti_version": 130001,
+  "host_driver_release_string": "UNRECORDED",
+  "limits": "Trace API versions are recorded telemetry; no worker driver/library binary rehash or timing/non-perturbation claim. Exact source, namespace and raw-data acceptance is separate from native serving/cost/reference admission.",
+  "evidence_sha256": {
+    "package_primary/execution/platform_02.json": "f036a63b0f2dad146c58a9d2c5ce8c1ceb558ba0305c90d8bb2a5a7a06c67416",
+    "package_primary/execution/platform_02.exp-1025-021228-212042-cfcd2084.log": "fc18505c0803a545303d87e1d205da21e9390d80ba95d74b235a7a3980417d1c",
+    "package_primary/execution/launcher_result.json": "e6fd33630b4792b705e10b47517298c223a86890d8a7418b2d88e9c47ee3b7eb"
+  }
+}

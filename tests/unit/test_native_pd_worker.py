@@ -1,0 +1,535 @@
+"""Execute the reviewed worker with CPU-only process and platform stand-ins."""
+
+import contextlib
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import types
+from unittest.mock import patch
+
+import pytest
+
+from tests.comparison.calibration import native_pd_worker
+
+
+def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, engine=None,
+             lifecycle=None):
+    directory = Path(tempfile.mkdtemp(prefix=case + "_", dir=temporary))
+    root = directory / "output"
+    model = directory / "model"
+    scratch = directory / "scratch"
+    model.mkdir()
+    scratch.mkdir()
+    (model / "config.json").write_text("{}")
+    own_host = "host1" if case in ("canonical_clean_natural_headless_exit",
+        "canonical_clean_active_headless_exit", "canonical_clean_headless_native_error") else "host0"
+    for index in range(4):
+        if f"host{index}" == own_host:
+            continue
+        node = root / "nodes" / f"host{index}"
+        node.mkdir(parents=True)
+        (node / "ready.json").write_text(json.dumps({
+            "host": f"host{index}", "ip": f"10.0.0.{index + 1}"}))
+        if not (lifecycle and index == 3 and lifecycle.get("peer_drained_at", 0) != 0):
+            (node / "drained.json").write_text("{}")
+    (root / "nodes/host2/server_ready.json").write_text("{}")
+    events = []
+    replay_commands = []
+    server_environments = []
+    child_imports = []
+    real_popen = subprocess.Popen
+    injected = False
+    clock = [0]
+    real_glob = Path.glob
+
+    def advance(seconds):
+        clock[0] += seconds
+        marker_at = lifecycle.get("head_marker_at")
+        marker = root / "nodes/host0/native_stopped.json"
+        if marker_at is not None and clock[0] >= marker_at and not marker.exists():
+            marker.write_text('{"returncode":0,"signal":"SIGINT"}')
+            events.append("head_native_stopped")
+        peer_at = lifecycle.get("peer_drained_at")
+        if peer_at is not None and clock[0] >= peer_at:
+            (root / "nodes/host3/drained.json").write_text("{}")
+
+    def glob(path, pattern):
+        if (lifecycle.get("stale_drain_listing") and pattern == "nodes/*/drained.json"
+                and clock[0] < 20):
+            return iter(())
+        return real_glob(path, pattern)
+
+    def write_json(path, value):
+        nonlocal injected
+        if (case == "report_write_failure" and not injected
+                and path.name == "result.json" and value.get("stage") == "await_replay"):
+            injected = True
+            events.append("auxiliary_report_error_after_native_health")
+            raise OSError("Injected auxiliary result writer failure")
+        path.write_text(json.dumps(value))
+
+    def sha256(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    class Process:
+        def __init__(self, kind):
+            self.kind = kind
+            self.pid = 101 if kind == 'server' else 102
+            self.returncode = None
+
+        def poll(self):
+            if (self.kind == "server" and case == "canonical_clean_natural_headless_exit"
+                    and (root / "nodes/host1/drained.json").exists()):
+                self.returncode = 0
+            if (self.kind == "server" and case == "canonical_clean_headless_native_error"
+                    and (root / "nodes/host1/drained.json").exists()):
+                self.returncode = 23
+            if self.kind == "replay":
+                self.returncode = 4 if case == "canonical_clean_admission_failure" else 0
+                if "replay_completed" not in events:
+                    events.append("replay_completed")
+                if case == "native_exit_at_replay_completion":
+                    server.returncode = 23
+                    events.append("native_exit_23_before_requested_stop")
+            return self.returncode
+
+    server = Process("server")
+    replay = Process("replay")
+
+    def popen(command, **kwargs):
+        kind = ("server" if command[0] == "fake-native-server"
+                or '--worker-extension-cls' in command else "replay")
+        if kind == "replay":
+            replay_commands.append(command)
+        else:
+            server_environments.append(dict(kwargs['env']))
+            if case == 'canonical_clean_serving_staged_child':
+                assert '--worker-extension-cls' in command
+                child_env = dict(kwargs['env'])
+                for name in ('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR',
+                             'FRONTIER_NATIVE_RUN_GENERATION', 'FRONTIER_NATIVE_ROLE'):
+                    child_env.pop(name, None)
+                probe = child_code or (
+                    'import importlib, json; '
+                    'm = importlib.import_module("native_full_structure"); '
+                    'print(json.dumps({"path": m.__file__, "class": m.FullModelInventory.__name__}))')
+                with real_popen([sys.executable, '-P', '-c', probe],
+                    cwd=directory, env=child_env, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE, text=True) as child:
+                    stdout, stderr = child.communicate(timeout=30)
+                assert child.returncode == 0, stderr
+                child_imports.append(json.loads(stdout))
+        events.append(kind + "_launch")
+        return server if kind == "server" else replay
+
+    def stop_server(process, timeout):
+        events.append(process.kind + "_stop_called")
+        if lifecycle is not None:
+            clock[0] += 3
+            if lifecycle.get('stop_raises'):
+                raise RuntimeError('Injected native stop error')
+        if process.poll() is not None:
+            return {"signal": None, "returncode": process.returncode}
+        process.returncode = (23 if case == "native_shutdown_error"
+                              and process.kind == "server" else 0)
+        return {"signal": "SIGINT", "returncode": process.returncode}
+
+    inventory = types.ModuleType("probe_runtime_inventory")
+    inventory.primary_ipv4 = lambda: "10.0.0.2" if own_host == "host1" else "10.0.0.1"
+    inventory.read_text = lambda path: ""
+    inventory.sha256 = sha256
+    inventory.weight_candidates = lambda *args: {}
+    inventory.write_json = write_json
+    nixl = types.ModuleType("probe_nixl_read")
+    nixl.SYSFS_INFINIBAND = directory / "no_rdma_files"
+    nixl.gid_table = lambda path: {}
+    nixl.roce_v2_ipv4_ports = lambda value: ["mlx5_0:1"]
+    pd = types.ModuleType("pd_replay")
+    pd.instance_devices = lambda inherited, *, engine, role: {role: "0,1,2,3,4,5,6,7"}
+    pd.instance_env = lambda *args, **kwargs: ({}, {})
+    pd.kv_transfer_config = lambda *args: {}
+    native = types.ModuleType("vllm_replay")
+    native.server_command = lambda *args: ["fake-native-server"]
+    native.stop_server = stop_server
+    config = {
+        "script": str(directory / "worker.py"), "harness_dir": str(directory),
+        "output_dir": str(root), "cache_environment": {}, "model_dir": str(model),
+        "model_hashes": {"config.json": sha256(model / "config.json")},
+        "installed_package": str(directory / "vllm"), "expected_source_hashes": {},
+        "replica": 4, "gpu": 8, "data_parallel_size_local": 1,
+        "engine": {"data_parallel_size": 2, "tensor_parallel_size": 8, "kv_transfer": {}},
+        "dp_rpc_ports": {"prefill": 30100, "decode": 30200},
+        "http_ports": {"prefill": 30300, "decode": 30400},
+        "proxy_port": 30500, "serve_observers": {"prefill": {}, "decode": {}},
+        "peer_wait_seconds": 10, "startup_timeout_s": startup_timeout_s, "replay_timeout_s": 10,
+        "drain_seconds": 0, "stop_timeout_s": 10, "weight_suffixes": [".bin"],
+    }
+    if lifecycle is not None:
+        config["peer_wait_seconds"] = 60
+    if case.startswith("canonical_clean"):
+        config.update(mode="clean", idle_timeout_s=180, idle_poll_s=1)
+    if case in ("canonical_clean_standard_layout", "canonical_clean_manifest_staging_failure"):
+        config.update(case_dir=str(directory / "local-case"), run_tag="cpu-fixture")
+        if case == 'canonical_clean_standard_layout':
+            metadata = Path(config['case_dir']) / 'runs/groundtruth_clean/cpu-fixture/run_manifest.json'
+            metadata.parent.mkdir(parents=True)
+            metadata.write_text(json.dumps({'run_generation': 'CPU-worker-cold-start'}))
+    if own_host == "host1":
+        (root / "replay_finished.json").write_text('{"returncode":0}')
+    if case.startswith('canonical_clean_serving'):
+        config.update(case_dir=str(directory / 'local-case'), run_tag='cpu-fixture')
+        config['engine']['worker_extension_cls'] = 'native_full_structure.FullModelInventory'
+        if case != 'canonical_clean_serving_staged_child':
+            (directory / 'native_full_structure.py').write_text('CPU fixture module, not executed\n')
+        if case in ('canonical_clean_serving', 'canonical_clean_serving_invalid_generation',
+                    'canonical_clean_serving_staged_child'):
+            metadata = Path(config['case_dir']) / 'runs/groundtruth_clean/cpu-fixture/run_manifest.json'
+            metadata.parent.mkdir(parents=True)
+            metadata.write_text(json.dumps({'run_generation': 'cpu-serving-generation'
+                if case == 'canonical_clean_serving' else None}))
+    if case == 'canonical_clean_serving_staged_child':
+        from tests.unit.test_native_pd_manifest import MODULES, REPO
+        if engine is None:
+            from tests.unit.test_calibration_pd_harness import nixl_engine
+            engine = nixl_engine()
+
+        for name in (*MODULES, 'tests/comparison/calibration/native_full_structure.py'):
+            target = directory / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPO / name, target)
+        harness = directory / 'tests/comparison/calibration'
+        spec = importlib.util.spec_from_file_location('staged_pd_replay', harness / 'pd_replay.py')
+        staged_pd = importlib.util.module_from_spec(spec)
+        with patch('sys.path', list(sys.path)):
+            spec.loader.exec_module(staged_pd)
+        pd.instance_env = staged_pd.instance_env
+        pd.kv_transfer_config = staged_pd.kv_transfer_config
+        native.server_command = staged_pd.server_command
+        config['harness_dir'] = str(harness)
+        config['serve_observers'] = {'prefill': None, 'decode': None}
+        config['engine'] = engine | {
+            'worker_extension_cls': 'native_full_structure.FullModelInventory'}
+        (model / 'config.json').write_text(json.dumps({
+            'architectures': ['GlmMoeDsaForCausalLM'], 'vocab_size': 154880}))
+        config['model_hashes']['config.json'] = sha256(model / 'config.json')
+        metadata.write_text(json.dumps({'run_generation': 'cpu-serving-generation'}))
+    original_relative = Path.is_relative_to
+
+    def is_relative_to(path, other):
+        if path == root and other == "/mnt/codesign-exp/ycfeng":
+            return True
+        return original_relative(path, other)
+
+    class Health:
+        status = 200
+
+        def __enter__(self):
+            events.append("native_health_200")
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(patch.dict("os.environ"))
+        if case == 'canonical_clean_serving_staged_child':
+            os.environ['PYTHONPATH'] = str(directory)
+            os.environ['NCCL_IB_HCA'] = 'platform-value'
+        stack.enter_context(patch("sys.path", list(__import__("sys").path)))
+        stack.enter_context(patch.dict("sys.modules", {
+            "probe_runtime_inventory": inventory, "probe_nixl_read": nixl,
+            "pd_replay": pd, "vllm_replay": native}))
+        stack.enter_context(patch.object(Path, "is_relative_to", is_relative_to))
+        stack.enter_context(patch.object(worker.socket, "gethostname",
+            return_value=own_host))
+        stack.enter_context(patch.object(worker.os, "dup2"))
+        stack.enter_context(patch.object(worker.tempfile, "mkdtemp", return_value=str(scratch)))
+        stack.enter_context(patch.object(worker.subprocess, "Popen", side_effect=popen))
+        stack.enter_context(patch.object(worker.subprocess, "check_output", return_value="fake H800"))
+        stack.enter_context(patch.object(worker.importlib.metadata, "version", return_value="stub"))
+        stack.enter_context(patch("urllib.request.urlopen", return_value=Health()))
+        if case == "canonical_clean_standard_layout" or case.startswith('canonical_clean_serving'):
+            stack.enter_context(patch.object(worker, "stage_run_manifest",
+                side_effect=lambda *args: events.append("prelaunch_manifest_staged")))
+        if lifecycle is not None:
+            stack.enter_context(patch.object(worker.time, "monotonic", side_effect=lambda: clock[0]))
+            stack.enter_context(patch.object(worker.time, "sleep", side_effect=advance))
+            stack.enter_context(patch.object(Path, "glob", glob))
+        elif case == "canonical_clean_natural_headless_exit":
+            def publish_head_stop(_):
+                events.append("head_native_stopped")
+                (root / "nodes/host0/native_stopped.json").write_text('{"returncode":0,"signal":"SIGINT"}')
+            stack.enter_context(patch.object(worker.time, "sleep", side_effect=publish_head_stop))
+        code = worker.run(config)
+    result = json.loads((root / "nodes" / own_host / "result.json").read_text())
+    return {
+        "case": case, "worker_returncode": code, "events": events,
+        "native_server_returncode": result.get("server_stop", {}).get("returncode"),
+        "native_server_stop_signal": result.get("server_stop", {}).get("signal"),
+        "failed_sentinel": (root / "nodes" / own_host / "failed.json").exists(),
+        "observation_errors": result["observation_errors"],
+        "replay_commands": replay_commands,
+        "shutdown_order": result.get("shutdown_order"),
+        "shutdown_timings": result.get("shutdown_timings"),
+        "lifecycle_monotonic": clock[0],
+        "server_environments": server_environments,
+        "server_env_set": result.get('server_env_set'),
+        "serving_instrumentation": result.get('serving_instrumentation'),
+        "child_imports": child_imports,
+        "server_pid": result.get('server_pid'),
+        "server_ready": json.loads((root / 'nodes' / own_host / 'server_ready.json').read_text())
+            if (root / 'nodes' / own_host / 'server_ready.json').exists() else None,
+    }
+
+
+@pytest.mark.parametrize("case", ["control", "report_write_failure",
+                                 "native_exit_at_replay_completion", "native_shutdown_error"])
+def test_worker_separates_auxiliary_report_faults_from_native_failure(tmp_path, case):
+    result = exercise(native_pd_worker, tmp_path, case)
+    assert "native_health_200" in result["events"]
+    assert "replay_launch" in result["events"]
+    assert "server_stop_called" in result["events"]
+    if case.startswith("native_"):
+        assert result["worker_returncode"] != 0
+        assert result["native_server_returncode"] == 23
+    else:
+        assert result["worker_returncode"] == 0
+        assert not result["failed_sentinel"]
+    if case == "report_write_failure":
+        assert result["observation_errors"]
+        assert "Injected auxiliary result writer failure" in result["observation_errors"][0]
+    if case == "native_exit_at_replay_completion":
+        assert result["failed_sentinel"]
+
+
+def test_worker_forwards_canonical_clean_mode_and_idle_configuration(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean")
+    assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
+    command = result["replay_commands"][0]
+    assert command[command.index("--mode") + 1] == "clean"
+    assert command[command.index("--idle-timeout-s") + 1] == "180"
+    assert command[command.index("--idle-poll-s") + 1] == "1"
+
+
+def test_worker_preserves_native_completion_when_client_admission_is_unverified(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_admission_failure")
+    assert result["worker_returncode"] == 4
+    assert result["native_server_returncode"] == 0
+    assert not result["failed_sentinel"]
+    assert result["events"].index("replay_completed") < result["events"].index("server_stop_called")
+
+
+def test_worker_uses_case_run_layout_and_retains_ordered_shutdown(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_standard_layout")
+    assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
+    assert result["events"].index("prelaunch_manifest_staged") < result["events"].index("server_launch")
+    command = result["replay_commands"][0]
+    assert Path(command[command.index("--output-dir") + 1]).name == "run"
+    assert result["shutdown_order"] == {
+        "drained_before_stop": True,
+        "all_nodes_drained_before_head_stop": ["host0", "host1", "host2", "host3"],
+        "native_returned_before_requested_stop": False,
+    }
+
+
+def test_manifest_copy_failure_is_soft_and_native_work_still_completes(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_manifest_staging_failure")
+    assert result["observation_errors"]
+    assert "FileNotFoundError" in result["observation_errors"][0]
+    assert result["worker_returncode"] == result["native_server_returncode"] == 0
+    assert not result["failed_sentinel"]
+    assert result["events"].index("replay_completed") < result["events"].index("server_stop_called")
+
+
+def test_headless_natural_completion_still_waits_for_head_stop_evidence(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_natural_headless_exit")
+    assert result["worker_returncode"] == result["native_server_returncode"] == 0
+    assert result["native_server_stop_signal"] is None
+    assert not result["observation_errors"]
+    assert result["shutdown_order"]["native_returned_before_requested_stop"] is True
+    assert result["shutdown_order"]["head_stopped_before_headless_stop"] is True
+    assert result["events"].index("head_native_stopped") < result["events"].index("server_stop_called")
+
+
+def test_serving_extension_receives_actual_generation_role_and_node_directory(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving')
+    assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+    assert not result['observation_errors']
+    env = result['server_environments'][0]
+    assert env['FRONTIER_NATIVE_RUN_GENERATION'] == 'cpu-serving-generation'
+    assert env['FRONTIER_NATIVE_ROLE'] == 'prefill'
+    assert Path(env['FRONTIER_NATIVE_SERVING_EVIDENCE_DIR']).parts[-2:] == ('nodes', 'host0')
+    assert result['serving_instrumentation']['native_python_callables_wrapped'] is True
+    assert result['serving_instrumentation']['overhead_measured'] is False
+    ready = result['server_ready']
+    assert ready['server_pid'] == result['server_pid'] == 101
+    assert ready['health_status'] == 200 and ready['run_generation'] == 'cpu-serving-generation'
+    assert ready['server_started_at_utc'] <= ready['ready_at_utc']
+    assert len(ready['run_manifest_sha256']) == 64
+
+
+def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child')
+    assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+    assert not result['observation_errors']
+    env = result['server_environments'][0]
+    assert env['NCCL_IB_HCA'] == 'platform-value'
+    assert env['PYTHONPATH'].split(os.pathsep)[0].endswith('/tests/comparison/calibration')
+    assert len(result['child_imports']) == 1
+    assert result['child_imports'][0]['class'] == 'FullModelInventory'
+    assert result['child_imports'][0]['path'].endswith(
+        '/tests/comparison/calibration/native_full_structure.py')
+
+
+@pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+def test_worker_child_ready_timeout_matches_configured_startup_budget(
+        tmp_path, monkeypatch, budget, inherited):
+    name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+    if inherited is None:
+        monkeypatch.delenv(name, raising=False)
+    else:
+        monkeypatch.setenv(name, inherited)
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+        startup_timeout_s=budget, child_code=(
+            'import json, os; print(json.dumps({"ready_timeout_s": '
+            'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+    assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+    assert not result['observation_errors']
+    assert result['server_environments'][0][name] == str(budget)
+    assert result['server_env_set'][name] == str(budget)
+    assert result['child_imports'] == [{'ready_timeout_s': str(budget)}]
+    assert result['server_environments'][0]['NCCL_IB_HCA'] == 'platform-value'
+    assert result['replay_commands'][0][
+        result['replay_commands'][0].index('--startup-timeout-s') + 1] == str(budget)
+
+
+@pytest.mark.parametrize('case', ['canonical_clean_serving_missing_provenance',
+                                'canonical_clean_serving_invalid_generation'])
+def test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission(tmp_path, monkeypatch, case):
+    monkeypatch.setenv('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR', '/unrelated/stale')
+    result = exercise(native_pd_worker, tmp_path, case)
+    assert result['observation_errors']
+    assert result['worker_returncode'] == result['native_server_returncode'] == 0
+    assert not result['failed_sentinel']
+    assert 'FRONTIER_NATIVE_SERVING_EVIDENCE_DIR' not in result['server_environments'][0]
+
+
+@pytest.mark.parametrize('iterations', [{}, {'prefill': 7, 'decode': 5}, {'prefill': 7},
+                                       {'prefill': 512, 'decode': 64}])
+@pytest.mark.parametrize('dump_cuda_time_total', [True, False])
+def test_profile_nodes_have_distinct_trace_directories_without_changing_input(
+        tmp_path, iterations, dump_cuda_time_total):
+    from tests.unit.test_calibration_pd_harness import nixl_engine
+    from tests.comparison.calibration.pd_replay import server_command
+
+    (tmp_path / 'config.json').write_text(json.dumps({
+        'architectures': ['DeepseekV4ForCausalLM'], 'vocab_size': 129280}))
+    config = dict(data_parallel_size_local=1, http_ports=dict(prefill=8100, decode=8200),
+        dp_rpc_ports=dict(prefill=3100, decode=3200), role_profiler_max_iterations=iterations,
+        engine=nixl_engine() | dict(data_parallel_size=2,
+            tensor_parallel_size=8, kv_transfer={},
+            worker_extension_cls='native_serve_profile.NativeServeProfile',
+            profiler_config=dict(profiler='torch', torch_profiler_dir='/trace', max_iterations=3,
+                torch_profiler_dump_cuda_time_total=dump_cuda_time_total)))
+    original = json.dumps(config, sort_keys=True)
+    peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
+    plans = [native_pd_worker.node_plan(config, peers, peer['host'], list(range(8))) for peer in peers]
+    assert [p['engine']['profiler_config']['torch_profiler_dir'] for p in plans] == [
+        '/trace/prefill/dp0', '/trace/prefill/dp1', '/trace/decode/dp0', '/trace/decode/dp1']
+    assert [p['engine']['profiler_config']['max_iterations'] for p in plans] == [
+        iterations.get(role, 3) for role in ('prefill', 'prefill', 'decode', 'decode')]
+    for plan in plans:
+        assert plan['engine']['profiler_config'] == config['engine']['profiler_config'] | {
+            'torch_profiler_dir': f"/trace/{plan['role']}/dp{plan['lane']}",
+            'max_iterations': iterations.get(plan['role'], 3)}
+        command = server_command(plan['engine'], tmp_path, config['http_ports'][plan['role']])
+        profiler = json.loads(command[command.index('--profiler-config') + 1])
+        assert profiler == plan['engine']['profiler_config']
+        assert profiler['torch_profiler_dump_cuda_time_total'] is dump_cuda_time_total
+    assert all(p['engine']['profiler_config'] is not config['engine']['profiler_config'] for p in plans)
+    assert json.dumps(config, sort_keys=True) == original
+
+
+@pytest.mark.parametrize('profiler', [dict(profiler='cuda'),
+    dict(profiler='torch', torch_profiler_dir='s3://example/traces')])
+def test_native_profile_config_outside_local_torch_window_is_preserved(profiler):
+    config = dict(data_parallel_size_local=1, http_ports=dict(prefill=8100, decode=8200),
+        dp_rpc_ports=dict(prefill=3100, decode=3200), role_profiler_max_iterations={'prefill': 7},
+        engine=dict(data_parallel_size=2,
+            tensor_parallel_size=8, kv_transfer={},
+            worker_extension_cls='native_serve_profile.NativeServeProfile', profiler_config=profiler))
+    peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
+    plan = native_pd_worker.node_plan(config, peers, 'cpu0', list(range(8)))
+    assert plan['engine']['profiler_config'] == profiler
+
+
+@pytest.mark.parametrize('iterations', [None, [], {'other': 1}, {'prefill': 0},
+                                      {'decode': True}, {'decode': 1.5}])
+def test_role_profiler_iterations_require_positive_integer_role_values(iterations):
+    config = dict(data_parallel_size_local=1, role_profiler_max_iterations=iterations,
+        http_ports=dict(prefill=8100, decode=8200), dp_rpc_ports=dict(prefill=3100, decode=3200),
+        engine=dict(data_parallel_size=2, tensor_parallel_size=8, kv_transfer={}))
+    peers = [dict(host=f'cpu{i}', ip=f'192.0.2.{i + 1}') for i in range(4)]
+    with pytest.raises(ValueError, match='Role profiler iteration'):
+        native_pd_worker.node_plan(config, peers, 'cpu0', list(range(8)))
+
+
+@pytest.mark.parametrize('case,marker_at,wait,returncode,signal,observed', [
+    ('canonical_clean_natural_headless_exit', 20, 20, 0, None, True),
+    ('canonical_clean_active_headless_exit', 20, 20, 0, 'SIGINT', True),
+    ('canonical_clean_active_headless_exit', 61, 60, 0, 'SIGINT', False),
+    ('canonical_clean_natural_headless_exit', None, 60, 0, None, False),
+    ('canonical_clean_headless_native_error', 20, 0, 23, None, False)])
+def test_headless_post_stop_marker_uses_peer_budget_and_keeps_native_outcome(
+        tmp_path, case, marker_at, wait, returncode, signal, observed):
+    result = exercise(native_pd_worker, tmp_path, case, lifecycle={'head_marker_at': marker_at})
+    assert result['worker_returncode'] == (1 if returncode else 0)
+    assert result['lifecycle_monotonic'] == wait + 3
+    assert result['native_server_returncode'] == returncode
+    assert result['native_server_stop_signal'] == signal
+    assert not result['failed_sentinel']
+    order = result['shutdown_order']
+    assert order['head_stopped_before_headless_stop'] is observed
+    assert order['native_returned_before_requested_stop'] is (signal is None)
+    assert order['drained_before_stop'] is True
+    assert order['all_nodes_drained_before_head_stop'] == []
+    assert result['observation_errors'] == ([] if observed else [
+        'Head shutdown marker missing; native stop order unverified'])
+    timings = result['shutdown_timings']
+    assert timings['head_marker_wait'] == {'start_monotonic': 0, 'end_monotonic': wait}
+    assert timings['native_stop'] == {'start_monotonic': wait, 'end_monotonic': wait + 3}
+    assert 'drain_quorum_wait' not in timings
+    if observed:
+        assert result['events'].index('head_native_stopped') < result['events'].index('server_stop_called')
+
+
+@pytest.mark.parametrize('stale_listing,peer_at,wait,returncode,members', [
+    (True, 0, 0, 0, ['host0', 'host1', 'host2', 'host3']),
+    (False, 20, 20, 0, ['host0', 'host1', 'host2', 'host3']),
+    (False, None, 60, 1, ['host0', 'host1', 'host2'])])
+def test_head_drain_quorum_and_membership_use_known_paths(
+        tmp_path, stale_listing, peer_at, wait, returncode, members):
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean', lifecycle={
+        'stale_drain_listing': stale_listing, 'peer_drained_at': peer_at})
+    assert result['lifecycle_monotonic'] == wait + 3
+    assert result['worker_returncode'] == returncode
+    assert result['native_server_returncode'] == 0
+    assert result['failed_sentinel'] is bool(returncode)
+    assert result['shutdown_order']['all_nodes_drained_before_head_stop'] == members
+    assert result['shutdown_order']['native_returned_before_requested_stop'] is False
+    assert not result['observation_errors']
+    timings = result['shutdown_timings']
+    assert timings['drain_quorum_wait'] == {'start_monotonic': 0, 'end_monotonic': wait}
+    assert timings['native_stop'] == {'start_monotonic': wait, 'end_monotonic': wait + 3}
+    assert 'head_marker_wait' not in timings
+
+
+def test_native_stop_exception_is_not_suppressed_by_diagnostic_timing(tmp_path):
+    with pytest.raises(RuntimeError, match='Injected native stop error'):
+        exercise(native_pd_worker, tmp_path, 'canonical_clean', lifecycle={'stop_raises': True})

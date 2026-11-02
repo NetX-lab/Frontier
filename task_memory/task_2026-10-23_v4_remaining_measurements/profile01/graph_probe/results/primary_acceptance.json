@@ -1,0 +1,62 @@
+{
+  "status": "ACCEPTED_GPU_GRAPH_CORRESPONDENCE_WITH_LIMITS",
+  "accepted_at_utc": "2026-10-24T06:05:54.300903+00:00",
+  "job": "exp-1024-134447-148581",
+  "source_revision": "1aa1e4a5ce24bba8aafc8dd9f2fb41236d016077",
+  "probe_sha256": "a9d6a24e0aff13ef61088d75b5f693b599f42e8c50c2702342fbb84d3754d1a0",
+  "manifest_sha256": "ec816706edeb0930756ad7077684a2872b93c7728ae8851264e3e2592409c146",
+  "scope": "One tiny H800 captured graph with two event-delimited scopes; callback-witnessed full source/clone/exec IDs.",
+  "U1_U4": {
+    "U1": "PASS",
+    "U2": "PASS",
+    "U3": "PASS",
+    "U4": "PASS"
+  },
+  "counts": {
+    "clone_callbacks": 9,
+    "event_boundaries": 4,
+    "exec_callbacks": 1,
+    "fault_bytes": 0,
+    "kernels": 5,
+    "nodes": 9,
+    "scopes": 2,
+    "stages": 52,
+    "target_kernels": 5,
+    "trace_kernels": 6
+  },
+  "target_replays": 1,
+  "retained_source_snapshots": 2,
+  "owned_target_kernels": 4,
+  "unscoped_target_kernels": 1,
+  "independent_review": {
+    "task": "W128-GRAPH-PAYLOAD-DATA-REVIEW",
+    "session": "ses_e93abff63ffeaLmGwRc633Vskw",
+    "status": "NO_FINDINGS",
+    "scope": "Complete raw-file/algorithm review; no execution or rehash by reviewer."
+  },
+  "root_verification": {
+    "path": "root_verification.json",
+    "sha256": "cfbc9fe8885a806d924abdbc5582b464287244984fb0872117946db2020fa1b0",
+    "fresh_processes": 2,
+    "byte_identical_result_sha256": "1a56bb00bd7fa8bde329f2c9e9933e97fc237b2d70232659edc1021281235905"
+  },
+  "data_audit": {
+    "path": "data_audit.json",
+    "sha256": "3b7c57a32d090b4494a4e35cc81e3173974bde117159a82e6a3f92b40d9c100c"
+  },
+  "run_check": {
+    "path": "../root_run_check.json",
+    "sha256": "1a8d0f900208d59d81a8e6f10115c4aef326dbd6787ca1652d66677086493177"
+  },
+  "limitations": [
+    "Native descriptor buffers not captured; decoded scalar observations are bound to the executed source.",
+    "Worker library bytes not independently rehashed; image digest and CPU image binary pins are separate evidence.",
+    "No numerical accuracy or repeated-replay/clone-ID stability proof.",
+    "Old attempt3 crash cause remains an inference.",
+    "No general native/V4 serving/operator-cost/consumer/reference/E2E qualification."
+  ],
+  "general_native_captured_ownership": false,
+  "performance_admission": false,
+  "consumer_admission": false,
+  "source_cpu_acceptance_sha256": "2a282a4077cefb2c44166118a56982352bf8007442a604cd2ffe96a66b65560f"
+}

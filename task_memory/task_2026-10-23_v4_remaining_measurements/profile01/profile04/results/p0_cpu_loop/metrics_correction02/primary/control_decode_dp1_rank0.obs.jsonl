@@ -1,0 +1,30 @@
+{"t": 0.074, "stage": "instrumented", "rss_mb": 18.9, "hits": ["after:data = reader.load_trace(path)", "after:events = data['traceEvents']", "after:header = reader.trace_header(path)", "after:in calls.items():", "after:in enumerate(events):", "after:in enumerate(syn):", "after:in profile['steps']:", "after:in streams.items():", "after:inventory = read(inventory_path)", "after:names = collections.Counter", "after:output.write_text(", "after:print(json.dumps({", "after:result = {", "after:start = time.monotonic()", "after:with gzip.open(raw_path,", "before:data = reader.load_trace(path)", "before:header = reader.trace_header(path)", "before:step_rows = []", "before:with gzip.open(raw_path,", "loop:in enumerate(events):", "loop:in kernels:"], "auditor_sha": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8", "reader_sha": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52", "trace": "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792842735368033988.pt.trace.json.gz", "output": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.json"}
+{"t": 0.078, "stage": "enter", "rss_mb": 19.2}
+{"t": 0.095, "stage": "metadata_loaded", "rss_mb": 23.5}
+{"t": 0.097, "stage": "header_start", "rss_mb": 23.8}
+{"t": 0.098, "stage": "header_done", "rss_mb": 23.8}
+{"t": 0.098, "stage": "load_gc_disabled", "rss_mb": 23.8, "enabled": false}
+{"t": 0.098, "stage": "load_start", "rss_mb": 23.8, "trace_gz_bytes": 12794369}
+{"t": 2.698, "stage": "load_done", "rss_mb": 515.2}
+{"t": 2.733, "stage": "freeze_after_load", "rss_mb": 515.2, "seconds": 8.157920092344284e-06, "objects": 669509, "gc_enabled": true}
+{"t": 2.733, "stage": "events_ready", "rss_mb": 515.2, "events": 375270}
+{"t": 2.774, "stage": "annotations_named", "rss_mb": 515.2, "names": 485}
+{"t": 2.775, "stage": "event_pass_progress", "rss_mb": 515.2, "idx": 0}
+{"t": 3.148, "stage": "event_pass_done", "rss_mb": 529.4, "events": 375270, "kernels": 142567, "calls": 11667, "ranges": 485}
+{"t": 3.206, "stage": "correlation_done", "rss_mb": 533.3, "launch_owner_rows": 11667, "correlations": 11667}
+{"t": 3.206, "stage": "kernel_pass_start", "rss_mb": 533.3}
+{"t": 3.401, "stage": "kernel_pass_progress", "rss_mb": 535.9, "idx": 100000}
+{"t": 3.662, "stage": "kernel_pass_progress", "rss_mb": 540.8, "idx": 175000}
+{"t": 3.749, "stage": "kernel_pass_progress", "rss_mb": 543.1, "idx": 200000}
+{"t": 4.059, "stage": "kernel_pass_progress", "rss_mb": 547.2, "idx": 275000}
+{"t": 4.373, "stage": "kernel_pass_done", "rss_mb": 553.6, "streams": 341, "status_rows": {"unowned": 1075, "unique_leaf": 4240, "captured_segment_unknown": 137252}}
+{"t": 4.415, "stage": "DEBUG-V4-METRICS-GROUP-02:start", "rss_mb": 554.4, "events": 142567, "groups": 361, "memberships": 578364}
+{"t": 5.32, "stage": "DEBUG-V4-METRICS-GROUP-02:end", "rss_mb": 574.3}
+{"t": 5.627, "stage": "per_stream_done", "rss_mb": 567.6, "streams": 341}
+{"t": 5.627, "stage": "sync_done", "rss_mb": 567.6, "rows": 0, "pairs": 0, "unpaired": 0}
+{"t": 5.627, "stage": "steps_start", "rss_mb": 567.6}
+{"t": 5.629, "stage": "steps_done", "rss_mb": 567.6, "steps": 64, "useful": 61}
+{"t": 5.765, "stage": "result_built", "rss_mb": 558.1}
+{"t": 5.785, "stage": "output_written", "rss_mb": 558.1}
+{"t": 5.785, "stage": "done", "rss_mb": 558.1}
+{"t": 6.018, "stage": "process_end", "rss_mb": 150.8}

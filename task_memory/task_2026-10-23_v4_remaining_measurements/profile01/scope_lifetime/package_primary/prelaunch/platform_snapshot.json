@@ -1,0 +1,258 @@
+{
+  "creator": "i-fengyicheng",
+  "end_utc": "2026-10-24T18:05:36.676595+00:00",
+  "group": "codesign",
+  "limits": "Current quota and node snapshots are not reservations; actual placement follows submission. Zero predicted capacity does not exclude the authorized FIFO queue.",
+  "matching_scope_workspace_jobs": [],
+  "node_http": 200,
+  "nodes": {
+    "gpu_total_in_returned_nodes": 1394.0,
+    "gpu_usable_in_returned_nodes": 12.0,
+    "nodes_with_at_least_one_usable_gpu": 5,
+    "returned": 192,
+    "total_reported": 192
+  },
+  "personal_jobs_checked": 129,
+  "personal_list_complete": true,
+  "personal_live_jobs": [
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1025-004846-725379",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1024-174757-524816",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1024-224138-459099",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1025-003717-575037",
+      "phase": "Running",
+      "preemptible": "yes"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1025-020330-136012",
+      "phase": "Running",
+      "preemptible": "yes"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1024-165608-822976",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1025-004826-318117",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1024-224318-564613",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1024-174810-010926",
+      "phase": "Running",
+      "preemptible": "no"
+    },
+    {
+      "charged_group": "step_main",
+      "creator": "i-fengyicheng",
+      "mounts": {
+        "default": "100.96.128.195:/data/ycfeng/steptron:/data/ycfeng/steptron"
+      },
+      "name": "exp-1024-174827-717391",
+      "phase": "Running",
+      "preemptible": "no"
+    }
+  ],
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "quota": {
+    "gpuCardNum": null,
+    "nonPreemptibleUsedQuota": {
+      "4090": "0",
+      "4090-48g": "0",
+      "A100": "0",
+      "A800": "0",
+      "A800-MIG-1g-20GB": "0",
+      "A910X": "0",
+      "B300": "0",
+      "B300A": "0",
+      "B300S": "0",
+      "BI-V150": "0",
+      "BI-V150s": "0",
+      "H100": "0",
+      "H100-MIG-1g-10GB": "0",
+      "H20": "0",
+      "H20-MIG-1g-12GB": "0",
+      "H200": "0",
+      "H800": "87",
+      "L40S": "0",
+      "cpu": "1543",
+      "cpu-node-core": "0",
+      "cpu-node-memory": "0",
+      "ephemeral-storage": "0",
+      "gpu": "87",
+      "mellanox.com/mlnx_rdma": "56",
+      "memory": "13678824914944",
+      "nori": "0",
+      "oss": "0",
+      "pro5000-72g": "0",
+      "rdma/mlnx_shared": "296",
+      "spot-gpu": "0",
+      "storage@hdd": "0",
+      "storage@other": "0",
+      "storage@ssd": "0"
+    },
+    "preemptibleUsedQuota": {
+      "4090": "0",
+      "4090-48g": "0",
+      "A100": "0",
+      "A800": "0",
+      "A800-MIG-1g-20GB": "0",
+      "A910X": "0",
+      "B300": "0",
+      "B300A": "0",
+      "B300S": "0",
+      "BI-V150": "0",
+      "BI-V150s": "0",
+      "H100": "0",
+      "H100-MIG-1g-10GB": "0",
+      "H20": "0",
+      "H20-MIG-1g-12GB": "0",
+      "H200": "0",
+      "H800": "0",
+      "L40S": "0",
+      "cpu": "0",
+      "cpu-node-core": "0",
+      "cpu-node-memory": "0",
+      "ephemeral-storage": "0",
+      "gpu": "0",
+      "memory": "0",
+      "nori": "0",
+      "oss": "0",
+      "pro5000-72g": "0",
+      "spot-gpu": "0",
+      "storage@hdd": "0",
+      "storage@other": "0",
+      "storage@ssd": "0"
+    },
+    "queueInfo": {
+      "codesign-default": {
+        "highPriorityQueuePolicy": null,
+        "lowPriorityQueuePolicy": null,
+        "queueEnabled": true,
+        "standardPriorityQueuePolicy": null
+      }
+    },
+    "totalQuota": {
+      "A800": "0",
+      "A910X": "0",
+      "BI-V150": "0",
+      "H100": "0",
+      "H200": "0",
+      "H800": "128",
+      "L40S": "0",
+      "cpu": "3584",
+      "cpu-node-core": "0",
+      "cpu-node-memory": "0",
+      "ephemeral-storage": "0",
+      "gpu": "128",
+      "memory": "34634616274944",
+      "nori": "0",
+      "spot-gpu": "0",
+      "storage@hdd": "0",
+      "storage@ssd": "0"
+    },
+    "usedQuota": {
+      "4090": "0",
+      "4090-48g": "0",
+      "A100": "0",
+      "A800": "0",
+      "A800-MIG-1g-20GB": "0",
+      "A910X": "0",
+      "B300": "0",
+      "B300A": "0",
+      "B300S": "0",
+      "BI-V150": "0",
+      "BI-V150s": "0",
+      "H100": "0",
+      "H100-MIG-1g-10GB": "0",
+      "H20": "0",
+      "H20-MIG-1g-12GB": "0",
+      "H200": "0",
+      "H800": "0",
+      "L40S": "0",
+      "cpu": "1543",
+      "cpu-node-core": "0",
+      "cpu-node-memory": "0",
+      "ephemeral-storage": "0",
+      "gpu": "87",
+      "mellanox.com/mlnx_rdma": "56",
+      "memory": "13678824914944",
+      "nori": "0",
+      "oss": "0",
+      "pro5000-72g": "0",
+      "rdma/mlnx_shared": "296",
+      "spot-gpu": "0",
+      "storage@hdd": "0",
+      "storage@other": "0",
+      "storage@ssd": "0"
+    }
+  },
+  "quota_http": 200,
+  "start_utc": "2026-10-24T18:05:34.761826+00:00",
+  "status": "PASS_FRESH_READS",
+  "submissions_or_controls": 0,
+  "tag": "H800"
+}

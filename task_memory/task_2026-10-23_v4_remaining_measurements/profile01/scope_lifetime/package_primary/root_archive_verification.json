@@ -1,0 +1,48 @@
+{
+  "status": "PASS_MERGED_PACKAGE_ARCHIVE_CHECKS",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "merge_commit": "08b389052e6249776a16f152163da81ff90d4229",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "executable_package": "/data/ycfeng/Frontier/.worktrees/v4-scope-lifetime-package/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/h800_scope_lifetime_probe_01",
+  "manifest_sha256": "9ff1abec5fa2451baa2a285bdf081011eba9a2741448ad39a64b9a27aae4198e",
+  "inputs": 18,
+  "files": 19,
+  "bytes": 184495,
+  "original_input_pins_verified": 67,
+  "package_bytes_unchanged": true,
+  "image_status": "PASS_CPU_PACKAGE_IMAGE_PINS",
+  "image_wall_seconds": 5.324803566094488,
+  "sdk_status": "PASS_ACTUAL_SDK_LAUNCH_ENTRY_NO_SUBMISSION",
+  "gpu_submitted": false,
+  "sealed": false,
+  "metrics_exit": 124,
+  "metrics_completed": 155,
+  "metrics_censored": [
+    {
+      "t": 59.258,
+      "stage": "metrics_start",
+      "rss_mb": 6383.1,
+      "count": 1215919
+    }
+  ],
+  "archive": {
+    "profile01/scope_lifetime/package_primary/image/receipt.json": "707a2c48e36417d483d23894c00e9886be3efe40e4773eca5e923683a6a68148",
+    "profile01/scope_lifetime/package_primary/image/stdout": "054295f25135b0520746cb3b4fba447d1fb591f118280c11d5be4a6ee6545c90",
+    "profile01/scope_lifetime/package_primary/image/stderr": "6fb579d1aee08b6a69a13d12c7ad55f64e3fef2dce8f9753798e904b8e3885e3",
+    "profile01/scope_lifetime/package_primary/image/phase_stdin.txt": "8e80b02076f54a38ac42c69f428a9a157903367b47cc004fcbc4fc530e1a7841",
+    "profile01/scope_lifetime/package_primary/sdk/receipt.json": "b7c859cad0f8f5476c6653a287b4fdada372eac046e42b3af386d67f2daa1e32",
+    "profile01/scope_lifetime/package_primary/image_without_stdin/receipt.json": "6c416300b3bd8850a5ab5268e74e1beb12900d47d1ed073d6b3777b1d4b309ee",
+    "profile01/scope_lifetime/package_primary/image_without_stdin/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile01/scope_lifetime/package_primary/image_without_stdin/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/observer_source.txt": "e121b760d39ac0a76f83ed60b79b37825e367b34e396b62ea7605df578750aff",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/p0_metrics_01.receipt.json": "a8fe107cac3bd50269356742810d504d68e826837cfded7db78ad5b2fa36d0eb",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/metrics_control_compare.json": "34361becf0c6d68579615b18b1d7a3850ca22dd51747a0fbc37f03333b0dfc97",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/metrics_timing_summary.json": "501cccd6b6451a974eff773a466062778c8d1d509dea06ce35ba46d08a1275db",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/p0_metrics_01.obs.jsonl": "4597b9b5eef21888b730c4a0138cddc6a72e0cc11f08738d16f02358c4cbe1f5",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/p0_metrics_01.gc.jsonl": "5edea83f2bebf2e75ec47547cab74c59b2747c3faebc34077da4e4e7f7419598",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/p0_metrics_01.hb.log": "8e0dc6228ac60b1ab071242fd8460bfaa938a46b1d8924f499a19a0863e3ea0d",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/p0_metrics_01.stderr": "04263e97d05a6f6decc5edad451945187ede2fc2ee29061655836bc11a7edfd3",
+    "profile01/profile04/results/p0_cpu_loop/metrics_observation/p0_metrics_01.cgroup.json": "e72f42182896886a2a35c8b0ae79d9ef0c02eb9f1b008667de4321ce26bb3f52"
+  },
+  "limits": "Merged package/CPU image/signature/SDK controls only. Fresh storage/quota/destination/seal and GPU TLS/lifetime remain pending; metrics and full32 trace acceptance remain incomplete."
+}

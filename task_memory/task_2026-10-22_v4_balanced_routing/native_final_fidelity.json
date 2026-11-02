@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "source_revision": "e9e79d496d58941bf3e95dbc4f374e5c1159851f",
+  "baseline": {
+    "git_head": "bfa82de80413b5f4b38e4990a80b5108f9521f50",
+    "label": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline",
+    "repo_root": "/data/ycfeng/Frontier/.worktrees/baseline-bfa82de"
+  },
+  "cases": 77,
+  "identical_cases": 77,
+  "verified_artifact_files": 451,
+  "source_dirty": false,
+  "all_case_source_and_harness_revisions_match": true,
+  "cache_filenames_equal": true,
+  "comparison": "/data/ycfeng/tmp/glm53_dsv4/balanced_native_e9e79d4_20261023/comparison.json",
+  "comparison_sha256": "5a8805f90470ea34d45b09ee4cfe9218259b17099f77e4f7b296015e9b884cba",
+  "manifest_sha256": "2de3c4ca6c2b4f324030a0e380c423c0bc6e1469f27310d58b6b590c3751ebdc",
+  "results_sha256": "0a22ef8ce1fc47f7eec67a3667d95304cb76f2968c514f1f30c1d3f870dec217",
+  "python": "3.10.6",
+  "frontier_and_tests_identical_to_current_working_tree": true,
+  "followup_scope": "Only task-local native builder model-name case input differs; do not relabel this capture with a later commit.",
+  "receipt_iteration": "Initial summary assertion treated identical_cases as an int. Inspected actual list schema and corrected its length check; no capture or comparison rerun."
+}

@@ -1,0 +1,62 @@
+{
+  "task_id": "W128-V4-NATIVE-SERVE-PROFILE",
+  "status": "FIVE_REVIEW_FIXES_CPU_VERIFIED_ROOT_ACCEPTANCE_PENDING",
+  "baseline": "993f05f59ef22bfab38433dd93e2fcf486fc113a",
+  "repair_base": "d94b821ac26a3cbff8379e355994b3bb3acb0f3c",
+  "baseline_collector_sha256": "a4cc56a6af4ceafc92d5d3ec53f6aa2a88803d0b1356d45272f91a979f28a870",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile",
+  "python": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "python_version": "3.12.13",
+  "pytest_version": "9.0.2",
+  "source_scope": {"files": 5, "changed_lines": 880, "limit": 987, "net_delta_since_repair_base": 152, "repair_edit_volume": 256},
+  "source_files": {
+    "tests/comparison/calibration/native_serve_profile.py": {"added": 457, "deleted": 0, "limit": 550, "repair_added": 92, "repair_deleted": 40, "sha256": "8f67a367650b40b67f7df82e337adefdc4784a4f3c0f75adc9aa36c4ab159ee1"},
+    "tests/unit/test_native_serve_profile.py": {"added": 400, "deleted": 0, "limit": 400, "repair_added": 112, "repair_deleted": 12, "sha256": "aa8239f0eda0ca7ab4f966e5385622f843320953f36797986be0fd72c43805a2"},
+    "tests/comparison/calibration/native_pd_worker.py": {"added": 9, "deleted": 2, "limit": 25, "repair_added": 0, "repair_deleted": 0, "sha256": "8bd540bcc3aea3f064fc0772c7ba6e3a586c8075d5f5c5bea38d30bf6769a199"},
+    "tests/comparison/calibration/pd_replay.py": {"added": 2, "deleted": 2, "limit": 4, "repair_added": 0, "repair_deleted": 0, "sha256": "673d23d1d725bc1636da066a8ac1a56966dce74aee047c7b974e15e7d9d17465"},
+    "tests/comparison/dp_placement_pp/vllm_replay.py": {"added": 7, "deleted": 1, "limit": 8, "repair_added": 0, "repair_deleted": 0, "sha256": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901"}
+  },
+  "preserved_sha256": {
+    "tests/comparison/calibration/native_full_structure.py": "e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa",
+    "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py": "67f3192302b6d12c0b8296581ee8b2788a772bce80b158ad45bc349eacb32a7b"
+  },
+  "finding_closures": [
+    {"finding": "P1 load-time None manager", "repair": "Install ModelCudaGraphManager class methods independent of instance; observe instance, parallel, replay and facts installation separately.", "test": "test_manager_none_at_load_keeps_independent_hooks_and_facts"},
+    {"finding": "P2 earlier slot mapping metadata", "repair": "Annotate GPUModelRunner.prepare_attn and BlockTables.compute_slot_mappings before DefaultModelState.prepare_attn.", "test": "test_metadata_owns_native_early_slot_mapping_boundary", "native_body": "vllm/v1/worker/gpu/model_runner.py:GPUModelRunner.prepare_attn"},
+    {"finding": "P2 internal PDL arguments and CuTeDSL local import", "repair": "Observe actual indexed Triton launch kwargs plus the importing-module CuTeDSL function.", "tests": ["test_native_launch_arguments_are_observed_at_indexed_call", "test_cuda_head512_local_import_target_is_owned"], "native_bodies": ["vllm/models/common/ops/fused_qk_rmsnorm.py:fused_q_kv_rmsnorm", "vllm/models/deepseek_v4/common/ops/fused_inv_rope_fp8_quant.py:_fused_inv_rope_fp8_quant_kernel_impl", "vllm/models/deepseek_v4/compressor.py:DeepseekCompressor.forward"]},
+    {"finding": "P2 enrichment bypasses retention", "repair": "Keep execution-local pending observation; append final detached enriched step once, atomically, or drop it explicitly.", "test": "test_step_enrichment_cannot_exceed_retention_bytes"},
+    {"finding": "P2 detailed stderr flood", "repair": "Cap detailed formatting/retention/printing at 64, count and emit suppressed_errors.", "test": "test_annotation_failures_are_soft_with_traceback", "direct_control": "repair_log_receipt.json:100 native results + original keyword exception; 501 failures -> 64 details + 437 suppressed"}
+  ],
+  "red": {"collector_source": "git show d94b821a:tests/comparison/calibration/native_serve_profile.py", "result": "5 failed, 1 error, 22 deselected", "artifact": "repair_red.txt", "selection": "manager_none or metadata_owns or native_launch_arguments or head512 or step_enrichment", "additional_red_controls": ["repair_head512_receipt.json", "repair_retention_receipt.json", "repair_log_receipt.json"]},
+  "pytest_command": "/data/ycfeng/envs/asyncopd-py312/bin/python -m pytest <suite> -q -p no:cacheprovider",
+  "pytest_environment": {"PYTHONDONTWRITEBYTECODE": "1", "TMPDIR": "/data/ycfeng/tmp/opencode-v2-tmp/opencode", "FRONTIER_VLLM_BS_ROOT": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69", "NATIVE_READER_BINDING_CHECKER_for_reader_only": "/data/ycfeng/Frontier/.worktrees/v4-native-serve-profile/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py"},
+  "tests": [
+    {"suite": "tests/unit/test_native_serve_profile.py", "passed": 28, "seconds": 1.93, "exit": 0, "artifact": "repair_collector_green.txt", "new_collector_evidence": true},
+    {"suite": "tests/unit/test_native_serving_inventory.py", "passed": 28, "seconds": 0.88, "exit": 0, "artifact": "repair_inventory_green.txt", "new_collector_evidence": false},
+    {"suite": "tests/unit/test_native_v2_serving_inventory.py", "passed": 45, "seconds": 4.17, "exit": 0, "artifact": "repair_v2_inventory_green.txt", "new_collector_evidence": false},
+    {"suite": "tests/unit/test_native_reader_binding.py", "passed": 135, "seconds": 62.64, "exit": 0, "artifact": "repair_reader_green.txt", "new_collector_evidence": false},
+    {"suite": "tests/unit/test_native_pd_worker.py", "passed": 16, "seconds": 2.55, "exit": 0, "artifact": "repair_worker_green.txt"},
+    {"suite": "tests/unit/test_dp_placement_harness.py", "passed": 75, "seconds": 1.71, "exit": 0, "artifact": "repair_dp_green.txt"},
+    {"suite": "tests/unit/test_calibration_pd_harness.py", "passed": 68, "seconds": 5.71, "exit": 0, "artifact": "repair_pd_green.txt"},
+    {"suite": "tests/unit/test_native_pd_manifest.py", "passed": 14, "seconds": 1.39, "exit": 0, "artifact": "repair_manifest_green.txt"}
+  ],
+  "evidence_sha256": {
+    "repair_collector_green.txt": "1aae22fd1401965e159688c761d58ec4b19f254a77879fd16757734ba7140bc4",
+    "repair_dp_green.txt": "c408adb40d34e88377b68f0badc7421a526ea693388add912c88dd892a3dfaa8",
+    "repair_head512_receipt.json": "cbbd609e3ac9778bec2c07261e36462970117119a4ce82152fb56aab38af7335",
+    "repair_image_symbols.json": "8906baa8489dd2aa903c518e29a34980d6d4150cc0887a0f377d76bec9cdd85f",
+    "repair_inventory_green.txt": "d589f186307078c01cbf7d3777e058cf3bdc7314e7b6648a3a20dd8db5be3548",
+    "repair_log_receipt.json": "994c69c711eed91cfeb31e10fb4a1906eee7bb1084dca32d38149d9b0df8630d",
+    "repair_manifest_green.txt": "088ba5a11ddae1faf11294af169ba709dc9103830944ae96c09e27be9b73eb41",
+    "repair_pd_green.txt": "35166a28e1bddaba29a042c83e6b02c344e611335d0c73a50defe416dd505886",
+    "repair_reader_green.txt": "93700b7906c54e39a6fe9969d6ebaf05a8d689a9316ee60d8710589ac18405fb",
+    "repair_red.txt": "7c99bfc2e90dbb7bd22d9ee47d89402825997cd653de7128582c0876c11faa77",
+    "repair_retention_receipt.json": "b7c974db117901e8b5532cc70ec0080419e0a04d7864b948da38ca3c814510cd",
+    "repair_soft_gate_receipt.json": "1c74128da7ff6843c2d9e530f4ad6746a122ac7d5eff622238c418d9ff819086",
+    "repair_v2_inventory_green.txt": "d5e6b61d584e29482933a6f1e8c2dec718d4b71670ef4e0d86c5ab07c2ce6905",
+    "repair_worker_green.txt": "bd24e8106638ccc31fbf2f3aa25bbabef28f8a0c85c421d07ed3be44279cc32e"
+  },
+  "image": {"digest": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635", "installed_source_symbols": "31/31 PASS", "runtime_hook_resolution": "NOT_RUN", "mount": "read-only owner worktree", "network": "none", "pull": "never", "entrypoint": "python3", "cuda_initialized": false, "broad_imports_jit_cupti_retried": false},
+  "unknown_capabilities": ["GPU stream handle-to-trace ID mapping", "actual per-kernel GPU PDL", "compile/breakable annotation and event survival", "captured-segment per-replay ownership", "GPU CUPTI restart"],
+  "handoff": {"next": "Root independent re-review and integration after checking final hashes", "driver_seam": "pd_replay.py:464-479; POST /start_profile and /stop_profile around measured/drained phase; NOT IMPLEMENTED", "gpu_authority": "NONE", "parent_records_edited": false, "native_c26_inventory_edited": false, "root_commits_merged": false, "delegation": false}
+}

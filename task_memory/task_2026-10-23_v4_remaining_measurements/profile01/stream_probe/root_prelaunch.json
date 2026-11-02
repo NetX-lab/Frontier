@@ -1,0 +1,24 @@
+{
+  "status": "PRELAUNCH_READS_PASS",
+  "observed_at_utc": "2026-10-23T18:00:31.141333+00:00",
+  "quota": "/data/ycfeng/tmp/glm53_dsv4/native_stream_probe_prelaunch_85o7eu05/quota.json",
+  "quota_sha256": "84765d6ddbc661dd5a5724ffd21861c2feb3375c817a91d53bfc6c5a37deab91",
+  "hostname": "kun-workspace-vgen2",
+  "nfs_ip": "100.96.128.195",
+  "local_source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/h800_stream_probe_01",
+  "cloud_destination": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/native_stream_probe/5f7d0950_h800_20261024_01",
+  "destination_read": {
+    "path": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/native_stream_probe/5f7d0950_h800_20261024_01",
+    "exists": false
+  },
+  "personal_live_jobs": [
+    {
+      "charged_group": "step_main",
+      "gpus": 56.0,
+      "name": "exp-1024-010311-649166",
+      "phase": "Starting",
+      "preemptible": "no"
+    }
+  ],
+  "quota_is_not_a_reservation": true
+}

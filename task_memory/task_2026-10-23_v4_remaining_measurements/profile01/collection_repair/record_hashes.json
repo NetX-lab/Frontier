@@ -1,0 +1,26 @@
+{
+  "task_id": "W128-PROFILE03-COLLECTION",
+  "source_commit": "20660f4c0776ddd75dc211f1f0819266b48ba23c",
+  "algorithm": "SHA256",
+  "self_excluded": true,
+  "files": {
+    "artifact_checks.json": "3ebea14b353853aa5cdc8eaf64ef37b7eb941c5d3d2183b3140f29252b034945",
+    "baseline_commands.json": "00a725c469b00809f34869cec724d405e96f4923bf6e725fb0ec80bc4b324244",
+    "checkpoint.md": "4f204796c45253bcb8b04a160c14c21b191b7fb306bc1ff10b39bf31247627e8",
+    "final_checks.json": "5b9e9abde333bd28aec250844d90430270fda8a024dca2d0ad2088fb414dd74f",
+    "frozen_worker_command.json": "3f674d96ecd40282ab74e91366b0ed175687fdc68a06832f96faeae2bbc9f8bf",
+    "green_worker_command.json": "1f03d2c80b5dabbbcee6b1748df37f8d4e7bfb957f8a555dd68a1f88179a5fff",
+    "issues.md": "8c46eee843945e4f4e641893b5402ff9e70d62db4e4558fc8b07ced0635148cd",
+    "matrix_binding.json": "90e666851baabb0e3b5627ef97883da869720fd9e4103f48820b0bcf50da3c59",
+    "plan.md": "2824d5270acc2b6545269c5e6511ea47c66cd2b7d7350b4e16fa35c0cab01bb3",
+    "progress.md": "bd435b77e81e85318ea6cb299d54205b517a2dc6a954bc12f444d3c845271f57",
+    "red_command.json": "bf52bc05f56985f8e2d65ab4c9d008cd9b155b59fb6a4cb3a858a6095ef1a142",
+    "red_worker.log": "579fddbdefac5457c563d839f9e71531986d81ce7618c3ab39ae10c64af35a8c",
+    "requirements.md": "bee426f02a613e1982b4ab5e68fd5b7a294bcf62392a1ba50fd99787e849e6b6",
+    "source_changes.diff": "9e6410d6185e4f3c508af9cbad35d65eccc0a5498d67e4e80b583ed3c98c9420",
+    "source_manifest.json": "b96c319ad5819a181da575e45cdfb619f5dacac96a2a6fed774d128205573422",
+    "summary.md": "52a05aecbe6ca33b7e00c9facd8b2e50ac883060d939566bb626e6c44feecaf8",
+    "test_report_2026-10-24_collection_repair.md": "6ec54fea59e86dd40cb92cab0b331f636f7b66f1ca2bdb0349d4d8000340d414",
+    "verification_interruption.json": "58172ab88262233f3aa135eea27a404253bb67045116c017cf12f4db8038f5bc"
+  }
+}

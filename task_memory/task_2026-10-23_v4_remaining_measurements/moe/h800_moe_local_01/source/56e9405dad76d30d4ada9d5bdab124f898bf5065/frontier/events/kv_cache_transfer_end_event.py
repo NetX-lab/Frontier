@@ -1,0 +1,200 @@
+from typing import TYPE_CHECKING, List
+
+from frontier.events.base_event import BaseEvent
+from frontier.types import ClusterType, EventType
+
+if TYPE_CHECKING:
+    from frontier.entities import KVCacheTransferInfo
+    from frontier.metrics import MetricsStore
+    from frontier.scheduler import BaseGlobalScheduler
+
+
+class KVCacheTransferEndEvent(BaseEvent):
+    """Event emitted when a KV cache transfer completes."""
+
+    def __init__(
+        self,
+        time: float,
+        transfer_info: "KVCacheTransferInfo",
+    ) -> None:
+        super().__init__(time, EventType.KV_CACHE_TRANSFER_END)
+        self._transfer_info = transfer_info
+        self._transfer_info.transfer_end_time = time
+
+    def handle_event(
+        self,
+        scheduler: "BaseGlobalScheduler",
+        metrics_store: "MetricsStore",
+    ) -> List[BaseEvent]:
+        batch = self._transfer_info.batch
+        target_cluster_scheduler = scheduler.get_cluster_scheduler(
+            self._transfer_info.target_cluster_type
+        )
+        source_replica_scheduler = None
+        target_replica_scheduler = None
+        is_structural_nixl = (
+            getattr(self._transfer_info, "kv_connector", "none") == "nixl"
+        )
+        if is_structural_nixl:
+            if len(batch.requests) != 1:
+                raise RuntimeError("NIXL transfer end requires one request")
+            request = batch.requests[0]
+            target_replica_scheduler = target_cluster_scheduler.get_replica_scheduler(
+                self._transfer_info.target_replica_id,
+                self._transfer_info.target_replica_local_id,
+            )
+            target_replica_scheduler.validate_kv_transfer_target_completion(
+                request,
+                sum(block is not None for table in self._transfer_info.target_group_block_ids.values() for block in table)
+                if self._transfer_info.target_group_block_ids is not None
+                else self._transfer_info.target_reserved_common_blocks,
+            )
+            source_cluster_scheduler = scheduler.get_cluster_scheduler(
+                self._transfer_info.source_cluster_type
+            )
+            source_replica_scheduler = source_cluster_scheduler.get_replica_scheduler(
+                self._transfer_info.source_replica_id,
+                self._transfer_info.source_replica_local_id,
+            )
+            source_capacity = source_replica_scheduler._kv_cache_capacity
+            if source_capacity.is_grouped:
+                from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import get_grouped_nixl_payload
+
+                source_groups = source_replica_scheduler.get_kv_transfer_source_group_block_ids(request)
+                target_groups = target_replica_scheduler._kv_cache_manager.get_group_block_ids(request.id)
+                if source_groups != self._transfer_info.source_group_block_ids or target_groups != self._transfer_info.target_group_block_ids:
+                    raise RuntimeError("NIXL grouped source or destination ownership changed")
+                transferred, expected_payload_bytes = get_grouped_nixl_payload(
+                    source_capacity, request.num_prefill_tokens, source_groups, target_groups,
+                )
+                if transferred != self._transfer_info.transferred_group_block_ids:
+                    raise RuntimeError("NIXL grouped transferred pages changed")
+            else:
+                source_blocks = source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(request)
+                if source_blocks != self._transfer_info.source_prompt_common_blocks:
+                    raise RuntimeError(
+                        f"Request {request.id} PREFILL ownership changed from "
+                        f"{self._transfer_info.source_prompt_common_blocks} to "
+                        f"{source_blocks} prompt blocks"
+                    )
+                expected_payload_bytes = source_blocks * source_capacity.resident_bytes_per_common_block
+            if self._transfer_info.kv_cache_size_bytes != expected_payload_bytes:
+                raise RuntimeError(
+                    f"Request {request.id} NIXL payload changed from "
+                    f"{expected_payload_bytes} to "
+                    f"{self._transfer_info.kv_cache_size_bytes} bytes"
+                )
+            source_replica_scheduler.validate_kv_transfer_source_release(request)
+
+        transfer_duration_s = self.time - self._transfer_info.transfer_start_time
+        transfer_duration_ms = transfer_duration_s * 1e3
+        metrics_store.on_kv_cache_transfer_end(
+            self.time,
+            transfer_duration_ms,
+            self._transfer_info.kv_cache_size_bytes,
+            self._transfer_info.target_cluster_type,
+            self._transfer_info,
+        )
+
+        for request in batch.requests:
+            request.on_kv_cache_transfer_complete(self.time, transfer_duration_s)
+
+        if is_structural_nixl:
+            from frontier.logger import get_cluster_logger
+            from frontier.scheduler.utils.kv_arrival import (
+                handle_reserved_decode_arrival,
+            )
+
+            arrival_events = handle_reserved_decode_arrival(
+                target_replica_scheduler,
+                self.time,
+                batch,
+                self._transfer_info,
+                get_cluster_logger(__name__, ClusterType.DECODE.name),
+            )
+        else:
+            arrival_events = target_cluster_scheduler.on_kv_cache_arrival(
+                self.time,
+                batch,
+                self._transfer_info,
+            )
+
+        if self._transfer_info.source_cluster_type == ClusterType.PREFILL:
+            from frontier.events.replica_schedule_event import ReplicaScheduleEvent
+
+            if source_replica_scheduler is None:
+                source_cluster_scheduler = scheduler.get_cluster_scheduler(
+                    self._transfer_info.source_cluster_type
+                )
+                source_replica_scheduler = (
+                    source_cluster_scheduler.get_replica_scheduler(
+                        self._transfer_info.source_replica_id,
+                        self._transfer_info.source_replica_local_id,
+                    )
+                )
+            source_replica_scheduler.complete_kv_transfer_for_requests(batch.requests)
+            if is_structural_nixl:
+                self._transfer_info.source_release_time = self.time
+
+            memory_usage_percent = source_replica_scheduler.memory_usage_percent
+            metrics_store.on_replica_schedule(
+                self.time,
+                self._transfer_info.source_replica_id,
+                memory_usage_percent,
+                self._transfer_info.source_cluster_type,
+                replica_local_id=self._transfer_info.source_replica_local_id,
+            )
+
+            if source_replica_scheduler.should_schedule_after_kv_transfer_completion():
+                source_cluster_logical_time = scheduler.get_cluster_logical_time(
+                    self._transfer_info.source_cluster_type
+                )
+                source_reschedule_time = max(self.time, source_cluster_logical_time)
+                arrival_events.append(
+                    ReplicaScheduleEvent(
+                        source_reschedule_time,
+                        self._transfer_info.source_replica_id,
+                        self._transfer_info.source_cluster_type,
+                        self._transfer_info.source_replica_local_id,
+                    )
+                )
+
+        return arrival_events
+
+    def get_target_cluster(self) -> ClusterType:
+        return self._transfer_info.target_cluster_type
+
+    def to_dict(self) -> dict:
+        payload = {
+            "time": self.time,
+            "event_type": self.event_type.name,
+            "batch_id": self._transfer_info.batch.id,
+            "batch_global_id": self._transfer_info.batch.global_id,
+            "source_cluster_type": self._transfer_info.source_cluster_type.name,
+            "target_cluster_type": self._transfer_info.target_cluster_type.name,
+            "source_replica_id": self._transfer_info.source_replica_id,
+            "kv_cache_size_bytes": self._transfer_info.kv_cache_size_bytes,
+            "transfer_time_ms": self._transfer_info.transfer_time_ms,
+            "transfer_start_time": self._transfer_info.transfer_start_time,
+            "transfer_end_time": self._transfer_info.transfer_end_time,
+        }
+        if getattr(self._transfer_info, "kv_connector", "none") == "nixl":
+            payload.update(
+                {
+                    "kv_connector": self._transfer_info.kv_connector,
+                    "target_replica_id": self._transfer_info.target_replica_id,
+                    "target_replica_local_id": self._transfer_info.target_replica_local_id,
+                    "payload_kind": self._transfer_info.payload_kind,
+                    "source_prompt_common_blocks": self._transfer_info.source_prompt_common_blocks,
+                    "target_reserved_common_blocks": self._transfer_info.target_reserved_common_blocks,
+                    "target_ready_time": self._transfer_info.target_ready_time,
+                    "source_release_time": self._transfer_info.source_release_time,
+                }
+            )
+            if self._transfer_info.source_group_block_ids is not None:
+                payload.update(
+                    source_group_block_ids=self._transfer_info.source_group_block_ids,
+                    target_group_block_ids=self._transfer_info.target_group_block_ids,
+                    transferred_group_block_ids=self._transfer_info.transferred_group_block_ids,
+                )
+        return payload

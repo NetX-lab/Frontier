@@ -8,7 +8,7 @@ for profiling MoE grouped GEMM performance under various load imbalance scenario
 Supported distributions:
 - uniform: All experts receive roughly equal number of tokens
 - balanced: Every expert receives the same number of tokens, up to one; the
-  round-robin assignment of the uniform_topk routing path
+  round-robin assignment of the balanced_topk routing path
 - skewed: Some experts are more popular than others (power law distribution)
 - extremely_skewed: Majority of tokens go to a small subset of experts (80-20 rule)
 """
@@ -17,7 +17,7 @@ import torch
 import numpy as np
 from typing import Tuple, List, Optional
 
-from frontier.profiling.moe.moe_impl import uniform_topk
+from frontier.profiling.moe.balanced_routing import balanced_topk
 
 
 def generate_expert_routing(
@@ -85,7 +85,7 @@ def generate_expert_routing(
         
     elif load_distribution == "balanced":
         scores = torch.empty(num_tokens, num_experts, device=device)
-        topk_weights, topk_ids, _ = uniform_topk(scores, scores, top_k)
+        topk_weights, topk_ids = balanced_topk(scores, scores, top_k, token_offset=0)
         topk_weights = topk_weights.to(dtype)
 
     elif load_distribution == "skewed":

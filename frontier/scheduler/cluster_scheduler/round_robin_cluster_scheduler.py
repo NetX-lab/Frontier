@@ -407,6 +407,21 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         return request_mapping
 
+    def select_kv_transfer_target(
+        self, time: float, request: Request
+    ) -> tuple[int, int]:
+        """Select the DECODE lane that must reserve before a NIXL READ."""
+        if self._cluster_type != ClusterType.DECODE:
+            raise ValueError("NIXL transfer target selection requires DECODE")
+        replica_ids = list(self._cluster.replicas.keys())
+        if not replica_ids:
+            raise ValueError("DECODE cluster has no replicas")
+        ordinal = self._request_counter
+        replica_id = replica_ids[ordinal % len(replica_ids)]
+        replica_local_id = ordinal // len(replica_ids) % self._replica_dp_size
+        self._request_counter += 1
+        return replica_id, replica_local_id
+
     def _schedule_lane_round_robin(self) -> List[Tuple[int, int, Request]]:
         """Place queued requests on Replica-local DP lanes in arrival order.
 

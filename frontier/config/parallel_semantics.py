@@ -5,6 +5,7 @@ import sys
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import Sequence
 
 from frontier.operators.spec import TensorParallelMode
 from frontier.types import ClusterType
@@ -65,6 +66,50 @@ def _validate_positive(name: str, value: int) -> int:
     return resolved_value
 
 
+@dataclass(frozen=True)
+class SequenceParallelMoETokenWidths:
+    """Per-DP-lane SP rows and the EP all-gather's physical input rows."""
+
+    local_tokens: tuple[int, ...]
+    valid_tokens: tuple[int, ...]
+    gathered_tokens: int
+
+
+def sequence_parallel_moe_token_widths(
+    lane_token_counts: Sequence[int],
+    attention_tp_size: int,
+    tp_rank: int = 0,
+) -> SequenceParallelMoETokenWidths:
+    """Split already DP/graph-padded widths, retaining SP padding in M.
+
+    ``local_tokens[d]`` is S_d = ceil(T_pad_d / TP), including padding.
+    ``valid_tokens[d]`` excludes this TP rank's SP padding only. All rows,
+    including padding, pass through the router and EP dispatch.
+    """
+
+    if type(attention_tp_size) is not int or attention_tp_size <= 0:
+        raise ValueError("attention_tp_size must be a positive int")
+    if type(tp_rank) is not int or not 0 <= tp_rank < attention_tp_size:
+        raise ValueError("tp_rank must be in the attention TP domain")
+    if not lane_token_counts or any(
+        type(tokens) is not int or tokens < 0 for tokens in lane_token_counts
+    ):
+        raise ValueError("lane_token_counts must contain non-negative ints")
+    local = tuple(
+        (tokens + attention_tp_size - 1) // attention_tp_size
+        for tokens in lane_token_counts
+    )
+    valid = tuple(
+        max(0, min(rows, tokens - tp_rank * rows))
+        for tokens, rows in zip(lane_token_counts, local)
+    )
+    return SequenceParallelMoETokenWidths(
+        local_tokens=local,
+        valid_tokens=valid,
+        gathered_tokens=attention_tp_size * sum(local),
+    )
+
+
 def validate_frontier_shared_parallel_domains(
     mapping: FrontierParallelismMapping,
 ) -> None:
@@ -123,6 +168,14 @@ def resolve_shared_expert_tensor_parallel_size(
     if model_config is None:
         raise ValueError("Shared-expert TP requires replica_config.model_config")
     mode = resolve_shared_expert_tensor_parallel_mode(model_config=model_config)
+    profile = model_config.get_model_architecture_profile()
+    if cluster_type is not ClusterType.DECODE_FFN and profile.uses_sequence_parallel_moe(
+        getattr(replica_config, "attn_tensor_parallel_size", None),
+        getattr(replica_config, "attn_dp", None),
+        getattr(replica_config, "num_pipeline_stages", None),
+        getattr(replica_config, "moe_expert_parallel_size", None),
+    ):
+        return 1
     if cluster_type is ClusterType.DECODE_FFN or mode in {
         TensorParallelMode.FFN_TP,
         TensorParallelMode.MOE_TP,

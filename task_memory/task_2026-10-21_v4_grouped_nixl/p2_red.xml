@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.224" timestamp="2026-10-21T15:33:59.773785+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_dsv4_structural_pd" name="test_real_grouped_handoff_and_all_outputs_conserve[6144-True]" file="tests/unit/test_dsv4_structural_pd.py" line="92" time="0.061"><failure message="ValueError: Mixed compression variants require an explicit global layer id; call bind_layer_attention(config, global_layer_id)">prompt = 6144, real_metrics = True
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x7f1e49dc6b00&gt;
+tmp_path = PosixPath('/data/ycfeng/tmp/v4_grouped_nixl_p2_red/test_real_grouped_handoff_and_0')
+
+    @pytest.mark.parametrize(("prompt", "real_metrics"), [(191, False), (6144, False), (6145, False), (6144, True)])
+    def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, record_property, tmp_path):
+        source, target, scheduler, _ = _harness()
+        request, initial = _prefill(source, prompt)
+        if prompt == 6144:
+            assert list(map(len, initial.values())) == [24, 96, 96, 1536, 768]
+        metrics = _Metrics()
+        if real_metrics:
+            from frontier.config import ClusterConfig, MetricsConfig
+            from frontier.metrics.metrics_store import MetricsStore
+            from frontier.metrics.trace_store import TraceStore
+&#32;&#32;&#32;&#32;
+            cluster_configs = {
+                role: ClusterConfig(cluster_type=role, replica_config=source._replica_config)
+                for role in (ClusterType.PREFILL, ClusterType.DECODE)
+            }
+            traces = TraceStore(str(tmp_path), enabled=True)
+            traces.initialize({"case": "grouped_nixl_real_metrics"})
+            metrics = MetricsStore(
+                SimpleNamespace(metrics_config=MetricsConfig(
+                    output_dir=str(tmp_path), write_metrics=True, store_plots=False,
+                    enable_op_level_tracing=True,
+                )),
+                cluster_configs, traces,
+            )
+        start = _start_event(request, source)
+&gt;       [end] = start.handle_event(scheduler, metrics)
+
+tests/unit/test_dsv4_structural_pd.py:119:&#32;
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _&#32;
+frontier/events/kv_cache_transfer_start_event.py:251: in handle_event
+    metrics_store.on_kv_cache_transfer_start(
+frontier/metrics/metrics_store.py:5454: in on_kv_cache_transfer_start
+    transfer_meta = build_kv_cache_transfer_meta(
+frontier/metrics/op_trace_utils.py:831: in build_kv_cache_transfer_meta
+    family = bind_attention_family(model_config).family
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _&#32;
+
+config = MoEModelConfig(num_layers=43, num_q_heads=64, num_kv_heads=1, embedding_dim=4096, mlp_hidden_dim=2048, max_position_em...rm_capability=None, dense_mlp_hidden_dim=None, routed_mlp_hidden_dim=2048, _model_name='deepseek-ai/DeepSeek-V4-Flash')
+
+    def bind_attention_family(config: Any) -&gt; AttentionFamilyBinding:
+        """Bind a runtime or profiling model config to an attention family.
+&#32;&#32;&#32;&#32;
+        Dense-FFN and MoE-FFN are intentionally ignored here. This rule engine only
+        classifies the attention topology/cache family.
+        """
+        # A hybrid Qwen3.5 model has no single whole-model attention family.  Keep
+        # this legacy API available for homogeneous consumers and fail before any
+        # caller can accidentally select the first/majority layer.
+        if _has_hybrid_attention_schedule(config):
+            raise ValueError(
+                "Hybrid attention configuration requires an explicit global layer id; "
+                "call bind_layer_attention(config, global_layer_id)"
+            )
+&#32;&#32;&#32;&#32;
+        if _get_attr(config, "compress_ratios") is not None:
+            variants = {spec.variant_id for spec in config.get_layer_attention_specs()}
+            if len(variants) &gt; 1:
+&gt;               raise ValueError(
+                    "Mixed compression variants require an explicit global layer id; "
+                    "call bind_layer_attention(config, global_layer_id)"
+                )
+E               ValueError: Mixed compression variants require an explicit global layer id; call bind_layer_attention(config, global_layer_id)
+
+frontier/attention/model_binding.py:150: ValueError</failure></testcase></testsuite></testsuites>

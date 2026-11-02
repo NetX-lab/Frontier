@@ -1,0 +1,49 @@
+{
+  "status": "PASS_STATIC_WORKER_SOURCE_BINDING",
+  "worker_python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "worker_image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "root_image_receipt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/graph_source_evidence/image_source_receipt.json",
+  "root_image_receipt_sha256": "e1858d64c5eb8a4bebdb6d986b4073c5a7de7bc84740905d112c5954ba9da624",
+  "original_sha256": "f7314cfbc70a1ba347339245754e385d24239eff9f24ceb485e5f3fba379a1e0",
+  "actual_fault_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/observed/fault.log",
+  "fault_log_sha256": "d90bdd0850f2fceae1ffc237b0f611e261b07a2991a9a1fdf09c78ed45be361f",
+  "observed_stack": "Fatal Python error: Segmentation fault\n\nCurrent thread 0x00007f324fd16300 (most recent call first):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py\", line 119 in _read\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py\", line 125 in node_id\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py\", line 197 in _callback\n  File \"/usr/local/lib/python3.12/dist-packages/torch/cuda/graphs.py\", line 180 in instantiate\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py\", line 504 in run_probe\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py\", line 634 in main\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_graph_probe_attempt3_20261021/probe_diagnostic.py\", line 647 in <module>",
+  "source_query_lines": [
+    {
+      "old_line": 196,
+      "candidate_line": 218,
+      "expression": "self.ids.node_id(row[\"node\"])"
+    },
+    {
+      "old_line": 197,
+      "candidate_line": 219,
+      "expression": "self.ids.node_id(row[\"original_node\"])"
+    }
+  ],
+  "local_python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "local_disassembly_calls": [
+    {
+      "offset": 516,
+      "line": 196,
+      "end_line": 196,
+      "column": 35,
+      "opcode": "CALL"
+    },
+    {
+      "offset": 574,
+      "line": 197,
+      "end_line": 197,
+      "column": 44,
+      "opcode": "CALL"
+    },
+    {
+      "offset": 584,
+      "line": 196,
+      "end_line": 197,
+      "column": 16,
+      "opcode": "CALL"
+    }
+  ],
+  "interpretation": "The retained fault names old line197. Its source expression is the original-node query. Local CPython3.12.13 distinguishes CALL lines196/197; exact worker3.12.3 bytecode was not rerun here.",
+  "limits": "Static/root-receipt binding only. No real invalid-pointer CUPTI call; no claim that payload decoding, original crash cause or callback/runtime lifetime is proven."
+}

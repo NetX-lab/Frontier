@@ -1,0 +1,121 @@
+{
+  "status": "PASS_CLOSED_CONTROL_EVIDENCE_BINDING",
+  "observed_utc": "2026-10-24T20:33:55.839806+00:00",
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_decode_dp1_rank0.receipt.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.receipt.json",
+      "bytes": 9322,
+      "sha256": "f5a47eb1a05530f3ee62bd59216a41dadd2d3ded20cd4bd9205d78e222187fe3",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_decode_dp1_rank0.gc.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.gc.jsonl",
+      "bytes": 767,
+      "sha256": "207a09f1e2334281d6f4df1f3710e59013c8b070bccd34753bae1d6376056b9a",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_decode_dp1_rank0.obs.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.obs.jsonl",
+      "bytes": 3381,
+      "sha256": "81676bf7ea8cc4a8979ed6d0c65a440140db4580ad18e6ff851a505f60c47f03",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_decode_dp1_rank0.hb.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.hb.log",
+      "bytes": 878,
+      "sha256": "4888b6aea89c46ab6ce016ba664f88db52b37f1b2ab3d29732a5ef7da6f28469",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_decode_dp1_rank0.stderr",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.stderr",
+      "bytes": 67,
+      "sha256": "e88e65f81c2a5fc6132ba347e4023cc4ac3199a33eb9eabe127a7a41f258a6d7",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_decode_dp1_rank0.stdout",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.stdout",
+      "bytes": 124,
+      "sha256": "47de7d6f5b479e0bc0ebba75616dddec0314f90c5e92a82f0f80f2dfbea7bf4f",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_decode_dp1_rank0.cgroup.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.cgroup.json",
+      "bytes": 1947,
+      "sha256": "e318736af8e820e790931d47a4f282dd74472274ede7285ac10937724dd29df7",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_prefill_dp1_rank0.receipt.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.receipt.json",
+      "bytes": 9342,
+      "sha256": "02c27c7b9f639ea4dd6af711eef034b4da531d7814b8b427a0fbf0c45012939c",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_prefill_dp1_rank0.gc.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.gc.jsonl",
+      "bytes": 2114,
+      "sha256": "0a5efe4a995c82dc8f2cf5a6ab86c55c6431c8a13eca69bb6e93b259da7e08f1",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_prefill_dp1_rank0.obs.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.obs.jsonl",
+      "bytes": 4891,
+      "sha256": "aaf35ec8c593857ee45d2be99d9d994fecd9da899423de5f7ff40b7c5aece910",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_prefill_dp1_rank0.hb.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.hb.log",
+      "bytes": 4589,
+      "sha256": "f18aa6dfa2983bad5eb2c47efa3827cd1dac4e75a6cd08fcf2c7cca2ae774abc",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_prefill_dp1_rank0.stderr",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.stderr",
+      "bytes": 67,
+      "sha256": "bf108294d26cfe1ee40c4c1ce57434d2aefad3d5e2f8c7f86863374a083d8805",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_prefill_dp1_rank0.stdout",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.stdout",
+      "bytes": 128,
+      "sha256": "a1a5e03082fc8afc21f8d85890095100a6db193dc048221056122f48ed32f7b6",
+      "status": "PASS"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/control_prefill_dp1_rank0.cgroup.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.cgroup.json",
+      "bytes": 1947,
+      "sha256": "1e5745e7a6ffff36bf5196fafabe3288bfbc4c91c2f1fccdad286e821c39312c",
+      "status": "PASS"
+    }
+  ],
+  "complete_controls_sha256": "8a5cbbb4f022b631871703074fd61541816429fa3931d60028f9cdb07f9afa21",
+  "source_complete_controls_sha256": "8a5cbbb4f022b631871703074fd61541816429fa3931d60028f9cdb07f9afa21",
+  "large_outputs": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.json",
+      "sha256": "cdfbba2fb3b7c6ddbb1e8c8d9f0df73dc43694bd8ad673048162ebfefed386d5",
+      "index_path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_decode_dp1_rank0.kernels.jsonl.gz",
+      "index_sha256": "6e7899e9124233ad85fa6cac31e815b8856a134a959b0cafeb06f6f5c1735479"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.json",
+      "sha256": "1f824fef2937677062010fdf0a0a1418b7c2a26f6091e1bb13a0d91ef2eab9ef",
+      "index_path": "/data/ycfeng/tmp/glm53_dsv4/p0_metrics_group_controls_20261025_01/control_prefill_dp1_rank0.kernels.jsonl.gz",
+      "index_sha256": "984479733c2c71941ac9d8cfc48748c8a78a185faed07bc3450cd36ab47595e3"
+    }
+  ],
+  "new_audit_or_control_invocations": 0
+}

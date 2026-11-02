@@ -1,0 +1,168 @@
+{
+  "status": "ACCEPTED_GPU_STREAM_IDENTITY_WITH_LIMITS",
+  "accepted_at_utc": "2026-10-23T18:25:00.188638+00:00",
+  "task_id": "W128-NATIVE-STREAM-PROBE",
+  "decision_owner": "root",
+  "job": "exp-1024-020317-012085",
+  "source_revision": "5f7d0950b78276a77a66b7330cf0041a9f380f12",
+  "manifest_sha256": "0725941c3b433b2bd300c10a48c3d6f6d5316e1036e1e8efb5294b8c2845431d",
+  "accepted_scope": {
+    "actual_collector_stream_identity": "PASS",
+    "default_and_auxiliary_streams": "PASS",
+    "two_native_profiler_cycles": "PASS_OBSERVED_REUSE",
+    "raw_trace_eager_and_priming_joins": "PASS",
+    "cached_and_fresh_cupti_queries": "PASS"
+  },
+  "counts": {
+    "files": 5,
+    "download_bytes": 228175,
+    "sealed_inputs": 7,
+    "snapshots": 8,
+    "snapshot_stream_rows": 16,
+    "eager_joins": 8,
+    "priming_joins": 16,
+    "raw_events": 369,
+    "raw_kernels": 28,
+    "raw_runtime_rows": 50,
+    "raw_cpu_annotations": 29,
+    "capture_per_op_annotations": 2,
+    "capture_per_op_runtime_rows": 2,
+    "capture_per_op_kernels": 0,
+    "capture_per_op_positive_graph_identities": 0,
+    "replay_kernels": 4,
+    "raw_positive_graph_identities": 4,
+    "checks": 162,
+    "passing_checks": 162,
+    "failed_checks": 0
+  },
+  "stream_ids": {
+    "torch_default": 0,
+    "torch_auxiliary": 3,
+    "cupti_default": 7,
+    "cupti_auxiliary": 13
+  },
+  "graph_correspondence": {
+    "status": "UNKNOWN",
+    "reason": "Captured per-op runtime rows have no graph/node fields and no correlated kernels; replay node identities do not establish captured ownership.",
+    "captured_positive_identities": {
+      "probe.capture.add": [],
+      "probe.capture.mul": []
+    },
+    "replay_positive_identities": {
+      "1": [
+        [
+          2,
+          8589934592
+        ],
+        [
+          2,
+          8589934593
+        ]
+      ],
+      "2": [
+        [
+          2,
+          8589934592
+        ],
+        [
+          2,
+          8589934593
+        ]
+      ]
+    },
+    "capture_returned": true,
+    "replay_returned": {
+      "1": true,
+      "2": true
+    }
+  },
+  "limitations": {
+    "cycle2_missing_metadata_keys": [
+      "vllm_version",
+      "vllm_version_tuple"
+    ],
+    "native_log_lines": [
+      "Torch profiling enabled. Traces will be saved to: /mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/native_stream_probe/5f7d0950_h800_20261024_01/native_traces",
+      "Profiler stopped successfully."
+    ],
+    "native_log_stop_messages": 1,
+    "version_metadata_source_reason": "wrapper.py:253,277-306 retains _version_metadata_added=True between starts; second native trace lacks both vLLM version fields.",
+    "stop_log_source_reason": "wrapper.py:76-83 uses logger.info_once; one success line cannot count stop calls, and running_after_stop=False is unconditional even after stop failure.",
+    "runtime_version_observations": {
+      "binding_cudaRuntimeGetVersion": [
+        0,
+        13030
+      ],
+      "trace_cuda_runtime_version": {
+        "1": 13000,
+        "2": 13000
+      }
+    },
+    "binary_hash_limit": "All five downloaded files and local package/native source bytes rehashed. Worker-only Torch/CUDA/library binary hashes are retained telemetry; only available pins and proc_maps are cross-checked, not a fresh binary rehash.",
+    "snapshot_limit": "One observer cache entry per stream; fresh trace_stream query per snapshot. No observer reset, new process, or new stream tested.",
+    "reuse_limit": "Stable wrapper and outer torch.profiler.profile Python object IDs are recorded by pinned source; inner Kineto/CUPTI object identities are not recorded.",
+    "graph_limit": "Successful capture/instantiate and both synchronized replay returns are source-bound telemetry plus runtime/kernel evidence, not per-op captured graph/node ownership or numerical tensor validation.",
+    "platform_limit": "Succeeded/exit0/resources/image/mount are root-provided platform_terminal.json evidence only; no requery.",
+    "excluded_claims": [
+      "native/reference admission",
+      "serving/operator cost",
+      "CUDA event dependencies",
+      "graph ID remapping",
+      "cross-rank equivalence"
+    ]
+  },
+  "independent_review": {
+    "session_id": "ses_e9601bf4fffezQeDiZYI54ewUI",
+    "result": "NO_FINDINGS",
+    "scope": "Static review and selected raw text; root separately reran complete audit."
+  },
+  "root_rerun": "BYTE_IDENTICAL_NO_EXCLUSIONS",
+  "admissions": {
+    "serving_cost": false,
+    "operator_cost": false,
+    "gpu_event_dependencies": false,
+    "captured_per_op_ownership": false,
+    "cross_rank_or_hardware": false,
+    "native_reference": false,
+    "numerical_output_correctness": false
+  },
+  "references": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/data_audit.json",
+      "sha256": "601cb737fd5f25d76feddd483225090f291dc6bb1f9b9acfb83647a5852f1310"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/command.md",
+      "sha256": "544c5e34d137800bb7e3b2b835f5a6f97d09b16cb3af9a0e738c76a64e4377b4"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/test_report_2026-10-24_data.md",
+      "sha256": "3b670b719eef1e66ddb27bb31dbd241a1290b4460a4ab99b3c5ec5a43b56f58f"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/root_verification.json",
+      "sha256": "420e44ea7f06a183d98bdb493de7e40d1b59d3618b5973ec13ead890165481b0"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/results/review.md",
+      "sha256": "32ea6ac16079dec5f2360d12fb1603a2ef1a10442bd056adad986a5f613d66f3"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/root_seal.json",
+      "sha256": "faed39c2d00596dd7ec600508164d86e590384628202a64bb41dad15f4bd64f0"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/root_run_check.json",
+      "sha256": "af18d80a9a2f5b48084d894237ec8484b8ca756a08093e1efdc0c53255e6d557"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/platform_terminal.json",
+      "sha256": "a16430cac7eadbcf9744c029076dcf3338f8cc74b7e5d28416c46a90afee807b"
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/download.json",
+      "sha256": "344c960701797601e7325e80d19195703bee1b6459c7b23a376080317c95cf36"
+    }
+  ],
+  "next_action": "Carry verified stream identity into a fresh source-bound diagnostic; finish compatible DP-sequence and collection-coverage design. Startup capture alone did not supply captured per-op ownership."
+}

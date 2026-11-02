@@ -1,0 +1,31 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/usr/bin/python3",
+  "conda": "not used; /usr/bin/python3",
+  "tiny_invocations": 1,
+  "full_invocations": 0,
+  "checks": [],
+  "execution_hashes": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py": "e1f0450a6aebe1ba84944571a40f2a3e5a64d2b4fb92f26d0ddd9ff24031ddf5",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs.json": "8a2e90c821cc3286f7533077fb6a52797e8a2ba0e36fadb103bd910c56fd4edc"
+  },
+  "status": "FAIL",
+  "error": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py\", line 41, in <module>\n    result['actual_memory_limit_bytes'] = int((Path('/sys/fs/cgroup') / group_path.lstrip('/') / 'memory.max').read_text())\n  File \"/usr/lib/python3.10/pathlib.py\", line 1134, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n  File \"/usr/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nFileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/run-r3b38e99aa47140ca8ff890236a450486.scope/memory.max'\n",
+  "elapsed_seconds": 0.0007084459066390991
+}

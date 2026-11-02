@@ -1,0 +1,26 @@
+{
+  "status": "LAUNCHER_STARTED",
+  "created_at_utc": "2026-10-23T15:52:46.888819+00:00",
+  "pid": 4152584,
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01",
+  "seal_sha256": "b552a3a05aef5fbe92dedeb1974e851f83e9b158d874de2875f52bdb1bd01d07",
+  "manifest_sha256": "2ce8333148675cbec721c7f0f9710f70c1b031032be971ffcf7b1e754a1377f4",
+  "command": [
+    "bash",
+    "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/launch/launch_glm_producers.sh",
+    "/data/ycfeng/Frontier/.worktrees/v4-moe-local-run/task_memory/task_2026-10-23_v4_remaining_measurements/moe/h800_moe_local_01/jobs/moe.json"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/moe01_launch_20261023.log",
+  "authorization": "D-V4-H800-RJOB-AUTHORITY",
+  "resources": {
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "gpu": 1,
+    "cpu": 16,
+    "mem_gb": 128,
+    "preemptible": false,
+    "timeout_seconds": 1800,
+    "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01"
+  }
+}

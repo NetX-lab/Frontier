@@ -1,0 +1,929 @@
+{
+  "task_id": "W128-DP-SEQUENCE-CPU",
+  "status": "PASS",
+  "command": [
+    "timeout",
+    "60s",
+    "python3",
+    "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-cpu-I0HAIn/verify_delivery.py"
+  ],
+  "verifier_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "checks": [
+    {
+      "name": "report_at_most_100_lines",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "report_modification_history",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "report_no_trailing_whitespace",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "docker_exit",
+      "actual": 0,
+      "expected": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "docker_time_under_60s",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "image_local_id",
+      "actual": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "expected": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "status": "PASS"
+    },
+    {
+      "name": "image_descriptor",
+      "actual": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "expected": "sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "status": "PASS"
+    },
+    {
+      "name": "torch",
+      "actual": "2.13.0+cu130",
+      "expected": "2.13.0+cu130",
+      "status": "PASS"
+    },
+    {
+      "name": "python",
+      "actual": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+      "expected": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+      "status": "PASS"
+    },
+    {
+      "name": "startup",
+      "actual": [
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "after_counters",
+      "actual": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "zero_collectives",
+      "actual": [
+        0,
+        2,
+        5
+      ],
+      "expected": [
+        0,
+        2,
+        5
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "no_cuda",
+      "actual": false,
+      "expected": false,
+      "status": "PASS"
+    },
+    {
+      "name": "no_nvidia_devices",
+      "actual": [],
+      "expected": [],
+      "status": "PASS"
+    },
+    {
+      "name": "parent_lazy_init_calls",
+      "actual": [],
+      "expected": [],
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_backend",
+      "actual": "gloo",
+      "expected": "gloo",
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_group_ranks",
+      "actual": [
+        0,
+        1
+      ],
+      "expected": [
+        0,
+        1
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_world_size",
+      "actual": 2,
+      "expected": 2,
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_getter",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_lazy_init_calls",
+      "actual": [],
+      "expected": [],
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_before_counters",
+      "actual": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_reduced_matrices",
+      "actual": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ],
+      "expected": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "rank0_native_returns",
+      "actual": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "expected": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_backend",
+      "actual": "gloo",
+      "expected": "gloo",
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_group_ranks",
+      "actual": [
+        0,
+        1
+      ],
+      "expected": [
+        0,
+        1
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_world_size",
+      "actual": 2,
+      "expected": 2,
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_getter",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_lazy_init_calls",
+      "actual": [],
+      "expected": [],
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_before_counters",
+      "actual": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_reduced_matrices",
+      "actual": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ],
+      "expected": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "rank1_native_returns",
+      "actual": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "expected": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "status": "PASS"
+    },
+    {
+      "name": "docker.log_sha256",
+      "actual": "f67fc280b84c47805dba32e251571c1bdf33b04acff29c90c52c695d283e95f9",
+      "expected": "f67fc280b84c47805dba32e251571c1bdf33b04acff29c90c52c695d283e95f9",
+      "status": "PASS"
+    },
+    {
+      "name": "dp_sequence_probe.py_sha256",
+      "actual": "81fe442ddaec1d928f58d34be13d0c4d387b7c3d7328218cb5210f807d0a92a8",
+      "expected": "81fe442ddaec1d928f58d34be13d0c4d387b7c3d7328218cb5210f807d0a92a8",
+      "status": "PASS"
+    },
+    {
+      "name": "image_inspect.json_sha256",
+      "actual": "9eea420ac599bcc5367959099e98936e810af2da79c274242bb63d508243a8d0",
+      "expected": "9eea420ac599bcc5367959099e98936e810af2da79c274242bb63d508243a8d0",
+      "status": "PASS"
+    },
+    {
+      "name": "locked_native_dp_utils.py_sha256",
+      "actual": "3c882f85109ba47e473953351d166c4377ceb995205e91cbf128ca5075775a5d",
+      "expected": "3c882f85109ba47e473953351d166c4377ceb995205e91cbf128ca5075775a5d",
+      "status": "PASS"
+    },
+    {
+      "name": "metadata.json_sha256",
+      "actual": "6ea05b76a1b2fcefa3b232297f8508741c082e5fc3cf3927bda78f8fe9bcbda9",
+      "expected": "6ea05b76a1b2fcefa3b232297f8508741c082e5fc3cf3927bda78f8fe9bcbda9",
+      "status": "PASS"
+    },
+    {
+      "name": "rank0.json_sha256",
+      "actual": "388e08e299dfb27596b7bd46bb570722044b3f7d985019874ed308541c494022",
+      "expected": "388e08e299dfb27596b7bd46bb570722044b3f7d985019874ed308541c494022",
+      "status": "PASS"
+    },
+    {
+      "name": "rank1.json_sha256",
+      "actual": "5b88afeb4d4ec507f076d8d97350ac314ead7c2cee81073f5ba073c46db7ebd4",
+      "expected": "5b88afeb4d4ec507f076d8d97350ac314ead7c2cee81073f5ba073c46db7ebd4",
+      "status": "PASS"
+    },
+    {
+      "name": "result.json_sha256",
+      "actual": "75b6600f727751a2000299a2b18c1fda2c25bba29737bfc2f1253246d24ae53f",
+      "expected": "75b6600f727751a2000299a2b18c1fda2c25bba29737bfc2f1253246d24ae53f",
+      "status": "PASS"
+    },
+    {
+      "name": "run_probe.py_sha256",
+      "actual": "8b56fbd30d7ac2da25672fcabc0db2f45347b2b271aadede271e4976849ac19d",
+      "expected": "8b56fbd30d7ac2da25672fcabc0db2f45347b2b271aadede271e4976849ac19d",
+      "status": "PASS"
+    },
+    {
+      "name": "dp_sequence_probe.py_hash_in_report",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "run_probe.py_hash_in_report",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "result.json_hash_in_report",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "rank0.json_hash_in_report",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "rank1.json_hash_in_report",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "docker.log_hash_in_report",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "native_source_sha256",
+      "actual": "3c882f85109ba47e473953351d166c4377ceb995205e91cbf128ca5075775a5d",
+      "expected": "3c882f85109ba47e473953351d166c4377ceb995205e91cbf128ca5075775a5d",
+      "status": "PASS"
+    },
+    {
+      "name": "native_source_hash_in_report",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "native_all_reduce_line39",
+      "actual": "dist.all_reduce(tensor, group=group)",
+      "expected": "dist.all_reduce(tensor, group=group)",
+      "status": "PASS"
+    },
+    {
+      "name": "--pull=never",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "--network=none",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "--runtime=runc",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "--memory=6g",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "--memory-swap=6g",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "--cpus=2",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "--pids-limit=128",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "name": "no_gpu_flag",
+      "actual": false,
+      "expected": false,
+      "status": "PASS"
+    },
+    {
+      "name": "single_mount",
+      "actual": 1,
+      "expected": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "mount",
+      "actual": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-cpu-I0HAIn:/evidence:rw",
+      "expected": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/w128-dp-sequence-cpu-I0HAIn:/evidence:rw",
+      "status": "PASS"
+    },
+    {
+      "name": "container_deadline",
+      "actual": 45,
+      "expected": 45,
+      "status": "PASS"
+    }
+  ],
+  "check_count": 60,
+  "report_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/dp_sequence_cpu.md",
+  "report_line_count": 63,
+  "report_sha256": "9ca82d245c89ffbb52c5178ddd742883016f9cb33321bc66ea0b158047a46fd8"
+}

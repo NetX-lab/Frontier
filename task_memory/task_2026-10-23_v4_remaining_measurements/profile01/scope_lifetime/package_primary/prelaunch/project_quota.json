@@ -1,0 +1,13 @@
+{
+  "command": [
+    "sudo",
+    "-n",
+    "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/read_project_quota",
+    "/data"
+  ],
+  "start_utc": "2026-10-24T18:03:21.347765+00:00",
+  "end_utc": "2026-10-24T18:03:21.367392+00:00",
+  "exit": 4,
+  "stdout": "",
+  "stderr": "Q_XGETQSTATV errno=38: Function not implemented\n"
+}

@@ -1,0 +1,42 @@
+{
+  "task_id": "W128-PROFILE04-PACKAGE",
+  "base": "53398d06",
+  "rows": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "added": 1,
+      "deleted": 1,
+      "gross": 2
+    },
+    {
+      "path": "tests/unit/test_native_pd_worker.py",
+      "added": 17,
+      "deleted": 4,
+      "gross": 21
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/profile_plan.json",
+      "added": 50,
+      "deleted": 0,
+      "gross": 50
+    }
+  ],
+  "total_gross": 73,
+  "source_and_plan_gross": 52,
+  "test_gross": 21,
+  "native06_elided_ast_equal": {
+    "53398d06": true,
+    "1437ace6f4a438c1bb879d904e2bede0c777303c": true
+  },
+  "plan_changed_keys": [
+    "cloud_root",
+    "generation",
+    "primary_acceptance",
+    "profiler_config",
+    "proposal_inputs",
+    "run_generation",
+    "run_tag"
+  ],
+  "status": "PASS_PRECOMMIT_CPU_BUDGET_AND_NO_PLAN_AST",
+  "generated": false
+}

@@ -1,0 +1,295 @@
+diff --git a/tests/comparison/calibration/native_serve_profile.py b/tests/comparison/calibration/native_serve_profile.py
+index 39203964..a43a4050 100644
+--- a/tests/comparison/calibration/native_serve_profile.py
++++ b/tests/comparison/calibration/native_serve_profile.py
+@@ -35,0 +36,4 @@ METHODS = (
++    ('vllm.v1.worker.gpu.model_runner', 'GPUModelRunner', 'prepare_attn', 'metadata', 'slot_mapping_preparation'),
++    ('vllm.v1.worker.gpu.block_table', 'BlockTables', 'compute_slot_mappings', 'metadata', 'slot_mappings'),
++    ('vllm.v1.worker.gpu.cudagraph_utils', 'ModelCudaGraphManager', 'run_fullgraph', 'outer', 'model_dispatch_run_fullgraph'),
++    ('vllm.v1.worker.gpu.cudagraph_utils', 'ModelCudaGraphManager', 'run_pw_graph', 'outer', 'model_dispatch_run_pw_graph'),
+@@ -42,0 +47,5 @@ FUNCTIONS = (
++    ('vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl', 'compress_norm_rope_store_cutedsl'),
++)
++LAUNCHES = (
++    ('vllm.models.common.ops.fused_qk_rmsnorm', '_fused_q_kv_rmsnorm_kernel'),
++    ('vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant', '_fused_inv_rope_fp8_quant_per_head'),
+@@ -55,0 +65 @@ class ServingProfile:
++        self.suppressed_errors = 0
+@@ -66,0 +77,3 @@ class ServingProfile:
++            if len(self.errors) >= 64:
++                self.suppressed_errors += 1
++                return
+@@ -68,2 +81 @@ class ServingProfile:
+-            if len(self.errors) < 64:
+-                self.errors.append(row)
++            self.errors.append(row)
+@@ -98,2 +110,2 @@ class ServingProfile:
+-        if step is not None and dispatch is not None and 'dispatch_evidence' not in step:
+-            step['dispatch_evidence'] = dispatch
++        if dispatch is not None:
++            self.local.dispatch = dispatch
+@@ -101,2 +113 @@ class ServingProfile:
+-        if step is not None:
+-            step['context'] = dict(context)
++        self.local.step_context = dict(context)
+@@ -265,2 +276,5 @@ class ServingProfile:
+-    def install_model(self, worker):
+-        if self.worker is worker:
++    def install_launch(self, path, name):
++        # Intercept the invoked Triton launcher, not a platform capability query.
++        namespace = importlib.import_module(path)
++        original = getattr(namespace, name)
++        if getattr(original, '_native_profile', None) is self:
+@@ -268,2 +282,38 @@ class ServingProfile:
+-        self.worker, self.rank = worker, worker.rank
+-        model = worker.model_runner.model
++        observer = self
++
++        class Launch:
++            _native_profile = observer
++
++            def __getattr__(self, attribute):
++                return getattr(original, attribute)
++
++            def __getitem__(self, grid):
++                native = original[grid]
++
++                def call(*args, **kwargs):
++                    with observer.range('launch', name, arguments=kwargs):
++                        return native(*args, **kwargs)
++
++                return call
++
++        setattr(namespace, name, Launch())
++        self.hooks.append(path + '.' + name)
++
++    def install_parallel_target(self):
++        self.install_parallel(importlib.import_module(ATTENTION_MODULE))
++
++    def install_replay_target(self):
++        self.install_replay(importlib.import_module(
++            'vllm.compilation.breakable_cudagraph').BreakableCUDAGraphCapture)
++
++    def record_facts(self, worker):
++        self.facts = dict(environment={k: v for k, v in os.environ.items() if
++            any(word in k for word in ('PDL', 'GDC', 'BREAKABLE_CUDAGRAPH', 'CUPTI'))},
++            kernel_config=str(worker.vllm_config.kernel_config),
++            compilation_config=str(worker.vllm_config.compilation_config),
++            profiler_config=str(worker.vllm_config.profiler_config))
++        self.facts['source_modules'] = {path: dict(origin=sys.modules[path].__file__)
++            for path in {row[0] for row in METHODS + FUNCTIONS + LAUNCHES}
++            if getattr(sys.modules.get(path), '__file__', None) is not None}
++
++    def install_instances(self, model):
+@@ -273,0 +324,12 @@ class ServingProfile:
++        for module in model.modules():
++            if hasattr(module, '_prepare_and_attn_fn'):
++                module._prepare_and_attn_fn = module._prepare_and_attn
++        for name, scope in (('embed_tokens', 'embedding'), ('norm', 'final_norm')):
++            self.observe('install:' + scope, self.wrap, getattr(model.model, name),
++                'forward', 'ownership', scope)
++
++    def install_model(self, worker):
++        if self.worker is worker:
++            return
++        self.worker, self.rank = worker, worker.rank
++        model = worker.model_runner.model
+@@ -280,20 +342,6 @@ class ServingProfile:
+-        for module in model.modules():
+-            if hasattr(module, '_prepare_and_attn_fn'):
+-                module._prepare_and_attn_fn = module._prepare_and_attn
+-        core = model.model
+-        for name, scope in (('embed_tokens', 'embedding'), ('norm', 'final_norm')):
+-            self.observe('install:' + scope, self.wrap, getattr(core, name),
+-                'forward', 'ownership', scope)
+-        self.install_parallel(importlib.import_module(ATTENTION_MODULE))
+-        manager = worker.model_runner.cudagraph_manager
+-        for name in ('run_fullgraph', 'run_pw_graph'):
+-            self.wrap(type(manager), name, 'outer', 'model_dispatch_' + name)
+-        self.install_replay(importlib.import_module('vllm.compilation.breakable_cudagraph').BreakableCUDAGraphCapture)
+-        self.facts = dict(environment={k: v for k, v in os.environ.items() if
+-            any(word in k for word in ('PDL', 'GDC', 'BREAKABLE_CUDAGRAPH', 'CUPTI'))},
+-            kernel_config=str(worker.vllm_config.kernel_config),
+-            compilation_config=str(worker.vllm_config.compilation_config),
+-            profiler_config=str(worker.vllm_config.profiler_config))
+-        self.facts['source_modules'] = {path: dict(origin=sys.modules[path].__file__)
+-            for path in {row[0] for row in METHODS + FUNCTIONS}
+-            if getattr(sys.modules.get(path), '__file__', None) is not None}
++        for path, name in LAUNCHES:
++            self.observe('install:' + name, self.install_launch, path, name)
++        self.observe('instance_installation', self.install_instances, model)
++        self.observe('parallel_installation', self.install_parallel_target)
++        self.observe('replay_installation', self.install_replay_target)
++        self.observe('facts', self.record_facts, worker)
+@@ -324,0 +373 @@ class ServingProfile:
++            suppressed_errors=self.suppressed_errors,
+@@ -361 +410,2 @@ class ServingProfile:
+-                            return self.append(self.steps, row)
++                            self.local.dispatch, self.local.step_context = None, {}
++                            return row
+@@ -367 +417 @@ class ServingProfile:
+-                            self.observe('step_finalize', self.finish_step, self.local.step)
++                            retained = self.observe('step_finalize', self.finish_step, self.local.step)
+@@ -369 +419 @@ class ServingProfile:
+-                                self.local.last_step = self.local.step
++                                self.local.last_step = retained
+@@ -382 +432,3 @@ class ServingProfile:
+-        dispatch = step.get('dispatch_evidence')
++        # Admit only the final detached row: enrichment cannot bypass capacity.
++        pending = step | {'context': getattr(self.local, 'step_context', {})}
++        dispatch = getattr(self.local, 'dispatch', None) or step.get('dispatch_evidence')
+@@ -384,6 +436,6 @@ class ServingProfile:
+-            step['dispatch_forwards'], step['dispatch_replays'] = dispatch['forwards'], dispatch['replays']
+-            step['dispatch_evidence'] = {k: v for k, v in dispatch.items() if k not in ('forwards', 'replays')}
+-            step['has_prefill'] = dispatch.get('classifier', {}).get('inputs', {}).get('has_prefill')
+-            step['synchronized_descriptor'] = dispatch.get('dispatch', {}).get('descriptor')
+-            step['synchronized_mode'] = (step['synchronized_descriptor'] or {}).get('cg_mode')
+-            self.used += len(json.dumps(step['dispatch_evidence']).encode())
++            pending['dispatch_forwards'], pending['dispatch_replays'] = dispatch['forwards'], dispatch['replays']
++            pending['dispatch_evidence'] = {k: v for k, v in dispatch.items() if k not in ('forwards', 'replays')}
++            pending['has_prefill'] = dispatch.get('classifier', {}).get('inputs', {}).get('has_prefill')
++            pending['synchronized_descriptor'] = dispatch.get('dispatch', {}).get('descriptor')
++            pending['synchronized_mode'] = (pending['synchronized_descriptor'] or {}).get('cg_mode')
++        return self.append(self.steps, json.loads(json.dumps(pending)))
+diff --git a/tests/unit/test_native_serve_profile.py b/tests/unit/test_native_serve_profile.py
+index 81ccccc0..7997f316 100644
+--- a/tests/unit/test_native_serve_profile.py
++++ b/tests/unit/test_native_serve_profile.py
+@@ -29 +29 @@ def load():
+-def profile(v2, monkeypatch):
++def profile(v2, monkeypatch, request):
+@@ -44,2 +44 @@ def profile(v2, monkeypatch):
+-    profiler = ModuleType('torch.profiler')
+-    profiler.record_function = record_function
++    profiler = SimpleNamespace(record_function=record_function)
+@@ -76 +75,4 @@ def profile(v2, monkeypatch):
+-        namespace = namespaces.setdefault(path, ModuleType(path))
++        namespace = namespaces.setdefault(path, sys.modules[path] if path in (
++            'vllm.v1.worker.gpu.model_runner', 'vllm.v1.worker.gpu.cudagraph_utils') else ModuleType(path))
++        if cls == 'GPUModelRunner':
++            namespace.GPUModelRunner = type(v2.worker.model_runner)
+@@ -79 +81,5 @@ def profile(v2, monkeypatch):
+-        setattr(getattr(namespace, cls), method, lambda self, *args, **kwargs: v2.state.result)
++        if not hasattr(getattr(namespace, cls), method):
++            setattr(getattr(namespace, cls), method, lambda self, *args, **kwargs: v2.state.result)
++        if scope == 'slot_mapping_preparation':
++            setattr(getattr(namespace, cls), method, native_function(
++                'vllm/v1/worker/gpu/model_runner.py', method, {}, cls))
+@@ -82,0 +89,6 @@ def profile(v2, monkeypatch):
++    class Kernel:
++        def __getitem__(self, grid):
++            return lambda *args, **kwargs: v2.state.result
++
++    for path, name in module.LAUNCHES:
++        setattr(namespaces.setdefault(path, ModuleType(path)), name, Kernel())
+@@ -104,2 +116,2 @@ def profile(v2, monkeypatch):
+-    norm = SimpleNamespace(forward=lambda: v2.state.result)
+-    core.embed_tokens, core.norm = norm, SimpleNamespace(forward=lambda: v2.state.result)
++    core.embed_tokens = SimpleNamespace(forward=lambda: v2.state.result)
++    core.norm = SimpleNamespace(forward=lambda: v2.state.result)
+@@ -116,0 +129,5 @@ def profile(v2, monkeypatch):
++    manager = v2.worker.model_runner.cudagraph_manager
++    monkeypatch.setattr(type(v2.worker), 'initialize_kv_cache',
++        lambda worker: setattr(worker.model_runner, 'cudagraph_manager', manager), raising=False)
++    if getattr(request, 'param', None) == 'manager_later':
++        v2.worker.model_runner.cudagraph_manager = None
+@@ -123,0 +141,81 @@ def profile(v2, monkeypatch):
++@pytest.mark.parametrize('profile', ['manager_later'], indirect=True)
++def test_manager_none_at_load_keeps_independent_hooks_and_facts(profile):
++    p = profile
++    assert p.native.worker.model_runner.cudagraph_manager is None
++    assert p.collector.facts['kernel_config'] == 'native kernel config'
++    assert 'BreakableCUDAGraphCapture.replay' in p.collector.hooks
++    p.native.worker.initialize_kv_cache()
++    p.native.state.mode = 'FULL'
++    assert p.native.worker.execute_model(scheduled(tokens=1)) is p.native.state.result
++    assert any(r['scope'] == 'model_dispatch_run_fullgraph' for r in p.collector.annotations)
++
++
++def test_metadata_owns_native_early_slot_mapping_boundary(profile):
++    p = profile
++    tables = p.namespaces['vllm.v1.worker.gpu.block_table'].BlockTables()
++    tables.gather_block_tables = lambda *args, **kwargs: None
++    p.native.worker.model_runner.pcp_manager, p.native.worker.model_runner.block_tables = None, tables
++    batch = SimpleNamespace(idx_mapping=None, query_start_loc=None, positions=None,
++        num_reqs_after_padding=16, num_tokens_after_padding=16)
++    assert p.native.worker.model_runner.prepare_attn(batch)[1] is p.native.state.result
++    p.namespaces['vllm.v1.worker.gpu.model_states.default'].DefaultModelState().prepare_attn()
++    assert [r['scope'] for r in p.collector.annotations] == [
++        'slot_mapping_preparation', 'slot_mappings', 'attention_metadata']
++    assert 'slot_mapping_preparation' in p.entered[1][1][0]
++
++
++@pytest.mark.parametrize('path,flags', [
++    ('vllm.models.common.ops.fused_qk_rmsnorm', {'launch_pdl': True}),
++    ('vllm.models.deepseek_v4.common.ops.fused_inv_rope_fp8_quant', {'USE_GDC': True, 'launch_pdl': True}),
++])
++def test_native_launch_arguments_are_observed_at_indexed_call(profile, path, flags):
++    class Tensor:
++        shape, ndim, device = (1, 8), 2, 'cpu'
++
++        def stride(self, dim):
++            return 1
++
++        def is_contiguous(self):
++            return True
++
++        def as_strided(self, shape, strides):
++            return self
++
++    namespace = vars(profile.namespaces[path]) | dict(current_platform=SimpleNamespace(is_arch_support_pdl=lambda: True),
++        torch=SimpleNamespace(empty_like=lambda tensor: Tensor(), empty=lambda *a, **k: Tensor(),
++            float8_e4m3fn=object(), int32=object(), float32=object()), triton=SimpleNamespace(next_power_of_2=lambda n: n))
++    function = 'fused_q_kv_rmsnorm' if 'qk_rmsnorm' in path else '_fused_inv_rope_fp8_quant_kernel_impl'
++    native_call = native_function(path.replace('.', '/') + '.py', function, namespace)
++    result = (native_call(Tensor(), Tensor(), Tensor(), Tensor(), 1e-6) if 'qk_rmsnorm' in path else
++        native_call(Tensor(), Tensor(), Tensor(), *([1] * 12)))
++    assert all(isinstance(tensor, Tensor) for tensor in result)
++    assert profile.collector.annotations[-1]['launch_arguments'] == flags
++
++
++def test_cuda_head512_local_import_target_is_owned(profile):
++    from vllm.models.deepseek_v4.nvidia.ops.sparse_attn_compress_cutedsl import compress_norm_rope_store_cutedsl
++    assert compress_norm_rope_store_cutedsl(pdl_kwargs={'launch_pdl': False}) is profile.native.state.result
++    assert profile.collector.annotations[-1]['scope'] == 'compress_norm_rope_store_cutedsl'
++    assert profile.collector.annotations[-1]['launch_arguments'] == {'pdl_kwargs': {'launch_pdl': False}}
++
++
++def test_step_enrichment_cannot_exceed_retention_bytes(profile):
++    c = profile.collector
++    initial = dict(step=0, request_ids=['req'], local_num_requests=1, local_num_tokens=1)
++    c.limits = dict(records=1000, bytes=len(json.dumps(initial).encode()) + 8)
++    initial['dispatch_evidence'] = dict(forwards=1, replays=0,
++        classifier=dict(inputs=dict(has_prefill=False)), dispatch=dict(descriptor=dict(num_tokens=16, cg_mode='FULL')))
++    c.finish_step(initial)
++    assert c.steps == [] and c.dropped == 1
++    assert c.used <= c.limits['bytes']
++    c.local.step = dict(step=1)
++    c.inventory.local.dispatch_evidence = initial['dispatch_evidence']
++    c.context()
++    assert c.local.step == dict(step=1)
++    c.limits['bytes'] = 10000
++    retained = c.finish_step(initial)
++    initial['dispatch_evidence']['dispatch']['descriptor']['num_tokens'] = 999
++    assert retained['synchronized_descriptor']['num_tokens'] == 16
++    assert c.used == len(json.dumps(retained).encode())
++
++
+@@ -141 +238,0 @@ def test_keyword_only_and_original_exception_passthrough(profile):
+-    marker = object()
+@@ -145 +242 @@ def test_keyword_only_and_original_exception_passthrough(profile):
+-            assert hidden_states is marker
++            assert hidden_states is profile.native.state.result
+@@ -152 +249 @@ def test_keyword_only_and_original_exception_passthrough(profile):
+-        Router().select_experts(hidden_states=marker, router_logits=error)
++        Router().select_experts(hidden_states=profile.native.state.result, router_logits=error)
+@@ -158 +255 @@ def test_keyword_only_and_original_exception_passthrough(profile):
+-def test_annotation_failures_are_soft_with_traceback(profile, monkeypatch, where):
++def test_annotation_failures_are_soft_with_traceback(profile, monkeypatch, where, capsys):
+@@ -171 +268,3 @@ def test_annotation_failures_are_soft_with_traceback(profile, monkeypatch, where
+-    assert profile.core.forward() is profile.native.state.result
++    for _ in range(100):
++        assert profile.core.forward() is profile.native.state.result
++    assert capsys.readouterr().err.count('NATIVE_PROFILE_UNVERIFIED') == 64
+@@ -174,0 +274 @@ def test_annotation_failures_are_soft_with_traceback(profile, monkeypatch, where
++    assert payload['suppressed_errors'] == 436

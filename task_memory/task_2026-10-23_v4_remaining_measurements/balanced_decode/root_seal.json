@@ -1,0 +1,164 @@
+{
+  "status": "SEALED_READY_ISOLATED_PROFILE",
+  "created_at_utc": "2026-10-23T13:38:32.105697+00:00",
+  "task_id": "W128-V4-BALANCED-DECODE-ROOT",
+  "authority": [
+    "D-V4-H800-RJOB-AUTHORITY",
+    "D-V4-QUEUE-PARALLEL-WORK",
+    "D-V4-KERNEL-ONLY-GPU-COST"
+  ],
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02",
+  "manifest_sha256": "9714cdb749e8504df32955bb62e080467434e33e20da1d23ae653da2ce8e09cf",
+  "input_count": 530,
+  "builder_commit": "64133239c4f4c7fdc50b1b0b85d57d2d72fe3097",
+  "runtime_commit": "97803f07f72454030a4d3fe538d7cdf473906b8a",
+  "merged_commit": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+  "source_diff_sha256": "9173502019326ffa6a5791342e9df937d45754e7c90cfb818cfc5a256433a6da",
+  "source_numstat": "39\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/package_plan.json\n175\t0\ttask_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/prepare_package.py\n",
+  "snapshot_git_equal_files": 512,
+  "originals_unchanged": [
+    {
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-q1-warm-remeasure/task_memory/task_2026-10-21_v4_q1_warm_remeasure/h800_decode",
+      "manifest_sha256": "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360",
+      "input_count": 527
+    },
+    {
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced",
+      "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+      "input_count": 529
+    },
+    {
+      "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_01",
+      "manifest_sha256": "9ac0e6c09df9755d44980ff448f2e71244dde4b4c6772fc0525213a7f4899910",
+      "input_count": 530
+    }
+  ],
+  "checks": {
+    "image": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_image_cf8j40z6/receipt.json",
+      "sha256": "dccb704dc7edade9f71896727ebdacf9d36a57efae32e07aa8ec136006426578",
+      "result": [
+        {
+          "status": "PASS",
+          "python": "3.12.3",
+          "source_pins": 60,
+          "tool_pins": 520,
+          "binary_pins": 20,
+          "torch_vllm_imported": false,
+          "cuda_initialized": false,
+          "launch_executable": "/usr/bin/python3",
+          "stage": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02"
+        },
+        {
+          "status": "PASS",
+          "kind": "fresh_actual_balanced_wrapper_entry",
+          "registration_body_executed": false,
+          "native_hash_origin_checks_executed": true,
+          "cuda_initialized": false
+        }
+      ]
+    },
+    "sdk": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_sdk_8oci6za_/receipt.json",
+      "sha256": "3a237c5a50f1db4849808d5db7283f85a892939c07fc5190ab06cb96b78630a0",
+      "result": {
+        "status": "PASS",
+        "stage": "actual_sdk_resource_before_spawn",
+        "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+        "workspace": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run",
+        "code_mount_point": "/data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run",
+        "charged_group": "codesign",
+        "preemptible": false,
+        "cpu": 16,
+        "gpu": 1,
+        "mem_gb": 128,
+        "replica": 1,
+        "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        "positive_tags": [
+          "H800"
+        ],
+        "mounts": [
+          "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+        ],
+        "custom_resources": [
+          "mellanox.com/mlnx_rdma:1",
+          "rdma/mlnx_shared:8"
+        ],
+        "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 1800 python3 /data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/launch/glm_producer_worker.py --config /data/ycfeng/Frontier/.worktrees/v4-balanced-decode-run/task_memory/task_2026-10-23_v4_remaining_measurements/balanced_decode/h800_decode_balanced_02/jobs/Q1_WARM_6143_7166_BALANCED.json'",
+        "source_sha256": "795a156807bbbc59d3037d998cf504cd0344f74f1f3d699cac90bd5c1ae368e6",
+        "sdk_config_sha256": "0fc88ea9fd70ad08f69d76637f4e05c65309f80ce81b4ff933c3b0d0320d4d37",
+        "sdk_spawn_sha256": "bb691868e93b85748af02e5255204f3706ec56382457beb9612e66189574f647",
+        "submissions": 0
+      }
+    },
+    "destination": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_destination_4tbnt9l0/receipt.json",
+      "sha256": "72ccf671fd526869eb067e33050ff347bbf5c0f70a3b6a937a11ba94bd5cce2f",
+      "result": {
+        "path": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_decode/97803f0_balanced_warm2_02/Q1_WARM_6143_7166_BALANCED",
+        "exists": false,
+        "is_symlink": false,
+        "personal_root_exists": true
+      }
+    }
+  },
+  "quota": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_quota_bw4wwwq8/quota.json",
+    "sha256": "bd8dfb2346eafee12c695068dbf3f884a3a557a2aca65479c5d6a4ec1c6a1865",
+    "census_path": "/data/ycfeng/tmp/glm53_dsv4/balanced_decode02_quota_bw4wwwq8/census.json",
+    "census_sha256": "7812c1bfe46f1d409838c2c0ab8818c1ae23b92f54433bc0270ba1f2c33c307f",
+    "observed_utc": "2026-10-23T13:35:48.854906+00:00",
+    "H800_used": 122,
+    "H800_quota": 128,
+    "profile02_phase": "Pending",
+    "profile02_launcher_alive": true
+  },
+  "reviews": [
+    {
+      "axis": "spec",
+      "session": "ses_e97145e90ffeDHy4ZobE6HQCoL",
+      "result": "NO_FINDINGS",
+      "scope": "Full changed-file source and provided package records; reviewer did not independently run Git/hash/test commands"
+    },
+    {
+      "axis": "standards",
+      "session": "ses_e97145e7affe5inF1CF3n14ILz",
+      "result": "NO_FINDINGS",
+      "scope": "Full changed-file source and provided package records; reviewer did not independently run Git/hash/test commands"
+    }
+  ],
+  "matrix": {
+    "status": "PASS_EXISTING_BINDING",
+    "identical_cases": 77,
+    "new_capture": false,
+    "comparison": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+    "sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+    "unchanged_domains": [
+      "frontier",
+      "data",
+      "examples",
+      "tests/e2e/refactor_fidelity",
+      "tests/integration/canonical_case"
+    ]
+  },
+  "expected_outputs": {
+    "calls": {
+      "cuda_event": 51200,
+      "kernel_only": 45056
+    },
+    "rows": {
+      "cuda_event": 6144,
+      "kernel_only": 6144
+    },
+    "steps": {
+      "cuda_event": 1024,
+      "kernel_only": 1024
+    }
+  },
+  "limits": [
+    "Only isolated physical TP1/eager/six-layer attention costs; no serving or physicalTP8/graph equivalence.",
+    "Image/bootstrap entry checks stop before native routing registration/model execution.",
+    "Owner131+256CPU suites are supplied verified records, not root reruns.",
+    "Runtime constructor values, outputs, routing origin and terminal status remain unverified."
+  ]
+}

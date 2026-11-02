@@ -1,0 +1,51 @@
+{
+  "task_id": "W128-V4-MOE-PACKAGE",
+  "source_revision": "56e9405dad76d30d4ada9d5bdab124f898bf5065",
+  "native_revision": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "native_repo": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+  "base_package": "/data/ycfeng/Frontier/.worktrees/v4-q1-warm-remeasure/task_memory/task_2026-10-21_v4_q1_warm_remeasure/h800_decode",
+  "base_manifest_sha256": "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360",
+  "root_task": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements",
+  "destination": "h800_moe_local_01",
+  "name": "EP16_RANK0_LOCAL_MOE",
+  "job_tag": "v4-h800-moe-ep16-rank0-balanced-20261023-01",
+  "output_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_moe/56e9405d_ep16_rank0_balanced_20261023_01",
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "gpu_type": "H800",
+  "charged_group": "codesign",
+  "gpu": 1,
+  "cpu": 16,
+  "mem_gb": 128,
+  "preemptible": false,
+  "timeout_seconds": 1800,
+  "planning_gpu_hours_cap": 0.5,
+  "common_args": [
+    "--models", "deepseek-ai/DeepSeek-V4-Flash", "--device", "h800",
+    "--num_gpus", "1", "--disable_ray", "--num_tensor_parallel_workers", "1",
+    "--expert_parallel_sizes", "16", "--num_tokens_list", "12288", "6152", "32", "16",
+    "--max_tokens", "16384", "--load_distributions", "balanced",
+    "--num_samples_per_distribution", "1", "--routing_runtime_path", "balanced_topk", "--yes"
+  ],
+  "methods": {"cuda_event": "moe.csv", "record_function": "moe_kernel_only.csv"},
+  "native_paths": [
+    "vllm/model_executor/layers/fused_moe", "vllm/model_executor/layers/quantization/mxfp4.py",
+    "vllm/model_executor/layers/quantization/utils/marlin_utils.py",
+    "vllm/model_executor/layers/quantization/utils/marlin_utils_fp4.py", "vllm/_custom_ops.py",
+    "vllm/config/parallel.py", "vllm/config/vllm.py", "vllm/forward_context.py",
+    "vllm/distributed/device_communicators/all2all.py", "vllm/models/common/ops/sequence_parallel.py",
+    "vllm/v1/worker/gpu/dp_utils.py", "vllm/v1/worker/gpu/cudagraph_utils.py",
+    "csrc/libtorch_stable/moe", "csrc/libtorch_stable/quantization/marlin"
+  ],
+  "native_symbols": {
+    "vllm/model_executor/layers/fused_moe/oracle/mxfp4.py": ["select_deepseek_v4_mxfp4_moe_backend"],
+    "vllm/model_executor/layers/fused_moe/experts/marlin_moe.py": ["MarlinExperts", "fused_marlin_moe"],
+    "vllm/model_executor/layers/fused_moe/moe_align_block_size.py": ["moe_align_block_size"],
+    "vllm/_custom_ops.py": ["moe_sum", "moe_wna16_marlin_gemm"]
+  },
+  "selected_scope": "existing rank0 moe_grouped_gemm envelope only",
+  "conditional_population": 6152,
+  "retain_all_columns_and_traces": true,
+  "qualification": "diagnostic local measurement; no admission or rank/time/weight/graph/serving equivalence"
+}

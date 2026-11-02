@@ -187,3 +187,39 @@ def test_only_a_complete_unchanged_base_is_extended(tmp_path):
     with pytest.raises(ValueError, match="not a complete supplement"):
         main(["--run-dir", str(run), "--output-dir", str(tmp_path / "b"), "--base-dir", str(incomplete),
               "--table", "attention.csv", "out/extension.csv"])
+
+
+COLLECTIVE = {
+    "pass": "0", "scenario": "eager_uniform_t8_r1", "call": "moe_dispatch_all_gatherv",
+    "op": "all_gatherv", "group": "ep", "group_size": "16", "max_input_bytes": "12352",
+    "median_us": "12.5", "mean_us": "13", "std_us": "1", "min_us": "11", "max_us": "15",
+    "p10_us": "11", "p90_us": "15", "launch_median_us": "99", "queue_held_fraction": "1",
+}
+
+
+def test_collective_summary_uses_existing_merge_and_base_receipts(tmp_path):
+    run = tmp_path / "run"
+    publish_run(run, {"ep16.csv": [COLLECTIVE]})
+    base = tmp_path / "base"
+    assert main(["--run-dir", str(run), "--output-dir", str(base),
+                 "--table", "summary.csv", "ep16.csv"]) == 0
+    next_run = tmp_path / "next"
+    measured = {**COLLECTIVE, "median_us": "14", "launch_median_us": "103"}
+    added = {**COLLECTIVE, "group_size": "32", "median_us": "20"}
+    publish_run(next_run, {"ep.csv": [measured, added]})
+    output = tmp_path / "extended"
+    assert main(["--run-dir", str(next_run), "--output-dir", str(output), "--base-dir", str(base),
+                 "--table", "summary.csv", "ep.csv"]) == 0
+    assert read_rows(output / "summary.csv")[1] == [COLLECTIVE, added]
+    receipt = json.loads((output / "merge_receipt.json").read_text())
+    repeated = receipt["tables"]["summary.csv"]["repeated_base_rows"]
+    assert repeated[0]["measurements"]["median_us"] == "14"
+    assert repeated[0]["base_row"] == 0
+
+
+def test_collective_timing_change_is_not_a_new_identity(tmp_path):
+    run = tmp_path / "run"
+    publish_run(run, {"a.csv": [COLLECTIVE], "b.csv": [{**COLLECTIVE, "median_us": "14"}]})
+    with pytest.raises(ValueError, match="repeats the identity"):
+        main(["--run-dir", str(run), "--output-dir", str(tmp_path / "output"),
+              "--table", "summary.csv", "a.csv", "b.csv"])

@@ -1,0 +1,102 @@
+{
+ "schema_version": "dsv4_step_cost.v1",
+ "qualification": "diagnostic_step_cost",
+ "formal_gate_admission": false,
+ "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+ "device": "h800",
+ "topology": {
+  "attn_tensor_parallel_size": 8,
+  "attn_dp": 2,
+  "moe_tensor_parallel_size": 1,
+  "moe_expert_parallel_size": 16,
+  "num_pipeline_stages": 1
+ },
+ "limits": {
+  "max_model_len": 7168,
+  "max_num_batched_tokens": 8192,
+  "max_num_seqs": 128
+ },
+ "roles": {
+  "PREFILL": [
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 6144,
+    "num_decode_requests": {
+     "min": 0,
+     "max": 0
+    },
+    "time_ms": 287.35362365841866,
+    "samples": 256,
+    "measured_num_decode_requests": [
+     0
+    ],
+    "min_ms": 245.05646154284477,
+    "max_ms": 345.52713483572006
+   }
+  ],
+  "DECODE": [
+   {
+    "num_prefill_requests": 0,
+    "num_prefill_tokens": 0,
+    "num_decode_requests": {
+     "min": 1,
+     "max": 128
+    },
+    "time_ms": 19.2992880859375,
+    "samples": 117,
+    "measured_num_decode_requests": [
+     1,
+     2
+    ],
+    "median_gpu_span_ms": 19.295671875,
+    "max_interval_minus_gpu_span_ms": 0.012575927734374659
+   },
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 1,
+    "num_decode_requests": {
+     "min": 0,
+     "max": 0
+    },
+    "time_ms": 21.100847534179685,
+    "samples": 2,
+    "measured_num_decode_requests": [
+     0
+    ],
+    "median_gpu_span_ms": 21.0936474609375,
+    "max_interval_minus_gpu_span_ms": 0.00812792968749676
+   },
+   {
+    "num_prefill_requests": 1,
+    "num_prefill_tokens": 1,
+    "num_decode_requests": {
+     "min": 1,
+     "max": 128
+    },
+    "time_ms": 30.146481201171873,
+    "samples": 1,
+    "measured_num_decode_requests": [
+     1
+    ],
+    "median_gpu_span_ms": 30.13649609375,
+    "max_interval_minus_gpu_span_ms": 0.009985107421872641
+   }
+  ]
+ },
+ "sources": {
+  "run_tag": "dsv4-h800-p0-profile-20261023-02",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_profile_20261023/case/runs/groundtruth_clean/dsv4-h800-p0-profile-20261023-02",
+  "engine_config_sha256": "1cd520296da139a89b4a8c5e988aae80c8c339447b041b4cf5b4a84cd2621321",
+  "files_sha256": {
+   "run/client_requests.jsonl": "c5953be9e2554eabd633d0c582a8eb4e5e004b6c6085e5a82adb9b737ee12a62",
+   "run/proxy_requests.jsonl": "95c5f68bd24c4a39f39aaccadf443d87e45b6e05ebea8192e0dabf112330d3bc",
+   "torch_traces/decode/dp0/dp0_pp0_tp0_dcp0_ep0_rank0.1792766820606124725.pt.trace.json.gz": "c408bdac6f1c3a7ba8fa8ef824ec35cfb5f079f4b0b127373e1bd5024115c752",
+   "torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792766798163291423.pt.trace.json.gz": "c0abe91e25ac7ab667f354725b2496f753405a90190bc85bc376821c7ea9f61a"
+  },
+  "profiled_repeat": 1,
+  "prefill_repeats": [
+   2,
+   3
+  ]
+ }
+}

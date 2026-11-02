@@ -1,0 +1,74 @@
+{
+  "status": "REVIEW_RED_CONTROLS",
+  "suites": [
+    {
+      "suite": "test_native_serve_profile",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_serve_profile.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "-k",
+        "window_archive_failures",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_review_red/test_native_serve_profile.xml"
+      ],
+      "returncode": 1,
+      "counts": {
+        "tests": 2,
+        "errors": 0,
+        "failures": 1,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_pd_worker",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_pd_worker.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "-k",
+        "outside_local_torch",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_review_red/test_native_pd_worker.xml"
+      ],
+      "returncode": 1,
+      "counts": {
+        "tests": 2,
+        "errors": 0,
+        "failures": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "suite": "test_native_streaming_replay",
+      "command": [
+        "/data/ycfeng/envs/asyncopd-py312/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "tests/unit/test_native_streaming_replay.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "-k",
+        "profile_receipt_active or profile_receipt_persistent or profile_uri",
+        "--junitxml=/data/ycfeng/tmp/glm53_dsv4/g2_review_red/test_native_streaming_replay.xml"
+      ],
+      "returncode": 1,
+      "counts": {
+        "tests": 3,
+        "errors": 0,
+        "failures": 3,
+        "skipped": 0
+      }
+    }
+  ]
+}

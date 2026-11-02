@@ -488,6 +488,7 @@ def test_metrics_emit_exact_named_ep_phase_times_without_splitting():
         cluster_type=ClusterType.MONOLITHIC,
         use_profile_ep_alltoall=False,
         use_ep_alltoall_dispatch_combine=True,
+        advance_cursor=lambda _ms: None,
     )
     aggregated_ep = {}
     for kind, name, duration, _layer_id in per_layer:

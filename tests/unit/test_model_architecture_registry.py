@@ -559,6 +559,13 @@ def test_raw_model_profile_resolution_callsites_are_allowlisted() -> None:
             "build_profiling_plan",
             "helper",
         ): 1,
+        # The sweep-exclusion probe runs before the plan is built, so it
+        # resolves the profile the same way the plan does.
+        (
+            "frontier/profiling/linear_op/profiling_plan.py",
+            "tensor_parallel_sweep_exclusion",
+            "helper",
+        ): 1,
         (
             "frontier/profiling/utils/confirmation.py",
             "build_linear_op_config_sections",

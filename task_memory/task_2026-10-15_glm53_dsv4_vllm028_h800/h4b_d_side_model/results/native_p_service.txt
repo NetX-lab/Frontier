@@ -1,0 +1,36 @@
+== native06: hosts ['gpu-h800-0214', 'gpu-h800-0310', 'gpu-h800-0346', 'gpu-h800-0399']
+  repetition 1: n 128  P service mean 277.75  median 267.11  min 246.74  max 528.12  arrival gap min 998.1  arrivals during an earlier P service 0
+  repetition 2: n 128  P service mean 268.12  median 264.89  min 246.50  max 431.49  arrival gap min 998.2  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 278.13  median 266.17  min 245.96  max 741.48  arrival gap min 998.7  arrivals during an earlier P service 0
+== H800l: hosts ['gpu-h800-0133', 'gpu-h800-0179', 'gpu-h800-0209', 'gpu-h800-0339']
+  repetition 1: n 128  P service mean 251.83  median 249.44  min 242.66  max 295.10  arrival gap min 998.1  arrivals during an earlier P service 0
+  repetition 2: n 128  P service mean 247.23  median 246.16  min 242.04  max 308.19  arrival gap min 998.5  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 248.82  median 247.40  min 242.39  max 289.05  arrival gap min 998.1  arrivals during an earlier P service 0
+== profile02: hosts ['gpu-h800-0091', 'gpu-h800-0213', 'gpu-h800-0216', 'gpu-h800-0266']
+  repetition 1: n 128  P service mean 56762.36  median 59307.20  min 344.85  max 114595.59  arrival gap min 995.3  arrivals during an earlier P service 123
+  repetition 2: n 128  P service mean 279.39  median 278.04  min 245.59  max 345.53  arrival gap min 998.3  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 284.51  median 292.68  min 245.06  max 319.22  arrival gap min 998.5  arrivals during an earlier P service 0
+== P2-32r: hosts ['gpu-h200-0082', 'gpu-h200-0146', 'gpu-h200-0710', 'gpu-h200-0938']
+  repetition 1: n 128  P service mean 234.37  median 230.40  min 224.99  max 257.54  arrival gap min 998.7  arrivals during an earlier P service 0
+  repetition 2: n 128  P service mean 236.02  median 229.70  min 224.66  max 284.54  arrival gap min 998.2  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 236.10  median 230.42  min 224.79  max 300.41  arrival gap min 998.9  arrivals during an earlier P service 0
+== P2-32l: hosts ['gpu-h200-0043', 'gpu-h200-0628', 'gpu-h200-0705', 'gpu-h200-1191']
+  repetition 1: n 128  P service mean 260.73  median 257.19  min 227.85  max 351.35  arrival gap min 998.4  arrivals during an earlier P service 0
+  repetition 2: n 128  P service mean 255.37  median 251.52  min 232.70  max 299.19  arrival gap min 998.8  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 256.43  median 253.66  min 228.15  max 318.50  arrival gap min 998.6  arrivals during an earlier P service 0
+== P2-32p: hosts ['gpu-h200-0040', 'gpu-h200-0043', 'gpu-h200-0577', 'gpu-h200-0628']
+  repetition 1: n 128  P service mean 51345.65  median 50363.09  min 349.08  max 105993.36  arrival gap min 998.0  arrivals during an earlier P service 123
+  repetition 2: n 128  P service mean 280.14  median 286.81  min 230.79  max 349.19  arrival gap min 998.7  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 274.06  median 278.73  min 227.45  max 304.80  arrival gap min 998.2  arrivals during an earlier P service 0
+== P2-64r: hosts ['gpu-h200-0040', 'gpu-h200-0543', 'gpu-h200-0710', 'gpu-h200-0716', 'gpu-h200-0722', 'gpu-h200-0760', 'gpu-h200-0938', 'gpu-h200-0968']
+  repetition 1: n 128  P service mean 558.25  median 572.42  min 295.89  max 802.98  arrival gap min 992.6  arrivals during an earlier P service 0
+  repetition 2: n 128  P service mean 552.41  median 550.90  min 297.62  max 806.67  arrival gap min 998.9  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 547.24  median 547.10  min 296.76  max 800.60  arrival gap min 997.9  arrivals during an earlier P service 0
+== P2-64l: hosts ['gpu-h200-0040', 'gpu-h200-0645', 'gpu-h200-0705', 'gpu-h200-0710', 'gpu-h200-0714', 'gpu-h200-0716', 'gpu-h200-0828', 'gpu-h200-1087']
+  repetition 1: n 128  P service mean 572.17  median 578.31  min 306.07  max 811.95  arrival gap min 998.0  arrivals during an earlier P service 0
+  repetition 2: n 128  P service mean 581.63  median 604.20  min 306.59  max 824.82  arrival gap min 998.4  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 573.99  median 579.30  min 307.13  max 826.19  arrival gap min 998.1  arrivals during an earlier P service 0
+== P2-64p: hosts ['gpu-h200-0040', 'gpu-h200-0146', 'gpu-h200-0543', 'gpu-h200-0710', 'gpu-h200-0722', 'gpu-h200-0760', 'gpu-h200-0938', 'gpu-h200-0968']
+  repetition 1: n 128  P service mean 38732.72  median 34121.09  min 428.01  max 87833.43  arrival gap min 995.1  arrivals during an earlier P service 122
+  repetition 2: n 128  P service mean 556.58  median 559.46  min 300.60  max 775.70  arrival gap min 997.9  arrivals during an earlier P service 0
+  repetition 3: n 128  P service mean 559.22  median 559.39  min 300.60  max 797.59  arrival gap min 998.4  arrivals during an earlier P service 0

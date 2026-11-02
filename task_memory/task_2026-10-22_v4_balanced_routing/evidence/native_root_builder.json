@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "builder": "/data/ycfeng/Frontier/.worktrees/v4-balanced-binding/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+  "sha256": "0b095d44aa5a53a73e3f6bad5e28dd1aa4e10c3c770bbd0d857162e7330fc4ac",
+  "baseline_sha256": "21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560",
+  "added": 31,
+  "deleted": 7,
+  "dispatch_lines": 3,
+  "routing_lines": 35,
+  "B_routing_lines": 318,
+  "aggregate_routing_lines": 952,
+  "immutable_commit_invocation": true,
+  "deadlines": {
+    "timeout_seconds": 3600,
+    "startup_timeout_s": 1800,
+    "replay_timeout_s": 1800,
+    "payload_guard_seconds": 3600,
+    "max_payload_gpu_hours": 32
+  },
+  "package_created": false
+}

@@ -1,0 +1,29 @@
+{
+  "status": "INTEGRATED_ISOLATED_PREREQUISITE",
+  "merge_commit": "e89b45da0346d2d3de7c735d47a00c4a580193ad",
+  "source_commit": "2f87828",
+  "source_sha256": {
+    "frontier/execution_time_predictor/deepseek_v4.py": "45d30210ffc34a1538e86eb3305a8cd5ef9960122c4b3c5d4c6b26df12f4429c",
+    "tests/integration/check_dsv4_measured_scopes.py": "8921d66ab53d3758fc9f3f3ea7f9f2de6e31bdf8ede27834b2e727cb63158855",
+    "tests/unit/test_dsv4_graph_measured.py": "561ed21d7731a697cdfa90683a59e042e1e1f2c46a2b937cc5a0a2dee9b13ad6"
+  },
+  "merged_unit_tests": 144,
+  "merged_failures_errors_skips": 0,
+  "merged_accepted_comparisons": 94,
+  "merged_legacy_positive_negative": [
+    102,
+    72
+  ],
+  "fixed_matrix_commit": "576d278156ea21b209da33791337bd195047ae3e",
+  "matrix_identical_cases": 77,
+  "matrix_production_test_data_gitlink_bytes_equal": true,
+  "serving_admission": false,
+  "full_predictor_admission": false,
+  "verification_limits": "Isolated prefill only; complete public predictor, physical TP8, PD/graph, balanced decode and E2E remain unqualified.",
+  "evidence": {
+    "/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_merged_e89b45d.xml": "f0d35cd168686964ed22ca649dd895618a7badbb5c7d75b975a6ad5fb35e9556",
+    "/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_merged_e89b45d_accepted.json": "9ce55d3fd1fd4268385c795d2a60ba27c7aec41d5397fc9d2bd04fd01755f17d",
+    "/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_merged_e89b45d_legacy.json": "e97c7683324594c250c36c3fc06f768bf13a760ef6d136c69452bb7d140ff68b"
+  },
+  "retained_wrapper_error": "The accepted report has no typed_negative_count; root printed that legacy-only key after accepted PASS and stopped before legacy. No source/checker change; existing accepted result preserved, only unfinished legacy command then ran successfully."
+}

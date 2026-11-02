@@ -1,0 +1,60 @@
+{
+  "status": "COMPLETED_AWAITING_PRIMARY_INSPECTION",
+  "decision": "D-V4-P0-GROUP-SEGMENTS-TINY-CGROUP-REPAIR",
+  "start_utc": "2026-10-24T21:21:03.315352+00:00",
+  "allocation_sha256": "23ae652b60101355ffdf624a8f3882c73be76e50db72653b4aed55a83ed9bd33",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control02.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "attempt": "1/1",
+  "driver_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "bindings": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426",
+      "bytes": 5041
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control02.py",
+      "sha256": "dabfdc8199ea3e6e17ea9c7ef96656801c5c8b973b29c02ca13a6096c0580650",
+      "bytes": 7364
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs02.json",
+      "sha256": "df1c94280684d4c604644c4171b04316228868b4f5991f0d511c09c487f9a8a2",
+      "bytes": 7306
+    }
+  ],
+  "returncode": 0,
+  "enclosing_seconds": 0.21523058274760842,
+  "end_utc": "2026-10-24T21:21:03.530831+00:00",
+  "outputs": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_stdout02.txt",
+      "bytes": 105,
+      "sha256": "d0892c63d3737882168810bf0a55897ba63aa6d88d6a9bca82f6000adbbf37f3"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_stderr02.txt",
+      "bytes": 67,
+      "sha256": "e0bd1163cce666d04a5ecac92c0894f320c72fddf3deb52b26987b056dbac315"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_result02.json",
+      "bytes": 207055,
+      "sha256": "1b4074b85ac02cd5594ce70d2f2782c214670daf5687ce949ea8bdcd853202e7"
+    }
+  ]
+}

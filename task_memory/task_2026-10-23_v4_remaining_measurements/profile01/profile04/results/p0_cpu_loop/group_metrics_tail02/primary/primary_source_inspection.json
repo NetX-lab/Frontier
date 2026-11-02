@@ -1,0 +1,169 @@
+{
+  "status": "PASS_PRIMARY_SOURCE_AND_SERIALIZED_TINY02_INSPECTION_PENDING_INDEPENDENT_REVIEWS",
+  "observed_utc": "2026-10-24T21:21:35.606624+00:00",
+  "reviewer": "primary",
+  "source_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+  "source_sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426",
+  "source_lines": 112,
+  "source_cap": 140,
+  "active_tiny_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control02.py",
+  "active_tiny_sha256": "dabfdc8199ea3e6e17ea9c7ef96656801c5c8b973b29c02ca13a6096c0580650",
+  "tiny_lines": 114,
+  "tiny_cap": 115,
+  "tiny_receipt_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_result02.json",
+  "tiny_receipt_sha256": "1b4074b85ac02cd5594ce70d2f2782c214670daf5687ce949ea8bdcd853202e7",
+  "tiny_launch_receipt_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_launch_receipt02.json",
+  "tiny_launch_receipt_sha256": "68ca1e481b2b9928d1db66532b8ce140edebaaf33bcb2a1e6a14bb3ba70a539b",
+  "serialized_check_count": 32,
+  "all_serialized_expected_actual_status_consistent": true,
+  "actual_memory_limit_bytes": 32212254720,
+  "checks": [
+    {
+      "name": "actual_memory_limit_bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "immutable_pins_before",
+      "status": "PASS"
+    },
+    {
+      "name": "stripped_complete_module_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "stripped_frozen_source_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "unchanged_union_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "single_adjacent_timing_composition",
+      "status": "PASS"
+    },
+    {
+      "name": "restored_pipeline_CLI_AST",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_no_groups:exact_values",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_no_groups:stable_duplicate_orders_and_sort_count",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_no_groups:sparse_boundaries",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_no_groups:group_membership_telemetry",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_groups:exact_values",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_groups:stable_duplicate_orders_and_sort_count",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_groups:sparse_boundaries",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_groups:group_membership_telemetry",
+      "status": "PASS"
+    },
+    {
+      "name": "stable_ties:exact_values",
+      "status": "PASS"
+    },
+    {
+      "name": "stable_ties:stable_duplicate_orders_and_sort_count",
+      "status": "PASS"
+    },
+    {
+      "name": "stable_ties:sparse_boundaries",
+      "status": "PASS"
+    },
+    {
+      "name": "stable_ties:group_membership_telemetry",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_memberships:exact_values",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_memberships:stable_duplicate_orders_and_sort_count",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_memberships:sparse_boundaries",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_memberships:group_membership_telemetry",
+      "status": "PASS"
+    },
+    {
+      "name": "original_order_float_sum:exact_values",
+      "status": "PASS"
+    },
+    {
+      "name": "original_order_float_sum:stable_duplicate_orders_and_sort_count",
+      "status": "PASS"
+    },
+    {
+      "name": "original_order_float_sum:sparse_boundaries",
+      "status": "PASS"
+    },
+    {
+      "name": "original_order_float_sum:group_membership_telemetry",
+      "status": "PASS"
+    },
+    {
+      "name": "original_float_accumulation_witness",
+      "status": "PASS"
+    },
+    {
+      "name": "_group_metrics_global_sorted:same_list_and_exact_forwarding",
+      "status": "PASS"
+    },
+    {
+      "name": "_group_metrics_group_sorted:same_list_and_exact_forwarding",
+      "status": "PASS"
+    },
+    {
+      "name": "immutable_pins_after",
+      "status": "PASS"
+    },
+    {
+      "name": "serialized_evidence_after_list_mutation",
+      "status": "PASS"
+    }
+  ],
+  "closed_output_hashes_unchanged": true,
+  "immutable_input_count": 21,
+  "original_tiny_failure_preserved": true,
+  "original_tiny_used": 1,
+  "repair_tiny_used": 1,
+  "segment_diagnostic_used": 0,
+  "segment_diagnostic_ceiling": 1,
+  "new_full_control_or_affected_invocations": 0,
+  "primary_source_observations": [
+    "Both wrappers call the passed original sorted exactly once with original positional/keyword AST and return the same list. Global order construction remains its original comprehension, followed by the original group loop.",
+    "Removing only new wrapper definitions/boundaries and restoring their first positional argument yields the retained composed full module, accepted source function, unchanged union recurrence and CLI pipeline AST; runtime tiny copied expected/actual values remain consistent after recorder lists are cleared.",
+    "Group key/members are closure values at each same-thread group iteration. Six sparse group observations contain exact repr(key)/len(members) sequence; no per-event observation, extra sorting, filtering or computation is inserted.",
+    "The fresh tiny uses four v1 controller/mount-root expressions from the existing pinned observer; the failed original unified memory.max assumption and zero-check failure remain immutable."
+  ],
+  "limits": [
+    "One tiny AST/fixture invocation cannot establish full-input performance or whole-output equivalence beyond the accepted previously completed controls.",
+    "Primary inspects the retained tiny evidence and source, without rerunning old/new tiny/unit/control drivers.",
+    "R5remains24/32; native ownership/dependency/cost/reference and control timing are not admitted."
+  ]
+}

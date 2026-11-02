@@ -1,0 +1,42 @@
+{
+  "status": "PASS_FIXED_SOURCE_BINDING",
+  "source_revision": "6abd2d8e5a99f948236f062b69589a91fc511437",
+  "base_revision": "c4b59b65f177619223c7e0c8466bf852ee9c8083",
+  "changed_files": [
+    "tests/unit/test_native_groundtruth_check.py"
+  ],
+  "source_sha256": "d5f702efe9d108ee0ef34594f3d61f459a14268a7fa55b7a68134d30aa4e5b43",
+  "test_functions_ast_unchanged": 17,
+  "commands": [
+    [
+      "git",
+      "show",
+      "6abd2d8e5a99f948236f062b69589a91fc511437:tests/unit/test_native_groundtruth_check.py"
+    ],
+    [
+      "git",
+      "ls-tree",
+      "-r",
+      "6abd2d8e5a99f948236f062b69589a91fc511437",
+      "--",
+      "frontier",
+      "data",
+      "examples",
+      "tests/e2e/refactor_fidelity",
+      "tests/integration/canonical_case"
+    ],
+    [
+      "git",
+      "diff-tree",
+      "--no-commit-id",
+      "--name-only",
+      "-r",
+      "6abd2d8e5a99f948236f062b69589a91fc511437"
+    ]
+  ],
+  "matrix_tree_sha256": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62",
+  "fixture_paths": {
+    "native": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69",
+    "c26": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02"
+  }
+}

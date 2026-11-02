@@ -1,0 +1,22 @@
+{
+  "status": "PASS_EXPLICIT_UNCHANGED_DOMAIN_MATRIX_BINDING",
+  "observed_utc": "2026-10-24T20:33:55.849372+00:00",
+  "fixed_baseline": "4ae81052e8b7a82593b68c6740dadb07e9e1624b",
+  "prior_binding_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction/primary/matrix_binding.json",
+  "prior_binding_sha256": "51bc15df389de536e31c92373e49e42c87bf9d12879a5df9489b234a308f4f9c",
+  "capture_commit": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "identical_cases": 77,
+  "fresh_capture": false,
+  "unchanged_domains": [
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "diff_from_prior_fixed_baseline": "0f2fb6cdffbbe86f2fdc06e5141e3e80c227c2b9",
+  "changed_domain_files": [],
+  "scope": "Only the new standalone offline CPU audit metrics function and its tests; simulator and default matrix domains are unchanged."
+}

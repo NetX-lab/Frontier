@@ -11,3 +11,12 @@ EXECUTION_MODE_COLUMN: Final[str] = "execution_mode"
 TENSOR_PARALLEL_COLUMN: Final[str] = "num_tensor_parallel_workers"
 # Mean device idle time before a kernel, in microseconds.
 KERNEL_GAP_US_COLUMN: Final[str] = "kernel_gap_us"
+
+# Segment classes of the DeepSeek-V4 replay stream program.
+CUDA_GRAPH: Final[str] = "cuda_graph"
+CUDA_GRAPH_PIECEWISE: Final[str] = "cuda_graph_piecewise"
+EAGER: Final[str] = "eager"
+EAGER_PREPARATION: Final[str] = "eager_preparation"
+DSV4_EXECUTION_MODES: Final[tuple[str, ...]] = (
+    CUDA_GRAPH, CUDA_GRAPH_PIECEWISE, EAGER, EAGER_PREPARATION,
+)

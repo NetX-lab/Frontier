@@ -1,0 +1,59 @@
+{
+  "status": "PASS_EXPLICIT_EXISTING_SOURCE_BINDING",
+  "task_id": "W128-PROFILE03-COLLECTION",
+  "base_revision": "44f2ddb9736f0abaaf6a52a5fb768519996b7da3",
+  "comparison_source": "4a1b53e6033134c59b4561306eb2d586bd3d8300",
+  "inherited_source_binding": "5f7d0950b78276a77a66b7330cf0041a9f380f12",
+  "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/root_attention_input_4a1b53e6_compare/comparison.json",
+  "comparison_sha256": "7a8728ecc0851373827d9cdc7dfb68c552299e6c54b5fae75bd8cc5429d36ad6",
+  "inherited_binding_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/matrix_binding.json",
+  "inherited_binding_sha256": "39e2435a25ef718dadafa0a8f0a67c4b91fe559f409aa929e5014338c901a57b",
+  "identical_cases": 77,
+  "new_capture": false,
+  "unchanged_domains": {
+    "frontier": {
+      "capture_tree": "e97fbcc69d3d183b93d9e21c6724170dadb5b9c6",
+      "current_tree": "e97fbcc69d3d183b93d9e21c6724170dadb5b9c6",
+      "working_tree_diff_empty": true
+    },
+    "data": {
+      "capture_tree": "403e775810357805c4ce0eeb27553e68c56f58fc",
+      "current_tree": "403e775810357805c4ce0eeb27553e68c56f58fc",
+      "working_tree_diff_empty": true
+    },
+    "examples": {
+      "capture_tree": "eca48fdc0510b46f8ca9309d595737397be4d0cc",
+      "current_tree": "eca48fdc0510b46f8ca9309d595737397be4d0cc",
+      "working_tree_diff_empty": true
+    },
+    "tests/e2e/refactor_fidelity": {
+      "capture_tree": "deebb8fcabc0bd82d3e8d410c742f49569133411",
+      "current_tree": "deebb8fcabc0bd82d3e8d410c742f49569133411",
+      "working_tree_diff_empty": true
+    },
+    "tests/integration/canonical_case": {
+      "capture_tree": "96495912d547ffcf4c8fe0dec27d156cb5f9e717",
+      "current_tree": "96495912d547ffcf4c8fe0dec27d156cb5f9e717",
+      "working_tree_diff_empty": true
+    }
+  },
+  "changed_files": [
+    "tests/comparison/calibration/native_pd_worker.py",
+    "tests/unit/test_native_pd_worker.py"
+  ],
+  "source_sha256": {
+    "tests/comparison/calibration/native_pd_worker.py": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+    "tests/unit/test_native_pd_worker.py": "84fa7a4be7a8a957eb62671e652d6e00ff48d153c92671bea7a53fe6528cea4c"
+  },
+  "primary_evidence_sha256": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/stream_probe/matrix_binding.json": "39e2435a25ef718dadafa0a8f0a67c4b91fe559f409aa929e5014338c901a57b",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile03_design.md": "837d9924215eb9c0427e2a67ec870c2c43f558ad3db56d7588f4f832c992140f",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/test_report_2026-10-24_lifecycle_cpu.md": "ee2f30b60bf2cc66058cb5c5749b64e578cebc1cec8baaf1a24b2866a5872903",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/command.json": "48bf97a3ecfc3a0a733d3ef91d4ce0a46792062664825c7677e3180b87cadc61",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/control.py": "2ac40a250571695dad80b821519d0d10aef6fd1d1b5b52e57d3c9e1eaaf01a33",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/receipt.json": "cad90bbc420a510c14612baac603fa2f537cfc7fc86548c585bea76866ed0f7b",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/lifecycle_cpu/profile_capacity.json": "1d85858d93a9a9377dc887795b1b50a77829ff04777104e7279399abf2546818"
+  },
+  "qualification": "Existing unchanged simulator/input domain evidence; not GPU worker/runtime validation.",
+  "source_revision": "20660f4c0776ddd75dc211f1f0819266b48ba23c"
+}

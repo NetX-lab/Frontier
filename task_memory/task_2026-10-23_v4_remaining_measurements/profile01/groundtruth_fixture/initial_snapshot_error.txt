@@ -1,0 +1,1 @@
+Initial coordinator used system Python3.10.6 and failed before snapshot/test execution: AttributeError: module hashlib has no attribute file_digest. Corrected coordinator uses required asyncopd Python3.12.13; no source change.

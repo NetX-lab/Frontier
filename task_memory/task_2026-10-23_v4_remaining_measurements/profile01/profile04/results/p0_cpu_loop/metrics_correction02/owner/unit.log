@@ -1,0 +1,14 @@
+test_duplicate_global_identity_with_equal_endpoints (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_empty_groups (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_generated_ast_and_composition (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_original_float_accumulation (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_overlap_repeated_memberships_and_keys (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_pipeline_and_entry_closure (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_receipt_values_are_copied (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_source_pins (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+test_stable_global_order_and_integer_group_keys (test_v4_trace_audit_group_metrics.GroupMetricsTest) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.247s
+
+OK

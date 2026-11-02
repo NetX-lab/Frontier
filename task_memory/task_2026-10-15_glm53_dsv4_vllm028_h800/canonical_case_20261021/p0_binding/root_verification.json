@@ -1,0 +1,107 @@
+{
+  "status": "ACCEPTED_P0_WORKLOAD_METRIC_BINDING",
+  "verified_at_utc": "2026-10-23T13:05:50.017090+00:00",
+  "task_id": "W128-V4-P0-CASE-BINDING",
+  "owner_receipt_sha256": "56583585cf83fa0b82676e637342b2c932309fb9f81f491e26f000ec4f7698fb",
+  "command_sha256": "382d4ac6097ef9cafc1f629dd8cb5bbe602ce4a1bcadcc440774e1a13b9a3796",
+  "root_output": "/data/ycfeng/tmp/glm53_dsv4/p0_binding_root_bs0volv_/stdout.json",
+  "root_output_sha256": "5ea9b5a62d0113e0d9ac50f669d5e0891098854cc3b640141a7944783c18fce0",
+  "root_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "root_execution": {
+    "executable": "/usr/bin/python3",
+    "python": "3.10.6",
+    "timeout_seconds": 60,
+    "returncode": 0,
+    "stderr_bytes": 0
+  },
+  "compared_fields": [
+    "analysis_state",
+    "calibration_admission",
+    "command_path",
+    "command_sha256",
+    "counts",
+    "environment",
+    "idle_helper",
+    "input_count",
+    "inputs",
+    "inputs_unchanged",
+    "metrics",
+    "native_graph_quantization_binding",
+    "native_primary_status",
+    "new_gpu_run",
+    "new_manifest",
+    "prompt_evidence",
+    "reader_revision",
+    "runtime_native_scalars",
+    "shared_revision_from_prior_acceptance",
+    "source_revision",
+    "status",
+    "task_id",
+    "unverified",
+    "workload_hashes"
+  ],
+  "clock_fields_excluded": [
+    "elapsed_s",
+    "finished_at_utc",
+    "started_at_utc"
+  ],
+  "owner_runner_metadata_separately_checked": "command_execution",
+  "counts": {
+    "total": 432,
+    "formal": 384,
+    "warmup": 48,
+    "repetitions": 3,
+    "formal_per_repeat": 128,
+    "warmup_per_repeat": 16,
+    "missing": 0,
+    "failed": 0,
+    "unfinished": 0
+  },
+  "metrics": [
+    {
+      "repeat": 1,
+      "ttft_ms": 403.30500297932304,
+      "tpot_ms": 19.03109878276599,
+      "request_e2e_time_ms": 19872.119057748932,
+      "token_throughput_tps": 6273.332979026521,
+      "window_s": 146.25463100196794,
+      "first_submission": 3151131.484069785,
+      "last_token": 3151277.738700787
+    },
+    {
+      "repeat": 2,
+      "ttft_ms": 393.21618992471485,
+      "tpot_ms": 19.016502763090106,
+      "request_e2e_time_ms": 19847.098516565893,
+      "token_throughput_tps": 6273.129500109898,
+      "window_s": 146.2593750031665,
+      "first_submission": 3151314.71750041,
+      "last_token": 3151460.976875413
+    },
+    {
+      "repeat": 3,
+      "ttft_ms": 399.9459093065525,
+      "tpot_ms": 18.98073687169182,
+      "request_e2e_time_ms": 19817.239729047287,
+      "token_throughput_tps": 6269.771959563796,
+      "window_s": 146.33769871015102,
+      "first_submission": 3151497.84449108,
+      "last_token": 3151644.18218979
+    }
+  ],
+  "prompt_evidence": {
+    "kind": "pinned source deterministic reconstruction; not retained HTTP prompt arrays",
+    "vocab_size": 129280,
+    "native_input_processor_guard_claimed": false,
+    "template_count": 144,
+    "template_prompt_tokens": 884736,
+    "three_repeat_prompt_tokens": 2654208,
+    "min_token_id": 100,
+    "max_token_id": 129179,
+    "aggregate_sha256": "a585b96b162ef2e7746241ab093a638b67000f0e5a1242687ae51a3355051859",
+    "digest_encoding": "formal then warmup template order; UTF8 template+NUL+6144 uint32 little-endian IDs",
+    "stable_template_binding": true
+  },
+  "scope": "P0 native workload/client-metric binding only; retained R4 admission reused; no Frontier or numerical calibration admission",
+  "first_root_comparison": "FAIL_HARNESS_METADATA_ONLY: owner added command_execution to its stdout-derived receipt; root command itself passed. Corrected comparison checks every common non-clock field and validates wrapper exit/stderr metadata separately; no inputs or results changed."
+}

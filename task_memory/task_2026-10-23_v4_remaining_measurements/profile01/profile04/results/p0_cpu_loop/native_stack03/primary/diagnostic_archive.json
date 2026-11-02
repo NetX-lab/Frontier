@@ -1,0 +1,46 @@
+{
+  "status": "PASS_SELECTED_CLOSED_NATIVE_EVIDENCE",
+  "files": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/retained_native.receipt.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.receipt.json",
+      "sha256": "52066624424c298e5e9e6106d49d000078f3f76224f50a2b5aebd41381fb662c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/retained_native.cgroup.json",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.cgroup.json",
+      "sha256": "013e61f92e17d55d50001ed689d6bb83e4d06ddd45d557f0cb17b1cf4f60f218"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/retained_native.obs.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.obs.jsonl",
+      "sha256": "bf11db54f54724f8cabb8bcc5c38484a12ea62db522bf087fe00d875afd8e8cc"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/retained_native.gc.jsonl",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.gc.jsonl",
+      "sha256": "787f00deddae4cb37d1fdad6cde624568263e468b6aecba27c234fdd7b60d26e"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/retained_native.hb.log",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.hb.log",
+      "sha256": "7f500f2146a669774fd9d5dfb96cced1f2d28c73f10214bc31f4ea7867fc6365"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/retained_native.stdout",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stdout",
+      "sha256": "aca4e0fdedc6cdb80b304a91a9506cf928c9e3d533b4d0bef5d5d79896af5521"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/native_stack03/primary/retained_native.stderr",
+      "source": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.stderr",
+      "sha256": "dcafa6429d5ed112732c1600d51fa4d14f20e9b2f9d96554de8c3d819fdc9347"
+    }
+  ],
+  "compressed_index": {
+    "path": "/data/ycfeng/tmp/glm53_dsv4/p0_native_stack_20261025_01/prefill_dp0_rank0_native.kernels.jsonl.gz",
+    "bytes": 5383865,
+    "sha256": "aa83c66a13eeaab727f4b5b5d48888b19bc9f1632ddffa6229612b7e42ba761c"
+  },
+  "index_decoded": false
+}

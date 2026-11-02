@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--cap-drop=ALL",
+    "--cap-add=DAC_OVERRIDE",
+    "--memory=4g",
+    "--cpus=2",
+    "--pids-limit=128",
+    "-i",
+    "-e",
+    "VLLM_USE_V2_MODEL_RUNNER=1",
+    "-v",
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced:/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced:ro",
+    "--entrypoint",
+    "python3",
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "-I",
+    "-B",
+    "-",
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
+  ],
+  "existing_control_source": "/data/ycfeng/Frontier/.worktrees/v4-h800-prefill/task_memory/task_2026-10-22_v4_h800_prefill/configured_capacity/verify_package.py",
+  "existing_control_sha256": "f80918bd97b59196f63923f4d1009d57cc22b927644bd266e8c69ff77945921e",
+  "purpose": "Existing CLI/engine boundary against actual staged adapter and installed native registry; no GPU construction"
+}

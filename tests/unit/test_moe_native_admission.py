@@ -31,7 +31,7 @@ def native_runtime(monkeypatch):
     args = dict(num_tokens=2, num_experts=2, hidden_dim=64, expert_hidden_dim=256,
                 top_k=1, topk_weights=routing, topk_ids=routing, warmup_steps=0,
                 active_steps=2, profile_method="device_event", use_mxfp4=True,
-                model_type="qwen3_5_moe_text")
+                mxfp4_weight_source="online", model_type="qwen3_5_moe_text")
     state = dict(backend="Mxfp4MoeBackend.AITER_MXFP4_MXFP4",
                  layer=SimpleNamespace(w13_weight=object(), w2_weight=object(), activation="silu"),
                  quant_method=SimpleNamespace(moe_kernel=SimpleNamespace(apply=Mock())))
@@ -66,7 +66,7 @@ def test_cuda_cannot_be_labeled_as_aiter_mxfp4(native_runtime):
 
 def test_unimplemented_functional_fp8_rejects_before_allocation(native_runtime):
     runtime, args, build_state = native_runtime
-    args.update(use_mxfp4=False, use_fp8=True)
+    args.update(use_mxfp4=False, mxfp4_weight_source=None, use_fp8=True)
     with pytest.raises(NotImplementedError, match="FP8 profiling"):
         kernel.profile_fused_moe_kernel(**args)
     runtime.randn.assert_not_called()
@@ -77,12 +77,14 @@ def test_mxfp4_wrapper_exports_actual_backend_outside_numeric_stats(native_runti
     _, args, build_state = native_runtime
     wrapper = object.__new__(MoEWrapper)
     for name, value in dict(
-        model_config=SimpleNamespace(model_type="qwen3_5_moe_text"),
+        model_config=SimpleNamespace(model_type="qwen3_5_moe_text", swiglu_limit=None),
         use_vllm_kernel=True, use_mxfp4=True, use_fp8=False,
+        mxfp4_weight_source="online",
         num_experts=2, num_experts_per_device=2, hidden_dim=64,
         expert_hidden_dim=256, router_topk=1, num_tensor_parallel_workers=1,
         _dtype=torch.bfloat16, per_channel_quant=False, block_shape=None,
         profile_method="device_event", output_dir=None, quantization_mode="mxfp4",
+        routing_runtime_path="standard_fused_topk",
     ).items():
         setattr(wrapper, name, value)
     row = wrapper.profile_grouped_gemm(2, routing_inputs=dict(

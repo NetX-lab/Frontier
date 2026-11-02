@@ -1,0 +1,18 @@
+E       assert 2 == 4
+E        +  where 2 = len({140112609574256, 140112611001360})
+E       assert 2 == 4
+E        +  where 2 = len({140112611014512, 140112611014896})
+E       assert 2 == 4
+E        +  where 2 = len({140112609572432, 140112611263216})
+E       AssertionError: assert 3 == 4
+E        +  where 3 = len({140112611262928, 140112611264080, 140112611274832})
+E        +  and   4 = len([('P', 'bad'), ('D', 'bad'), ('P', 'good'), ('D', 'good')])
+E       AssertionError: assert 3 == 4
+E        +  where 3 = len({140112608650128, 140112611265712, 140112611277808})
+E        +  and   4 = len([('P', 'bad'), ('D', 'bad'), ('P', 'good'), ('D', 'good')])
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.10.2-False]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-False]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_uses_independent_upstream_connections_for_consecutive_posts[0.28.0-True]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_headers]
+FAILED tests/unit/test_calibration_pd_harness.py::test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent[decode_stream]
+5 failed, 1 passed, 62 deselected in 0.97s

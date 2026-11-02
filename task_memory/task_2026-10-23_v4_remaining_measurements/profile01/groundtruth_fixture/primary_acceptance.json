@@ -1,0 +1,92 @@
+{
+  "status": "ACCEPTED_CPU_FIXTURE_RESTORATION",
+  "observed_at_utc": "2026-10-24T11:00:41.256914+00:00",
+  "source_revision": "6abd2d8e5a99f948236f062b69589a91fc511437",
+  "integrated_source_revision": "0dbb617f",
+  "integrated_records_revision": "3c3fdce4",
+  "verified_head": "3c3fdce40471a8e05f31662c463e097cdcf4f2da",
+  "source_sha256": "d5f702efe9d108ee0ef34594f3d61f459a14268a7fa55b7a68134d30aa4e5b43",
+  "changed_file": "tests/unit/test_native_groundtruth_check.py",
+  "gross_source_lines": 37,
+  "source_budget": 60,
+  "unchanged_test_function_asts": 17,
+  "root_verifications": [
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/groundtruth_fixture/root_worktree_verification.json",
+      "sha256": "ec644ac6c5c0ec240518822462668ad68ca8926e2448f9fa75f6da356a8bbaed",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root_3k_xkx_9/receipt.json",
+      "python": "3.12.13",
+      "tests": 145
+    },
+    {
+      "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/groundtruth_fixture/root_integration_verification.json",
+      "sha256": "04f282016e2a92293eeedbd0dde842b0139c631cf7b0e5ebc0e6fda118a7e706",
+      "source": "/data/ycfeng/tmp/opencode-v2-tmp/opencode/groundtruth_fixture_root__n6k0ryh/receipt.json",
+      "python": "3.12.13",
+      "tests": 145
+    }
+  ],
+  "tests_each_execution": {
+    "groundtruth": 99,
+    "inventory": 46,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "immutable_files": 189,
+  "mapped_main_immutable_files": {
+    "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+    "frontier/profiling/moe/balanced_routing.py": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+    "tests/comparison/calibration/client_metrics.py": "ca91383caa9c5f60f5d942f5a561e2a90862e8c25451eff04f1f439b9776309d",
+    "tests/comparison/calibration/e2e_metrics_gap.py": "2785c1f0580032bc2d6ed49aaa74f9d55cfbb73022f883597c450b6173c1bd3f",
+    "tests/comparison/calibration/native_dummy_initialization.py": "118b5feb8b3fb15f72f3736fbf0af166eaeebe99cba46245b2ddf5ddc2b6a8ca",
+    "tests/comparison/calibration/native_full_structure.py": "a37ec448730dd1f3be26e466c44f14bd9cec2518c5cd42624fa4e6fb6a39455c",
+    "tests/comparison/calibration/native_pd_worker.py": "59cdd58d9fce0d3aa432caeace4411d8fef074f59857260e81c75d3441bcfa1b",
+    "tests/comparison/calibration/native_serve_profile.py": "c8f712177fcd3e8ef6fbbfe2ceb62a30e06d298d432da48bd7790ed214669f58",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/calibration/pd_proxy.py": "ebc8d3c6f171368f85ac22e21e2bb6829eef670c6f6fe0d24615c657c11bd942",
+    "tests/comparison/calibration/pd_replay.py": "65ec81721ebe1d02a4028388521bc25d57888bb39a721bc59c21dc6f0a3ed0ae",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "80c97f07de62ad278a4070eedb20352aee8528be8ca26a8bea017c3283433901",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/integration/native_extension_startup_probe.py": "8c04aad06417ddde7e33f11b41959b3330404f0a4106756318c95ff1700227a3",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/root_seal.json": "de66faae79b94d749214412d46c6f8b9f06d71ae3d3481bdf34306979bd79259"
+  },
+  "existing_matrix_tree_sha256": "e9be15c60dffc0083b887460ddfbad61718f40f16246be201aa22571f6d12d62",
+  "matrix_command": [
+    "git",
+    "ls-tree",
+    "-r",
+    "HEAD",
+    "--",
+    "frontier",
+    "data",
+    "examples",
+    "tests/e2e/refactor_fidelity",
+    "tests/integration/canonical_case"
+  ],
+  "matrix_capture": "Existing77-case binding only; no new simulator capture.",
+  "snapshot_audit": {
+    "path": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/groundtruth_fixture/root_32rank_audit.json",
+    "sha256": "c7e12315741c66365babb610c7854c702f10ce95879026830b5fe56eb474728d"
+  },
+  "reviews": {
+    "standards": {
+      "task": "W128-GROUNDTRUTH-FIXTURE-STANDARDS",
+      "session": "ses_e9296e63bffeBzg6BbptUCa2fF",
+      "verdict": "NO_FINDINGS"
+    },
+    "spec": {
+      "task": "W128-GROUNDTRUTH-FIXTURE-SPEC",
+      "session": "ses_e9296e680ffeJ02WsBKt7RqDp6",
+      "verdict": "NO_FINDINGS"
+    }
+  },
+  "review_scope": "Static source/spec/records; supplied execution/hashes, no reviewer rerun.",
+  "preserved_evidence": "Original fixture RED, setup errors and one-process60s timeout remain in owner records.",
+  "limitations": [
+    "All99 original nodes covered exactly once in1+80+9+9 disjoint invocations, retaining60s/30G per-process caps.",
+    "145 unique tests per root execution; no new466-test combined run claimed.",
+    "No native/GPU/distributed/reference/serving/operator-cost acceptance.",
+    "Profile04 sealed45inputs and runtime1437ace6 unchanged; existing queued job only."
+  ]
+}

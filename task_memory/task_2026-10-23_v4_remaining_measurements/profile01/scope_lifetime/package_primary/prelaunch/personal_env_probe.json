@@ -1,0 +1,14 @@
+{
+  "command": [
+    "bash",
+    "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/with_personal_env.sh",
+    "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "-c",
+    "import os,sys,brainpp; print(sys.executable,sys.version.split()[0],brainpp.__version__); print(\"personal_credentials_present\",bool(os.environ.get(\"BRAINPP_ACCESS_KEY\")) and bool(os.environ.get(\"BRAINPP_SECRET_KEY\"))); print(\"backend\",os.environ[\"STEPMIND_BACKEND\"]); print(\"authorization_present\",bool(os.environ.get(\"AUTHORIZATION\")))"
+  ],
+  "start_utc": "2026-10-24T18:03:21.348002+00:00",
+  "end_utc": "2026-10-24T18:03:21.364744+00:00",
+  "exit": 1,
+  "stdout": "",
+  "stderr": "/data/ycfeng/tmp/glm53_dsv4/scope_prelaunch_20261025_01/with_personal_env.sh: line 16: AUTHORIZATION: Proxy initialization must supply AUTHORIZATION\n"
+}

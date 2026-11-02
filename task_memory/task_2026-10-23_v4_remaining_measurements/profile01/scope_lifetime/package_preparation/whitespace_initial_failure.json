@@ -1,0 +1,9 @@
+{
+  "status": "FAIL_RAW_LOG_WHITESPACE_CHECK",
+  "command": "git diff --cached --check -- task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation :(exclude)*.diff",
+  "observed_output": "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/scope_lifetime/package_preparation/closure_01.stdout.log:23: new blank line at EOF.",
+  "interpretation": "The raw stdout contains the printed JSON's original final blank line. Preserve its byte stream and already-recorded closed-log SHA256.",
+  "correction": "Lint maintained files and command/JSON records while excluding immutable raw diffs and raw logs; verify those excluded artifacts by exact hashes instead.",
+  "raw_log_changed": false,
+  "source_or_package_changed": false
+}

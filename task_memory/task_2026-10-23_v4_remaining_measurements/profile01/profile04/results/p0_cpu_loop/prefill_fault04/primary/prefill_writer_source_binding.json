@@ -1,0 +1,34 @@
+{
+  "recorded_utc": "2026-10-25T04:34:02.175911+00:00",
+  "status": "SOURCE_PATH_BINDING_ONLY",
+  "auditor_path": "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py",
+  "auditor_sha256": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+  "writer_lines": [
+    96,
+    119
+  ],
+  "writer_source": "with gzip.open(raw_path, 'wt', compresslevel=1) as raw:\n        for idx, kernel in kernels:\n            args = kernel['args']; candidates = correlation.get(args.get('correlation'), [])\n            owners = {a[2]['id']: a for launch_idx, _ in candidates for a in launch_owners[launch_idx]}\n            innermost = []\n            for aid, owner in owners.items():\n                _, e, row = owner\n                hierarchy[row['category'] + '|' + row['scope']].append(kernel)\n                if row['step'] is not None:\n                    steps_with_kernels[row['step']].add(idx)\n                if not any(other[1]['ts'] >= e['ts'] and other[1]['ts'] + other[1]['dur'] <= e['ts'] + e['dur']\n                           and (other[1]['ts'], other[1]['dur']) != (e['ts'], e['dur']) for bid, other in owners.items() if bid != aid):\n                    innermost.append(aid)\n            graph = bool(args.get('graph id'))\n            status = ('uncorrelated' if not candidates else 'ambiguous_correlation' if len(candidates) != 1\n                      else 'unowned' if not owners else 'ambiguous_innermost' if len(innermost) != 1\n                      else 'captured_segment_unknown' if graph or candidates[0][1]['name'] in ('cudaGraphLaunch', 'cuGraphLaunch')\n                      else 'unique_leaf')\n            statuses[status].append(kernel)\n            if status == 'unique_leaf':\n                row = owners[innermost[0]][2]\n                leaf[row['category'] + '|' + row['scope'] + '|' + row['execution']].append(kernel)\n            streams[str(args.get('stream'))].append((idx, kernel, candidates))\n            raw.write(json.dumps([idx, args.get('correlation'), [i for i, _ in candidates], sorted(owners), innermost, status]) + '\\n')",
+  "earlier_failure": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/diagnostic_failure.json",
+    "sha256": "0c440c674c38f696f94efae3166f97b1a51f9af1d58a3b55bd597095b83d4b0c",
+    "signal": "SIGABRT",
+    "before_metrics": true
+  },
+  "new_failure": {
+    "signal": "SIGSEGV",
+    "before_metrics": true,
+    "last_kernel_progress": {
+      "t": 19.943,
+      "stage": "kernel_pass_progress",
+      "rss_mb": 2440.4,
+      "idx": 1175000
+    }
+  },
+  "observation": "Both retained failures are before new metrics execution; recent heartbeat sampled json.dumps for the index row, but fatal row has no Python frame",
+  "inference_limits": [
+    "Heartbeat sample is prior to the fault and does not establish the fault instruction",
+    "Different input/stop signal; no common corruption writer is proven",
+    "No proposed metrics change can be assessed from this pre-metrics fault alone"
+  ],
+  "new_trace_control_diagnostic_executions": 0
+}

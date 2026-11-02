@@ -1,0 +1,21 @@
+{
+  "status": "PASS_PRIMARY_SOURCE_POINTER_P2",
+  "created_at_utc": "2026-10-24T15:18:16.529716+00:00",
+  "finding": "Two current dependencies still required closed source/review/replay steps",
+  "all_seven_stale_dependency_checks_pass": true,
+  "files": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+      "sha256": "e119f83cacd365709ea50b67c06c9e82b1657f74a4f5d6a13be344c824f06053",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/p2_plan.md.diff",
+      "diff_sha256": "f1193291f90548883559ec12c5a07c01a7f7946574314906517c9c3a4ebc5200"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+      "sha256": "d58bfbab07cab230d3456a7003fcb1480030d00b0a6957f6a7c54c73c349d36d",
+      "diff": "/data/ycfeng/tmp/glm53_dsv4/scope_source_pointer_root_wn35aqjv/p2_progress.md.diff",
+      "diff_sha256": "a8e25d3b0cbc97fc8d93977b3480f9854343935fb0fb865d5a00458be833178e"
+    }
+  ],
+  "limits": "Document current-pointer correction only; source50PASS adopted, no newCPU/GPU/raw invocation or R5/native/costadmission."
+}

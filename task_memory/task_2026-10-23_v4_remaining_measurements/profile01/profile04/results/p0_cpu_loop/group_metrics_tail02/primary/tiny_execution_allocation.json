@@ -1,0 +1,72 @@
+{
+  "status": "FROZEN_READY_ONCE_ONLY_TINY",
+  "decision": "D-V4-P0-GROUP-METRICS-SEGMENTS",
+  "takeover_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/takeover_allocation.json",
+  "takeover_sha256": "45c6356f872968d3194881233045ee7a517962db606e7ca49734e42945fe6cfa",
+  "recorded_utc": "2026-10-24T21:17:17.566340+00:00",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "command": [
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "timeout",
+    "60s",
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py"
+  ],
+  "tiny_used_before": 0,
+  "tiny_ceiling": 1,
+  "diagnostic_used_before": 0,
+  "diagnostic_ceiling": 1,
+  "affected_or_complete_controls": 0,
+  "source_lines": 112,
+  "tiny_lines": 112,
+  "source_cap": 140,
+  "tiny_cap": 115,
+  "bindings": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/v4_trace_audit_group_metrics_timing.py",
+      "sha256": "9f456317208fa3646fd32cf24d6e92cfe7c9ca08da716b98aabf0b0aa619c426",
+      "bytes": 5041
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_control.py",
+      "sha256": "e1f0450a6aebe1ba84944571a40f2a3e5a64d2b4fb92f26d0ddd9ff24031ddf5",
+      "bytes": 7101
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/owner/tiny_inputs.json",
+      "sha256": "8a2e90c821cc3286f7533077fb6a52797e8a2ba0e36fadb103bd910c56fd4edc",
+      "bytes": 6206
+    }
+  ],
+  "immutable_pins": {
+    "tests/analysis/v4_trace_audit_group_metrics.py": "4dec265e20426a20e437588a4e44828e257247c82897cc8188621f93369a5251",
+    "tests/analysis/v4_trace_audit_metrics.py": "6dff04f36dbcd8a66a298e4f6ae88d382bb29813c8a98f8fea91372b271b788a",
+    "tests/analysis/v4_trace_audit_metrics_timing.py": "fdce5eca10e0cea28af12b87d25a94ed68f0ce0de2eda77c6b5fa2ccb5b541b5",
+    "tests/comparison/calibration/forward_device_timeline.py": "fe4c3f82500df79ce097ce762808bcaf2b78040e41cbab942ccc746a723b3a52",
+    "/data/ycfeng/tmp/glm53_dsv4/W128-PROFILE02-DATA/audit.py": "7ed0ea45a61d5150e2f45bbc1cdf245f2331e40a351c235228b209b064ede0c8",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_audit_cpu_20261024/stage_audit.py": "f7f1253ce9ebae5dcb3b60e2aeb97d7f17f58f34a7d68af56611918f809b9fe4",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/observe_gc.py": "3ae64dce5e1498418c3489d48bb74393f08c4dbbcb95231bab4e11a414a5a83c",
+    "/data/ycfeng/tmp/glm53_dsv4/p0_gc_observation_20261024/load_without_gc.py": "6b91e25fc592d4f1340ef22e6d6e73c4dd8ed6e7ce6239f7a113d946a74edd02",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/allocation.json": "51bcae18fc96b97315b3891041191f43701080e2c9382f64251cab5b1868b5cf",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/owner/ast_closure.json": "678c2d88d2ba30eddd38bb83b14d9f91a2e340faf41d382ef183255f07117308",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_correction02/primary/pilot_failure.json": "5a440544e13faa8a2ffd4d8c30ae3b789be1368525b8ab24027a6258384dc019",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/owner/tiny_control.py": "6e6b69a9317cc6418aa7a39ec92a960e4007bf640d15b56990ce9e33e0b4c010",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/owner/tiny_control_result.json": "99a7862bd79c84f061671a62f0f3b6cdeeb217d1cec126aa7b5ad83d58aa67f9",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/source_review_failure_01.json": "ca117dc772a84a8d8a08248190092934160f462e43e782fa4728e7cf985e8791",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/metrics_tail/primary/tiny_receipt_binding.json": "0d17f4c6ae9d04ffe3de3535da8e2c3687d9395ca4ab3ea068a542ff806dec09",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/profile01/profile04/results/p0_cpu_loop/group_metrics_tail02/primary/takeover_allocation.json": "45c6356f872968d3194881233045ee7a517962db606e7ca49734e42945fe6cfa"
+  },
+  "actual_memory_limit_required": 32212254720,
+  "timeout_seconds": 60,
+  "max_concurrency": 2,
+  "selected_concurrency": 1,
+  "automatic_retry": false,
+  "expectation": "Exact stripped full/module/source/union/pipeline AST, copied floathex fixture values, stable/duplicate order and sorted call counts, same returned-list and argument forwarding, sparse members telemetry and exact actual cgroup."
+}

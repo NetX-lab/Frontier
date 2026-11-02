@@ -1,0 +1,21 @@
+{
+  "status": "PRESERVED_PRECOMMIT_HARNESS_FAILURE",
+  "error": "AssertionError comparing canonical multi-path git diff with per-file concatenation",
+  "command": [
+    "git",
+    "diff",
+    "c4b59b65",
+    "--",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/summary.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/plan.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/05-dsv4-flash-family.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/09-predictor-bundle.md",
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_prediction_next_20261022.md",
+    "task_memory/task_2026-10-23_v4_remaining_measurements/summary.md"
+  ],
+  "expected_per_file_concatenation_sha256": "5143a67b9c6a2b1ef9fdc9d7339d22eb2e77fd0ee7d7bb1f2c59cea16c7d337d",
+  "actual_canonical_git_order_sha256": "37f56926cc66c9a05199b6e79235d96756869fea3e0798b2cb4f3ecf91177ff6",
+  "cause": "Git orders its multi-path output by path, while the archived diff explicitly concatenates the manifest entry order. All seven individual file and four artifact hashes passed before this assertion.",
+  "correction": "Recompute each recorded per-file diff and concatenate in the manifest entry order; do not change any document or diff bytes."
+}

@@ -1,0 +1,121 @@
+"""Compare fresh full controls with retained outputs, excluding four clock/path fields."""
+import copy
+from datetime import datetime, timezone
+import gzip
+import hashlib
+import json
+import math
+from pathlib import Path
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parent
+PLAN = ROOT / "comparison_allocation.json"
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+
+
+def metric_groups(value, path="$", rows=None):
+    rows = [] if rows is None else rows
+    if isinstance(value, dict):
+        if set(("count", "sum_ms", "union_ms")) <= value.keys():
+            rows.append(dict(path=path, count=value["count"], sum_ms=value["sum_ms"],
+                             union_ms=value["union_ms"], sum_hex=value["sum_ms"].hex(),
+                             union_hex=value["union_ms"].hex()))
+        for key, item in value.items():
+            metric_groups(item, path + "." + key, rows)
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            metric_groups(item, path + f"[{index}]", rows)
+    return rows
+
+
+def compare(control, plan):
+    role, lane, rank = control["key"]
+    prefix = ROOT / f"control_{role}_dp{lane}_rank{rank}"
+    run = json.loads(prefix.with_suffix(".receipt.json").read_text())
+    assert run["returncode"] == 0 and run["invocation"] == 1
+    assert int(run["actual_cgroup"]["limits"]["memory.limit_in_bytes"]) == plan["actual_memory_limit_bytes"]
+    new_path, old_path = prefix.with_suffix(".json"), Path(control["retained_output_path"])
+    assert sha(old_path) == control["retained_output_sha256"]
+    new, old = json.loads(new_path.read_text()), json.loads(old_path.read_text())
+    assert new["key"] == control["key"]
+    for kind in ("trace", "profile", "inventory"):
+        assert new[kind + "_sha256"] == control["input_bindings"][kind + "_sha256"]
+    index_path = prefix.with_suffix(".kernels.jsonl.gz")
+    old_index = Path(control["retained_kernel_index_path"])
+    assert new["kernel_sample_index"]["path"] == str(index_path)
+    assert new["kernel_sample_index"]["sha256"] == sha(index_path)
+    assert sha(old_index) == control["retained_kernel_index_sha256"]
+    assert math.isfinite(new["elapsed_seconds"]) and 0 < new["elapsed_seconds"] < plan["timeout_seconds"]
+    assert new["maxrss_kib"] > 0
+    groups_new, groups_old = metric_groups(new), metric_groups(old)
+    assert canonical(groups_new) == canonical(groups_old)
+    projected_new, projected_old = copy.deepcopy(new), copy.deepcopy(old)
+    for value in (projected_new, projected_old):
+        del value["elapsed_seconds"], value["maxrss_kib"]
+        del value["kernel_sample_index"]["path"], value["kernel_sample_index"]["sha256"]
+    encoded_new, encoded_old = canonical(projected_new), canonical(projected_old)
+    assert encoded_new == encoded_old, "Non-clock JSON mismatch"
+    digest, byte_count, row_count = hashlib.sha256(), 0, 0
+    with gzip.open(index_path, "rb") as fresh, gzip.open(old_index, "rb") as retained:
+        while True:
+            a, b = fresh.read(1024 * 1024), retained.read(1024 * 1024)
+            assert a == b, "Decompressed index mismatch"
+            if not a:
+                break
+            digest.update(a)
+            byte_count += len(a)
+            row_count += a.count(b"\n")
+    assert row_count == new["kernel_sample_index"]["rows"] == old["kernel_sample_index"]["rows"]
+    useful = sum(row["useful"] for row in new["steps"])
+    assert useful == control["expected_useful_steps"]
+    assert canonical(new["kernel_total"]) == canonical(control["expected_kernel_total"])
+    return dict(status="PASS_EXACT_COMPLETE_CONTROL", key=control["key"],
+                command=run["command"], enclosing_seconds=run["enclosing_seconds"],
+                audit_elapsed_seconds=new["elapsed_seconds"], maxrss_kib=new["maxrss_kib"],
+                actual_memory_limit_bytes=plan["actual_memory_limit_bytes"],
+                non_clock_json_exact=True, canonical_sha256=hashlib.sha256(encoded_new).hexdigest(),
+                canonical_bytes=len(encoded_new), exact_metric_group_count=len(groups_new),
+                metric_group_sha256=hashlib.sha256(canonical(groups_new)).hexdigest(),
+                decompressed_index_exact=True, decompressed_index_sha256=digest.hexdigest(),
+                decompressed_index_bytes=byte_count, index_rows=row_count, clean_gzip_eof=True,
+                useful_steps=useful, kernel_total=new["kernel_total"],
+                fresh_output_path=str(new_path), fresh_output_sha256=sha(new_path),
+                fresh_index_path=str(index_path), fresh_index_sha256=sha(index_path),
+                retained_output_sha256=sha(old_path), retained_index_sha256=sha(old_index))
+
+
+def main():
+    plan = json.loads(PLAN.read_text())
+    assert sha(__file__) == plan["comparison_driver_sha256"]
+    assert sha(plan["control_inputs_path"]) == plan["control_inputs_sha256"]
+    receipt_path = ROOT / "exact_controls.receipt.json"
+    receipt = dict(status="STARTING", start_utc=datetime.now(timezone.utc).isoformat(),
+                   command=plan["command"], python=sys.version, conda="not used",
+                   allocation_sha256=sha(PLAN), artifact_comparison_invocations_used=1,
+                   artifact_comparison_invocation_ceiling=1, new_trace_audit_invocations=0)
+    with receipt_path.open("x") as stream:
+        json.dump(receipt, stream, indent=2)
+    started = time.monotonic()
+    controls = json.loads(Path(plan["control_inputs_path"]).read_text())["controls"]
+    receipt.update(controls=[compare(control, plan) for control in controls],
+                   status="PASS", elapsed_seconds=time.monotonic() - started,
+                   end_utc=datetime.now(timezone.utc).isoformat(),
+                   excluded_fields=plan["excluded_fields"], full_control_invocations_used=2)
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
+    print(json.dumps({key: receipt[key] for key in ("status", "elapsed_seconds", "controls")}))
+
+
+if __name__ == "__main__":
+    main()
