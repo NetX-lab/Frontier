@@ -1,0 +1,6 @@
+group_id,logical_block_size,window_tokens,extra_retained_tokens,component_bytes_per_page,initial_p_pages,p_held,p_exchange_including_null,d_non_null_pages,maximum_read_pages,registered_stride_bytes,bound_bytes,structural_bytes
+compressed,256,0,0,1002240,24,24,24,24,24,1002240,24053760,24053760
+swa_0,64,128,0,823680,96,2,3,2,2,1002240,2004480,1647360
+swa_1,64,128,0,786240,96,2,3,2,2,1002240,2004480,1572480
+csa_state_0,4,8,0,870912,1536,2,3,2,2,1002240,2004480,1741824
+hca_state_0,8,128,0,656640,768,16,17,16,16,1002240,16035840,10506240

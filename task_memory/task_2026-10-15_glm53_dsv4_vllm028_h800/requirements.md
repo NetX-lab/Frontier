@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Recorded the Q3 result under D-P2-PAYLOAD-C: all four checks PASS and the lead accepted; payload edge QUALIFIED (source-derived, metric-invariant). |
 | 2026-11-02 | YC chose payload option C (D-P2-PAYLOAD-C): the source-derived payload is accepted for P2 when a CPU-derived upper bound on native per-request READ bytes still finishes inside every decode-step gap; Codex Q3 derives and checks the bound. |
 | 2026-11-01 | Q2 choice (D-P2-Q2-NIXL-TIMING): the H200 affine NIXL pair becomes the formal P2 timing input at the measured coordinate, with a physical-fit and per-pass trial median 5% / p90 10% rule; no replay by the event proof. |
 | 2026-11-01 | Q1 choices under D-P2-INPUT-QUALIFICATION (D-P2-Q1-CHOICES): attention supplement A, original attention table, H200 NIXL timing route B with the 16-H200 preemptible nixl6144 measurement; the native payload route is left to YC. |
@@ -203,6 +204,7 @@ The lead's previous message explained the payload (the bytes one NIXL READ moves
   4. **Only transfer time depends on the bytes.** The four compared metrics and the event sequence depend on the payload only through the READ transfer time.
 - **If a check fails**, or `B_max` lies outside the measured grid, the edge stays OPEN and the evidence comes back with a proposal. The criterion is not adjusted after seeing the result.
 - **Scope.** The bound and the invariance claim cover P2-32 and P2-64 with the adopted H200 pair. H800 needs its own check with H800 timing and gaps. No `frontier/`, native source, table or timing change; no GPU or platform action.
+- **Result (2026-11-02, lead acceptance).** Codex Q3 `bd667bb6` passed all four checks; the lead accepted it ([Q3 test report](test_report_2026-11-02_q3_payload_bound.md)). `B_max` = 46 pages x 1,002,240 B = 46,103,040 B per TP rank pair, equal to the priced payload. The price is 0.968 ms against gaps of at least 18.72 / 24.38 ms, and the maximum measured trial at that coordinate is 12.55 ms. The payload edge is QUALIFIED with provenance `source-derived, metric-invariant`. No replay.
 
 ## [Original Request / Decision] 2026-11-01 — two existing-path corrections and two CPU replays (D-WARM-TWO-FIX)
 

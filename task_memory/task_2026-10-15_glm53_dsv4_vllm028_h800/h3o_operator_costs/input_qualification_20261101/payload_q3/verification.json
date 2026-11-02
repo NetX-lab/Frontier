@@ -1,0 +1,128 @@
+{
+  "status": "PASS",
+  "python": "3.10.6",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "commands": [
+    {
+      "command": "env PYTHONPATH=\"$PWD:$PWD/tests/analysis\" PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TMPDIR=\"$PWD/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/scratch\" timeout 120s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/analyze.py > task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/analysis.log 2>&1",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected": "four checks PASS",
+      "actual": "four checks PASS; B_max=46103040; 2034 windows; 1440 selected trials",
+      "log": "analysis.log"
+    },
+    {
+      "command": "env PYTHONPATH=\"$PWD:$PWD/tests/analysis\" PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TMPDIR=\"$PWD/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/scratch\" timeout 120s /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_nixl_read_completion.py -q -p no:cacheprovider --basetemp \"$PWD/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/scratch/pytest\" > task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/lifecycle_tests.log 2>&1",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected": "READ lifecycle regressions pass",
+      "actual": "9 passed in 0.78s",
+      "log": "lifecycle_tests.log"
+    },
+    {
+      "command": "env PYTHONPATH=\"$PWD:$PWD/tests/analysis\" PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TMPDIR=\"$PWD/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/scratch\" timeout 120s /data/ycfeng/envs/frontier-py310/bin/python task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/verify.py > task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/verification.log 2>&1",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected": "immutable inputs; independent arithmetic; complete exports",
+      "actual": [
+        {
+          "name": "retained source and input immutability",
+          "status": "PASS",
+          "checked_files": 104
+        },
+        {
+          "name": "independent per-group closed-form arithmetic",
+          "status": "PASS",
+          "group_counts": [
+            24,
+            2,
+            2,
+            2,
+            16
+          ],
+          "B_max": 46103040,
+          "structural_bytes": 39521664
+        },
+        {
+          "name": "production formula and every possible post",
+          "status": "PASS",
+          "price_ms": 0.9684023419505275,
+          "posting_windows": 2034,
+          "crossings": 0
+        },
+        {
+          "name": "all selected raw trials exported without exclusions",
+          "status": "PASS",
+          "selected_trials": 1440,
+          "missing_trials": 0,
+          "slowest_trials": [
+            {
+              "case": "t6144_pairs8_inflight1",
+              "pass_index": 1,
+              "rank": 14,
+              "trial_index": 0,
+              "complete_ms": 12.554511427879333
+            }
+          ]
+        }
+      ],
+      "log": "verification.log"
+    }
+  ],
+  "initial_failure": {
+    "status": "FAIL",
+    "exit_code": 1,
+    "log": "scratch/analysis_initial_failed.log",
+    "error": "KeyError: 'byte_count'",
+    "cause": "Q3 script used byte_count; retained ledger uses bytes",
+    "resolution": "corrected Q3 lookup to bytes; rerun all four checks PASS; no retained source edit"
+  },
+  "audits": [
+    {
+      "name": "retained source and input immutability",
+      "status": "PASS",
+      "checked_files": 104
+    },
+    {
+      "name": "independent per-group closed-form arithmetic",
+      "status": "PASS",
+      "group_counts": [
+        24,
+        2,
+        2,
+        2,
+        16
+      ],
+      "B_max": 46103040,
+      "structural_bytes": 39521664
+    },
+    {
+      "name": "production formula and every possible post",
+      "status": "PASS",
+      "price_ms": 0.9684023419505275,
+      "posting_windows": 2034,
+      "crossings": 0
+    },
+    {
+      "name": "all selected raw trials exported without exclusions",
+      "status": "PASS",
+      "selected_trials": 1440,
+      "missing_trials": 0,
+      "slowest_trials": [
+        {
+          "case": "t6144_pairs8_inflight1",
+          "pass_index": 1,
+          "rank": 14,
+          "trial_index": 0,
+          "complete_ms": 12.554511427879333
+        }
+      ]
+    }
+  ],
+  "not_run": [
+    "native serving/GPU run",
+    "P2 replay",
+    "route B observer",
+    "H800 qualification"
+  ]
+}

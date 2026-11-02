@@ -1,0 +1,42 @@
+{
+  "row": "Actual native request-selected descriptors/rank wire bytes",
+  "current_status": "OPEN",
+  "proposed_status": "QUALIFIED",
+  "provenance": "source-derived, metric-invariant",
+  "authority": "requirements.md D-P2-PAYLOAD-C (2026-11-02)",
+  "scope": "Retained P2-32/P2-64 H200 configurations; homogeneous TP8; 6144-token prompts; engine_step; compression and prefix caching off; operator tracing off",
+  "B_max_bytes_per_tp_rank_pair": 46103040,
+  "selected_pages": 46,
+  "registered_stride_bytes": 1002240,
+  "structural_bytes_preserved": 39521664,
+  "check_statuses": {
+    "1": "PASS",
+    "2": "PASS",
+    "3": "PASS",
+    "4": "PASS"
+  },
+  "production_price_ms": 0.9684023419505275,
+  "possible_posting_steps": 2034,
+  "gaps_ms": {
+    "32": 18.72496532622958,
+    "64": 24.380075962758763
+  },
+  "measured_coordinate_bytes_per_reader": 46103040,
+  "measured_largest_bytes_per_reader": 817827840,
+  "selected_trials": 1440,
+  "removed_trials": 0,
+  "observed_max_ms": 12.554511427879333,
+  "native_final_descriptor_arrays_observed": false,
+  "wording": "QUALIFIED for retained P2-32/P2-64 under D-P2-PAYLOAD-C, with provenance source-derived, metric-invariant (not observed). Unconditional D allocation/null filtering, group clipping and P suffix trimming bound every READ on one TP rank pair to 46 selected pages \u00d7 1,002,240 B = 46,103,040 B; structural 39,521,664 B is preserved. The adopted H200 pair prices this bound at 0.9684023419505275 ms, below all 2,034 possible posting-step gaps (minima 18.72496532622958 / 24.380075962758763 ms). The bound is within the eight-pair measured grid (maximum 817,827,840 B/reader). At its smallest qualifying byte coordinate, 46,103,040 B/reader, all 1,440 reader trials from both tied prompt cases and all three passes are below both gaps, including the 12.554511427879333 ms maximum; no trials removed. In these configurations wire bytes reach only READ transfer time; operator wire-byte tracing is disabled and structural memory/ledger bytes remain fixed. Actual native final descriptor IDs/ranges/aliases remain unobserved. No H800, tracing-enabled or other workload/configuration qualification is claimed.",
+  "evidence": [
+    "report.md",
+    "results.json",
+    "per_group_bound.csv",
+    "model_windows.csv",
+    "selected_reader_trials.csv",
+    "selected_pass_summary.csv",
+    "source_excerpts.md",
+    "verification.json"
+  ],
+  "lead_action": "Review and, if accepted, update the Q1 ledger and related task records. This proposal does not edit them."
+}

@@ -1,0 +1,11 @@
+WARNING 10:46:28 model_architectures.py:1314] Experimental model architecture profile selected: deepseek_v4 (name=deepseek-ai/DeepSeek-V4-Flash, _model_name=deepseek-ai/DeepSeek-V4-Flash, model_type=deepseek_v4, model_arch=generic). Runtime limitations: trained operator execution supports MONOLITHIC, PREFILL and unified DECODE on measured H200 coordinates; dsv4_step_cost.json is diagnostic only; PD-AF, prefix caching, speculative decoding / MTP and CPU-overhead modeling are unsupported; sampling measures MONOLITHIC and unified DECODE requests with min_tokens=max_tokens (logits processing on) and PREFILL requests from the vLLM 0.28 PD proxy without min_tokens (logits processing off); other sampling parameters are unmeasured
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/analyze.py", line 455, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/analyze.py", line 434, in main
+    sinks=check4()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/analyze.py", line 339, in check4
+    assert {r['byte_count'] for r in transfers}=={39521664}
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/payload_q3/analyze.py", line 339, in <setcomp>
+    assert {r['byte_count'] for r in transfers}=={39521664}
+KeyError: 'byte_count'
