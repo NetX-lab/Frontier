@@ -1,0 +1,54 @@
+{
+  "p2_32": {
+    "verdict": "PASS",
+    "numerical_verdict": "PASS",
+    "blocking_reasons": [],
+    "limitations": [
+      "Attention qualification uses exact retained coordinates and the accepted independent-pass supplement. The original KFold5 NOT_EVALUABLE/48 omissions remain recorded; no unseen-geometry generalization claim.",
+      "Payload is source-derived, metric-invariant under D-P2-PAYLOAD-C; final native per-request/per-TP-rank descriptor arrays were not observed. Structural ledger bytes39,521,664 differ from the46,103,040-B price bound.",
+      "NIXL timing is qualified only at t6144_pairs8_inflight1 on these H200 configs, engine_step and compression off. Runtime domain is audited, not enforced by the simulator. Measured tails are finite samples; the observed12.554511ms maximum is not a future-tail guarantee.",
+      "Host cost remains zero; ingress10.3ms, handoff11.4ms and K19 remain the approved inputs. They are not claimed as autonomous predictions.",
+      "The unequal-lane eager EP dispatch count remains1 under D-WARM-EP-DEFER, with <=0.0468ms/step undercount.",
+      "Capacity is measured-pool isolation109934/112914 only. Autonomous planner 116034/120623 and2940-versus2944 admission geometry remain mismatches; independent phase peaks remain unverified.",
+      "Native R4 graph proof consists of serving host/replay returns. It is not device timing proof. Future formal references need independent all-kernel/graph/lazy-pair warm coverage and both-role idle proof.",
+      "Pooled values and latency percentiles are diagnostics. P2-64 repeat01 unchanged all-request TTFT remains FAIL despite warm PASS.",
+      "Nineteen listed GPU jobs lack full-container allocation intervals; actual total GPU-hours is unknown. Launcher/phase clocks are retained separately.",
+      "Only the two P2 H200 cases are assessed. Missing active H800 cases and paused GLM work are not declared complete."
+    ],
+    "scope": "ticket 19, case-specific retained P2 H200 only; final acceptance belongs to Claude",
+    "evidence": [
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/input_status.json",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/formal_vs_two_fix.json",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion.json"
+    ]
+  },
+  "p2_64": {
+    "verdict": "BLOCKED_ON_DECISION",
+    "numerical_verdict": "PASS",
+    "blocking_reasons": [
+      "No qualifying pre-launch 30% receipt is evidenced for the original 2026-10-25T15:54:41Z native submission. YC must authorize historical reference reuse/launch-order exception, or Claude must issue the32 receipt and collect a new wholly preemptible64 reference."
+    ],
+    "limitations": [
+      "Attention qualification uses exact retained coordinates and the accepted independent-pass supplement. The original KFold5 NOT_EVALUABLE/48 omissions remain recorded; no unseen-geometry generalization claim.",
+      "Payload is source-derived, metric-invariant under D-P2-PAYLOAD-C; final native per-request/per-TP-rank descriptor arrays were not observed. Structural ledger bytes39,521,664 differ from the46,103,040-B price bound.",
+      "NIXL timing is qualified only at t6144_pairs8_inflight1 on these H200 configs, engine_step and compression off. Runtime domain is audited, not enforced by the simulator. Measured tails are finite samples; the observed12.554511ms maximum is not a future-tail guarantee.",
+      "Host cost remains zero; ingress10.3ms, handoff11.4ms and K19 remain the approved inputs. They are not claimed as autonomous predictions.",
+      "The unequal-lane eager EP dispatch count remains1 under D-WARM-EP-DEFER, with <=0.0468ms/step undercount.",
+      "Capacity is measured-pool isolation109934/112914 only. Autonomous planner 116034/120623 and2940-versus2944 admission geometry remain mismatches; independent phase peaks remain unverified.",
+      "Native R4 graph proof consists of serving host/replay returns. It is not device timing proof. Future formal references need independent all-kernel/graph/lazy-pair warm coverage and both-role idle proof.",
+      "Pooled values and latency percentiles are diagnostics. P2-64 repeat01 unchanged all-request TTFT remains FAIL despite warm PASS.",
+      "Nineteen listed GPU jobs lack full-container allocation intervals; actual total GPU-hours is unknown. Launcher/phase clocks are retained separately.",
+      "Only the two P2 H200 cases are assessed. Missing active H800 cases and paused GLM work are not declared complete."
+    ],
+    "scope": "ticket 19, case-specific retained P2 H200 only; final acceptance belongs to Claude",
+    "evidence": [
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/input_status.json",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/formal_vs_two_fix.json",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion.json"
+    ]
+  }
+}

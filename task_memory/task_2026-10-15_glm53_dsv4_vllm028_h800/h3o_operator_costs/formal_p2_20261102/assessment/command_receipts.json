@@ -1,0 +1,446 @@
+{
+  "commands": [
+    {
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/assess_inputs.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:43:05.846465+00:00",
+      "finished_utc": "2026-11-02T06:43:07.419066+00:00",
+      "expected": "27 dispositions, row26 coverage PASS; seven tables, exact population/config/source/helper/cache hashes bound for each FINISHED run",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/final_assess_inputs.log",
+        "sha256": "5f3213f78e4b832cca2101395f5df60e95faad63fddb60e13f7a7e351b17a638",
+        "bytes": 161
+      },
+      "observed": "current_counts {'QUALIFIED': 22, 'OPEN': 4, 'FAIL': 1} coverage PASS\np2_32 binding True status FINISHED findings 5\np2_64 binding True status FINISHED findings 5\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "300s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/compare_formal.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:43:07.419783+00:00",
+      "finished_utc": "2026-11-02T06:43:28.877137+00:00",
+      "expected": "Both formal/two-fix comparisons PASS: zero complete forward differences, exact metrics/collectives/gate rows and both reading documents; all provenance deltas recorded",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/final_compare_formal.log",
+        "sha256": "c337969eb268723c569a7106fe978e58547dc8767152d154d2ade17fc08cbc93",
+        "bytes": 110
+      },
+      "observed": "p2_32 PASS full forward differences 0 file findings []\np2_64 PASS full forward differences 0 file findings []\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/read_formal.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:43:28.895655+00:00",
+      "finished_utc": "2026-11-02T06:43:29.497937+00:00",
+      "expected": "Exact official-harness reproduction; 24 per-repeat warm metric rows and 144 percentile diagnostics; original all-request failures preserved",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/final_read_formal.log",
+        "sha256": "86ffc592efb8f823460115bbedbf2385b952adbb44e28cc753971c43b1b47980",
+        "bytes": 107
+      },
+      "observed": "PASS exact harness reproduction; metric rows 24 warm PASS 24 all-request FAIL 1 percentile diagnostics 144\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "180s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/audit_runtime.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:43:29.498924+00:00",
+      "finished_utc": "2026-11-02T06:43:32.769429+00:00",
+      "expected": "Non-dummy measured timing, correct topology/flags/limits/native copies, 128 exact completions each; Q2 domain and no crossings",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/final_audit_runtime.log",
+        "sha256": "b39361b7887440227ebe1726f2393270d9d8e40dd7942253ef9030e0dfdb1222",
+        "bytes": 215
+      },
+      "observed": "p2_32 PASS forward rows 23040 completion count 128 domain t6144_pairs8_inflight1 min gap 18.72496532622958\np2_64 PASS forward rows 39680 completion count 128 domain t6144_pairs8_inflight1 min gap 24.380075962758763\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/account_gpu.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:43:32.770452+00:00",
+      "finished_utc": "2026-11-02T06:43:32.831697+00:00",
+      "expected": "35 distinct relevant H200 jobs with exact allocation clocks separated from estimates/unknowns; total actual hours labelled unknown",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/final_account_gpu.log",
+        "sha256": "318a36e73826599447ff77d3cad18d43ab52409f152029a988e197900a772113",
+        "bytes": 59
+      },
+      "observed": "jobs 35 known container GPUh 141.41055555555553 unknown 19\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion_assessment.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:43:32.832906+00:00",
+      "finished_utc": "2026-11-02T06:43:32.901817+00:00",
+      "expected": "Exactly three repeats/four finite errors each <=0.30 plus completed input/reference/runtime checks; draft only, original64 chronology and costed options",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/final_promotion_assessment.log",
+        "sha256": "9afa91797bbdd8bccc6664f195cccc79047de41436f5d8ce904bc1f6345a4953",
+        "bytes": 119
+      },
+      "observed": "numerical30 True formal predicate PASS existing64 order BLOCKED_ON_DECISION new native64 proxy GPUh 24.322222222222223\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/render_report.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:43:32.902782+00:00",
+      "finished_utc": "2026-11-02T06:43:32.996160+00:00",
+      "expected": "All eight results, 27 input rows and 16 ticket checkboxes, case-specific verdicts, unknown spend and promotion limitations; no task/evidence edits",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/final_render_report.log",
+        "sha256": "8bbbfef3125b234f423df7fde16c63601463d4fde2ea747f043a870faf74d78c",
+        "bytes": 61
+      },
+      "observed": "rendered report;32 PASS 64 BLOCKED_ON_DECISION milestones 16\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/render_report.py"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:50:55.780271+00:00",
+      "finished_utc": "2026-11-02T06:50:55.877747+00:00",
+      "expected": "Render the final report with both terminal replay times and nine-artifact wording; retain verdicts and 16 milestones",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/report_refresh.log",
+        "sha256": "8bbbfef3125b234f423df7fde16c63601463d4fde2ea747f043a870faf74d78c",
+        "bytes": 61
+      },
+      "observed": "rendered report;32 PASS 64 BLOCKED_ON_DECISION milestones 16\n"
+    },
+    {
+      "command": [
+        "timeout",
+        "120s",
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "-c",
+        "import ast, sys\nfrom pathlib import Path\nsys.path.insert(0, '/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment')\nimport finish_checks as c\nc.validate_outputs()\nassert c.load(c.HERE/'scratch/protected_before.json') == c.protected(), 'Protected evidence changed'\nfor p in c.HERE.glob('*.py'): ast.parse(p.read_text(),filename=str(p))\nreport=(c.HERE/'report.md').read_text()\nassert 'Full runner elapsed seconds' in report and 'nine requested artifacts' in report and 'No Frontier/native source change' in report\nassert '05:59:27.683187' in report and '06:37:22.883681' in report\nprint('PASS refreshed report, Python syntax, protected evidence hashes and all cross-artifact assertions')"
+      ],
+      "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "environment": {
+        "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TMPDIR": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch"
+      },
+      "python_version": "3.10.6",
+      "started_utc": "2026-11-02T06:50:55.879142+00:00",
+      "finished_utc": "2026-11-02T06:50:56.069871+00:00",
+      "expected": "PASS all 27/24/144/16 cross-artifact assertions, draft promotion/GPU accounting, protected evidence SHA equality, Python syntax and refreshed report content",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/integrity_refresh.log",
+        "sha256": "8adaecb9e4525555cd01918b0de1300ccf83a7aa265a9822d41edc909b3b0aad",
+        "bytes": 247
+      },
+      "observed": "PASS cross-artifact consistency:27 inputs,24 repeat metrics,144 percentile diagnostics,16 milestones,draft promotion and deduplicated GPU accounting\nPASS refreshed report, Python syntax, protected evidence hashes and all cross-artifact assertions\n"
+    }
+  ],
+  "protected_evidence_before": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/ledger.json",
+      "sha256": "5851a9fd0b4ef6989d50c79c5ea26bd4d8e45150b84b020ba1c2b587f1aef97f",
+      "bytes": 338168
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/ledger.md",
+      "sha256": "fb82c43a022f9a6c0e3fc90d1262e3e0a48f65467a732212b6c3cc9b67f042cd",
+      "bytes": 29035
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/decisions.md",
+      "sha256": "4509c895f87a04bc5ab13773643f402454413aa3f2f528e482d6ef501969ddda",
+      "bytes": 12276
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/proposed_input.json",
+      "sha256": "74374415e6a70c118447ece2f0e264a4e03677d49353b86951e654b156aff673",
+      "bytes": 125247
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+      "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+      "bytes": 68442827
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+      "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+      "bytes": 662
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+      "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+      "bytes": 87712
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_block_kernel_only.csv",
+      "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+      "bytes": 1357362
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_replay_kernel_only.csv",
+      "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+      "bytes": 5999817
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f",
+      "bytes": 93898
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+      "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+      "bytes": 190056
+    }
+  ],
+  "protected_evidence_after": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/ledger.json",
+      "sha256": "5851a9fd0b4ef6989d50c79c5ea26bd4d8e45150b84b020ba1c2b587f1aef97f",
+      "bytes": 338168
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/ledger.md",
+      "sha256": "fb82c43a022f9a6c0e3fc90d1262e3e0a48f65467a732212b6c3cc9b67f042cd",
+      "bytes": 29035
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/decisions.md",
+      "sha256": "4509c895f87a04bc5ab13773643f402454413aa3f2f528e482d6ef501969ddda",
+      "bytes": 12276
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/proposed_input.json",
+      "sha256": "74374415e6a70c118447ece2f0e264a4e03677d49353b86951e654b156aff673",
+      "bytes": 125247
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+      "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+      "bytes": 68442827
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+      "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+      "bytes": 662
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+      "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+      "bytes": 87712
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_block_kernel_only.csv",
+      "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+      "bytes": 1357362
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_replay_kernel_only.csv",
+      "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+      "bytes": 5999817
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f",
+      "bytes": 93898
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+      "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+      "bytes": 190056
+    }
+  ],
+  "protected_hash_check": "PASS",
+  "replay_commands": {
+    "p2_32": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/p2_32_command.json",
+      "sha256": "db92c94721db6af95c6058b56ee7ffcf8c8e0f55d429433db01b0eff6fd66c41",
+      "bytes": 5121
+    },
+    "p2_64": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/p2_64_command.json",
+      "sha256": "702e9d0a00e60bf40f029fd48b33866cbc7458a4ef320b991e780549fe2d3ac1",
+      "bytes": 5121
+    }
+  },
+  "artifact_checks": "PASS",
+  "output_records": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/input_status.json",
+      "sha256": "6018bda2ce7f6da5a534912da6c5c49337913fe6de6b0d71ca423f1ba0f42b42",
+      "bytes": 49833
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json",
+      "sha256": "c507cc1f090401377ee994a3146408ec432eca7accbd977e5641ed741d3871e2",
+      "bytes": 1167363
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/formal_vs_two_fix.json",
+      "sha256": "630c07ae19723d8341a54ebd70c435d0bc778c765d89aa803317415782d771b9",
+      "bytes": 49824
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv",
+      "sha256": "12307165ba5d1fc4f082900fdae2860d8e8fe89ef549aeea63810ff0dbbe0b06",
+      "bytes": 18902
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/milestones.json",
+      "sha256": "ed6c5017b2c6c8c2c42241167b221d7d0b6dd1e5a0b9bcd60a78498151273412",
+      "bytes": 20052
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion.json",
+      "sha256": "3d791e06ebcc69c08de95f684d0d6ac72ccfc33a12f89ac39c563a2cef70aaa9",
+      "bytes": 16527
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gpu_hours.csv",
+      "sha256": "16e30be39e6dd5274725eedb0d20bf8926ad57afcac821deaaddc5b42d347829",
+      "bytes": 18669
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/verdict.json",
+      "sha256": "d6d6a3d05427d63547a3670a53a2014b90fa9c3cc3a7461627129ed5dda520c0",
+      "bytes": 6202
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/report.md",
+      "sha256": "50e3f2805e4b75231134749d151e136b8f6e508373e84965dbd789245587bf64",
+      "bytes": 74200
+    }
+  ],
+  "report_refresh": {
+    "previous_commands_preserved": 7,
+    "added_commands": 2,
+    "status": "PASS"
+  }
+}

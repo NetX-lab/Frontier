@@ -1,0 +1,101 @@
+{
+  "classification": "D-P2-FORMAL_CPU_REPLAY",
+  "status": "FINISHED",
+  "command": [
+    "timeout",
+    "86400s",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-u",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_driver.py",
+    "p2_32",
+    "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32",
+    "--field",
+    "analytical_kv_cache_transfer_config_network_bandwidth_gbps=390.39349928254796",
+    "--field",
+    "analytical_kv_cache_transfer_config_network_latency_ms=0.0236521842818856"
+  ],
+  "timing_input": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/proposed_input.json",
+  "timing_input_sha256": "74374415e6a70c118447ece2f0e264a4e03677d49353b86951e654b156aff673",
+  "timing_fields": {
+    "analytical_kv_cache_transfer_config_network_bandwidth_gbps": 390.39349928254796,
+    "analytical_kv_cache_transfer_config_network_latency_ms": 0.0236521842818856
+  },
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "environment": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "source_commit": "abd1e14198b2b258921ccd669ac87c91f499e6dd",
+  "source_dirty_paths": [],
+  "driver_sha256": "3172d0d0a326382c59e3c9637fc1f1b756059064087f70e555b14700c2a8b527",
+  "python": "3.10.6",
+  "started_utc": "2026-11-02T03:09:44.327780+00:00",
+  "run_root": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32",
+  "gate_root": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/gates/p2_32",
+  "log": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/logs/p2_32.log",
+  "as_limit_bytes": 68719476736,
+  "supervisor_pid": 512989,
+  "exit_code": 0,
+  "elapsed_seconds": 10183.355138233863,
+  "finished_utc": "2026-11-02T05:59:27.683187+00:00",
+  "simulator_status": "FINISHED",
+  "receipt_sha256": "bae8231b47856cd4aaf40e95f71ee715ce9aeebdd5fdbb1ee7e2a9a5d3fa5003",
+  "gate": {
+    "command": [
+      "/data/ycfeng/envs/frontier-py310/bin/python",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10/a10_gate.py",
+      "p2_32",
+      "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32",
+      "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/gates/p2_32"
+    ],
+    "log": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/logs/p2_32_gate.log",
+    "started_utc": "2026-11-02T05:59:27.684486+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-11-02T05:59:28.924173+00:00",
+    "reading_sha256": "8406db8443a394648a722e9121bd47e268147454161954e8ed69822cb320fa01",
+    "verdict": "PASS"
+  },
+  "readings": {
+    "warm": {
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+        "--rows",
+        "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/gates/p2_32/rows",
+        "--reading",
+        "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/gates/p2_32/reading.json",
+        "--openers",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_repeat_openers.json",
+        "--output",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/readings/p2_32_warm_reading.json"
+      ],
+      "log": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/logs/p2_32_warm_reading.log",
+      "exit_code": 0,
+      "output_sha256": "a3f7da6f99c5cbca7751777c9d8aec38a405348e1ee00dedb67d0b3e3b82d11e"
+    },
+    "empty": {
+      "command": [
+        "/data/ycfeng/envs/frontier-py310/bin/python",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+        "--rows",
+        "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/gates/p2_32/rows",
+        "--reading",
+        "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/gates/p2_32/reading.json",
+        "--openers",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/p2_32_empty_openers.json",
+        "--output",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/readings/p2_32_empty_reading.json"
+      ],
+      "log": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/logs/p2_32_empty_reading.log",
+      "exit_code": 0,
+      "output_sha256": "7bc6122f3620d1d748ea5c4cb4f20c2a7db418d8247655a4be99385c5a5ee68b"
+    }
+  }
+}

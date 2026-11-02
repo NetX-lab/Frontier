@@ -1,0 +1,3 @@
+current_counts {'QUALIFIED': 22, 'OPEN': 4, 'FAIL': 1} coverage PASS
+p2_32 binding True status FINISHED findings 5
+p2_64 binding True status FINISHED findings 5

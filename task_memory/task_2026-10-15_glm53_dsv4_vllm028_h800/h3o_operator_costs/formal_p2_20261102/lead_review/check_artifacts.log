@@ -1,0 +1,24 @@
+inventory rows 66 hash mismatches 0 unlisted files [] missing []
+verdict.json: {
+ "p2_32": {
+  "verdict": "PASS",
+  "blocking_reasons": []
+ },
+ "p2_64": {
+  "verdict": "BLOCKED_ON_DECISION",
+  "blocking_reasons": [
+   "No qualifying pre-launch 30% receipt is evidenced for the original 2026-10-25T15:54:41Z native submission. YC must authorize historical reference reuse/launch-order exception, or Claude must issue the32 receipt and collect a new wholly preemptible64 reference."
+  ]
+ }
+}
+promotion keys: ['schema_version', 'generated_utc', 'draft_only', 'issued_receipt', 'receipt_timestamp', 'numerical_predicate_30pct', 'qualified_input_predicate', 'formal32_terminal', 'formal32_runtime_coverage_verified', 'runtime_audit', 'promotion_predicate', 'predicate_status', 'numeric_evidence_generation', 'draft', 'chronology', 'recommended_next_action', 'options']
+  draft_only True
+  issued_receipt False
+receipt keys: ['observed_utc', 'job', 'creator', 'charged_group', 'preemptible_label', 'status', 'tasks', 'replicas', 'container_gpu_hours']
+receipt container_gpu_hours 24.322222222222223 preemptible no status {'phase': 'Succeeded', 'startTime': None, 'finishTime': '2026-10-25T16:19:44Z'}
+list 8 {"name": "exp-1025-155441-668927-1679091c", "phase": "Succeeded", "node": "gpu-h200-0968.lgcm.sh.istep.fun", "containers": [{"name": "default", "restartCount": 0, "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635", "state": {"terminated": {"exitCode": 0, "reason": "Completed", "startedAt": "2026-10-25T15:57:39Z", "finishedAt": "2026-10-25T16:19:30Z", "containerID": "containerd://ee9e5a514b96d62a2bf34bc206198794a3a95ff4dd6256a0fffc338bbaa7ebcc"}}, "duration_seconds": 1311.0}]}
+promotion_predicate True status PASS
+numerical True
+chronology {"existing_native64_job": "exp-1025-155441-668927", "submission_utc": "2026-10-25T15:54:41Z", "submission_evidence": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h200_package_preparation.md:74", "manifest_before_launch_utc": "2026-10-25T15:54:37.229732+00:00", "manifest_sha256": "ea61cc2690dcb32eddbd79e5d9756ae8d1e791dd6ac530892c1887079a71678b", "terminal_utc": "2026-10-25T16:19:44Z", "platform_receipt": {"path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json", "sha256": "634a6e7380909a0992876407a067da1fb96506dd88f6f7f17a12b3094040256a", "bytes": 6076}, "authorization": "YC approved D-H200-TEMP-MAINLINE on 2026-10-25: DSV4 H200-32/64 temporary mainline, at most 64 H200 step_main non-preemptible for this session until 03:00 UTC 2026-10-26; P2-64r clean native reference and basic validation, 64 H200", "historical_preemptible_label": "no", "prelaunch_promotion_receipt_found": false, "retained_absence_scope": "Q
+exp-1025-155441-668927 8 containers; recomputed GPUh 24.322222222222223 receipt 24.322222222222223
+exp-1025-152327-225209 4 containers; recomputed GPUh 11.311111111111112 receipt 11.311111111111112

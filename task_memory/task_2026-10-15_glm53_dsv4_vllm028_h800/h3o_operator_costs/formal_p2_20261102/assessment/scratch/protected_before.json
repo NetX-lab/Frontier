@@ -1,0 +1,57 @@
+[
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/ledger.json",
+    "sha256": "5851a9fd0b4ef6989d50c79c5ea26bd4d8e45150b84b020ba1c2b587f1aef97f",
+    "bytes": 338168
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/ledger.md",
+    "sha256": "fb82c43a022f9a6c0e3fc90d1262e3e0a48f65467a732212b6c3cc9b67f042cd",
+    "bytes": 29035
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/decisions.md",
+    "sha256": "4509c895f87a04bc5ab13773643f402454413aa3f2f528e482d6ef501969ddda",
+    "bytes": 12276
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/proposed_input.json",
+    "sha256": "74374415e6a70c118447ece2f0e264a4e03677d49353b86951e654b156aff673",
+    "bytes": 125247
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv",
+    "sha256": "01a9d51b4389db15c0d61eaa7347482e6a99df421540929abc7f0c55052365eb",
+    "bytes": 68442827
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/kernel_gap.csv",
+    "sha256": "d890b67a2a2b975f8a72659a7febd1a82a4b8133c01895d13ad352eaa1f4cb23",
+    "bytes": 662
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+    "sha256": "ec8a552aa672dc6b4faae45bb0633343f69bdffea8e1baa5fdd6269c856817ee",
+    "bytes": 87712
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_block_kernel_only.csv",
+    "sha256": "e0a6dadfa844883603e22be2906e34d987060bc487f3290b821c9a0a6c3139cd",
+    "bytes": 1357362
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/model_runner_replay_kernel_only.csv",
+    "sha256": "de7607f1142f95a6730b57e1da197211b9ec26d9981e10c0cba15da63f81f58f",
+    "bytes": 5999817
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+    "sha256": "b522f687bd38d3404d980d43704b3a2041caad8f96ce033b76c7cbeef9fc4d2f",
+    "bytes": 93898
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/profiling/network/h200_dgx/summary.csv",
+    "sha256": "1a7c701f2701aa94440f091fb6c5d03477b61f81ad7d43924f0a51008f3d4c65",
+    "bytes": 190056
+  }
+]

@@ -1,0 +1,20 @@
+p2_32 warm formal == two-fix (paths excluded): True
+p2_32 empty formal == two-fix (paths excluded): True
+p2_64 warm formal == two-fix (paths excluded): True
+p2_64 empty formal == two-fix (paths excluded): True
+gate_readings.csv columns: ['case', 'repeat', 'metric', 'unit', 'warm_native', 'warm_frontier', 'warm_relative_error', 'warm_status', 'limit', 'all_native', 'all_frontier', 'all_relative_error', 'all_status', 'original_count', 'retained_count', 'excluded_ids', 'original_native_start_s', 'original_native_end_s', 'retained_native_start_s', 'retained_native_end_s', 'original_frontier_start_s', 'original_frontier_end_s', 'retained_frontier_start_s', 'retained_frontier_end_s', 'original_tokens', 'retained_tokens', 'reading', 'reading_sha256', 'exclusion_evidence']
+p2_32 repeat01 warm {'ttft_ms': 4.722918, 'tpot_ms': 0.100175, 'request_e2e_time_ms': 0.015944, 'token_throughput_tps': 0.134548} verdict PASS excluded [0, 0, 0, 0]
+p2_32 repeat01 all  {'ttft_ms': 4.722918, 'tpot_ms': 0.100175, 'request_e2e_time_ms': 0.015944, 'token_throughput_tps': 0.134548} verdict PASS
+p2_32 repeat02 warm {'ttft_ms': 5.447453, 'tpot_ms': 0.192044, 'request_e2e_time_ms': 0.092723, 'token_throughput_tps': 0.090974} verdict PASS excluded [0, 0, 0, 0]
+p2_32 repeat02 all  {'ttft_ms': 5.447453, 'tpot_ms': 0.192044, 'request_e2e_time_ms': 0.092723, 'token_throughput_tps': 0.090974} verdict PASS
+p2_32 repeat03 warm {'ttft_ms': 5.607176, 'tpot_ms': 0.173713, 'request_e2e_time_ms': 0.26922, 'token_throughput_tps': 0.047914} verdict PASS excluded [0, 0, 0, 0]
+p2_32 repeat03 all  {'ttft_ms': 5.607176, 'tpot_ms': 0.173713, 'request_e2e_time_ms': 0.26922, 'token_throughput_tps': 0.047914} verdict PASS
+p2_32 max warm error % 5.607176023817675 max all-request error % 5.607176023817675 30% predicate on every error: True
+p2_64 repeat01 warm {'ttft_ms': 4.599811, 'tpot_ms': 0.552985, 'request_e2e_time_ms': 0.661659, 'token_throughput_tps': 0.457663} verdict PASS excluded [5, 5, 5, 5]
+p2_64 repeat01 all  {'ttft_ms': 12.254941, 'tpot_ms': 0.529032, 'request_e2e_time_ms': 0.870328, 'token_throughput_tps': 0.457663} verdict FAIL
+p2_64 repeat02 warm {'ttft_ms': 5.675933, 'tpot_ms': 3.656983, 'request_e2e_time_ms': 3.710082, 'token_throughput_tps': 0.022443} verdict PASS excluded [0, 0, 0, 0]
+p2_64 repeat02 all  {'ttft_ms': 5.675933, 'tpot_ms': 3.656983, 'request_e2e_time_ms': 3.710082, 'token_throughput_tps': 0.022443} verdict PASS
+p2_64 repeat03 warm {'ttft_ms': 4.727235, 'tpot_ms': 2.433412, 'request_e2e_time_ms': 2.493894, 'token_throughput_tps': 0.170758} verdict PASS excluded [0, 0, 0, 0]
+p2_64 repeat03 all  {'ttft_ms': 4.727235, 'tpot_ms': 2.433412, 'request_e2e_time_ms': 2.493894, 'token_throughput_tps': 0.170758} verdict PASS
+p2_64 max warm error % 5.675932671489589 max all-request error % 12.254940665008354 30% predicate on every error: True
+gate_readings.csv matches the formal readings for every repeat and metric

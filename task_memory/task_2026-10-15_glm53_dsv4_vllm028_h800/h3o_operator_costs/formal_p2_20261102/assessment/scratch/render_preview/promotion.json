@@ -1,0 +1,321 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-11-02T03:25:01.371997+00:00",
+  "draft_only": true,
+  "issued_receipt": false,
+  "receipt_timestamp": null,
+  "numerical_predicate_30pct": true,
+  "qualified_input_predicate": true,
+  "formal32_terminal": false,
+  "formal32_runtime_coverage_verified": false,
+  "promotion_predicate": false,
+  "predicate_status": "UNVERIFIED_PENDING_FORMAL32",
+  "numeric_evidence_generation": "retained two-fix control only; update when formal finishes",
+  "draft": {
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "hardware": "H200",
+    "topology": "P16+D16; TP8/DP2/EP16/PP1 per role",
+    "runtime": "vLLM0.28.0 native; torch2.13.0+cu130; Frontier Python3.10.6, sequential PDD, measured CC",
+    "workload": {
+      "requests": 128,
+      "prompt_tokens": 6144,
+      "output_tokens": 1024,
+      "qps": 1,
+      "repetitions": 3,
+      "trace": {
+        "kind": "trace",
+        "ledger_row": 8,
+        "actual": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/trace.csv",
+          "sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+          "bytes": 1986
+        },
+        "ledger_sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+        "evidence": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/input_qualification_20261101/evidence/audit.json#/runs",
+        "status": "PASS"
+      },
+      "population": {
+        "kind": "request_population",
+        "ledger_row": 8,
+        "files": [
+          {
+            "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/trace.csv",
+            "sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+            "bytes": 1986,
+            "native_manifest_sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+            "matches": true
+          },
+          {
+            "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/manifest.json",
+            "sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+            "bytes": 4208,
+            "native_manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+            "matches": true
+          },
+          {
+            "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/request_ids.json",
+            "sha256": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+            "bytes": 32630,
+            "native_manifest_sha256": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+            "matches": true
+          },
+          {
+            "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/data/processed_traces/canonical_fixed_6144_1024_req128_qps1/warmup_pool.csv",
+            "sha256": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+            "bytes": 929,
+            "native_manifest_sha256": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+            "matches": true
+          }
+        ],
+        "native_manifest": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_32r/run_manifest.json",
+          "sha256": "d447e75be5cef3f56858b203854ed52c3043beebbb618fa22e3d0707ab87bbbd",
+          "bytes": 10839
+        },
+        "rows": 128,
+        "columns": [
+          "arrived_at",
+          "num_prefill_tokens",
+          "num_decode_tokens"
+        ],
+        "first_row": {
+          "arrived_at": "0.0",
+          "num_prefill_tokens": "6144",
+          "num_decode_tokens": "1024"
+        },
+        "last_row": {
+          "arrived_at": "127.0",
+          "num_prefill_tokens": "6144",
+          "num_decode_tokens": "1024"
+        },
+        "exact_lengths_ids_arrivals": true,
+        "token_totals": {
+          "formal_output_tokens": 131072,
+          "formal_prompt_tokens": 786432,
+          "formal_total_tokens": 917504,
+          "output_tokens_per_request": 1024,
+          "prompt_tokens_per_request": 6144,
+          "total_tokens_per_request": 7168
+        },
+        "status": "PASS"
+      }
+    },
+    "source_commit": "abd1e14198b2b258921ccd669ac87c91f499e6dd",
+    "source_and_table_bindings": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json",
+    "formal_command": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/p2_32_command.json",
+      "sha256": "48d674b72dcb91748892256513cea664002fd914ef5ad876a825f4050377d352",
+      "bytes": 2130
+    },
+    "native_manifest": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_32r/run_manifest.json",
+      "sha256": "d447e75be5cef3f56858b203854ed52c3043beebbb618fa22e3d0707ab87bbbd",
+      "bytes": 10839
+    },
+    "native_r4": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_32r/run_check_status.groundtruth_clean.json",
+      "sha256": "8cc662e69a6f10c093e703e9280b6336fe910374e44953b48f2f8d1a119204a1",
+      "bytes": 15609
+    },
+    "readings": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/readings/p2_32_warm_reading.json",
+      "sha256": "3a766e2ab7af0c5637e6237fbfe823b6f3c9cf8c5f9b1d08b687ef8c4148d4a1",
+      "bytes": 36170
+    },
+    "repetitions": {
+      "vllm/dsv4-h200-p2-canonical-20261025-01-repeat01": {
+        "metrics": [
+          {
+            "metric": "ttft_ms",
+            "unit": "ms",
+            "native": 361.974763982289,
+            "frontier": 344.8789913386803,
+            "relative_error": 0.04722918375725548,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "tpot_ms",
+            "unit": "ms",
+            "native": 19.90684459997105,
+            "frontier": 19.926786349460063,
+            "relative_error": 0.0010017534114393585,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "request_e2e_time_ms",
+            "unit": "ms",
+            "native": 20726.676789752673,
+            "frontier": 20729.981426836326,
+            "relative_error": 0.00015943882934897697,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "token_throughput_tps",
+            "unit": "tokens/s",
+            "native": 6234.123762198884,
+            "frontier": 6225.735861749648,
+            "relative_error": 0.0013454818622781035,
+            "finite": true,
+            "passes_30pct": true
+          }
+        ],
+        "all_four_pass": true,
+        "count": 128
+      },
+      "vllm/dsv4-h200-p2-canonical-20261025-01-repeat02": {
+        "metrics": [
+          {
+            "metric": "ttft_ms",
+            "unit": "ms",
+            "native": 364.7484959801659,
+            "frontier": 344.8789913386803,
+            "relative_error": 0.05447453481087434,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "tpot_ms",
+            "unit": "ms",
+            "native": 19.88859159321239,
+            "frontier": 19.926786349460063,
+            "relative_error": 0.001920435445047219,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "request_e2e_time_ms",
+            "unit": "ms",
+            "native": 20710.77769583644,
+            "frontier": 20729.981426836326,
+            "relative_error": 0.0009272336984113157,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "token_throughput_tps",
+            "unit": "tokens/s",
+            "native": 6231.404806079404,
+            "frontier": 6225.735861749648,
+            "relative_error": 0.0009097377728092454,
+            "finite": true,
+            "passes_30pct": true
+          }
+        ],
+        "all_four_pass": true,
+        "count": 128
+      },
+      "vllm/dsv4-h200-p2-canonical-20261025-01-repeat03": {
+        "metrics": [
+          {
+            "metric": "ttft_ms",
+            "unit": "ms",
+            "native": 365.3656886308454,
+            "frontier": 344.8789913386803,
+            "relative_error": 0.05607176023817675,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "tpot_ms",
+            "unit": "ms",
+            "native": 19.961462032743434,
+            "frontier": 19.926786349460063,
+            "relative_error": 0.0017371314398961148,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "request_e2e_time_ms",
+            "unit": "ms",
+            "native": 20785.94134812738,
+            "frontier": 20729.981426836326,
+            "relative_error": 0.002692200480787742,
+            "finite": true,
+            "passes_30pct": true
+          },
+          {
+            "metric": "token_throughput_tps",
+            "unit": "tokens/s",
+            "native": 6228.720262719535,
+            "frontier": 6225.735861749648,
+            "relative_error": 0.0004791354955766326,
+            "finite": true,
+            "passes_30pct": true
+          }
+        ],
+        "all_four_pass": true,
+        "count": 128
+      }
+    },
+    "intended_successor": {
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "hardware": "H200",
+      "topology": "P32+D32; TP8/DP4/EP32/PP1 per role",
+      "basic_validation": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/run_check_status.groundtruth_clean.json",
+        "sha256": "e1da1a98b36aa051b062ac902217238069ab083162d6440122c913e848ce3b00",
+        "bytes": 28908
+      },
+      "basic_native_manifest": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/run_manifest.json",
+        "sha256": "ea61cc2690dcb32eddbd79e5d9756ae8d1e791dd6ac530892c1887079a71678b",
+        "bytes": 10869
+      },
+      "future_resource_class": "64 wholly preemptible H200, step_main"
+    },
+    "issue_condition": "Claude issues an actual timestamped receipt after formal32 input/runtime/reference checks pass, before a NEW formal64 native submission. Draft is not authorization."
+  },
+  "chronology": {
+    "existing_native64_job": "exp-1025-155441-668927",
+    "submission_utc": "2026-10-25T15:54:41Z",
+    "submission_evidence": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-10-25_h200_package_preparation.md:74",
+    "manifest_before_launch_utc": "2026-10-25T15:54:37.229732+00:00",
+    "manifest_sha256": "ea61cc2690dcb32eddbd79e5d9756ae8d1e791dd6ac530892c1887079a71678b",
+    "terminal_utc": "2026-10-25T16:19:44Z",
+    "platform_receipt": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json",
+      "sha256": "634a6e7380909a0992876407a067da1fb96506dd88f6f7f17a12b3094040256a",
+      "bytes": 6076
+    },
+    "authorization": "YC approved D-H200-TEMP-MAINLINE on 2026-10-25: DSV4 H200-32/64 temporary mainline, at most 64 H200 step_main non-preemptible for this session until 03:00 UTC 2026-10-26; P2-64r clean native reference and basic validation, 64 H200",
+    "historical_preemptible_label": "no",
+    "prelaunch_promotion_receipt_found": false,
+    "retained_absence_scope": "Q1 row27, ticket11 explicit no backfill instruction; original native launch records/manifests; no current formal32 qualification existed in these retained records. Not a global filesystem absence claim.",
+    "historical_launch_order": "BLOCKED_ON_DECISION; current draft cannot precede 2026-10-25 launch",
+    "resource_interpretation": "Original non-preemptible64 was explicitly authorized under D-H200-TEMP-MAINLINE. A new formal64 job must be wholly preemptible; admission of this historical reference to current acceptance requires YC to resolve the launch-order/reference-reuse question."
+  },
+  "options": [
+    {
+      "option": "A",
+      "decision": "YC explicitly waives launch order for the existing P2-64 reference, retaining its original temporary non-preemptible authorization and accepting reuse in current formal assessment.",
+      "gpu_hours": 0,
+      "cost": "Records/review only; no native rerun. Does not backdate or claim an old promotion receipt.",
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md:149",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/run_manifest.json"
+      ],
+      "result_if_approved": "P2-64 may PASS if every other formal criterion passes; record explicit exception."
+    },
+    {
+      "option": "B",
+      "decision": "Claude issues the qualified P2-32 receipt, then submits a new formal native P2-64 campaign through the authorized lead workflow.",
+      "estimated_gpu_hours": 24.322222222222223,
+      "estimate_basis": "Original eight-node P2-64 clean campaign summed container durations (three full repeats, initialization, compile, warmup and teardown). Planning proxy, not a quote.",
+      "resource_class": "64 wholly preemptible H200; 8 nodes x8 GPUs; step_main",
+      "timeout_seconds": 3600,
+      "timeout_gpu_hour_ceiling": 64.0,
+      "limitation": "Queue time unknown; stronger all-pair/kernel/graph warm coverage, idle proofs and observers may increase cost. Retain existing basic validation; verify source/config identity and no new unmatched shapes.",
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/diagnostic/inputs/p2_64r/run_manifest.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md:156",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/11-h200-regression-delivery.md:92"
+      ],
+      "result_if_completed": "Meets prelaunch ordering and current resource class; rerun CPU normalize/warm gates against the new three native repeats. No new CPU simulator replay needed if inputs unchanged."
+    }
+  ]
+}

@@ -1,0 +1,519 @@
+{
+  "cases": {
+    "p2_32": {
+      "case": "p2_32",
+      "mode": "two_fix_vs_B29_control",
+      "input_identity_changes": [],
+      "forwards": {
+        "prefill": {
+          "b29_rows": 8192,
+          "new_rows": 8192,
+          "identical": true,
+          "first_difference_index": null
+        },
+        "decode": {
+          "b29_rows": 14848,
+          "new_rows": 14848,
+          "identical": true,
+          "first_difference_index": null
+        }
+      },
+      "full_forward_rows": {
+        "rows": 23040,
+        "mismatches": 0,
+        "first_difference": null,
+        "status": "PASS"
+      },
+      "scheduler_kv_transfers": {
+        "transfers": 128,
+        "bytes_equal": true,
+        "bytes": [
+          39521664
+        ],
+        "start_delta_ms": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "end_delta_ms": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "duration_delta_ms": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        }
+      },
+      "request_metrics": {
+        "ttft": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "ttft_kv_transfer": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "transfer_kv_cache": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "tpot": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "request_e2e_time": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        }
+      },
+      "files": [
+        {
+          "file": "request_metrics.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/request_metrics.csv",
+            "sha256": "3a8f4dd8178b783ac1c42eaac47aa8e3e061fefefb1c6161e6ab26c252e8ace3",
+            "bytes": 86436
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/request_metrics.csv",
+            "sha256": "3a8f4dd8178b783ac1c42eaac47aa8e3e061fefefb1c6161e6ab26c252e8ace3",
+            "bytes": 86436
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "frontier_transfer_ledger.jsonl",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/frontier_transfer_ledger.jsonl",
+            "sha256": "6b1e1ddc1a0fed5ff843dea87419f22d698126a2f6e5a0d920ff0e3449d81e33",
+            "bytes": 91068
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/frontier_transfer_ledger.jsonl",
+            "sha256": "6b1e1ddc1a0fed5ff843dea87419f22d698126a2f6e5a0d920ff0e3449d81e33",
+            "bytes": 91068
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "op_precision_metadata.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/op_precision_metadata.csv",
+            "sha256": "8a9920ba74e5d067fbfe29eea7372c8fd2ed6e695264a93a7c1132555941ee87",
+            "bytes": 11472
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/op_precision_metadata.csv",
+            "sha256": "8a9920ba74e5d067fbfe29eea7372c8fd2ed6e695264a93a7c1132555941ee87",
+            "bytes": 11472
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "metrics_ground_truth.jsonl",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/metrics_ground_truth.jsonl",
+            "sha256": "34b0ccb71a87892b0d8a4ddb950a0933c609df3827f4e1c61f5f207d22fb1bf0",
+            "bytes": 141414
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/metrics_ground_truth.jsonl",
+            "sha256": "34b0ccb71a87892b0d8a4ddb950a0933c609df3827f4e1c61f5f207d22fb1bf0",
+            "bytes": 141414
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "system_metrics.json",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/system_metrics.json",
+            "sha256": "c6bdb845cdfe9676932b237ebb2b72d5f49fd9db87e29149b90cb29608d9eb20",
+            "bytes": 5681
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_32_operator_path/system_metrics.json",
+            "sha256": "c6bdb845cdfe9676932b237ebb2b72d5f49fd9db87e29149b90cb29608d9eb20",
+            "bytes": 5681
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "collectives.json",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/collectives.json",
+            "sha256": "7b38a30294f8586e4f2f9c403ec883ca199624c0c050f208f2c3ca6106215f97",
+            "bytes": 19178
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/collectives.json",
+            "sha256": "7b38a30294f8586e4f2f9c403ec883ca199624c0c050f208f2c3ca6106215f97",
+            "bytes": 19178
+          },
+          "status": "PASS"
+        }
+      ],
+      "gate_rows": [
+        {
+          "file": "rows/frontier/a10.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows/frontier/a10.csv",
+            "sha256": "c9cb022497fe181f9a7d37a6b5d4c32b84f7eecabe8732fe21527190625a99d3",
+            "bytes": 23633
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/rows/frontier/a10.csv",
+            "sha256": "c9cb022497fe181f9a7d37a6b5d4c32b84f7eecabe8732fe21527190625a99d3",
+            "bytes": 23633
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat01.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat01.csv",
+            "sha256": "d4f2279d99b453a42b5002855edebe5018d47a51e378f90f7c652ce21baa7f5a",
+            "bytes": 29799
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat01.csv",
+            "sha256": "d4f2279d99b453a42b5002855edebe5018d47a51e378f90f7c652ce21baa7f5a",
+            "bytes": 29799
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat02.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat02.csv",
+            "sha256": "e49570ad492299aab00ab97485145dc260551a5fd87690710af200b12c359d0f",
+            "bytes": 29793
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat02.csv",
+            "sha256": "e49570ad492299aab00ab97485145dc260551a5fd87690710af200b12c359d0f",
+            "bytes": 29793
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat03.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_32_warm_k19b29/rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat03.csv",
+            "sha256": "c79363f7ac25395ba4011a6cc110fbc18291700ea31809c5bbc376fa9b4e7727",
+            "bytes": 29778
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_32/rows/vllm/dsv4-h200-p2-canonical-20261025-01-repeat03.csv",
+            "sha256": "c79363f7ac25395ba4011a6cc110fbc18291700ea31809c5bbc376fa9b4e7727",
+            "bytes": 29778
+          },
+          "status": "PASS"
+        }
+      ],
+      "gate_and_warm_reading_differences": [],
+      "wire_end": {
+        "observed_field": false,
+        "source": "Production analytical predictor on both resolved pairs, plus Q2 event proof; transfer ledger has no wire-end timestamp",
+        "old_price_ms": 2.5700352773375594,
+        "new_price_ms": 2.9872381933438987,
+        "expected_wire_end_delta_ms": 0.4172029160063393,
+        "minimum_possible_next_step_gap_ms": 18.724965326
+      },
+      "source_receipts": {
+        "old": {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/receipt.json",
+          "sha256": "a6bbc64ad0cfd83af52a1359fe959c980fa89e0cfc1e366dfdbccde27a5d0813",
+          "bytes": 225477
+        },
+        "new": {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/receipt.json",
+          "sha256": "2048e59d03ec3598e843277d30d730efe3eb212d45c4c757c62ecc54a01859bc",
+          "bytes": 225317
+        }
+      },
+      "metadata_note": "Run roots, wall times, timestamps, receipt/source hashes and gzip header time are administrative provenance; compare decoded full forward rows and exact metric/gate-row bytes.",
+      "status": "PASS"
+    },
+    "p2_64": {
+      "case": "p2_64",
+      "mode": "two_fix_vs_B29_control",
+      "input_identity_changes": [],
+      "forwards": {
+        "prefill": {
+          "b29_rows": 15360,
+          "new_rows": 15360,
+          "identical": true,
+          "first_difference_index": null
+        },
+        "decode": {
+          "b29_rows": 24320,
+          "new_rows": 24320,
+          "identical": true,
+          "first_difference_index": null
+        }
+      },
+      "full_forward_rows": {
+        "rows": 39680,
+        "mismatches": 0,
+        "first_difference": null,
+        "status": "PASS"
+      },
+      "scheduler_kv_transfers": {
+        "transfers": 128,
+        "bytes_equal": true,
+        "bytes": [
+          39521664
+        ],
+        "start_delta_ms": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "end_delta_ms": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "duration_delta_ms": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        }
+      },
+      "request_metrics": {
+        "ttft": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "ttft_kv_transfer": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "transfer_kv_cache": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "tpot": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        },
+        "request_e2e_time": {
+          "count": 128,
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "zero": 128
+        }
+      },
+      "files": [
+        {
+          "file": "request_metrics.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/request_metrics.csv",
+            "sha256": "ad2d3ec71ea79066cfd8d9215f340b8aee2827f4ca91b027022e10105abd3e11",
+            "bytes": 86943
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/request_metrics.csv",
+            "sha256": "ad2d3ec71ea79066cfd8d9215f340b8aee2827f4ca91b027022e10105abd3e11",
+            "bytes": 86943
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "frontier_transfer_ledger.jsonl",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/frontier_transfer_ledger.jsonl",
+            "sha256": "8361d8cb45ca811aaf6771703cfc26c848006fce3f3ea3a417c61d4e178dafd2",
+            "bytes": 91172
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/frontier_transfer_ledger.jsonl",
+            "sha256": "8361d8cb45ca811aaf6771703cfc26c848006fce3f3ea3a417c61d4e178dafd2",
+            "bytes": 91172
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "op_precision_metadata.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/op_precision_metadata.csv",
+            "sha256": "8a9920ba74e5d067fbfe29eea7372c8fd2ed6e695264a93a7c1132555941ee87",
+            "bytes": 11472
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/op_precision_metadata.csv",
+            "sha256": "8a9920ba74e5d067fbfe29eea7372c8fd2ed6e695264a93a7c1132555941ee87",
+            "bytes": 11472
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "metrics_ground_truth.jsonl",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/metrics_ground_truth.jsonl",
+            "sha256": "19c5b841488241a7169ee6aaffbce7c1b065dfb217e29a56febfd0786eb13538",
+            "bytes": 141913
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/metrics_ground_truth.jsonl",
+            "sha256": "19c5b841488241a7169ee6aaffbce7c1b065dfb217e29a56febfd0786eb13538",
+            "bytes": 141913
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "system_metrics.json",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/system_metrics.json",
+            "sha256": "ac3f77983ec2e49f8a2a1941e16a6f20d1fa19e3d7de0960a3e8d368d91eba55",
+            "bytes": 5674
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/metrics/deepseek_ai_deepseek_v4_flash/online_serving/a10_p2_64_operator_path/system_metrics.json",
+            "sha256": "ac3f77983ec2e49f8a2a1941e16a6f20d1fa19e3d7de0960a3e8d368d91eba55",
+            "bytes": 5674
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "collectives.json",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/collectives.json",
+            "sha256": "8af0f669bdf3f58c327d02d94e5b4337592a915745a4f40992f4f64500b66a15",
+            "bytes": 16787
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/collectives.json",
+            "sha256": "8af0f669bdf3f58c327d02d94e5b4337592a915745a4f40992f4f64500b66a15",
+            "bytes": 16787
+          },
+          "status": "PASS"
+        }
+      ],
+      "gate_rows": [
+        {
+          "file": "rows/frontier/a10.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows/frontier/a10.csv",
+            "sha256": "e2b8230556bd31d35d9563b2211e17e1534c86fef320f7deb9bf183f1bbdba0a",
+            "bytes": 23654
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_64/rows/frontier/a10.csv",
+            "sha256": "e2b8230556bd31d35d9563b2211e17e1534c86fef320f7deb9bf183f1bbdba0a",
+            "bytes": 23654
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01.csv",
+            "sha256": "49752e06acb0cb75794f42d540e6ee50d06a48d755432a5e48ba501737aa2c2e",
+            "bytes": 29765
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_64/rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat01.csv",
+            "sha256": "49752e06acb0cb75794f42d540e6ee50d06a48d755432a5e48ba501737aa2c2e",
+            "bytes": 29765
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02.csv",
+            "sha256": "7df7280ea032c9295e78316e490ef4e3177200726e63abeca54e96ed639f7c0c",
+            "bytes": 29766
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_64/rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat02.csv",
+            "sha256": "7df7280ea032c9295e78316e490ef4e3177200726e63abeca54e96ed639f7c0c",
+            "bytes": 29766
+          },
+          "status": "PASS"
+        },
+        {
+          "file": "rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03.csv",
+          "old": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/codex_resume_20261031/p2_64_warm_k19b29/rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03.csv",
+            "sha256": "3eb3a505d439a32b67363d7724e3585d6171d506265ab65752ac21859688dd61",
+            "bytes": 29772
+          },
+          "new": {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/gates/p2_64/rows/vllm/dsv4-h200-p2-64-canonical-20261025-01-repeat03.csv",
+            "sha256": "3eb3a505d439a32b67363d7724e3585d6171d506265ab65752ac21859688dd61",
+            "bytes": 29772
+          },
+          "status": "PASS"
+        }
+      ],
+      "gate_and_warm_reading_differences": [],
+      "wire_end": {
+        "observed_field": false,
+        "source": "Production analytical predictor on both resolved pairs, plus Q2 event proof; transfer ledger has no wire-end timestamp",
+        "old_price_ms": 2.5700352773375594,
+        "new_price_ms": 2.9872381933438987,
+        "expected_wire_end_delta_ms": 0.4172029160063393,
+        "minimum_possible_next_step_gap_ms": 24.380075963
+      },
+      "source_receipts": {
+        "old": {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/receipt.json",
+          "sha256": "f9c4c493d8fe0b04627c76ef992c34d480edcf70bd9f7882530394a145406366",
+          "bytes": 225772
+        },
+        "new": {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/receipt.json",
+          "sha256": "62cc1b59b29e938fdbe90428a9906503061eb12f37d76d44d25357935e11385e",
+          "bytes": 225611
+        }
+      },
+      "metadata_note": "Run roots, wall times, timestamps, receipt/source hashes and gzip header time are administrative provenance; compare decoded full forward rows and exact metric/gate-row bytes.",
+      "status": "PASS"
+    }
+  },
+  "existing_comparator": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/two_fix_20261101/compare_b29.py"
+}

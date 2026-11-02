@@ -1,0 +1,2 @@
+p2_32 PASS forward rows 23040 completion count 128 domain t6144_pairs8_inflight1 min gap 18.72496532622958
+p2_64 PASS forward rows 39680 completion count 128 domain t6144_pairs8_inflight1 min gap 24.380075962758763

@@ -1,0 +1,265 @@
+{
+  "ticket": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+    "sha256": "a45fe902a1768586cca1a80cccf1d6f7f515d1f592e10cf81261760176ca8675",
+    "bytes": 28311
+  },
+  "items": [
+    {
+      "section": "frontier_reference_run",
+      "item": 1,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 135,
+      "checkbox_text": "Run the exact68f891b workload on each eligible priority case with measured communication:32 GPUs=P16/D16, TP8/DP2/EP16/PP1 per role;64=P32/D32, TP8/DP4/EP32/PP1. Use its own hardware-specific compute/collective/NIXL coverage for P6144/C0 and D cached6143..7166/attention6144..7167. Missing coverage remains typed; no cross-hardware scaling or cost substitution.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/runtime.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/formal_vs_two_fix.json"
+      ],
+      "reason": "Own-H200 tables, adopted timing, exact prompt/decode coordinates and bound forward coverage; no cross-hardware substitution."
+    },
+    {
+      "section": "frontier_reference_run",
+      "item": 2,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 140,
+      "checkbox_text": "Confirm non-dummy timing without omissions/fallbacks, native-default MTP off, prefix/chunking/thinking off, graph and quantization on with effective values matching ticket 18. All 128 requests complete with exact lengths; bind native evidence for `max_model_len >= 7168` and `max_num_batched_tokens >= max_model_len` and the actual memory budget.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/runtime.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json"
+      ],
+      "reason": "Non-dummy measured communication, no step table; effective feature flags/limits, actual measured memory budget and128 exact completions."
+    },
+    {
+      "section": "frontier_reference_run",
+      "item": 3,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 141,
+      "checkbox_text": "Record client TTFT, TPOT, THPT and per-request E2E with the same definitions, aggregation and window as the native reference, plus p50/p95 and the non-gating diagnostics.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/diagnostics.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/reading_details.json"
+      ],
+      "reason": "Existing client harness definitions/window, both populations and p50/p95 diagnostics."
+    },
+    {
+      "section": "comparison_and_calibration",
+      "item": 1,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 144,
+      "checkbox_text": "Compute `abs(frontier \u2212 vllm) / abs(vllm)` for mean client TTFT, mean request TPOT, THPT and mean request E2E, independently gated at0.10 for each warm repeat under D-WARM-TARGET. Keep the unchanged all-request reading beside it: full-repetition THPT is `917504 / (last_formal_last_token_completion \u2212 first_formal_submission)`, not tokens divided by127 s. Warm THPT uses retained paired token totals over each side's retained-population window (`last retained completion \u2212 first retained arrival`), using the existing harness arithmetic; pooling sums token totals and duration totals on both sides. Record both original and retained endpoints. In the current P2 readings the five excluded requests are interior and the window endpoints remain unchanged; this observation is not a fixed-endpoint rule for other populations. Keep every repeat's exclusion IDs/evidence, counts, endpoints and both readings; warmup/startup/idle outside the formal window stays excluded. Output-only throughput, request/s, ITL, internal TTFT and percentiles do not gate.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/reading_details.json"
+      ],
+      "reason": "All four warm errors <=.10 independently in every repeat; unchanged all-request readings/windows/evidence retained."
+    },
+    {
+      "section": "comparison_and_calibration",
+      "item": 2,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 145,
+      "checkbox_text": "Where a metric misses, localize the cause before changing anything: scheduler behaviour, attention or FFN cost, MoE routing, CUDA graph coverage, host/device overlap, or P/D communication. Record the evidence that identifies the cause.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/reading_details.json"
+      ],
+      "reason": "All-request repeat01 miss localized to event-bound first-contact NIXL pairs; no warm metric miss requires a new cause investigation. Retained warm-target and A10 reports supply cause evidence."
+    },
+    {
+      "section": "comparison_and_calibration",
+      "item": 3,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 146,
+      "checkbox_text": "Fix causes, not symptoms. No arbitrary multipliers, no benchmark-specific numerical patches, no duplicated predictor logic, no widened threshold. A fix that needs a Frontier core refactor goes to YC with alternatives first.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/formal_vs_two_fix.json"
+      ],
+      "reason": "No patch in this assignment; approved two-fix source and exact H200 pair only. No offsets/threshold changes."
+    },
+    {
+      "section": "comparison_and_calibration",
+      "item": 4,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 147,
+      "checkbox_text": "Re-run after each fix and keep every attempt in the record with its verdict.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/formal_vs_two_fix.json"
+      ],
+      "reason": "Existing attempts retained. Formal fresh-cache replays and controlled comparison completed; no assessment replay started."
+    },
+    {
+      "section": "promotion_32_to_64",
+      "item": 1,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 150,
+      "checkbox_text": "Bind the admitted32-GPU comparison's model, hardware, topology, runtime, exact workload hashes, source/table generations and all three repetitions. Record source metric values/units and all four relative errors, plus the intended64-GPU successor and its basic-validation receipt.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/binding.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv"
+      ],
+      "reason": "Draft binds model/hardware/topology/runtime/generations/workload/all repeats and intended successor/basic R4; draft is not issued receipt."
+    },
+    {
+      "section": "promotion_32_to_64",
+      "item": 2,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 154,
+      "checkbox_text": "Set promotion true only when EVERY finite error is<=0.30 in EVERY required repetition and all reference/coverage checks pass. Missing, undefined, unstable, mock or partial evidence means false/unverified. Do not use an average across metrics or repetitions. A native value of zero gives undefined relative error and cannot qualify.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion.json"
+      ],
+      "reason": "Every required finite32 error <=.30 and input/reference/coverage checks pass. No pooling predicate."
+    },
+    {
+      "section": "promotion_32_to_64",
+      "item": 3,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 159,
+      "checkbox_text": "P0-H800-32 can unlock only the same model's P1-H800-64 formal campaign; P2-H200-32 can unlock only its P2-H200-64 formal campaign. The receipt must exist before formal64-GPU native submission, not be supplied retrospectively.",
+      "status": {
+        "p2_32": "NOT_APPLICABLE",
+        "p2_64": "BLOCKED_ON_DECISION"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion.json"
+      ],
+      "reason": "A new receipt cannot precede the original native 64 launch. YC exception or new 64 native campaign required."
+    },
+    {
+      "section": "promotion_32_to_64",
+      "item": 4,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 162,
+      "checkbox_text": "A32-GPU case between10% and30% remains unfinished but may promote. Basic 64-GPU validation/preparation has no30% prerequisite. Keep final gate.py threshold0.10 unchanged; the new30% predicate is a launch eligibility record, not a replacement final PASS.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/promotion.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv"
+      ],
+      "reason": "30% launch eligibility is separate from final10%; basic64 validation was historically independent."
+    },
+    {
+      "section": "final_acceptance",
+      "item": 1,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 168,
+      "checkbox_text": "Publish a separate result for every eligible case containing native and Frontier values, all four relative errors, evidence references and verdict. Active scope is DSV4 across the four requested tasks,not an extra workload/ topology sweep. GLM results remain paused,not falsely complete and not needed for DSV4 closure. Never claim completion for missing active DSV4 cases.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/verdict.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gate_readings.csv"
+      ],
+      "reason": "Separate P2 results published; whole four-case ticket closure not claimed."
+    },
+    {
+      "section": "final_acceptance",
+      "item": 2,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 173,
+      "checkbox_text": "Guard against accidental overfitting without expanding the matrix: compare all3 admitted repetitions from ticket18, retaining all128 exact-length completions and targeted correctness evidence. Independently warm required kernels/graphs/lazy communication pairs and prove coverage before future formal windows, with both roles idle between repetitions. Apply D-WARM-TARGET's paired event exclusion to retained runs uniformly and retain unchanged all-request readings; do not drop a repeat, select by latency, average away unstable admission or substitute deferred SharedGPT.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/runtime.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/reading_details.json"
+      ],
+      "reason": "Three admitted repeats, all 128 completions retained; paired event rule applied uniformly;7 both-role idle boundaries. Future enhanced warm-proof requirement retained."
+    },
+    {
+      "section": "final_acceptance",
+      "item": 3,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 174,
+      "checkbox_text": "Report any limitation that qualifies the verdict: an unmeasured shape, an unstable reference, a diagnostic that could not be collected. Labelling rules stay in force: `FAIL`, `INSUFFICIENT_EVIDENCE`, `COVERAGE_MISS`, `REFERENCE_UNSTABLE`, `BLOCKED_ON_DECISION`.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/verdict.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/input_status.json"
+      ],
+      "reason": "All qualifying limitations/labels explicitly recorded, including64 BLOCKED_ON_DECISION."
+    },
+    {
+      "section": "final_acceptance",
+      "item": 4,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 175,
+      "checkbox_text": "Record the GPU-hours actually spent, including initialization, compilation, warm-up and failures.",
+      "status": {
+        "p2_32": "FAIL",
+        "p2_64": "FAIL"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/gpu_hours.csv",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/gpu_hours_detail.json"
+      ],
+      "reason": "INSUFFICIENT_EVIDENCE for an exact actual-spend total: all identified P2/reused H200 jobs, failures included, are deduplicated, but 19 lack full allocation clocks. Unknowns and estimates are separate. This reporting limitation is disclosed; it does not change the explicit numerical/input/promotion Acceptance predicates."
+    },
+    {
+      "section": "final_acceptance",
+      "item": 5,
+      "ticket_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/tickets/19-comparison-and-acceptance.md",
+      "ticket_line": 176,
+      "checkbox_text": "Verify affected shared infrastructure for the active DSV4 change and retain existing baseline/shared evidence. No new GLM simulation/tests/calibration or paired GLM/V4/Step completion gate. Existing reusable commits/evidence can be handed to the separate integration owner without restarting paused work.",
+      "status": {
+        "p2_32": "PASS",
+        "p2_64": "PASS"
+      },
+      "evidence": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/formal_vs_two_fix.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/scratch/full_control.json"
+      ],
+      "reason": "No shared infrastructure edited. Reused retained two-fix/fidelity/collective checks and controlled full-sequence comparison. No paused GLM work run."
+    }
+  ],
+  "scope": "Two P2 cases only. PASS means evidence for this assessed slice; ticket checkboxes were not edited. Acceptance64 still blocked on prelaunch promotion."
+}

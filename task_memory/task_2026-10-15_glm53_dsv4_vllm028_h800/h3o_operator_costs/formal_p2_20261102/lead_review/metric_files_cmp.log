@@ -1,0 +1,24 @@
+p2_32 config.json DIFF
+p2_32 frontier_transfer_ledger.jsonl SAME
+p2_32 metrics_ground_truth.jsonl SAME
+p2_32 op_precision_metadata.csv SAME
+p2_32 request_metrics.csv SAME
+p2_32 system_metrics.json SAME
+p2_64 config.json DIFF
+p2_64 frontier_transfer_ledger.jsonl SAME
+p2_64 metrics_ground_truth.jsonl SAME
+p2_64 op_precision_metadata.csv SAME
+p2_64 request_metrics.csv SAME
+p2_64 system_metrics.json SAME
+p2_32 5 differing config keys
+   /cluster_config/cc_backend_config/cache_dir '/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/cc_cache' -> '/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32/cc_cache'
+   /kv_cache_transfer_config/network_bandwidth_gbps 126.2 -> 390.39349928254796
+   /kv_cache_transfer_config/network_latency_ms 0.0647 -> 0.0236521842818856
+   /metrics_config/cache_dir '/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/cache' -> '/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32/cache'
+   /metrics_config/output_dir '/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/metrics/deepseek_ai_deepseek_v4_f -> '/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32/metrics/deepseek_ai_deepseek_v4
+p2_64 5 differing config keys
+   /cluster_config/cc_backend_config/cache_dir '/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/cc_cache' -> '/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64/cc_cache'
+   /kv_cache_transfer_config/network_bandwidth_gbps 126.2 -> 390.39349928254796
+   /kv_cache_transfer_config/network_latency_ms 0.0647 -> 0.0236521842818856
+   /metrics_config/cache_dir '/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/cache' -> '/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64/cache'
+   /metrics_config/output_dir '/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/metrics/deepseek_ai_deepseek_v4_f -> '/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64/metrics/deepseek_ai_deepseek_v4

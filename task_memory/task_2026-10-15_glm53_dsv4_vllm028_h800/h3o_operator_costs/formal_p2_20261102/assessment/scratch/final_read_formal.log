@@ -1,0 +1,1 @@
+PASS exact harness reproduction; metric rows 24 warm PASS 24 all-request FAIL 1 percentile diagnostics 144

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Formal P2 assessed: replays with the H200 NIXL pair identical to two-fix apart from the pair; P2-32 formal PASS; P2-64 BLOCKED_ON_DECISION on the pre-launch promotion receipt (options A/B to YC). |
 | 2026-11-02 | YC chose payload route C (D-P2-PAYLOAD-C); Q3 accepted: the native per-pair READ bound equals the priced 46,103,040 B, and every check passes, so the payload edge is QUALIFIED (source-derived, metric-invariant). |
 | 2026-11-01 | nixl6144 complete (0.346 container GPUh) and Q2 adopted: the H200 affine NIXL pair is the formal P2 timing input at the measured coordinate (D-P2-Q2-NIXL-TIMING); P2 outputs unchanged by the event proof; payload route waits for YC with a new invariance option. |
 | 2026-11-01 | Q1 input qualification ledger (`f48457d2`) and lead choices D-P2-Q1-CHOICES (`a182084c`); nixl6144 16-H200 preemptible measurement submitted through `/ds4-exec`; payload route waits for YC. |
@@ -141,7 +142,24 @@ Authority: requirements D-P2-INPUT-QUALIFICATION, D-P2-Q1-CHOICES, D-P2-Q2-NIXL-
 2. Attention (lead choice A): the 48 omitted workloads have positive measured windows but fail held-out admission. The original table's exact lookup, checked against each independent measurement pass separately, gives a maximum error of 3.663151% over 96 comparisons (NONE/prefill 0.971587%). The original table stays the formal table.
 3. H200 NIXL timing (lead choice B): the formal input is still the H800 fit, which ticket 19 does not allow for H200. The nixl6144 package measures READ timing at prompts 6143/6144/6145 (46/46/51 packed blocks), 1 or 8 active pairs and 1-16 requests in flight, three passes. It runs on 16 H200, wholly preemptible, about 2.06 GPUh, as RJob `exp-1102-030025-971155`, submitted through `/ds4-exec` (launcher `g5h/launch/submit.py`, which now passes `preemptible`, `a182084c`). The run succeeded on 2 H200 nodes (0.346 container GPUh after a 3 h 21 min queue wait; [nixl6144 report](test_report_2026-11-01_nixl6144_h200.md)): one 6144-token READ takes 0.964 ms (1 pair) / 0.971 ms (8 pairs) at the median, completion is proportional to bytes, pass spread is at most 0.882%.
 4. H200 NIXL timing adopted (D-P2-Q2-NIXL-TIMING; Codex `8ce5ed55`, [Q2 evidence](h3o_operator_costs/input_qualification_20261101/nixl_timing_q2/report.md), [lead review](test_report_2026-11-01_q2_h200_nixl_timing.md)): `analytical_kv_cache_transfer_config_network_bandwidth_gbps = 390.39349928254796`, `analytical_kv_cache_transfer_config_network_latency_ms = 0.0236521842818856`, 0.968 ms per READ. Fit on all 90 case/pass medians with a positive intercept; qualified only at the coordinate the P2 replays use (one transfer at a time per decode pod, eight pairs), where every held-out pass meets per-trial median 5% / p90 10% (p90 at most 2.464%). The P2 outputs equal the two-fix outputs: inside every transfer window the next decode step start is at least 18.72 / 24.38 ms after any possible posting step, longer than every price and observed trial at the coordinate (2,034 checks, zero crossings). Other bytes or concurrency are not qualified.
-5. Native payload QUALIFIED under YC's route C (D-P2-PAYLOAD-C; Codex `bd667bb6`, [Q3 evidence](h3o_operator_costs/input_qualification_20261101/payload_q3/report.md), [lead review](test_report_2026-11-02_q3_payload_bound.md)). From the native source rules, one READ on one TP rank pair moves at most 46 pages x 1,002,240 B = 46,103,040 B, the payload Frontier already prices. At 0.968 ms it stays below every decode-step gap (at least 18.72 / 24.38 ms); the measured maximum at that size is 12.55 ms. Wire bytes reach only the transfer time. Provenance: source-derived, metric-invariant, not observed; P2-32/P2-64 on H200 only. No replay. Next: formal P2 assessment.
+5. Native payload QUALIFIED under YC's route C (D-P2-PAYLOAD-C; Codex `bd667bb6`, [Q3 evidence](h3o_operator_costs/input_qualification_20261101/payload_q3/report.md), [lead review](test_report_2026-11-02_q3_payload_bound.md)). From the native source rules, one READ on one TP rank pair moves at most 46 pages x 1,002,240 B = 46,103,040 B, the payload Frontier already prices. At 0.968 ms it stays below every decode-step gap (at least 18.72 / 24.38 ms); the measured maximum at that size is 12.55 ms. Wire bytes reach only the transfer time. Provenance: source-derived, metric-invariant, not observed; P2-32/P2-64 on H200 only. No replay.
+
+### Formal P2 assessment — 2026-11-02
+
+Report: [formal P2 test report](test_report_2026-11-02_formal_p2_assessment.md). Evidence: `h3o_operator_costs/formal_p2_20261102/` (runner `run_formal_replay.py` at `abd1e141`, command records, `readings/`, Codex `75ccdbe8` deliverables in `assessment/`, lead checks in `lead_review/`).
+
+1. Formal replays: the B29 formal inputs with only the two KV transfer fields set to the adopted H200 pair (390.39349928254796 Gbit/s, 0.0236521842818856 ms). Both FINISHED (10,183 s / 12,459 s). Against the two-fix runs only `config.json` differs (the pair and three cache/output roots); forwards, collectives, transfers, request metrics, gate rows and readings are identical.
+2. Inputs: 22 QUALIFIED, 4 OPEN, 1 FAIL. Aggregate coverage (row 26) PASS under its unchanged criterion. OPEN rows 18 (retired H800 pair), 23 and 24 (memory peaks, planner agreement) are not prerequisites of these measured-capacity cases; row 27 (promotion receipt) applies to P2-64 only.
+3. Readings: 24/24 warm checks PASS at 10% (maximum 5.675933%). The P2-64 repeat01 all-request TTFT FAIL (12.254941%) stays on record.
+4. Verdicts:
+
+| Case | Native vs Frontier, warm, worst metric | Verdict | Blocking reason |
+| --- | --- | --- | --- |
+| P2-32 (P16+D16, TP8/DP2/EP16) | TTFT repeat03: 365.366 vs 344.879 ms, 5.607176% | **PASS** | none |
+| P2-64 (P32+D32, TP8/DP4/EP32) | TTFT repeat02: 725.492 vs 684.314 ms, 5.675933% | **BLOCKED_ON_DECISION** | reference `exp-1025-155441-668927` was launched 2026-10-25T15:54:41Z, before any 30% promotion receipt could exist |
+
+5. P2-64 options to YC: A, exception for the existing reference (0 GPUh); B, issue the P2-32 receipt (30% predicate true, maximum 5.607176%), add a warmup that opens all 16 P x D lane pairs (D-WARM-TARGET rule for future native runs), then a new 64-H200 preemptible campaign of about 24.3 container GPUh. Lead recommends B.
+6. GPU-hours: 35 H200 jobs; 141.41 container GPUh witnessed plus 19 jobs with incomplete clocks; actual total unknown (INSUFFICIENT_EVIDENCE).
 
 ### Two-fix continuation — 2026-11-01
 
