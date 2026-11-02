@@ -1,0 +1,13 @@
+{
+  "captured_utc": "2026-11-02T15:32:02.170378+00:00",
+  "job": "exp-1102-232618-248194",
+  "phase": "Succeeded",
+  "finish_time": "2026-11-02T15:30:32Z",
+  "node": null,
+  "containers": [],
+  "markers": {
+    "BASE_SOURCE_HASHES_PASS": true,
+    "ALL PASS": true,
+    "PINNED_IMAGE_DP_STARTUP_PASS": true
+  }
+}

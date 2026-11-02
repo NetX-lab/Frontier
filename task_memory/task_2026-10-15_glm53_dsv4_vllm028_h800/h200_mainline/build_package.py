@@ -51,6 +51,12 @@ SOURCES = {
 }
 # h200_limit: the session's non-preemptible H200 limit, running plus queued, when the case was built.
 CASES = {
+    'p2_64_formal_recovery': dict(source='formal', dp=4, h200_limit=32,
+                         native='p2-dp-startup-coordination', native_commit='a06a72a4326cba02234df6cfbdc21b78d3a15d26',
+                         case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
+                         run_tag='dsv4-h200-p2-64-formal-20261102-02',
+                         purpose='Formal P2 H200-64 generation 02 under D-P2-64-STARTUP-RECOVERY; '
+                                 'native DP startup coordination corrected; pair-warmed, wholly preemptible'),
     'p2_64_formal': dict(source='formal', dp=4, h200_limit=32,
                          case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
                          run_tag='dsv4-h200-p2-64-formal-20261102-01',
@@ -110,6 +116,8 @@ class Case:
         self.source = HERE.parent / source['package']
         self.harness = WORKTREES / source['harness']
         self.harness_commit = source['harness_commit']
+        self.native = NATIVE.parent / case['native'] if 'native' in case else NATIVE
+        self.native_commit = case.get('native_commit', NATIVE_COMMIT)
         self.source_root = str(WORKTREES / source['built_in'] / TASK_DIR / source['package'])
         self.target = HERE / name / package
         self.output_dir = f"{CLOUD}/{self.run_tag.replace('-', '_')}/case/runs/groundtruth_clean/{self.run_tag}"
@@ -365,7 +373,61 @@ def formal_harness_differences(case):
     config = json.loads((case.source / 'config.json').read_text())
     return [name for name, target in config['harness_files'].items()
             if name not in FORMAL_MODULES
+            and not (case.native != NATIVE and name == 'tests/comparison/dp_placement_pp/vllm_replay.py')
             and sha256(case.harness / name) != sha256(case.source / target)]
+
+
+STARTUP_SOURCES = {
+    'vllm/config/parallel.py': 'native_config_parallel.py',
+    'vllm/distributed/parallel_state.py': 'native_distributed_parallel_state.py',
+    'vllm/distributed/utils.py': 'native_distributed_utils.py',
+    'vllm/v1/engine/utils.py': 'native_engine_utils.py',
+}
+
+
+def formal_startup_sources(case, files, config, lock, overlay):
+    """Bind the approved startup repair to the installed wheel overlay."""
+    if case.native == NATIVE:
+        return
+    changed = set(git(case.native, 'diff', '--name-only', NATIVE_COMMIT, case.native_commit,
+                      '--', 'vllm').splitlines())
+    if changed != STARTUP_SOURCES.keys():
+        raise ValueError(f'Unexpected native repair scope: {sorted(changed)}')
+    for name, staged in STARTUP_SOURCES.items():
+        content = (case.native / name).read_bytes()
+        digest = hashlib.sha256(content).hexdigest()
+        if content != subprocess.run(['git', '-C', str(case.native), 'show',
+                                     f'{case.native_commit}:{name}'], check=True, capture_output=True).stdout:
+            raise ValueError(f'Native repair differs from committed source: {name}')
+        files[staged] = content
+        config['expected_source_hashes'][name] = digest
+        config['retained_files'][staged] = digest
+        lock['committed_files'][staged] = dict(commit=case.native_commit, path=name, sha256=digest)
+        overlay['files'][name.removeprefix('vllm/')] = dict(
+            source=str(case.target / staged), sha256=digest, base_sha256=sha256(NATIVE / name))
+    bootstrap = files['native_dummy_bootstrap.py'].decode()
+    bootstrap = replace_lines(bootstrap, [
+        ('FILES = (V4_MODEL,)', 'FILES = (V4_MODEL, ' + ', '.join(repr(n.removeprefix('vllm/')) for n in STARTUP_SOURCES) + ')', 1),
+    ])
+    bootstrap = bootstrap.replace('Only the accepted V4 model leaf is allowed',
+                                  'Only the accepted model and startup files are allowed')
+    bootstrap = bootstrap.replace('Deploy only the previously accepted C26 model leaf before native imports.',
+                                  'Deploy the accepted C26 model and DP startup correction before native imports.')
+    original_check = """    require(config['expected_source_hashes']['vllm/' + V4_MODEL]
+            == overlay['files'][V4_MODEL]['sha256'], 'V4 diagnostic source mismatch')"""
+    if bootstrap.count(original_check) != 1:
+        raise ValueError('Non-unique bootstrap source-hash boundary')
+    bootstrap = bootstrap.replace(original_check, """    for name in FILES:
+        require(config['expected_source_hashes']['vllm/' + name]
+                == overlay['files'][name]['sha256'], f'Runtime source mismatch: {name}')""")
+    files['native_dummy_bootstrap.py'] = bootstrap.encode()
+    config['engine']['native_reference'].update(source_sha=case.native_commit, instrumentation_sha=case.native_commit)
+    for name in ENGINES:
+        files[name] = dumps(config['engine']).encode()
+    lock.update(native_checkout=str(case.native), native_commit=case.native_commit)
+    config['runtime_source_overlay'].update(
+        base_source_sha=case.native_commit,
+        effective_runtime_source='reviewed DP startup correction plus the accepted C26 model leaf')
 
 
 def formal_documents(case):
@@ -387,7 +449,7 @@ def formal_documents(case):
     lock['harness_commit'] = case.harness_commit
     # Rebind unchanged staged modules to the same new reviewed commit too.
     for name, target in config['harness_files'].items():
-        if name in FORMAL_MODULES:
+        if name in FORMAL_MODULES or (case.native != NATIVE and name == 'tests/comparison/dp_placement_pp/vllm_replay.py'):
             files[target] = (case.harness / name).read_bytes()
         lock['committed_files'][target] = dict(commit=case.harness_commit, path=name,
                                               sha256=hashlib.sha256(files[target]).hexdigest())
@@ -402,6 +464,7 @@ def formal_documents(case):
     files['submit_native_diagnostic.py'] = submit.replace(
         PREEMPTIBLE_LINE, PREEMPTIBLE_LINE + '\n        preemptible=config.get("preemptible", False),').encode()
     overlay = relocate(case, json.loads(files['overlay.json']))
+    formal_startup_sources(case, files, config, lock, overlay)
     files['overlay.json'] = dumps(overlay).encode()
     lock['runtime_overlay'] = overlay
     changed = []
@@ -433,6 +496,12 @@ def formal_documents(case):
     manifest = files['case/manifest.yaml'].decode()
     purpose = next(line for line in manifest.splitlines() if line.startswith('purpose: '))
     generation = next(line for line in manifest.splitlines() if line.startswith('run_generation: '))
+    if case.native != NATIVE:
+        manifest = replace_lines(manifest, [
+            ('groundtruth_checkout_path: ' + str(NATIVE), 'groundtruth_checkout_path: ' + str(case.native), 1),
+            ('groundtruth_commit: ' + NATIVE_COMMIT, 'groundtruth_commit: ' + case.native_commit, 1),
+            ("groundtruth_branch: ''", 'groundtruth_branch: fix/p2-dp-startup-coordination', 1),
+        ])
     files['case/manifest.yaml'] = replace_lines(manifest, [
         (purpose, 'purpose: ' + case.purpose, 1),
         (generation, f"run_generation: v4-native-v028-{case.run_tag.removeprefix('dsv4-')}", 1),
@@ -469,6 +538,9 @@ def compare_formal(case, config):
     for name, content in expected.items():
         if actual[name].read_bytes() != content:
             raise ValueError(f'Unexpected formal package bytes: {name}')
+        if not (case.source / name).exists():
+            report[name] = ['added committed native startup source']
+            continue
         original = (case.source / name).read_bytes()
         if original != content:
             if name.endswith('.json'):
@@ -673,7 +745,7 @@ def preflight(case, config):
     from native_pd_worker import write_run_manifest
     manifest = json.loads(write_run_manifest(trial, 'preflight only; no submission').read_text())
     resources = manifest['resources']
-    if (manifest['harness_commit'] != case.harness_commit or manifest['groundtruth_commit'] != NATIVE_COMMIT
+    if (manifest['harness_commit'] != case.harness_commit or manifest['groundtruth_commit'] != case.native_commit
             or manifest['harness_tree_dirty_paths'] or manifest['groundtruth_tree_dirty']
             or manifest['run_tag'] != case.run_tag or resources['gpus'] != case.replicas * config['gpu']
             or (resources['gpu_type'], resources['charged_group']) != (HARDWARE['gpu_type'], HARDWARE['charged_group'])):
@@ -764,7 +836,7 @@ def main():
         raise ValueError(f'The harness worktree {case.harness} is not clean')
     if git(case.harness, 'rev-parse', 'HEAD').strip() != case.harness_commit:
         raise ValueError(f'The harness worktree {case.harness} moved from {case.harness_commit}')
-    if git(NATIVE, 'rev-parse', 'HEAD').strip() != NATIVE_COMMIT:
+    if git(case.native, 'rev-parse', 'HEAD').strip() != case.native_commit:
         raise ValueError('NATIVE checkout moved')
     sys.dont_write_bytecode = True
     # As launch.py: the profile worker imports vllm_replay at module level.
@@ -781,7 +853,7 @@ def main():
     if check.returncode or check.stdout.strip() != 'INPUT_HASHES_PASS_NO_SUBMISSION':
         raise ValueError(f'launch.py --check-only failed: {check.stdout} {check.stderr}')
     result = dict(case=case.name, source=str(case.source), harness=str(case.harness),
-                  harness_commit=case.harness_commit, native_commit=NATIVE_COMMIT, package=str(case.target),
+                  harness_commit=case.harness_commit, native_commit=case.native_commit, package=str(case.target),
                   manifest_sha256=sha256(case.target / 'manifest.json'), sealed=sealed, changes=report,
                   changed_retained_files=changed_retained, preflight_scratch=scratch, frontier_roles=roles,
                   launch_path=plans, check_only=check.stdout.strip())

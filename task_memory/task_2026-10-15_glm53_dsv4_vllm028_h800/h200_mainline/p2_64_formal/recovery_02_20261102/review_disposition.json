@@ -1,0 +1,11 @@
+{
+  "status": "PACKAGE_ACCEPTED_FOR_APPROVED_RUN",
+  "package_review": "package_review.json",
+  "findings": {
+    "R4-IDENTITY-INCOMPATIBLE": "Confirmed. R5 exact-source successor and explicit comparison reader selection assigned to p64-reader-1102m; old R4 preserved. This post-run auxiliary reader does not block the approved GPU run.",
+    "INSTALLED-BASE-UNVERIFIED": "Resolved independently: image_cpu_lead_verification.json verifies actual pinned-image hashes and real torch2.13 CPU communication.",
+    "STALE-BASE-ONLY-FLAG": "Legacy descriptive field is retained in the sealed package; exact native commit and five-file overlay are explicit. It supplies no admission bypass."
+  },
+  "image_review_correction": "The CPU regression source is a06a72a4, not the base2cf named in the executor final prose. Exact source hashes verified against the sealed package.",
+  "authorization": "D-P2-64-STARTUP-RECOVERY; ordinary in-scope debug fixes preapproved"
+}

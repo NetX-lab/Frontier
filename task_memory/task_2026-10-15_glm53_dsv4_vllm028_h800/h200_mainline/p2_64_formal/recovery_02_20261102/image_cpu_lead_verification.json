@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "engine_ranks": 16,
+  "engine_groups": 32,
+  "worker_ranks": 32,
+  "source_hashes": {
+    "vllm/config/parallel.py": "f489eb26a3784ce5691faebad99a33b6e2e7c5988605bd7427415efc685f7440",
+    "vllm/distributed/utils.py": "a06292492a5cc24a17be299a5890d617fc8d1fe82e9a95b1cfc6be47d0d250ab",
+    "vllm/distributed/parallel_state.py": "a9b20efd63ece3bd4e4436f774a7be7156bfc410b310944c4ef4d7e19a091572",
+    "vllm/v1/engine/utils.py": "533d60761f2505e93b318c349baf733a1ec7e386f1c2ad3f768e41bdab017599"
+  },
+  "base_hashes": {
+    "vllm/config/parallel.py": "f29f984ac39f4ae11622c2c64f92a657951f3a28e624a2a60d1040b49e025311",
+    "vllm/distributed/utils.py": "792146b357139e705064a68d3b66858de8a0baaca4dc7db1232fa217d45db231",
+    "vllm/distributed/parallel_state.py": "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c",
+    "vllm/v1/engine/utils.py": "6ce83b0552b6207505c9bd7ac1fd67d2771628eac01572738765923aa91c1c0f",
+    "vllm/utils/network_utils.py": "383648e9374a6f2304fec91bd6a54aeb0301c009e69c267bcdc4dfbed38e20e9",
+    "vllm/utils/system_utils.py": "837e6ff0ab524c06c048d6b42d4f35b77baba2e9d9e57837fe333ca0aaee1cfb"
+  },
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "torch": "2.13.0+cu130",
+  "cloud_result_sha256": "0a11a3f8a8087c0b4c1e5c95bcfe4deafabaffeca1ced66796d650d92bac4f4c",
+  "markers": [
+    "BASE_SOURCE_HASHES_PASS",
+    "ALL PASS",
+    "PINNED_IMAGE_DP_STARTUP_PASS"
+  ],
+  "limits": "CPU sockets/Gloo/source methods; no GPU kernels or remote multi-node HELLO"
+}

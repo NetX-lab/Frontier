@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/build_package.py", line 861, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/build_package.py", line 844, in main
+    scratch = preflight(case, config)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/build_package.py", line 742, in preflight
+    manifest = json.loads(write_run_manifest(trial, 'preflight only; no submission').read_text())
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_01/native_pd_worker.py", line 64, in write_run_manifest
+    raise ValueError(f'Native source must match the pinned clean checkout: {source_commit}, {source_dirty}')
+ValueError: Native source must match the pinned clean checkout: a06a72a4326cba02234df6cfbdc21b78d3a15d26, 

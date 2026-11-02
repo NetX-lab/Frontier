@@ -1,0 +1,401 @@
+{
+ "schema": "p64-formal-clocks/clock-receipt/v1",
+ "query_utc": "2026-11-02T15:31:45.843601+00:00",
+ "scope": "exact job name + eight known replica names only; no listing, no polling",
+ "job": "exp-1102-164536-160317",
+ "query_errors": [],
+ "uid": "8e2e21a9-4041-4694-8c60-4abfea9a57a1",
+ "creationTimestamp": "2026-11-02T08:45:36Z",
+ "deletionTimestamp": null,
+ "creator": "i-fengyicheng",
+ "creator_id": "e7163316ad76ba7266a33f9787afd70a",
+ "real_creator_id": "group-shai-core-step-main",
+ "charged_group": "step_main",
+ "preemptible_label": "yes",
+ "job_status": {
+  "phase": "Failed",
+  "reason": "RJobFailed",
+  "message": "Tasks with failed status: [default]",
+  "startTime": null,
+  "finishTime": "2026-11-02T12:50:51Z",
+  "taskStatuses": {
+   "default": {
+    "failed": 1,
+    "stopped": 7,
+    "taskStage": "stepmind-task-stage-1"
+   }
+  }
+ },
+ "job_stop_annotations": {
+  "rjob.brainpp.cn/system-stop-reason": "Task fail policy [any] caused undesired running replicas."
+ },
+ "task_specs": {
+  "default": {
+   "replicas": 8,
+   "gpu_limits": [
+    "8"
+   ]
+  }
+ },
+ "replicas": {
+  "exp-1102-164536-160317-cfcd2084": {
+   "name": "exp-1102-164536-160317-cfcd2084",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "846ea702-ac97-497a-9df3-cc50ef67da47",
+   "phase": "Stopped",
+   "reason": null,
+   "nodeName": "gpu-h200-0043.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:33Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {
+    "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "running"
+     ],
+     "running": {
+      "startedAt": "2026-11-02T12:20:08Z",
+      "finishedAt": null
+     },
+     "terminated": null,
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:20:08Z",
+     "finishedAt": null
+    }
+   ],
+   "missing": [
+    "default.finishedAt"
+   ],
+   "finished_clock_status": "NOT_AVAILABLE"
+  },
+  "exp-1102-164536-160317-c4ca4238": {
+   "name": "exp-1102-164536-160317-c4ca4238",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "971beca4-9e90-4eef-bcde-e51296d63ac4",
+   "phase": "Stopped",
+   "reason": null,
+   "nodeName": "gpu-h200-0197.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:32Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {
+    "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "running"
+     ],
+     "running": {
+      "startedAt": "2026-11-02T12:20:20Z",
+      "finishedAt": null
+     },
+     "terminated": null,
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:20:20Z",
+     "finishedAt": null
+    }
+   ],
+   "missing": [
+    "default.finishedAt"
+   ],
+   "finished_clock_status": "NOT_AVAILABLE"
+  },
+  "exp-1102-164536-160317-8f14e45f": {
+   "name": "exp-1102-164536-160317-8f14e45f",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "63c6214a-e312-4f9a-b876-3bedeea885ab",
+   "phase": "Stopped",
+   "reason": null,
+   "nodeName": "gpu-h200-0357.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:32Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {
+    "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "running"
+     ],
+     "running": {
+      "startedAt": "2026-11-02T12:20:19Z",
+      "finishedAt": null
+     },
+     "terminated": null,
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:20:19Z",
+     "finishedAt": null
+    }
+   ],
+   "missing": [
+    "default.finishedAt"
+   ],
+   "finished_clock_status": "NOT_AVAILABLE"
+  },
+  "exp-1102-164536-160317-1679091c": {
+   "name": "exp-1102-164536-160317-1679091c",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "a0766e6d-9c8b-4a5a-8fcd-190efc3269ed",
+   "phase": "Stopped",
+   "reason": null,
+   "nodeName": "gpu-h200-0375.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:32Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {
+    "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "running"
+     ],
+     "running": {
+      "startedAt": "2026-11-02T12:17:36Z",
+      "finishedAt": null
+     },
+     "terminated": null,
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:17:36Z",
+     "finishedAt": null
+    }
+   ],
+   "missing": [
+    "default.finishedAt"
+   ],
+   "finished_clock_status": "NOT_AVAILABLE"
+  },
+  "exp-1102-164536-160317-a87ff679": {
+   "name": "exp-1102-164536-160317-a87ff679",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "f189604c-43df-4984-bda3-ed133c8912b2",
+   "phase": "Failed",
+   "reason": null,
+   "nodeName": "gpu-h200-0760.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:32Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {},
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "terminated"
+     ],
+     "running": null,
+     "terminated": {
+      "exitCode": 1,
+      "reason": "Error",
+      "message": "user command: exit status 1",
+      "signal": null,
+      "startedAt": "2026-11-02T12:20:25Z",
+      "finishedAt": "2026-11-02T12:50:49Z",
+      "containerID": "containerd://12b7c4edb3979b0d60b73a0cba4984c538a320942c3f7af5696fd1090bc536bb"
+     },
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:20:25Z",
+     "finishedAt": "2026-11-02T12:50:49Z",
+     "exact_seconds": 1824.0,
+     "exact_gpu_hours": 4.053333333333334
+    }
+   ],
+   "missing": [],
+   "finished_clock_status": "AVAILABLE"
+  },
+  "exp-1102-164536-160317-e4da3b7f": {
+   "name": "exp-1102-164536-160317-e4da3b7f",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "32f2cf80-f3b0-413b-abac-ac4edd728cc9",
+   "phase": "Stopped",
+   "reason": null,
+   "nodeName": "gpu-h200-0819.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:33Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {
+    "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "running"
+     ],
+     "running": {
+      "startedAt": "2026-11-02T12:17:37Z",
+      "finishedAt": null
+     },
+     "terminated": null,
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:17:37Z",
+     "finishedAt": null
+    }
+   ],
+   "missing": [
+    "default.finishedAt"
+   ],
+   "finished_clock_status": "NOT_AVAILABLE"
+  },
+  "exp-1102-164536-160317-c81e728d": {
+   "name": "exp-1102-164536-160317-c81e728d",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "b55aa537-c8da-4a7f-8d3b-b21c512c897a",
+   "phase": "Stopped",
+   "reason": null,
+   "nodeName": "gpu-h200-0828.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:32Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {
+    "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "running"
+     ],
+     "running": {
+      "startedAt": "2026-11-02T12:17:38Z",
+      "finishedAt": null
+     },
+     "terminated": null,
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:17:38Z",
+     "finishedAt": null
+    }
+   ],
+   "missing": [
+    "default.finishedAt"
+   ],
+   "finished_clock_status": "NOT_AVAILABLE"
+  },
+  "exp-1102-164536-160317-eccbc87e": {
+   "name": "exp-1102-164536-160317-eccbc87e",
+   "source": "RJobClient._get_replica_kapis (exact name)",
+   "uid": "0a06a8fa-b5b7-4337-9e91-8a8f5be52db4",
+   "phase": "Stopped",
+   "reason": null,
+   "nodeName": "gpu-h200-0882.lgcm.sh.istep.fun",
+   "pod_startTime": "2026-11-02T12:17:32Z",
+   "gpu_limits": [
+    "8"
+   ],
+   "gpu_count": 8,
+   "stop_annotations": {
+    "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller"
+   },
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state_keys": [
+      "running"
+     ],
+     "running": {
+      "startedAt": "2026-11-02T12:17:37Z",
+      "finishedAt": null
+     },
+     "terminated": null,
+     "lastState_keys": [],
+     "last_terminated": {},
+     "startedAt": "2026-11-02T12:17:37Z",
+     "finishedAt": null
+    }
+   ],
+   "missing": [
+    "default.finishedAt"
+   ],
+   "finished_clock_status": "NOT_AVAILABLE"
+  }
+ },
+ "replicas_returned": 8,
+ "exact_pairs": [
+  "exp-1102-164536-160317-a87ff679"
+ ],
+ "exact_pair_count": 1,
+ "exact_complete": false,
+ "gpu_hours_exact": null,
+ "gpu_hours_exact_note": "Sum over the eight container start/end pairs x per-replica GPU count. Null while any platform finishedAt is missing; no value is inferred.",
+ "gpu_hours_exact_partial": {
+  "exp-1102-164536-160317-a87ff679": 4.053333333333334
+ },
+ "observation_estimate": {
+  "status": "OBSERVED_LOG_TAIL_ESTIMATE \u2014 not a platform clock; never used as finishedAt",
+  "definition": "Per replica: exact container startedAt -> last container log line, x 8 GPU / 3600. Computed from the preserved earlier log query, not from this query.",
+  "source_observed_utc": "2026-11-02T14:33:16.363280+00:00",
+  "source_files": [
+   "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/failure_01_20261102/rca/mount_and_container_clocks.json",
+   "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/failure_01_20261102/rca/report.json"
+  ],
+  "per_replica_log_tail_gpu_hours": {
+   "exp-1102-164536-160317-eccbc87e": 4.429832328889,
+   "exp-1102-164536-160317-8f14e45f": 4.072265506667,
+   "exp-1102-164536-160317-cfcd2084": 4.096667266667,
+   "exp-1102-164536-160317-1679091c": 4.434471411111,
+   "exp-1102-164536-160317-c4ca4238": 4.069970584444,
+   "exp-1102-164536-160317-a87ff679": 4.054105737778,
+   "exp-1102-164536-160317-e4da3b7f": 4.432280877778,
+   "exp-1102-164536-160317-c81e728d": 4.430009377778
+  },
+  "total_log_tail_all_eight_gpu_hours": 34.019603091112,
+  "mixed_total_seven_log_tail_plus_exact_pair_gpu_hours": 34.018830686667336,
+  "mixed_total_definition": "The seven replicas without a platform finish use their log-tail estimate; exp-1102-164536-160317-a87ff679 uses its exact start/end pair, which is why this differs from the all-log-tail sum.",
+  "prior_reported_value_gpu_hours": 34.01883068666667,
+  "prior_reported_matches_mixed_total": true
+ },
+ "finished_clock_summary": {
+  "requested_replicas": 8,
+  "records_returned": 8,
+  "records_removed_by_platform": 0,
+  "finished_clock_available": 1,
+  "finished_clock_not_available": 7,
+  "record_state": "All eight replica records are still readable; the seven terminal clocks were never populated by the platform (state stayed \"running\" with no finishedAt), so the values are NOT_AVAILABLE rather than a retrieval failure.",
+  "inference_policy": "No finish time was inferred from job finishTime, stop timestamps, or logs."
+ }
+}

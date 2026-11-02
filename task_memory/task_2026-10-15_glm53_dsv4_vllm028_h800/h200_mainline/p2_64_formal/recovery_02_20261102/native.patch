@@ -1,0 +1,232 @@
+From a06a72a4326cba02234df6cfbdc21b78d3a15d26 Mon Sep 17 00:00:00 2001
+From: fwyc0573 <935953068@qq.com>
+Date: Mon, 2 Nov 2026 23:23:19 +0800
+Subject: [PATCH] Coordinate multiprocess DP startup on reserved stores
+
+---
+ .../task_2026-11-02_p2_dp_startup/plan.md     | 13 ++++++++++
+ .../task_2026-11-02_p2_dp_startup/progress.md | 13 ++++++++++
+ .../requirements.md                           | 11 ++++++++
+ .../task_2026-11-02_p2_dp_startup/summary.md  | 13 ++++++++++
+ vllm/config/parallel.py                       |  7 ++++++
+ vllm/distributed/parallel_state.py            | 25 +++++++++++++++++--
+ vllm/distributed/utils.py                     |  1 +
+ vllm/v1/engine/utils.py                       | 22 ++++++++++++++++
+ 8 files changed, 103 insertions(+), 2 deletions(-)
+ create mode 100644 task_memory/task_2026-11-02_p2_dp_startup/plan.md
+ create mode 100644 task_memory/task_2026-11-02_p2_dp_startup/progress.md
+ create mode 100644 task_memory/task_2026-11-02_p2_dp_startup/requirements.md
+ create mode 100644 task_memory/task_2026-11-02_p2_dp_startup/summary.md
+
+diff --git a/task_memory/task_2026-11-02_p2_dp_startup/plan.md b/task_memory/task_2026-11-02_p2_dp_startup/plan.md
+new file mode 100644
+index 000000000..ed1caddb1
+--- /dev/null
++++ b/task_memory/task_2026-11-02_p2_dp_startup/plan.md
+@@ -0,0 +1,13 @@
++# Native repair plan
++
++## Modification History
++
++| Date | Change |
++| --- | --- |
++| 2026-11-02 | Implemented the approved P2 native startup coordination correction. |
++
++Evidence -> {native correction + CPU communication checks, package preparation in Frontier} -> independent review -> source freeze -> Frontier package freeze -> formal generation 02.
++
++Online nonelastic MoE DP rank0's CoreEngineProcManager owns a TCPStore that binds port 0 before startup. HELLO sends its actual port. Engine groups retain the bound-socket path, use distinct sequence keys, and select the legacy TCPStore backend needed to adopt master_listen_fd. Workers initialize their existing default process group through a dp_worker_world PrefixStore on the same coordination listener. This avoids reusing the unreserved port list for workers. The engine sequence is hash-excluded. Elastic keys and offline paths retain their prior behavior.
++
++Acceptance: two and four ranks with free/occupied preselected ports communicate; two consecutive engine groups have distinct ports; two worker shards per DP rank communicate; simultaneous independent role groups succeed; listener released on shutdown; source review and immutable package binding. Full GPU runtime is verified only by the parent task's formal run.
+diff --git a/task_memory/task_2026-11-02_p2_dp_startup/progress.md b/task_memory/task_2026-11-02_p2_dp_startup/progress.md
+new file mode 100644
+index 000000000..5e92a05c6
+--- /dev/null
++++ b/task_memory/task_2026-11-02_p2_dp_startup/progress.md
+@@ -0,0 +1,13 @@
++# Native repair progress
++
++## Modification History
++
++| Date | Change |
++| --- | --- |
++| 2026-11-02 | Implemented the approved P2 native startup coordination correction. |
++
++- completed: four source files changed, startup only.
++- completed: parent regression runner tests/comparison/calibration/check_native_dp_startup.py executed under Python 3.12.13 / torch 2.8.0+cu128; all six role cases passed. Exact command and result retained in the parent task recovery_02_20261102/cpu_result.json.
++- completed: independent source review p64-native-review-1102h reports no actionable defect. Earlier review-1102g was stopped after optional Torch searching. Parent accepted the actual current-path findings; no speculative guard added.
++- in-progress: parent package rebinding and 0-GPU pinned-image validation (p64-image-cpu-1102i).
++- pending: parent formal GPU validation on the pinned torch 2.13.0+cu130 image.
+diff --git a/task_memory/task_2026-11-02_p2_dp_startup/requirements.md b/task_memory/task_2026-11-02_p2_dp_startup/requirements.md
+new file mode 100644
+index 000000000..c6e4d4670
+--- /dev/null
++++ b/task_memory/task_2026-11-02_p2_dp_startup/requirements.md
+@@ -0,0 +1,11 @@
++# Native P2 DP startup correction
++
++## Modification History
++
++| Date | Change |
++| --- | --- |
++| 2026-11-02 | Implemented the approved P2 native startup coordination correction. |
++
++[Original Request] YC: 批准，类似debug修复无需询问我，默认都批准
++
++D-P2-64-STARTUP-RECOVERY approves a startup-only repair from native 2cf0a6915ce544dc493a0990f2ea38d81601128a. The head must not select a rendezvous port independently after peers received another port. Preserve serving geometry, kernels, routing, workload and timeouts. The parent Frontier task owns GPU authorization and generation-02 execution.
+diff --git a/task_memory/task_2026-11-02_p2_dp_startup/summary.md b/task_memory/task_2026-11-02_p2_dp_startup/summary.md
+new file mode 100644
+index 000000000..9d7506b43
+--- /dev/null
++++ b/task_memory/task_2026-11-02_p2_dp_startup/summary.md
+@@ -0,0 +1,13 @@
++# Native DP startup repair archive
++
++## Modification History
++
++| Date | Change |
++| --- | --- |
++| 2026-11-02 | Archived the source/CPU deliverable; full GPU validation belongs to the parent Frontier task. |
++
++Four startup files now coordinate online nonelastic MoE DP initialization through a launcher-owned TCPStore. Engine groups publish reserved listeners under sequence keys; worker-world rendezvous uses an independent PrefixStore. Tensor/data/expert geometry, model execution and serving timing code are unchanged.
++
++Local CPU validation used Python3.12.13, torch2.8.0+cu128: six role cases, 16 engine ranks, 32 engine group initializations and 32 worker ranks completed actual all-reduce. Free and occupied old-port cases passed for DP2 and DP4; simultaneous P/D and listener release passed. The native functions are extracted verbatim; configuration/model body/NUMA/world wrapper are fixtures. This is not a full native GPU test.
++
++Independent Pi review p64-native-review-1102h found no actionable source defect in the current nnodes=1/nonelastic/MP/MoE path. The parent task retains the CPU runner, commands, results, review and complete patch, freezes the package, and owns pinned-image CPU plus formal P2-64 validation.
+diff --git a/vllm/config/parallel.py b/vllm/config/parallel.py
+index 83c4e6fe5..b52119c5d 100644
+--- a/vllm/config/parallel.py
++++ b/vllm/config/parallel.py
+@@ -339,6 +339,9 @@ class ParallelConfig:
+     """Port of the coordination TCPStore. Can be set by the API server; workers
+     connect as clients to exchange self-picked group ports at runtime."""
+ 
++    _stateless_dp_group_sequence: int = 0
++    """Local sequence for nonelastic engine-group rendezvous keys."""
++
+     decode_context_parallel_size: int = Field(default=1, ge=1)
+     """Number of ranks that shard the decode KV cache. DCP does not expand
+     the process world size. Without PCP, DCP reuses TP ranks. With PCP, DCP
+@@ -600,6 +603,9 @@ class ParallelConfig:
+         )
+ 
+         key = "dp_master_port"
++        if not self.enable_elastic_ep:
++            key += f"/{self._stateless_dp_group_sequence}"
++            self._stateless_dp_group_sequence += 1
+         if self.data_parallel_rank == 0:
+             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+             s.bind((self.data_parallel_master_ip, 0))
+@@ -795,6 +801,7 @@ class ParallelConfig:
+             "data_parallel_master_port",
+             "_data_parallel_master_port_list",
+             "_coord_store_port",
++            "_stateless_dp_group_sequence",
+             "data_parallel_rpc_port",
+             "rank",
+             "master_addr",
+diff --git a/vllm/distributed/parallel_state.py b/vllm/distributed/parallel_state.py
+index 128db903d..6af2bc4cc 100644
+--- a/vllm/distributed/parallel_state.py
++++ b/vllm/distributed/parallel_state.py
+@@ -1626,7 +1626,10 @@ def init_distributed_environment(
+             distributed_init_method = get_distributed_init_method(ip, port)
+         else:
+             ip = parallel_config.data_parallel_master_ip
+-            port = parallel_config.get_next_dp_init_port()
++            port = (
++                parallel_config._coord_store_port
++                or parallel_config.get_next_dp_init_port()
++            )
+             distributed_init_method = get_distributed_init_method(ip, port)
+             logger.debug(
+                 "Adjusting world_size=%d rank=%d distributed_init_method=%s for DP",
+@@ -1657,7 +1660,25 @@ def init_distributed_environment(
+             )
+             backend = "gloo"
+         store = None
+-        if distributed_init_method.startswith("file://"):
++        if (
++            config is not None
++            and not enable_elastic_ep
++            and config.parallel_config._coord_store_port
++            and config.parallel_config.nnodes == 1
++            and config.parallel_config.data_parallel_size > 1
++            and config.parallel_config.distributed_executor_backend != "external_launcher"
++        ):
++            # The launcher owns this listener before the engines handshake.
++            # Worker-world keys must not overlap the engine Gloo group.
++            parallel_config = config.parallel_config
++            store = torch.distributed.PrefixStore(
++                "dp_worker_world",
++                get_cached_tcp_store_client(
++                    parallel_config.data_parallel_master_ip,
++                    parallel_config._coord_store_port,
++                ),
++            )
++        elif distributed_init_method.startswith("file://"):
+             store = torch.distributed.FileStore(
+                 distributed_init_method.removeprefix("file://"), world_size
+             )
+diff --git a/vllm/distributed/utils.py b/vllm/distributed/utils.py
+index eec9890f0..2b26cb95e 100644
+--- a/vllm/distributed/utils.py
++++ b/vllm/distributed/utils.py
+@@ -640,6 +640,7 @@ def stateless_init_torch_distributed_process_group(
+             is_master=True,
+             timeout=timeout,
+             multi_tenant=True,
++            use_libuv=False,  # master_listen_fd requires the legacy TCPStore.
+         )
+     else:
+         store, rank, world_size = next(
+diff --git a/vllm/v1/engine/utils.py b/vllm/v1/engine/utils.py
+index 7736062d9..755afadf8 100644
+--- a/vllm/v1/engine/utils.py
++++ b/vllm/v1/engine/utils.py
+@@ -179,7 +179,27 @@ class CoreEngineProcManager:
+         # the config before each proc.start() works because the spawn method
+         # pickles process args at start() time, sequentially per rank.
+         user_assigned_gpu_ids = vllm_config.parallel_config.assigned_physical_gpu_ids
++        self._coord_store = None
+         try:
++            parallel_config = vllm_config.parallel_config
++            if (
++                is_dp
++                and vllm_config.model_config.is_moe
++                and parallel_config.data_parallel_rank == 0
++                and parallel_config.data_parallel_rank_local is None
++                and not parallel_config.enable_elastic_ep
++            ):
++                from vllm.distributed.utils import create_tcp_store
++
++                # Keep the listener alive until the managed engines stop.
++                self._coord_store = create_tcp_store(
++                    parallel_config.data_parallel_master_ip,
++                    0,
++                    is_master=True,
++                    world_size=-1,
++                    wait_for_workers=False,
++                )
++                parallel_config._coord_store_port = self._coord_store.port
+             for proc, local_dp_rank in zip(self.processes, local_dp_ranks):
+                 # Populate the logical-to-physical GPU mapping in DP for
+                 # platforms that cannot rely on
+@@ -218,6 +238,7 @@ class CoreEngineProcManager:
+         self.manager_stopped.set()
+         if self._finalizer.detach() is not None:
+             shutdown(self.processes, timeout=timeout)
++        self._coord_store = None
+ 
+     def monitor_engine_liveness(self) -> None:
+         """Monitor engine core process liveness."""
+@@ -1338,6 +1359,7 @@ def wait_for_engine_startup(
+                             "data_parallel_master_ip",
+                             "data_parallel_master_port",
+                             "_data_parallel_master_port_list",
++                            "_coord_store_port",
+                             "data_parallel_size",
+                         )
+                     }
+-- 
+2.34.1
+

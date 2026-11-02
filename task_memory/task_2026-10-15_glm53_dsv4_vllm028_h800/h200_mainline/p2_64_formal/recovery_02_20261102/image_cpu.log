@@ -1,0 +1,9 @@
+{"@caller":"gitlab.basemind.com/basemind/brainpp/projects/kubebrain/cmd/worker-init/app/options.(*Options).Run","@file":"projects/kubebrain/cmd/worker-init/app/options/options.go:80","@level":"info","@msg":"SSHD not enabled","@timestamp":"2026-11-02T15:29:42.991Z"}
+2026/11/02 15:29:43 [DEBUG] packaging-url , packaging-dir /workdir/src/rjob, Starting packaging server
+BASE_SOURCE_HASHES_PASS {"vllm/config/parallel.py": "f29f984ac39f4ae11622c2c64f92a657951f3a28e624a2a60d1040b49e025311", "vllm/distributed/utils.py": "792146b357139e705064a68d3b66858de8a0baaca4dc7db1232fa217d45db231", "vllm/distributed/parallel_state.py": "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c", "vllm/v1/engine/utils.py": "6ce83b0552b6207505c9bd7ac1fd67d2771628eac01572738765923aa91c1c0f", "vllm/utils/network_utils.py": "383648e9374a6f2304fec91bd6a54aeb0301c009e69c267bcdc4dfbed38e20e9", "vllm/utils/system_utils.py": "837e6ff0ab524c06c048d6b42d4f35b77baba2e9d9e57837fe333ca0aaee1cfb"}
+dp2-occupied0 PASS
+dp2-occupied1 PASS
+dp4-occupied0 PASS
+dp4-occupied1 PASS
+ALL PASS
+PINNED_IMAGE_DP_STARTUP_PASS

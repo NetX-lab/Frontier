@@ -5,6 +5,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Recorded native startup fix a06a72a4, harness f33306d4 and sealed generation02; image and final package verification pending. |
+| 2026-11-02 | Native recovery: four startup source files implemented; CPU 2/4-rank baseline/collision, consecutive groups, worker communication, P/D isolation and listener cleanup PASS. Independent Pi review and generation-02 builder are active; no GPU submission. |
+| 2026-11-02 | Recorded D-P2-64-STARTUP-RECOVERY: YC approved option B, generation 02 and ordinary in-scope debug corrections without repeated approval. |
 | 2026-11-02 | Accepted failure RCA, verified-copy evidence and independent CPU port-divergence reproduction; recorded incomplete exact usage and concrete recovery approval boundary. |
 | 2026-11-02 | Resumed after launcher failure; old monitor is terminal and exact-job RCA runs through a new Pi label; no retry yet. |
 | 2026-11-02 | Completed accepted harness integration and targeted verification; stopped repeated unrelated CUPTI testing and preserved its unresolved errors. |
@@ -507,7 +510,7 @@ The following completed A6 history retains its original all-request verdicts. D-
 
 ## Current session handoff — Codex CLI (2026-11-02)
 
-Current outcome: formal generation 01 `exp-1102-164536-160317` failed at 2026-11-02T12:50:51Z before warmup/formal client requests. Failed-output recovery, exact-job RCA review and the lead's CPU mechanism reproduction are complete. The original port occupant remains unknown. No native source change, second GPU submission, repeated Frontier replay or metric gate against missing data has occurred. The next consequential step is YC's decision on the [startup-only recovery proposal](h200_mainline/p2_64_formal/failure_01_20261102/recovery_proposal.md).
+Current outcome: formal generation 01 `exp-1102-164536-160317` failed at 2026-11-02T12:50:51Z before warmup/formal client requests. Failed-output recovery, exact-job RCA review and the lead's CPU mechanism reproduction are complete. The original port occupant remains unknown. YC approved D-P2-64-STARTUP-RECOVERY. Native startup correction a06a72a4, CPU communication checks, frozen harness f33306d4 and sealed recovery package02 are complete; pinned-image CPU and independent package checks also pass. The review found old R4 source binding incompatible with approved a06a72a4; an exact-source R5 successor is assigned in parallel with the approved second run. No second GPU submission or repeated Frontier replay has occurred yet.
 
 <a id="current-session-handoff--codex-cli-2026-10-31"></a>
 <a id="current-session-handoff--2026-10-25-mainline-correction"></a>
@@ -519,11 +522,14 @@ Current outcome: formal generation 01 `exp-1102-164536-160317` failed at 2026-11
 - completed within evidence limits — accounting review: actual starts 8/8, finishes 1/8. Exact job total is unknown; 4.053333333333334 GPUh is one-container subtotal. Observed-runtime estimate 34.01883068666667 GPUh uses the exact failed-head end and the other seven last logs. Historical 35-job exact total stays 158.27166666666665; combined estimate 192.2904973533333. Missing seven ends remain open in ticket 19.
 - completed — prior scoped harness verification remains accepted: 136 tests, two corrected mock cases, native profile 36 tests, frozen check-only. CUPTI's 25 unrelated errors, GLM and EP count remain deferred. Latest check-progress stops repeated optional control/harness reruns after the startup mechanism was isolated.
 - completed — local record checks: 26 JSON evidence files parse; authored Markdown/JSON/TXT whitespace check passes, while the full staged check reports 10 preserved raw-log whitespace lines; and the frozen native checkout remains clean at `2cf0a691`. Initial shell `python` was unavailable; used `python3`. Pi stop receipt contains `exit 130`; the local archival parser was corrected to read that format. Neither issue affected the GPU job or CPU reproduction.
-- pending — YC approval for native startup correction and generation 02; missing terminal clocks; complete new reference followed by pair coverage soft gate, R4, all-request gate and warm reading. No request data exists for generation 01, so these comparisons are NOT RUN.
+- completed — native startup correction `a06a72a4`, independent source review, CPU communication and harness verification (120 PASS/21 SKIP); frozen harness `f33306d4`; recovery package02 sealed47 files and independent check-only PASS. Package01 failed on stale engine metadata and remains unlaunched. See [recovery report](test_report_2026-11-02_p2_64_recovery.md).
+- completed — pinned-image CPU job `exp-1102-232618-248194` Succeeded; all expected markers and6cases pass on torch2.13.0+cu130. Lead source/hash/sum checks pass. Package review confirms inputs/workload/resources, but old R4 rejects the newly approved identity; its historical FAIL review is preserved. Clock follow-up returned8replica objects but still only1exact end.
+- in-progress — `p64-reader-1102m` implements narrow R5 source binding and explicit comparison reader selection under the existing debug authorization. All R4 numerical and other native predicates stay unchanged.
+- pending — second formal GPU execution; missing terminal clocks; complete new reference followed by pair coverage soft gate, R4, all-request gate and warm reading. No request data exists for generation 01, so these comparisons are NOT RUN.
 
 Next actions:
-1. Review option B: correct native nonelastic multiprocess DP startup coordination, run scoped CPU regression, then freeze a distinct source/package/generation 02. D-P2-64-FORMAL-B's original three package changes do not authorize this source correction; a decision is pending.
-2. After approval and CPU/package checks, submit through `/ds4-exec` under the same resource ceiling and three-job-per-case cap. Preserve generation 01 and the completed Frontier replay.
+1. Review option B: correct native nonelastic multiprocess DP startup coordination, run scoped CPU regression, then freeze a distinct source/package/generation 02. D-P2-64-STARTUP-RECOVERY authorizes this correction; ordinary related debug corrections need no repeated approval.
+2. After CPU/package checks, submit through `/ds4-exec` under the same resource ceiling and three-job-per-case cap. Preserve generation 01 and the completed Frontier replay.
 3. For a completed reference, verify terminal evidence and copy, then inspect pair coverage, R4 and every repeat's four metrics. Complete exact accounting only when the missing finish clocks can be obtained; do not turn the estimate into a complete ledger. H800 requires its own resource proposal; GLM stays paused.
 
 ## Historical session handoff — Codex CLI (2026-10-31)

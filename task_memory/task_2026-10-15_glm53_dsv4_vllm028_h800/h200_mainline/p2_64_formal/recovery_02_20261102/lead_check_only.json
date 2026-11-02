@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/data/ycfeng/envs/openmopd-py312/bin/python",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02/launch.py",
+    "--check-only"
+  ],
+  "returncode": 0,
+  "stdout": "INPUT_HASHES_PASS_NO_SUBMISSION\n",
+  "stderr": "",
+  "manifest_sha256": "9f9a1ab954ef3b7d61ff67f2f62c891e9da8547590a21b19db020c8557e8ed7d",
+  "harness_commit": "f33306d40443cfc0c44842d6ee044f6703c736e7"
+}

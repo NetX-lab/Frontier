@@ -125,6 +125,7 @@ OP_TIMING_SCOPES = (
 MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cpu",
          "kv_save_timing", "kv_save_device_ids")
 V028_SOURCE = "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+V028_SOURCES = frozenset({V028_SOURCE, "a06a72a4326cba02234df6cfbdc21b78d3a15d26"})
 V028_IMAGE = ("hub.i.basemind.com/vllm-openai/vllm-openai@sha256:"
               "2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
@@ -147,7 +148,7 @@ def runtime_version(engine: dict) -> str:
         reference = engine.get("native_reference")
         if (type(reference) is not dict or set(reference) != {
                 "source_sha", "instrumentation_sha", "image"}
-                or reference["source_sha"] != V028_SOURCE
+                or reference["source_sha"] not in V028_SOURCES
                 or reference["image"] != V028_IMAGE
                 or not isinstance(reference["instrumentation_sha"], str)
                 or re.fullmatch(r"[0-9a-f]{40}", reference["instrumentation_sha"]) is None):

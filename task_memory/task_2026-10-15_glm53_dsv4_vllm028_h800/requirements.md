@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Recorded D-P2-64-STARTUP-RECOVERY: YC approved option B, generation 02 and ordinary in-scope debug corrections without repeated approval. |
 | 2026-11-02 | Recorded reviewed native-startup failure findings and pending recovery proposal without adding source-change or retry authority. |
 | 2026-11-02 | Recorded continuation after e2289283; first formal launcher reports failure and exact-job RCA precedes any retry. |
 | 2026-11-02 | Recorded the current-branch continuation and reconciled the Q5 handoff with the already submitted formal P2-64 job; existing authority and limits unchanged. |
@@ -157,13 +158,19 @@
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
 
+## [Original Request / Decision] 2026-11-02 — D-P2-64-STARTUP-RECOVERY
+
+> 批准，类似debug修复无需询问我，默认都批准
+
+YC approves option B in `h200_mainline/p2_64_formal/failure_01_20261102/recovery_proposal.md`: correct native nonelastic multiprocess DP startup coordination in a new worktree based on `2cf0a6915ce544dc493a0990f2ea38d81601128a`, verify CPU communication and lifecycle, freeze the corrected source and a distinct generation-02 package, and submit through `/ds4-exec`. Ordinary in-scope debug corrections are approved without repeated questions. Resources remain 64 H200 (8 x 8), all preemptible, `step_main`, timeout 3600 seconds, ceiling 64 GPU-hours per run and the existing three-job-per-case cap. Preserve old inputs/results, native serving geometry and workload, auxiliary soft gates and the existing completed Frontier replay. This decision supersedes the pending-approval state below; it does not reopen GLM, EP-count changes or H800 allocation.
+
 ## [Original Request] 2026-11-02 — continue after harness integration
 
 > continue
 
 Continue D-P2-64-FORMAL-B under the existing resource and retry limits. At resumption the local launcher reports the first formal job failed; establish its exact terminal state and initiating cause before choosing any new clean generation. Preserve the failed package, all outputs, and actual usage. This adds no new resource or modeling authority.
 
-Recorded investigation outcome (2026-11-02; lead finding, not a new user decision): generation 01 failed before requests; CPU tests reproduce a reachable native DP port-retry coordination defect. The original GPU port occupant remains unknown, so infrastructure/preemption retry authority is not invoked. [Option B's recovery proposal](h200_mainline/p2_64_formal/failure_01_20261102/recovery_proposal.md) requests a startup-only native source correction and a distinct generation 02 under the same per-job limits. It is **pending approval**. No source correction, timeout change or second submission has been made. Actual GPU-hours remain incomplete because seven container end clocks are absent; the observation estimate does not amend accounting acceptance.
+Recorded investigation outcome (2026-11-02; lead finding, not a new user decision): generation 01 failed before requests; CPU tests reproduce a reachable native DP port-retry coordination defect. The original GPU port occupant remains unknown, so infrastructure/preemption retry authority is not invoked. [Option B's recovery proposal](h200_mainline/p2_64_formal/failure_01_20261102/recovery_proposal.md) requests a startup-only native source correction and a distinct generation 02 under the same per-job limits. At that checkpoint it awaited approval; D-P2-64-STARTUP-RECOVERY above now approves the correction and generation 02. No timeout change is planned. Actual GPU-hours remain incomplete because seven container end clocks are absent; the observation estimate does not amend accounting acceptance.
 
 ## [Original Request] 2026-11-02 — continue the current branch after the Q5 handoff
 

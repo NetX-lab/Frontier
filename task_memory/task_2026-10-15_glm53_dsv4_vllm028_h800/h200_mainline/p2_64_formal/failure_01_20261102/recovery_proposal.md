@@ -1,4 +1,4 @@
-# P2-64 recovery proposal — approval pending
+# P2-64 recovery proposal — approved as D-P2-64-STARTUP-RECOVERY
 
 ## Modification History
 
@@ -7,6 +7,8 @@
 | 2026-11-02 | Proposed a native DP startup correction from CPU-verified failure evidence; the correction itself is unimplemented and unverified, with no new GPU submission authorized by this document. |
 
 The first formal campaign failed before warmup. The decode head logged `EADDRINUSE`; CPU execution of the frozen native methods reproduces rank 0 switching rendezvous ports while the other three ranks keep the original port. The original port occupant is unknown. Preserved artifacts are sufficient to diagnose this reachable coordination defect, but cannot classify the original contention as external infrastructure.
+
+YC approved this proposal on 2026-11-02: “批准，类似debug修复无需询问我，默认都批准”. The proposal below preserves the original options and pre-approval evidence. Current authority is recorded in the task requirements.
 
 ## Options and cost
 

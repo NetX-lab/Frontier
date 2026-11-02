@@ -1,0 +1,509 @@
+{
+  "status": "PASS",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "torch": "2.13.0+cu130",
+  "cases": {
+    "dp2-occupied0": {
+      "engines": [
+        {
+          "rank": 0,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 45465,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 45033,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 40707
+        },
+        {
+          "rank": 1,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 45465,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 45033,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 40707
+        }
+      ],
+      "workers": [
+        {
+          "rank": 0,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 1,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 2,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 3,
+          "sum": 10.0,
+          "expected": 10.0
+        }
+      ],
+      "coord_port": 40707,
+      "listener_released": true
+    },
+    "dp2-occupied1": {
+      "engines": [
+        {
+          "rank": 0,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 55137,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 44001,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 35125
+        },
+        {
+          "rank": 1,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 55137,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 44001,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 35125
+        }
+      ],
+      "workers": [
+        {
+          "rank": 0,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 1,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 2,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 3,
+          "sum": 10.0,
+          "expected": 10.0
+        }
+      ],
+      "coord_port": 35125,
+      "listener_released": true
+    },
+    "dp4-occupied0": {
+      "engines": [
+        {
+          "rank": 0,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 47853,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 56645,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 43247
+        },
+        {
+          "rank": 1,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 47853,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 56645,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 43247
+        },
+        {
+          "rank": 2,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 47853,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 56645,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 43247
+        },
+        {
+          "rank": 3,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 47853,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 56645,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 43247
+        }
+      ],
+      "workers": [
+        {
+          "rank": 0,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 1,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 2,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 3,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 4,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 5,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 6,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 7,
+          "sum": 36.0,
+          "expected": 36.0
+        }
+      ],
+      "coord_port": 43247,
+      "listener_released": true
+    },
+    "dp4-occupied1": {
+      "engines": [
+        {
+          "rank": 0,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 58669,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 54543,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 35517
+        },
+        {
+          "rank": 1,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 58669,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 54543,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 35517
+        },
+        {
+          "rank": 2,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 58669,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 54543,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 35517
+        },
+        {
+          "rank": 3,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 58669,
+              "sum": 10.0,
+              "expected": 10.0
+            },
+            {
+              "sequence": 1,
+              "port": 54543,
+              "sum": 10.0,
+              "expected": 10.0
+            }
+          ],
+          "coord_port": 35517
+        }
+      ],
+      "workers": [
+        {
+          "rank": 0,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 1,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 2,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 3,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 4,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 5,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 6,
+          "sum": 36.0,
+          "expected": 36.0
+        },
+        {
+          "rank": 7,
+          "sum": 36.0,
+          "expected": 36.0
+        }
+      ],
+      "coord_port": 35517,
+      "listener_released": true
+    },
+    "prefill": {
+      "engines": [
+        {
+          "rank": 0,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 58959,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 49601,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 33911
+        },
+        {
+          "rank": 1,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 58959,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 49601,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 33911
+        }
+      ],
+      "workers": [
+        {
+          "rank": 0,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 1,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 2,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 3,
+          "sum": 10.0,
+          "expected": 10.0
+        }
+      ],
+      "coord_port": 33911,
+      "listener_released": true
+    },
+    "decode": {
+      "engines": [
+        {
+          "rank": 0,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 32919,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 56781,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 45285
+        },
+        {
+          "rank": 1,
+          "groups": [
+            {
+              "sequence": 0,
+              "port": 32919,
+              "sum": 3.0,
+              "expected": 3.0
+            },
+            {
+              "sequence": 1,
+              "port": 56781,
+              "sum": 3.0,
+              "expected": 3.0
+            }
+          ],
+          "coord_port": 45285
+        }
+      ],
+      "workers": [
+        {
+          "rank": 0,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 1,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 2,
+          "sum": 10.0,
+          "expected": 10.0
+        },
+        {
+          "rank": 3,
+          "sum": 10.0,
+          "expected": 10.0
+        }
+      ],
+      "coord_port": 45285,
+      "listener_released": true
+    }
+  },
+  "source_hashes": {
+    "vllm/config/parallel.py": "f489eb26a3784ce5691faebad99a33b6e2e7c5988605bd7427415efc685f7440",
+    "vllm/distributed/utils.py": "a06292492a5cc24a17be299a5890d617fc8d1fe82e9a95b1cfc6be47d0d250ab",
+    "vllm/distributed/parallel_state.py": "a9b20efd63ece3bd4e4436f774a7be7156bfc410b310944c4ef4d7e19a091572",
+    "vllm/v1/engine/utils.py": "533d60761f2505e93b318c349baf733a1ec7e386f1c2ad3f768e41bdab017599"
+  }
+}

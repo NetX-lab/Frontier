@@ -1,0 +1,36 @@
+boss YC
+
+**TASK 1 DONE** — 在批准的 nnodes=1 非 elastic MoE MP DP 场景内，未发现可执行的源码缺陷。以下为逐项证据（仅源码审查，无 GPU 执行）。
+
+## 1. `_coord_store_port` 的传播与顺序（成立）
+
+顺序链完整，且都发生在使用点之前：
+
+- 创建与赋值：`vllm/v1/engine/utils.py:184-192` 的 gate（`is_dp` + `is_moe` + `data_parallel_rank==0` + `data_parallel_rank_local is None` + 非 elastic）→ `:195-201` 建 store → `:202` 写回 `parallel_config._coord_store_port`；随后才进入 `:210` 起的 `proc.start()` 循环。spawn 是在 `start()` 时 pickle，所以 4 个 EngineCore 进程都拿到该端口（db 中该字段是普通 `int` dataclass 字段，`vllm/config/parallel.py:337`）。
+- HELLO 序列化：`vllm/v1/engine/utils.py:1359-1363` 把 `_coord_store_port` 放进 `EngineHandshakeMetadata.parallel_config`（类型 `dict[str, int|str|list[int]]`，`utils.py:85`）；该分支只在 `coordinated_dp` 为真时填充，`coordinated_dp = dp_size>1 and is_moe`（`utils.py:1229` 调用点），与本场景一致。
+- 应用早于 DP group：`vllm/v1/engine/core.py:1263-1266` 在 `startup_handshake` 内 `setattr`；它在 `_perform_handshakes` 的 `yield` 之前（`core.py:1158-1187`），因此 `core.py:1071` 的 `_init_data_parallel` → `core.py:2027` `stateless_init_dp_group` 一定读到已更新的端口。`parallel.py:603-604` 也确认只有 `_coord_store_port` 非零才走 store 发布路径，否则回落旧端口列表。
+- 串到 worker：engine 的 `vllm_config` 在 `_init_data_parallel` 之后才构造 executor（`core.py:1072`），worker 由 executor spawn 时 pickle 同一对象；worker 侧 `init_worker_distributed_environment`（`vllm/v1/worker/gpu_worker.py:387`）在 `set_current_vllm_config(self.vllm_config)` 之内（`vllm/v1/worker/worker_base.py:334-339` `init_device`），所以 `parallel_state.py:1608` 的 `get_current_vllm_config_or_none()` 返回带端口的同一 config，命中新分支 `parallel_state.py:1663-1680`。该分支条件（`nnodes==1`、DP>1、非 elastic、非 external_launcher）与 manager 侧 gate 在本场景一致；`parallel_state.py:1628-1631` 同时把 world group 的 `init_method` 指向同一 store 地址，`store` 非空时 `init_method=None`（`:1712-1719`），不会出现“store 和 tcp rendezvous 同时生效”。
+
+## 2. Store 生命周期与关闭释放（成立）
+
+- 存活：store 只挂在 manager 的 `self._coord_store`（`utils.py:182/195`）；manager 由 `CoreEngineLaunch.engine_manager` 持有，`serve.py:331` 的 `local_engine_manager` 与 `wait_for_completion_or_failure(engine_manager=...)` 贯穿整个服务期；offline 侧同样保存在 `self.resources.engine_manager`（`core_client.py:609-620`）。因此启动 context 退出后仍存活，覆盖 worker 后续 `new_group` 等对 world store 的使用。
+- 释放顺序：`utils.py:238-241` 先 `shutdown(self.processes, timeout=...)` 终止 engine（及其 worker 子进程），再把 `_coord_store` 置 None（CPython 引用计数即关监听）。`monitor_engine_liveness` 也走同一 `shutdown()`。没有在 engine 运行期丢 store 的路径。
+- 泄漏面：每个 engine group 恰好一个 store（manager 只在 `local_engine_count>0` 时构造；elastic 被排除；Ray 非 elastic 路径 `utils.py:454-459` 不建，保持旧行为）。启动失败路径上 store 随 manager 对象一起回收（`weakref.finalize` 只负责进程），不构成稳态泄漏。
+
+## 3. 序列键 / worker 命名空间 / hash / elastic / offline（成立）
+
+- engine 键为 `dp_master_port/{seq}`（`parallel.py:606-608`），与 worker world 的 `PrefixStore("dp_worker_world", ...)`（`parallel_state.py:1674-1676`）顶层前缀不相交；每个 stateless DP group 的 PG store 是独立 TCPStore 服务（端口经 coord store 发布），其 `PrefixStore(tcp://host:port)` 也彼此不相交。
+- elastic 行为保持：`if not self.enable_elastic_ep` 才加后缀，elastic 仍用常量键；`core_client.py:1688-1701` 每次 reconfig 新建 store 并重新发布，语义未变。reconfig 路径 `core.py:2261` 未改。
+- 模型 hash 不受影响：`_stateless_dp_group_sequence` 已加入 `ignored_factors`（`parallel.py:804`），`get_hash_factors` 按字段名跳过（`vllm/config/utils.py:366-369`），因此 engine 在 READY 前把计数加到 1 也不会与 frontend 的 0 不一致；`_coord_store_port` 原本就在忽略集内。
+- offline：offline DP MoE 走同一 manager/HELLO 流程（`core_client.py:609`），一致地使用 coord store；offline SPMD（`data_parallel_rank_local` 非 None）被 `utils.py:189` 排除，回落旧端口列表；非 MoE DP 经 `reconfigure_for_independent_dp_rank` 把 DP 置 1，同样不走新分支。
+
+## 残余风险（不足以判 FAILED，建议 lead 决定是否加一行保险）
+
+1. `parallel.py:646-661` 的重试循环每次尝试都会调用 `_pick_stateless_dp_port` 并推进序号；若仅部分 rank 因 EADDRINUSE 重试，键流会错位。实际仅当 rank0 在已 `bind()+listen()` 的 socket 上建 TCPStore 失败时才可达（近乎不可达），且失败会以 DistNetworkError 退出而非静默挂死。
+2. rank0 frontend 本地 `local_engine_count==0` 时不建 store，所有 engine 仍一致地走旧端口列表（rank>0 的本地 frontend HELLO 不携带 DP 配置，`core.py:1178-1184` 未传 `parallel_config`），不会出现混合 rendezvous。
+3. 多节点（nnodes>1）：engine DP group 仍使用 node0 的 coord store（经 rank0 HELLO 传播），worker world 因 `parallel_state.py:1667` 的 `nnodes==1` 条件保留 `master_addr` 旧路径，两侧各自一致。
+
+## 验证边界
+
+本次仅源码审查：未执行 GPU/NCCL；TP8×DP4 的 32 进程 NCCL world 初始化、以及真实 serving 下的正常/异常关闭未在本轮验证。已由 lead 的 CPU TCPStore/Gloo 结果（`/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_fix_cpu_02/result.json`）覆盖多 rank、多 engine group、每 DP rank 两个 worker shard 与关闭后监听释放。`master_listen_fd` 需 legacy TCPStore（`vllm/distributed/utils.py:643`）按要求未再追查。未做任何编辑，无 Git/平台/网络操作。
+[settled] aborted=false
