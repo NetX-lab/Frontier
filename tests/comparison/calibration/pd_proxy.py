@@ -56,6 +56,26 @@ def proxied_request_id(client_request_id: str, prefill_kv_address: str, decode_k
     )
 
 
+def warmup_pair(headers):
+    """Read an explicit warmup-only target without forwarding client DP headers."""
+    names = {role: f"X-Frontier-Warmup-{role.title()}-Rank" for role in ("prefill", "decode")}
+    if not any(name in headers for name in names.values()):
+        return None
+    if headers.get("X-Frontier-Segment") != "warmup" or not all(name in headers for name in names.values()):
+        raise ValueError("P/D targets require an explicit warmup segment and both ranks")
+    pair = {role: int(headers[name]) for role, name in names.items()}
+    if any(rank < 0 for rank in pair.values()):
+        raise ValueError("Warmup DP ranks must be nonnegative")
+    return pair
+
+
+def upstream_headers(request_id, pair, role):
+    headers = {"Content-Type": "application/json", "X-Request-Id": request_id}
+    if pair is not None:
+        headers["X-data-parallel-rank"] = str(pair[role])
+    return headers
+
+
 def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
               decode_kv_address: str, log_path: Path, *, vllm_version: str = "0.10.2"):
     if vllm_version not in ("0.10.2", "0.28.0"):
@@ -72,10 +92,10 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
         await session.close()
         log.close()
 
-    async def forward(url: str, body: bytes, request_id: str) -> tuple[int, bytes, str]:
+    async def forward(url: str, body: bytes, request_id: str, headers: dict) -> tuple[int, bytes, str]:
         async with session.post(
             url, data=body,
-            headers={"Content-Type": "application/json", "X-Request-Id": request_id},
+            headers=headers,
         ) as response:
             return response.status, await response.read(), response.content_type
 
@@ -93,6 +113,13 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
         body = await request.read()
         stream_response = None
         try:
+            pair = warmup_pair(request.headers)
+            if pair is not None:
+                if vllm_version != "0.28.0":
+                    raise ValueError("Pair warmup requires native vLLM 0.28.0")
+                record["intended_pair"] = pair
+            prefill_headers = upstream_headers(request_id, pair, "prefill")
+            decode_headers = upstream_headers(request_id, pair, "decode")
             if vllm_version == "0.28.0":
                 record["handoff_protocol"] = "nixl_pull"
                 original = json.loads(body)
@@ -112,7 +139,7 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                 prefill_body = json.dumps(prefill).encode()
             else:
                 prefill_body = json.dumps(json.loads(body) | {"max_tokens": 1, "min_tokens": 1}).encode()
-            status, payload, _ = await forward(f"{prefill_url}/v1/completions", prefill_body, request_id)
+            status, payload, _ = await forward(f"{prefill_url}/v1/completions", prefill_body, request_id, prefill_headers)
             record.update(prefill_status=status, prefill_response_time=time.time(),
                           prefill_response_monotonic=time.monotonic())
             if status != 200:
@@ -143,7 +170,7 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                 if original["stream"]:
                     async with session.post(
                         f"{decode_url}/v1/completions", data=body,
-                        headers={"Content-Type": "application/json", "X-Request-Id": request_id},
+                        headers=decode_headers,
                     ) as response:
                         record["decode_status"] = response.status
                         if response.status != 200:
@@ -164,7 +191,7 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                         record.update(decode_response_time=time.time(),
                                       decode_response_monotonic=time.monotonic())
                         return stream_response
-            status, payload, content_type = await forward(f"{decode_url}/v1/completions", body, request_id)
+            status, payload, content_type = await forward(f"{decode_url}/v1/completions", body, request_id, decode_headers)
             record.update(decode_status=status, decode_response_time=time.time(),
                           decode_response_monotonic=time.monotonic())
             if status != 200:

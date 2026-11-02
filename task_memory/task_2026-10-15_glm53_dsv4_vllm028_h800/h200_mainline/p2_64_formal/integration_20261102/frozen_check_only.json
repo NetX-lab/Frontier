@@ -1,0 +1,15 @@
+{
+  "checked_utc": "2026-11-02T10:40:30.498902+00:00",
+  "command": [
+    "python3",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02/launch.py",
+    "--check-only"
+  ],
+  "exit_code": 0,
+  "stdout": "INPUT_HASHES_PASS_NO_SUBMISSION\n",
+  "stderr": "",
+  "harness": "/data/ycfeng/Frontier/.worktrees/p2-64-pair-warmup",
+  "harness_head": "4861e680548a5666f3107945ec4881b7022c23fb",
+  "harness_status": ""
+}

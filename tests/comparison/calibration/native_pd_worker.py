@@ -19,6 +19,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'dp_placement_pp
 from vllm_replay import NATIVE_WORKER_EXTENSIONS
 
 
+def validate_promotion_receipt(config):
+    """Validate the issued receipt before either check-only or submission."""
+    binding = config.get('promotion_receipt')
+    if binding is None:
+        return None
+    content = Path(binding['path']).read_bytes()
+    if hashlib.sha256(content).hexdigest() != binding['sha256']:
+        raise ValueError('Promotion receipt SHA-256 differs from the build binding')
+    receipt = json.loads(content)
+    issued = datetime.fromisoformat(receipt['issued_utc'])
+    built = datetime.fromisoformat(binding['build_utc'])
+    if (issued.tzinfo is None or built.tzinfo is None or not issued < built
+            or not built <= datetime.now(timezone.utc)):
+        raise ValueError('Promotion receipt issued_utc must be earlier than the build (both timezone-aware)')
+    if receipt['predicate']['result'] is not True:
+        raise ValueError('Promotion receipt does not qualify the 32-to-64 predicate')
+    return binding.copy()
+
+
 def write_run_manifest(config, authorization):
     """Bind actual clean sources and staged inputs before the native job launches."""
     import yaml
@@ -32,6 +51,7 @@ def write_run_manifest(config, authorization):
 
     if not authorization.strip():
         raise ValueError('The native run requires the actual root/user authorization')
+    validate_promotion_receipt(config)
     case_dir = Path(config['case_dir']).resolve()
     case = yaml.safe_load((case_dir / 'manifest.yaml').read_text())
     engine = json.loads((case_dir / 'inputs/engine.json').read_text())
@@ -93,6 +113,10 @@ def write_run_manifest(config, authorization):
         resources={key: config[key] for key in ('gpu_type', 'replica', 'gpu', 'charged_group',
                    'image', 'cpu', 'mem_gb', 'timeout_seconds', 'replay_timeout_s')} |
                   {'gpus': config['replica'] * config['gpu']}, authorization=authorization)
+    if 'preemptible' in config:
+        manifest['resources']['preemptible'] = config['preemptible']
+    if 'promotion_receipt' in config:
+        manifest['promotion_receipt'] = validate_promotion_receipt(config)
     run_dir.mkdir(parents=True, exist_ok=False)
     path = run_dir / 'run_manifest.json'
     path.write_text(json.dumps(manifest, indent=2) + '\n')
@@ -359,6 +383,8 @@ def run(config):
                 '--proxy-port', str(config['proxy_port']),
                 '--startup-timeout-s', str(config['startup_timeout_s']),
                 '--drain-s', str(config['drain_seconds'])]
+            if config.get('pair_warmup'):
+                replay_command.append('--pair-warmup')
             for field in ('idle_timeout_s', 'idle_poll_s'):
                 if field in config:
                     replay_command += ['--' + field.replace('_', '-'), str(config[field])]

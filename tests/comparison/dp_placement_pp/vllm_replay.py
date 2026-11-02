@@ -500,6 +500,21 @@ def request_records(rows: list[dict]) -> list[dict]:
             for row in rows]
 
 
+def request_headers(record: dict) -> dict[str, str]:
+    """Proxy-only pair headers; formal requests never carry a DP target."""
+    headers = {"Content-Type": "application/json", "X-Request-Id": record["request_id"]}
+    pair = record.get("intended_pair")
+    if pair is not None:
+        if (record.get("segment", record.get("role")) != "warmup"
+                or type(pair) is not dict or set(pair) != {"prefill", "decode"}
+                or any(type(rank) is not int or rank < 0 for rank in pair.values())):
+            raise ValueError("Only warmup requests may target a valid P/D pair")
+        headers.update({"X-Frontier-Segment": "warmup",
+                        "X-Frontier-Warmup-Prefill-Rank": str(pair["prefill"]),
+                        "X-Frontier-Warmup-Decode-Rank": str(pair["decode"])})
+    return headers
+
+
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
                  profile_window_s: tuple[float, float] | None = None, *,
                  vllm_version: str = "0.10.2", records: list[dict] | None = None) -> tuple[dict, list[dict]]:
@@ -545,7 +560,7 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                               send_lateness_s=dispatched - due, status="submitted")
                 async with session.post(
                     url, data=bodies[record["request_id"]],
-                    headers={"Content-Type": "application/json", "X-Request-Id": record["request_id"]},
+                    headers=request_headers(record),
                 ) as response:
                     record["http_status"] = response.status
                     if response.status != 200:

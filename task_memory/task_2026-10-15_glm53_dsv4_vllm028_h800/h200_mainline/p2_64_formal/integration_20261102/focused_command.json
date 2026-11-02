@@ -1,0 +1,31 @@
+{
+  "command": [
+    "timeout",
+    "120s",
+    "/data/ycfeng/envs/openmopd-py312/bin/python",
+    "-m",
+    "pytest",
+    "tests/unit/test_native_pair_warmup.py",
+    "tests/unit/test_native_pd_worker.py",
+    "tests/unit/test_native_pd_manifest.py",
+    "tests/unit/test_native_pd_canonical_http.py",
+    "tests/unit/test_calibration_pd_harness.py",
+    "tests/unit/test_native_serve_profile.py",
+    "tests/unit/test_native_streaming_replay.py",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "env": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102"
+  },
+  "started_utc": "2026-11-02T10:37:55.223192+00:00",
+  "finished_utc": "2026-11-02T10:39:16.403127+00:00",
+  "exit_code": 1,
+  "log": "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/focused.log"
+}

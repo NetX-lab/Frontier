@@ -196,7 +196,9 @@ def test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownersh
         calls.append(command)
         return object()
 
-    async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records, **options):
+    async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records,
+                          pair_warmup, **options):
+        assert pair_warmup is False
         assert options == ({'profiler_config': PROFILE_CONFIG} if profile_selected else {})
         assert len(workload[1]) == 128 and len(workload[2]) == 16
         assert workload[0]["repetitions"]["repeat_indices"] == [1, 2, 3]

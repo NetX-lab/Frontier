@@ -1,0 +1,149 @@
+........................................................................ [ 34%]
+................................................................ssssssss [ 68%]
+sssssssssssssssssssssssssss.............FF.........................      [100%]
+=================================== FAILURES ===================================
+_ test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership[False] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/pytest-of-brainpp/pytest-0/test_pd_main_dispatches_canoni0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa5f0e62c30>
+profile_selected = False
+
+    @pytest.mark.parametrize('profile_selected', [False, True])
+    def test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership(tmp_path, monkeypatch, profile_selected):
+        from tests.unit.test_calibration_pd_harness import native_replay_inputs, nixl_engine
+    
+        engine = nixl_engine()
+        if profile_selected:
+            engine.update(worker_extension_cls='native_serve_profile.NativeServeProfile', profiler_config=PROFILE_CONFIG)
+        argv, output = native_replay_inputs(tmp_path, engine)
+        argv[argv.index("--trace-dir") + 1] = str(TRACE)
+        argv += ["--prefill-url", "http://192.0.2.1:8100", "--decode-url", "http://192.0.2.2:8200"]
+        calls = []
+    
+        def spawn(command, **kwargs):
+            assert command[1].endswith("/pd_proxy.py")
+            calls.append(command)
+            return object()
+    
+        async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records, **options):
+            assert options == ({'profiler_config': PROFILE_CONFIG} if profile_selected else {})
+            assert len(workload[1]) == 128 and len(workload[2]) == 16
+            assert workload[0]["repetitions"]["repeat_indices"] == [1, 2, 3]
+            assert urls == {"prefill": "http://192.0.2.1:8100", "decode": "http://192.0.2.2:8200"}
+            assert (timeout, poll) == (180., 1.)
+            checkpoint({"fixture": True}, records)
+            return {"client_workload_verified": True}, records
+    
+        monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+        monkeypatch.setattr(pd_replay, "wait_until_ready", lambda *args, **kwargs: 0.)
+        monkeypatch.setattr(pd_replay, "stop_server", lambda *args: {"signal": "SIGINT", "returncode": 0})
+        monkeypatch.setattr(pd_replay, "replay_repetitions", repetitions)
+>       assert pd_replay.main(argv) == 0
+               ^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_native_streaming_replay.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/comparison/calibration/pd_replay.py:775: in main
+    repetitions, records = asyncio.run(replay_repetitions(
+../../../envs/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py:195: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../envs/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../envs/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py:691: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workload = ({'arrivals': {'first_arrival_s': 0.0, 'inter_arrival_s': 1.0, 'last_arrival_s': 127.0, 'realized_mean_qps': 1.0, ...}...44-1024-req128-qps1-warmup-r005', 'arrived_at': 5.0, 'num_prefill_tokens': 6144, 'num_decode_tokens': 1024, ...}, ...])
+port = 8000, vocab = 154880, lead = 1.0
+urls = {'prefill': 'http://192.0.2.1:8100', 'decode': 'http://192.0.2.2:8200'}
+dp = 2, timeout = 180.0, poll = 1.0
+checkpoint = <function main.<locals>.checkpoint at 0x7fa5de9dc360>, records = []
+options = {'pair_warmup': False}
+
+    async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records, **options):
+>       assert options == ({'profiler_config': PROFILE_CONFIG} if profile_selected else {})
+E       AssertionError: assert {'pair_warmup': False} == {}
+E         
+E         Left contains 1 more item:
+E         {'pair_warmup': False}
+E         Use -v to get more diff
+
+tests/unit/test_native_streaming_replay.py:200: AssertionError
+_ test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership[True] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/pytest-of-brainpp/pytest-0/test_pd_main_dispatches_canoni1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa5dedb5d00>
+profile_selected = True
+
+    @pytest.mark.parametrize('profile_selected', [False, True])
+    def test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership(tmp_path, monkeypatch, profile_selected):
+        from tests.unit.test_calibration_pd_harness import native_replay_inputs, nixl_engine
+    
+        engine = nixl_engine()
+        if profile_selected:
+            engine.update(worker_extension_cls='native_serve_profile.NativeServeProfile', profiler_config=PROFILE_CONFIG)
+        argv, output = native_replay_inputs(tmp_path, engine)
+        argv[argv.index("--trace-dir") + 1] = str(TRACE)
+        argv += ["--prefill-url", "http://192.0.2.1:8100", "--decode-url", "http://192.0.2.2:8200"]
+        calls = []
+    
+        def spawn(command, **kwargs):
+            assert command[1].endswith("/pd_proxy.py")
+            calls.append(command)
+            return object()
+    
+        async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records, **options):
+            assert options == ({'profiler_config': PROFILE_CONFIG} if profile_selected else {})
+            assert len(workload[1]) == 128 and len(workload[2]) == 16
+            assert workload[0]["repetitions"]["repeat_indices"] == [1, 2, 3]
+            assert urls == {"prefill": "http://192.0.2.1:8100", "decode": "http://192.0.2.2:8200"}
+            assert (timeout, poll) == (180., 1.)
+            checkpoint({"fixture": True}, records)
+            return {"client_workload_verified": True}, records
+    
+        monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+        monkeypatch.setattr(pd_replay, "wait_until_ready", lambda *args, **kwargs: 0.)
+        monkeypatch.setattr(pd_replay, "stop_server", lambda *args: {"signal": "SIGINT", "returncode": 0})
+        monkeypatch.setattr(pd_replay, "replay_repetitions", repetitions)
+>       assert pd_replay.main(argv) == 0
+               ^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_native_streaming_replay.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/comparison/calibration/pd_replay.py:775: in main
+    repetitions, records = asyncio.run(replay_repetitions(
+../../../envs/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py:195: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../envs/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../envs/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py:691: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workload = ({'arrivals': {'first_arrival_s': 0.0, 'inter_arrival_s': 1.0, 'last_arrival_s': 127.0, 'realized_mean_qps': 1.0, ...}...44-1024-req128-qps1-warmup-r005', 'arrived_at': 5.0, 'num_prefill_tokens': 6144, 'num_decode_tokens': 1024, ...}, ...])
+port = 8000, vocab = 154880, lead = 1.0
+urls = {'prefill': 'http://192.0.2.1:8100', 'decode': 'http://192.0.2.2:8200'}
+dp = 2, timeout = 180.0, poll = 1.0
+checkpoint = <function main.<locals>.checkpoint at 0x7fa5dea78180>, records = []
+options = {'pair_warmup': False, 'profiler_config': {'profiler': 'torch', 'torch_profiler_dir': '/trace', 'max_iterations': 3, 'delay_iterations': 0, ...}}
+
+    async def repetitions(workload, port, vocab, lead, urls, dp, timeout, poll, *, checkpoint, records, **options):
+>       assert options == ({'profiler_config': PROFILE_CONFIG} if profile_selected else {})
+E       AssertionError: assert {'pair_warmup...ons': 0, ...}} == {'profiler_co...ons': 0, ...}}
+E         
+E         Omitting 1 identical items, use -vv to show
+E         Left contains 1 more item:
+E         {'pair_warmup': False}
+E         Use -v to get more diff
+
+tests/unit/test_native_streaming_replay.py:200: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_native_streaming_replay.py::test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership[False]
+FAILED tests/unit/test_native_streaming_replay.py::test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership[True]
+2 failed, 174 passed, 35 skipped in 80.34s (0:01:20)

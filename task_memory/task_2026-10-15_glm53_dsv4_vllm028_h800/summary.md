@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Archived the accepted harness integration, relevant passing checks, resolved mock failures and deferred CUPTI test errors. |
 | 2026-11-02 | Archived completed promotion/Q5/single submission, complete prior GPU-hours and the current co-scheduling blocker; post-run and final case acceptance remain open. |
 | 2026-11-02 | Formal P2 assessed: replays with the H200 NIXL pair identical to two-fix apart from the pair; P2-32 formal PASS; P2-64 BLOCKED_ON_DECISION on the pre-launch promotion receipt (options A/B to YC). |
 | 2026-11-02 | YC chose payload route C (D-P2-PAYLOAD-C); Q3 accepted: the native per-pair READ bound equals the priced 46,103,040 B, and every check passes, so the payload edge is QUALIFIED (source-derived, metric-invariant). |
@@ -161,7 +162,7 @@ Report: [formal P2 test report](test_report_2026-11-02_formal_p2_assessment.md).
 
 5. YC chose option B (D-P2-64-FORMAL-B). The new receipt was issued at 07:38:49Z (`1a7950ed`); it does not retroactively cover the old reference above. Q5 (`0ee7f6c2`) built `h200_mainline/p2_64_formal/package_02` at 08:42:19Z with harness `4861e680`, and check-only passed. The job was submitted at 08:45:36Z: 8 x 8 H200, `step_main`, preemptible `yes`, timeout 3,600 s, ceiling 64 GPUh, expected about 24.3 container GPUh. Each repeat has 16 pair-targeted warmups and 128 native-routed formal requests. Post-run coverage, R4 and the unchanged formal replay comparison are pending.
 6. GPU-hours: all 19 missing clocks recovered read-only (`2bdf9fed`); 35 prior terminal jobs total 158.271667 container GPUh (P2 H200 151.86, earlier shared prerequisites 6.41). Initialization, compilation, warmup and failures are included; queuing and pre-container image pulling are excluded. New formal job usage awaits its actual container clocks; no ceiling or wall-clock queue wait is counted as usage.
-7. Current startup evidence and verification: [test_report_2026-11-02_p2_64_startup.md](test_report_2026-11-02_p2_64_startup.md), `h200_mainline/p2_64_formal/startup_20261102/report.json`, and [phase checkpoint](check_progress_2026-11-02_p2_64_formal.md). The accepted harness port to the final branch is in progress; the frozen standalone harness/package stay unchanged for this run.
+7. Current startup evidence and verification: [test_report_2026-11-02_p2_64_startup.md](test_report_2026-11-02_p2_64_startup.md), `h200_mainline/p2_64_formal/startup_20261102/report.json`, and [phase checkpoint](check_progress_2026-11-02_p2_64_formal.md). The accepted harness port is integrated and verified on the final branch, preserving profiling/shutdown behavior; [integration test report](test_report_2026-11-02_p2_64_mainline_integration.md). Initial 136 scoped tests passed; two mock failures were corrected and rechecked (2 passed); the retained native source enabled all 36 profile checks. Frozen check-only and scope/hash checks passed. Repeated unrelated CUPTI tests were stopped, with 25 unresolved errors retained in `future.md`; no GPU control action occurred. The frozen standalone harness/package stay unchanged for this run.
 
 ### Two-fix continuation — 2026-11-01
 

@@ -1,0 +1,72 @@
+{
+  "label": "p64-mainline-integration-1102c",
+  "session_id": "7db34b2a-7536-4ef2-a139-40b1d1a40af6",
+  "model": "custom/deepseek-v4.1-flash-sys\nhigh",
+  "exit": "exit 130",
+  "stop_reason": "Lead stopped repeated out-of-scope CUPTI expansion after scoped acceptance evidence was available. No GPU launcher or GPU monitor was stopped.",
+  "checks": [
+    {
+      "command": "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 && export PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch && timeout 120s /data/ycfeng/envs/openmopd-py312/bin/python -m pytest tests/unit/test_native_pair_warmup.py tests/unit/test_native_pd_worker.py tests/unit/test_native_pd_manifest.py tests/unit/test_native_pd_canonical_http.py tests/unit/test_calibration_pd_harness.py -q -p no:cacheprovider 2>&1 | tail -25; echo \"EXIT=$?\"; /data/ycfeng/envs/openmopd-py312/bin/python -V",
+      "result": {
+        "output": "........................................................................ [ 52%]\n................................................................         [100%]\n136 passed in 16.03s\nEXIT=0\nPython 3.12.13\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 16.7
+      },
+      "tool_error": false
+    },
+    {
+      "command": "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 && export PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch && timeout 300s /data/ycfeng/envs/openmopd-py312/bin/python -m pytest tests/unit/test_native_serve_profile.py tests/unit/test_native_streaming_replay.py tests/unit/test_native_groundtruth_check.py tests/unit/test_native_serving_inventory.py tests/unit/test_native_full_structure.py tests/unit/test_cupti_scope_lifetime.py tests/unit/test_native_cold_start.py -q -p no:cacheprovider 2>&1 | tail -20; echo \"EXIT=${PIPESTATUS[0]}\"",
+      "result": {
+        "output": "ERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[clone-original_node_id-4611686018427387905]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[clone-original_node-999]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[source-queried_type-2]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[source-node_type-2]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[source-graph-800]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[source-graph_id-102]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[clone-node_id-1152921504606847009]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[exec-graph_exec-700]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[kernel-graph node id-1152921504606847009]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records[kernel-graph node id-9223372036854775879]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[ambiguous]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[clone_missing]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[clone_duplicate]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[created_duplicate]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[trace]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[query]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[descriptor]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence[stage]\nERROR tests/unit/test_cupti_scope_lifetime.py::test_other_thread_has_distinct_identities_and_no_live_tls\n2 failed, 198 passed, 35 skipped, 25 errors in 194.47s (0:03:14)\nEXIT=1\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 195.9
+      },
+      "tool_error": false
+    },
+    {
+      "command": "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 && export PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch && timeout 300s /data/ycfeng/envs/openmopd-py312/bin/python -m pytest tests/unit/test_native_serve_profile.py tests/unit/test_native_streaming_replay.py tests/unit/test_native_groundtruth_check.py tests/unit/test_native_serving_inventory.py tests/unit/test_native_full_structure.py tests/unit/test_cupti_scope_lifetime.py tests/unit/test_native_cold_start.py -q -p no:cacheprovider 2>&1 | grep -E \"^(FAILED|ERROR)\" | sed 's/\\[.*//' | sort | uniq -c",
+      "result": {
+        "output": "      1 ERROR tests/unit/test_cupti_scope_lifetime.py::test_actual_range_callback_and_full_ids_join\n      2 ERROR tests/unit/test_cupti_scope_lifetime.py::test_created_tuple_disambiguates_same_handle_evidence\n      8 ERROR tests/unit/test_cupti_scope_lifetime.py::test_incomplete_callbacks_or_trace_preserve_evidence\n      1 ERROR tests/unit/test_cupti_scope_lifetime.py::test_other_thread_has_distinct_identities_and_no_live_tls\n     13 ERROR tests/unit/test_cupti_scope_lifetime.py::test_wrong_scope_window_and_full_id_records\n      2 FAILED tests/unit/test_native_streaming_replay.py::test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 197.9
+      },
+      "tool_error": false
+    },
+    {
+      "command": "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 && export PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch && timeout 120s /data/ycfeng/envs/openmopd-py312/bin/python -m pytest \"tests/unit/test_native_streaming_replay.py::test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership\" -q -p no:cacheprovider 2>&1 | tail -50",
+      "result": {
+        "output": "..                                                                       [100%]\n2 passed in 1.00s\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 1.7
+      },
+      "tool_error": false
+    },
+    {
+      "command": "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 && export PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch && timeout 300s /data/ycfeng/envs/openmopd-py312/bin/python -m pytest tests/unit/test_native_serve_profile.py tests/unit/test_native_streaming_replay.py -q -p no:cacheprovider 2>&1 | tail -60",
+      "result": {
+        "output": "sssssssssssssssssssssssssssssssssss..................................... [ 96%]\n...                                                                      [100%]\n40 passed, 35 skipped in 62.18s (0:01:02)\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 63.1
+      },
+      "tool_error": false
+    },
+    {
+      "command": "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 && export PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch && timeout 300s /data/ycfeng/envs/openmopd-py312/bin/python -m pytest tests/unit/test_native_streaming_replay.py tests/unit/test_native_groundtruth_check.py tests/unit/test_native_serving_inventory.py tests/unit/test_native_full_structure.py -q -p no:cacheprovider 2>&1 | tail -60",
+      "result": {
+        "output": "........................................................................ [ 41%]\n........................................................................ [ 83%]\n............................                                             [100%]\n172 passed in 156.22s (0:02:36)\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 157.6
+      },
+      "tool_error": false
+    },
+    {
+      "command": "cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 && export PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch && timeout 400s /data/ycfeng/envs/openmopd-py312/bin/python -m pytest tests/unit/test_native_serve_profile.py tests/unit/test_native_streaming_replay.py tests/unit/test_native_groundtruth_check.py tests/unit/test_native_serving_inventory.py tests/unit/test_native_full_structure.py tests/unit/test_cupti_scope_lifetime.py tests/unit/test_native_cold_start.py -q -p no:cacheprovider 2>&1 > /data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch/native_regression_run.log; echo EXIT=$?; grep -n \"short test summary\" -A 5 /data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch/native_regression_run.log | head -10"
+    }
+  ]
+}

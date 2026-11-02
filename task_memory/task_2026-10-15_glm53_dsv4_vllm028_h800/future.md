@@ -2,6 +2,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Retained 25 unresolved CUPTI CPU test errors from unnecessary integration-suite expansion; stopped further execution and kept the investigation deferred. |
 | 2026-10-28 | Added the DeepSeek-V4 attention items that B8 left without a planned route entry. |
 | 2026-10-25 | Added the deferred profile04 P0 trace-audit ranks (D-TRACE-AUDIT-STOP). |
 | 2026-10-21 | D-MEASUREMENT-FIRST stops expanded CUPTI investigation; retained current evidence and bounded future choices without waiving DSA coverage. |
@@ -54,6 +55,8 @@ open item 2; [m2_m3_design.md](w3_review_fixes_20261020/m2_m3_design.md) for the
 NIXL path that was fixed.
 
 ## Expanded CUPTI graph diagnostic is stopped; DSA coverage remains required
+
+2026-11-02 CPU regression note: Pi `p64-mainline-integration-1102c` unnecessarily included `tests/unit/test_cupti_scope_lifetime.py` during the accepted P2-64 warmup harness port. The first broad run retained 25 ERROR summaries; their cause is UNKNOWN because the captured output omitted the traceback. No CUPTI fix or baseline/environment conclusion is claimed. The lead stopped repeated expansion after relevant harness checks passed. Exact commands and retained output: `h200_mainline/p2_64_formal/integration_20261102/pi_verification.json`. This remains outside the native pair-warmup acceptance path and does not reopen the investigation.
 
 Status: stopped/deferred by YC's D-MEASUREMENT-FIRST. No active investigation owner or fourth GPU authorization. The DSA compiled/FULL coverage requirement itself remains in H3/H4 and is not deferred out of formal acceptance.
 

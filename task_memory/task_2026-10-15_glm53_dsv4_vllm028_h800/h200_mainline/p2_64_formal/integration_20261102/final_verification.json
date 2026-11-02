@@ -1,0 +1,21 @@
+{
+  "checked_utc": "2026-11-02T10:46:22.296055+00:00",
+  "base_head": "39d710a4702562c9c4b276df7e17980cbeeb3cee",
+  "source_hashes_unchanged_since_tests": true,
+  "source_hashes": {
+    "tests/comparison/calibration/native_pd_worker.py": "eff3c7377589ceac51d4e6e14066dd36430d875f7d8ba1a8e3c6e5ed8ecf3c2c",
+    "tests/comparison/calibration/pd_proxy.py": "543046bcdc3e68207ffbd25f4f8f4f38b52fda58d89b8d7580322f454cf35efc",
+    "tests/comparison/calibration/pd_replay.py": "a191f81da0d9ddc9862bbb57875588380b0440e5f8c2b8d9c9b291e52311c651",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "4350543a6fc8b88fbd265a3c2c074e6b1f4e169ec12727caeb6875cb9afce8b3",
+    "tests/unit/test_native_pair_warmup.py": "3d2385bdb7bd22de2c66c56c4c541cdc875adc44b269141c38d209f11ab635b5",
+    "tests/unit/test_native_streaming_replay.py": "f79c25b1de2f5b52a80c852cc27d59b3abbb2eb011a2afe7175371d8582982a5"
+  },
+  "accepted_test_byte_identical": true,
+  "frozen_harness_head": "4861e680548a5666f3107945ec4881b7022c23fb",
+  "frozen_harness_clean": true,
+  "frontier_diff_empty": true,
+  "diff_check": "PASS",
+  "python_version": "Python 3.12.13",
+  "code_review": "PASS: preserves NATIVE_WORKER_EXTENSIONS, profiler_config, role profiling and shutdown ordering; only warmup carries P/D targeting; formal requests use native routing.",
+  "staged_style_check": "PASS for source, Markdown and JSON; preserved raw pytest .log whitespace excluded"
+}

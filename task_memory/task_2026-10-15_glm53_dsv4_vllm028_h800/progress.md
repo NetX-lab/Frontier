@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Completed accepted harness integration and targeted verification; stopped repeated unrelated CUPTI testing and preserved its unresolved errors. |
 | 2026-11-02 | Exact-job startup diagnosis confirms eight unassigned replicas and co-scheduling rejection; current records reconciled and accepted harness integration runs independently. |
 | 2026-11-02 | Formal P2-64 submitted once via Pi `h200-p64-formal-submit-1102a`: job `exp-1102-164536-160317` (08:45:36Z), preemptible `yes`, queue `quotagroup-global-default`, identity checks PASS; Pending. |
 | 2026-11-02 | Q5 reviewed; harness `4861e680`; builder import-cache fix; `p2_64_formal/package_02` built and check-only PASS; [test report](test_report_2026-11-02_p2_64_formal_package.md). |
@@ -512,8 +513,8 @@ The following completed A6 history retains its original all-request verdicts. D-
 - completed — read-only exact-job diagnosis through Pi `p64-startup-inspect-1102b`: at 10:29:23Z all eight replicas had `PodScheduled=False/Unschedulable`, no assigned node, start time or container status. Repeated co-scheduling prefilter rejections show `member gap` 8/2/7/8. The specific resource shortfall and start ETA are UNKNOWN; there is no image-pull, mount or worker-init evidence because no container started. Retained report: [startup test report](test_report_2026-11-02_p2_64_startup.md).
 - completed — GPU accounting through the previous 35 terminal jobs: 158.271667 container GPUh (`2bdf9fed`). The new P2-64 job has no terminal usage yet. Keep ticket 19's usage checkbox open until its actual container clocks are included.
 - in-progress — original Pi monitor `h200-p64-formal-submit-1102a`; `/data/ycfeng/tmp/glm53_dsv4/h200/monitor/status_p64f_*.json` must be sorted by numeric suffix or mtime. The monitor has a 150-minute observation limit; if it exits while the job queues, the independently launched Python launcher must remain alive.
-- in-progress — Pi `p64-mainline-integration-1102c` consolidates only the accepted five-file warmup/receipt change onto the final branch. Existing mainline profiling and shutdown changes are preserved. Frozen package and independent harness stay untouched.
-- completed — check-progress found S5 stale current records; current plan, ticket 19 and summary are updated. No scope, criterion or resource change.
+- completed — accepted five-file harness port plus one existing test-mock correction verified on the final branch. Initial five-file suite: 136 PASS; the two corrected mock cases: 2 PASS; native profile with the retained source path: 36 PASS; frozen check-only and six-file hash/scope checks PASS. See [integration test report](test_report_2026-11-02_p2_64_mainline_integration.md). The lead stopped Pi `p64-mainline-integration-1102c` after repeated unrelated CUPTI suite expansion (exit 130); 25 CUPTI errors remain uninvestigated in `future.md`. No GPU job/launcher/monitor was stopped.
+- completed — check-progress corrections applied: current ticket 18 now also uses `/ds4-exec`, and repeated unrelated test expansion is stopped. No scope, criterion or resource change. Latest retained monitor snapshot at 2026-11-02T10:45:58Z remains Starting/8 pending; launcher PID 3140124 and the original Pi monitor remain alive.
 
 Next actions:
 1. Inspect the existing job through `/ds4-exec`; keep its launcher alive. A real failure/preemption triggers exact-job RCA before any new clean generation, under the existing three-job loop cap.

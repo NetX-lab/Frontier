@@ -1,0 +1,24 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "/data/ycfeng/envs/openmopd-py312/bin/python",
+    "-m",
+    "pytest",
+    "tests/unit/test_native_streaming_replay.py::test_pd_main_dispatches_canonical_three_repeat_client_without_native_ownership",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "started_utc": "2026-11-02T10:39:58.295581+00:00",
+  "finished_utc": "2026-11-02T10:40:00.118828+00:00",
+  "exit_code": 0,
+  "env": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "TMPDIR": "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "read_utc": "2026-11-02T10:46:22.303353+00:00",
+  "source": "/data/ycfeng/tmp/glm53_dsv4/h200/monitor/status_p64f_40.json",
+  "source_mtime_utc": "2026-11-02T10:45:58.005041+00:00",
+  "status": {
+    "name": "exp-1102-164536-160317",
+    "creator": "i-fengyicheng",
+    "preemptible": "yes",
+    "queue": "quotagroup-global-default",
+    "queue_reason": null,
+    "stop": {},
+    "phase": "Starting",
+    "start": null,
+    "finish": null,
+    "conditions": [],
+    "task_status": {
+      "default": {
+        "pending": 8
+      }
+    },
+    "mounts": {
+      "default": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02"
+    },
+    "images": {
+      "default": [
+        "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+      ]
+    },
+    "replicas": {
+      "default": 8
+    }
+  },
+  "launcher_pid": 3140124,
+  "launcher_command": "/data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/package_02/launch.py ",
+  "launcher_alive": true,
+  "original_monitor_exit": null
+}

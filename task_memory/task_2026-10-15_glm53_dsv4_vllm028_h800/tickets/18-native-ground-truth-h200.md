@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Corrected the stale direct-Codex route and recorded the single formal P2-64 job plus verified final-branch harness integration. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-23 | W128-V4-NATIVE06-ADMISSION-RECORDS: P0 native06 reference subtask PASS/ACCEPTED_NATIVE_REFERENCE_R4; full18 other hardware/prerequisites open, native05/originalR3 remain historical. |
 | 2026-10-23 | Recorded native06 client/RCA completion and the bounded versioned-reader correction; admission remains open. |
@@ -25,9 +26,11 @@
 | 2026-10-21 | Created from the canonical H200 calibration contract (`calibration.md`, decisions Q1–Q12). Folds the per-model native reference collection and the MTP/CUDA-graph/quantization parity checks into one ticket so the reference and its parity evidence share one manifest. |
 | 2026-10-21 | Second round: MTP parity resolved at source level for both models (native default disabled); reference repetition rule raised to at least 3 clean repetitions inside one job, each with its own warmup and measurement window. |
 
-## Current Codex checkpoint — 2026-10-31
+## Current Codex checkpoint — 2026-11-02
 
-Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-10-31). D-H200-MAINLINE-CONTINUE and decision 46 apply; Codex uses personal StepMind Python RJobBackend directly. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-11-02). Platform actions use `/ds4-exec` under D-P2-INPUT-QUALIFICATION and D-P2-64-FORMAL-B. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.
+
+The receipt-bound formal P2-64 job `exp-1102-164536-160317` was submitted once at 2026-11-02T08:45:36Z: 64 H200, wholly preemptible, `step_main`, timeout 3,600 s. At 10:45:58Z it remained Starting with 8 pending replicas; preserve launcher PID 3140124. The accepted harness is integrated on the final branch with relevant CPU tests and frozen check-only PASS ([report](../test_report_2026-11-02_p2_64_mainline_integration.md)). Native terminal evidence, pair coverage, R4 and the new reference admission remain open. Existing reference history below is unchanged.
 
 P2-32 reference exp-1025-152327-225209 and P2-64 reference exp-1025-155441-668927 have R4 PASS. Exact reports: h200_mainline/diagnostic/inputs/p2_32r and p2_64r/run_check_status.groundtruth_clean.json. Reuse all three independently warmed clean repetitions. Their original checkers, authorization and admission remain unchanged; current resource/promotion rules do not rewrite past receipts. Complete all-hardware native qualification stays OPEN.
 

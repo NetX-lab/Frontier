@@ -403,11 +403,30 @@ def formal_metrics(records):
     return metrics
 
 
+def warmup_pair_targets(templates, dp_sizes):
+    """Cover the Cartesian product once before reusing pairs for extra warmups."""
+    if (set(dp_sizes) != set(ROLES)
+            or any(type(size) is not int or size <= 0 for size in dp_sizes.values())):
+        raise ValueError("Pair warmup requires positive configured P and D DP sizes")
+    pairs = [{"prefill": p, "decode": d}
+             for p in range(dp_sizes["prefill"]) for d in range(dp_sizes["decode"])]
+    if len(templates) < len(pairs):
+        raise ValueError(f"Pair warmup needs at least {len(pairs)} requests for "
+                         f"DP{dp_sizes['prefill']} x DP{dp_sizes['decode']}; "
+                         f"only {len(templates)} warmups configured per repetition")
+    return [row | {"intended_pair": pairs[index % len(pairs)].copy()}
+            for index, row in enumerate(templates)]
+
+
 async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp_size,
                              idle_timeout_s, idle_poll_s, *, checkpoint=None, records=None, fresh_services=None,
-                             profiler_config=None):
+                             profiler_config=None, pair_warmup=False):
     """Run canonical warmup/formal phases in one existing proxy/client lifetime."""
     manifest, formal, warmup = workload
+    if pair_warmup:
+        warmup = warmup_pair_targets(warmup, {role: dp_size for role in ROLES})
+    if any("intended_pair" in row for row in formal):
+        raise ValueError("Formal requests must keep native DP routing without a target")
     result = {"repetitions": [], "idle_boundaries": [], "observation_errors": [],
               "reference_admission": "UNVERIFIED"}
     if records is None:
@@ -579,6 +598,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--stop-timeout-s", type=float, default=60.0)
     parser.add_argument("--idle-timeout-s", type=float, default=180.0)
     parser.add_argument("--idle-poll-s", type=float, default=1.0)
+    parser.add_argument("--pair-warmup", action="store_true",
+                        help="Target every configured P x D DP pair during canonical warmup only")
     args = parser.parse_args(argv)
 
     engine = json.loads(args.engine_config.read_text())
@@ -586,6 +607,8 @@ def main(argv: list[str] | None = None) -> int:
     workload = canonical_workload(args.trace_dir)
     if workload is not None and (version != "0.28.0" or args.mode != "clean"):
         raise ValueError("Canonical repetitions require the native v0.28 clean mode")
+    if args.pair_warmup and workload is None:
+        raise ValueError("Pair warmup requires the canonical native workload")
     if args.idle_timeout_s <= 0 or args.idle_poll_s <= 0:
         raise ValueError("Idle observation timeout and poll interval must be positive")
     external = args.prefill_url is not None or args.decode_url is not None
@@ -752,7 +775,7 @@ def main(argv: list[str] | None = None) -> int:
                 repetitions, records = asyncio.run(replay_repetitions(
                     workload, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s,
                     urls, engine["data_parallel_size"], args.idle_timeout_s, args.idle_poll_s,
-                    checkpoint=checkpoint, records=records,
+                    checkpoint=checkpoint, records=records, pair_warmup=args.pair_warmup,
                     **({'profiler_config': engine.get('profiler_config') or {}}
                        if engine.get('worker_extension_cls') == 'native_serve_profile.NativeServeProfile' else {}),
                     **({"fresh_services": fresh_services} if fresh_services else {})))
