@@ -547,6 +547,8 @@ Current outcome: Generation03 exp-1103-092042-217677 is Stopped at 2026-11-03T01
 - completed — generation04 one-time submission and independent acceptance: job exp-1103-131952-259161/UID9d02faf7-621e-4368-ae73-4110312c6ae2, created05:19:52Z; selected exact-job receipts and local launcher survival PASS. Pi submit label ended normally; independent monitor p64-formal4-monitor-1103f active. See generation04/lead_submission_acceptance.json and report.
 - completed — post-submission check-progress: D1–D7 CLEAR in the new window; previous D2/D7 corrections applied. No old tests, source changes or duplicate allocation. Native/reference/accounting remain pending.
 
+- in-progress — generation04 queue checkpoint 2026-11-03T05:26:00.691550+00:00: 6 successful exact-job snapshots; Pending,0replicas,platform reason Insufficient GPU quota. Launcher81539 alive after normal submission-Pi exit; independent Pi p64-formal4-monitor-1103f remains active. Resource placement is the current external blocker. No native metric or exact usage claim. Receipt: h200_mainline/p2_64_formal_retry04/generation04_queue_checkpoint.json.
+
 Next actions:
 1. Continue exact-job monitoring of exp-1103-131952-259161 through Pi p64-formal4-monitor-1103f; the single approved fourth submission and independent submission acceptance are complete. Preserve launcher81539 and capture each container start/end clock. No fifth submission.
 2. Retain the launcher, let its submitting Pi turn finish normally, and use a distinct finite read-only monitor label. Check exact replica objects and full query output. Never stop a launcher-owning Pi label to repair monitoring.

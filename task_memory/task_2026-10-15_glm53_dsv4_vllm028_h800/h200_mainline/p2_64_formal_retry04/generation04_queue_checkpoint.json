@@ -1,0 +1,39 @@
+{
+  "observed_utc": "2026-11-03T05:26:25.555284+00:00",
+  "status": "QUEUED_RESOURCE_BLOCKER",
+  "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-monitor-1103f/scratch/status_snapshots.jsonl",
+  "source_prefix_sha256": "c95094837cd53641ddb4ec10f67ce0699e53cf4dd5854381b645e0d439188064",
+  "snapshot_count": 6,
+  "successful_snapshot_count": 6,
+  "first_utc": "2026-11-03T05:22:04.881487+00:00",
+  "latest_snapshot": {
+    "utc": "2026-11-03T05:26:00.691550+00:00",
+    "identity": {
+      "job": "exp-1103-131952-259161",
+      "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+      "creator": "i-fengyicheng",
+      "creationTimestamp": "2026-11-03T05:19:52Z",
+      "phase": "Pending",
+      "startTime": null,
+      "finishTime": null,
+      "preemptible": "yes",
+      "queue": "quotagroup-global-default",
+      "conditions": [],
+      "stop_annotations": {
+        "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=420."
+      }
+    },
+    "replica_rows": [],
+    "replicas": {},
+    "errors": []
+  },
+  "launcher_pid": 81539,
+  "launcher_alive": true,
+  "monitor_label": "p64-formal4-monitor-1103f",
+  "monitor_session": "7bdd2659-fd5e-4a5f-9c58-e109958279a6",
+  "monitor_active": true,
+  "monitor_checkpoint_policy": "Return at terminal, verified worker/native progress, or 20 minutes without scheduling; never stop the submitted launcher.",
+  "native_reference": "PENDING",
+  "container_gpu_hours": null,
+  "next_action": "Continue exact-job monitoring; capture starts/ends immediately when available, then terminal/copy/coverage/R5/all-request/warm. No fifth submission."
+}
