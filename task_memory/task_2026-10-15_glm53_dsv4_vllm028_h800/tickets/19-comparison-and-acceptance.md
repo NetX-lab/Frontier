@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Generation03 package independently accepted:47sealed files,41unchanged,check-onlyPASS; third authorized submission next. |
 | 2026-11-03 | Accepted generation02 preemption and104-file copy; recorded the third permitted generation and incomplete reference/accounting. |
 | 2026-11-03 | Accepted R5 source binding and legacy control; recorded generation02 on eight distinct Running nodes. |
 | 2026-11-02 | Recorded generation02 submission and the lead's reproducible R5 call-chain failure; native execution and reader correction proceed in parallel. |
@@ -42,6 +43,8 @@
 | 2026-10-21 | Second round: THPT confirmed as total prompt+output token throughput (output-only and request/s are diagnostics); anti-overfitting repetition aligned with the reference's 3-clean-repetition rule. |
 
 ## Current Codex checkpoint — 2026-11-02
+
+Generation03 package is independently accepted: `h200_mainline/p2_64_formal_retry03/package_01`,47sealed files,41byte-identical to generation02, exact identity-only changes and check-onlyPASS. The next action is the third authorized GPU submission; see the generation03 test report.
 
 Latest continuation, 2026-11-03: generation02 exp-1102-233941-576872 was preempted at2026-11-02T16:10:07Z. Lead independent terminal/copy audit PASS:104files,53,233,857bytes, both API heads healthy, first warmup stream interrupted, zero complete repetitions/no formal metrics. Saved predeclared client rows are not dispatch evidence. Generation03 preparation uses the last of the existing three-GPU-job allowance, unchanged64H200/all-preemptible/step_main/3600s/64GPUh. R5 is accepted; complete-reference coverage/R5/gates remain pending. Exact generation01/02 container GPU-hours remain unknown and do not block the authorized reference recovery. See `../h200_mainline/p2_64_formal/recovery_02_20261102/generation02_terminal_acceptance.json`. Earlier Running statements below describe historical snapshots.
 

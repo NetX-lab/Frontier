@@ -1,0 +1,37 @@
+{
+  "status": "PASS_PACKAGE_IDENTITY_AND_CHECK_ONLY",
+  "python": "3.10.6",
+  "command": "python3 /data/ycfeng/tmp/glm53_dsv4/h200/audit_formal03_package.py",
+  "script_sha256": "5fdd32bc7b3ac4e3eccce5da7b4ece37ead6c754dc6781f02cc7b3845e15d71e",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+  "manifest_sha256": "9f9ec3c1f9d2b72b957d0678a0e8f06e05de8bd1fbd68b8addc3c092043bb474",
+  "sealed_files": 47,
+  "byte_identical_files": 41,
+  "changed_files": [
+    "case/inputs/native_config.json",
+    "case/manifest.yaml",
+    "config.json",
+    "evidence_readiness.json",
+    "overlay.json",
+    "source_lock.json"
+  ],
+  "allowed_changes": "Exact replacement of package root, run tag, cloud output, promotion build time, purpose and derived overlay digest; all other bytes equal generation02.",
+  "commits": {
+    "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness": "f33306d40443cfc0c44842d6ee044f6703c736e7",
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination": "a06a72a4326cba02234df6cfbdc21b78d3a15d26"
+  },
+  "check_only": {
+    "argv": [
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/launch.py",
+      "--check-only"
+    ],
+    "exit_code": 0,
+    "stdout": "INPUT_HASHES_PASS_NO_SUBMISSION\n"
+  },
+  "old_manifest_unchanged": "9f9a1ab954ef3b7d61ff67f2f62c891e9da8547590a21b19db020c8557e8ed7d",
+  "source_implementation_change": "One entry through unchanged CASES registry only",
+  "gpu_jobs_used_before_submission": 2,
+  "gpu_job_cap": 3
+}

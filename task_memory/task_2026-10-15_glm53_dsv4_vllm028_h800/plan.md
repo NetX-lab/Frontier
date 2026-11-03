@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Generation03 package independently accepted:47sealed files,41unchanged,check-onlyPASS; third authorized submission next. |
 | 2026-11-03 | Generation02 is preempted and copied/verified; third clean generation follows the existing three-job cap, with exact clock recovery independent. |
 | 2026-11-03 | Accepted R5 source binding and legacy control; recorded generation02 on eight distinct Running nodes. |
 | 2026-11-02 | Recorded generation02 submission and the lead's reproducible R5 call-chain failure; native execution and reader correction proceed in parallel. |
@@ -174,6 +175,8 @@
 
 <a id="current-execution-route--dsv4-h800-mainline-2026-10-25"></a>
 ## Current execution route — Codex CLI, H200 operator path (2026-10-31)
+
+Generation03 package is independently accepted: `h200_mainline/p2_64_formal_retry03/package_01`,47sealed files,41byte-identical to generation02, exact identity-only changes and check-onlyPASS. The next action is the third authorized GPU submission; see the generation03 test report.
 
 Authority: requirements D-H200-MAINLINE-CONTINUE, D-NO-STEP-COST-SHORTCUT, D-COMM-MEASURED-ALLOWED, D-WARM-TARGET, D-P2-INPUT-QUALIFICATION and D-P2-64-FORMAL-B. The active work is DSV4 H200 P2-32/P2-64, then the retained H800 cases after a concrete package/resource approval. Comparison targets the warmed serving path with the same event-based paired rule for every case/repeat. Use this current route and the current progress handoff; dated routes below preserve history. GLM remains paused.
 

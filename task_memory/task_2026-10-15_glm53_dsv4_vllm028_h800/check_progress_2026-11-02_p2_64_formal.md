@@ -34,20 +34,20 @@ Modification History
 | 15 D-DP-PD | BLOCKED | 完整native决策未关闭；保留其证据边界。 |
 | 16 GLM case | BLOCKED | GLM暂停。 |
 | 17 DSV4 case | TODO | P2绑定已用；完整硬件范围未关闭。 |
-| 18 native reference | TODO | generation02终态/复制通过；0完整repeat，第三代准备中。 |
+| 18 native reference | TODO | generation02终态/复制通过；0完整repeat，第三代package已独立验收。 |
 | 19 comparison/acceptance | TODO | P2-32PASS及晋级receipt已签；P2-64新参考与完整用量未闭。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 前次启动故障收尾checkpoint至本次generation02终态验收｜**当前前沿：** 18第三代准备/运行；19精确容器时钟。
+**检测窗口：** 前次启动故障收尾checkpoint至本次generation02终态验收｜**当前前沿：** 18第三代单次提交/运行；19精确容器时钟仍缺失。
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | 39f9d20f和5bd68e9e解决实际启动/reader依赖；153+25测试及PASS_EXACT已止步，不重复。 |
 | D2 细节反复重试 | CLEAR | 第一代端口机制已修复，第二代两API头healthy后被平台抢占；不同已证实原因，当前仅用剩余第三次额度。 |
 | D3 支线问题修补 | CLEAR | GLM/EP-count/collector-hash旧债未重开。 |
-| D4 可并行任务停滞 | CLEAR | 第三代package与两exact-job只读时钟/事件查询并行，lead独立验收并维护记录。 |
+| D4 可并行任务停滞 | CLEAR | 第三代package与两exact-job只读时钟/事件查询并行完成，lead独立验收；时钟仍缺失。 |
 | D5 超范围镀金 | CLEAR | 第三代仅现有CASES新增身份条目，源/工作负载/资源均不变。 |
 | D6 分析空转 | CLEAR | 已落地终态和104文件验收，并启动新generation准备。 |
 | D7 路线违背 | CLEAR | requirements:263明确允许抢占后的新generation，累计上限3jobs；平台动作均走/ds4-exec。 |
@@ -67,7 +67,7 @@ Modification History
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 18：审查第三代package、独立seal/check-only并提交 → 完成标志：仅身份/路径变化，源和工作负载保持冻结且预检通过。
+1. 18：第三代package独立seal/check-only已通过，提交该代码步骤 → 完成标志：47sealed/41相同，仅身份/路径变化，源和工作负载冻结。
 2. 18：通过/ds4-exec提交第三个64H200全preemptible job并监控 → 完成标志：三repeat完成及terminal/copy证据；不自动创建第四job。
 3. 并行：19的缺失时钟一次只读跟进；不足则精确总量继续null，不阻塞已授权运行。
 4. 18/19：完整参考的pair覆盖soft gate → R5 → all-request/warm → 每repeat四项≤10%及reference充分性结论。
