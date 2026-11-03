@@ -1,0 +1,182 @@
+{
+ "observed_utc": "2026-11-03T01:31:06.853155+00:00",
+ "job": {
+  "name": "exp-1103-092042-217677",
+  "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+  "creator": "i-fengyicheng",
+  "charged_group": "step_main",
+  "preemptible_label": "yes",
+  "created": "2026-11-03T01:20:42Z",
+  "phase": "Stopped",
+  "reason": "RJobStopped",
+  "message": "RJob stopped",
+  "startTime": null,
+  "finishTime": "2026-11-03T01:26:58Z",
+  "spec_stopTimestamp": "2026-11-03T01:26:58Z",
+  "annotations": {
+   "kubebrain.brainpp.cn/stopped-by": "i-fengyicheng",
+   "rjob.brainpp.cn/manual-stop-reason": null,
+   "rjob.brainpp.cn/rjob-queue-approved": "2026-11-03T01:25:42.053624529Z",
+   "rjob.brainpp.cn/rjob-pod-created": "2026-11-03T01:25:42.748333318Z",
+   "rjob.brainpp.cn/rjob-scheduled": "",
+   "rjob.brainpp.cn/rjob-running": "",
+   "stepmind.com/queue-status": "closed"
+  },
+  "taskStatuses": {
+   "default": {
+    "pending": 8,
+    "taskStage": "stepmind-task-stage-1"
+   }
+  },
+  "expected_resources": {
+   "replicas": 8,
+   "gpu_per_replica": 8,
+   "total_gpus": 64,
+   "limits_per_replica": {
+    "cpu": "64",
+    "memory": "500Gi",
+    "nvidia.com/gpu": "8",
+    "mellanox.com/mlnx_rdma": "1",
+    "rdma/mlnx_shared": "8"
+   },
+   "positiveTags": [
+    "H200"
+   ]
+  }
+ },
+ "replicas": {
+  "expected_count": 8,
+  "actual_count": 8,
+  "names": [
+   "exp-1103-092042-217677-eccbc87e",
+   "exp-1103-092042-217677-1679091c",
+   "exp-1103-092042-217677-8f14e45f",
+   "exp-1103-092042-217677-a87ff679",
+   "exp-1103-092042-217677-c4ca4238",
+   "exp-1103-092042-217677-c81e728d",
+   "exp-1103-092042-217677-cfcd2084",
+   "exp-1103-092042-217677-e4da3b7f"
+  ],
+  "phase": "Stopped",
+  "creationTimestamp": "2026-11-03T01:25:42Z",
+  "nodeName": null,
+  "status_startTime": null,
+  "podIP": null,
+  "hostIP": null,
+  "containerStatuses": null,
+  "podScheduled_condition": {
+   "type": "PodScheduled",
+   "status": "False",
+   "reason": "Unschedulable",
+   "lastTransitionTime": "2026-11-03T01:25:42Z",
+   "message_summary": "0/4453 nodes are available: coscheduling podGroup shai-core/exp-1103-092042-217677-default rejected; member gap / failed recently; assigned 0"
+  },
+  "observed_container_starts": 0
+ },
+ "gpu_hours": {
+  "requested_gpus": 64,
+  "container_gpu_hours_exact": null,
+  "known_container_gpu_hours": 0.0,
+  "container_clocks_complete": false,
+  "supported_observation": "zero containers ever scheduled or started; no node binding, so no GPU allocation could be consumed",
+  "exact_null_semantics": "platform_terminal_receipt.py returns container_gpu_hours=null because container clocks are incomplete; the 0.0 value is only the known-duration subtotal"
+ },
+ "stop_evidence": {
+  "initiating_local": {
+   "source_run": "/data/ycfeng/tmp/ds4_runs/p64-formal3-1103b",
+   "ds4_stop_marker": "stop requested by caller, mtime 2026-11-03T09:26:58.397247+08:00",
+   "launcher_pid": 907414,
+   "launcher_log": "local_launcher_stop.log (copy; sha256 da37c46437602ab8a4fa692366eafddda1f81167293744f33f31bad658e23a0f)",
+   "launcher_traceback": "KeyboardInterrupt at steptron/utils/stepmind.py:921 spawn_tasks -> stepmind_control.py:339 wait -> :258 time.sleep",
+   "launcher_job_stop_line": "2026-11-03 09:26:58.920 HKT = 2026-11-03T01:26:58.920Z Job Stop: by-stepmind/7bcdc(exp-1103-092042-217677)",
+   "interpretation": "lead-caused interruption of the launcher session; the launcher's stop path then called Job Stop. Not a platform preemption."
+  },
+  "platform_audit": {
+   "operation": "stop",
+   "result": "succeeded",
+   "subject_name": "i-fengyicheng",
+   "subject_type": "user",
+   "timestamp_epoch_seconds": 1793669218,
+   "timestamp_utc": "2026-11-03T01:26:58Z",
+   "timestamp_hkt": "2026-11-03 09:26:58 HKT",
+   "receipt": "01M6FG8GK3XYNR1DBAKDP3SZRA",
+   "data": null,
+   "reason_returned": null
+  },
+  "subsequent_controller_update": {
+   "subject": "system:serviceaccount:kubebrain:queue-controller",
+   "operation": "update",
+   "timestamp_utc": "2026-11-03T01:26:59Z",
+   "role": "controller activity after the stop; not the initiator"
+  },
+  "conclusion": "Platform stop subject is i-fengyicheng; no platform stop reason is returned (annotation manual-stop-reason null, audit data null). Stop time 01:26:58Z matches the local launcher Job Stop and ds4 stop marker."
+ },
+ "events": {
+  "live_events": {
+   "job": 42,
+   "per_replica": 5,
+   "pagination": "complete (1 page each, no continuation)"
+  },
+  "historical_events": {
+   "job": {
+    "count": 42,
+    "total": 42
+   },
+   "per_replica": {
+    "count": 3,
+    "total": 3
+   },
+   "pagination": "complete (1 page each)"
+  },
+  "timeline_utc": [
+   "01:20:42 job create audit by i-fengyicheng; creationTimestamp",
+   "01:21:46 QueueWaiting (H200=789)",
+   "01:23:44 QueueWaiting (H200=788)",
+   "01:25:42 queue approved; 8 replicas created; Start replica events; 8x FailedScheduling",
+   "01:25:42-01:26:57 repeated FailedScheduling only; no Scheduled/Pulled/Created/Started event",
+   "01:26:58 8x Close replica, 8x SuccessfulDelete pod, stop audit, finishTime/stopTimestamp",
+   "01:26:59 queue-controller update"
+  ],
+  "positive_absence": "no Scheduled, Pulled, Created, Started, Preempted, Evicted or reclaim event for the exact job or its replicas"
+ },
+ "audit": {
+  "rjob": {
+   "count": 9,
+   "total": 9,
+   "operations": "create 1, update 6 (queue/rjob controllers), stop 1 (i-fengyicheng), update 1 after stop"
+  },
+  "replicas": {
+   "per_replica": {
+    "count": 2,
+    "total": 2
+   },
+   "operations": "create + stop by rjob-controller"
+  },
+  "pagination": "complete (1 page each, count == total)"
+ },
+ "local_native_artifacts": {
+  "run_dir": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261103-03",
+  "retained_files": [
+   "run_manifest.json (12473 bytes, written 2026-11-03T01:20:38Z before launch)"
+  ],
+  "file_count": 1,
+  "native_business_output_present": false,
+  "note": "run_manifest.json is the pre-launch input manifest staged locally; native outputs (replay.log, replay_finished.json, per-node dirs, request metrics) are written under the worker output_dir and require a running container"
+ },
+ "query_coverage": {
+  "script": "collect_evidence.py, query_job.py",
+  "queries_total": 29,
+  "queries_pass": 29,
+  "queries_fail": 0,
+  "not_queried": [
+   "DeepScan flows/tasks (not requested; bounded pass)",
+   "Sherlock native logs (not requested; bounded pass)",
+   "core Pods custom-object listing (403 observed previously; prohibited)"
+  ],
+  "limitations": [
+   "No node-level allocation record was queried; zero GPU consumption is inferred from no pod binding and no container start.",
+   "Replica phase is terminal Stopped and retains no containerStatuses, so no exit code exists.",
+   "Platform stop reason text was not returned; the initiating local stop is established from the retained launcher log and ds4 marker."
+  ]
+ }
+}

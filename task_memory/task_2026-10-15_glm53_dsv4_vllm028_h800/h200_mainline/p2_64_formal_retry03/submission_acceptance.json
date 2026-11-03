@@ -1,0 +1,46 @@
+{
+  "status": "PASS_SUBMISSION_SPEC_ONLY",
+  "job": "exp-1103-092042-217677",
+  "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+  "created": "2026-11-03T01:20:42Z",
+  "observed_utc": "2026-11-03T01:21:20.654353+00:00",
+  "phase_at_snapshot": "Pending",
+  "launcher_pid": 907414,
+  "creator": "i-fengyicheng",
+  "charged_group": "step_main",
+  "preemptible": "yes",
+  "restartable": "false",
+  "restartPolicy": "Never",
+  "queue": "quotagroup-global-default",
+  "replicas": 8,
+  "gpu_per_replica": 8,
+  "positiveTags": [
+    "H200"
+  ],
+  "resources": {
+    "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+    },
+    "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+    }
+  },
+  "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+  "local_source": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+  "cloud_mount": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "cloud_access_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261103_03/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261103-03",
+  "worker_timeout_seconds": 3600,
+  "platform_maxRunningDuration": "0s",
+  "timeout_note": "Existing launch enforces GNU timeout3600 around native worker. Platform maxRunningDuration0s is not a platform deadline.",
+  "manifest_sha256": "9f9ec3c1f9d2b72b957d0678a0e8f06e05de8bd1fbd68b8addc3c092043bb474",
+  "gpu_attempts_used": 3,
+  "gpu_attempt_cap": 3,
+  "worker_identity": "PENDING_RUNNING",
+  "business_completion": "PENDING"
+}

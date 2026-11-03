@@ -1,0 +1,63 @@
+== config.json: normalized leaf differences (paths+identity+build_utc excluded) = 1
+    ('DIFF', ('retained_files', 'overlay.json'), '6e196686e8f501aa5b70eefaf2ec559530350088685a680aa98eaac74dc192c1', '72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0')
+== case/inputs/native_config.json: normalized leaf differences (paths+identity+build_utc excluded) = 1
+    ('DIFF', ('retained_files', 'overlay.json'), '6e196686e8f501aa5b70eefaf2ec559530350088685a680aa98eaac74dc192c1', '72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0')
+== overlay.json: normalized leaf differences (paths+identity+build_utc excluded) = 0
+== source_lock.json: normalized leaf differences (paths+identity+build_utc excluded) = 0
+== case/inputs/engine.json: normalized leaf differences (paths+identity+build_utc excluded) = 0
+== engine.json: normalized leaf differences (paths+identity+build_utc excluded) = 0
+== case/inputs/frontier.json: normalized leaf differences (paths+identity+build_utc excluded) = 0
+== evidence_readiness.json: normalized leaf differences (paths+identity+build_utc excluded) = 1
+    ('DIFF', ('purpose',), 'Formal P2 H200-64 generation 03 under D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY; preemption recovery after generation 02; native DP startup coordination corrected; pair-warmed, wholly preemptible', 'Formal P2 H200-64 generation 04 candidate under D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY; prepared after the lead-caused interruption of generation 03; native DP startup coordination corrected; pair-warmed, wholly preemptible; GPU submission pending user approval beyond the three-job cap; no fourth-run authorization')
+
+== exact identity differences in config.json ==
+  run_tag:
+    03=dsv4-h200-p2-64-formal-20261103-03
+    04=dsv4-h200-p2-64-formal-20261103-04
+  job_tag:
+    03=dsv4-h200-p2-64-formal-20261103-03
+    04=dsv4-h200-p2-64-formal-20261103-04
+  output_dir:
+    03=/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261103_03/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261103-03
+    04=/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261103_04/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261103-04
+  workspace:
+    03=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01
+    04=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01
+  model_dir:
+    03=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/model
+    04=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/model
+  case_dir:
+    03=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/case
+    04=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/case
+  harness_dir:
+    03=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/tests/comparison/calibration
+    04=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/tests/comparison/calibration
+  script:
+    03=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_pd_worker.py
+    04=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/native_pd_worker.py
+  observer_bootstrap:
+    03=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py
+    04=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/native_dummy_bootstrap.py
+  overlay_manifest:
+    03=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/overlay.json
+    04=/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/overlay.json
+  promotion_receipt:
+    03={'path': '/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json', 'sha256': 'd505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596', 'build_utc': '2026-11-03T01:12:57.082569+00:00'}
+    04={'path': '/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json', 'sha256': 'd505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596', 'build_utc': '2026-11-03T01:30:36.748161+00:00'}
+promotion receipt 03 d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596 04 d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596
+build_utc 03 2026-11-03T01:12:57.082569+00:00 04 2026-11-03T01:30:36.748161+00:00
+
+== pins (must be equal) ==
+  harness_commit: EQUAL
+  native_commit: EQUAL
+  gpu_type: EQUAL
+  charged_group: EQUAL
+  preemptible: EQUAL
+  pair_warmup: EQUAL
+  gpu: EQUAL
+  replica: EQUAL
+  engine: EQUAL
+  trace: EQUAL
+  frontier: EQUAL
+  expected_source_hashes: EQUAL
+  promotion_receipt: EQUAL

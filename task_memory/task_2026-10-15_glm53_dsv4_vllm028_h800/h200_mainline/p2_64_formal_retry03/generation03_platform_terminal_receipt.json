@@ -1,0 +1,86 @@
+{
+ "observed_utc": "2026-11-03T01:29:06.145267+00:00",
+ "job": "exp-1103-092042-217677",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "yes",
+ "status": {
+  "phase": "Stopped",
+  "startTime": null,
+  "finishTime": "2026-11-03T01:26:58Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 8,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1103-092042-217677-1679091c",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  },
+  {
+   "name": "exp-1103-092042-217677-8f14e45f",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  },
+  {
+   "name": "exp-1103-092042-217677-a87ff679",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  },
+  {
+   "name": "exp-1103-092042-217677-c4ca4238",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  },
+  {
+   "name": "exp-1103-092042-217677-c81e728d",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  },
+  {
+   "name": "exp-1103-092042-217677-cfcd2084",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  },
+  {
+   "name": "exp-1103-092042-217677-e4da3b7f",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  },
+  {
+   "name": "exp-1103-092042-217677-eccbc87e",
+   "phase": "Stopped",
+   "node": null,
+   "containers": []
+  }
+ ],
+ "container_gpu_hours": null,
+ "known_container_gpu_hours": 0.0,
+ "container_clocks_complete": false
+}

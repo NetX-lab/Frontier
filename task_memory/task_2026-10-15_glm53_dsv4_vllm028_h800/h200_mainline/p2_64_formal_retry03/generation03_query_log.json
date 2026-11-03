@@ -1,0 +1,338 @@
+{
+ "observed_utc": "2026-11-03T01:30:13.970943+00:00",
+ "job": "exp-1103-092042-217677",
+ "job_uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+ "queries": [
+  {
+   "query": "identity",
+   "target": "exp-1103-092042-217677",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:29.279268+00:00",
+   "detail": {
+    "name": "exp-1103-092042-217677",
+    "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+    "creator": "i-fengyicheng",
+    "phase": "Stopped",
+    "finishTime": "2026-11-03T01:26:58Z",
+    "stopTimestamp": "2026-11-03T01:26:58Z"
+   }
+  },
+  {
+   "query": "replica_identity",
+   "target": "exp-1103-092042-217677",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:30.770111+00:00",
+   "replicas": [
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-eccbc87e",
+     "uid": "351a114f-7584-4be3-9604-df4a0721e49a",
+     "phase": "Stopped"
+    },
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-1679091c",
+     "uid": "ed275bc3-4fd6-4aac-a847-d46595c4cb2a",
+     "phase": "Stopped"
+    },
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-8f14e45f",
+     "uid": "56435e42-642c-4436-aa9b-cbb203d20390",
+     "phase": "Stopped"
+    },
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-a87ff679",
+     "uid": "ca7be2cf-8de3-431c-aaa6-ffaff79f03f4",
+     "phase": "Stopped"
+    },
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-c4ca4238",
+     "uid": "6f38a1c7-6ad9-4c35-a796-579ab9acd91d",
+     "phase": "Stopped"
+    },
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-c81e728d",
+     "uid": "24d3da6b-6643-41c7-abde-b350a110ebb4",
+     "phase": "Stopped"
+    },
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-cfcd2084",
+     "uid": "3852b26d-5d53-4074-9a2b-cb101130e668",
+     "phase": "Stopped"
+    },
+    {
+     "task": "default",
+     "name": "exp-1103-092042-217677-e4da3b7f",
+     "uid": "fe4b51fa-aff9-4c65-b760-f9a5a5f385a8",
+     "phase": "Stopped"
+    }
+   ]
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:30.881517+00:00",
+   "kind": "RJob",
+   "count": 42,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-eccbc87e",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:30.976858+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-1679091c",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.069094+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-8f14e45f",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.157033+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-a87ff679",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.247103+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-c4ca4238",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.339183+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-c81e728d",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.427477+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-cfcd2084",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.521490+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-092042-217677-e4da3b7f",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.657001+00:00",
+   "kind": "Replica",
+   "count": 5,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:31.856203+00:00",
+   "kind": "RJob",
+   "count": 42,
+   "total": 42,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-eccbc87e",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:32.025711+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-1679091c",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:32.239951+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-8f14e45f",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:32.412743+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-a87ff679",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:32.582771+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-c4ca4238",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:32.786507+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-c81e728d",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:32.969829+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-cfcd2084",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:33.117253+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-092042-217677-e4da3b7f",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:33.273361+00:00",
+   "kind": "Replica",
+   "count": 3,
+   "total": 3,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:46.960626+00:00",
+   "resource_type": "rjobs",
+   "count": 9,
+   "total": 9,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-eccbc87e",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:49.931325+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-1679091c",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:52.927185+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-8f14e45f",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:29:56.316306+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-a87ff679",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:30:02.825356+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-c4ca4238",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:30:05.488639+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-c81e728d",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:30:07.687989+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-cfcd2084",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:30:10.327289+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-092042-217677-e4da3b7f",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T01:30:13.968734+00:00",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": 1
+  }
+ ]
+}

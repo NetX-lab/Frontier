@@ -1,0 +1,174 @@
+{
+ "identity": {
+  "charged_group": "step_main",
+  "creator": "i-fengyicheng",
+  "creator_id": "e7163316ad76ba7266a33f9787afd70a",
+  "manual_stop_reason": null,
+  "pod_created": "2026-11-03T01:25:42.748333318Z",
+  "preemptible": "yes",
+  "queue_approved": "2026-11-03T01:25:42.053624529Z",
+  "queue_name": "quotagroup-global-default",
+  "queue_reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=788.",
+  "queue_status": "closed",
+  "running": "",
+  "scheduled": "",
+  "stopped_by": "i-fengyicheng",
+  "uid_matches": true
+ },
+ "job": "exp-1103-092042-217677",
+ "metadata": {
+  "annotations": {
+   "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+   "kubebrain.brainpp.cn/gang-start": "true",
+   "kubebrain.brainpp.cn/pod-group-enabled": "true",
+   "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+   "kubebrain.brainpp.cn/stopped-by": "i-fengyicheng",
+   "rjob.brainpp.cn/enable-jobutil-config": "true",
+   "rjob.brainpp.cn/labels": "",
+   "rjob.brainpp.cn/rjob-pod-created": "2026-11-03T01:25:42.748333318Z",
+   "rjob.brainpp.cn/rjob-queue-approved": "2026-11-03T01:25:42.053624529Z",
+   "rjob.brainpp.cn/rjob-running": "",
+   "rjob.brainpp.cn/rjob-scheduled": "",
+   "rjob.brainpp.cn/worker-regulate-name": "true",
+   "stepboard.stepfun.com/enabled": "false",
+   "stepboard.stepfun.com/exp": "stepmind",
+   "stepboard.stepfun.com/project": "default_project",
+   "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2",
+   "stepmind.com/estimated-resource": "{\"default\":{\"H200\":{\"preemptible\":8}}}",
+   "stepmind.com/queue-approved-stage": "stepmind-task-stage-1",
+   "stepmind.com/queue-elem-ranking": "18",
+   "stepmind.com/queue-name": "quotagroup-global-default",
+   "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=788.",
+   "stepmind.com/use-global-queue": "true"
+  },
+  "creationTimestamp": "2026-11-03T01:20:42Z",
+  "deletionTimestamp": null,
+  "finalizers": [
+   "rjob.brainpp.cn/rjob-finalizer"
+  ],
+  "labels": {
+   "brainpp.cn/restartable": "false",
+   "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+   "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+   "kubebrain.brainpp.cn/creator-type": "user",
+   "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+   "kubebrain.brainpp.cn/resourcetype": "rjob",
+   "logs.monitoring.basemind.com/collect": "true",
+   "privatemachine.brainpp.cn/privatemachine": "group",
+   "quotagroup.brainpp.cn/preemptible": "yes",
+   "quotagroup.brainpp.cn/quotagroup": "step_main",
+   "rjob.brainpp.cn/group-share": "read",
+   "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+   "rjob.brainpp.cn/rjob-version": "v2",
+   "stepmind.com/gang-group": "true",
+   "stepmind.com/queue-status": "closed",
+   "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+   "workspace.brainpp.cn/workspace-namspace": "shai-core"
+  },
+  "name": "exp-1103-092042-217677",
+  "namespace": "shai-core",
+  "resourceVersion": "1612276721",
+  "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+ },
+ "observed_utc": "2026-11-03T01:28:54.592368+00:00",
+ "spec": {
+  "autoDeleteDuration": "120h0m0s",
+  "backoffLimit": 10,
+  "selector": {
+   "matchLabels": {
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677"
+   }
+  },
+  "stopTimestamp": "2026-11-03T01:26:58Z",
+  "taskSpecs": {
+   "default": {
+    "containers": [
+     {
+      "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+      "imagePullPolicy": "IfNotPresent",
+      "name": "default",
+      "resources": {
+       "limits": {
+        "cpu": "64",
+        "mellanox.com/mlnx_rdma": "1",
+        "memory": "500Gi",
+        "nvidia.com/gpu": "8",
+        "rdma/mlnx_shared": "8"
+       },
+       "requests": {
+        "cpu": "64",
+        "memory": "500Gi",
+        "nvidia.com/gpu": "8"
+       }
+      }
+     }
+    ],
+    "maxRunningDuration": "0s",
+    "maxWaitDuration": "0s",
+    "positiveTags": [
+     "H200"
+    ],
+    "qos": {
+     "gpuQos": "guaranteed",
+     "localStorageQos": "guaranteed"
+    },
+    "replicas": 8,
+    "selector": {
+     "matchLabels": {
+      "kubebrain.brainpp.cn/resourcetype": "rjob",
+      "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+      "rjob.brainpp.cn/rjob-task-type": "default"
+     }
+    },
+    "template_annotations": {
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "template_labels": {
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    }
+   }
+  }
+ },
+ "status": {
+  "finishTime": "2026-11-03T01:26:58Z",
+  "message": "RJob stopped",
+  "phase": "Stopped",
+  "reason": "RJobStopped",
+  "taskStage": "stepmind-task-stage-1",
+  "taskStatuses": {
+   "default": {
+    "pending": 8,
+    "taskStage": "stepmind-task-stage-1"
+   }
+  }
+ }
+}

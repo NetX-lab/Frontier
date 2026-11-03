@@ -64,6 +64,15 @@ CASES = {
                          purpose='Formal P2 H200-64 generation 03 under D-P2-64-FORMAL-B and '
                                  'D-P2-64-STARTUP-RECOVERY; preemption recovery after generation 02; '
                                  'native DP startup coordination corrected; pair-warmed, wholly preemptible'),
+    'p2_64_formal_retry04': dict(source='formal', dp=4, h200_limit=32,
+                         native='p2-dp-startup-coordination', native_commit='a06a72a4326cba02234df6cfbdc21b78d3a15d26',
+                         case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
+                         run_tag='dsv4-h200-p2-64-formal-20261103-04',
+                         purpose='Formal P2 H200-64 generation 04 candidate under D-P2-64-FORMAL-B and '
+                                 'D-P2-64-STARTUP-RECOVERY; prepared after the lead-caused interruption of '
+                                 'generation 03; native DP startup coordination corrected; pair-warmed, wholly '
+                                 'preemptible; GPU submission pending user approval beyond the three-job cap; '
+                                 'no fourth-run authorization'),
     'p2_64_formal': dict(source='formal', dp=4, h200_limit=32,
                          case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
                          run_tag='dsv4-h200-p2-64-formal-20261102-01',

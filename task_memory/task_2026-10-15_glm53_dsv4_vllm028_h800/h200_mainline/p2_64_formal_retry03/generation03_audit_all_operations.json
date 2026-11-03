@@ -1,0 +1,760 @@
+{
+ "observed_utc": "2026-11-03T01:30:13.968771+00:00",
+ "job": "exp-1103-092042-217677",
+ "job_uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+ "request": {
+  "path": "/kapi/auditlogger.kubebrain.io/api/v1alpha1/audit",
+  "pageSize": 100,
+  "note": "no operationType filter"
+ },
+ "resources": {
+  "rjob": {
+   "name": "exp-1103-092042-217677",
+   "resource_type": "rjobs",
+   "count": 9,
+   "total": 9,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "rjobs",
+      "resourceName": "exp-1103-092042-217677",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 9,
+     "rows": [
+      {
+       "receipt": "01M6FG8GP8FRSQZ0K365VJ2FPD",
+       "root": "01M6FG8GP8FRSQZ0K365VJ2FPD",
+       "parent": "01M6FG8GP8FRSQZ0K365VJ2FPD",
+       "timestamp": 1793669219,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "update",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:queue-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:queue-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG8GK3XYNR1DBAKDP3SZRA",
+       "root": "01M6FG8GK3XYNR1DBAKDP3SZRA",
+       "parent": "01M6FG8GK3XYNR1DBAKDP3SZRA",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "e7163316ad76ba7266a33f9787afd70a",
+        "subject_type": "user",
+        "subject_name": "i-fengyicheng",
+        "tenant": "shai",
+        "scope": "/shai/",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG669E28KSKCY7GC07N3BE",
+       "root": "01M6FG669E28KSKCY7GC07N3BE",
+       "parent": "01M6FG669E28KSKCY7GC07N3BE",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "update",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65J20TBGPBDRHET1PWM1",
+       "root": "01M6FG65J20TBGPBDRHET1PWM1",
+       "parent": "01M6FG65J20TBGPBDRHET1PWM1",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "update",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:queue-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:queue-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG668KB96VZH2DS5G5DVTZ",
+       "root": "01M6FG668KB96VZH2DS5G5DVTZ",
+       "parent": "01M6FG668KB96VZH2DS5G5DVTZ",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "update",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG2JNDWCF3V60WM398QGEC",
+       "root": "01M6FG2JNDWCF3V60WM398QGEC",
+       "parent": "01M6FG2JNDWCF3V60WM398QGEC",
+       "timestamp": 1793669024,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "update",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:queue-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:queue-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FFYZYETCG7J8NHW91Q17MP",
+       "root": "01M6FFYZYETCG7J8NHW91Q17MP",
+       "parent": "01M6FFYZYETCG7J8NHW91Q17MP",
+       "timestamp": 1793668906,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "update",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:queue-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:queue-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FFYZZ16WKB340TRSSCT798",
+       "root": "01M6FFYZZ16WKB340TRSSCT798",
+       "parent": "01M6FFYZZ16WKB340TRSSCT798",
+       "timestamp": 1793668906,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "update",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:queue-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:queue-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FFX0WTZAFQKF5NY8EY3WB5",
+       "root": "01M6FFX0WTZAFQKF5NY8EY3WB5",
+       "parent": "01M6FFX0WTZAFQKF5NY8EY3WB5",
+       "timestamp": 1793668842,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "rjobs",
+       "resource_name": "exp-1103-092042-217677",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "e7163316ad76ba7266a33f9787afd70a",
+        "subject_type": "user",
+        "subject_name": "i-fengyicheng",
+        "tenant": "shai",
+        "scope": "/shai/",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-eccbc87e": {
+   "name": "exp-1103-092042-217677-eccbc87e",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-eccbc87e",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GM49MJW5NZ34B4MKWG7",
+       "root": "01M6FG8GM49MJW5NZ34B4MKWG7",
+       "parent": "01M6FG8GM49MJW5NZ34B4MKWG7",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-eccbc87e",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65WDKKD7SMTXGZKADYE9",
+       "root": "01M6FG65WDKKD7SMTXGZKADYE9",
+       "parent": "01M6FG65WDKKD7SMTXGZKADYE9",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-eccbc87e",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-1679091c": {
+   "name": "exp-1103-092042-217677-1679091c",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-1679091c",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GKTF0KTSHGQFRJZMFED",
+       "root": "01M6FG8GKTF0KTSHGQFRJZMFED",
+       "parent": "01M6FG8GKTF0KTSHGQFRJZMFED",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-1679091c",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65WJVS9587P46JNHGEKJ",
+       "root": "01M6FG65WJVS9587P46JNHGEKJ",
+       "parent": "01M6FG65WJVS9587P46JNHGEKJ",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-1679091c",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-8f14e45f": {
+   "name": "exp-1103-092042-217677-8f14e45f",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-8f14e45f",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GM4P0B9CPTKKKM7WZP1",
+       "root": "01M6FG8GM4P0B9CPTKKKM7WZP1",
+       "parent": "01M6FG8GM4P0B9CPTKKKM7WZP1",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-8f14e45f",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG660YN0HC04E5GEEPK9GK",
+       "root": "01M6FG660YN0HC04E5GEEPK9GK",
+       "parent": "01M6FG660YN0HC04E5GEEPK9GK",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-8f14e45f",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-a87ff679": {
+   "name": "exp-1103-092042-217677-a87ff679",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-a87ff679",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GM1K13SEZB0XYF5Y7JR",
+       "root": "01M6FG8GM1K13SEZB0XYF5Y7JR",
+       "parent": "01M6FG8GM1K13SEZB0XYF5Y7JR",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-a87ff679",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65WQXV0EBVYQBAX3K91Y",
+       "root": "01M6FG65WQXV0EBVYQBAX3K91Y",
+       "parent": "01M6FG65WQXV0EBVYQBAX3K91Y",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-a87ff679",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-c4ca4238": {
+   "name": "exp-1103-092042-217677-c4ca4238",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-c4ca4238",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GKCN332SDGCTE6H9MC9",
+       "root": "01M6FG8GKCN332SDGCTE6H9MC9",
+       "parent": "01M6FG8GKCN332SDGCTE6H9MC9",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-c4ca4238",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65RD2HGSHG94ZYXKR7WQ",
+       "root": "01M6FG65RD2HGSHG94ZYXKR7WQ",
+       "parent": "01M6FG65RD2HGSHG94ZYXKR7WQ",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-c4ca4238",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-c81e728d": {
+   "name": "exp-1103-092042-217677-c81e728d",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-c81e728d",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GKQ9MRFAG615TPKERPX",
+       "root": "01M6FG8GKQ9MRFAG615TPKERPX",
+       "parent": "01M6FG8GKQ9MRFAG615TPKERPX",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-c81e728d",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65R7E3VVCV35YKK6W80K",
+       "root": "01M6FG65R7E3VVCV35YKK6W80K",
+       "parent": "01M6FG65R7E3VVCV35YKK6W80K",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-c81e728d",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-cfcd2084": {
+   "name": "exp-1103-092042-217677-cfcd2084",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-cfcd2084",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GKCY0CWS5RX0Y2WM7WN",
+       "root": "01M6FG8GKCY0CWS5RX0Y2WM7WN",
+       "parent": "01M6FG8GKCY0CWS5RX0Y2WM7WN",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-cfcd2084",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65M46CNP0XDBWHEA502D",
+       "root": "01M6FG65M46CNP0XDBWHEA502D",
+       "parent": "01M6FG65M46CNP0XDBWHEA502D",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-cfcd2084",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-e4da3b7f": {
+   "name": "exp-1103-092042-217677-e4da3b7f",
+   "resource_type": "replicas",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "resourceType": "replicas",
+      "resourceName": "exp-1103-092042-217677-e4da3b7f",
+      "projectName": "shai-core",
+      "pageType": "shai-core",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "receipt": "01M6FG8GM2HHE3V7X9EA4QWKXJ",
+       "root": "01M6FG8GM2HHE3V7X9EA4QWKXJ",
+       "parent": "01M6FG8GM2HHE3V7X9EA4QWKXJ",
+       "timestamp": 1793669218,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-e4da3b7f",
+       "operation": "stop",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      },
+      {
+       "receipt": "01M6FG65WVH3VZ6GRDHK5BVA9R",
+       "root": "01M6FG65WVH3VZ6GRDHK5BVA9R",
+       "parent": "01M6FG65WVH3VZ6GRDHK5BVA9R",
+       "timestamp": 1793669142,
+       "service": "kubebrain-apiserver",
+       "project": "shai-core",
+       "resource": "replicas",
+       "resource_name": "exp-1103-092042-217677-e4da3b7f",
+       "operation": "create",
+       "result": "succeeded",
+       "subject": {
+        "subject_id": "system:serviceaccount:kubebrain:rjob-controller",
+        "subject_type": "service",
+        "subject_name": "system:serviceaccount:kubebrain:rjob-controller",
+        "tenant": "shai",
+        "scope": "shai-core",
+        "groups": null
+       },
+       "topic": "",
+       "data": null
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  }
+ }
+}

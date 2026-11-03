@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "scratch": "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle_c09141cf79154ce89e63356fd74bf509",
+  "child": {
+    "pid": 1055855,
+    "sid": 1055855,
+    "pgid": 1055855
+  },
+  "normal_parent_exit_preserved_child": true,
+  "marker_matches_stop_selector": true,
+  "isolated_session_does_not_remove_environment_marker": true,
+  "received_signal": {
+    "signal": 2,
+    "pid": 1055855
+  },
+  "host_launch_sha256": "3b6fb08c536259af40954efa7aecea7eab77486c444e5a1721f1634d18ac216d",
+  "scope": "CPU sleeper only; no ds4 stop, StepMind API, GPU allocation, or production process signal"
+}

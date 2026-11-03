@@ -1,0 +1,14 @@
+{
+ "observed_utc": "2026-11-03T01:31:14.573312+00:00",
+ "name": "exp-1103-092042-217677",
+ "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+ "creator": "i-fengyicheng",
+ "phase": "Stopped",
+ "reason": "RJobStopped",
+ "message": "RJob stopped",
+ "startTime": null,
+ "finishTime": "2026-11-03T01:26:58Z",
+ "stopTimestamp": "2026-11-03T01:26:58Z",
+ "stopped_by": "i-fengyicheng",
+ "manual_stop_reason": null
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Recorded lead-caused generation03 stop before scheduling; verified terminal evidence and prepared an unsubmitted generation04 candidate pending the fourth-job decision. |
 | 2026-11-03 | Generation03 package independently accepted:47sealed files,41unchanged,check-onlyPASS; third authorized submission next. |
 | 2026-11-03 | Accepted generation02 preemption and104-file copy; recorded the third permitted generation and incomplete reference/accounting. |
 | 2026-11-03 | Accepted R5 source binding and legacy control; recorded generation02 on eight distinct Running nodes. |
@@ -35,9 +36,9 @@
 
 ## Current Codex checkpoint — 2026-11-02
 
-Generation03 package is independently accepted: `h200_mainline/p2_64_formal_retry03/package_01`,47sealed files,41byte-identical to generation02, exact identity-only changes and check-onlyPASS. The next action is the third authorized GPU submission; see the generation03 test report.
+Generation03 exp-1103-092042-217677 is Stopped at 2026-11-03T01:26:58Z after the lead called ds4-exec --stop on its submitting Pi label. The environment-marker stop also interrupted detached launcher907414; platform audit confirms the personal stop request. All eight replicas remained unscheduled and no container or native request started. Terminal/cause acceptance is complete; this is not preemption or a native-engine failure. Generation04 candidate `h200_mainline/p2_64_formal_retry04/package_01` is prepared and independently verified (47 sealed files, 41 byte-identical, check-only PASS), manifest `d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081`. It is unsubmitted and requires a new user decision because all three GPU-job submissions are used. See the generation03/generation04 reports and the fourth-submission proposal.
 
-Latest continuation, 2026-11-03: generation02 exp-1102-233941-576872 was preempted at2026-11-02T16:10:07Z. Lead independent terminal/copy audit PASS:104files,53,233,857bytes, both API heads healthy, first warmup stream interrupted, zero complete repetitions/no formal metrics. Saved predeclared client rows are not dispatch evidence. Generation03 preparation uses the last of the existing three-GPU-job allowance, unchanged64H200/all-preemptible/step_main/3600s/64GPUh. R5 is accepted; complete-reference coverage/R5/gates remain pending. Exact generation01/02 container GPU-hours remain unknown and do not block the authorized reference recovery. See `../h200_mainline/p2_64_formal/recovery_02_20261102/generation02_terminal_acceptance.json`. Earlier Running statements below describe historical snapshots.
+Latest continuation, 2026-11-03: generation02 exp-1102-233941-576872 was preempted at2026-11-02T16:10:07Z. Lead independent terminal/copy audit PASS:104files,53,233,857bytes, both API heads healthy, first warmup stream interrupted, zero complete repetitions/no formal metrics. Saved predeclared client rows are not dispatch evidence. Generation03 used the last of the three-GPU-job allowance and was subsequently stopped by the lead before scheduling; no automatic submission remains. R5 is accepted; complete-reference coverage/R5/gates remain pending. Exact generation01/02 container GPU-hours remain unknown and do not block the authorized reference recovery. See `../h200_mainline/p2_64_formal/recovery_02_20261102/generation02_terminal_acceptance.json`. Earlier Running statements below describe historical snapshots.
 
 
 Use [current plan](../plan.md#current-execution-route--codex-cli-h200-operator-path-2026-10-31) and [current handoff](../progress.md#current-session-handoff--codex-cli-2026-11-02). Platform actions use `/ds4-exec` under D-P2-INPUT-QUALIFICATION and D-P2-64-FORMAL-B. GLM stays paused. Dated snapshots below are historical where they conflict with this entry.

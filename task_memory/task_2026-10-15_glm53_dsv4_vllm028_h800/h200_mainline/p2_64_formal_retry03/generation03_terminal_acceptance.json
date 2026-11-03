@@ -1,0 +1,65 @@
+{
+  "status": "PASS_TERMINAL_AND_CAUSE_ONLY",
+  "observed_utc": "2026-11-03T01:32:56.874120+00:00",
+  "job": "exp-1103-092042-217677",
+  "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+  "terminal": "Stopped",
+  "terminal_utc": "2026-11-03T01:26:58Z",
+  "cause": "Lead stopped Pi; marker-based SIGINT also interrupted the detached StepMind launcher, which stopped this RJob.",
+  "stop_audit": {
+    "receipt": "01M6FG8GK3XYNR1DBAKDP3SZRA",
+    "root": "01M6FG8GK3XYNR1DBAKDP3SZRA",
+    "parent": "01M6FG8GK3XYNR1DBAKDP3SZRA",
+    "timestamp": 1793669218,
+    "service": "kubebrain-apiserver",
+    "project": "shai-core",
+    "resource": "rjobs",
+    "resource_name": "exp-1103-092042-217677",
+    "operation": "stop",
+    "result": "succeeded",
+    "subject": {
+      "subject_id": "e7163316ad76ba7266a33f9787afd70a",
+      "subject_type": "user",
+      "subject_name": "i-fengyicheng",
+      "tenant": "shai",
+      "scope": "/shai/",
+      "groups": null
+    },
+    "topic": "",
+    "data": null
+  },
+  "expected_replicas": 8,
+  "owner_uids_verified": 8,
+  "never_scheduled_replicas": 8,
+  "query_pass": 29,
+  "event_counts": {
+    "live_events.json": 82,
+    "historical_events.json": 66
+  },
+  "exact_container_gpu_hours": null,
+  "known_container_gpu_hours": 0,
+  "inferred_container_gpu_hours": 0,
+  "inference_basis": "All replicas remained PodScheduled=False/assigned0, with no node binding, container state, or container start events.",
+  "inference_limit": "Not a billing or node-level allocation receipt; generic missing-clock result remains null.",
+  "native_business_output_present": false,
+  "controller_files": [
+    "run_manifest.json"
+  ],
+  "cloud_copy": "NOT_RUN: no worker started; no native-produced artifact to recover. Cloud root not independently inspected.",
+  "comparison": "NOT_RUN_INSUFFICIENT_EVIDENCE",
+  "script_sha256": "421c7febee4ea0347155e8ee6a681f76c945ca94201753026979ef73002d6cd0",
+  "artifacts": {
+    "generation03_platform_job.json": "933094eeae1de0be61e839b13d782c50278ed66bf01762644f5c91310b4ab481",
+    "generation03_platform_replicas.json": "3d6797b4efc576cbd10f0d3eecd552dac5b7bd715f86c64ab152f2c78a530082",
+    "generation03_platform_queries.json": "4996d437e7fb3d18744cfaf09d66c11b2b983f3eb5eefaa1f127cb70b1907bb7",
+    "generation03_platform_terminal_receipt.json": "daea93b99f0644fdda8cad2d1b3ebf5c1a20096f84cc2753a7af8131a378c61e",
+    "generation03_platform_phase_recheck.json": "c70f5b47e23b598d9f24793a70aba33ab63a415c73f0a14319a2d0dc76684c25",
+    "generation03_live_events.json": "d4953ec8f15c1373c56be49a066398f1190c92a54dea50870e60e3b4003d0741",
+    "generation03_historical_events.json": "297c10371b6566074fbcb574c965278d42b35ce00659e11a28a0a5c2a1f39bd6",
+    "generation03_audit_all_operations.json": "1a009e856b0781ca388c06995d4399317e7067452ad1825bc80620b934db9aa2",
+    "generation03_query_log.json": "db8c8c83dee66185efe3c8f0b864c2c87d114ab9847798e3ef06863ad0f1cfa3",
+    "generation03_local_launcher_stop.log": "da37c46437602ab8a4fa692366eafddda1f81167293744f33f31bad658e23a0f",
+    "generation03_local_ds4_stop_marker.txt": "735e69ca40d02c83b1b9438454b30ac39a5e9f29aae838a1a65dad029bd392c1",
+    "generation03_evidence_summary.json": "cdeef220c3be4942618813b8c7307341da7aa44bddaffba66089564f6dd3e116"
+  }
+}

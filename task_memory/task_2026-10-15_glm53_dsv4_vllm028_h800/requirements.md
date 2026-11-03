@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Recorded the lead-caused third-job interruption and explicit pending fourth-job decision; existing resource cap and user decisions unchanged. |
 | 2026-11-03 | Resumed generation02 terminal/copy acceptance; retained the explicit preemption retry rule and three-GPU-job cap for generation03. |
 | 2026-11-02 | Recorded D-P2-64-STARTUP-RECOVERY: YC approved option B, generation 02 and ordinary in-scope debug corrections without repeated approval. |
 | 2026-11-02 | Recorded reviewed native-startup failure findings and pending recovery proposal without adding source-change or retry authority. |
@@ -164,6 +165,12 @@
 > continue
 
 Carry forward D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY. Generation01 used one GPU job and failed during startup; generation02 used the second and was preempted. The explicit preemption-recovery rule permits the third GPU job with unchanged 64 H200, all-preemptible, step_main, 3600-second and 64-GPU-hour-per-run limits. A fourth GPU job requires a new decision. The lead's next action is a fresh run generation with the already accepted source, workload, promotion receipt and R5 reader; no new source correction or resource class is inferred.
+
+## [Execution Note] 2026-11-03 — third submission interrupted by the lead; fourth decision pending
+
+Generation03 `exp-1103-092042-217677` was stopped at01:26:58Z when the lead used ds4-exec --stop to redirect a failing monitor. The stop selector also matched the detached StepMind launcher by its inherited DS4_SESSION_ID. The lead owns this mistake. Platform audit and eight unscheduled replica records confirm no native container or request started. This is not preemption and creates no new automatic retry authority.
+
+D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY still cap GPU submissions at three; all three are used. Ordinary debug approval permits local recovery preparation, not a fourth resource allocation. Generation04 candidate has been built and checked locally for a concrete decision, but no fourth submission is authorized. The proposed fourth job preserves64H200/all-preemptible/step_main/3600s/64GPUh and all native, workload, promotion and comparison inputs. The existing old-reference launch-order requirement is not waived. Proposed operation change: finite submission turns finish normally, a separate Pi label reads exact replicas, and a label owning a live launcher never receives ds4 --stop. Details and options: `h200_mainline/p2_64_formal_retry04/recovery_proposal.md`.
 
 ## [Original Request / Decision] 2026-11-02 — D-P2-64-STARTUP-RECOVERY
 

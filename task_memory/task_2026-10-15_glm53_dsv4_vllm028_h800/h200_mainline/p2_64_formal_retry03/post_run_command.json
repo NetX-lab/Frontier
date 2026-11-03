@@ -1,0 +1,23 @@
+{
+  "status": "NOT_RUN_INSUFFICIENT_EVIDENCE",
+  "precondition": "Terminal receipt and hash-identical completed three-repeat reference copied locally; admission/coverage remain auxiliary soft gates.",
+  "argv": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/compare.py",
+    "--case",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/case",
+    "--download",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261103_03/dsv4-h200-p2-64-formal-20261103-03",
+    "--controller-run",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261103-03",
+    "--reference-checker",
+    "r5",
+    "--r4-python",
+    "/data/ycfeng/envs/openmopd-py312/bin/python",
+    "--output",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation03"
+  ],
+  "reuse_frontier_run": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64",
+  "expected": "TOOLS_FINISHED, selected R5 run PASS, coverage evidence verified, all-request and warm reading with all three repeats/four metrics retained.",
+  "reason": "Lead-triggered launcher interruption stopped the unscheduled job; zero native repeats or request output. No cloud copy was launched because no worker started."
+}

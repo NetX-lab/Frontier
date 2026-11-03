@@ -1,0 +1,847 @@
+{
+ "job": "exp-1103-092042-217677",
+ "job_uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+ "observed_utc": "2026-11-03T01:28:56.259988+00:00",
+ "replica_errors": [],
+ "replica_infos": {
+  "default": [
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-eccbc87e",
+    "phase": "Stopped"
+   },
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-1679091c",
+    "phase": "Stopped"
+   },
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-8f14e45f",
+    "phase": "Stopped"
+   },
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-a87ff679",
+    "phase": "Stopped"
+   },
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-c4ca4238",
+    "phase": "Stopped"
+   },
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-c81e728d",
+    "phase": "Stopped"
+   },
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-cfcd2084",
+    "phase": "Stopped"
+   },
+   {
+    "ip": "",
+    "name": "exp-1103-092042-217677-e4da3b7f",
+    "phase": "Stopped"
+   }
+  ]
+ },
+ "replicas": [
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-eccbc87e",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.557787638Z",
+     "rjob.brainpp.cn/replica-running": "2026-11-03T01:27:00.002548029Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "3",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-eccbc87e",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "351a114f-7584-4be3-9604-df4a0721e49a"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-eccbc87e is unschedulable even after PostFilter, assigned 0.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:58Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  },
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-1679091c",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.573111322Z",
+     "rjob.brainpp.cn/replica-running": "2026-11-03T01:26:59.998474602Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "6",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-1679091c",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "ed275bc3-4fd6-4aac-a847-d46595c4cb2a"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-1679091c is unschedulable even after PostFilter, assigned 0.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:58Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  },
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-8f14e45f",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.748333318Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "7",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-8f14e45f",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "56435e42-642c-4436-aa9b-cbb203d20390"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:59Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  },
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-a87ff679",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.563282293Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "4",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-a87ff679",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "ca7be2cf-8de3-431c-aaa6-ffaff79f03f4"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-a87ff679 is unschedulable even after PostFilter, assigned 0.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:59Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  },
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-c4ca4238",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.479768235Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "1",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-c4ca4238",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "6f38a1c7-6ad9-4c35-a796-579ab9acd91d"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-c4ca4238 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:59Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  },
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-c81e728d",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.418622086Z",
+     "rjob.brainpp.cn/replica-running": "2026-11-03T01:26:59.996387769Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "2",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-c81e728d",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "24d3da6b-6643-41c7-abde-b350a110ebb4"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-c81e728d is unschedulable even after PostFilter, assigned 0.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:58Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  },
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-cfcd2084",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.328158814Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "0",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-cfcd2084",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "3852b26d-5d53-4074-9a2b-cb101130e668"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 8. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 8, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:59Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  },
+  {
+   "info_row": {
+    "ip": "",
+    "name": "exp-1103-092042-217677-e4da3b7f",
+    "phase": "Stopped"
+   },
+   "metadata": {
+    "annotations": {
+     "basemind.kubernetes.io/auto-port-enabled": "true",
+     "events.basemind.com/enabled": "true",
+     "events.basemind.com/kafka-topic": "events-g25-jobutils",
+     "k8s.v1.cni.cncf.io/networks": "kubebrain/vf",
+     "kubebrain.brainpp.cn/auto-port-num": "2",
+     "kubebrain.brainpp.cn/command": "bash -lc cd /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01 && exec bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; timeout 3600 python3 -I -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/native_dummy_bootstrap.py --config /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01/config.json'",
+     "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/package_01",
+     "kubebrain.brainpp.cn/overlay2.size": "50g",
+     "kubebrain.brainpp.cn/preemptible.job": "yes",
+     "kubebrain.brainpp.cn/showname": "by-stepmind/7bcdc",
+     "kubebrain.brainpp.cn/stopped-by": "system:serviceaccount:kubebrain:rjob-controller",
+     "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+     "rjob.brainpp.cn/labels": "",
+     "rjob.brainpp.cn/replica-pod-created": "2026-11-03T01:25:42.587313631Z",
+     "stepboard.stepfun.com/enabled": "false",
+     "stepboard.stepfun.com/exp": "stepmind",
+     "stepboard.stepfun.com/project": "default_project",
+     "stepboard.stepfun.com/steptron_commit": "9651750be2198b269e0373be3bbc4c3d288d6ee2"
+    },
+    "creationTimestamp": "2026-11-03T01:25:42Z",
+    "deletionTimestamp": null,
+    "labels": {
+     "autoAddPrivateMachine": "true",
+     "brainpp.cn/restartable": "false",
+     "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+     "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+     "kubebrain.brainpp.cn/creator-type": "user",
+     "kubebrain.brainpp.cn/extraresourceid": "",
+     "kubebrain.brainpp.cn/extraresourcetype": "",
+     "kubebrain.brainpp.cn/lxcfs": "yes",
+     "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+     "kubebrain.brainpp.cn/replica": "5",
+     "kubebrain.brainpp.cn/resourcetype": "rjob",
+     "logs.monitoring.basemind.com/collect": "true",
+     "privatemachine.brainpp.cn/privatemachine": "group",
+     "quotagroup.brainpp.cn/preemptible": "yes",
+     "quotagroup.brainpp.cn/quotagroup": "step_main",
+     "rjob.brainpp.cn/generated-task-index": "0",
+     "rjob.brainpp.cn/is-critical-task": "yes",
+     "rjob.brainpp.cn/managed-by": "replica",
+     "rjob.brainpp.cn/rjob-name": "exp-1103-092042-217677",
+     "rjob.brainpp.cn/rjob-task-id": "exp-1103-092042-217677-default",
+     "rjob.brainpp.cn/rjob-task-type": "default",
+     "rjob.brainpp.cn/rjob-uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+     "rjob.brainpp.cn/task-fail-policy": "any",
+     "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group": "exp-1103-092042-217677-default",
+     "scheduling.x-k8s.io/pod-group-root": "exp-1103-092042-217677",
+     "stepmind.com/gang-group": "true",
+     "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+     "workspace.brainpp.cn/workspace-namspace": "shai-core"
+    },
+    "name": "exp-1103-092042-217677-e4da3b7f",
+    "namespace": "shai-core",
+    "ownerReferences": [
+     {
+      "apiVersion": "rjob.brainpp.cn/v1alpha1",
+      "blockOwnerDeletion": true,
+      "controller": true,
+      "kind": "RJob",
+      "name": "exp-1103-092042-217677",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d"
+     }
+    ],
+    "uid": "fe4b51fa-aff9-4c65-b760-f9a5a5f385a8"
+   },
+   "source": "_get_replica_kapis",
+   "spec_selected": {
+    "nodeName": null,
+    "nodeSelector": null,
+    "priorityClassName": null,
+    "restartPolicy": "Never",
+    "schedulerName": null
+   },
+   "status": {
+    "conditions": [
+     {
+      "lastProbeTime": null,
+      "lastTransitionTime": "2026-11-03T01:25:42Z",
+      "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-e4da3b7f is unschedulable even after PostFilter, assigned 0.",
+      "reason": "Unschedulable",
+      "status": "False",
+      "type": "PodScheduled"
+     }
+    ],
+    "finishTimestamp": "2026-11-03T01:26:59Z",
+    "phase": "Stopped",
+    "qosClass": "Guaranteed"
+   },
+   "task": "default"
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+  "cause": "lead-called ds4 stop matched detached launcher by inherited DS4_SESSION_ID",
+  "host_stop_script": "/data/ycfeng/codex-home/skills/ds4-exec/scripts/host_launch.sh",
+  "host_stop_script_sha256": "3b6fb08c536259af40954efa7aecea7eab77486c444e5a1721f1634d18ac216d",
+  "host_stop_source_lines_71_84": "  sid=$(cat \"$R/session_id\")\n  # Pi may handle SIGINT and exit 0; retain the stop decision independently of its exit code.\n  printf 'stop requested by caller\\n' > \"$R/stopped\"\n  flock -u 9\n  signal_workers() {\n    for f in /proc/[0-9]*/environ; do\n      if grep -zFxq -- \"DS4_SESSION_ID=$sid\" \"$f\" 2>/dev/null; then\n        kill -\"$1\" \"${f//[^0-9]/}\" 2>/dev/null || true\n      fi\n    done\n  }\n  signal_workers INT\n  for ((i=0; i<30; i++)); do\n    [ -f \"$R/exit\" ] && break",
+  "submission_script": "/data/ycfeng/tmp/ds4_runs/p64-formal3-1103b/scratch/submit_once.py",
+  "submission_script_sha256": "a9bd5070e43f4be8d8d5f0be8ea0e26e59925adad5e57501d523ec8cc5a1e3e0",
+  "submission_environment": "env = dict(os.environ), then Popen(env=env, start_new_session=True)",
+  "correction": "Let the submission executor finish normally; retain its detached launcher until native terminal. Never call ds4 --stop for a label owning a live StepMind launcher. Use a different label for read-only monitoring; its finite turns return normally. Check exact replica objects, with full output, instead of retrying the forbidden core Pod API."
+}

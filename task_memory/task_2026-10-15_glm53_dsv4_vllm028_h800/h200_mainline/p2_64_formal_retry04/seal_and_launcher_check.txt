@@ -1,0 +1,38 @@
+manifest keys: ['files', 'native_qualification', 'submitted']
+manifest json sha256: d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081
+sealed entries: 47
+seal mismatches: []
+sealed sha256 multiset: 9ad8d323aa77a87667d9a7cdd79eb1a372c829934cbf98eda619d30bfbdd5a21
+
+-- run markers in 04 --
+found: []
+case/ exists: True case/runs exists: False
+
+-- 03 extras not copied --
+['case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261103-03/run_manifest.json', 'launcher_exit.json', 'launcher_started.json']
+
+-- changed file digests (04) --
+829c368b2174de351a19e7b6c88296a2f6b2abbd7be994b49ccc5f068dc85f5d case/inputs/native_config.json
+dad3b7d72c1ee4079da8074b9bbf91a68d4fb38288183b9d7b59322ae0381abf case/manifest.yaml
+829c368b2174de351a19e7b6c88296a2f6b2abbd7be994b49ccc5f068dc85f5d config.json
+3e0cc88af4a157a8ccfbe472d3f4277ebedb5107d1fce6bcd815df3683471d2f evidence_readiness.json
+d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081 manifest.json
+72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0 overlay.json
+02bda9fc66e3e4055d2cd1732258c8a0fe1aac22dd7d530d6898b7968f1642b0 source_lock.json
+
+-- unchanged pin digests (sample, identical in 03/04) --
+EQUAL ae8931b798b437551c857c441ee9885d6b44084dbefe14414c2de39f98984ea3 case/inputs/engine.json
+EQUAL ae8931b798b437551c857c441ee9885d6b44084dbefe14414c2de39f98984ea3 engine.json
+EQUAL 3aac0a3f6b829a478b4a350614722d386398271d5eb0cf670299bc9a533c8cf4 case/inputs/frontier.json
+EQUAL 5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3 case/inputs/trace/manifest.json
+EQUAL 594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9 case/inputs/trace/SHA256SUMS
+EQUAL 2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2 case/inputs/trace/trace.csv
+EQUAL 55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e case/inputs/trace/warmup_pool.csv
+EQUAL f489eb26a3784ce5691faebad99a33b6e2e7c5988605bd7427415efc685f7440 native_config_parallel.py
+EQUAL a9b20efd63ece3bd4e4436f774a7be7156bfc410b310944c4ef4d7e19a091572 native_distributed_parallel_state.py
+EQUAL a06292492a5cc24a17be299a5890d617fc8d1fe82e9a95b1cfc6be47d0d250ab native_distributed_utils.py
+EQUAL 533d60761f2505e93b318c349baf733a1ec7e386f1c2ad3f768e41bdab017599 native_engine_utils.py
+EQUAL 948672ddb51167c51d6bb14db04a12aa9fa72ea569ad664f9ac359f9a12276a5 launch.py
+EQUAL c75cf418e87d95e1afccb47baf437ef46bcceecb0f9ca93e6c7e1e4f7f0da693 native_pd_worker.py
+EQUAL 204cffd3ac8b3e9e2b35982d0b810172845579ae3ea4eb3a5c902699304b8ccf submit_native_diagnostic.py
+EQUAL b2441369a63ab732b9e3c03d8f43aaf5382c6d3e13ac4a6b155f4c34b2c1a27b tests/comparison/dp_placement_pp/vllm_replay.py

@@ -1,0 +1,1134 @@
+{
+ "observed_utc": "2026-11-03T01:29:33.273385+00:00",
+ "job": "exp-1103-092042-217677",
+ "job_uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+ "request": {
+  "path": "/kapis/v1/tenants/shai/projects/shai-core/events",
+  "sortBy": "lastTimestamp:desc",
+  "pageSize": 100
+ },
+ "sources": {
+  "exp-1103-092042-217677": {
+   "kind": "RJob",
+   "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+   "count": 42,
+   "total": 42,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677",
+      "kind": "RJob",
+      "uid": "f8d2b600-f5c6-4e04-bf62-28123802235d",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 42,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-eccbc87e",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-cfcd2084",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-cfcd2084",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1103-092042-217677-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-eccbc87e",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 8. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 8, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-eccbc87e is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-c4ca4238 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-e4da3b7f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-1679091c is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-c81e728d is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-a87ff679 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 6. coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-8f14e45f is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 6.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-e4da3b7f cannot find enough sibling pods, current pods number: 7, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-e4da3b7f cannot find enough sibling pods, current pods number: 7, minMember of group: 8, pre-filter pod exp-1103-092042-217677-e4da3b7f cannot find enough sibling pods, current pods number: 7, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8, pre-filter pod exp-1103-092042-217677-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8, pre-filter pod exp-1103-092042-217677-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-1679091c cannot find enough sibling pods, current pods number: 5, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-1679091c cannot find enough sibling pods, current pods number: 5, minMember of group: 8, pre-filter pod exp-1103-092042-217677-1679091c cannot find enough sibling pods, current pods number: 5, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8, pre-filter pod exp-1103-092042-217677-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8, pre-filter pod exp-1103-092042-217677-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-a87ff679 cannot find enough sibling pods, current pods number: 6, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-a87ff679 cannot find enough sibling pods, current pods number: 6, minMember of group: 8, pre-filter pod exp-1103-092042-217677-a87ff679 cannot find enough sibling pods, current pods number: 6, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-cfcd2084",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1103-092042-217677-eccbc87e",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=788.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:23:44Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=789.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:21:46Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-eccbc87e": {
+   "kind": "Replica",
+   "uid": "351a114f-7584-4be3-9604-df4a0721e49a",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-eccbc87e",
+      "kind": "Replica",
+      "uid": "351a114f-7584-4be3-9604-df4a0721e49a",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-eccbc87e",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-eccbc87e is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8, pre-filter pod exp-1103-092042-217677-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-1679091c": {
+   "kind": "Replica",
+   "uid": "ed275bc3-4fd6-4aac-a847-d46595c4cb2a",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-1679091c",
+      "kind": "Replica",
+      "uid": "ed275bc3-4fd6-4aac-a847-d46595c4cb2a",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-1679091c is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-1679091c cannot find enough sibling pods, current pods number: 5, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-1679091c cannot find enough sibling pods, current pods number: 5, minMember of group: 8, pre-filter pod exp-1103-092042-217677-1679091c cannot find enough sibling pods, current pods number: 5, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-8f14e45f": {
+   "kind": "Replica",
+   "uid": "56435e42-642c-4436-aa9b-cbb203d20390",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-8f14e45f",
+      "kind": "Replica",
+      "uid": "56435e42-642c-4436-aa9b-cbb203d20390",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 6. coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-8f14e45f is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 6.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-a87ff679": {
+   "kind": "Replica",
+   "uid": "ca7be2cf-8de3-431c-aaa6-ffaff79f03f4",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-a87ff679",
+      "kind": "Replica",
+      "uid": "ca7be2cf-8de3-431c-aaa6-ffaff79f03f4",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-a87ff679 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-a87ff679 cannot find enough sibling pods, current pods number: 6, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-a87ff679 cannot find enough sibling pods, current pods number: 6, minMember of group: 8, pre-filter pod exp-1103-092042-217677-a87ff679 cannot find enough sibling pods, current pods number: 6, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-c4ca4238": {
+   "kind": "Replica",
+   "uid": "6f38a1c7-6ad9-4c35-a796-579ab9acd91d",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-c4ca4238",
+      "kind": "Replica",
+      "uid": "6f38a1c7-6ad9-4c35-a796-579ab9acd91d",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-c4ca4238 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8, pre-filter pod exp-1103-092042-217677-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-c81e728d": {
+   "kind": "Replica",
+   "uid": "24d3da6b-6643-41c7-abde-b350a110ebb4",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-c81e728d",
+      "kind": "Replica",
+      "uid": "24d3da6b-6643-41c7-abde-b350a110ebb4",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-c81e728d is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8, pre-filter pod exp-1103-092042-217677-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-cfcd2084": {
+   "kind": "Replica",
+   "uid": "3852b26d-5d53-4074-9a2b-cb101130e668",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-cfcd2084",
+      "kind": "Replica",
+      "uid": "3852b26d-5d53-4074-9a2b-cb101130e668",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-cfcd2084",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 8. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 8, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8, pre-filter pod exp-1103-092042-217677-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1103-092042-217677-e4da3b7f": {
+   "kind": "Replica",
+   "uid": "fe4b51fa-aff9-4c65-b760-f9a5a5f385a8",
+   "count": 3,
+   "total": 3,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-092042-217677-e4da3b7f",
+      "kind": "Replica",
+      "uid": "fe4b51fa-aff9-4c65-b760-f9a5a5f385a8",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 3,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1103-092042-217677-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1103-092042-217677-default failed recently, coscheduling: podGroup shai-core/exp-1103-092042-217677-default gets rejected due to Pod exp-1103-092042-217677-e4da3b7f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:26:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1103-092042-217677-e4da3b7f cannot find enough sibling pods, current pods number: 7, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1103-092042-217677-e4da3b7f cannot find enough sibling pods, current pods number: 7, minMember of group: 8, pre-filter pod exp-1103-092042-217677-e4da3b7f cannot find enough sibling pods, current pods number: 7, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T01:25:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  }
+ }
+}
