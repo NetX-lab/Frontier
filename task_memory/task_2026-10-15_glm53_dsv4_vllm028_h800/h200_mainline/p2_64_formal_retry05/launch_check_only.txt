@@ -1,0 +1,6 @@
+# command: /data/ycfeng/envs/openmopd-py312/bin/python -B /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01/launch.py --check-only
+# cwd: /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline
+# utc: 2026-11-03T17:44:23Z
+# env: PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp
+INPUT_HASHES_PASS_NO_SUBMISSION
+# exit: 0

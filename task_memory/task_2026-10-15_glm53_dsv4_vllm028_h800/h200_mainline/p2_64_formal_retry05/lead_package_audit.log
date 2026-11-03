@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "manifest_sha256": "23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c",
+  "sealed_files": 47,
+  "identical_files": 41,
+  "check_only": "INPUT_HASHES_PASS_NO_SUBMISSION"
+}

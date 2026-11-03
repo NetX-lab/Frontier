@@ -1,0 +1,37 @@
+{
+ "observed_utc": "2026-11-03T17:40:50.099547+00:00",
+ "job": "exp-1103-131952-259161",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "yes",
+ "status": {
+  "phase": "Stopped",
+  "startTime": null,
+  "finishTime": "2026-11-03T10:00:43Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 8,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [],
+ "container_gpu_hours": null,
+ "known_container_gpu_hours": 0.0,
+ "container_clocks_complete": false
+}

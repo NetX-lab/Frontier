@@ -1,0 +1,56 @@
+manifest keys: ['files', 'native_qualification', 'submitted']
+manifest json sha256: 23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c
+manifest json sha256 (04): d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081
+sealed entries: 47 submitted: False native_qualification: False
+sealed file set equal to 04: True
+seal mismatches: []
+sealed sha256 multiset: 76c7762364e511ed50dc45cff5d55700f7cded61624d2bf7dc8b6d020317f414
+sealed sha256 multiset (04): 0ad639a6f9453b109ab5253b9414d6701b40dd4c8475e252b75f65f7250a1463
+changed sealed entries: 6 unchanged: 41
+  CHANGED case/inputs/native_config.json 829c368b2174de351a19e7b6c88296a2f6b2abbd7be994b49ccc5f068dc85f5d -> eafb1e6f1aa26c6a13c0daea2425d88d351173d37b0834e5425992eb11b1b2b0
+  CHANGED case/manifest.yaml dad3b7d72c1ee4079da8074b9bbf91a68d4fb38288183b9d7b59322ae0381abf -> ad9968310b11e8d7436090e1baecc2fd61dcfc4ed3e3d24c3d12f7e9d9f96719
+  CHANGED config.json 829c368b2174de351a19e7b6c88296a2f6b2abbd7be994b49ccc5f068dc85f5d -> eafb1e6f1aa26c6a13c0daea2425d88d351173d37b0834e5425992eb11b1b2b0
+  CHANGED evidence_readiness.json 3e0cc88af4a157a8ccfbe472d3f4277ebedb5107d1fce6bcd815df3683471d2f -> 1c53374e19c3af9aaa12583f9f15f0ca0a2918370e3ae63430436b28eaa7080f
+  CHANGED overlay.json 72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0 -> b8de9508b4f958304f0ae6833bd23f958301b4e564619488aabfa7a2052c7293
+  CHANGED source_lock.json 02bda9fc66e3e4055d2cd1732258c8a0fe1aac22dd7d530d6898b7968f1642b0 -> 07dd9d68e806c090c35a9e0caeaedb8450fd8017148f62fa4f0639b69912ba21
+-- launcher / run markers in 05 --
+found: []
+case/ exists: True case/runs exists: False
+-- pins: sealed digests of pinned inputs must equal 04 --
+EQUAL ae8931b798b437551c857c441ee9885d6b44084dbefe14414c2de39f98984ea3 case/inputs/engine.json
+EQUAL ae8931b798b437551c857c441ee9885d6b44084dbefe14414c2de39f98984ea3 engine.json
+EQUAL 3aac0a3f6b829a478b4a350614722d386398271d5eb0cf670299bc9a533c8cf4 case/inputs/frontier.json
+EQUAL 5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3 case/inputs/trace/manifest.json
+EQUAL 594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9 case/inputs/trace/SHA256SUMS
+EQUAL 2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2 case/inputs/trace/trace.csv
+EQUAL 55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e case/inputs/trace/warmup_pool.csv
+EQUAL 318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6 case/inputs/trace/request_ids.json
+EQUAL 948672ddb51167c51d6bb14db04a12aa9fa72ea569ad664f9ac359f9a12276a5 launch.py
+EQUAL c75cf418e87d95e1afccb47baf437ef46bcceecb0f9ca93e6c7e1e4f7f0da693 native_pd_worker.py
+EQUAL fc4e48156401091ce45c843451481d68795acaa5e36c27d2797ae10db0bf58e9 native_dummy_bootstrap.py
+EQUAL 204cffd3ac8b3e9e2b35982d0b810172845579ae3ea4eb3a5c902699304b8ccf submit_native_diagnostic.py
+EQUAL f489eb26a3784ce5691faebad99a33b6e2e7c5988605bd7427415efc685f7440 native_config_parallel.py
+EQUAL a9b20efd63ece3bd4e4436f774a7be7156bfc410b310944c4ef4d7e19a091572 native_distributed_parallel_state.py
+EQUAL a06292492a5cc24a17be299a5890d617fc8d1fe82e9a95b1cfc6be47d0d250ab native_distributed_utils.py
+EQUAL 533d60761f2505e93b318c349baf733a1ec7e386f1c2ad3f768e41bdab017599 native_engine_utils.py
+EQUAL 851ff85b03c5684613f4ea2f4536796bfa971497556f94a6f6bb04a46b761619 seal.py
+EQUAL 38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed serve_observers.json
+EQUAL d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee overlay_model.py
+EQUAL 543046bcdc3e68207ffbd25f4f8f4f38b52fda58d89b8d7580322f454cf35efc tests/comparison/calibration/pd_proxy.py
+EQUAL 7606cb5f0d7d01bd64e31f1de2372ffeb76d95b56b416af516f5c7a029360f81 tests/comparison/calibration/pd_replay.py
+EQUAL b2441369a63ab732b9e3c03d8f43aaf5382c6d3e13ac4a6b155f4c34b2c1a27b tests/comparison/dp_placement_pp/vllm_replay.py
+-- config pins --
+  gpu_type: H200 EQUAL
+  charged_group: step_main EQUAL
+  gpu: 8 EQUAL
+  replica: 8 EQUAL
+  preemptible: True EQUAL
+  pair_warmup: True EQUAL
+  mode: clean EQUAL
+  gpu: 8 EQUAL
+  engine: EQUAL | dp 4 tp 8
+  expected_source_hashes: EQUAL
+  promotion path/sha: /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596
+  promotion build_utc 04: 2026-11-03T01:30:36.748161+00:00 05: 2026-11-03T17:43:44.520088+00:00
+  run_tag 05: dsv4-h200-p2-64-formal-20261104-05 | output_dir 05: /mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261104_05/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261104-05
+  timeout/limit: None 8 8

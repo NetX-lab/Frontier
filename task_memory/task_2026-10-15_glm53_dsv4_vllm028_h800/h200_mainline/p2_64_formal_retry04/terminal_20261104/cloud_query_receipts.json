@@ -1,0 +1,32 @@
+{
+  "source_events": "/data/ycfeng/tmp/ds4_runs/p64-formal4-monitor-1103f/events.jsonl",
+  "selection": "Two exact terminal-turn SSH tool calls, with their original tool results; no reasoning or unrelated session content copied.",
+  "records": [
+    {
+      "tool_call_id": "call_00_UAVyqEq0w899FrznZUp67014|0c37f788-4d50-44c6-9aa8-ea32baf9dfd9",
+      "command": "timeout 45s ssh -o BatchMode=yes -o ConnectTimeout=10 shai-ycfeng 'id -un; d=/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261103_04; if [ -d \"$d\" ]; then echo DIR_PRESENT; find \"$d\" -type f -printf \"%s %p\\n\" | sort -k2 | head -60; echo FILES=$(find \"$d\" -type f | wc -l); echo BYTES=$(find \"$d\" -type f -printf \"%s\\n\" | awk \"{s+=\\$1} END{print s}\"); find \"$d\" -maxdepth 4 -type d | sed \"s|$d|.|\"; else echo DIR_ABSENT; fi' 2>&1",
+      "is_error": false,
+      "result": "i-fengyicheng\nDIR_ABSENT\n",
+      "details": null,
+      "structured_content": {
+        "output": "i-fengyicheng\nDIR_ABSENT\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 0.4
+      }
+    },
+    {
+      "tool_call_id": "call_00_GxtT4DPLVDugL4S7tPI96319|6f57fb07-d6bf-419a-b3fa-b50edd84c00c",
+      "command": "timeout 45s ssh -o BatchMode=yes -o ConnectTimeout=10 shai-ycfeng 'ls -1d /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/*20261103* 2>&1; echo ---; ls -1 /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18 | tail -8' 2>&1",
+      "is_error": false,
+      "result": "ls: cannot access '/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/*20261103*': No such file or directory\n---\ndsv4_h800_p0_canonical_20261021\ndsv4_h800_p0_lifecycle_20261025\ndsv4_h800_p0_profile_20261023\ndsv4_h800_p0_profile_20261024\ndsv4_h800_p0_profile_20261024_04\ndsv4_h800_scope_lifetime_20261024_01\nglm53_h800_p0_canonical_20261021\np64_dp_image_cpu_1102i\n",
+      "details": null,
+      "structured_content": {
+        "output": "ls: cannot access '/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/*20261103*': No such file or directory\n---\ndsv4_h800_p0_canonical_20261021\ndsv4_h800_p0_lifecycle_20261025\ndsv4_h800_p0_profile_20261023\ndsv4_h800_p0_profile_20261024\ndsv4_h800_p0_profile_20261024_04\ndsv4_h800_scope_lifetime_20261024_01\nglm53_h800_p0_canonical_20261021\np64_dp_image_cpu_1102i\n",
+        "truncated": false,
+        "exit_code": 0,
+        "wall_time_seconds": 0.2
+      }
+    }
+  ]
+}

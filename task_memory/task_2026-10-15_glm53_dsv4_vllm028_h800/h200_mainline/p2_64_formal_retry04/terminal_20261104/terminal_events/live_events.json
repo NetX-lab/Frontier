@@ -1,0 +1,26 @@
+{
+ "observed_utc": "2026-11-03T17:40:55.855371+00:00",
+ "job": "exp-1103-131952-259161",
+ "job_uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+ "sources": {
+  "exp-1103-131952-259161": {
+   "kind": "RJob",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45265084501",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  }
+ }
+}

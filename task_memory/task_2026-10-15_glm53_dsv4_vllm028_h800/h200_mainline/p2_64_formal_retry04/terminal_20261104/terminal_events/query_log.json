@@ -1,0 +1,57 @@
+{
+ "observed_utc": "2026-11-03T17:41:15.722304+00:00",
+ "job": "exp-1103-131952-259161",
+ "job_uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+ "queries": [
+  {
+   "query": "identity",
+   "target": "exp-1103-131952-259161",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T17:40:55.387665+00:00",
+   "detail": {
+    "name": "exp-1103-131952-259161",
+    "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+    "creator": "i-fengyicheng",
+    "phase": "Stopped",
+    "finishTime": "2026-11-03T10:00:43Z",
+    "stopTimestamp": "2026-11-03T10:00:43Z"
+   }
+  },
+  {
+   "query": "replica_identity",
+   "target": "exp-1103-131952-259161",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T17:40:55.708744+00:00",
+   "replicas": []
+  },
+  {
+   "query": "live_events",
+   "target": "exp-1103-131952-259161",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T17:40:55.855352+00:00",
+   "kind": "RJob",
+   "count": 0,
+   "pages": 1
+  },
+  {
+   "query": "historical_events",
+   "target": "exp-1103-131952-259161",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T17:40:56.163072+00:00",
+   "kind": "RJob",
+   "count": 65,
+   "total": 65,
+   "pages": 1
+  },
+  {
+   "query": "all_operation_audit",
+   "target": "exp-1103-131952-259161",
+   "status": "PASS",
+   "observed_utc": "2026-11-03T17:41:15.714198+00:00",
+   "resource_type": "rjobs",
+   "count": 178,
+   "total": 178,
+   "pages": 2
+  }
+ ]
+}

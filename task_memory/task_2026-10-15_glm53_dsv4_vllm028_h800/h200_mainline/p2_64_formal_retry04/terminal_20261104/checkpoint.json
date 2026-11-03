@@ -1,0 +1,179 @@
+{
+ "observed_utc": "2026-11-03T17:42:13.509097+00:00",
+ "turn": "terminal evidence pass for generation04; read-only, no control",
+ "identity": {
+  "name": "exp-1103-131952-259161",
+  "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "creator": "i-fengyicheng",
+  "uid_matches_expected": true,
+  "creator_matches_expected": true
+ },
+ "platform": {
+  "phase": "Stopped",
+  "finishTime": "2026-11-03T10:00:43Z",
+  "startTime": null,
+  "replica_count": 0,
+  "owner_chain": "N/A",
+  "preemptible": "yes",
+  "stop_annotations": {
+   "kubebrain.brainpp.cn/stopped-by": "alimasiyilixiati",
+   "rjob.brainpp.cn/manual-stop-reason": "release_quota",
+   "rjob.brainpp.cn/rjob-queue-approved": "",
+   "stepmind.com/queue-elem-ranking": "6",
+   "stepmind.com/queue-name": "quotagroup-global-default",
+   "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=312.",
+   "stepmind.com/use-global-queue": "true"
+  }
+ },
+ "cause": {
+  "status": "ESTABLISHED",
+  "actor": "alimasiyilixiati",
+  "reason": "release_quota",
+  "audit_operation": "stop",
+  "audit_result": "succeeded",
+  "time_utc": "2026-11-03T10:00:43+00:00",
+  "evidence": "job annotations plus succeeded audit stop row; matches finishTime to the second",
+  "not_launcher_initiated": true
+ },
+ "cleanup_chronology": {
+  "platform_finish_utc": "2026-11-03T10:00:43Z",
+  "launcher_observed_stop_utc": "2026-11-03T10:00:46.504Z",
+  "launcher_receipt_recorded_utc": "2026-11-03T10:00:46.504967+00:00",
+  "launcher_exit_utc": "2026-11-03T10:00:47.086386+00:00",
+  "launcher_exit_code": 0,
+  "launcher_job_stop_log_utc": "2026-11-03T10:00:47.218Z",
+  "local_launcher_present": false,
+  "launcher_log_tail": [
+   "2026-11-03 13:19:52.444 | INFO     | steptron.utils.stepmind:submit:784 - Job Create: by-stepmind/5d1f7(exp-1103-131952-259161)",
+   "2026-11-03 18:00:46.504 | INFO     | steptron.utils.stepmind_control:wait_while_monitor_other:239 - Job stopped: by-stepmind/5d1f7(exp-1103-131952-259161)",
+   "FINAL_STATUS stopped",
+   "2026-11-03 18:00:47.218 | INFO     | steptron.utils.stepmind_control:stop:363 - Job Stop: by-stepmind/5d1f7(exp-1103-131952-259161)"
+  ],
+  "order": "platform stop (10:00:43) -> launcher observed stop (10:00:46.504) -> launcher cleanup Job Stop (10:00:47.218)"
+ },
+ "clocks_and_gpuh": {
+  "job_wall_seconds": 16851,
+  "job_wall_hours": 4.680833333333333,
+  "known_container_gpu_hours": 0.0,
+  "exact_container_gpu_hours": null,
+  "clocks_complete": false,
+  "note": "startTime null and zero replicas: no container clock exists; exact GPUh stays null and known GPUh is 0.0."
+ },
+ "events_and_audit": {
+  "historical_events": {
+   "live_count": 0,
+   "historical_count": 65,
+   "historical_total": 65,
+   "reasons": {
+    "QueueWaiting": 65
+   },
+   "first_utc": "2026-11-03T05:20:59Z",
+   "last_utc": "2026-11-03T09:57:02Z",
+   "termination_event": null,
+   "files": [
+    "terminal_events/live_events.json",
+    "terminal_events/historical_events.json"
+   ]
+  },
+  "audit": {
+   "total": 178,
+   "pages": 2,
+   "operations": {
+    "create": 1,
+    "stop": 1,
+    "update": 176
+   },
+   "subjects": {
+    "alimasiyilixiati": 2,
+    "i-fengyicheng": 1,
+    "system:serviceaccount:kubebrain:queue-controller": 175
+   },
+   "stop_row": {
+    "timestamp": 1793700043,
+    "operation": "stop",
+    "subject": {
+     "subject_id": "4d1eee5519ab7b7d303e82f71eed29de",
+     "subject_type": "user",
+     "subject_name": "alimasiyilixiati",
+     "tenant": "shai",
+     "scope": "/shai/",
+     "groups": null
+    },
+    "service": "kubebrain-apiserver",
+    "result": "succeeded",
+    "receipt": "01M6GDN6WNXCVQ8QW14FAW9MAG",
+    "root": "01M6GDN6WNXCVQ8QW14FAW9MAG",
+    "parent": "01M6GDN6WNXCVQ8QW14FAW9MAG",
+    "data": null
+   },
+   "stop_utc": "2026-11-03T10:00:43+00:00",
+   "file": "terminal_events/audit_all_operations.json"
+  }
+ },
+ "worker_business": {
+  "cloud_dir": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261103_04",
+  "cloud_dir_present": false,
+  "cloud_dir_checks": 2,
+  "files": 0,
+  "bytes": 0,
+  "nodes": 0,
+  "gpu_uuids": 0,
+  "source_hash_entries": 0,
+  "api_readiness_proofs": 0,
+  "client_records": 0,
+  "dispatched_requests": 0,
+  "completed_requests": 0,
+  "planned_formal_requests": 384,
+  "planned_warmup_requests": 48,
+  "canonical_repetitions": 0,
+  "replay_summary": null,
+  "evidence": "zero replicas and null startTime; worker never ran, so no worker or business artifact can exist."
+ },
+ "complete_native_reference": false,
+ "reference_gate": "NO: no worker execution, no client/proxy records, no canonical repetitions; copy->coverage->R5->metrics cannot proceed from this run.",
+ "artifact_paths": {
+  "root": "/data/ycfeng/tmp/ds4_runs/p64-formal4-monitor-1103f/scratch/terminal_20261104",
+  "files": [
+   "poll_terminal.out",
+   "platform_terminal_receipt.json",
+   "terminal_receipt.out",
+   "job_object.json",
+   "terminal_summary.json",
+   "terminal_events/live_events.json",
+   "terminal_events/historical_events.json",
+   "terminal_events/audit_all_operations.json",
+   "terminal_events/query_log.json"
+  ],
+  "sha256": {
+   "poll_terminal.out": "5663b00f27531258419d1186167424b5dfa819c2a0a10014a39838b6aa3b6261",
+   "platform_terminal_receipt.json": "bf9db8aa50dbead312015f4ac236a9b4f24f19b0c056b55b74d05220f6d45967",
+   "terminal_receipt.out": "2821a3592508c98aa43f1c088dc393cb05f8398b745ea1d14ceb66b60ffa3444",
+   "job_object.json": "9f3ce962759cb84ceef9e1478839a07fc2c7d33797e4777e2ba9419593d75c73",
+   "terminal_summary.json": "0bffe55ef703fc7284a38137f16c1d38637aaf3f07186704e9d10e308a092a6d",
+   "terminal_events/live_events.json": "045e547777ffc8d46f9f839b51aaefbc19e174fa9796e9a09839e95c6c13f0db",
+   "terminal_events/historical_events.json": "ed52af9627588dae90736faa39f23a14b41ac0e1a08eb9b185101859c8c05b72",
+   "terminal_events/audit_all_operations.json": "d09d8babb7c5b5ce5a6f09a7e75809246d6e8fdadbea92d2eb3595ff861b27c1",
+   "terminal_events/query_log.json": "ec1bdda4fe230588f6a1a64ac0094811ce7a058e1e0f9d1ee42bbcfafd7fb135"
+  }
+ },
+ "query_coverage": {
+  "exact_job_poll": 1,
+  "terminal_receipt": 1,
+  "exact_job_object": 1,
+  "live_events": "queried; 0 returned",
+  "historical_events": "65/65, pagination complete",
+  "all_operation_audit": "178/178 over 2 pages",
+  "deepsan_read": 0,
+  "cloud_checks": 2,
+  "preemptor_job_queries": 0,
+  "retries": 0
+ },
+ "limits": [
+  "No replica object ever existed, so no replica owner UID, node, IP, container clock or replica log can be preserved.",
+  "Cloud output directory for this generation does not exist; worker-side source/GPU/readiness/business evidence is absent, not merely unread.",
+  "Live Kubernetes Events returned 0 rows while historical Events returned 65; the historical projection is the retained record available now.",
+  "Exact container GPUh is null because no container ran; known GPUh is 0.0 by absence of allocation."
+ ],
+ "errors": [],
+ "business_completion": "NONE (never scheduled; 0 of 384 planned formal and 0 of 48 planned warmup requests observed)"
+}

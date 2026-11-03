@@ -1,0 +1,54 @@
+{
+ "observed_utc": "2026-11-03T17:41:50.073298+00:00",
+ "name": "exp-1103-131952-259161",
+ "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+ "creationTimestamp": "2026-11-03T05:19:52Z",
+ "deletionTimestamp": null,
+ "creator": "i-fengyicheng",
+ "quotagroup": "step_main",
+ "preemptible": "yes",
+ "restartable": "false",
+ "stop_annotations": {
+  "kubebrain.brainpp.cn/stopped-by": "alimasiyilixiati",
+  "rjob.brainpp.cn/manual-stop-reason": "release_quota",
+  "rjob.brainpp.cn/rjob-queue-approved": "",
+  "stepmind.com/queue-elem-ranking": "6",
+  "stepmind.com/queue-name": "quotagroup-global-default",
+  "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=312.",
+  "stepmind.com/use-global-queue": "true"
+ },
+ "status": {
+  "phase": "Stopped",
+  "startTime": null,
+  "finishTime": "2026-11-03T10:00:43Z",
+  "conditions": null,
+  "completionTime": null
+ },
+ "tasks": {
+  "default": {
+   "replicas": 8,
+   "filestore": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ],
+   "image": [
+    "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635"
+   ]
+  }
+ },
+ "replicas": [],
+ "replica_count": 0
+}

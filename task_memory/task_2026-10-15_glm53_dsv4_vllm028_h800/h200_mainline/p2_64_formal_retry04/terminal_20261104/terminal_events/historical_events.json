@@ -1,0 +1,944 @@
+{
+ "observed_utc": "2026-11-03T17:40:56.163093+00:00",
+ "job": "exp-1103-131952-259161",
+ "job_uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+ "request": {
+  "path": "/kapis/v1/tenants/shai/projects/shai-core/events",
+  "sortBy": "lastTimestamp:desc",
+  "pageSize": 100
+ },
+ "sources": {
+  "exp-1103-131952-259161": {
+   "kind": "RJob",
+   "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+   "count": 65,
+   "total": 65,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1103-131952-259161",
+      "kind": "RJob",
+      "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 65,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=624.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:57:02Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=296.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:52:19Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=304.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:46:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=224.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:41:01Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=240.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:36:00Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=247.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:32:06Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=194.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:26:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=162.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:22:06Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=186.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:16:39Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=206.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:11:30Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=238.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:06:45Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=182.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T09:01:58Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=182.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:56:14Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=197.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:51:00Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=284.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:47:10Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=277.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:41:57Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=325.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:36:05Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=307.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:32:52Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=290.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:26:36Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=322.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:16:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=297.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:11:03Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=368.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:06:59Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=297.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T08:01:24Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=252.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:56:55Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=334.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:46:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=318.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:41:49Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=398.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:36:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=404.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:31:00Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=539.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:27:02Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=483.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:22:02Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=414.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:16:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=375.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:11:11Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=374.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:06:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=376.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T07:01:14Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=424.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:56:01Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=448.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:51:00Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=399.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:46:28Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=414.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:41:21Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=416.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:36:17Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=411.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:31:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=424.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:26:12Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=428.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:21:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=405.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:17:00Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=421.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:12:52Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=429.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:06:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=389.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:02:27Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=421.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:01:13Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=428.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T06:00:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=444.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:58:15Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=444.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:57:03Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=436.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:54:23Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=460.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:52:22Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=453.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:51:03Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=469.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:49:38Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=465.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:48:33Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=449.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:47:28Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=457.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:46:23Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=441.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:43:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "(combined from similar events): Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=441.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:40:59Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=416.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:35:02Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=408.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:31:50Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=420.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:25:12Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=419.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:23:50Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=403.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:22:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=412.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-03T05:20:59Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  }
+ }
+}

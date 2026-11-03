@@ -1,0 +1,14 @@
+PRELAUNCH_MANIFEST /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261103-04/run_manifest.json
+/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/paramiko/pkey.py:82: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "cipher": algorithms.TripleDES,
+/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/paramiko/transport.py:253: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "class": algorithms.TripleDES,
+2026-11-03 13:19:52.259 | INFO     | steptron.exp.base_exp:find_leaf_task_specs:4512 - Get TaskSpecs from entire config tree:
+- @ResourceConfig: default
+2026-11-03 13:19:52.264 | INFO     | steptron.exp.base_exp:find_leaf_task_specs:4512 - Get TaskSpecs from entire config tree:
+- @ResourceConfig: default
+2026-11-03 13:19:52.444 | INFO     | steptron.utils.stepmind:submit:784 - Job Create: by-stepmind/5d1f7(exp-1103-131952-259161)
+2026-11-03 18:00:46.504 | INFO     | steptron.utils.stepmind_control:wait_while_monitor_other:239 - Job stopped: by-stepmind/5d1f7(exp-1103-131952-259161)
+RJOB_NAME exp-1103-131952-259161
+FINAL_STATUS stopped
+2026-11-03 18:00:47.218 | INFO     | steptron.utils.stepmind_control:stop:363 - Job Stop: by-stepmind/5d1f7(exp-1103-131952-259161)

@@ -1,6 +1,6 @@
 {
-  "status": "PLANNED_NOT_RUN_WAITING_FOR_NATIVE_REFERENCE",
-  "precondition": "D-P2-64-FOURTH approval recorded; require terminal receipt and hash-identical complete native reference. Auxiliary validators remain soft gates.",
+  "status": "NOT_RUN_NO_NATIVE_REFERENCE_GENERATION04_STOPPED_WHILE_QUEUED",
+  "precondition": "Generation04 stopped externally at 2026-11-03T10:00:43Z with no native output. This retained command was not run; use a separately approved successor generation.",
   "argv": [
     "/data/ycfeng/envs/frontier-py310/bin/python",
     "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/compare.py",

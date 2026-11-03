@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-04 | Completed fourth-job terminal evidence recovery and prepared an unsubmitted fifth candidate; existing resource and retry limits unchanged. |
 | 2026-11-03 | Recorded return to the existing P2-64 mainline after completed cleanup; no new submission or scope change. |
 | 2026-11-03 | Recorded explicit task-artifact cleanup and rm authorization; preserve live P2-64 dependencies, unique measurements and acceptance evidence. |
 | 2026-11-03 | Recorded YC continuation as D-P2-64-FOURTH: one additional submission, same64H200/preemptible/3600s/64GPUh limits; separate monitoring and no fifth retry. |
@@ -162,6 +163,20 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Execution finding] 2026-11-04 — fourth-job terminal and fifth offline candidate
+
+Generation04 exp-1103-131952-259161 is Stopped at 2026-11-03T10:00:43Z. The successful stop audit and job annotations identify alimasiyilixiati / release_quota. Independent acceptance verifies 178/178 audit rows, 65/65 historical QueueWaiting events, null startTime, zero retained replicas and two raw cloud-read receipts showing no output directory. This supports never-scheduled status; no complete native reference exists. Launcher81539 observed the stop afterwards and exited0 at10:00:47.086386Z; it is absent. Terminal/cause recovery is complete; copy, pair coverage, R5 and metrics are NOT RUN for generation04. See h200_mainline/p2_64_formal_retry04/terminal_20261104/lead_terminal_acceptance.json. Generation05 package h200_mainline/p2_64_formal_retry05/package_01 is prepared and independently verified:47/47 sealed hashes,41 byte-identical files,6 exact identity/provenance changes, check-only PASS, manifest23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c. It is unsubmitted and awaits a new explicit resource decision; D-P2-64-FOURTH authorized only the fourth submission. Proposed resources remain64H200/all-preemptible/step_main/3600s/64GPUh for exactly one fifth run, with no automatic sixth. Frozen native/harness/promotion/workload, R5 and the completed Frontier replay remain unchanged.
+
+Historical35-job exact accounting remains158.27166666666665GPUh. Generation01 known subtotal4.053333333333334 and generation02 missing end clocks stay incomplete. Generation03/04 evidence supports zero container consumption while their generic exact-clock receipts remain null. Queue wall time is excluded. Ticket19 accounting and formal P2-64 remain open.
+
+This records observed execution and a proposed next action, not a new user decision. The reviewable one-submission proposal is `h200_mainline/p2_64_formal_retry05/recovery_proposal.md`. Ordinary debug corrections remain approved; no allocation count, resource class or acceptance threshold is amended.
+
+## [Original Request] 2026-11-04 — continue the fourth-job mainline
+
+> continue
+
+Continue the existing fourth P2-64 job and its terminal/copy/reference/comparison acceptance. At resumption, launcher81539 has exited0 and reports Stopped; preserve terminal evidence and determine actual business completion before any comparison. D-P2-64-FOURTH and ordinary in-scope debug approval remain in force. This continuation does not itself authorize a fifth GPU submission or change the frozen workload, resource class or acceptance thresholds.
 
 ## [Original Request] 2026-11-03 — return to the mainline
 

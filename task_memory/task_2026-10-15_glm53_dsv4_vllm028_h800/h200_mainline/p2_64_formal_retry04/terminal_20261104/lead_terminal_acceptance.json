@@ -1,0 +1,53 @@
+{
+  "status": "PASS_TERMINAL_CAUSE_NO_REFERENCE",
+  "observed_utc": "2026-11-03T17:46:24.617492+00:00",
+  "python": "3.10.6",
+  "command": "python3 /data/ycfeng/tmp/glm53_dsv4/h200/audit_formal04_terminal.py",
+  "script_sha256": "7360370eef610a8f60434d54a126d847b396181d566086de106c2ec44eebea29",
+  "job": "exp-1103-131952-259161",
+  "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "creator": "i-fengyicheng",
+  "finish_utc": "2026-11-03T10:00:43+00:00",
+  "cause": {
+    "actor": "alimasiyilixiati",
+    "reason": "release_quota",
+    "audit_rows": 178,
+    "audit_pages": 2
+  },
+  "historical_events": {
+    "count": 65,
+    "reasons": {
+      "QueueWaiting": 65
+    }
+  },
+  "chronology": {
+    "platform_before_launcher": true,
+    "launcher_exit_code": 0,
+    "launcher_absent": true
+  },
+  "business": {
+    "complete_native_reference": false,
+    "cloud_directory_absent": true,
+    "raw_cloud_read_receipts": 2,
+    "never_scheduled": "Inference supported by null startTime, zero retained replicas, complete available queue history, and absent cloud output."
+  },
+  "accounting": {
+    "container_gpu_hours": null,
+    "known_container_gpu_hours": 0.0,
+    "container_clocks_complete": false,
+    "queue_wall_seconds": 16851.0,
+    "queue_excluded_from_gpuh": true,
+    "zero_container_consumption": "Supported inference, not a complete-clock receipt."
+  },
+  "not_run": {
+    "copy": "No native output",
+    "pair_coverage": "No native reference",
+    "R5": "No native reference",
+    "metrics_and_warm_reading": "No native reference"
+  },
+  "limitations": [
+    "Current API has no replicas; historical queue projections are not container clocks.",
+    "No preemption classification and no further retry authority inferred.",
+    "Generation01/02 incomplete container clocks remain open."
+  ]
+}

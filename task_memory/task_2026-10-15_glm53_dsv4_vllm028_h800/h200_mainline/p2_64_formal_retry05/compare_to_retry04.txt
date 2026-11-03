@@ -1,0 +1,61 @@
+== package comparison: retry05 vs retry04 (read-only) ==
+manifest.json sha256 04: d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081
+manifest.json sha256 05: 23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c
+sealed entries: 47 | changed: 6 | unchanged: 41
+  CHANGED case/inputs/native_config.json
+  CHANGED case/manifest.yaml
+  CHANGED config.json
+  CHANGED evidence_readiness.json
+  CHANGED overlay.json
+  CHANGED source_lock.json
+
+== purpose 04 ==
+  Formal P2 H200-64 generation 04 candidate under D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY; prepared after the lead-caused interruption of generation 03; native DP startup coordination corrected; pair-warmed, wholly preemptible; GPU submission pending user approval beyond the three-job cap; no fourth-run authorization
+== purpose 05 ==
+  Formal P2 H200-64 generation 05 candidate under D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY; prepared after the external release_quota stop of generation 04 while queued; native DP startup coordination corrected; pair-warmed, wholly preemptible; GPU submission pending user approval beyond the four submissions used
+
+== config.json: non-identity leaf differences after normalizing package path, run/cloud identity, purpose and build_utc = 1
+    DIFF retained_files.overlay.json | 72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0 -> b8de9508b4f958304f0ae6833bd23f958301b4e564619488aabfa7a2052c7293
+== case/inputs/native_config.json: non-identity leaf differences after normalizing package path, run/cloud identity, purpose and build_utc = 1
+    DIFF retained_files.overlay.json | 72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0 -> b8de9508b4f958304f0ae6833bd23f958301b4e564619488aabfa7a2052c7293
+== evidence_readiness.json: non-identity leaf differences after normalizing package path, run/cloud identity, purpose and build_utc = 0
+== overlay.json: non-identity leaf differences after normalizing package path, run/cloud identity, purpose and build_utc = 0
+== source_lock.json: non-identity leaf differences after normalizing package path, run/cloud identity, purpose and build_utc = 0
+== case/manifest.yaml: non-identity leaf differences = 2
+    DIFF run_generation | v4-native-v028-h200-p2-64-formal-20261103-04 -> v4-native-v028-h200-p2-64-formal-20261104-05
+    DIFF runtime_source_overlay.sha256 | 72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0 -> b8de9508b4f958304f0ae6833bd23f958301b4e564619488aabfa7a2052c7293
+
+== derived digests that follow the above ==
+  overlay.json 04: 72bef4cce3ec5725164cd30d01a1e281bec0de944463558576ba4bc74247baa0
+  overlay.json 05: b8de9508b4f958304f0ae6833bd23f958301b4e564619488aabfa7a2052c7293
+  overlay reason: overlay.files[*].source embeds the package directory
+  run_generation 05: v4-native-v028-h200-p2-64-formal-20261104-05
+  run_tag 05: dsv4-h200-p2-64-formal-20261104-05 | job_tag 05: dsv4-h200-p2-64-formal-20261104-05
+  output_dir 05: /mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261104_05/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261104-05
+  promotion_receipt build_utc 04: 2026-11-03T01:30:36.748161+00:00
+  promotion_receipt build_utc 05: 2026-11-03T17:43:44.520088+00:00
+  promotion_receipt sha256 04/05: d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596 d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596
+
+== pins (must be equal) ==
+  harness_worktree: EQUAL
+  gpu_type: EQUAL
+  charged_group: EQUAL
+  gpu: EQUAL
+  replica: EQUAL
+  preemptible: EQUAL
+  pair_warmup: EQUAL
+  mode: EQUAL
+  engine: EQUAL
+  expected_source_hashes: EQUAL
+  harness_files: EQUAL
+  model_hashes: EQUAL
+  timeout_seconds: EQUAL
+  image: EQUAL
+  promotion path: /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json
+  harness_commit/source_lock: f33306d40443cfc0c44842d6ee044f6703c736e7 -> f33306d40443cfc0c44842d6ee044f6703c736e7
+  native_commit/source_lock: a06a72a4326cba02234df6cfbdc21b78d3a15d26
+
+== state ==
+  manifest.submitted 05: False | native_qualification: False
+  launcher markers / case runs in 05: []
+  case/runs exists: False
