@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Recorded YC continuation as D-P2-64-FOURTH: one additional submission, same64H200/preemptible/3600s/64GPUh limits; separate monitoring and no fifth retry. |
 | 2026-11-03 | Recorded the lead-caused third-job interruption and explicit pending fourth-job decision; existing resource cap and user decisions unchanged. |
 | 2026-11-03 | Resumed generation02 terminal/copy acceptance; retained the explicit preemption retry rule and three-GPU-job cap for generation03. |
 | 2026-11-02 | Recorded D-P2-64-STARTUP-RECOVERY: YC approved option B, generation 02 and ordinary in-scope debug corrections without repeated approval. |
@@ -160,13 +161,21 @@
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
 
+## [Original Request / Decision] 2026-11-03 — D-P2-64-FOURTH
+
+> continue
+
+YC's reply continues the concrete fourth-submission proposal in `h200_mainline/p2_64_formal_retry04/recovery_proposal.md`. Authorize exactly one additional submission of the reviewed generation04 package: 64 H200 (8 x 8), all preemptible, `step_main`, timeout 3600 seconds and ceiling 64 container GPU-hours. The manifest SHA256 is `d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081`; the package remains frozen. The package-external `approval_receipt.json` binds this decision. This approval supersedes the earlier pending-fourth state; the original three submissions remain recorded, and no fifth submission or automatic retry is authorized.
+
+Submit through `/ds4-exec` using the existing personal local StepMind Python path. The finite submitting Pi turn ends normally; an independent label monitors exact replicas. Never call `ds4 --stop` on a label owning a live StepMind launcher. Preserve native/harness/workload/promotion/R5/Frontier inputs, auxiliary soft gates and all numerical criteria. Ordinary in-scope debug approval persists; GLM, EP-count and new H800 allocation remain deferred.
+
 ## [Original Request] 2026-11-03 — continue after the generation02 handoff
 
 > continue
 
 Carry forward D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY. Generation01 used one GPU job and failed during startup; generation02 used the second and was preempted. The explicit preemption-recovery rule permits the third GPU job with unchanged 64 H200, all-preemptible, step_main, 3600-second and 64-GPU-hour-per-run limits. A fourth GPU job requires a new decision. The lead's next action is a fresh run generation with the already accepted source, workload, promotion receipt and R5 reader; no new source correction or resource class is inferred.
 
-## [Execution Note] 2026-11-03 — third submission interrupted by the lead; fourth decision pending
+## [Historical Execution Note] 2026-11-03 — third submission interrupted; fourth approval followed
 
 Generation03 `exp-1103-092042-217677` was stopped at01:26:58Z when the lead used ds4-exec --stop to redirect a failing monitor. The stop selector also matched the detached StepMind launcher by its inherited DS4_SESSION_ID. The lead owns this mistake. Platform audit and eight unscheduled replica records confirm no native container or request started. This is not preemption and creates no new automatic retry authority.
 

@@ -4,7 +4,12 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | YC replied continue; recommended one-submission option approved as D-P2-64-FOURTH. |
 | 2026-11-03 | Prepared a verified package and concrete resource options after the lead-caused third-job stop; decision remains pending. |
+
+## Decision
+
+Approved: YC replied `continue` to this concrete request. D-P2-64-FOURTH in requirements.md and approval_receipt.json authorizes exactly one fourth submission with the resources below. The fifth submission remains unauthorized. The following pending wording records the proposal before that reply.
 
 ## Evidence and responsibility
 

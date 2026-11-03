@@ -1,6 +1,6 @@
 {
-  "status": "PLANNED_NOT_RUN_PENDING_GPU_APPROVAL",
-  "precondition": "New user approval for GPU job4, then terminal receipt and hash-identical complete native reference; auxiliary validators stay soft gates.",
+  "status": "PLANNED_NOT_RUN_WAITING_FOR_NATIVE_REFERENCE",
+  "precondition": "D-P2-64-FOURTH approval recorded; require terminal receipt and hash-identical complete native reference. Auxiliary validators remain soft gates.",
   "argv": [
     "/data/ycfeng/envs/frontier-py310/bin/python",
     "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/compare.py",

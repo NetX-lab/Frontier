@@ -1,12 +1,19 @@
-# P2-64 generation04 offline candidate verification
+# P2-64 generation04 verification and execution
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | YC approved one fourth submission under D-P2-64-FOURTH; package-external authorization bound to the frozen manifest. |
 | 2026-11-03 | Prepared and independently verified a fourth-generation candidate after the lead-caused interruption; no GPU submission authorized or performed. |
 
-## Result and boundary
+## Current execution state
+
+D-P2-64-FOURTH approves exactly one fourth submission. The approved scope is unchanged:64H200=8x8,all-preemptible,step_main,3600s,64container GPUh maximum. `h200_mainline/p2_64_formal_retry04/approval_receipt.json` binds the user reply `continue` to the reviewed manifest. The package-external wrapper authorization was corrected from the inherited third-job text; `bash -n` passes. No package byte changed.
+
+Submission is assigned to Pi `p64-formal4-submit-1103e`, session `5de845f5-6c54-42d1-aa42-2cb11b6cda13`, custom/deepseek-v4.1-flash-sys at thinking high. This turn ends normally after job/spec verification; an independent label performs monitoring. No fifth submission or automatic retry. Exact job/spec verification has passed; worker/terminal/metric verification is pending.
+
+## Historical offline result and boundary
 
 PREPARED_UNSUBMITTED_PENDING_USER_APPROVAL. Package `h200_mainline/p2_64_formal_retry04/package_01`, manifest SHA256 `d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081`. The existing three-job allowance is exhausted. This report accepts local package preparation only; neither check-only nor the old promotion receipt authorizes a fourth GPU submission.
 
@@ -40,3 +47,11 @@ Remaining: fourth-job resource decision, actual native execution, terminal/copy/
 Record-format check: the first JSON parse found that executor compare_to_retry03.json held plain command stdout. The original remains unchanged in executor scratch; the durable file now stores that exact stdout and source digest in a valid JSON object. No package or seal byte changed. The affected JSON/record checks were rerun before staging.
 
 Final record validation:38JSONfiles parse,84scoped paths staged,and all authored-file whitespace checks pass. Full staged diff-check reports only the three inherited trailing-space lines228/271/274 in the sealed native_config_parallel.py, whose bytes are identical to generation03 and the native source. No frozen source was normalized. Both Pi turns ended normally with exit0/settled and the required model/thinking identity.
+
+## Submission acceptance — 2026-11-03
+
+Job `exp-1103-131952-259161`, UID `9d02faf7-621e-4368-ae73-4110312c6ae2`, created05:19:52Z. Pi `p64-formal4-submit-1103e` ended normally with exit0 and `[settled] aborted=false`. Lead independently inspected the query scripts and selected platform receipts, checked exact name/UID/creator, requested8x8H200,preemptible=yes,step_main,global queue,restartable=false,timeout3600 and both RDMA limits. Image matches the sealed config; NFS `100.96.128.195:<package>:<package>` matches the resolved submission host, and required codesign-exp mount is present. The manifest still matches approval_receipt.json; prelaunch run_manifest names D-P2-64-FOURTH. Every acceptance predicate PASS.
+
+Direct local `ps -p 81539 -o pid=,ppid=,sid=,lstart=,stat=,args=` and `/proc/81539/cmdline` confirm the launcher remains alive after the Pi parent exited. No launcher_exit.json exists. No stop/control action was issued. Evidence: `h200_mainline/p2_64_formal_retry04/lead_submission_acceptance.json` and selected `generation04_*` receipts/scripts. Independent monitoring runs under Pi `p64-formal4-monitor-1103f`, session `7bdd2659-fd5e-4a5f-9c58-e109958279a6`.
+
+At05:20:58Z the job remained Pending with no replica objects or start clocks. The preceding05:19:35Z capacity snapshot reported47usable GPUs and5eight-GPU nodes; this is a snapshot, not a placement reservation or a global scheduling verdict. Native worker/source/API/pair/formal acceptance remains NOT RUN. Exact GPU usage remains unknown before terminal clocks. Prepared but unexecuted post-terminal copy wrapper: `/data/ycfeng/tmp/glm53_dsv4/h200/copy_p2_64_formal_retry04.sh`, derived only by replacing generation identities in the existing wrapper; bash-nPASS.
