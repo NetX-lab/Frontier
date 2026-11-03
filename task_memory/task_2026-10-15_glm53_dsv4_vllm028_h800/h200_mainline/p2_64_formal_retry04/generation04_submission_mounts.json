@@ -1,0 +1,100 @@
+{
+  "annotations": {
+    "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+    "rjob.brainpp.cn/rjob-queue-approved": "",
+    "stepmind.com/queue-name": "quotagroup-global-default",
+    "stepmind.com/use-global-queue": "true"
+  },
+  "finished_utc": "2026-11-03T05:20:37.861115+00:00",
+  "job": "exp-1103-131952-259161",
+  "name": "exp-1103-131952-259161",
+  "observed_utc": "2026-11-03T05:20:37.861040+00:00",
+  "tasks": {
+    "default": {
+      "affinity": {
+        "podAntiAffinity": {
+          "preferredDuringSchedulingIgnoredDuringExecution": [
+            {
+              "podAffinityTerm": {
+                "labelSelector": {
+                  "matchExpressions": [
+                    {
+                      "key": "rjob.brainpp.cn/rjob-task-id",
+                      "operator": "In",
+                      "values": [
+                        "exp-1103-131952-259161-default"
+                      ]
+                    }
+                  ]
+                },
+                "topologyKey": "kubernetes.io/hostname"
+              },
+              "weight": 10
+            }
+          ]
+        }
+      },
+      "containers": [
+        {
+          "env_names": [
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "DISTRIBUTED_JOB",
+            "ENABLE_SUBMODULE_COMMIT_CACHE",
+            "EXP_ID",
+            "HF_DATASETS_OFFLINE",
+            "HF_HUB_OFFLINE",
+            "HOST_NETWORK",
+            "KUBEBRAIN_CLUSTER_ENTRY",
+            "KUBEBRAIN_CLUSTER_ENTRY",
+            "KUBEBRAIN_NAMESPACE",
+            "KUBEBRAIN_NODE_NAME",
+            "KUBEBRAIN_QUOTA_GROUP",
+            "KUBEBRAIN_WORKSPACE_NAME",
+            "KUBEBRAIN_WORKSPACE_NAMESPACE",
+            "MC_DISABLE_METACACHE",
+            "PYTHONDONTWRITEBYTECODE",
+            "PYTHONPATH",
+            "TRANSFORMERS_OFFLINE",
+            "VLLM_CUDA_COMPATIBILITY_PATH",
+            "VLLM_ENABLE_CUDA_COMPATIBILITY",
+            "VLLM_LOGGING_LEVEL"
+          ],
+          "name": "default",
+          "volumeMounts": [
+            {
+              "mountPath": "/.auth/accesskey_id",
+              "name": "auth-info",
+              "readOnly": true,
+              "subPath": "accesskey_id"
+            },
+            {
+              "mountPath": "/.auth/accesskey_secret",
+              "name": "auth-info",
+              "readOnly": true,
+              "subPath": "accesskey_secret"
+            }
+          ]
+        }
+      ],
+      "nodeSelector": null,
+      "task_annotations": {
+        "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+        "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant;s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+      },
+      "tolerations": null,
+      "volumes": [
+        {
+          "claimName": null,
+          "csi_driver": null,
+          "hostPath": null,
+          "name": "auth-info",
+          "type": [
+            "secret"
+          ]
+        }
+      ]
+    }
+  },
+  "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2"
+}

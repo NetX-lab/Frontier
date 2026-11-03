@@ -1,0 +1,75 @@
+{
+  "authorization_env": "YC D-P2-64-FOURTH (set inside the wrapper)",
+  "checks": {
+    "approval_decision": "D-P2-64-FOURTH",
+    "approval_manifest_sha256": "d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081",
+    "auto_restart_disabled": true,
+    "charged_group": "step_main",
+    "check_only_output": "INPUT_HASHES_PASS_NO_SUBMISSION",
+    "cloud_mount_codesign_exp": true,
+    "command_timeout_3600s": true,
+    "company_image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "creator_is_i_fengyicheng": true,
+    "gpu_tag_H200": true,
+    "gpus_per_replica": "8",
+    "host_resolved_ips": [
+      "100.96.128.195"
+    ],
+    "job_created_once": true,
+    "launcher_alive": true,
+    "launcher_cmdline": "/data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/launch.py ",
+    "launcher_pid": 81539,
+    "manifest_sha256_matches": true,
+    "nfs_source": "100.96.128.195",
+    "nfs_source_matches_host": true,
+    "preemptible_label": "yes",
+    "prior_candidate_launcher_absent": true,
+    "prior_launch_markers_absent": true,
+    "queue_name": "quotagroup-global-default",
+    "rdma_mlnx_rdma": "1",
+    "rdma_mlnx_shared": "8",
+    "replicas": 8,
+    "sealed_entries": 47,
+    "total_requested_gpus": 64
+  },
+  "controls_issued": 0,
+  "current_phase": "Pending",
+  "decision": "D-P2-64-FOURTH",
+  "failed_checks": [],
+  "job_creation_timestamp": "2026-11-03T05:19:52Z",
+  "job_name": "exp-1103-131952-259161",
+  "job_uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "launcher_alive_at_record": true,
+  "launcher_log": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/launcher.log",
+  "launcher_pid": 81539,
+  "launcher_started_utc": "2026-11-03T05:19:47.693580+00:00",
+  "limitations": [
+    "Pending: scheduling not yet observed; no startTime or replica objects.",
+    "Node capacity snapshot showed 47 usable H200 GPUs across 5 eight-GPU nodes, below the 64 requested; queuing is expected and is not a submission veto.",
+    "No native/metric outcome is claimed from submission or scheduling."
+  ],
+  "namespace": "shai-core",
+  "platform_durations": {
+    "autoDeleteDuration": "120h0m0s",
+    "backoffLimit": 10,
+    "maxRunningDuration": "0s",
+    "maxWaitDuration": "0s"
+  },
+  "quota_snapshot": {
+    "nodes_with_8_usable_gpus": 5,
+    "observed_utc": "2026-11-03T05:19:35.156526+00:00",
+    "step_main_H200_non_preemptible_used": "472",
+    "step_main_H200_preemptible_used": "0",
+    "step_main_H200_total": "512",
+    "step_main_gpu_usable_snapshot": 47.0,
+    "step_main_nodes_reported": 64
+  },
+  "read_errors": {
+    "identity": [],
+    "replicas": []
+  },
+  "recorded_utc": "2026-11-03T05:20:58.179502+00:00",
+  "replicas_reported": 0,
+  "start_time": null,
+  "submissions_made_this_turn": 1
+}

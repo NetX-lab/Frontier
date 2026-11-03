@@ -1,0 +1,52 @@
+{
+  "errors": [],
+  "finished_utc": "2026-11-03T05:20:25.692641+00:00",
+  "job": {
+    "creationTimestamp": "2026-11-03T05:19:52Z",
+    "creator": "i-fengyicheng",
+    "finishTime": null,
+    "name": "exp-1103-131952-259161",
+    "namespace": "shai-core",
+    "phase": "Pending",
+    "preemptible": "yes",
+    "preemptible_spec": null,
+    "private_machine": null,
+    "queue_name": "quotagroup-global-default",
+    "queue_status": "suspend",
+    "quotagroup": "step_main",
+    "restartable": "false",
+    "startTime": null,
+    "stop_annotations": {},
+    "taskSpecs": {
+      "default": {
+        "containers": [
+          {
+            "command_mentions_codesign_exp": false,
+            "command_prefix_len": 642,
+            "has_timeout_3600": true,
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "limits": {
+              "cpu": "64",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8",
+              "rdma/mlnx_shared": "8"
+            },
+            "name": "default"
+          }
+        ],
+        "filestore_volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+        "replicas": 8,
+        "restartPolicy": "Never"
+      }
+    },
+    "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2"
+  },
+  "job_requested": "exp-1103-131952-259161",
+  "observed_utc": "2026-11-03T05:20:25.431465+00:00",
+  "operation": "read_only",
+  "replicas": {
+    "errors": [],
+    "rows": []
+  }
+}

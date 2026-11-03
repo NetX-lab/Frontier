@@ -1,0 +1,24 @@
+{
+  "decision_id": "D-P2-64-FOURTH",
+  "recorded_at_utc": "2026-11-03T05:18:31.721243+00:00",
+  "user_reply": "continue",
+  "context": "Reply to the concrete request for exactly one fourth submission in recovery_proposal.md; continuation approval carried by the handoff.",
+  "status": "APPROVED_ONE_FOURTH_SUBMISSION",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+  "manifest_sha256": "d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081",
+  "run_tag": "dsv4-h200-p2-64-formal-20261103-04",
+  "resources": {
+    "gpu_type": "H200",
+    "gpu_per_replica": 8,
+    "replicas": 8,
+    "total_gpus": 64,
+    "preemptible": true,
+    "charged_group": "step_main",
+    "timeout_s": 3600,
+    "container_gpu_hours_ceiling": 64
+  },
+  "additional_submissions_authorized": 1,
+  "fifth_submission_authorized": false,
+  "execution": "Submit through ds4-exec and personal local StepMind Python. Submitting Pi turn must end normally; a distinct label monitors. Never stop a label owning a live launcher.",
+  "frozen_package_changed": false
+}

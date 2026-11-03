@@ -1,0 +1,17 @@
+{
+  "autoDeleteDuration": "120h0m0s",
+  "backoffLimit": 10,
+  "maxRunningDuration": "0s",
+  "maxWaitDuration": "0s",
+  "name": "exp-1103-131952-259161",
+  "observed_utc": "2026-11-03T05:20:48.460370+00:00",
+  "phase": "Pending",
+  "positiveTags": [
+    "H200"
+  ],
+  "qos": {
+    "gpuQos": "guaranteed",
+    "localStorageQos": "guaranteed"
+  },
+  "updatePolicy": "None"
+}

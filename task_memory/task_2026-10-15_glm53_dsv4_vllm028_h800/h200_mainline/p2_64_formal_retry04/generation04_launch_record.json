@@ -1,0 +1,9 @@
+{
+  "launched_utc": "2026-11-03T05:19:47.693580+00:00",
+  "pid": 81539,
+  "wrapper": "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal_retry04.sh",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "start_new_session": true,
+  "stdin": "DEVNULL",
+  "stdout": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/launcher.log"
+}

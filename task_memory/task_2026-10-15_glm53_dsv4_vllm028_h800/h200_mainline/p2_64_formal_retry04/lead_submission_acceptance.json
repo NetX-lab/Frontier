@@ -1,0 +1,56 @@
+{
+  "status": "PASS_SUBMISSION_IDENTITY_AND_LAUNCHER_SURVIVAL",
+  "observed_utc": "2026-11-03T05:22:26.702842+00:00",
+  "job": "exp-1103-131952-259161",
+  "job_uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "launcher_pid": 81539,
+  "submission_pi_normal_exit": true,
+  "launcher_alive_after_pi_exit": true,
+  "launcher_cmdline": "/data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/launch.py ",
+  "package_manifest_sha256": "d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081",
+  "source_evidence": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_submission_acceptance.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/submission_acceptance.json",
+      "sha256": "db18f50715d54c0477b615084abe11d763bb9b1041a91b16b254ed37e618bbf5"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_submission_identity.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/submission_identity.json",
+      "sha256": "1c8e6a834b0853c529faf1948d89d49a36c88d8355c31fc099a26acad10b40ad"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_submission_mounts.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/submission_mounts.json",
+      "sha256": "67d379c5105e3720a6b0a4d406a38309d02b64059b7e179bdd55a03fd182efe4"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_submission_durations.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/submission_durations.json",
+      "sha256": "d73c322dd42e74dbc7bf7eb0d054b312dcee93bfd3962ce05f99dc7cf04480ee"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_quota_snapshot.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/quota_snapshot.json",
+      "sha256": "e736d65d17ff3f871bffa1c6f344845b03709e7c8dce3cf967afaaeaee55d957"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_launch_record.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/launch_record.json",
+      "sha256": "374492a8d7f3b3a4518a4e49d835e526143b8ea6aa3288de6f5205ad869a06bb"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_verify_submission.py",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/verify_submission.py",
+      "sha256": "4a63d19312de7698d7000a50c45dc52d786cfae8521d8ba3c61c3a5f3c4ad075"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/generation04_verify_mounts.py",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/verify_mounts.py",
+      "sha256": "83db76cfaf56568d9b7070f1f615beffa9900500f1da8f8fb65a9bf5154872b2"
+    }
+  ],
+  "scope": "Independent readback of exact-job receipts, verification-script inspection, frozen manifest binding and local launcher survival. No direct platform API calls by the lead.",
+  "native_reference_status": "PENDING",
+  "exact_container_gpu_hours": null
+}
