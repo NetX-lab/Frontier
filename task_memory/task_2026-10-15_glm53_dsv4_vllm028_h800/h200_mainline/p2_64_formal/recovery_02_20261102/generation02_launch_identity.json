@@ -1,0 +1,134 @@
+{
+  "status": "PASS_LAUNCH_IDENTITY_ONLY",
+  "verified_utc": "2026-11-02T16:05:19.122892+00:00",
+  "job": "exp-1102-233941-576872",
+  "nodes": [
+    {
+      "host": "gpu-h200-0125.lgcm.sh.istep.fun",
+      "role": "prefill",
+      "lane": 0,
+      "stage": "native_launched",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-0125.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "891a6793eeb6c5d37a660163716f5f6342dbb0f82b584619e06dee9826e76d1e"
+    },
+    {
+      "host": "gpu-h200-0272.lgcm.sh.istep.fun",
+      "role": "prefill",
+      "lane": 1,
+      "stage": "await_replay",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-0272.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "faf114cc8989f66e43278af64f48489644e6676d964579127611f10c0064bab3"
+    },
+    {
+      "host": "gpu-h200-0285.lgcm.sh.istep.fun",
+      "role": "prefill",
+      "lane": 2,
+      "stage": "await_replay",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-0285.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "86dde7edb3b0a8265477a231f017cda31f26514ac35b538f0e22c0760325b4c1"
+    },
+    {
+      "host": "gpu-h200-0319.lgcm.sh.istep.fun",
+      "role": "prefill",
+      "lane": 3,
+      "stage": "await_replay",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-0319.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "52da50e181afaa8b65234720dcef1bd76ba5d9d91b12547fced513626f571cdd"
+    },
+    {
+      "host": "gpu-h200-0626.lgcm.sh.istep.fun",
+      "role": "decode",
+      "lane": 0,
+      "stage": "native_launched",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-0626.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "99f389b87c3f10d6be3cd868d38f1e5efda881978d32f036b8814ecf26fd6f42"
+    },
+    {
+      "host": "gpu-h200-0733.lgcm.sh.istep.fun",
+      "role": "decode",
+      "lane": 1,
+      "stage": "await_replay",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-0733.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "d5ecbacd3b5854113f13f0045f9df0f8d20779a57db719066176f15e29cb5c37"
+    },
+    {
+      "host": "gpu-h200-0873.lgcm.sh.istep.fun",
+      "role": "decode",
+      "lane": 2,
+      "stage": "await_replay",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-0873.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "ccba15c3a9edbbb8a1409547622c61a883228e5f8263d30cb5d660b0c71ca4f8"
+    },
+    {
+      "host": "gpu-h200-1021.lgcm.sh.istep.fun",
+      "role": "decode",
+      "lane": 3,
+      "stage": "await_replay",
+      "gpu_count": 8,
+      "source_hash_count": 76,
+      "versions": {
+        "torch": "2.13.0+cu130",
+        "vllm": "0.28.0",
+        "aiohttp": "3.14.3"
+      },
+      "result_path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/cloud_evidence/snapshot_nodes/gpu-h200-1021.lgcm.sh.istep.fun/result.json",
+      "result_sha256": "69bf607169a3346f263954d7e94c9b2cf48096a9b39f5d0fe693cb8c692294ae"
+    }
+  ],
+  "unique_h200_devices": 64,
+  "source_comparisons": 608,
+  "native_progress": "DeepGEMM/FlashInfer warmup in all role/lane server logs",
+  "full_native_ready": false,
+  "formal_request_result": "PENDING",
+  "limits": "Read-only in-progress snapshot; terminal admission and final copy still required.",
+  "inspection_correction": "Initial inspection incorrectly required native_launched for headless lanes; native_pd_worker.py advances those lanes to await_replay while heads remain native_launched. No worker/source change."
+}

@@ -1,0 +1,194 @@
+{
+ "captured_utc": "2026-11-02T16:13:00.653373+00:00",
+ "job": "exp-1102-233941-576872",
+ "objects": {
+  "exp-1102-233941-576872": {
+   "n": 0,
+   "events": []
+  },
+  "exp-1102-233941-576872-a87ff679": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-1679091c after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    },
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    }
+   ]
+  },
+  "exp-1102-233941-576872-e4da3b7f": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    },
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-aab32389 after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    }
+   ]
+  },
+  "exp-1102-233941-576872-c4ca4238": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-c4ca4238 after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    },
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    }
+   ]
+  },
+  "exp-1102-233941-576872-eccbc87e": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 2,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-c81e728d after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    },
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    }
+   ]
+  },
+  "exp-1102-233941-576872-cfcd2084": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-6512bd43 after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    },
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    }
+   ]
+  },
+  "exp-1102-233941-576872-8f14e45f": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-eccbc87e after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    },
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    }
+   ]
+  },
+  "exp-1102-233941-576872-c81e728d": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 2,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-a87ff679 after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    },
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 2,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    }
+   ]
+  },
+  "exp-1102-233941-576872-1679091c": {
+   "n": 2,
+   "events": [
+    {
+     "type": "Normal",
+     "reason": "Preempted",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-e4da3b7f after terminating grace period",
+     "source": "addon-agent-podfreezer"
+    },
+    {
+     "type": "Normal",
+     "reason": "Killing",
+     "count": 1,
+     "first": null,
+     "last": null,
+     "message": "Stopping container default",
+     "source": "kubelet"
+    }
+   ]
+  }
+ }
+}

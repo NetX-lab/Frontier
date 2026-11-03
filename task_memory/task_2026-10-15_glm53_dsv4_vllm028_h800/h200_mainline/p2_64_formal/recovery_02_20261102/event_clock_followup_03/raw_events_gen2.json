@@ -1,0 +1,155 @@
+{
+ "captured_utc": "2026-11-03T01:12:41.148762+00:00",
+ "query": {
+  "method": "corev1_api.list_namespaced_event",
+  "field_selector": "involvedObject.name=<exact name>",
+  "limit_per_page": 100,
+  "max_pages": 5
+ },
+ "objects": {
+  "exp-1102-233941-576872": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229310962",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-a87ff679": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229310992",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-e4da3b7f": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229311017",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-c4ca4238": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229311047",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-eccbc87e": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229311075",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-cfcd2084": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229311099",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-8f14e45f": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229311135",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-c81e728d": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229311156",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  },
+  "exp-1102-233941-576872-1679091c": {
+   "pages": [
+    {
+     "page": 1,
+     "returned": 0,
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45229311191",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "continuation_exhausted": true
+  }
+ }
+}

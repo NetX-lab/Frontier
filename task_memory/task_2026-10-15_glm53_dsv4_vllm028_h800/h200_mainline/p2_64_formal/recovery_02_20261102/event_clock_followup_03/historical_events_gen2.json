@@ -1,0 +1,1407 @@
+{
+ "captured_utc": "2026-11-03T01:13:43.710853+00:00",
+ "endpoint": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+ "scope": "/shai/shai-core",
+ "objects": {
+  "exp-1102-233941-576872": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "RJob",
+   "name": "exp-1102-233941-576872",
+   "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872",
+      "kind": "RJob",
+      "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 41,
+     "returned": 41,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0319.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:52Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-eccbc87e is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-c4ca4238 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-e4da3b7f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-c81e728d is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3486 node(s) didn't match Pod's node affinity/selector, 668 Insufficient memory, 701 Insufficient cpu, 966 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 8. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 8, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:51:46Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-1679091c is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:51:46Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-a87ff679 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:49:45Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 4. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 4.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:47:43Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 4. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 4, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-a87ff679 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-e4da3b7f is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-c81e728d is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0900.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0848.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 2. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 2.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0650.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0079.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0768.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0374.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 1. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 1, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:41:40Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-eccbc87e is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 2. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 2, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8, pre-filter pod exp-1102-233941-576872-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:05Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 2. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 2, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:05Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-1679091c cannot find enough sibling pods, current pods number: 7, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-1679091c cannot find enough sibling pods, current pods number: 7, minMember of group: 8, pre-filter pod exp-1102-233941-576872-1679091c cannot find enough sibling pods, current pods number: 7, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:05Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-eccbc87e",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8, pre-filter pod exp-1102-233941-576872-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8, pre-filter pod exp-1102-233941-576872-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-cfcd2084",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1102-233941-576872-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-a87ff679 cannot find enough sibling pods, current pods number: 4, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-a87ff679 cannot find enough sibling pods, current pods number: 4, minMember of group: 8, pre-filter pod exp-1102-233941-576872-a87ff679 cannot find enough sibling pods, current pods number: 4, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8, pre-filter pod exp-1102-233941-576872-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8, pre-filter pod exp-1102-233941-576872-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 41,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-a87ff679": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-a87ff679",
+   "uid": "f94e4e5d-0425-4335-9dfe-b17d94d6d76d",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-a87ff679",
+      "kind": "Replica",
+      "uid": "f94e4e5d-0425-4335-9dfe-b17d94d6d76d",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 6,
+     "returned": 6,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-1021.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3486 node(s) didn't match Pod's node affinity/selector, 668 Insufficient memory, 701 Insufficient cpu, 966 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-a87ff679 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:49:45Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-a87ff679 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0374.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-a87ff679 cannot find enough sibling pods, current pods number: 4, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-a87ff679 cannot find enough sibling pods, current pods number: 4, minMember of group: 8, pre-filter pod exp-1102-233941-576872-a87ff679 cannot find enough sibling pods, current pods number: 4, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 6,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-e4da3b7f": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-e4da3b7f",
+   "uid": "7d7fa43c-07ae-4c83-a648-702cba9c0ba7",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-e4da3b7f",
+      "kind": "Replica",
+      "uid": "7d7fa43c-07ae-4c83-a648-702cba9c0ba7",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 5,
+     "returned": 5,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0319.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:52Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-e4da3b7f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-e4da3b7f is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0768.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8, pre-filter pod exp-1102-233941-576872-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:05Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 5,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-c4ca4238": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-c4ca4238",
+   "uid": "943e1199-d462-485d-a531-4c41801c4e42",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-c4ca4238",
+      "kind": "Replica",
+      "uid": "943e1199-d462-485d-a531-4c41801c4e42",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 4,
+     "returned": 4,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0125.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-c4ca4238 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0079.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8, pre-filter pod exp-1102-233941-576872-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 4,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-eccbc87e": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-eccbc87e",
+   "uid": "faad4dd2-6402-4e2d-8874-c6f2f0d99f50",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-eccbc87e",
+      "kind": "Replica",
+      "uid": "faad4dd2-6402-4e2d-8874-c6f2f0d99f50",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 5,
+     "returned": 5,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0272.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-eccbc87e is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0848.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-eccbc87e is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8, pre-filter pod exp-1102-233941-576872-eccbc87e cannot find enough sibling pods, current pods number: 5, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 5,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-cfcd2084": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-cfcd2084",
+   "uid": "22914d68-317d-4eb5-aef4-76d7f9db59df",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-cfcd2084",
+      "kind": "Replica",
+      "uid": "22914d68-317d-4eb5-aef4-76d7f9db59df",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 9,
+     "returned": 9,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0285.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 8. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 8, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:51:46Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 4. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 4.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:47:43Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 4. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 4, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 2. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 2.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0900.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 1. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 1, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:41:40Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 2. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 2, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-cfcd2084 is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8, pre-filter pod exp-1102-233941-576872-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 9,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-8f14e45f": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-8f14e45f",
+   "uid": "058fed2e-f1e0-4dfd-940d-dc6ae714afe4",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-8f14e45f",
+      "kind": "Replica",
+      "uid": "058fed2e-f1e0-4dfd-940d-dc6ae714afe4",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 3,
+     "returned": 3,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0733.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: coscheduling prefilter resource gap: map[] member gap 2. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 2, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:05Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 3,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-c81e728d": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-c81e728d",
+   "uid": "3123becd-d7eb-416c-ad7d-ad65a6141bea",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-c81e728d",
+      "kind": "Replica",
+      "uid": "3123becd-d7eb-416c-ad7d-ad65a6141bea",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 5,
+     "returned": 5,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0626.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-c81e728d is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-c81e728d is unschedulable even after PostFilter, assigned 0, co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:45:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0650.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:43:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8, pre-filter pod exp-1102-233941-576872-c81e728d cannot find enough sibling pods, current pods number: 2, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:04Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 5,
+   "pagination_complete": true
+  },
+  "exp-1102-233941-576872-1679091c": {
+   "url": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+   "kind": "Replica",
+   "name": "exp-1102-233941-576872-1679091c",
+   "uid": "434a58dc-e36d-41c0-afdc-fc80fa46633b",
+   "pages": [
+    {
+     "page": 1,
+     "request": {
+      "name": "exp-1102-233941-576872-1679091c",
+      "kind": "Replica",
+      "uid": "434a58dc-e36d-41c0-afdc-fc80fa46633b",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "status": 200,
+     "total": 4,
+     "returned": 4,
+     "items": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0873.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:55:51Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3486 node(s) didn't match Pod's node affinity/selector, 668 Insufficient memory, 701 Insufficient cpu, 966 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:53:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently. co-scheduling post filter, prefilter podGroup shai-core/exp-1102-233941-576872-default failed recently, coscheduling: podGroup shai-core/exp-1102-233941-576872-default gets rejected due to Pod exp-1102-233941-576872-1679091c is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:51:46Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4453 nodes are available: pre-filter pod exp-1102-233941-576872-1679091c cannot find enough sibling pods, current pods number: 7, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1102-233941-576872-1679091c cannot find enough sibling pods, current pods number: 7, minMember of group: 8, pre-filter pod exp-1102-233941-576872-1679091c cannot find enough sibling pods, current pods number: 7, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-02T15:40:05Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "total": 4,
+   "pagination_complete": true
+  }
+ }
+}

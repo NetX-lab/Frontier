@@ -1,0 +1,31 @@
+{
+ "captured_utc": "2026-11-02T16:14:01.091055+00:00",
+ "job": "exp-1103-001335-240782",
+ "uid": "7402bc4b-a983-4e6f-ac23-0fc7b1c694d8",
+ "creator": "i-fengyicheng",
+ "preemptible": "no",
+ "quotagroup": "step_main",
+ "replicas": 1,
+ "positive_tags": [
+  "H200"
+ ],
+ "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+ "limits": {
+  "cpu": "16",
+  "memory": "64000Mi",
+  "nvidia.com/gpu": "0"
+ },
+ "requests": {
+  "cpu": "16",
+  "memory": "64000Mi",
+  "nvidia.com/gpu": "0"
+ },
+ "filestore_volume": "100.96.128.195:/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261102_02:/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261102_02",
+ "juicefs_mount": "s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant;s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+ "command": [
+  "bash",
+  "-lc",
+  "cd /data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261102_02 && exec bash -c 'timeout 3600 python3 -B /data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261102_02/cloud_copy.py copy /data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261102_02/copy_config.json'"
+ ],
+ "phase": "Running"
+}

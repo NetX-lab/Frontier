@@ -1,0 +1,30 @@
+{
+ "exp-1102-164536-160317": {
+  "phase": "Stopped",
+  "startTime": null,
+  "finishTime": "2026-11-02T12:50:51Z",
+  "reason": "RJobFailed",
+  "message": "Tasks with failed status: [default]",
+  "taskStage": null,
+  "taskStatuses": {
+   "default": {
+    "failed": 1,
+    "stopped": 7
+   }
+  }
+ },
+ "exp-1102-233941-576872": {
+  "phase": "Stopped",
+  "startTime": null,
+  "finishTime": "2026-11-02T16:10:07Z",
+  "reason": "RJobStopped",
+  "message": "RJob stopped",
+  "taskStage": "stepmind-task-stage-1",
+  "taskStatuses": {
+   "default": {
+    "stopped": 8,
+    "taskStage": "stepmind-task-stage-1"
+   }
+  }
+ }
+}

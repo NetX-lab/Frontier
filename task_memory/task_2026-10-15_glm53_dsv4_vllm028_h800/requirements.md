@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Resumed generation02 terminal/copy acceptance; retained the explicit preemption retry rule and three-GPU-job cap for generation03. |
 | 2026-11-02 | Recorded D-P2-64-STARTUP-RECOVERY: YC approved option B, generation 02 and ordinary in-scope debug corrections without repeated approval. |
 | 2026-11-02 | Recorded reviewed native-startup failure findings and pending recovery proposal without adding source-change or retry authority. |
 | 2026-11-02 | Recorded continuation after e2289283; first formal launcher reports failure and exact-job RCA precedes any retry. |
@@ -157,6 +158,12 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request] 2026-11-03 — continue after the generation02 handoff
+
+> continue
+
+Carry forward D-P2-64-FORMAL-B and D-P2-64-STARTUP-RECOVERY. Generation01 used one GPU job and failed during startup; generation02 used the second and was preempted. The explicit preemption-recovery rule permits the third GPU job with unchanged 64 H200, all-preemptible, step_main, 3600-second and 64-GPU-hour-per-run limits. A fourth GPU job requires a new decision. The lead's next action is a fresh run generation with the already accepted source, workload, promotion receipt and R5 reader; no new source correction or resource class is inferred.
 
 ## [Original Request / Decision] 2026-11-02 — D-P2-64-STARTUP-RECOVERY
 

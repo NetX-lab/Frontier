@@ -1,0 +1,70 @@
+{
+ "captured_utc": "2026-11-03T01:12:40.534540+00:00",
+ "job": {
+  "name": "exp-1102-164536-160317",
+  "uid": "8e2e21a9-4041-4694-8c60-4abfea9a57a1",
+  "creator": "i-fengyicheng",
+  "quotagroup": "step_main",
+  "preemptible": "yes",
+  "creationTimestamp": "2026-11-02T08:45:36Z",
+  "phase": "Stopped",
+  "status": {
+   "phase": "Stopped",
+   "startTime": null,
+   "finishTime": "2026-11-02T12:50:51Z"
+  },
+  "stop_annotations": {
+   "rjob.brainpp.cn/system-stop-reason": "Task fail policy [any] caused undesired running replicas."
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1102-164536-160317-eccbc87e",
+   "listed_phase": "Stopped",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': '6712b71e-34f8-4753-858f-6fdc05127137, 6712b71e-34f8-4753-858f-6fdc05127137', 'cache-control': 'no-cache, private,no-cache, p"
+  },
+  {
+   "name": "exp-1102-164536-160317-8f14e45f",
+   "listed_phase": "Stopped",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': '848b1878-5ec5-4766-ba7f-3ec14f435353, 848b1878-5ec5-4766-ba7f-3ec14f435353', 'cache-control': 'no-cache, private,no-cache, p"
+  },
+  {
+   "name": "exp-1102-164536-160317-cfcd2084",
+   "listed_phase": "Stopped",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': '89fbb21b-4075-4591-8503-61813933b118, 89fbb21b-4075-4591-8503-61813933b118', 'cache-control': 'no-cache, private,no-cache, p"
+  },
+  {
+   "name": "exp-1102-164536-160317-1679091c",
+   "listed_phase": "Stopped",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': 'a9ede3a7-c6dc-4df6-9616-049e38da9acb, a9ede3a7-c6dc-4df6-9616-049e38da9acb', 'cache-control': 'no-cache, private,no-cache, p"
+  },
+  {
+   "name": "exp-1102-164536-160317-c4ca4238",
+   "listed_phase": "Stopped",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': '3fc84a98-8c80-41ef-b01c-72e81885e402, 3fc84a98-8c80-41ef-b01c-72e81885e402', 'cache-control': 'no-cache, private,no-cache, p"
+  },
+  {
+   "name": "exp-1102-164536-160317-a87ff679",
+   "listed_phase": "Failed",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': 'cc11fa66-b27d-4436-8884-5b88f5f8f66f, cc11fa66-b27d-4436-8884-5b88f5f8f66f', 'cache-control': 'no-cache, private,no-cache, p"
+  },
+  {
+   "name": "exp-1102-164536-160317-e4da3b7f",
+   "listed_phase": "Stopped",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': '7ad0e7a3-18e2-46da-bf5a-b5219952659a, 7ad0e7a3-18e2-46da-bf5a-b5219952659a', 'cache-control': 'no-cache, private,no-cache, p"
+  },
+  {
+   "name": "exp-1102-164536-160317-c81e728d",
+   "listed_phase": "Stopped",
+   "object_available": false,
+   "error": "NotFoundException: (404)\nReason: Not Found\nHTTP response headers: HTTPHeaderDict({'audit-id': '718c2973-0210-45b0-911d-5f42883f0ab2, 718c2973-0210-45b0-911d-5f42883f0ab2', 'cache-control': 'no-cache, private,no-cache, p"
+  }
+ ]
+}

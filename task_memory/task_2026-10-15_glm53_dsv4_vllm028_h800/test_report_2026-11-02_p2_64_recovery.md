@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Independently verified generation02 preemption,104-file copy, healthy heads and incomplete first warmup; formal reference and exact GPU-hours remain unverified. |
 | 2026-11-03 | Accepted R5 source binding and legacy control; recorded generation02 on eight distinct Running nodes. |
 | 2026-11-02 | Recorded generation02 submission and the lead's reproducible R5 call-chain failure; native execution and reader correction proceed in parallel. |
 | 2026-11-02 | Recorded the approved native startup repair, source/CPU checks, frozen harness and sealed generation-02 package. |
@@ -28,7 +29,7 @@ Commands run from `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028` unless s
 | Independent lead check-only | Same sealed manifest passes | exit0; manifest 9f9a1ab954ef3b7d61ff67f2f62c891e9da8547590a21b19db020c8557e8ed7d | PASS |
 | Locked image CPU check | Actual wheel base hashes and torch runtime communication pass | exp-1102-232618-248194 Succeeded; actual six base hashes and all6 CPU cases PASS with Python3.12.3/torch2.13.0+cu130 | PASS |
 | Independent final package review | Workload, identities, overlays and resources agree | All source/package/workload/resource checks PASS; old R4 rejects the new approved source identity | Package PASS; R5 code/control subsequently accepted below |
-| Formal GPU reference | Complete three-repeat native output and post-run admission | Generation02 exp-1102-233941-576872 submitted15:39:41Z;8replicas Running at15:58:41Z, eight distinct nodes verified15:58:59Z | IN PROGRESS |
+| Formal GPU reference | Complete three-repeat native output and post-run admission | Generation02 preempted16:10:07Z; first warmup interrupted,0 complete repeats | INSUFFICIENT_EVIDENCE |
 
 CPU command:
 
@@ -102,3 +103,21 @@ The14deselected tests already fail before these edits: both their test file and 
 ## Continuation verification — 2026-11-03 Asia/Hong_Kong
 
 Lead recomputed SHA-256 for all three accepted R5 files and matched `r5_lead_acceptance.json` exactly; retained test/control logs agree with the reported counts and PASS_EXACT result. No code changed after those checks. `generation02_running_nodes.json` records eight distinct nodes with all containers Running and restartCount0, captured2026-11-02T15:58:59Z. This is placement evidence; native full-model initialization and request completion remain pending.
+
+Lead startup verification (`generation02_launch_identity.json`) checked the eight downloaded in-progress `result.json` records against the sealed `config.json`:64distinct NVIDIA H200 UUIDs,608/608native source hashes, all P/D lanes0–3 and torch2.13.0+cu130/vLLM0.28.0. **PASS_LAUNCH_IDENTITY_ONLY**. Server logs show FlashInfer/DeepGEMM warmup in progress. A first local assertion expected every node stage to remain native_launched; source inspection showed headless lanes already advance to await_replay. The corrected role-aware inspection passes; no running code changed. Pi turn1 settled exit0 and turn2 continues the same existing job through terminal/copy.
+
+## Generation02 terminal and copy acceptance — 2026-11-03
+
+Command: `python3 /data/ycfeng/tmp/glm53_dsv4/h200/audit_formal02_terminal.py`, from the task repository, system Python3, CPU only. Expected: exact104-file inventory/bytes/hash, matching run manifest and platform/launcher identity, API readiness before terminal, and direct examination of client/proxy/repetition records. Actual: **PASS_TERMINAL_AND_COPY_ONLY**. Result and script digest: `h200_mainline/p2_64_formal/recovery_02_20261102/generation02_terminal_acceptance.json`.
+
+All104files/53,233,857bytes match inventory SHA256 `0e5110ad68d2e5fea14d3b6cbd69fdb2a3c922ebae5ce2ce8222c829d98a6e95`; zero missing, extra or mismatched files. Copy job exp-1103-001335-240782 is Succeeded,0GPU,exit0,restart0. Every replica of exp-1102-233941-576872 has the exact event text `Preempted by high priority pod shai-core/exp-1103-000903-887139-default-<suffix> after terminating grace period`, source addon-agent-podfreezer. Job Stopped16:10:07Z; launcher observed terminal16:10:10.264Z and cleanup16:10:10.677Z. The projected event file has no UID or event timestamp; a bounded follow-up is separate and those fields remain unknown until verified.
+
+Prefill and decode API heads returned200 at16:08:56.653897Z and16:08:58.458603Z. `run/client_requests.jsonl` contains432 unique predeclared rows (48warmup,384formal), all saved as not_submitted with no dispatch clock. However, `run/proxy_requests.jsonl` proves the first warmup did run: both endpoints returned200, then `ClientPayloadError` reports an incomplete stream. `canonical_repetitions.json` has no complete repetition; no request metric files or COMPLETE marker exist. The executor's inference from empty replay.log is corrected. No formal comparison is possible: coverage/R5/gates/warm reading are NOT RUN for this incomplete reference, and no new calibration PASS is claimed.
+
+All8generation02 container end clocks are missing; exact usage remainsnull, completenessfalse, known subtotal0.0. That subtotal is not zero consumption. First-generation missing clocks remain separate. Recovery generation03 is authorized by the explicit preemption rule and the remaining third job, with unchanged source/workload/resources. A fourth GPU job is outside the recorded allowance.
+
+## Event/clock follow-up — 2026-11-03 01:12–01:15 UTC
+
+Pi p64-formal2-1102n turn3 settled/exit0. Lead independently matched RJob UID62b2b3f8-056e-452c-a38d-7a442942f6c1, eight replica names and all ownerReferences to the previously retained Preempted projections. Live events now return0items for each object; historical events preserve scheduling/pulling records but no initiating Preempted row. Original event timestamps/Pod UIDs remain unavailable, with request bindings and query coverage retained in `recovery_02_20261102/event_clock_followup_03/`. Absence now does not erase the prior positive projections, and expiry is an inference rather than an API-reported reason.
+
+Generation02 still has8starts and0finishedAt values. Generation01 replicas now return404, while its job retains finishTime12:50:51Z and failure reason. Historical Failed/one exact container-end evidence stays valid despite later Stopped projection. The new inquiry's zero-observed subtotal must not replace the previously retained generation01 exact subtotal4.053333333333334GPUh. No exact total was recovered. The follow-up prose also incorrectly says ClientPayloadError was not stored in the proxy row; lead verified the row's `error` field directly and keeps the original stored error as evidence. No further query or parser expansion is needed for generation03 submission.

@@ -1,0 +1,740 @@
+{
+ "captured_utc": "2026-11-03T01:12:40.303597+00:00",
+ "job": {
+  "name": "exp-1102-233941-576872",
+  "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+  "creator": "i-fengyicheng",
+  "quotagroup": "step_main",
+  "preemptible": "yes",
+  "creationTimestamp": "2026-11-02T15:39:41Z",
+  "phase": "Stopped",
+  "status": {
+   "phase": "Stopped",
+   "startTime": null,
+   "finishTime": "2026-11-02T16:10:07Z"
+  },
+  "stop_annotations": {}
+ },
+ "replicas": [
+  {
+   "name": "exp-1102-233941-576872-a87ff679",
+   "uid": "f94e4e5d-0425-4335-9dfe-b17d94d6d76d",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-1021.lgcm.sh.istep.fun",
+   "hostIP": "10.204.9.45",
+   "podIP": "10.204.9.45",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "4",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:21Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:21Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://b75315e528a591f2c1e8380bc3c7aa6a1b5871a5abbe38755b98cfc4c0385b37",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:20Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-e4da3b7f",
+   "uid": "7d7fa43c-07ae-4c83-a648-702cba9c0ba7",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-0319.lgcm.sh.istep.fun",
+   "hostIP": "10.204.6.54",
+   "podIP": "10.204.6.54",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "5",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:17Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:17Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://e7b131b3bee8e985a0df0ddd1fa6bbbea12d893ae38bcd1d51b0a0ee46983965",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:17Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-c4ca4238",
+   "uid": "943e1199-d462-485d-a531-4c41801c4e42",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-0125.lgcm.sh.istep.fun",
+   "hostIP": "10.204.2.77",
+   "podIP": "10.204.2.77",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "1",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:04Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:04Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://6e12b5edc167667891132546dc966e5cd3d7f917d1322e87b508b7df2cccc000",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:04Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-eccbc87e",
+   "uid": "faad4dd2-6402-4e2d-8874-c6f2f0d99f50",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-0272.lgcm.sh.istep.fun",
+   "hostIP": "10.204.16.67",
+   "podIP": "10.204.16.67",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "3",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:07Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:07Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://63893da6b2b7f9194b4b2646837e42d41b590a1ac64fc7b3b360dba4e641fe40",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:06Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-cfcd2084",
+   "uid": "22914d68-317d-4eb5-aef4-76d7f9db59df",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-0285.lgcm.sh.istep.fun",
+   "hostIP": "10.204.16.70",
+   "podIP": "10.204.16.70",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "0",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:20Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:20Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://7eb1858d7dca29a8092baace7dc9bcdcbb6c5cc10f8ec7e95f70171fbd9640ec",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:20Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-8f14e45f",
+   "uid": "058fed2e-f1e0-4dfd-940d-dc6ae714afe4",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-0733.lgcm.sh.istep.fun",
+   "hostIP": "10.204.14.92",
+   "podIP": "10.204.14.92",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "7",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:09Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:09Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://8aeced30692c8c1909f1335f9a7a85ceb2269e0dd122b7357524a71cc530c784",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:09Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-c81e728d",
+   "uid": "3123becd-d7eb-416c-ad7d-ad65a6141bea",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-0626.lgcm.sh.istep.fun",
+   "hostIP": "10.204.24.32",
+   "podIP": "10.204.24.32",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "2",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:17Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:17Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://9197566c7199e2df9c8c50f23eafeb009eb617847f5b048e03ed862aefd697df",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:17Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-1679091c",
+   "uid": "434a58dc-e36d-41c0-afdc-fc80fa46633b",
+   "phase": "Stopped",
+   "nodeName": "gpu-h200-0873.lgcm.sh.istep.fun",
+   "hostIP": "10.204.1.63",
+   "podIP": "10.204.1.63",
+   "startTime": "2026-11-02T15:55:48Z",
+   "ownerReferences": [
+    {
+     "kind": "RJob",
+     "name": "exp-1102-233941-576872",
+     "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "controller": true,
+     "blockOwnerDeletion": true
+    }
+   ],
+   "labels": {
+    "autoAddPrivateMachine": "true",
+    "brainpp.cn/restartable": "false",
+    "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+    "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+    "kubebrain.brainpp.cn/creator-type": "user",
+    "kubebrain.brainpp.cn/extraresourceid": "",
+    "kubebrain.brainpp.cn/extraresourcetype": "",
+    "kubebrain.brainpp.cn/lxcfs": "yes",
+    "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+    "kubebrain.brainpp.cn/replica": "6",
+    "kubebrain.brainpp.cn/resourcetype": "rjob",
+    "logs.monitoring.basemind.com/collect": "true",
+    "privatemachine.brainpp.cn/privatemachine": "group",
+    "quotagroup.brainpp.cn/preemptible": "yes",
+    "quotagroup.brainpp.cn/quotagroup": "step_main",
+    "rjob.brainpp.cn/generated-task-index": "0",
+    "rjob.brainpp.cn/is-critical-task": "yes",
+    "rjob.brainpp.cn/managed-by": "replica",
+    "rjob.brainpp.cn/rjob-name": "exp-1102-233941-576872",
+    "rjob.brainpp.cn/rjob-task-id": "exp-1102-233941-576872-default",
+    "rjob.brainpp.cn/rjob-task-type": "default",
+    "rjob.brainpp.cn/rjob-uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+    "rjob.brainpp.cn/task-fail-policy": "any",
+    "scheduling.kubebrain.brainpp.cn/podgroup_name": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group": "exp-1102-233941-576872-default",
+    "scheduling.x-k8s.io/pod-group-root": "exp-1102-233941-576872",
+    "stepmind.com/gang-group": "true",
+    "workspace.brainpp.cn/workspace": "kun-workspace-vgen2",
+    "workspace.brainpp.cn/workspace-namspace": "shai-core"
+   },
+   "conditions": [
+    {
+     "type": "Initialized",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    },
+    {
+     "type": "Ready",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:18Z"
+    },
+    {
+     "type": "ContainersReady",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:58:18Z"
+    },
+    {
+     "type": "PodScheduled",
+     "status": "True",
+     "lastProbeTime": null,
+     "lastTransitionTime": "2026-11-02T15:55:48Z"
+    }
+   ],
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "ready": true,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "containerID": "containerd://ad63e69018e03c1ad827f4d4f00fe823d44652a1aee2e1501b500d60f7d13f5d",
+     "state": {
+      "running": {
+       "startedAt": "2026-11-02T15:58:17Z"
+      }
+     },
+     "lastState": {}
+    }
+   ]
+  }
+ ]
+}

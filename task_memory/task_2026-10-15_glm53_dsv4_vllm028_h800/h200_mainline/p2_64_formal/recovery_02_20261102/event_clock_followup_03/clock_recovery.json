@@ -1,0 +1,286 @@
+{
+ "captured_utc": "2026-11-03T01:15:06.899573+00:00",
+ "purpose": "Recover exact container clocks for two formal generations; preserve ended finishedAt only.",
+ "method": [
+  "RJobClient.get_rjob_infos -> replica names/phases/ips only (no clocks)",
+  "client.api.get_namespaced_custom_object(plural=replicas, name=<replica>) -> retained pod-like status incl. containerStatuses",
+  "client.api.get_namespaced_custom_object(plural=rjobs) -> job status/taskStatuses (job-level clocks only)",
+  "client.corev1_api.list_namespaced_event(field_selector=involvedObject.name=<exact>, limit=100, _continue pagination)",
+  "GET /kapis/v1/tenants/shai/projects/shai-core/events?name=<exact>&kind={RJob,Replica,Pod}&uid=<exact>&sortBy=lastTimestamp:desc&page/pageSize"
+ ],
+ "jobs": {
+  "exp-1102-233941-576872": {
+   "uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+   "creator": "i-fengyicheng",
+   "quotagroup": "step_main",
+   "preemptible": "yes",
+   "phase": "Stopped",
+   "job_startTime": null,
+   "job_finishTime": "2026-11-02T16:10:07Z",
+   "job_finishTime_note": "platform RJob finishTime; not a container clock",
+   "replica_count": 8,
+   "replicas": [
+    {
+     "replica": "exp-1102-233941-576872-a87ff679",
+     "replica_uid": "f94e4e5d-0425-4335-9dfe-b17d94d6d76d",
+     "node": "gpu-h200-1021.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://b75315e528a591f2c1e8380bc3c7aa6a1b5871a5abbe38755b98cfc4c0385b37",
+     "container_started_at": "2026-11-02T15:58:20Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    },
+    {
+     "replica": "exp-1102-233941-576872-e4da3b7f",
+     "replica_uid": "7d7fa43c-07ae-4c83-a648-702cba9c0ba7",
+     "node": "gpu-h200-0319.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://e7b131b3bee8e985a0df0ddd1fa6bbbea12d893ae38bcd1d51b0a0ee46983965",
+     "container_started_at": "2026-11-02T15:58:17Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    },
+    {
+     "replica": "exp-1102-233941-576872-c4ca4238",
+     "replica_uid": "943e1199-d462-485d-a531-4c41801c4e42",
+     "node": "gpu-h200-0125.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://6e12b5edc167667891132546dc966e5cd3d7f917d1322e87b508b7df2cccc000",
+     "container_started_at": "2026-11-02T15:58:04Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    },
+    {
+     "replica": "exp-1102-233941-576872-eccbc87e",
+     "replica_uid": "faad4dd2-6402-4e2d-8874-c6f2f0d99f50",
+     "node": "gpu-h200-0272.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://63893da6b2b7f9194b4b2646837e42d41b590a1ac64fc7b3b360dba4e641fe40",
+     "container_started_at": "2026-11-02T15:58:06Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    },
+    {
+     "replica": "exp-1102-233941-576872-cfcd2084",
+     "replica_uid": "22914d68-317d-4eb5-aef4-76d7f9db59df",
+     "node": "gpu-h200-0285.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://7eb1858d7dca29a8092baace7dc9bcdcbb6c5cc10f8ec7e95f70171fbd9640ec",
+     "container_started_at": "2026-11-02T15:58:20Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    },
+    {
+     "replica": "exp-1102-233941-576872-8f14e45f",
+     "replica_uid": "058fed2e-f1e0-4dfd-940d-dc6ae714afe4",
+     "node": "gpu-h200-0733.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://8aeced30692c8c1909f1335f9a7a85ceb2269e0dd122b7357524a71cc530c784",
+     "container_started_at": "2026-11-02T15:58:09Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    },
+    {
+     "replica": "exp-1102-233941-576872-c81e728d",
+     "replica_uid": "3123becd-d7eb-416c-ad7d-ad65a6141bea",
+     "node": "gpu-h200-0626.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://9197566c7199e2df9c8c50f23eafeb009eb617847f5b048e03ed862aefd697df",
+     "container_started_at": "2026-11-02T15:58:17Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    },
+    {
+     "replica": "exp-1102-233941-576872-1679091c",
+     "replica_uid": "434a58dc-e36d-41c0-afdc-fc80fa46633b",
+     "node": "gpu-h200-0873.lgcm.sh.istep.fun",
+     "pod_status_startTime": "2026-11-02T15:55:48Z",
+     "phase": "Stopped",
+     "owner_kind": "RJob",
+     "owner_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+     "container": "default",
+     "container_id": "containerd://ad63e69018e03c1ad827f4d4f00fe823d44652a1aee2e1501b500d60f7d13f5d",
+     "container_started_at": "2026-11-02T15:58:17Z",
+     "container_finished_at": null,
+     "container_state_keys": [
+      "running"
+     ],
+     "lastState": {},
+     "restartCount": 0,
+     "ready": true,
+     "clock_source": "client.api.get_namespaced_custom_object(plural=replicas).status.containerStatuses"
+    }
+   ],
+   "containers_with_finishedAt": 0,
+   "containers_observed": 8,
+   "container_gpu_hours": null,
+   "known_container_gpu_hours": 0.0,
+   "clock_coverage": "8/8 replica objects readable; all containers retained state=running with startedAt, none ended -> finishedAt unavailable",
+   "retained_start_snapshot": {
+    "path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/pods_running.json",
+    "captured_utc": "2026-11-02T15:58:59.693281+00:00",
+    "note": "independent start-time snapshot, consistent with replica objects"
+   }
+  },
+  "exp-1102-164536-160317": {
+   "uid": "8e2e21a9-4041-4694-8c60-4abfea9a57a1",
+   "creator": "i-fengyicheng",
+   "quotagroup": "step_main",
+   "preemptible": "yes",
+   "phase": "Stopped",
+   "job_startTime": null,
+   "job_finishTime": "2026-11-02T12:50:51Z",
+   "job_finishTime_note": "platform RJob finishTime; not a container clock",
+   "stop_annotations": {
+    "rjob.brainpp.cn/system-stop-reason": "Task fail policy [any] caused undesired running replicas."
+   },
+   "replica_count": 8,
+   "replicas": [
+    {
+     "replica": "exp-1102-164536-160317-eccbc87e",
+     "listed_phase": "Stopped",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    },
+    {
+     "replica": "exp-1102-164536-160317-8f14e45f",
+     "listed_phase": "Stopped",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    },
+    {
+     "replica": "exp-1102-164536-160317-cfcd2084",
+     "listed_phase": "Stopped",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    },
+    {
+     "replica": "exp-1102-164536-160317-1679091c",
+     "listed_phase": "Stopped",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    },
+    {
+     "replica": "exp-1102-164536-160317-c4ca4238",
+     "listed_phase": "Stopped",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    },
+    {
+     "replica": "exp-1102-164536-160317-a87ff679",
+     "listed_phase": "Failed",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    },
+    {
+     "replica": "exp-1102-164536-160317-e4da3b7f",
+     "listed_phase": "Stopped",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    },
+    {
+     "replica": "exp-1102-164536-160317-c81e728d",
+     "listed_phase": "Stopped",
+     "object_available": false,
+     "clock_error": "404 NotFound: pod not found (replica object expired/deleted)"
+    }
+   ],
+   "containers_with_finishedAt": 0,
+   "containers_observed": 0,
+   "container_gpu_hours": null,
+   "known_container_gpu_hours": 0.0,
+   "clock_coverage": "0/8 replica objects readable (404 NotFound); container clocks unavailable"
+  }
+ },
+ "event_identity": {
+  "job_uid": "62b2b3f8-056e-452c-a38d-7a442942f6c1",
+  "creator": "i-fengyicheng",
+  "replica_owner_binding": "all 8 replicas carry ownerReferences kind=RJob uid=62b2b3f8-056e-452c-a38d-7a442942f6c1",
+  "live_events": {
+   "source": "corev1_api.list_namespaced_event",
+   "captured": "2026-11-03T01:13Z",
+   "result": "0 items for job and all 8 replicas; each list paginated to continuation exhaustion (limit=100)",
+   "prior_projection": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/terminal_events.json retains reason/message/source/count with first/last null; raw dictionaries are no longer returned"
+  },
+  "historical_events": {
+   "source": "GET /kapis/v1/tenants/shai/projects/shai-core/events",
+   "coverage": "job total 41 (32 FailedScheduling, 8 Start replica, 1 Pulling); replicas 3-9 rows each, all FailedScheduling+Pulling",
+   "limits": "items carry lastTimestamp only (firstTimestamp/eventTime null) and empty involvedObject; uid binding preserved per request"
+  },
+  "pod_kind_probe": {
+   "requests": 8,
+   "result": "total 0 for every replica with kind=Pod; uid-less name+kind also returned 0, so the archive requires uid binding"
+  },
+  "preemption_raw_event_recovery": "UNAVAILABLE: exact raw Preempted/Killing dictionaries with first/last timestamps and involvedObject are no longer returned by live or historical event APIs; the retained projection remains positive evidence of the preempting pod text"
+ }
+}

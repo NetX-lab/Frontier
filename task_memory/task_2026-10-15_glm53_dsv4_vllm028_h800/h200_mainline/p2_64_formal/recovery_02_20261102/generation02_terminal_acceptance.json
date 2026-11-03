@@ -1,0 +1,238 @@
+{
+  "status": "PASS_TERMINAL_AND_COPY_ONLY",
+  "verified_utc": "2026-11-03T01:12:49.885391+00:00",
+  "command": "python3 /data/ycfeng/tmp/glm53_dsv4/h200/audit_formal02_terminal.py",
+  "script_sha256": "ef1de5222fff5e021f79e026258b08c95c8cb4c58b626459f7c79bd2eda3e36b",
+  "job": "exp-1102-233941-576872",
+  "terminal_phase": "Stopped",
+  "terminal_utc": "2026-11-02T16:10:07Z",
+  "initiating_cause": "PLATFORM_PREEMPTION",
+  "preemption_events": [
+    {
+      "replica": "exp-1102-233941-576872-1679091c",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 1,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-e4da3b7f after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    },
+    {
+      "replica": "exp-1102-233941-576872-8f14e45f",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 1,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-eccbc87e after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    },
+    {
+      "replica": "exp-1102-233941-576872-a87ff679",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 1,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-1679091c after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    },
+    {
+      "replica": "exp-1102-233941-576872-c4ca4238",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 1,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-c4ca4238 after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    },
+    {
+      "replica": "exp-1102-233941-576872-c81e728d",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 2,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-a87ff679 after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    },
+    {
+      "replica": "exp-1102-233941-576872-cfcd2084",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 1,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-6512bd43 after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    },
+    {
+      "replica": "exp-1102-233941-576872-e4da3b7f",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 1,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-aab32389 after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    },
+    {
+      "replica": "exp-1102-233941-576872-eccbc87e",
+      "type": "Normal",
+      "reason": "Preempted",
+      "count": 2,
+      "first": null,
+      "last": null,
+      "message": "Preempted by high priority pod shai-core/exp-1103-000903-887139-default-c81e728d after terminating grace period",
+      "source": "addon-agent-podfreezer"
+    }
+  ],
+  "event_limits": "Saved projected event times and UIDs are absent; exact-object follow-up is independent and pending. Do not infer request time or preemptor resource class.",
+  "launcher_observed_terminal_utc": "2026-11-02T16:10:10.264Z",
+  "launcher_cleanup_utc": "2026-11-02T16:10:10.677Z",
+  "inventory_sha256": "0e5110ad68d2e5fea14d3b6cbd69fdb2a3c922ebae5ce2ce8222c829d98a6e95",
+  "files": 104,
+  "bytes": 53233857,
+  "file_hash_mismatches": 0,
+  "missing": 0,
+  "extra": 0,
+  "download_root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261102_02/dsv4-h200-p2-64-formal-20261102-02",
+  "copy_job": "exp-1103-001335-240782",
+  "run_manifest_sha256": "5080a88910c86bc2820ae8635ddee1ced08c33dfae5992b786e78fd5793e7f4f",
+  "healthy_api_heads": [
+    {
+      "role": "prefill",
+      "url": "http://10.204.2.77:8100",
+      "server_pid": 740,
+      "server_started_at_utc": "2026-11-02T15:58:46.350358+00:00",
+      "run_manifest_sha256": "5080a88910c86bc2820ae8635ddee1ced08c33dfae5992b786e78fd5793e7f4f",
+      "run_generation": "v4-native-v028-h200-p2-64-formal-20261102-02",
+      "ready_at_utc": "2026-11-02T16:08:56.653897+00:00",
+      "health_status": 200
+    },
+    {
+      "role": "decode",
+      "url": "http://10.204.24.32:8200",
+      "server_pid": 741,
+      "server_started_at_utc": "2026-11-02T15:58:50.224768+00:00",
+      "run_manifest_sha256": "5080a88910c86bc2820ae8635ddee1ced08c33dfae5992b786e78fd5793e7f4f",
+      "run_generation": "v4-native-v028-h200-p2-64-formal-20261102-02",
+      "ready_at_utc": "2026-11-02T16:08:58.458603+00:00",
+      "health_status": 200
+    }
+  ],
+  "client_rows": {
+    "total": 432,
+    "formal": 384,
+    "warmup": 48,
+    "saved_status_not_submitted": 432
+  },
+  "observed_proxy_requests": 1,
+  "observed_proxy_request": {
+    "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+    "proxied_request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+    "proxy_arrival_time": 1793635745.6593194,
+    "proxy_arrival_monotonic": 13956855.695156222,
+    "intended_pair": {
+      "prefill": 0,
+      "decode": 0
+    },
+    "handoff_protocol": "nixl_pull",
+    "prefill_status": 200,
+    "prefill_response_time": 1793635777.1217868,
+    "prefill_response_monotonic": 13956887.157623908,
+    "kv_transfer_params": {
+      "do_remote_prefill": true,
+      "do_remote_decode": false,
+      "remote_block_ids": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24
+        ],
+        [
+          0,
+          119,
+          120
+        ],
+        [
+          0,
+          215,
+          216
+        ],
+        [
+          0,
+          1751,
+          1752
+        ],
+        [
+          0,
+          2505,
+          2506,
+          2507,
+          2508,
+          2509,
+          2510,
+          2511,
+          2512,
+          2513,
+          2514,
+          2515,
+          2516,
+          2517,
+          2518,
+          2519,
+          2520
+        ]
+      ],
+      "remote_engine_id": "a35191f2-11b2-4979-98c3-20a0deba4c27_dp0",
+      "remote_request_id": "cmpl-fixed-6144-1024-req128-qps1-warmup-r000-repeat01-0-8fb70417",
+      "remote_host": "10.204.2.77",
+      "remote_port": 5600,
+      "tp_size": 8,
+      "remote_num_tokens": 6144,
+      "remote_blocks_expiry_time": null,
+      "transfer_mode": "pull"
+    },
+    "decode_status": 200,
+    "decode_first_byte_time": 1793635779.465717,
+    "decode_first_byte_monotonic": 13956889.50155376,
+    "error": "ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>"
+  },
+  "complete_repeats": 0,
+  "client_record_limit": "Predeclared client snapshot is not evidence of no dispatch: proxy proves first warmup ran and its streaming response was interrupted.",
+  "complete_formal_metrics": false,
+  "reference_admission": "INSUFFICIENT_EVIDENCE",
+  "pair_coverage": "NOT_RUN_NO_COMPLETE_REFERENCE",
+  "r5": "NOT_RUN_NO_COMPLETE_REFERENCE",
+  "all_request_gate": "NOT_RUN_NO_COMPLETE_REFERENCE",
+  "warm_reading": "NOT_RUN_NO_COMPLETE_REFERENCE",
+  "container_gpu_hours": null,
+  "known_container_gpu_hours": 0.0,
+  "container_clocks_complete": false,
+  "accounting_limit": "Zero known subtotal is not zero consumption. Missing finishedAt clocks cannot use job finishTime.",
+  "next_action": "Build and independently check generation03 under the existing three-job cap; source, workload and resources unchanged."
+}

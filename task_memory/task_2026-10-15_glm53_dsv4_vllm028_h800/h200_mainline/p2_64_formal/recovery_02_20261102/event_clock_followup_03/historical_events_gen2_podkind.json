@@ -1,0 +1,102 @@
+{
+ "captured_utc": "2026-11-03T01:14:31.791278+00:00",
+ "endpoint": "https://platform.shaipower.com/kapis/v1/tenants/shai/projects/shai-core/events",
+ "objects": {
+  "exp-1102-233941-576872-a87ff679": {
+   "request": {
+    "name": "exp-1102-233941-576872-a87ff679",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  },
+  "exp-1102-233941-576872-e4da3b7f": {
+   "request": {
+    "name": "exp-1102-233941-576872-e4da3b7f",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  },
+  "exp-1102-233941-576872-c4ca4238": {
+   "request": {
+    "name": "exp-1102-233941-576872-c4ca4238",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  },
+  "exp-1102-233941-576872-eccbc87e": {
+   "request": {
+    "name": "exp-1102-233941-576872-eccbc87e",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  },
+  "exp-1102-233941-576872-cfcd2084": {
+   "request": {
+    "name": "exp-1102-233941-576872-cfcd2084",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  },
+  "exp-1102-233941-576872-8f14e45f": {
+   "request": {
+    "name": "exp-1102-233941-576872-8f14e45f",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  },
+  "exp-1102-233941-576872-c81e728d": {
+   "request": {
+    "name": "exp-1102-233941-576872-c81e728d",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  },
+  "exp-1102-233941-576872-1679091c": {
+   "request": {
+    "name": "exp-1102-233941-576872-1679091c",
+    "kind": "Pod",
+    "sortBy": "lastTimestamp:desc",
+    "page": 1,
+    "pageSize": 100
+   },
+   "status": 200,
+   "total": 0,
+   "items": []
+  }
+ }
+}

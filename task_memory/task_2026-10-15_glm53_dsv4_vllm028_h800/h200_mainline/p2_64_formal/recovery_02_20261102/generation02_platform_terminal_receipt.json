@@ -1,0 +1,158 @@
+{
+ "observed_utc": "2026-11-02T16:13:10.488580+00:00",
+ "job": "exp-1102-233941-576872",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "yes",
+ "status": {
+  "phase": "Stopped",
+  "startTime": null,
+  "finishTime": "2026-11-02T16:10:07Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 8,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1102-233941-576872-1679091c",
+   "phase": "Stopped",
+   "node": "gpu-h200-0873.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-8f14e45f",
+   "phase": "Stopped",
+   "node": "gpu-h200-0733.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-a87ff679",
+   "phase": "Stopped",
+   "node": "gpu-h200-1021.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-c4ca4238",
+   "phase": "Stopped",
+   "node": "gpu-h200-0125.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-c81e728d",
+   "phase": "Stopped",
+   "node": "gpu-h200-0626.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-cfcd2084",
+   "phase": "Stopped",
+   "node": "gpu-h200-0285.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-e4da3b7f",
+   "phase": "Stopped",
+   "node": "gpu-h200-0319.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1102-233941-576872-eccbc87e",
+   "phase": "Stopped",
+   "node": "gpu-h200-0272.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+     "state": {
+      "running": null
+     }
+    }
+   ]
+  }
+ ],
+ "container_gpu_hours": null,
+ "known_container_gpu_hours": 0.0,
+ "container_clocks_complete": false
+}
