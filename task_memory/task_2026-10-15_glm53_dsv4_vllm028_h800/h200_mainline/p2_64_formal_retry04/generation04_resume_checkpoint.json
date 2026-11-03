@@ -1,0 +1,91 @@
+{
+ "observed_utc": "2026-11-03T07:49:41.074239+00:00",
+ "purpose": "Finite read-only mainline resume checkpoint for the exact fourth P2-64 job. No submission, no control.",
+ "job": {
+  "name": "exp-1103-131952-259161",
+  "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "creator": "i-fengyicheng",
+  "creationTimestamp": "2026-11-03T05:19:52Z",
+  "phase": "Pending",
+  "startTime": null,
+  "finishTime": null,
+  "preemptible": "yes",
+  "queue": "quotagroup-global-default",
+  "queue_reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=238.",
+  "stop_annotations": {
+   "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=238."
+  }
+ },
+ "identity_binding": {
+  "expected_uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "observed_uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "uid_matches": true,
+  "creator_matches": true
+ },
+ "snapshots": [
+  {
+   "path": "mainline_resume_snapshot.json",
+   "utc": "2026-11-03T07:47:30.990501+00:00",
+   "phase": "Pending",
+   "replicas": 0,
+   "errors": 0,
+   "exit_code": 0
+  },
+  {
+   "path": "poll_mainline_resume_2.out",
+   "utc": "2026-11-03T07:48:37.428273+00:00",
+   "phase": "Pending",
+   "replicas": 0,
+   "errors": 0,
+   "exit_code": 0
+  },
+  {
+   "path": "poll_mainline_resume_3.out",
+   "utc": "2026-11-03T07:49:41.074239+00:00",
+   "phase": "Pending",
+   "replicas": 0,
+   "errors": 0,
+   "exit_code": 0
+  }
+ ],
+ "replicas": {
+  "expected": 8,
+  "count": 0,
+  "rows": [],
+  "container_clocks": [],
+  "container_clocks_available": false
+ },
+ "completion": {
+  "dispatch_records": 0,
+  "completed_requests": 0,
+  "evidence": "no worker exists"
+ },
+ "launcher": {
+  "pid": 81539,
+  "alive": true,
+  "state": "Ssl",
+  "started_utc": "2026-11-03T05:19:47.693580+00:00",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+  "cmdline": "/data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/launch.py",
+  "signal_sent": false
+ },
+ "blocker": "Pending with insufficient GPU quota for a 64-GPU gang; no replica scheduled yet.",
+ "command_return_codes": {
+  "poll_once_1": 0,
+  "poll_once_2": 0,
+  "poll_once_3": 0
+ },
+ "errors": [],
+ "queries": {
+  "job_replica_snapshots": 3,
+  "interval_s": 60,
+  "background_loop": false,
+  "quota_survey": false,
+  "ssh_cloud_survey": false
+ },
+ "terminal_receipt": {
+  "written": false,
+  "reason": "job is not terminal"
+ },
+ "business_completion_claimed": false
+}

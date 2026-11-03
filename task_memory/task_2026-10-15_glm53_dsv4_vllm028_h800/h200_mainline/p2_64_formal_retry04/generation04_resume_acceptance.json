@@ -1,0 +1,29 @@
+{
+  "verified_at_utc": "2026-11-03T07:50:44.755049+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "verdict": "PASS_QUEUE_CHECKPOINT_ONLY",
+  "job": "exp-1103-131952-259161",
+  "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "last_platform_observation_utc": "2026-11-03T07:49:41.074239+00:00",
+  "snapshots_verified": 3,
+  "read_errors": 0,
+  "launcher_pid": 81539,
+  "launcher_alive_after_monitor_exit": true,
+  "monitor_turn": 4,
+  "monitor_exit": 0,
+  "monitor_background_loop": false,
+  "replica_count": 0,
+  "native_business_status": "NOT_OBSERVED_NO_REPLICAS",
+  "exact_gpu_hours": null,
+  "post_run_status": "PLANNED_NOT_RUN_WAITING_FOR_NATIVE_REFERENCE",
+  "limits": [
+    "The platform remains Pending; no terminal or native-reference acceptance.",
+    "No business artifacts were read; zero request counts in the Pi checkpoint are inferred from no replicas, not a measured client count.",
+    "The existing queue annotation is preserved verbatim; it is not a new capacity survey.",
+    "Historical incomplete container clocks and broader ticket19 acceptance remain open."
+  ],
+  "artifact_sha256": {
+    "generation04_resume_checkpoint.json": "e9dfe593bec2f000ed88369be906276c7dc8108777c005f11cabec62886faca7",
+    "generation04_resume_snapshots.json": "6014b6c3b2eb498511032be310e562abaa8d6ccb7f8cf83889d76b0028fc9a6b"
+  }
+}

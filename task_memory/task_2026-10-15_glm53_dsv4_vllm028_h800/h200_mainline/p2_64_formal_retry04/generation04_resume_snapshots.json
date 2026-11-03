@@ -1,0 +1,65 @@
+[
+  {
+    "utc": "2026-11-03T07:47:30.990501+00:00",
+    "identity": {
+      "job": "exp-1103-131952-259161",
+      "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+      "creator": "i-fengyicheng",
+      "creationTimestamp": "2026-11-03T05:19:52Z",
+      "phase": "Pending",
+      "startTime": null,
+      "finishTime": null,
+      "preemptible": "yes",
+      "queue": "quotagroup-global-default",
+      "conditions": [],
+      "stop_annotations": {
+        "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=334."
+      }
+    },
+    "replica_rows": [],
+    "replicas": {},
+    "errors": []
+  },
+  {
+    "utc": "2026-11-03T07:48:37.428273+00:00",
+    "identity": {
+      "job": "exp-1103-131952-259161",
+      "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+      "creator": "i-fengyicheng",
+      "creationTimestamp": "2026-11-03T05:19:52Z",
+      "phase": "Pending",
+      "startTime": null,
+      "finishTime": null,
+      "preemptible": "yes",
+      "queue": "quotagroup-global-default",
+      "conditions": [],
+      "stop_annotations": {
+        "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=318."
+      }
+    },
+    "replica_rows": [],
+    "replicas": {},
+    "errors": []
+  },
+  {
+    "utc": "2026-11-03T07:49:41.074239+00:00",
+    "identity": {
+      "job": "exp-1103-131952-259161",
+      "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+      "creator": "i-fengyicheng",
+      "creationTimestamp": "2026-11-03T05:19:52Z",
+      "phase": "Pending",
+      "startTime": null,
+      "finishTime": null,
+      "preemptible": "yes",
+      "queue": "quotagroup-global-default",
+      "conditions": [],
+      "stop_annotations": {
+        "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=238."
+      }
+    },
+    "replica_rows": [],
+    "replicas": {},
+    "errors": []
+  }
+]

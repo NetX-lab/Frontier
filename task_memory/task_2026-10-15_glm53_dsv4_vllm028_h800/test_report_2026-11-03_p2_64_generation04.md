@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Mainline resumed after cleanup: three successful exact-job snapshots, Pending/0replicas, independent launcher verification PASS; native acceptance still blocked. |
 | 2026-11-03 | YC approved one fourth submission under D-P2-64-FOURTH; package-external authorization bound to the frozen manifest. |
 | 2026-11-03 | Prepared and independently verified a fourth-generation candidate after the lead-caused interruption; no GPU submission authorized or performed. |
 
@@ -11,7 +12,7 @@
 
 D-P2-64-FOURTH approves exactly one fourth submission. The approved scope is unchanged:64H200=8x8,all-preemptible,step_main,3600s,64container GPUh maximum. `h200_mainline/p2_64_formal_retry04/approval_receipt.json` binds the user reply `continue` to the reviewed manifest. The package-external wrapper authorization was corrected from the inherited third-job text; `bash -n` passes. No package byte changed.
 
-Submission is assigned to Pi `p64-formal4-submit-1103e`, session `5de845f5-6c54-42d1-aa42-2cb11b6cda13`, custom/deepseek-v4.1-flash-sys at thinking high. This turn ends normally after job/spec verification; an independent label performs monitoring. No fifth submission or automatic retry. Exact job/spec verification has passed; worker/terminal/metric verification is pending.
+Submission completed through Pi `p64-formal4-submit-1103e`, session `5de845f5-6c54-42d1-aa42-2cb11b6cda13`, custom/deepseek-v4.1-flash-sys at thinking high. That turn ended normally after job/spec verification. Independent monitor `p64-formal4-monitor-1103f` completed turn4 at the mainline-resume checkpoint below; the job remains Pending at2026-11-03T07:49:41Z, with0replicas and a GPU-quota queue reason. Launcher81539 survives. No background monitor, fifth submission or automatic retry. Worker/terminal/metric verification is pending.
 
 ## Historical offline result and boundary
 
@@ -59,3 +60,40 @@ At05:20:58Z the job remained Pending with no replica objects or start clocks. Th
 ## Queue checkpoint — 2026-11-03T05:26:00.691550+00:00
 
 Independent monitor has 6 successful exact-job snapshots, all with the approved UID/creator, no replica objects and no read errors. Latest phase Pending; platform queue reason is Insufficient GPU quota. The current source snapshot is retained in `h200_mainline/p2_64_formal_retry04/generation04_queue_checkpoint.json`. Launcher81539 remains alive; monitor labelp64-formal4-monitor-1103f is active and has a20-minute unscheduled checkpoint. Resource placement blocks native execution; this is not native failure or numerical acceptance. No stop or new submission.
+
+## Mainline resume checkpoint — 2026-11-03T07:49:41Z
+
+YC requested return to the mainline after cleanup commit `0eca0e38`. Pi `p64-formal4-monitor-1103f` turn4 reused the existing local personal StepMind Python read path, with the same approved job/UID. No old monitor loop was active. The turn finished with exit0 and `[settled] aborted=false`; no signal or control action occurred.
+
+Commands (cwd is the worktree above; no conda activation or installation):
+
+```bash
+bash /data/ycfeng/codex-home/skills/ds4-exec/scripts/run_ds4.sh p64-formal4-monitor-1103f /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028 /data/ycfeng/tmp/ds4_runs/prompts/p64-formal4-resume-1103g.md
+```
+
+Within Pi, using StepMind Python3.10.6 from `/data/ycfeng/tmp/ds4_runs/p64-formal4-monitor-1103f/scratch`, source the existing `env.sh`, then run the following three times, spaced60s apart, retaining stdout/stderr and the actual return code for each invocation:
+
+```bash
+timeout 60s /data/ycfeng/tmp/stepmind-env/bin/python -u poll_once.py
+```
+
+The lead then ran the offline evidence check, with Python3.10.6:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 /data/ycfeng/tmp/glm53_dsv4/h200/audit_formal04_resume.py
+```
+
+| Check | Expected | Observed | Result |
+| --- | --- | --- | --- |
+| Exact-job query | Approved job/UID/creator; all reads succeed | Three successful snapshots07:47:30Z/07:48:37Z/07:49:41Z; zero errors; all commands exit0 | PASS |
+| Current placement | Record actual phase, replicas and reason | Pending;0/8replicas; Insufficient GPU quota; start/end clocks null | BLOCKED_ON_CAPACITY |
+| Monitor lifecycle | Finite turn ends normally, launcher survives | Pi exit0/settled; lead reads matching launcher81539cmdline/cwd at07:50:44Z; no launcher_exit.json | PASS |
+| Durable evidence | Copied checkpoint matches source; raw records agree | Checkpoint exact bytes and three full sanitized snapshots independently verified | PASS |
+| Post-run prerequisites | Existing R5 command and completed Frontier replay retained | R5 selected, replay directory present, post_run status remains planned/not-run | PASS_PREPARATION_ONLY |
+| Native/reference/comparison | Requires actual workers, terminal outputs and complete reference | No replica or native output observed; terminal/copy/coverage/R5/metric commands not run | NOT RUN |
+
+Retained evidence: `h200_mainline/p2_64_formal_retry04/generation04_resume_checkpoint.json`, `generation04_resume_snapshots.json`, and `generation04_resume_acceptance.json`. Lead verdict: **PASS_QUEUE_CHECKPOINT_ONLY**. The checkpoint's zero request counts are inferred from absent workers; no client artifacts were read and they are not measured business counts. The platform queue annotation is retained verbatim, without interpreting its remaining-GPU field as usable capacity. Exact GPU-hours remain null; historical incomplete clocks are unchanged.
+
+check-progress reports D1–D7 CLEAR in the post-cleanup window. The only next mainline work needs platform placement: preserve container starts when workers appear, then terminal/end clocks → necessary copy/hash → pair coverage soft gate → R5 → all-request/warm four-metric readings. Existing reader tests and Frontier replay were not repeated.
+
+Final local record checks: all three new JSON receipts parse, their retained hashes match the acceptance receipt, and scoped `git diff --check` passes. No source or frozen package file changed; tickets18/19 remain open.

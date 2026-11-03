@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Recorded return to the existing P2-64 mainline after completed cleanup; no new submission or scope change. |
 | 2026-11-03 | Recorded explicit task-artifact cleanup and rm authorization; preserve live P2-64 dependencies, unique measurements and acceptance evidence. |
 | 2026-11-03 | Recorded YC continuation as D-P2-64-FOURTH: one additional submission, same64H200/preemptible/3600s/64GPUh limits; separate monitoring and no fifth retry. |
 | 2026-11-03 | Recorded the lead-caused third-job interruption and explicit pending fourth-job decision; existing resource cap and user decisions unchanged. |
@@ -161,6 +162,12 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request] 2026-11-03 — return to the mainline
+
+> 回到主线任务，继续
+
+Resume the already submitted fourth P2-64 job `exp-1103-131952-259161` and its existing terminal/copy/coverage/R5/comparison sequence. Cleanup is complete at `0eca0e38`; no further cleanup is planned. D-P2-64-FOURTH, its resource limits, the frozen package and completed Frontier replay remain unchanged. Keep launcher81539 alive and use the independent Pi monitoring label. This continuation does not authorize a fifth submission or reopen deferred GLM, EP-count or H800 work.
 
 ## [Original Request / Decision] 2026-11-03 — task artifact cleanup
 
