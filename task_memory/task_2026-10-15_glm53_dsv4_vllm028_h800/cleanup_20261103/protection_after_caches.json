@@ -1,0 +1,11 @@
+{
+  "utc": "2026-11-03T07:22:16.390459+00:00",
+  "stage": "after cache deletion; other surveys still running",
+  "file_count": 602,
+  "missing": [],
+  "changed": [],
+  "protected_roots_missing": [],
+  "worktrees_removed": [],
+  "launcher_same_alive": true,
+  "result": "PASS"
+}

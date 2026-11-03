@@ -1,0 +1,714 @@
+[
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline",
+  "rel": "t00/refactor_fidelity/baseline",
+  "is_candidate": false,
+  "cases_bytes": 702743232,
+  "cases_files": 528,
+  "rest_bytes": 143305,
+  "refs": 235,
+  "ref_examples": [
+   "t00/refactor_fidelity/baseline",
+   "t00/refactor_fidelity/baseline/manifest.json",
+   "t00/refactor_fidelity/baseline/results.jsonl",
+   "t00/refactor_fidelity/baseline/cases/coloc_dense_offline_cuda_graph_piecewise/metrics/meta_llama_llama_2_7b_hf/offline_batch/coloc_dense_offline_cuda_graph_piecewise"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-208ff75",
+  "rel": "t00/refactor_fidelity/candidate-208ff75",
+  "is_candidate": true,
+  "cases_bytes": 702879480,
+  "cases_files": 528,
+  "rest_bytes": 143320,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-9f58dbe",
+  "rel": "t00/refactor_fidelity/candidate-9f58dbe",
+  "is_candidate": true,
+  "cases_bytes": 702879480,
+  "cases_files": 528,
+  "rest_bytes": 143312,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c02-contracts-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c02-contracts-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702764467,
+  "cases_files": 528,
+  "rest_bytes": 143888,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c04-structural-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c04-structural-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702760621,
+  "cases_files": 528,
+  "rest_bytes": 144451,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c05-parameters-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c05-parameters-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702760621,
+  "cases_files": 528,
+  "rest_bytes": 143765,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c06-trace-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c06-trace-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702757926,
+  "cases_files": 528,
+  "rest_bytes": 143413,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-clean-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c07-clean-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702759431,
+  "cases_files": 528,
+  "rest_bytes": 143565,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-parameters-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c07-parameters-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702760320,
+  "cases_files": 528,
+  "rest_bytes": 143554,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-cache-layout-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c08-cache-layout-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702761398,
+  "cases_files": 528,
+  "rest_bytes": 143925,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-clean-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c08-clean-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702759431,
+  "cases_files": 528,
+  "rest_bytes": 143947,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c09-clean-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c09-clean-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702759431,
+  "cases_files": 528,
+  "rest_bytes": 144474,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c10-clean-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c10-clean-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702876167,
+  "cases_files": 528,
+  "rest_bytes": 143570,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c11-clean-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c11-clean-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702759130,
+  "cases_files": 528,
+  "rest_bytes": 143395,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c12-clean-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c12-clean-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702876244,
+  "cases_files": 528,
+  "rest_bytes": 143417,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c13-clean-20261018",
+  "rel": "t00/refactor_fidelity/candidate-c13-clean-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702876244,
+  "cases_files": 528,
+  "rest_bytes": 143462,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-clean-20261019",
+  "rel": "t00/refactor_fidelity/candidate-c14-clean-20261019",
+  "is_candidate": true,
+  "cases_bytes": 238972,
+  "cases_files": 8,
+  "rest_bytes": 0,
+  "refs": 1,
+  "ref_examples": [
+   "t00/refactor_fidelity/candidate-c14-clean-20261019/cases/trained_moe_csv_smoke/metrics"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-final-clean-20261019",
+  "rel": "t00/refactor_fidelity/candidate-c14-final-clean-20261019",
+  "is_candidate": true,
+  "cases_bytes": 702879478,
+  "cases_files": 528,
+  "rest_bytes": 143442,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c15-clean-20261019",
+  "rel": "t00/refactor_fidelity/candidate-c15-clean-20261019",
+  "is_candidate": true,
+  "cases_bytes": 702876244,
+  "cases_files": 528,
+  "rest_bytes": 143453,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-clean-20261019",
+  "rel": "t00/refactor_fidelity/candidate-c16-clean-20261019",
+  "is_candidate": true,
+  "cases_bytes": 702875943,
+  "cases_files": 528,
+  "rest_bytes": 144029,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-r2-clean-20261019",
+  "rel": "t00/refactor_fidelity/candidate-c16-r2-clean-20261019",
+  "is_candidate": true,
+  "cases_bytes": 702878463,
+  "cases_files": 528,
+  "rest_bytes": 144106,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c17-combined-clean-20261019",
+  "rel": "t00/refactor_fidelity/candidate-c17-combined-clean-20261019",
+  "is_candidate": true,
+  "cases_bytes": 702889750,
+  "cases_files": 528,
+  "rest_bytes": 145151,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c20-boundaries-clean-20261019",
+  "rel": "t00/refactor_fidelity/candidate-c20-boundaries-clean-20261019",
+  "is_candidate": true,
+  "cases_bytes": 702891430,
+  "cases_files": 528,
+  "rest_bytes": 143562,
+  "refs": 2,
+  "ref_examples": [
+   "t00/refactor_fidelity/candidate-c20-boundaries-clean-20261019/results.jsonl",
+   "t00/refactor_fidelity/candidate-c20-boundaries-clean-20261019/manifest.json"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c4513d9",
+  "rel": "t00/refactor_fidelity/candidate-c4513d9",
+  "is_candidate": true,
+  "cases_bytes": 702879480,
+  "cases_files": 528,
+  "rest_bytes": 143321,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-glm53-initial-contract-20261018",
+  "rel": "t00/refactor_fidelity/candidate-glm53-initial-contract-20261018",
+  "is_candidate": true,
+  "cases_bytes": 107385,
+  "cases_files": 6,
+  "rest_bytes": 25142,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-model-capacity-20261018",
+  "rel": "t00/refactor_fidelity/candidate-model-capacity-20261018",
+  "is_candidate": true,
+  "cases_bytes": 702763931,
+  "cases_files": 528,
+  "rest_bytes": 144104,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49",
+  "rel": "t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49",
+  "is_candidate": true,
+  "cases_bytes": 702890211,
+  "cases_files": 528,
+  "rest_bytes": 143357,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7",
+  "rel": "t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7",
+  "is_candidate": true,
+  "cases_bytes": 702891828,
+  "cases_files": 528,
+  "rest_bytes": 143352,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/root_v4_grouped_2a84c58",
+  "rel": "t00/refactor_fidelity/root_v4_grouped_2a84c58",
+  "is_candidate": true,
+  "cases_bytes": 0,
+  "cases_files": 0,
+  "rest_bytes": 703041593,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-call",
+  "rel": "t01/refactor_fidelity/candidate-cutlass-call",
+  "is_candidate": true,
+  "cases_bytes": 702676820,
+  "cases_files": 528,
+  "rest_bytes": 143366,
+  "refs": 1,
+  "ref_examples": [
+   "t01/refactor_fidelity/candidate-cutlass-call"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-context",
+  "rel": "t01/refactor_fidelity/candidate-cutlass-context",
+  "is_candidate": true,
+  "cases_bytes": 702678437,
+  "cases_files": 528,
+  "rest_bytes": 143362,
+  "refs": 2,
+  "ref_examples": [
+   "t01/refactor_fidelity/candidate-cutlass-context/results.jsonl",
+   "t01/refactor_fidelity/candidate-cutlass-context"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-fixture",
+  "rel": "t01/refactor_fidelity/candidate-cutlass-fixture",
+  "is_candidate": true,
+  "cases_bytes": 702678437,
+  "cases_files": 528,
+  "rest_bytes": 143256,
+  "refs": 1,
+  "ref_examples": [
+   "t01/refactor_fidelity/candidate-cutlass-fixture"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-state",
+  "rel": "t01/refactor_fidelity/candidate-cutlass-state",
+  "is_candidate": true,
+  "cases_bytes": 702677359,
+  "cases_files": 528,
+  "rest_bytes": 143366,
+  "refs": 1,
+  "ref_examples": [
+   "t01/refactor_fidelity/candidate-cutlass-state"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-native-tools",
+  "rel": "t01/refactor_fidelity/candidate-native-tools",
+  "is_candidate": true,
+  "cases_bytes": 702751380,
+  "cases_files": 528,
+  "rest_bytes": 143375,
+  "refs": 1,
+  "ref_examples": [
+   "t01/refactor_fidelity/candidate-native-tools"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-startup-memory",
+  "rel": "t01/refactor_fidelity/candidate-startup-memory",
+  "is_candidate": true,
+  "cases_bytes": 702677898,
+  "cases_files": 528,
+  "rest_bytes": 143378,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-dp-return",
+  "rel": "t02/refactor_fidelity/candidate-dp-return",
+  "is_candidate": true,
+  "cases_bytes": 702675203,
+  "cases_files": 528,
+  "rest_bytes": 143259,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-dp-return"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-dummy-host",
+  "rel": "t02/refactor_fidelity/candidate-dummy-host",
+  "is_candidate": true,
+  "cases_bytes": 702675742,
+  "cases_files": 528,
+  "rest_bytes": 143259,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-dummy-host"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-engine-update",
+  "rel": "t02/refactor_fidelity/candidate-engine-update",
+  "is_candidate": true,
+  "cases_bytes": 702677359,
+  "cases_files": 528,
+  "rest_bytes": 143264,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-engine-update"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-done",
+  "rel": "t02/refactor_fidelity/candidate-nixl-done",
+  "is_candidate": true,
+  "cases_bytes": 702675203,
+  "cases_files": 528,
+  "rest_bytes": 143257,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-nixl-done"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-lifetime",
+  "rel": "t02/refactor_fidelity/candidate-nixl-lifetime",
+  "is_candidate": true,
+  "cases_bytes": 702677359,
+  "cases_files": 528,
+  "rest_bytes": 143265,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-nixl-lifetime"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-pending",
+  "rel": "t02/refactor_fidelity/candidate-nixl-pending",
+  "is_candidate": true,
+  "cases_bytes": 702676820,
+  "cases_files": 528,
+  "rest_bytes": 143262,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-nixl-pending"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-prepare",
+  "rel": "t02/refactor_fidelity/candidate-nixl-prepare",
+  "is_candidate": true,
+  "cases_bytes": 702676820,
+  "cases_files": 528,
+  "rest_bytes": 143258,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-nixl-prepare"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-source",
+  "rel": "t02/refactor_fidelity/candidate-nixl-source",
+  "is_candidate": true,
+  "cases_bytes": 702676281,
+  "cases_files": 528,
+  "rest_bytes": 143260,
+  "refs": 1,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-nixl-source"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-raw-admission-a1",
+  "rel": "t02/refactor_fidelity/candidate-raw-admission-a1",
+  "is_candidate": true,
+  "cases_bytes": 702678976,
+  "cases_files": 528,
+  "rest_bytes": 143377,
+  "refs": 3,
+  "ref_examples": [
+   "t02/refactor_fidelity/candidate-raw-admission-a1",
+   "t02/refactor_fidelity/candidate-raw-admission-a1/results.jsonl",
+   "t02/refactor_fidelity/candidate-raw-admission-a1/manifest.json"
+  ],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-a72dcf8",
+  "rel": "w7a_dsa/fidelity/c3-a72dcf8",
+  "is_candidate": true,
+  "cases_bytes": 528391,
+  "cases_files": 21,
+  "rest_bytes": 0,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-4d2a018",
+  "rel": "w7a_dsa/fidelity/c3-final-4d2a018",
+  "is_candidate": true,
+  "cases_bytes": 702872634,
+  "cases_files": 528,
+  "rest_bytes": 143283,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-a72dcf8",
+  "rel": "w7a_dsa/fidelity/c3-final-a72dcf8",
+  "is_candidate": true,
+  "cases_bytes": 702872634,
+  "cases_files": 528,
+  "rest_bytes": 143287,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c6-9372b9d",
+  "rel": "w7a_dsa/fidelity/c6-9372b9d",
+  "is_candidate": true,
+  "cases_bytes": 702874174,
+  "cases_files": 528,
+  "rest_bytes": 143272,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c7-32f32fb",
+  "rel": "w7a_dsa/fidelity/c7-32f32fb",
+  "is_candidate": true,
+  "cases_bytes": 702863472,
+  "cases_files": 528,
+  "rest_bytes": 143278,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-523dd91",
+  "rel": "w7a_dsa/fidelity/final-523dd91",
+  "is_candidate": true,
+  "cases_bytes": 702871017,
+  "cases_files": 528,
+  "rest_bytes": 143279,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-f37268f",
+  "rel": "w7a_dsa/fidelity/final-f37268f",
+  "is_candidate": true,
+  "cases_bytes": 702871017,
+  "cases_files": 528,
+  "rest_bytes": 143281,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/merged-b5f44d2",
+  "rel": "w7a_dsa/fidelity/merged-b5f44d2",
+  "is_candidate": true,
+  "cases_bytes": 702871556,
+  "cases_files": 528,
+  "rest_bytes": 143297,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/metadata-28f47f1",
+  "rel": "w7a_dsa/fidelity/metadata-28f47f1",
+  "is_candidate": true,
+  "cases_bytes": 702872634,
+  "cases_files": 528,
+  "rest_bytes": 143285,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_30a77b5",
+  "rel": "w7b_sp_collectives/fidelity/w7b_sp_30a77b5",
+  "is_candidate": true,
+  "cases_bytes": 702874868,
+  "cases_files": 528,
+  "rest_bytes": 143325,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_7530ac5",
+  "rel": "w7b_sp_collectives/fidelity/w7b_sp_7530ac5",
+  "is_candidate": true,
+  "cases_bytes": 702874868,
+  "cases_files": 528,
+  "rest_bytes": 127055,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_f79061e",
+  "rel": "w7b_sp_collectives/fidelity/w7b_sp_f79061e",
+  "is_candidate": true,
+  "cases_bytes": 702874868,
+  "cases_files": 528,
+  "rest_bytes": 143340,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/m2_decode_lane/fidelity/candidate-m2-decode-lane",
+  "rel": "m2_decode_lane/fidelity/candidate-m2-decode-lane",
+  "is_candidate": true,
+  "cases_bytes": 702879908,
+  "cases_files": 528,
+  "rest_bytes": 143374,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/w7b_measured_cc/fidelity/w7b_b53c69c",
+  "rel": "w7b_measured_cc/fidelity/w7b_b53c69c",
+  "is_candidate": true,
+  "cases_bytes": 702870731,
+  "cases_files": 528,
+  "rest_bytes": 143309,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/fidelity/candidate-c23-c24",
+  "rel": "c23_root_20261019/fidelity/candidate-c23-c24",
+  "is_candidate": true,
+  "cases_bytes": 702880461,
+  "cases_files": 528,
+  "rest_bytes": 144007,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/merge_7ed3f21/fidelity/cand-7ed3f21",
+  "rel": "merge_7ed3f21/fidelity/cand-7ed3f21",
+  "is_candidate": true,
+  "cases_bytes": 702877023,
+  "cases_files": 528,
+  "rest_bytes": 143279,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ },
+ {
+  "dir": "/data/ycfeng/tmp/glm53_dsv4/merge_25f05f2/fidelity/merge-25f05f2",
+  "rel": "merge_25f05f2/fidelity/merge-25f05f2",
+  "is_candidate": true,
+  "cases_bytes": 702877562,
+  "cases_files": 528,
+  "rest_bytes": 143287,
+  "refs": 0,
+  "ref_examples": [],
+  "is_symlink": false
+ }
+]

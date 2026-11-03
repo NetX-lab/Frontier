@@ -1,0 +1,11 @@
+{
+  "utc": "2026-11-03T07:31:49.588008+00:00",
+  "deleted_directory_count": 45,
+  "manifest_directory_count": 45,
+  "retained_file_count": 114,
+  "retained_missing": [],
+  "retained_changed": [],
+  "retained_successful_case_records": 3157,
+  "retained_fidelity_runs": 41,
+  "status": "PASS"
+}

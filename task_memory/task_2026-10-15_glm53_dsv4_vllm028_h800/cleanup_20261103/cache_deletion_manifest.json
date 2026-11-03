@@ -1,0 +1,789 @@
+{
+  "scope": "Other task-owned cache directories; excludes h200, legacy-survey slices and protected formal_p2_20261102.",
+  "code_evidence": [
+    "frontier/execution_time_predictor/sklearn_execution_time_predictor.py:3082-3105 (cache load/save)",
+    "frontier/execution_time_predictor/sklearn_execution_time_predictor.py:3188-3247 (train on missing cache)"
+  ],
+  "entries": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "allocated_file_bytes": 290643968,
+      "logical_file_bytes": 288911604,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 294006784,
+      "logical_file_bytes": 291953582,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 298221568,
+      "logical_file_bytes": 296199143,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 300584960,
+      "logical_file_bytes": 298578056,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "allocated_file_bytes": 287567872,
+      "logical_file_bytes": 285857970,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 285466624,
+      "logical_file_bytes": 283349756,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "allocated_file_bytes": 279240704,
+      "logical_file_bytes": 277384344,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 286171136,
+      "logical_file_bytes": 284068580,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 287588352,
+      "logical_file_bytes": 285553637,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "allocated_file_bytes": 269189120,
+      "logical_file_bytes": 267605841,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 283729920,
+      "logical_file_bytes": 281613170,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "allocated_file_bytes": 277426176,
+      "logical_file_bytes": 275581209,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 284364800,
+      "logical_file_bytes": 282259277,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 286781440,
+      "logical_file_bytes": 284745188,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "allocated_file_bytes": 267034624,
+      "logical_file_bytes": 265480065,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 324214784,
+      "logical_file_bytes": 322179416,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 324214784,
+      "logical_file_bytes": 322179416,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326688768,
+      "logical_file_bytes": 324609263,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326688768,
+      "logical_file_bytes": 324609263,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "allocated_file_bytes": 290697216,
+      "logical_file_bytes": 288961173,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 292794368,
+      "logical_file_bytes": 290740991,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 298147840,
+      "logical_file_bytes": 296134874,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "allocated_file_bytes": 300732416,
+      "logical_file_bytes": 298721159,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "allocated_file_bytes": 286105600,
+      "logical_file_bytes": 284371503,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest/test_both_training_paths_and_w0/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 6340608,
+      "logical_file_bytes": 4664667,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 313073664,
+      "logical_file_bytes": 311024084,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 313073664,
+      "logical_file_bytes": 311024084,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_32_init/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_64_init/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_32_spec/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_spec/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_32_links03_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_64_links03_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_warm/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_warm/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_c/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 313073664,
+      "logical_file_bytes": 311024084,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 313073664,
+      "logical_file_bytes": 311024084,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "allocated_file_bytes": 326598656,
+      "logical_file_bytes": 324536393,
+      "extensions": [
+        ".pkl",
+        ".file"
+      ]
+    }
+  ]
+}

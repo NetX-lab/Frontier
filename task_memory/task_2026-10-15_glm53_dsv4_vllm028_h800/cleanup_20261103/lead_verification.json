@@ -1,0 +1,34 @@
+{
+  "utc": "2026-11-03T07:31:27.341621+00:00",
+  "protected_file_count": 602,
+  "protected_missing": [],
+  "protected_changed": [],
+  "protected_roots_missing": [],
+  "worktrees_removed": [],
+  "deleted_path_count": 110,
+  "still_present": [],
+  "launcher": {
+    "pid": 81539,
+    "alive": true,
+    "cmdline": "/data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/launch.py ",
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+    "identity_unchanged": true
+  },
+  "disk_before": {
+    "utc": "2026-11-03T07:18:03Z",
+    "size_bytes": 1098974756864,
+    "used_bytes": 1008673337344,
+    "available_bytes": 90301419520,
+    "source": "cleanup-caches-1103c/scratch/report.md and deletion_receipt.json"
+  },
+  "disk_after": {
+    "filesystem": "/dev/rbd1",
+    "size_bytes": 1098974756864,
+    "used_bytes": 960539348992,
+    "available_bytes": 138435407872,
+    "use_percent": "88%",
+    "raw_df": "Filesystem         1B-blocks         Used    Available Use% Mounted on\n/dev/rbd1      1098974756864 960539348992 138435407872  88% /data\n",
+    "available_increase_bytes": 48133988352
+  },
+  "status": "PASS"
+}

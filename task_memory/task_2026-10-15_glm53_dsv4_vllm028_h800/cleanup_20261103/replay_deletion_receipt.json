@@ -1,0 +1,3013 @@
+{
+  "task": "remove approved completed replay/fidelity outputs and pytest basetemp",
+  "operator": "pi executor for lead",
+  "manifest_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261103/replay_deletion_manifest.json",
+  "manifest_sha256": "6b414cb5a7502c20c0f0b44411026ce5b49311bea01b0daafdbfe1d19aeefed0",
+  "manifest_entries": 45,
+  "manifest_categories": {
+    "legacy_fidelity_outputs": 41,
+    "pytest_temporary_outputs": 4
+  },
+  "python_version": "Python 3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "commands": {
+    "validate": "python3 replay_validate.py replay_validation_pre.json",
+    "process_scan": "python3 replay_scan_proc.py replay_proc_scan_pre.json / replay_proc_scan_post.json",
+    "hash": "python3 replay_hash_retained.py replay_hashes_pre.json / replay_hashes_post.json",
+    "retained_evidence": "python3 - (inline; see replay_retained_evidence.txt)",
+    "delete": "python3 replay_delete_entries.py replay_deletion_results.json",
+    "per_entry_delete": "rm -rf -- <exact manifest entry path>",
+    "absence_and_siblings": "python3 - (inline; see replay_absence_check.txt)"
+  },
+  "dry_validation": {
+    "total_entries": 45,
+    "verified_ok": 45,
+    "skipped": 0,
+    "verified_regular_files": 84509,
+    "verified_symlinks": 2535,
+    "verified_allocated_bytes": 30255841280,
+    "verified_logical_bytes": 30043697696,
+    "hardlinks_files_with_nlink_gt1": 0,
+    "hardlinks_multi_member_groups": 0
+  },
+  "retained_evidence": {
+    "legacy_entries": 41,
+    "all_legacy_entries_77_of_77_exit_zero": true,
+    "legacy_detail": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-208ff75/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-208ff75/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-208ff75/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "208ff7548be693fa773401eea30cce825e60c4a5",
+        "harness_revision": "208ff7548be693fa773401eea30cce825e60c4a5",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-9f58dbe/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-9f58dbe/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-9f58dbe/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+        "harness_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c02-contracts-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c02-contracts-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c02-contracts-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9e9aca866484de993410f78bf6bf481bbbbaed1c",
+        "harness_revision": "9e9aca866484de993410f78bf6bf481bbbbaed1c",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c04-structural-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c04-structural-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c04-structural-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9c63e6b687e3307ad66208574cda661ffb7612bf",
+        "harness_revision": "9c63e6b687e3307ad66208574cda661ffb7612bf",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c05-parameters-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c05-parameters-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c05-parameters-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "b49a4a0074e78f91a70acca33dc0c569a1c7dd74",
+        "harness_revision": "b49a4a0074e78f91a70acca33dc0c569a1c7dd74",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c06-trace-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c06-trace-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c06-trace-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "cd3d3537f6c71535fcee7a1fdfda852c866bc745",
+        "harness_revision": "cd3d3537f6c71535fcee7a1fdfda852c866bc745",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-clean-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-clean-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-clean-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "harness_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-parameters-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-parameters-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-parameters-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "harness_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-cache-layout-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-cache-layout-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-cache-layout-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "harness_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-clean-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-clean-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-clean-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "harness_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c09-clean-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c09-clean-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c09-clean-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "harness_revision": "9d5f3eb66b322d02996fef7d7dab5a34e7cebd8f",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c10-clean-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c10-clean-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c10-clean-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "dc3912c8ac48b65a98e56b4b0208d156e1b15574",
+        "harness_revision": "dc3912c8ac48b65a98e56b4b0208d156e1b15574",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c11-clean-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c11-clean-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c11-clean-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "af5533ed69f2669b72e2a5525a35a047177925d4",
+        "harness_revision": "af5533ed69f2669b72e2a5525a35a047177925d4",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c12-clean-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c12-clean-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c12-clean-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "ba482200769828fdbc381eb298630f4753f48206",
+        "harness_revision": "ba482200769828fdbc381eb298630f4753f48206",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c13-clean-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c13-clean-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c13-clean-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "7626b3f301b7483632c75352cd48c670d4e6fe52",
+        "harness_revision": "7626b3f301b7483632c75352cd48c670d4e6fe52",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-final-clean-20261019/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-final-clean-20261019/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-final-clean-20261019/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "d3d4229b38273c7910e1edac80851ef81e2e2a10",
+        "harness_revision": "d3d4229b38273c7910e1edac80851ef81e2e2a10",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c15-clean-20261019/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c15-clean-20261019/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c15-clean-20261019/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "596451a4550be8edd912a026cea8a357b66dfb48",
+        "harness_revision": "596451a4550be8edd912a026cea8a357b66dfb48",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-clean-20261019/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-clean-20261019/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-clean-20261019/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "91d169757e11dfa54aae439643508504117946e8",
+        "harness_revision": "91d169757e11dfa54aae439643508504117946e8",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-r2-clean-20261019/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-r2-clean-20261019/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-r2-clean-20261019/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "91d169757e11dfa54aae439643508504117946e8",
+        "harness_revision": "91d169757e11dfa54aae439643508504117946e8",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c17-combined-clean-20261019/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c17-combined-clean-20261019/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c17-combined-clean-20261019/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "91d169757e11dfa54aae439643508504117946e8",
+        "harness_revision": "91d169757e11dfa54aae439643508504117946e8",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c4513d9/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c4513d9/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c4513d9/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "c4513d9177906de29abf37508f3c9bc38cfc6834",
+        "harness_revision": "c4513d9177906de29abf37508f3c9bc38cfc6834",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-model-capacity-20261018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-model-capacity-20261018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-model-capacity-20261018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9e9aca866484de993410f78bf6bf481bbbbaed1c",
+        "harness_revision": "9e9aca866484de993410f78bf6bf481bbbbaed1c",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "1a65e4985091f5c85c14830f86385800a614e4e6",
+        "harness_revision": "1a65e4985091f5c85c14830f86385800a614e4e6",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "5428bd7803137cac1de5c691409534af1e68888e",
+        "harness_revision": "5428bd7803137cac1de5c691409534af1e68888e",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-startup-memory/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-startup-memory/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-startup-memory/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "725bc18412277fca2bfdb46a539f6921c17d6873",
+        "harness_revision": "725bc18412277fca2bfdb46a539f6921c17d6873",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-4d2a018/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-4d2a018/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-4d2a018/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "4d2a01801a4c4c6b970eebc0b72f2a6a14286763",
+        "harness_revision": "4d2a01801a4c4c6b970eebc0b72f2a6a14286763",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-a72dcf8/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-a72dcf8/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-a72dcf8/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "a72dcf84f4bab9b38e3e53344bb069c47ece937b",
+        "harness_revision": "a72dcf84f4bab9b38e3e53344bb069c47ece937b",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c6-9372b9d/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c6-9372b9d/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c6-9372b9d/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "9372b9d4b212a73e08b776d7ccb8ba95d7c2fffd",
+        "harness_revision": "9372b9d4b212a73e08b776d7ccb8ba95d7c2fffd",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c7-32f32fb/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c7-32f32fb/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c7-32f32fb/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "32f32fba5d80db684c20d17e71dcd32f8d2bc50e",
+        "harness_revision": "32f32fba5d80db684c20d17e71dcd32f8d2bc50e",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-523dd91/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-523dd91/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-523dd91/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "523dd91c5d7e08edd1bb4a923eba0bce93b6b327",
+        "harness_revision": "523dd91c5d7e08edd1bb4a923eba0bce93b6b327",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-f37268f/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-f37268f/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-f37268f/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "f37268f2b343743f69214982b254a6b6e8bfaf59",
+        "harness_revision": "f37268f2b343743f69214982b254a6b6e8bfaf59",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/merged-b5f44d2/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/merged-b5f44d2/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/merged-b5f44d2/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "b5f44d2b3da79cbbcda1b1d5ca64543a9f0abac0",
+        "harness_revision": "b5f44d2b3da79cbbcda1b1d5ca64543a9f0abac0",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/metadata-28f47f1/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/metadata-28f47f1/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/metadata-28f47f1/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "28f47f10525d5d882769c219193d64d0b274e0f6",
+        "harness_revision": "28f47f10525d5d882769c219193d64d0b274e0f6",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_30a77b5/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_30a77b5/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_30a77b5/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "30a77b50b73eb067020ce7230c83e126bae65f2c",
+        "harness_revision": "30a77b50b73eb067020ce7230c83e126bae65f2c",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_7530ac5/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_7530ac5/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_7530ac5/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "7530ac507f16a1fe93471bf29b72d1e4fdd6295b",
+        "harness_revision": "7530ac507f16a1fe93471bf29b72d1e4fdd6295b",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_f79061e/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_f79061e/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_f79061e/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "f79061e138ba8253efe53c09c9dec0f45e42e2f2",
+        "harness_revision": "f79061e138ba8253efe53c09c9dec0f45e42e2f2",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/m2_decode_lane/fidelity/candidate-m2-decode-lane/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/m2_decode_lane/fidelity/candidate-m2-decode-lane/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/m2_decode_lane/fidelity/candidate-m2-decode-lane/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "6b9ce8040f0a5a78af6a6e54ad2224fcf258586e",
+        "harness_revision": "6b9ce8040f0a5a78af6a6e54ad2224fcf258586e",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_measured_cc/fidelity/w7b_b53c69c/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_measured_cc/fidelity/w7b_b53c69c/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/w7b_measured_cc/fidelity/w7b_b53c69c/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "b53c69c596f882edfac64a8420ba6af8c055a0bb",
+        "harness_revision": "b53c69c596f882edfac64a8420ba6af8c055a0bb",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/fidelity/candidate-c23-c24/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/fidelity/candidate-c23-c24/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/fidelity/candidate-c23-c24/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "b5120e6b39f44a79245b04de71e0ed95d8bb34a6",
+        "harness_revision": "b5120e6b39f44a79245b04de71e0ed95d8bb34a6",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/merge_7ed3f21/fidelity/cand-7ed3f21/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/merge_7ed3f21/fidelity/cand-7ed3f21/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/merge_7ed3f21/fidelity/cand-7ed3f21/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "7ed3f2165905b6be00ec1275a27892d21546d341",
+        "harness_revision": "7ed3f2165905b6be00ec1275a27892d21546d341",
+        "all_cases_exit_zero": true
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/merge_25f05f2/fidelity/merge-25f05f2/cases",
+        "retained_manifest": [
+          "/data/ycfeng/tmp/glm53_dsv4/merge_25f05f2/fidelity/merge-25f05f2/manifest.json"
+        ],
+        "retained_results": [
+          "/data/ycfeng/tmp/glm53_dsv4/merge_25f05f2/fidelity/merge-25f05f2/results.jsonl"
+        ],
+        "expected_records": 77,
+        "results_records": 77,
+        "manifest_case_count": 77,
+        "min_returncode": 0,
+        "max_returncode": 0,
+        "source_revision": "25f05f2e4d27bdb7a420c51c32719dec6884f3ea",
+        "harness_revision": "25f05f2e4d27bdb7a420c51c32719dec6884f3ea",
+        "all_cases_exit_zero": true
+      }
+    ],
+    "baseline": {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline",
+      "case_count": 77,
+      "results_records": 77,
+      "all_cases_exit_zero": true,
+      "cases_dir_entries": 77,
+      "source_revision": "bfa82de80413b5f4b38e4990a80b5108f9521f50",
+      "harness_revision": "bfa82de80413b5f4b38e4990a80b5108f9521f50"
+    }
+  },
+  "symlinks": {
+    "manifest_listed_total": 2535,
+    "observed_total_before_delete": 2535,
+    "all_targets_matched_manifest": true,
+    "entries_with_targets_outside_entry": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_before",
+        "links": [
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_before/test_temp_root_override_reject1/escape-to-system-tmp"
+        ]
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after",
+        "links": [
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after/test_temp_root_override_reject1/escape-to-system-tmp"
+        ]
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after_rerun",
+        "links": [
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after_rerun/test_temp_root_override_reject1/escape-to-system-tmp"
+        ]
+      }
+    ],
+    "handling": "rm -rf unlinks each symlink entry; no target was followed or descended. The only outside targets are manifest-listed escape-to-system-tmp -> /tmp fixture links; /tmp remains a plain directory after deletion."
+  },
+  "hardlinks": {
+    "files_with_nlink_gt1": 0,
+    "multi_member_groups": 0,
+    "note": "Collected during the existing precheck traversal; no extra survey run."
+  },
+  "git_worktrees": {
+    "registered_worktree_roots_checked": 175,
+    "overlaps_with_entries": []
+  },
+  "process_use_scan": {
+    "pre": {
+      "scanned_processes": 365,
+      "hits": 0,
+      "unreadable_fd_dirs": 117,
+      "unreadable_maps": 113
+    },
+    "post": {
+      "scanned_processes": 369,
+      "hits": 0,
+      "unreadable_fd_dirs": 117,
+      "unreadable_maps": 113
+    },
+    "note": "Unreadable /proc entries belong to other users and to protected sshd/sd-pam/runtime processes of this user; those are permission limits, not observed use. Every readable cwd/root/exe/fd/maps/cmdline reference was checked."
+  },
+  "hashes": {
+    "retained_file_count": 114,
+    "identical_after": true,
+    "changed_paths": [],
+    "active_package_manifest_sha256": "d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081",
+    "active_package_manifest_sha256_after": "d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081"
+  },
+  "deletion": {
+    "total_entries": 45,
+    "deleted": 45,
+    "skipped": 0,
+    "deleted_file_count": 84509,
+    "deleted_symlink_count": 2535,
+    "deleted_logical_file_bytes": 30043697696,
+    "deleted_allocated_file_bytes": 30255841280,
+    "runtime_seconds": 13.436
+  },
+  "disk": {
+    "pre_delete_observation": {
+      "used_bytes": 990856015872,
+      "available_bytes": 108118740992,
+      "observed_utc": "2026-11-03T07:30:17Z"
+    },
+    "post_delete_observation": {
+      "utc": "2026-11-03T07:31:06Z",
+      "filesystem": "/dev/rbd1",
+      "size_bytes": 1098974756864,
+      "used_bytes": 960541503488,
+      "available_bytes": 138433253376
+    },
+    "observed_used_delta_bytes": 30314512384,
+    "allocated_bytes_unlinked": 30255841280,
+    "logical_bytes_unlinked": 30043697696,
+    "note": "Allocated bytes are the sum of st_blocks*512 over unlinked regular files. The filesystem free-space change is reported separately and its difference from the allocated total is not attributed to a specific cause: concurrent host writes, shared inodes and delayed accounting can all affect it."
+  },
+  "launcher": {
+    "pid": 81539,
+    "ps": "81539     659 Tue Nov  3 13:19:47 2026    02:11:18 Ssl  /data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/launch.py",
+    "alive": true,
+    "signals_sent": false
+  },
+  "entries": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-208ff75/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702879480,
+        "allocated_file_bytes": 704036864,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702879480,
+        "allocated_file_bytes": 704036864,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-208ff75/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:27Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-9f58dbe/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702879480,
+        "allocated_file_bytes": 704036864,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702879480,
+        "allocated_file_bytes": 704036864,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-9f58dbe/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:27Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c02-contracts-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702764467,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702764467,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c02-contracts-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c04-structural-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702760621,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702760621,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c04-structural-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c05-parameters-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702760621,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702760621,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c05-parameters-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c06-trace-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702757926,
+        "allocated_file_bytes": 703905792,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702757926,
+        "allocated_file_bytes": 703905792,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c06-trace-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-clean-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702759431,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702759431,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-clean-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-parameters-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702760320,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702760320,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-parameters-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-cache-layout-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702761398,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702761398,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-cache-layout-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-clean-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702759431,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702759431,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-clean-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c09-clean-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702759431,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702759431,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c09-clean-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c10-clean-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702876167,
+        "allocated_file_bytes": 704028672,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702876167,
+        "allocated_file_bytes": 704028672,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c10-clean-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c11-clean-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702759130,
+        "allocated_file_bytes": 703913984,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702759130,
+        "allocated_file_bytes": 703913984,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c11-clean-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c12-clean-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702876244,
+        "allocated_file_bytes": 704028672,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702876244,
+        "allocated_file_bytes": 704028672,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c12-clean-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c13-clean-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702876244,
+        "allocated_file_bytes": 704028672,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702876244,
+        "allocated_file_bytes": 704028672,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c13-clean-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-final-clean-20261019/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702879478,
+        "allocated_file_bytes": 704032768,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702879478,
+        "allocated_file_bytes": 704032768,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-final-clean-20261019/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c15-clean-20261019/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702876244,
+        "allocated_file_bytes": 704028672,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702876244,
+        "allocated_file_bytes": 704028672,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c15-clean-20261019/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:28Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-clean-20261019/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702875943,
+        "allocated_file_bytes": 704028672,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702875943,
+        "allocated_file_bytes": 704028672,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-clean-20261019/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-r2-clean-20261019/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702878463,
+        "allocated_file_bytes": 704032768,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702878463,
+        "allocated_file_bytes": 704032768,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-r2-clean-20261019/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c17-combined-clean-20261019/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702889750,
+        "allocated_file_bytes": 704045056,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702889750,
+        "allocated_file_bytes": 704045056,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c17-combined-clean-20261019/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c4513d9/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702879480,
+        "allocated_file_bytes": 704036864,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702879480,
+        "allocated_file_bytes": 704036864,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c4513d9/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-model-capacity-20261018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702763931,
+        "allocated_file_bytes": 703918080,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702763931,
+        "allocated_file_bytes": 703918080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-model-capacity-20261018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702890211,
+        "allocated_file_bytes": 704045056,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702890211,
+        "allocated_file_bytes": 704045056,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702891828,
+        "allocated_file_bytes": 704045056,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702891828,
+        "allocated_file_bytes": 704045056,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-startup-memory/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702677898,
+        "allocated_file_bytes": 703823872,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702677898,
+        "allocated_file_bytes": 703823872,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-startup-memory/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-4d2a018/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702872634,
+        "allocated_file_bytes": 704016384,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702872634,
+        "allocated_file_bytes": 704016384,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-4d2a018/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-a72dcf8/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702872634,
+        "allocated_file_bytes": 704016384,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702872634,
+        "allocated_file_bytes": 704016384,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-a72dcf8/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:29Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c6-9372b9d/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702874174,
+        "allocated_file_bytes": 704008192,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702874174,
+        "allocated_file_bytes": 704008192,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c6-9372b9d/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c7-32f32fb/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702863472,
+        "allocated_file_bytes": 704004096,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702863472,
+        "allocated_file_bytes": 704004096,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c7-32f32fb/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-523dd91/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702871017,
+        "allocated_file_bytes": 704012288,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702871017,
+        "allocated_file_bytes": 704012288,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-523dd91/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-f37268f/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702871017,
+        "allocated_file_bytes": 704012288,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702871017,
+        "allocated_file_bytes": 704012288,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-f37268f/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/merged-b5f44d2/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702871556,
+        "allocated_file_bytes": 704016384,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702871556,
+        "allocated_file_bytes": 704016384,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/merged-b5f44d2/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/metadata-28f47f1/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702872634,
+        "allocated_file_bytes": 704016384,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702872634,
+        "allocated_file_bytes": 704016384,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/metadata-28f47f1/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_30a77b5/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702874868,
+        "allocated_file_bytes": 704024576,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702874868,
+        "allocated_file_bytes": 704024576,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_30a77b5/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_7530ac5/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702874868,
+        "allocated_file_bytes": 704024576,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702874868,
+        "allocated_file_bytes": 704024576,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_7530ac5/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_f79061e/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702874868,
+        "allocated_file_bytes": 704024576,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702874868,
+        "allocated_file_bytes": 704024576,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_f79061e/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/m2_decode_lane/fidelity/candidate-m2-decode-lane/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702879908,
+        "allocated_file_bytes": 704036864,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702879908,
+        "allocated_file_bytes": 704036864,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/m2_decode_lane/fidelity/candidate-m2-decode-lane/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_measured_cc/fidelity/w7b_b53c69c/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702870731,
+        "allocated_file_bytes": 704016384,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702870731,
+        "allocated_file_bytes": 704016384,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/w7b_measured_cc/fidelity/w7b_b53c69c/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:30Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/fidelity/candidate-c23-c24/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702880461,
+        "allocated_file_bytes": 704040960,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702880461,
+        "allocated_file_bytes": 704040960,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/fidelity/candidate-c23-c24/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:31Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/merge_7ed3f21/fidelity/cand-7ed3f21/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702877023,
+        "allocated_file_bytes": 704028672,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702877023,
+        "allocated_file_bytes": 704028672,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/merge_7ed3f21/fidelity/cand-7ed3f21/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:31Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/merge_25f05f2/fidelity/merge-25f05f2/cases",
+      "category": "legacy_fidelity_outputs",
+      "manifest_expected": {
+        "file_count": 528,
+        "logical_file_bytes": 702877562,
+        "allocated_file_bytes": 704028672,
+        "symlinks": 0,
+        "retained": 2,
+        "expected_records": 77
+      },
+      "pre_delete_observed": {
+        "regular_files": 528,
+        "symlinks": 0,
+        "logical_file_bytes": 702877562,
+        "allocated_file_bytes": 704028672,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/merge_25f05f2/fidelity/merge-25f05f2/cases",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:31Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_before",
+      "category": "pytest_temporary_outputs",
+      "manifest_expected": {
+        "file_count": 19731,
+        "logical_file_bytes": 410312036,
+        "allocated_file_bytes": 461770752,
+        "symlinks": 818,
+        "retained": 30,
+        "expected_records": null
+      },
+      "pre_delete_observed": {
+        "regular_files": 19731,
+        "symlinks": 818,
+        "logical_file_bytes": 410312036,
+        "allocated_file_bytes": 461770752,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [
+            "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_before/test_temp_root_override_reject1/escape-to-system-tmp"
+          ],
+          "target_outside_entry_count": 1,
+          "outside_note": "manifest-listed; unlinked as a link entry, target not followed"
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [
+        "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_before/test_temp_root_override_reject1/escape-to-system-tmp"
+      ],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_before",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:33Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after",
+      "category": "pytest_temporary_outputs",
+      "manifest_expected": {
+        "file_count": 20884,
+        "logical_file_bytes": 397470688,
+        "allocated_file_bytes": 452485120,
+        "symlinks": 808,
+        "retained": 30,
+        "expected_records": null
+      },
+      "pre_delete_observed": {
+        "regular_files": 20884,
+        "symlinks": 808,
+        "logical_file_bytes": 397470688,
+        "allocated_file_bytes": 452485120,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [
+            "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after/test_temp_root_override_reject1/escape-to-system-tmp"
+          ],
+          "target_outside_entry_count": 1,
+          "outside_note": "manifest-listed; unlinked as a link entry, target not followed"
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [
+        "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after/test_temp_root_override_reject1/escape-to-system-tmp"
+      ],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:35Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after_rerun",
+      "category": "pytest_temporary_outputs",
+      "manifest_expected": {
+        "file_count": 20884,
+        "logical_file_bytes": 397538943,
+        "allocated_file_bytes": 452526080,
+        "symlinks": 808,
+        "retained": 30,
+        "expected_records": null
+      },
+      "pre_delete_observed": {
+        "regular_files": 20884,
+        "symlinks": 808,
+        "logical_file_bytes": 397538943,
+        "allocated_file_bytes": 452526080,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [
+            "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after_rerun/test_temp_root_override_reject1/escape-to-system-tmp"
+          ],
+          "target_outside_entry_count": 1,
+          "outside_note": "manifest-listed; unlinked as a link entry, target not followed"
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [
+        "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after_rerun/test_temp_root_override_reject1/escape-to-system-tmp"
+      ],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after_rerun",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:40Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_selected",
+      "category": "pytest_temporary_outputs",
+      "manifest_expected": {
+        "file_count": 1362,
+        "logical_file_bytes": 21902985,
+        "allocated_file_bytes": 25370624,
+        "symlinks": 101,
+        "retained": 30,
+        "expected_records": null
+      },
+      "pre_delete_observed": {
+        "regular_files": 1362,
+        "symlinks": 101,
+        "logical_file_bytes": 21902985,
+        "allocated_file_bytes": 25370624,
+        "hardlinks_files_with_nlink_gt1": 0
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "validation_status": "ok",
+        "symlink_manifest_match": {
+          "missing_vs_manifest": [],
+          "missing_count": 0,
+          "unexpected": [],
+          "unexpected_count": 0,
+          "target_changed": [],
+          "target_changed_count": 0,
+          "target_outside_entry": [],
+          "target_outside_entry_count": 0
+        },
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "hardlink_groups": 0
+      },
+      "symlinks_targeting_outside_entry": [],
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_selected",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:30:40Z"
+    }
+  ],
+  "status": "DONE"
+}

@@ -1,0 +1,2868 @@
+{
+  "task": "remove approved regenerable sklearn caches",
+  "operator": "pi executor for lead",
+  "manifest_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261103/cache_deletion_manifest.json",
+  "manifest_entries": 65,
+  "scope": "exact manifest entry directories only; no ancestors, no globbing",
+  "dry_validation": {
+    "total_entries": 65,
+    "verified_ok": 65,
+    "skipped": 0,
+    "verified_file_count": 110502,
+    "verified_allocated_bytes": 20064489472,
+    "verified_logical_bytes": 19933719631
+  },
+  "hashes": {
+    "retained_file_count": 83,
+    "identical_after": true,
+    "changed_paths": [],
+    "active_package_manifest_sha256": "d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081",
+    "active_package_manifest_sha256_after": "d75b0277a3c08592359002d256ac8115844f50fa051efe422815cc5b2d19f081"
+  },
+  "process_use_scan": {
+    "pre": {
+      "scanned_processes": 387,
+      "hits": 0,
+      "unreadable_fd_dirs": 121,
+      "unreadable_maps": 117
+    },
+    "post": {
+      "scanned_processes": 387,
+      "hits": 0,
+      "unreadable_fd_dirs": 119,
+      "unreadable_maps": 115
+    },
+    "note": "Unreadable /proc entries belong to other users' processes and to setuid/sshd-style processes of this user; those are permission limits, not observed use. All readable cwd/root/exe/fd/maps/cmdline references were checked."
+  },
+  "deletion": {
+    "total_entries": 65,
+    "deleted": 65,
+    "skipped": 0,
+    "deleted_file_count": 110502,
+    "deleted_allocated_bytes": 20064489472,
+    "deleted_logical_bytes": 19933719631,
+    "runtime_seconds": 17.053
+  },
+  "disk": {
+    "pre_delete_observation": {
+      "used_bytes": 1008673337344,
+      "observed_utc": "2026-11-03T07:18:03Z"
+    },
+    "post_delete_observation": {
+      "utc": "2026-11-03T07:18:42Z",
+      "filesystem": "/dev/rbd1",
+      "size_bytes": 1098974756864,
+      "used_bytes": 990862745600,
+      "available_bytes": 108112011264
+    },
+    "observed_used_delta_bytes": 17810591744,
+    "allocated_bytes_unlinked": 20064489472,
+    "note": "Allocated bytes are the sum of st_blocks*512 for unlinked files. Observed filesystem free-space change also reflects concurrent host writes from other jobs, so the two figures need not match."
+  },
+  "launcher": {
+    "pid": 81539,
+    "ps": "81539     659 Tue Nov  3 13:19:47 2026    01:58:55 Ssl  /data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/launch.py",
+    "alive": true,
+    "signals_sent": false
+  },
+  "entries": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_0",
+      "manifest_expected": {
+        "file_count": 1440,
+        "allocated_file_bytes": 290643968,
+        "logical_file_bytes": 288911604
+      },
+      "pre_delete_observed": {
+        "file_count": 1440,
+        "allocated_file_bytes": 290643968,
+        "logical_file_bytes": 288911604,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_0",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:05Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_1",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 294006784,
+        "logical_file_bytes": 291953582
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 294006784,
+        "logical_file_bytes": 291953582,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_1",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:05Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_2",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 298221568,
+        "logical_file_bytes": 296199143
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 298221568,
+        "logical_file_bytes": 296199143,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_2",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:06Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_3",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 300584960,
+        "logical_file_bytes": 298578056
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 300584960,
+        "logical_file_bytes": 298578056,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_3",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:06Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_4",
+      "manifest_expected": {
+        "file_count": 1422,
+        "allocated_file_bytes": 287567872,
+        "logical_file_bytes": 285857970
+      },
+      "pre_delete_observed": {
+        "file_count": 1422,
+        "allocated_file_bytes": 287567872,
+        "logical_file_bytes": 285857970,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_4",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:08Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_0",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 285466624,
+        "logical_file_bytes": 283349756
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 285466624,
+        "logical_file_bytes": 283349756,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_0",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:08Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_1",
+      "manifest_expected": {
+        "file_count": 1440,
+        "allocated_file_bytes": 279240704,
+        "logical_file_bytes": 277384344
+      },
+      "pre_delete_observed": {
+        "file_count": 1440,
+        "allocated_file_bytes": 279240704,
+        "logical_file_bytes": 277384344,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_1",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:09Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_2",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 286171136,
+        "logical_file_bytes": 284068580
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 286171136,
+        "logical_file_bytes": 284068580,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_2",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:09Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_3",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 287588352,
+        "logical_file_bytes": 285553637
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 287588352,
+        "logical_file_bytes": 285553637,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_3",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:10Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_4",
+      "manifest_expected": {
+        "file_count": 1422,
+        "allocated_file_bytes": 269189120,
+        "logical_file_bytes": 267605841
+      },
+      "pre_delete_observed": {
+        "file_count": 1422,
+        "allocated_file_bytes": 269189120,
+        "logical_file_bytes": 267605841,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_4",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:10Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_0",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 283729920,
+        "logical_file_bytes": 281613170
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 283729920,
+        "logical_file_bytes": 281613170,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_0",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:10Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_1",
+      "manifest_expected": {
+        "file_count": 1440,
+        "allocated_file_bytes": 277426176,
+        "logical_file_bytes": 275581209
+      },
+      "pre_delete_observed": {
+        "file_count": 1440,
+        "allocated_file_bytes": 277426176,
+        "logical_file_bytes": 275581209,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_1",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:10Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_2",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 284364800,
+        "logical_file_bytes": 282259277
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 284364800,
+        "logical_file_bytes": 282259277,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_2",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:11Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_3",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 286781440,
+        "logical_file_bytes": 284745188
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 286781440,
+        "logical_file_bytes": 284745188,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_3",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:11Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_4",
+      "manifest_expected": {
+        "file_count": 1422,
+        "allocated_file_bytes": 267034624,
+        "logical_file_bytes": 265480065
+      },
+      "pre_delete_observed": {
+        "file_count": 1422,
+        "allocated_file_bytes": 267034624,
+        "logical_file_bytes": 265480065,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_4",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:11Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 324214784,
+        "logical_file_bytes": 322179416
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 324214784,
+        "logical_file_bytes": 322179416,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:12Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 324214784,
+        "logical_file_bytes": 322179416
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 324214784,
+        "logical_file_bytes": 322179416,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:12Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326688768,
+        "logical_file_bytes": 324609263
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326688768,
+        "logical_file_bytes": 324609263,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326688768,
+        "logical_file_bytes": 324609263
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326688768,
+        "logical_file_bytes": 324609263,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs_r2/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs_r2/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19b24/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19b24/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs_r2/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs_r2/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:13Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b24/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b24/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs_r2/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs_r2/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19b24/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19b24/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs_r2/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs_r2/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b24/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b24/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:14Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:15Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:15Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_0",
+      "manifest_expected": {
+        "file_count": 1440,
+        "allocated_file_bytes": 290697216,
+        "logical_file_bytes": 288961173
+      },
+      "pre_delete_observed": {
+        "file_count": 1440,
+        "allocated_file_bytes": 290697216,
+        "logical_file_bytes": 288961173,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_0",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:15Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_1",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 292794368,
+        "logical_file_bytes": 290740991
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 292794368,
+        "logical_file_bytes": 290740991,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_1",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:15Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_2",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 298147840,
+        "logical_file_bytes": 296134874
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 298147840,
+        "logical_file_bytes": 296134874,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_2",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:15Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_3",
+      "manifest_expected": {
+        "file_count": 1662,
+        "allocated_file_bytes": 300732416,
+        "logical_file_bytes": 298721159
+      },
+      "pre_delete_observed": {
+        "file_count": 1662,
+        "allocated_file_bytes": 300732416,
+        "logical_file_bytes": 298721159,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_3",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:15Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_4",
+      "manifest_expected": {
+        "file_count": 1422,
+        "allocated_file_bytes": 286105600,
+        "logical_file_bytes": 284371503
+      },
+      "pre_delete_observed": {
+        "file_count": 1422,
+        "allocated_file_bytes": 286105600,
+        "logical_file_bytes": 284371503,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_4",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:15Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest/test_both_training_paths_and_w0/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 6340608,
+        "logical_file_bytes": 4664667
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 6340608,
+        "logical_file_bytes": 4664667,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest/test_both_training_paths_and_w0/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:16Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_32/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_32/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:16Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_64/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_64/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:16Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_32_init/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_32_init/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:16Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_64_init/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_64_init/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:16Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_32_spec/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_32_spec/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:19Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:19Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_spec/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_spec/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:19Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_32_links03_codex_20261101/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_32_links03_codex_20261101/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:19Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_64_links03_codex_20261101/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_64_links03_codex_20261101/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:19Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_warm/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_warm/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_warm/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_warm/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_c/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_c/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 313073664,
+        "logical_file_bytes": 311024084,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid2/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid2/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:20Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:21Z"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/cache",
+      "manifest_expected": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393
+      },
+      "pre_delete_observed": {
+        "file_count": 1758,
+        "allocated_file_bytes": 326598656,
+        "logical_file_bytes": 324536393,
+        "extensions": [
+          ".file",
+          ".pkl"
+        ]
+      },
+      "precheck": {
+        "realpath_matches_manifest": true,
+        "nested_mounts": [],
+        "symlinks": [
+          [],
+          0
+        ],
+        "non_regular_files": [
+          [],
+          0
+        ],
+        "unexpected_extensions": [
+          [],
+          0
+        ],
+        "validation_status": "ok",
+        "validation_skips": []
+      },
+      "process_in_use": [],
+      "command": "rm -rf -- /data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/cache",
+      "rm_returncode": 0,
+      "rm_stderr": "",
+      "outcome": "deleted",
+      "skip_reason": null,
+      "exists_after": false,
+      "deleted_utc": "2026-11-03T07:18:21Z"
+    }
+  ],
+  "status": "DONE",
+  "manifest_sha256": "107a263dec52e3731b3bb1e5240a098eae51791377b57dfd37dead0494160919",
+  "manifest_mtime_local": "2026-11-03 15:16:48 +0800 (unmodified by this task)"
+}

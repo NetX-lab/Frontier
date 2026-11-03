@@ -1,0 +1,64 @@
+{
+ "observed_utc": "2026-11-03T07:11:45.893788+00:00",
+ "purpose": "Disk-cleanup dependency check for the exact live job; read-only, no control issued.",
+ "job": {
+  "name": "exp-1103-131952-259161",
+  "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2",
+  "creator": "i-fengyicheng",
+  "creationTimestamp": "2026-11-03T05:19:52Z",
+  "phase": "Pending",
+  "startTime": null,
+  "finishTime": null,
+  "preemptible": "yes",
+  "queue": "quotagroup-global-default",
+  "queue_reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=375.",
+  "stop_annotations": {
+   "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=375."
+  }
+ },
+ "replicas": {
+  "expected": 8,
+  "observed": [],
+  "replica_count": 0,
+  "container_clocks": [],
+  "container_clocks_available": false,
+  "note": "No replica object and no container startedAt/finishedAt exists while the job is Pending."
+ },
+ "launcher": {
+  "pid": 81539,
+  "alive": true,
+  "started_utc": "2026-11-03T05:19:47.693580+00:00",
+  "cmdline": "/data/ycfeng/tmp/stepmind-env/bin/python -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01/launch.py",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+  "note": "Launcher process exists; no signal sent."
+ },
+ "preserve_paths": {
+  "package_01_host": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+  "package_01_nfs_source": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+  "package_01_container_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+  "launcher_log": "/data/ycfeng/tmp/ds4_runs/p64-formal4-submit-1103e/scratch/launcher.log",
+  "native_source_tree": "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination",
+  "harness_tree": "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness",
+  "python_environment": "/data/ycfeng/tmp/stepmind-env",
+  "promotion_receipt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json",
+  "promotion_receipt_sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+  "formal_p2_20261102_local": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102",
+  "formal_p2_20261102_replay_cloud": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261102_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261102-02/run",
+  "generation04_cloud_output": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261103_04",
+  "monitor_scratch": "/data/ycfeng/tmp/ds4_runs/p64-formal4-monitor-1103f/scratch"
+ },
+ "cleanup_constraints": [
+  "Do not delete or move package_01 before the job reaches a terminal phase; it is the mounted NFS source the workers will read.",
+  "Do not delete the native source tree, harness tree, stepmind-env, or the promotion receipt; launch.py validates their hashes before submission and the workers import from the mounted package and harness.",
+  "Do not delete the formal_p2_20261102 replay/receipt trees; they are referenced by the promotion receipt and reference comparison.",
+  "generation04 cloud output does not exist yet; if it appears, it holds the only worker-side evidence and must not be cleaned.",
+  "No deletion was performed by this monitor; local storage inventory and cleanup decisions remain with the lead."
+ ],
+ "read_errors": [],
+ "queries": {
+  "poll_once_py": "one invocation",
+  "job_spec_read": "filestore/image/replicas/launcher facts only",
+  "quota_survey": false,
+  "ssh_cloud_listing": false
+ }
+}

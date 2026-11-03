@@ -1,0 +1,20 @@
+{
+  "utc": "2026-11-03T07:29:02.875429+00:00",
+  "surveys": [
+    {
+      "label": "cleanup-h200-1103a",
+      "exit": "exit 130",
+      "disposition": "Stopped after inventories to end repeated broad trace searches; no deletion was assigned or performed by this survey."
+    },
+    {
+      "label": "cleanup-replays-1103b",
+      "exit": "exit 130",
+      "disposition": "Stopped after inventories to end repeated broad trace searches; no deletion was assigned or performed by this survey."
+    }
+  ],
+  "live_launcher_pid": 81539,
+  "launcher_alive_after": true,
+  "stop_guard": "Checked that live launcher DS4_SESSION_ID differs from both survey session IDs before stop. Neither survey was authorized GPU operations.",
+  "decision": "Use existing completed-run metadata to remove 41 old fidelity cases directories and 4 disposable pytest trees; retain all other raw native/profiling traces and structural acceptance outputs.",
+  "preserve_reason": "Unique raw GPU evidence or unproven duplication remains necessary; no further broad hashing to increase cleanup volume."
+}

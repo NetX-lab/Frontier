@@ -1,0 +1,21 @@
+{
+  "tmp_top_level_directory_count": 441,
+  "tmp_top_level_allocated_bytes": 294323269632,
+  "unreadable_directories": [
+    "/data/ycfeng/tmp/glm53_dsv4/native_capture_scope_root_3ov6bjro",
+    "/data/ycfeng/tmp/glm53_dsv4/native_capture_scope_root_cctbt1_m",
+    "/data/ycfeng/tmp/glm53_dsv4/profile04_terminal_ybbq4f2m"
+  ],
+  "initial_delete_observation": {
+    "utc": "2026-11-03T07:18:03Z",
+    "size_bytes": 1098974756864,
+    "used_bytes": 1008673337344,
+    "available_bytes": 90301419520,
+    "source": "cleanup-caches-1103c/scratch/report.md and deletion_receipt.json"
+  },
+  "intermediate_snapshot": {
+    "utc": "2026-11-03T07:18:20.673172+00:00",
+    "df_B1": "Filesystem         1B-blocks         Used    Available Use% Mounted on\n/dev/rbd1      1098974756864 992148856832 106825900032  91% /data\n",
+    "note": "Intermediate lead snapshot; a deletion may already be in progress. Use the cache executor pre-deletion df for the final before/after comparison."
+  }
+}

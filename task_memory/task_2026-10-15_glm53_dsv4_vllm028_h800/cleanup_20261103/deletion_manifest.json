@@ -1,0 +1,996 @@
+{
+  "authorization": "requirements.md: task artifact cleanup, 2026-11-03; exact rm scope approved by user.",
+  "entries": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "logical_file_bytes": 288911604,
+      "allocated_file_bytes": 290643968,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 291953582,
+      "allocated_file_bytes": 294006784,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 296199143,
+      "allocated_file_bytes": 298221568,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 298578056,
+      "allocated_file_bytes": 300584960,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_all/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "logical_file_bytes": 285857970,
+      "allocated_file_bytes": 287567872,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 283349756,
+      "allocated_file_bytes": 285466624,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "logical_file_bytes": 277384344,
+      "allocated_file_bytes": 279240704,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 284068580,
+      "allocated_file_bytes": 286171136,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 285553637,
+      "allocated_file_bytes": 287588352,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/median3_shared/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "logical_file_bytes": 267605841,
+      "allocated_file_bytes": 269189120,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 281613170,
+      "allocated_file_bytes": 283729920,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "logical_file_bytes": 275581209,
+      "allocated_file_bytes": 277426176,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 282259277,
+      "allocated_file_bytes": 284364800,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 284745188,
+      "allocated_file_bytes": 286781440,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_multipass_20261101/runs/original_shared/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "logical_file_bytes": 265480065,
+      "allocated_file_bytes": 267034624,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 322179416,
+      "allocated_file_bytes": 324214784,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass1_all_p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 322179416,
+      "allocated_file_bytes": 324214784,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324609263,
+      "allocated_file_bytes": 326688768,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/runs/pass2_all_p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324609263,
+      "allocated_file_bytes": 326688768,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_cold_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b28/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_32_warm_k19b29/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_cold_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_g1hs_r2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b24/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b28/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a10/p2_64_warm_k19b29/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_0",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1440,
+      "logical_file_bytes": 288961173,
+      "allocated_file_bytes": 290697216,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_1",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 290740991,
+      "allocated_file_bytes": 292794368,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_2",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 296134874,
+      "allocated_file_bytes": 298147840,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_3",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1662,
+      "logical_file_bytes": 298721159,
+      "allocated_file_bytes": 300732416,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/a6_codex_20261031/fold_caches/fold_4",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1422,
+      "logical_file_bytes": 284371503,
+      "allocated_file_bytes": 286105600,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest/test_both_training_paths_and_w0/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 4664667,
+      "allocated_file_bytes": 6340608,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 311024084,
+      "allocated_file_bytes": 313073664,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/census/p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 311024084,
+      "allocated_file_bytes": 313073664,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_32_init/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/f4/p2_64_init/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_32_spec/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_codex_20261031a/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1a_p2_64_spec/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_32_links03_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f1b_p2_64_links03_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_32_k18_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f2_p2_64_k18_codex_20261101/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_planner/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_32_warm/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_planner/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/f_variants/runs/f4_p2_64_warm/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_c/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 311024084,
+      "allocated_file_bytes": 313073664,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 311024084,
+      "allocated_file_bytes": 313073664,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/probe/p2_64_mid2/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_32/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/two_fix_20261101/runs/p2_64/cache",
+      "action": "remove_directory",
+      "reason": "Regenerable sklearn estimator/prediction cache and reader-writer lock files; published profiling CSVs, configuration and run outputs remain outside this directory.",
+      "file_count": 1758,
+      "logical_file_bytes": 324536393,
+      "allocated_file_bytes": 326598656,
+      "category": "sklearn_cache"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-208ff75/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702879480,
+      "allocated_file_bytes": 704036864
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-9f58dbe/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702879480,
+      "allocated_file_bytes": 704036864
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c02-contracts-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702764467,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c04-structural-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702760621,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c05-parameters-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702760621,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c06-trace-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702757926,
+      "allocated_file_bytes": 703905792
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-clean-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702759431,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c07-parameters-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702760320,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-cache-layout-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702761398,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c08-clean-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702759431,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c09-clean-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702759431,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c10-clean-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702876167,
+      "allocated_file_bytes": 704028672
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c11-clean-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702759130,
+      "allocated_file_bytes": 703913984
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c12-clean-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702876244,
+      "allocated_file_bytes": 704028672
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c13-clean-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702876244,
+      "allocated_file_bytes": 704028672
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c14-final-clean-20261019/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702879478,
+      "allocated_file_bytes": 704032768
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c15-clean-20261019/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702876244,
+      "allocated_file_bytes": 704028672
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-clean-20261019/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702875943,
+      "allocated_file_bytes": 704028672
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c16-r2-clean-20261019/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702878463,
+      "allocated_file_bytes": 704032768
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c17-combined-clean-20261019/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702889750,
+      "allocated_file_bytes": 704045056
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c4513d9/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702879480,
+      "allocated_file_bytes": 704036864
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-model-capacity-20261018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702763931,
+      "allocated_file_bytes": 703918080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_1a65e49/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702890211,
+      "allocated_file_bytes": 704045056
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate_v4_grouped_nixl_p2_5428bd7/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702891828,
+      "allocated_file_bytes": 704045056
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-startup-memory/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702677898,
+      "allocated_file_bytes": 703823872
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-4d2a018/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702872634,
+      "allocated_file_bytes": 704016384
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c3-final-a72dcf8/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702872634,
+      "allocated_file_bytes": 704016384
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c6-9372b9d/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702874174,
+      "allocated_file_bytes": 704008192
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/c7-32f32fb/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702863472,
+      "allocated_file_bytes": 704004096
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-523dd91/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702871017,
+      "allocated_file_bytes": 704012288
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/final-f37268f/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702871017,
+      "allocated_file_bytes": 704012288
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/merged-b5f44d2/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702871556,
+      "allocated_file_bytes": 704016384
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_dsa/fidelity/metadata-28f47f1/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702872634,
+      "allocated_file_bytes": 704016384
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_30a77b5/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702874868,
+      "allocated_file_bytes": 704024576
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_7530ac5/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702874868,
+      "allocated_file_bytes": 704024576
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_sp_collectives/fidelity/w7b_sp_f79061e/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702874868,
+      "allocated_file_bytes": 704024576
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/m2_decode_lane/fidelity/candidate-m2-decode-lane/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702879908,
+      "allocated_file_bytes": 704036864
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7b_measured_cc/fidelity/w7b_b53c69c/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702870731,
+      "allocated_file_bytes": 704016384
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/fidelity/candidate-c23-c24/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702880461,
+      "allocated_file_bytes": 704040960
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/merge_7ed3f21/fidelity/cand-7ed3f21/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702877023,
+      "allocated_file_bytes": 704028672
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/merge_25f05f2/fidelity/merge-25f05f2/cases",
+      "action": "remove_directory",
+      "reason": "Completed historical 77-case CPU fidelity output, rebuilt by retained per-case script/source/arguments; candidate manifest/results and authoritative baseline are retained. Not an input to current formal P2.",
+      "category": "legacy_fidelity_outputs",
+      "file_count": 528,
+      "logical_file_bytes": 702877562,
+      "allocated_file_bytes": 704028672
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_before",
+      "action": "remove_directory",
+      "reason": "Disposable pytest basetemp fixtures from completed B8 review; parent test logs/XML/JSON, source and original measurements retained. Interior test symlinks are unlinked without following targets.",
+      "category": "pytest_temporary_outputs",
+      "file_count": 19731,
+      "logical_file_bytes": 410312036,
+      "allocated_file_bytes": 461770752
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after",
+      "action": "remove_directory",
+      "reason": "Disposable pytest basetemp fixtures from completed B8 review; parent test logs/XML/JSON, source and original measurements retained. Interior test symlinks are unlinked without following targets.",
+      "category": "pytest_temporary_outputs",
+      "file_count": 20884,
+      "logical_file_bytes": 397470688,
+      "allocated_file_bytes": 452485120
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_unit_after_rerun",
+      "action": "remove_directory",
+      "reason": "Disposable pytest basetemp fixtures from completed B8 review; parent test logs/XML/JSON, source and original measurements retained. Interior test symlinks are unlinked without following targets.",
+      "category": "pytest_temporary_outputs",
+      "file_count": 20884,
+      "logical_file_bytes": 397538943,
+      "allocated_file_bytes": 452526080
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/checks/pytest_selected",
+      "action": "remove_directory",
+      "reason": "Disposable pytest basetemp fixtures from completed B8 review; parent test logs/XML/JSON, source and original measurements retained. Interior test symlinks are unlinked without following targets.",
+      "category": "pytest_temporary_outputs",
+      "file_count": 1362,
+      "logical_file_bytes": 21902985,
+      "allocated_file_bytes": 25370624
+    }
+  ],
+  "note": "Planned exact paths; final lead_verification.json and per-batch receipts establish actual completion."
+}
