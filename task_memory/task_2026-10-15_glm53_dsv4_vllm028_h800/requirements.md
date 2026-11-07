@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | Recorded D-P2-64-SIXTH: a peer liveness check in the native harness, then night-time submission; one generation08 job plus at most two platform-cause resubmissions, 64 H200 per job, new chain ceiling 128 container GPUh. |
 | 2026-11-07 | Recorded the standing request to clean invalid task artifacts promptly through codex-implement. |
 | 2026-11-07 | Recorded the mainline drift check and D-P2-64-FIFTH: one generation05 submission plus at most two platform-cause resubmissions, 64 H200 per job, cumulative ceiling 128 container GPUh. |
 | 2026-11-04 | Completed fourth-job terminal evidence recovery and prepared an unsubmitted fifth candidate; existing resource and retry limits unchanged. |
@@ -165,6 +166,26 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-07 — D-P2-64-SIXTH
+
+Context: D-P2-64-FIFTH is exhausted. Generation05, 06 and 07 all ended on platform causes without a native reference
+(68.90 of 128 counted GPUh). In generation07 one replica was stopped from outside after the rendezvous, and the decode DP
+head waited for it until its 1800 s startup timeout (issues.md I-013). The lead asked YC through AskUserQuestion how to
+continue. YC selected "补活性检查+夜间重提 (Recommended)":
+
+- First add a peer liveness check to `native_pd_worker.py`: every node refreshes a heartbeat file after the rendezvous,
+  and any node whose peer heartbeat is older than a configured limit fails at once instead of waiting for
+  `startup_timeout_s`. Rebuild the package as generation08 and verify it on CPU before any submission.
+- Submit generation08 at a night-time low-demand hour. One submission plus at most two platform-cause resubmissions
+  (identity-only regenerated packages, as under D-P2-64-FIFTH). Each job: 64 H200 (8 x 8), all preemptible,
+  `step_main`, timeout 3600 s, at most 64 container GPUh. This new chain has its own cumulative ceiling of 128 container
+  GPUh; when exact clocks are missing the upper bound (64 GPUs x scheduled wall time) counts.
+- A native or code failure stops the chain. Frozen native, workload, promotion receipt, R5 and numerical criteria are
+  unchanged; only the harness liveness change and identity fields differ from generation07.
+
+Submission, monitoring and log reads go through `/ds4-exec` with the personal local StepMind Python RJobBackend; the
+existing launcher, monitor and soft-gate rules apply.
 
 ## [Original Request / Decision] 2026-11-07 — prompt cleanup of invalid task artifacts through codex-implement
 
