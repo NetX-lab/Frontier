@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | Recorded the standing request to clean invalid task artifacts promptly through codex-implement. |
+| 2026-11-07 | Recorded the mainline drift check and D-P2-64-FIFTH: one generation05 submission plus at most two platform-cause resubmissions, 64 H200 per job, cumulative ceiling 128 container GPUh. |
 | 2026-11-04 | Completed fourth-job terminal evidence recovery and prepared an unsubmitted fifth candidate; existing resource and retry limits unchanged. |
 | 2026-11-03 | Recorded return to the existing P2-64 mainline after completed cleanup; no new submission or scope change. |
 | 2026-11-03 | Recorded explicit task-artifact cleanup and rm authorization; preserve live P2-64 dependencies, unique measurements and acceptance evidence. |
@@ -163,6 +165,26 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-07 — prompt cleanup of invalid task artifacts through codex-implement
+
+> ps：通过codex implement及时清理当前task产生的产物文件（if它们已经无效）
+
+Standing rule: after each checkpoint, remove artifacts that this task produced and that are established as invalid, through `/codex-implement`. Invalid means regenerable caches, superseded or failed run copies whose outcome is already recorded, and disposable test/temporary trees. The 2026-11-03 cleanup criteria and protections carry forward: retain the current generation05 package, approval receipt and wrapper, native/harness/promotion/R5/completed Frontier replay inputs, P2-32 formal evidence, unique raw measurements, accepted evidence referenced by task records, required environments and credentials, live processes, Git-tracked files and all worktrees. No cloud deletion and no GPU control is implied. Record exact paths, reasons, sizes and retained-input checks under the task directory.
+
+## [Original Request / Decision] 2026-11-07 — mainline drift check and D-P2-64-FIFTH
+
+> 继续当前dsv4模拟支持+校准task，如果当前任务的推进方向存在偏移，请优先矫正回到主线。
+
+Lead drift check: the target is unchanged (DSV4 H200 calibration: P2-32 formal PASS, then P2-64 formal four-metric gates, then H800 by a later decision, then delivery). Execution has stalled since 2026-11-02 on obtaining the new P2-64 native reference: four submissions, no complete reference (startup defect fixed, preemption, lead-caused stop, external release_quota stop while queued). The drift is procedural: one approval round per platform failure and heavy per-attempt audit records. Correction: one decision covering platform-cause resubmissions, and lighter records for jobs that never start (terminal identity, stop cause, output absence).
+
+The lead asked YC through AskUserQuestion how to handle the fifth P2-64 run. YC selected "批准，含平台原因重提 (Recommended)":
+
+- Submit generation05 `h200_mainline/p2_64_formal_retry05/package_01` (manifest SHA256 `23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c`) once now: 64 H200 (8 x 8), all preemptible, `step_main`, timeout 3600 s, at most 64 container GPUh.
+- If a job under this decision is preempted, stopped by release_quota or ended by another external platform cause (not a code or native failure), resubmit without asking again, at most two more times (at most three jobs under this decision). Each resubmission uses an identity-only regenerated package: frozen native, harness, workload, promotion receipt and resources unchanged; only run tag, cloud output path, purpose and build-time fields change, verified by the existing builder and check-only. Each job is capped at 64 container GPUh; the cumulative cap is 128 container GPUh. When exact container clocks are missing, the upper bound (64 GPUs times scheduled wall time, or 64 GPUh if unknown) counts toward the cap.
+- A native or code failure stops the resubmission chain. Ordinary debug corrections stay approved under D-P2-64-STARTUP-RECOVERY; the lead reports the failure before any further allocation.
+
+Submission, monitoring and log reads go through `/ds4-exec` with personal local StepMind Python RJobBackend. The finite submitting Pi turn ends normally; a distinct label monitors; never call ds4 --stop on a label owning a live launcher. Auxiliary validators remain soft gates. GLM, EP-count changes and H800 allocation stay deferred. Numerical criteria are unchanged.
 
 ## [Execution finding] 2026-11-04 — fourth-job terminal and fifth offline candidate
 

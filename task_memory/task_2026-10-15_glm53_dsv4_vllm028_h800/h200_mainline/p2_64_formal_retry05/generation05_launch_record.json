@@ -1,0 +1,9 @@
+{
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "launched_utc": "2026-11-07T05:57:54.570258+00:00",
+  "pid": 2753825,
+  "start_new_session": true,
+  "stdin": "DEVNULL",
+  "stdout": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/launcher.log",
+  "wrapper": "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal_retry05.sh"
+}

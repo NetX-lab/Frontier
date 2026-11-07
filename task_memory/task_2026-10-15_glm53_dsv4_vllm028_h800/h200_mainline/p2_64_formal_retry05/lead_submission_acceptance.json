@@ -1,0 +1,109 @@
+{
+  "status": "PASS_SUBMISSION_IDENTITY_AND_LAUNCHER_SURVIVAL",
+  "observed_utc": "2026-11-07T06:03:51.083299+00:00",
+  "decision": "D-P2-64-FIFTH",
+  "generation": 5,
+  "resubmissions_used": 0,
+  "job": "exp-1107-135759-122907",
+  "job_uid": "a2d12f21-f384-411e-9dc4-f596e0f3e86a",
+  "job_creation_timestamp": "2026-11-07T05:57:59Z",
+  "launcher_pid": 2753825,
+  "submission_result": "SUBMITTED_ALL_CHECKS_PASS",
+  "failed_checks": [],
+  "checks_passed": 18,
+  "checks_total": 18,
+  "submission_pi_label": "p64-formal5-submit-1107e",
+  "submission_pi_normal_exit": true,
+  "launcher_alive_after_pi_exit": true,
+  "launcher_liveness_evidence": "HOST ps by Pi label p64-formal5-monitor-1107f at about 05:59:52Z (PID 2753825, SID 2753825, elapsed 01:58, argv .../p2_64_formal_retry05/package_01/launch.py) and monitor.jsonl launcher_alive true at 2026-11-07T05:59:55.778349+00:00",
+  "first_monitor_read": {
+    "finishTime": null,
+    "launcher_alive": true,
+    "observed_utc": "2026-11-07T05:59:55.778349+00:00",
+    "phase": "Starting",
+    "queue_status": "approved",
+    "read_error": null,
+    "replica_errors": null,
+    "replica_phases": [
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting"
+    ],
+    "startTime": null,
+    "stop_annotations": {}
+  },
+  "monitor": {
+    "pi_label": "p64-formal5-monitor-1107f",
+    "pid": 2774280,
+    "interval_s": 300,
+    "max_hours": 36,
+    "output_dir": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor"
+  },
+  "package_manifest_sha256": "23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c",
+  "package_manifest_matches_approval": true,
+  "submission_scripts": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/submit_package.py",
+      "sha256": "3feea735fd79434ca6ed446cba7824c48f33fdae9b1198021db3b474605cfcf1"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/read_job.py",
+      "sha256": "71f206e5f9be3ee8f97696e1a624cec760853d5428d93168a03532f062de2596"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/monitor_job.py",
+      "sha256": "6912ab9cfb55f362f2ec24252e393bd0f58135692ff7c1d0e816732e8b2775fe"
+    }
+  ],
+  "submission_wrapper_note": "The submission ran submit_package.sh with the StepMind environment lines inline; after the submission (05:59:28Z) those lines moved unchanged into stepmind_env.sh, which submit_package.sh, read_job.sh and monitor_job.sh now source. submit_package.py (mtime 05:57:02Z) and read_job.py (05:55:37Z) predate the launch at 05:57:54Z.",
+  "source_evidence": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_submission_acceptance.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/submission_acceptance.json",
+      "sha256": "e64e8fb0e3d4af8b535d263ab25de720a2276bed0596fb998c766821fe0cda03"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_submission_identity.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/submission_identity.json",
+      "sha256": "72f7c86a57527a8da99ceaf8567f88710f003c2733ded7c11160fbebdeaf91df"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_launch_record.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/launch_record.json",
+      "sha256": "24b509430908dfe7c0f51c1f90de1aaa64ae852417febac0322de512a609d3fa"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_quota_snapshot.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/quota_snapshot.json",
+      "sha256": "82d2166385ac849532d6d996a60fd602cd5a75f064aa45ec8a5f99e7f728faea"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_check_only.txt",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/check_only.txt",
+      "sha256": "1097bc1c25714ba507076bb9656ad12386a6dfdc90df994419a9c7a462306c42"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_launcher_log_at_submission.txt",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/launcher.log",
+      "sha256": "89e680f983f99d3d670dcb61954a94773f0b46a025b05dfd655861244efd5ef4"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_reader_smoke_generation04.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/reader_smoke_generation04.json",
+      "sha256": "0b2b87169daf83725eb360965a930d641903e81e464e5b2c2770488c04ea18c4"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/generation05_monitor_first_read.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/change_0001.json",
+      "sha256": "5c6b5d2b468534b5c1e1bc9aa44384c3c19835202fa16ab726da2f0a984594bb"
+    }
+  ],
+  "scope": "Readback of exact-job receipts written by the submitting Pi turn, frozen manifest binding and HOST launcher survival observed by a separate Pi label. The lead made no direct platform API call.",
+  "native_reference_status": "PENDING",
+  "exact_container_gpu_hours": null
+}

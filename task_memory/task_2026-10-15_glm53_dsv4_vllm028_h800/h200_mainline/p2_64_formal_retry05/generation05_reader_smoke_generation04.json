@@ -1,0 +1,108 @@
+{
+  "errors": [],
+  "finished_utc": "2026-11-07T05:57:48.273215+00:00",
+  "job": {
+    "autoDeleteDuration": "120h0m0s",
+    "backoffLimit": 10,
+    "creationTimestamp": "2026-11-03T05:19:52Z",
+    "creator": "i-fengyicheng",
+    "finishTime": "2026-11-03T10:00:43Z",
+    "job_annotations": {
+      "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+      "rjob.brainpp.cn/rjob-queue-approved": "",
+      "stepmind.com/queue-elem-ranking": "6",
+      "stepmind.com/queue-name": "quotagroup-global-default",
+      "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=312.",
+      "stepmind.com/use-global-queue": "true"
+    },
+    "name": "exp-1103-131952-259161",
+    "namespace": "shai-core",
+    "phase": "Stopped",
+    "preemptible": "yes",
+    "queue_name": "quotagroup-global-default",
+    "queue_status": "closed",
+    "quotagroup": "step_main",
+    "restartable": "false",
+    "startTime": null,
+    "stop_annotations": {
+      "kubebrain.brainpp.cn/stopped-by": "alimasiyilixiati",
+      "rjob.brainpp.cn/manual-stop-reason": "release_quota",
+      "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=312."
+    },
+    "taskSpecs": {
+      "default": {
+        "containers": [
+          {
+            "command_timeouts_s": [
+              3600
+            ],
+            "env_names": [
+              "AWS_ACCESS_KEY_ID",
+              "AWS_SECRET_ACCESS_KEY",
+              "DISTRIBUTED_JOB",
+              "ENABLE_SUBMODULE_COMMIT_CACHE",
+              "EXP_ID",
+              "HF_DATASETS_OFFLINE",
+              "HF_HUB_OFFLINE",
+              "HOST_NETWORK",
+              "KUBEBRAIN_CLUSTER_ENTRY",
+              "KUBEBRAIN_CLUSTER_ENTRY",
+              "KUBEBRAIN_NAMESPACE",
+              "KUBEBRAIN_NODE_NAME",
+              "KUBEBRAIN_QUOTA_GROUP",
+              "KUBEBRAIN_WORKSPACE_NAME",
+              "KUBEBRAIN_WORKSPACE_NAMESPACE",
+              "MC_DISABLE_METACACHE",
+              "PYTHONDONTWRITEBYTECODE",
+              "PYTHONPATH",
+              "TRANSFORMERS_OFFLINE",
+              "VLLM_CUDA_COMPATIBILITY_PATH",
+              "VLLM_ENABLE_CUDA_COMPATIBILITY",
+              "VLLM_LOGGING_LEVEL"
+            ],
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "limits": {
+              "cpu": "64",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8",
+              "rdma/mlnx_shared": "8"
+            },
+            "name": "default",
+            "volumeMounts": [
+              "/.auth/accesskey_id",
+              "/.auth/accesskey_secret"
+            ]
+          }
+        ],
+        "maxRunningDuration": "0s",
+        "maxWaitDuration": "0s",
+        "positiveTags": [
+          "H200"
+        ],
+        "replicas": 8,
+        "restartPolicy": "Never",
+        "task_annotations": {
+          "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/package_01",
+          "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant;s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+        },
+        "volumes": [
+          {
+            "name": "auth-info",
+            "type": [
+              "secret"
+            ]
+          }
+        ]
+      }
+    },
+    "uid": "9d02faf7-621e-4368-ae73-4110312c6ae2"
+  },
+  "job_requested": "exp-1103-131952-259161",
+  "observed_utc": "2026-11-07T05:57:48.125492+00:00",
+  "operation": "read_only",
+  "replicas": {
+    "errors": [],
+    "rows": []
+  }
+}

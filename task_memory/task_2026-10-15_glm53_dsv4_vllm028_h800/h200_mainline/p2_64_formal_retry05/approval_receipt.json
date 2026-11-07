@@ -1,0 +1,25 @@
+{
+  "decision_id": "D-P2-64-FIFTH",
+  "recorded_at_utc": "2026-11-07T05:33:32.375172+00:00",
+  "user_reply": "批准，含平台原因重提 (Recommended)",
+  "context": "AskUserQuestion answer on 2026-11-07 to the fifth-submission question; see requirements.md D-P2-64-FIFTH.",
+  "status": "APPROVED_FIFTH_SUBMISSION_WITH_PLATFORM_RESUBMISSIONS",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01",
+  "manifest_sha256": "23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c",
+  "resources": {
+    "gpu_type": "H200",
+    "gpu_per_replica": 8,
+    "replicas": 8,
+    "total_gpus": 64,
+    "preemptible": true,
+    "charged_group": "step_main",
+    "timeout_s": 3600,
+    "container_gpu_hours_ceiling": 64
+  },
+  "jobs_authorized_under_decision": 3,
+  "platform_cause_resubmissions_authorized": 2,
+  "cumulative_container_gpu_hours_ceiling": 128,
+  "resubmission_rule": "Only after preemption, release_quota or another external platform stop; identity-only regenerated package; native or code failure stops the chain.",
+  "execution": "Submit through ds4-exec and personal local StepMind Python. Submitting Pi turn ends normally; a distinct label monitors. Never stop a label owning a live launcher.",
+  "frozen_package_changed": false
+}

@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | I-010 worked around: a lead-written single-run submission script driven by a Pi turn of at most three single tool calls submitted generation05 (`exp-1107-135759-122907`); the earlier process checks are corrected. |
+| 2026-11-07 | I-010 opened: the DS4 Pi provider duplicates tool calls inside one message, so every generation05 submission turn ends before the launch step; nothing submitted. |
 | 2026-11-01 | I-009 resolved at 06:36 UTC: name resolution works again; quota check passed and the supplement job `exp-1101-143721-849401` was submitted once. |
 | 2026-11-01 | I-009 rechecked at 06:28 UTC: name resolution still fails; nothing submitted. |
 | 2026-11-01 | I-009 opened: this session's runtime has no DNS resolution, so the approved A6 supplement passes (D-A6-THREE-RUN) cannot be submitted from it; the package is verified and waits for a networked launch. |
@@ -22,6 +24,30 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+
+## I-010: provider stream error blocks the generation05 submission turns (2026-11-07)
+
+- Observation: Pi labels `p64-formal5-submit-1107a` (turns 1-3) and `p64-formal5-submit-1107d` (turns 1-16) all end with
+  `OpenAI Responses stream completed with an unfinished tool call`. In each failed assistant message the provider sends a
+  complete tool call, then an empty text item, then the same tool call id again without its end event
+  (`events.jsonl` of 1107d, line 89). Pi rejects the stream and executes no tool from that message.
+- A fresh short read-only probe `provider-probe-1107c` completed four messages normally at 05:42 UTC, so the provider is
+  reachable; the failure is intermittent per message and became 16/16 on the resumed 1107d session.
+- Inference: provider-side Responses stream defect, not a task, package or platform failure. Prompt rules (one tool call
+  per message) did not prevent it.
+- State before the workaround: no generation05 submission. Lead checks before every resume found no
+  `launcher_started.json`, no `launcher_exit.json` and no `case/runs`. Correction: the lead's "no retry05 process"
+  check ran inside the lead's isolated PID namespace (its `/proc` shows only its own processes), so it could not see
+  HOST processes. The submission script's HOST-side guard at 05:57:50Z later confirmed no live retry05 launcher or
+  wrapper and no launch markers (`p2_64_formal_retry05/generation05_submission_acceptance.json`,
+  `pre_launch_evidence`). Auto-resume driver and log: `/data/ycfeng/tmp/glm53_dsv4/h200/ds4_resume/`.
+- Workaround (2026-11-07, worked around, provider defect not fixed): the lead wrote
+  `h200_mainline/submit_package.py` (approval and seal checks, launch-evidence guard, check-only, quota snapshot, one
+  detached launch, job-name capture, one exact-job read, 18 checks). Pi label `p64-formal5-submit-1107e` ran it with
+  three single tool calls and exited normally. Result `SUBMITTED_ALL_CHECKS_PASS`, job `exp-1107-135759-122907`,
+  launcher PID 2753825. Monitoring uses the same pattern: Pi label `p64-formal5-monitor-1107f` started the detached
+  read-only `h200_mainline/monitor_job.py` (PID 2774280). Later Pi turns keep to at most three single tool calls,
+  with the work in lead-written scripts.
 
 ## I-001: unit-test fixtures wrote into the worktree's Git directory (2026-10-28)
 

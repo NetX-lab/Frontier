@@ -1,0 +1,112 @@
+{
+  "approval": {
+    "checks": {
+      "config_charged_group": true,
+      "config_gpu_type": true,
+      "config_gpus_per_replica": true,
+      "config_preemptible": true,
+      "config_replicas": true,
+      "config_timeout": true,
+      "manifest_sha256_matches": true,
+      "receipt_approved": true,
+      "receipt_package_matches": true
+    },
+    "decision": "D-P2-64-FIFTH",
+    "manifest_sha256": "23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c"
+  },
+  "check_only": {
+    "pass": true,
+    "returncode": 0
+  },
+  "checks": {
+    "auto_restart_disabled": true,
+    "charged_group": true,
+    "cloud_mount": true,
+    "command_timeout": true,
+    "company_image": true,
+    "creator_is_i_fengyicheng": true,
+    "gpu_tag": true,
+    "gpus_per_replica": true,
+    "identity_read_errors_zero": true,
+    "job_created_once": true,
+    "launcher_alive": true,
+    "nfs_paths_are_package": true,
+    "nfs_source_is_current_host": true,
+    "one_task_spec": true,
+    "preemptible_label": true,
+    "queue_name": true,
+    "rdma": true,
+    "replicas": true
+  },
+  "controls_issued": 0,
+  "current_phase": "Pending",
+  "failed_checks": [],
+  "job_creation_timestamp": "2026-11-07T05:57:59Z",
+  "job_name": "exp-1107-135759-122907",
+  "job_uid": "a2d12f21-f384-411e-9dc4-f596e0f3e86a",
+  "launch": {
+    "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "launched_utc": "2026-11-07T05:57:54.570258+00:00",
+    "pid": 2753825,
+    "start_new_session": true,
+    "stdin": "DEVNULL",
+    "stdout": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch/launcher.log",
+    "wrapper": "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal_retry05.sh"
+  },
+  "observed": {
+    "autoDeleteDuration": "120h0m0s",
+    "backoffLimit": 10,
+    "command_timeouts_s": [
+      3600
+    ],
+    "creator": "i-fengyicheng",
+    "filestore_volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01",
+    "host_ips": [
+      "100.96.128.195",
+      "172.17.0.1"
+    ],
+    "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+    "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+    },
+    "maxRunningDuration": "0s",
+    "maxWaitDuration": "0s",
+    "positiveTags": [
+      "H200"
+    ],
+    "preemptible": "yes",
+    "queue_name": "quotagroup-global-default",
+    "quotagroup": "step_main",
+    "replicas": 8,
+    "restartPolicy": "Never",
+    "restartable": "false"
+  },
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01",
+  "pre_launch_evidence": {
+    "live_launchers": [],
+    "markers": {
+      "case/runs": false,
+      "launcher_exit.json": false,
+      "launcher_started.json": false,
+      "scratch_launch_record": false
+    }
+  },
+  "quota_read_returncode": 0,
+  "read_errors": {
+    "identity": [],
+    "replicas": []
+  },
+  "read_returncode": 0,
+  "recorded_utc": "2026-11-07T05:58:07.324137+00:00",
+  "replicas_reported": 0,
+  "result": "SUBMITTED_ALL_CHECKS_PASS",
+  "scratch": "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch",
+  "start_time": null,
+  "started_utc": "2026-11-07T05:57:49.944662+00:00",
+  "wrapper": "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal_retry05.sh"
+}
