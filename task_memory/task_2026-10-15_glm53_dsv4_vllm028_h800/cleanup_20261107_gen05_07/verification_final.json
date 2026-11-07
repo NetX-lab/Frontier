@@ -1,0 +1,322 @@
+{
+  "archive_entry_count": 130,
+  "deleted_file_count": 449,
+  "deleted_summary": {
+    "categories": {
+      "archived_duplicate": {
+        "allocated_bytes": 1159168,
+        "bytes": 995408,
+        "files": 87
+      },
+      "node_compile_cache": {
+        "allocated_bytes": 32292864,
+        "bytes": 31482696,
+        "files": 360
+      },
+      "superseded_prompt": {
+        "allocated_bytes": 8192,
+        "bytes": 5095,
+        "files": 2
+      }
+    },
+    "labels": {
+      "p64-formal5-logs-1107h": {
+        "allocated_bytes": 2723840,
+        "bytes": 2653555,
+        "files": 38
+      },
+      "p64-formal5-monitor-1107f": {
+        "allocated_bytes": 2748416,
+        "bytes": 2657832,
+        "files": 39
+      },
+      "p64-formal5-submit-1107a": {
+        "allocated_bytes": 2691072,
+        "bytes": 2623544,
+        "files": 30
+      },
+      "p64-formal5-submit-1107d": {
+        "allocated_bytes": 2691072,
+        "bytes": 2623584,
+        "files": 30
+      },
+      "p64-formal5-submit-1107e": {
+        "allocated_bytes": 2691072,
+        "bytes": 2623576,
+        "files": 30
+      },
+      "p64-formal5-terminal-1107i": {
+        "allocated_bytes": 2805760,
+        "bytes": 2720333,
+        "files": 39
+      },
+      "p64-formal6-monitor-1107k": {
+        "allocated_bytes": 2732032,
+        "bytes": 2645941,
+        "files": 37
+      },
+      "p64-formal6-submit-1107j": {
+        "allocated_bytes": 2695168,
+        "bytes": 2626401,
+        "files": 31
+      },
+      "p64-formal6-terminal-1107l": {
+        "allocated_bytes": 3182592,
+        "bytes": 3065133,
+        "files": 47
+      },
+      "p64-formal7-inspect-1107o": {
+        "allocated_bytes": 2732032,
+        "bytes": 2661453,
+        "files": 36
+      },
+      "p64-formal7-submit-1107m": {
+        "allocated_bytes": 2764800,
+        "bytes": 2672393,
+        "files": 41
+      },
+      "p64-formal7-terminal-1107p": {
+        "allocated_bytes": 2994176,
+        "bytes": 2904359,
+        "files": 49
+      },
+      "prompts": {
+        "allocated_bytes": 8192,
+        "bytes": 5095,
+        "files": 2
+      }
+    }
+  },
+  "errors": [],
+  "immutable_original_records_checked": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/assignment.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/assignment_2.md",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/deletion_manifest.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/deletion_receipt.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execution_commands.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/prepare_cleanup.py",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/process_check.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/record_files.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/verification.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/verify_preparation.py"
+  ],
+  "interpreter": "/usr/bin/python3",
+  "journal_event_counts": {
+    "deleted": 449,
+    "directory_removed": 41,
+    "rmdir_intent": 41,
+    "unlink_intent": 449
+  },
+  "kept_file_count": 32,
+  "kept_summary": {
+    "categories": {
+      "uncovered_scratch": {
+        "allocated_bytes": 344064,
+        "bytes": 268875,
+        "files": 32
+      }
+    },
+    "labels": {
+      "p64-formal5-prepare-1104b": {
+        "allocated_bytes": 81920,
+        "bytes": 81852,
+        "files": 1
+      },
+      "p64-formal5-submit-1107e": {
+        "allocated_bytes": 57344,
+        "bytes": 37717,
+        "files": 9
+      },
+      "p64-formal6-submit-1107j": {
+        "allocated_bytes": 53248,
+        "bytes": 34259,
+        "files": 8
+      },
+      "p64-formal7-inspect-1107o": {
+        "allocated_bytes": 94208,
+        "bytes": 79725,
+        "files": 6
+      },
+      "p64-formal7-submit-1107m": {
+        "allocated_bytes": 57344,
+        "bytes": 35322,
+        "files": 8
+      }
+    }
+  },
+  "observed_utc": "2026-11-07T09:47:20.570161+00:00",
+  "protected_check": {
+    "accepted_exceptions_after": [
+      {
+        "bytes": 26,
+        "ctime_ns": 1792836849800562512,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1601982002,
+        "mtime_ns": 1792836849800562512,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/native_capture_scope_root_3ov6bjro",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 6,
+        "ctime_ns": 1792836777152558203,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1114424239,
+        "mtime_ns": 1792836777152558203,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/native_capture_scope_root_cctbt1_m",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 4096,
+        "ctime_ns": 1792843511413436955,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 766191101,
+        "mtime_ns": 1792843511413436955,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_terminal_ybbq4f2m",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 0,
+        "ctime_ns": 1792819302470342156,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1943939833,
+        "mtime_ns": 1792819302470342156,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_image_rieb91rz/diagnostics/fault.log",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 1168,
+        "ctime_ns": 1792819302750342218,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1943939832,
+        "mtime_ns": 1792819302750342218,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_image_rieb91rz/diagnostics/stages.jsonl",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 4117080760,
+        "ctime_ns": 1794044824161128296,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 346583156,
+        "mtime_ns": 1794044824161128296,
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch/launcher.log",
+        "reason": "Known growing log",
+        "uid": 10250
+      }
+    ],
+    "accepted_exceptions_before": [
+      {
+        "bytes": 26,
+        "ctime_ns": 1792836849800562512,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1601982002,
+        "mtime_ns": 1792836849800562512,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/native_capture_scope_root_3ov6bjro",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 6,
+        "ctime_ns": 1792836777152558203,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1114424239,
+        "mtime_ns": 1792836777152558203,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/native_capture_scope_root_cctbt1_m",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 4096,
+        "ctime_ns": 1792843511413436955,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 766191101,
+        "mtime_ns": 1792843511413436955,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/profile04_terminal_ybbq4f2m",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 0,
+        "ctime_ns": 1792819302470342156,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1943939833,
+        "mtime_ns": 1792819302470342156,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_image_rieb91rz/diagnostics/fault.log",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 1168,
+        "ctime_ns": 1792819302750342218,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 1943939832,
+        "mtime_ns": 1792819302750342218,
+        "path": "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_image_rieb91rz/diagnostics/stages.jsonl",
+        "reason": "Known unreadable path; descendants unverified",
+        "uid": 65534
+      },
+      {
+        "bytes": 4115320792,
+        "ctime_ns": 1794044174180917212,
+        "dev": 64784,
+        "hash_status": "ACCEPTED_EXCEPTION_NOT_READ",
+        "ino": 346583156,
+        "mtime_ns": 1794044174180917212,
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch/launcher.log",
+        "reason": "Known growing log",
+        "uid": 10250
+      }
+    ],
+    "added": [],
+    "after_inventory_sha256": "02f40946ac9477b575f643bd60463f78110ebc5c1258aa73116091db54f24b22",
+    "after_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after_final.json",
+    "before_inventory_sha256": "02f40946ac9477b575f643bd60463f78110ebc5c1258aa73116091db54f24b22",
+    "before_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before_final.json",
+    "changed": [],
+    "generation08_prompt_checks": [
+      {
+        "path": "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-post-1107r.md",
+        "sha256": "ba59b8a61527586f674497a2f17f03170330e69a7de99df3d401da1d7f29c874"
+      },
+      {
+        "path": "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-post-1107r.sh",
+        "sha256": "a731c8a82712c045923d57ec7b8d8ba8b96bda76fa1cbe82e948e628bb41bd42"
+      },
+      {
+        "path": "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-submit-1107q.md",
+        "sha256": "da151135c698b0ee5b452919404b51864e88684c1c0290b6a2e177590242fc2d"
+      },
+      {
+        "path": "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-submit-1107q.sh",
+        "sha256": "b28471d276592018ef7d61ea5d1de564cb9a5150ad09f36541c3ded48a7448d3"
+      }
+    ],
+    "hash_matched_regular_files": 119452,
+    "limitation": "Five unreadable paths/unknown descendants and the active log excluded by express decision; no host namespace scan. Directory metadata may change when scratch roots/prompts are removed.",
+    "missing": [],
+    "non_scratch_label_regular_files_matched": 241,
+    "status": "PASS_WITH_SIX_ACCEPTED_EXCEPTIONS",
+    "symlinks_matched": 852
+  },
+  "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "remaining_scratch_directory_count": 6,
+  "removed_directory_count": 41,
+  "status": "PASS"
+}

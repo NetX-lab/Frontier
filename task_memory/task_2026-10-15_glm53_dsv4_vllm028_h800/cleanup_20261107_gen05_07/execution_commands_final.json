@@ -1,0 +1,97 @@
+{
+  "commands": [
+    {
+      "command": "python3 -B - <<'PY'\nimport ast\nfrom pathlib import Path\nr=Path('/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07')\nfor name in ('execute_cleanup.py','verify_cleanup_final.py','write_report_final.py'):\n ast.parse((r/name).read_text());print('PASS: syntax',name)\nPY",
+      "expected": "All three scripts parse",
+      "observed": "PASS: all three scripts parse",
+      "purpose": "Parse all three final scripts without bytecode writes",
+      "returncode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execute_cleanup.py initialize",
+      "expected": "Immutable baseline and backup saved",
+      "observed": "PASS: original record hashes saved; report backed up",
+      "purpose": "Preserve original record hashes and prior report",
+      "returncode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execute_cleanup.py snapshot-before",
+      "expected": "All readable hashes recorded; six accepted exceptions listed",
+      "observed": {
+        "errors": [],
+        "regular_bytes": 170551351741,
+        "regular_files": 119452,
+        "runtime_seconds": 623.5706401150674
+      },
+      "purpose": "Fresh readable protected-input baseline",
+      "returncode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execute_cleanup.py execute",
+      "expected": "449 files deleted, 32 unchanged, only affected empty scratch ancestors removed",
+      "observed": {
+        "allocated_bytes": 33460224,
+        "deleted_files": 449,
+        "errors": [],
+        "kept_files": 32,
+        "logical_bytes": 32483199,
+        "removed_directories": 41
+      },
+      "purpose": "Preflight, immediate completion gate, exact deletion and retention check",
+      "returncode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execute_cleanup.py snapshot-after",
+      "expected": "Hash-identical protected inventory",
+      "observed": {
+        "errors": [],
+        "regular_bytes": 170551351741,
+        "regular_files": 119452,
+        "runtime_seconds": 589.2855080226436
+      },
+      "purpose": "Fresh readable protected-input after snapshot",
+      "returncode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/verify_cleanup_final.py",
+      "expected": "PASS with zero errors",
+      "observed": {
+        "archive_entries": 130,
+        "errors": [],
+        "protected_regular_hash_matches": 119452,
+        "status": "PASS"
+      },
+      "purpose": "Independent final acceptance-condition audit",
+      "returncode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B -u /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/write_report_final.py",
+      "expected": "report.md, execution_commands_final.json and record_files_final.json written",
+      "observed": "PASS: final report, exact check commands and record catalogue written",
+      "purpose": "Final report and artifact catalogue",
+      "returncode": 0,
+      "status": "PASS"
+    }
+  ],
+  "initial_environment_correction": {
+    "error": "zsh: command not found: python",
+    "executable": "python",
+    "phase": "Initial read-only inspection",
+    "resolution": "Used /usr/bin/python3; no dependencies installed",
+    "returncode": 127
+  },
+  "interpreter": "/usr/bin/python3",
+  "not_run": [
+    "Host PID namespace scan replaced by the expressly accepted completion evidence",
+    "Hashes or directory traversal for the six known protected exceptions",
+    "Simulator/GPU tests: unrelated to this file-only cleanup"
+  ],
+  "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "working_directory": "/data/ycfeng"
+}

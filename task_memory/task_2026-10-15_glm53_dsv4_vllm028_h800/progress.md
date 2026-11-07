@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | Recorded the generation08 records commit 79634ae7, the prepared generation08 copy script, and the codex-implement cleanup of generation05-07 scratch duplicates (449 files, 32.5 MB). |
 | 2026-11-07 | Recorded D-P2-64-SIXTH step 1: the native peer heartbeat check (harness 57caf2f7), the generation08 build and audit, and the prepared night-time submission. |
 | 2026-11-07 | Recorded the generation07 platform-cause end (one replica stopped after the rendezvous, decode startup timeout, 41.81 GPUh counted, cumulative 68.90 of 128); D-P2-64-FIFTH exhausted, next GPU job needs a new decision. |
 | 2026-11-07 | Recorded the codex-implement cleanup 86673e2f (171 directories, 37.42 GiB) and its lead acceptance. |
@@ -548,8 +549,31 @@ The following completed A6 history retains its original all-request verdicts. D-
 - completed — submission preparation: approval receipt, wrapper `/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal_retry08.sh`,
   post-run command, Pi prompt and script `/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-submit-1107q.{md,sh}`.
   [Test report](test_report_2026-11-07_p2_64_heartbeat_generation08_package.md).
+- completed — records commit 79634ae7 (builder entry, retry08 directory, test report, issues/plan/summary/tickets).
+- completed — copy on success prepared: `/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-post-1107r.{sh,md}`, the
+  generation07 copy script with generation08 paths; it reads the job name and UID from
+  `h200_mainline/p2_64_formal_retry08/lead_submission_acceptance.json` and refuses to run without them. `bash -n` passes.
+- completed — wait helper. `/data/ycfeng/tmp/wait_gen07.py` replaced by the generic
+  `/data/ycfeng/tmp/glm53_dsv4/h200/monitor/wait_monitor.py <monitor_dir> [cap_s]` (smoke run on the generation07
+  monitor before cleanup printed the final Failed phase); the old file was removed.
+- completed — cleanup of invalid artifacts through codex-implement. Reason: the standing cleanup rule; generations
+  05-07 are terminal and their evidence is archived with sha256 in the retry05/06/07 terminal directories.
+  Request 890bf5f2 classified 481 scratch files (449 candidates) and stopped on two prerequisites: no host-wide process
+  scan from its sandbox, and incomplete protected snapshots (five unreadable paths under `/data/ycfeng/tmp/glm53_dsv4`,
+  plus the still-growing old G0-D launcher log). Lead decisions: Pi exit files, label quiescence (no write after
+  08:00Z), launcher exits and monitor finals replace the host scan; the unrelated paths are known exceptions. Request
+  15216d7e deleted 449 files (87 archived duplicates, 360 Node compile-cache files, the never-launched
+  `p64-formal7-post-1107n.{sh,md}`), 32,483,199 bytes (33,460,224 allocated), and 41 emptied directories; 32 files
+  without archive coverage stay. Lead acceptance `cleanup_20261107_gen05_07/lead_acceptance.py`: ACCEPTED, 8/8 checks
+  (all 449 absent and in scope, 32 kept unchanged, 130 archive entries intact, generation08 prompts unchanged). The
+  four protected-hash snapshots (about 75 MB each) stay on disk uncommitted, with their sha256 in lead_acceptance.json;
+  the two from the classification-only request are superseded and go in the next cleanup.
+- finding update (reported before, progress.md "finding (not this task's job)"): the old G0-D launcher for
+  `exp-1020-203529-472675`, stopped on 2026-10-20, still runs on HOST and appends proxy-error tracebacks to
+  `native_track_20261020/g0d_launch/launcher.log`, now 4.11 GB (2.88 GB at the earlier report). Not visible from this
+  namespace; left untouched pending YC.
 - pending — night-time submission at about 16:30Z (00:30 Beijing) through Pi label p64-formal8-submit-1107q, then
-  the detached monitor, terminal reads, copy on success and the post-run comparison.
+  the detached monitor, terminal reads, copy on success (p64-formal8-post-1107r) and the post-run comparison.
 
 ## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
 

@@ -1,0 +1,30 @@
+{
+  "acceptance_outcome": "BLOCKED",
+  "counts": {
+    "archived_duplicate": 87,
+    "node_compile_cache": 360,
+    "superseded_prompt": 2,
+    "unclassified": 0,
+    "uncovered_scratch": 32
+  },
+  "covered_archive_entries": 130,
+  "deletion_execution": "NOT_RUN: prerequisites unavailable",
+  "errors": [],
+  "host_process_check": "NOT_RUN: isolated PID namespace",
+  "observed_utc": "2026-11-07T09:17:41.779835+00:00",
+  "protected_after_error_count": 6,
+  "protected_before_error_count": 6,
+  "protected_complete_sha256_check": "NOT_COMPLETE: unreadable directory descendants/files and unstable input",
+  "protected_content_inventory_equal": true,
+  "protected_missing_or_added": [],
+  "protected_proven_hash_changes": [],
+  "protected_sha256_match_count": 119450,
+  "protected_unverified_file_paths": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch/launcher.log",
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_image_rieb91rz/diagnostics/fault.log",
+    "/data/ycfeng/tmp/glm53_dsv4/graph_payload_root_image_rieb91rz/diagnostics/stages.jsonl"
+  ],
+  "scoped_files": 481,
+  "scoped_labels": 13,
+  "status": "PASS_CLASSIFICATION_AND_RETENTION"
+}

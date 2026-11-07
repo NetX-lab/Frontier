@@ -1,0 +1,15 @@
+{
+  "hits": [],
+  "host_check": "NOT_RUN: /proc is the isolated bwrap PID namespace; no host execution tool was provided in the assignment.",
+  "local_zero_references": true,
+  "note": "Local absence plus historical completion records does not establish the required current host-wide no-reference prerequisite.",
+  "observed_utc": "2026-11-07T08:46:32.236041+00:00",
+  "own_pid": 422,
+  "pid1_comm": "bwrap",
+  "pid_namespace": "pid:[4026532543]",
+  "process_exit_races": 0,
+  "read_errors": [],
+  "source_evidence": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/progress.md:611",
+  "status": "BLOCKED_NO_HOST_PROCESS_VISIBILITY",
+  "visible_processes_scanned": 4
+}

@@ -1,0 +1,46 @@
+{
+  "status": "ACCEPTED",
+  "python": "3.10.6",
+  "command": "python3 -B cleanup_20261107_gen05_07/lead_acceptance.py",
+  "codex_requests": [
+    "890bf5f2-a7eb-473d-ac18-51c83fd2de58 (blocked, classification only)",
+    "15216d7e-7bc2-49ed-bad0-f1aa572dfb9a (implemented)"
+  ],
+  "deleted_files": 449,
+  "deleted_bytes": 32483199,
+  "deleted_allocated_bytes": 33460224,
+  "kept_files": 32,
+  "archive_entries": 130,
+  "checks": {
+    "codex_receipt": true,
+    "counts": true,
+    "deleted_absent": true,
+    "deleted_in_scope": true,
+    "kept_unchanged": true,
+    "archives_intact": true,
+    "gen08_prompts_unchanged": true,
+    "launcher_exits_present": true
+  },
+  "lead_decisions": [
+    "Pi exit files, label quiescence, launcher exits and monitor finals replace the host process scan.",
+    "Five unreadable paths under /data/ycfeng/tmp/glm53_dsv4 and the growing old G0-D launcher log are unrelated to the scope and accepted as known exceptions."
+  ],
+  "snapshot_files_not_committed": {
+    "protected_hash_before.json": {
+      "bytes": 75188389,
+      "sha256": "8cb0e44aabf312785b149e59e305f05f8c4c21b8560d20c056b7db7d2faccda8"
+    },
+    "protected_hash_after.json": {
+      "bytes": 75188388,
+      "sha256": "55c8d5d65e499451186a30af078a2301077b18735e35b2425baa1c73b091c1c3"
+    },
+    "protected_hash_before_final.json": {
+      "bytes": 75188546,
+      "sha256": "cd50532f06fd0d027b4bee62459e7f5bf0d5b0d806c6733ed191783ba5915b7b"
+    },
+    "protected_hash_after_final.json": {
+      "bytes": 75188546,
+      "sha256": "9cf0b5b8c4cf1afa8094e26b4d3f7da758e45994bad8b1eef8dfabc756c7f265"
+    }
+  }
+}
