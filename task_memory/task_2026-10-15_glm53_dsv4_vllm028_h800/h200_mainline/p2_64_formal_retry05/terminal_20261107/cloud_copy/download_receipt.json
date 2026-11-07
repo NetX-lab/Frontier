@@ -1,0 +1,14 @@
+{
+ "status": "HASH_IDENTICAL_DOWNLOAD",
+ "start_utc": "2026-11-07T06:27:47.224608+00:00",
+ "end_utc": "2026-11-07T06:27:48.193384+00:00",
+ "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261104_05/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261104-05",
+ "local_root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts",
+ "files": 37,
+ "bytes": 371893,
+ "inventory_sha256": "03ee1d49fc76094eac64668489bc57d3cbda3c860bb36e47d6137dc670684a87",
+ "mismatched": [],
+ "method": "CPU-only RJob with the cloud mount and an NFS mount of this host; local copies rehashed after writing",
+ "script_sha256": "cc709f26bc246902db48a80fd5a394cc6db26e7384448e033cf26b756c43aa8f",
+ "rjob_task": "cloud-copy-formal_p2_64_20261104_05ee590/default"
+}

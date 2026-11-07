@@ -1,0 +1,40 @@
+{
+  "status": "PASS_PACKAGE_IDENTITY_AND_CHECK_ONLY",
+  "python": "3.10.6",
+  "command": "python3 h200_mainline/p2_64_formal_retry06/lead_package_audit.py",
+  "script_sha256": "6fc58bdf27ff565b4bffc2a4e8a0b2261e306be4b6c7fbd5a63abb2e9bc416b2",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01",
+  "manifest_sha256": "d70352ad05902eae58fcaea5f0f2709523675f16e3b2ad9830eb00a4bd4480fb",
+  "sealed_files": 47,
+  "byte_identical_files": 41,
+  "changed_files": [
+    "case/inputs/native_config.json",
+    "case/manifest.yaml",
+    "config.json",
+    "evidence_readiness.json",
+    "overlay.json",
+    "source_lock.json"
+  ],
+  "allowed_changes": "Exact replacement of package root, run tag, cloud output, promotion build time, purpose and derived overlay digest; all other bytes equal generation05.",
+  "commits": {
+    "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness": "f33306d40443cfc0c44842d6ee044f6703c736e7",
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination": "a06a72a4326cba02234df6cfbdc21b78d3a15d26"
+  },
+  "check_only": {
+    "argv": [
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01/launch.py",
+      "--check-only"
+    ],
+    "exit_code": 0,
+    "stdout": "INPUT_HASHES_PASS_NO_SUBMISSION\n"
+  },
+  "old_manifest_unchanged": "23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c",
+  "source_implementation_change": "One entry through unchanged CASES registry only",
+  "decision": "D-P2-64-FIFTH",
+  "jobs_used_under_decision": 1,
+  "jobs_authorized_under_decision": 3,
+  "submission_basis": "Platform-cause resubmission 1 of 2 after the external replica stops of generation05",
+  "submission_status": "PENDING_APPROVAL_RECEIPT_AND_SUBMISSION"
+}

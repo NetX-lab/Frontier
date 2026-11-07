@@ -1,0 +1,29 @@
+PRELAUNCH_MANIFEST /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-06/run_manifest.json
+/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/paramiko/pkey.py:82: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "cipher": algorithms.TripleDES,
+/data/ycfeng/tmp/stepmind-env/lib/python3.10/site-packages/paramiko/transport.py:253: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "class": algorithms.TripleDES,
+2026-11-07 14:43:21.305 | INFO     | steptron.exp.base_exp:find_leaf_task_specs:4512 - Get TaskSpecs from entire config tree:
+- @ResourceConfig: default
+2026-11-07 14:43:21.310 | INFO     | steptron.exp.base_exp:find_leaf_task_specs:4512 - Get TaskSpecs from entire config tree:
+- @ResourceConfig: default
+2026-11-07 14:43:21.462 | INFO     | steptron.utils.stepmind:submit:784 - Job Create: by-stepmind/b09c9(exp-1107-144321-305543)
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01/launch.py", line 44, in <module>
+    runpy.run_path(str(HERE / 'submit_native_diagnostic.py'), run_name='__main__')
+  File "/usr/lib/python3.10/runpy.py", line 289, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "/usr/lib/python3.10/runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01/submit_native_diagnostic.py", line 50, in <module>
+    workers = spawn_tasks(resource, command="bash -c " + shlex.quote(command),
+  File "/data/ycfeng/steptron/steptron/utils/stepmind.py", line 921, in spawn_tasks
+    workers.wait()
+  File "/data/ycfeng/steptron/steptron/utils/stepmind_control.py", line 339, in wait
+    return global_controller.wait_while_monitor_other(self)
+  File "/data/ycfeng/steptron/steptron/utils/stepmind_control.py", line 243, in wait_while_monitor_other
+    raise RuntimeError(
+RuntimeError: Waited job [by-stepmind/b09c9(exp-1107-144321-305543)] ended with status: failed
+2026-11-07 14:48:33.372 | INFO     | steptron.utils.stepmind_control:stop:363 - Job Stop: by-stepmind/b09c9(exp-1107-144321-305543)

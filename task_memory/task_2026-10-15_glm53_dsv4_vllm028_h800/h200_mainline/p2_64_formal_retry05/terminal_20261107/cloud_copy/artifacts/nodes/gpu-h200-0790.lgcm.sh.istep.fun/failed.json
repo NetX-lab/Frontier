@@ -1,0 +1,4 @@
+{
+  "host": "gpu-h200-0790.lgcm.sh.istep.fun",
+  "error": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01/native_pd_worker.py\", line 377, in run\n    await_condition(lambda: (root / 'replay_finished.json').is_file(),\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01/native_pd_worker.py\", line 235, in await_condition\n    raise RuntimeError(f'Native server exited early: {server.returncode}')\nRuntimeError: Native server exited early: 0\n"
+}

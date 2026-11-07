@@ -1,0 +1,40 @@
+{
+  "status": "PASS_PACKAGE_IDENTITY_AND_CHECK_ONLY",
+  "python": "3.10.6",
+  "command": "python3 h200_mainline/p2_64_formal_retry07/lead_package_audit.py",
+  "script_sha256": "d94354ff701d83783317d80ac33d6205ccd3d49dd8bb53dde4d006faf24e2b08",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01",
+  "manifest_sha256": "8fd5d9dc625bae451689775bfdcd578e3c7b60be6d0b7b08c0edbcc00703190a",
+  "sealed_files": 47,
+  "byte_identical_files": 41,
+  "changed_files": [
+    "case/inputs/native_config.json",
+    "case/manifest.yaml",
+    "config.json",
+    "evidence_readiness.json",
+    "overlay.json",
+    "source_lock.json"
+  ],
+  "allowed_changes": "Exact replacement of package root, run tag, cloud output, promotion build time, purpose and derived overlay digest; all other bytes equal generation06.",
+  "commits": {
+    "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness": "f33306d40443cfc0c44842d6ee044f6703c736e7",
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination": "a06a72a4326cba02234df6cfbdc21b78d3a15d26"
+  },
+  "check_only": {
+    "argv": [
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/launch.py",
+      "--check-only"
+    ],
+    "exit_code": 0,
+    "stdout": "INPUT_HASHES_PASS_NO_SUBMISSION\n"
+  },
+  "old_manifest_unchanged": "d70352ad05902eae58fcaea5f0f2709523675f16e3b2ad9830eb00a4bd4480fb",
+  "source_implementation_change": "One entry through unchanged CASES registry only",
+  "decision": "D-P2-64-FIFTH",
+  "jobs_used_under_decision": 2,
+  "jobs_authorized_under_decision": 3,
+  "submission_basis": "Platform-cause resubmission 2 of 2 after the spot-GPU device-admission failure of generation06",
+  "submission_status": "PENDING_APPROVAL_RECEIPT_AND_SUBMISSION"
+}

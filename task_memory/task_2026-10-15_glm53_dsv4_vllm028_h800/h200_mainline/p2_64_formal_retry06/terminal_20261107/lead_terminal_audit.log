@@ -1,0 +1,30 @@
+{
+ "status": "PASS_TERMINAL_PLATFORM_CAUSE_NO_REFERENCE",
+ "checks": {
+  "job_identity": true,
+  "job_failed_without_start": true,
+  "system_stop_reason_critical_task_failed": true,
+  "only_user_operation_is_create": true,
+  "admission_error_on_failed_replica": true,
+  "only_failed_replica_has_no_container": true,
+  "no_container_started": true,
+  "replica_logs_empty": true,
+  "stops_by_rjob_controller": true,
+  "closes_after_admission_error": true,
+  "launcher_exited_after_job_end": true,
+  "platform_queries_pass": true
+ },
+ "archived_files": 27
+}
+{
+ "known_container_gpu_hours": 0.0,
+ "container_clocks_complete": false,
+ "upper_bound_window_utc": [
+  "2026-11-07T06:43:55+00:00",
+  "2026-11-07T06:51:57+00:00"
+ ],
+ "upper_bound_seconds": 482.0,
+ "counted_container_gpu_hours": 8.57,
+ "rule": "D-P2-64-FIFTH: without complete container clocks, 64 GPUs x scheduled wall time counts toward 128. The window ends at the later of the last stop and the last replica event (image pull on a pod still tearing down)."
+}
+["Failed", "FailedMount", "Pulled", "Pulling"]

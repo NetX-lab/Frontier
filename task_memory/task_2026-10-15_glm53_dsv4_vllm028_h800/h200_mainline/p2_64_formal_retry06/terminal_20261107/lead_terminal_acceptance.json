@@ -1,0 +1,81 @@
+{
+  "status": "PASS_TERMINAL_PLATFORM_CAUSE_NO_REFERENCE",
+  "observed_utc": "2026-11-07T06:57:59.590234+00:00",
+  "python": "3.10.6",
+  "command": "python3 h200_mainline/p2_64_formal_retry06/terminal_20261107/lead_terminal_audit.py",
+  "script_sha256": "5a8e5d53e77e90bf2860b4fdc88f44a598e6b6e914d327136d0aeffddb9d3faa",
+  "job": "exp-1107-144321-305543",
+  "uid": "ceaa0653-8a7b-424b-b3e0-9c5bb52b7abd",
+  "finish_utc": "2026-11-07T06:48:31Z",
+  "checks": {
+    "job_identity": true,
+    "job_failed_without_start": true,
+    "system_stop_reason_critical_task_failed": true,
+    "only_user_operation_is_create": true,
+    "admission_error_on_failed_replica": true,
+    "only_failed_replica_has_no_container": true,
+    "no_container_started": true,
+    "replica_logs_empty": true,
+    "stops_by_rjob_controller": true,
+    "closes_after_admission_error": true,
+    "launcher_exited_after_job_end": true,
+    "platform_queries_pass": true
+  },
+  "cause": {
+    "classification": "PLATFORM_SPOT_GPU_DEVICE_ADMISSION_FAILURE",
+    "failed_replica": "8f14e45f",
+    "admission_events": [
+      {
+        "utc": "2026-11-07T06:48:30+00:00",
+        "object": "exp-1107-144321-305543",
+        "reason": "UnexpectedAdmissionError",
+        "host": "gpu-h200-0757.lgcm.sh.istep.fun",
+        "message": "Allocate failed due to requested number of devices unavailable for nvidia.com/spot-gpu. Requested: 8, Available: 7, which is unexpected"
+      },
+      {
+        "utc": "2026-11-07T06:48:30+00:00",
+        "object": "exp-1107-144321-305543-8f14e45f",
+        "reason": "UnexpectedAdmissionError",
+        "host": "gpu-h200-0757.lgcm.sh.istep.fun",
+        "message": "Allocate failed due to requested number of devices unavailable for nvidia.com/spot-gpu. Requested: 8, Available: 7, which is unexpected"
+      },
+      {
+        "utc": "2026-11-07T06:48:30+00:00",
+        "object": "exp-1107-144321-305543-8f14e45f",
+        "reason": "UnexpectedAdmissionError",
+        "host": "gpu-h200-0757.lgcm.sh.istep.fun",
+        "message": "Allocate failed due to requested number of devices unavailable for nvidia.com/spot-gpu. Requested: 8, Available: 7, which is unexpected"
+      }
+    ],
+    "basis": "While the replicas waited for spot GPUs to be released by preemption, the kubelet on the failed replica's node rejected the pod at admission (8 spot GPUs requested, 7 available). The pod never created a container, so no native code ran; the any-replica fail policy then closed the other replicas through rjob-controller. The only user operation is the create.",
+    "later_teardown_events": [
+      "Failed",
+      "FailedMount",
+      "Pulled",
+      "Pulling"
+    ]
+  },
+  "accounting": {
+    "known_container_gpu_hours": 0.0,
+    "container_clocks_complete": false,
+    "upper_bound_window_utc": [
+      "2026-11-07T06:43:55+00:00",
+      "2026-11-07T06:51:57+00:00"
+    ],
+    "upper_bound_seconds": 482.0,
+    "counted_container_gpu_hours": 8.57,
+    "rule": "D-P2-64-FIFTH: without complete container clocks, 64 GPUs x scheduled wall time counts toward 128. The window ends at the later of the last stop and the last replica event (image pull on a pod still tearing down)."
+  },
+  "business": {
+    "complete_native_reference": false,
+    "containers_started": 0
+  },
+  "not_run": {
+    "cloud_copy": "No container started, so no cloud output exists",
+    "pair_coverage": "No native reference",
+    "R5": "No native reference",
+    "metrics_and_warm_reading": "No native reference"
+  },
+  "archived_files": 27,
+  "next": "Platform-cause resubmission 2 of 2 (generation07), the last one under D-P2-64-FIFTH."
+}

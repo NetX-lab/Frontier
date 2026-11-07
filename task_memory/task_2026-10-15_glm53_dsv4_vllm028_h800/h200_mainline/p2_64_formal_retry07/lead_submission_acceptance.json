@@ -1,0 +1,164 @@
+{
+ "status": "PASS_SUBMISSION_IDENTITY_AND_LAUNCHER_SURVIVAL",
+ "observed_utc": "2026-11-07T07:07:33.964707+00:00",
+ "decision": "D-P2-64-FIFTH",
+ "generation": 7,
+ "resubmissions_used": 2,
+ "job": "exp-1107-150132-396145",
+ "job_uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168",
+ "job_creation_timestamp": "2026-11-07T07:01:32Z",
+ "launcher_pid": 3498815,
+ "launcher_started_utc": "2026-11-07T07:01:28.267996+00:00",
+ "submission_result": "SUBMITTED_ALL_CHECKS_PASS",
+ "failed_checks": [],
+ "checks": {
+  "auto_restart_disabled": true,
+  "charged_group": true,
+  "cloud_mount": true,
+  "command_timeout": true,
+  "company_image": true,
+  "creator_is_i_fengyicheng": true,
+  "gpu_tag": true,
+  "gpus_per_replica": true,
+  "identity_read_errors_zero": true,
+  "job_created_once": true,
+  "launcher_alive": true,
+  "nfs_paths_are_package": true,
+  "nfs_source_is_current_host": true,
+  "one_task_spec": true,
+  "preemptible_label": true,
+  "queue_name": true,
+  "rdma": true,
+  "replicas": true
+ },
+ "approval_checks": {
+  "config_charged_group": true,
+  "config_gpu_type": true,
+  "config_gpus_per_replica": true,
+  "config_preemptible": true,
+  "config_replicas": true,
+  "config_timeout": true,
+  "manifest_sha256_matches": true,
+  "receipt_approved": true,
+  "receipt_package_matches": true
+ },
+ "submission_pi_label": "p64-formal7-submit-1107m",
+ "submission_pi_turns": "One turn, one tool call running the lead script /data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-submit-1107m.sh (reader read of generation06, one submission, readback, detached monitor start); exit 0 at 07:02:58Z.",
+ "reader_read_generation06": {
+  "phase": "Failed",
+  "errors": 0
+ },
+ "launcher_alive_after_pi_exit": true,
+ "launcher_liveness_evidence": "monitor /proc check, launcher_alive true at 2026-11-07T07:06:43.840308+00:00 (after the Pi exit at 07:02:58Z)",
+ "monitor_reads": [
+  {
+   "finishTime": null,
+   "launcher_alive": true,
+   "observed_utc": "2026-11-07T07:01:42.425844+00:00",
+   "phase": "Pending",
+   "queue_status": "suspend",
+   "read_error": null,
+   "replica_errors": null,
+   "replica_phases": [],
+   "startTime": null,
+   "stop_annotations": {
+    "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=320."
+   }
+  },
+  {
+   "finishTime": null,
+   "launcher_alive": true,
+   "observed_utc": "2026-11-07T07:06:43.840308+00:00",
+   "phase": "Pending",
+   "queue_status": "suspend",
+   "read_error": null,
+   "replica_errors": null,
+   "replica_phases": [],
+   "startTime": null,
+   "stop_annotations": {
+    "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=319."
+   }
+  }
+ ],
+ "monitor": {
+  "pi_label": "p64-formal7-submit-1107m",
+  "pid": 3501222,
+  "interval_s": 300,
+  "max_hours": 36,
+  "output_dir": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/monitor"
+ },
+ "package_manifest_sha256": "8fd5d9dc625bae451689775bfdcd578e3c7b60be6d0b7b08c0edbcc00703190a",
+ "package_manifest_matches_approval": true,
+ "submission_scripts": [
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/submit_package.py",
+   "sha256": "3feea735fd79434ca6ed446cba7824c48f33fdae9b1198021db3b474605cfcf1"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/submit_package.sh",
+   "sha256": "61ec6bbe1d4686003a3a7eb5ed09ae7c5272845a2cac280e51a2cf5ea4e9af73"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/stepmind_env.sh",
+   "sha256": "e588cdb5c7ee75ae8a060f3323d1bd14ed5872f7b8cfa0ce7b0b268986592192"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/read_job.py",
+   "sha256": "71f206e5f9be3ee8f97696e1a624cec760853d5428d93168a03532f062de2596"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/monitor_job.py",
+   "sha256": "6912ab9cfb55f362f2ec24252e393bd0f58135692ff7c1d0e816732e8b2775fe"
+  },
+  {
+   "path": "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-submit-1107m.sh",
+   "sha256": "2bc62d7b323869f7ef8a601778f69bc05e32acf7be3cea15c2749b69dc268f31"
+  }
+ ],
+ "source_evidence": [
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_submission_acceptance.json",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/submission_acceptance.json",
+   "sha256": "5b01fc5ff8d1dbfb799d59873353ff46bcc269eae9691c1df2499a7a74aeb14d"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_submission_identity.json",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/submission_identity.json",
+   "sha256": "a6de31a0c60ce203bca4da544ffb513d0f64e83cb57e3252c3f2e356148c82cc"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_launch_record.json",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/launch_record.json",
+   "sha256": "a40378c68b4fd88fd30d8bc7fed80f84bad465e27c807d0df4184c3547532b1c"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_quota_snapshot.json",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/quota_snapshot.json",
+   "sha256": "e37cc994bd50345a64e0ff7c553c291d5e80b36eb68a98da2efb2ba5cc027d1c"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_check_only.txt",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/check_only.txt",
+   "sha256": "1097bc1c25714ba507076bb9656ad12386a6dfdc90df994419a9c7a462306c42"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_launcher_log_at_submission.txt",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/launcher.log",
+   "sha256": "5111c3d296414d3eecd24c799b74b753cddfa82f170a137f9c1a0e465e9550d5"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_reader_smoke_generation06.json",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/reader_smoke_generation06.json",
+   "sha256": "933ad3f17fd73a0e8b480fc5a27e9348c311bf244476910dd09f801a5f52028b"
+  },
+  {
+   "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/generation07_monitor_first_read.json",
+   "source": "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/monitor/change_0001.json",
+   "sha256": "920ff7cfa4fda76cf65c287b69b24f5d7b766185b43f825d7dc0e99a0d7b428c"
+  }
+ ],
+ "limits": "Last platform-cause resubmission under D-P2-64-FIFTH. Not yet observed: scheduling, worker nvidia-smi, API readiness, native completion, terminal status, container clocks.",
+ "checks_passed": 18,
+ "checks_total": 18,
+ "controls_issued": 0
+}

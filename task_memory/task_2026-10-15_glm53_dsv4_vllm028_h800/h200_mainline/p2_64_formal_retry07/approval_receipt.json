@@ -1,0 +1,38 @@
+{
+  "decision_id": "D-P2-64-FIFTH",
+  "recorded_at_utc": "2026-11-07T07:00:06.346195+00:00",
+  "user_reply": "批准，含平台原因重提 (Recommended)",
+  "context": "Carried forward from the 2026-11-07 D-P2-64-FIFTH approval (requirements.md); no new user round per its resubmission rule.",
+  "status": "APPROVED_PLATFORM_CAUSE_RESUBMISSION_2_OF_2",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01",
+  "manifest_sha256": "8fd5d9dc625bae451689775bfdcd578e3c7b60be6d0b7b08c0edbcc00703190a",
+  "resources": {
+    "gpu_type": "H200",
+    "gpu_per_replica": 8,
+    "replicas": 8,
+    "total_gpus": 64,
+    "preemptible": true,
+    "charged_group": "step_main",
+    "timeout_s": 3600,
+    "container_gpu_hours_ceiling": 64
+  },
+  "jobs_authorized_under_decision": 3,
+  "jobs_used_before_this_submission": 2,
+  "platform_cause_resubmissions_authorized": 2,
+  "platform_cause_resubmissions_used_before_this_submission": 1,
+  "cumulative_container_gpu_hours_ceiling": 128,
+  "cumulative_container_gpu_hours_counted_before_this_submission": 27.09,
+  "gpu_hours_accounting": "Generation05 upper bound 18.52 GPUh (64 GPUs x 1042 s). Generation06 started no container (0.0 GPUh known); its upper bound 64 GPUs x 482 s (2026-11-07T06:43:55+00:00 to 2026-11-07T06:51:57+00:00) = 8.57 GPUh counts. This job adds at most 64; total at most 91.09 <= 128.",
+  "cause_reference": {
+    "previous_job": "exp-1107-144321-305543",
+    "previous_package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01",
+    "classification": "PLATFORM_SPOT_GPU_DEVICE_ADMISSION_FAILURE",
+    "terminal_acceptance": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/terminal_20261107/lead_terminal_acceptance.json",
+    "evidence": "Replica 8f14e45f on gpu-h200-0757 was rejected at kubelet admission at 06:48:30Z (UnexpectedAdmissionError: 8 nvidia.com/spot-gpu requested, 7 available) while replicas waited for spot-GPU preemption; it created no container and no native code ran; the system stop reason is 'Some critical tasks failed.'; rjob-controller closed the other replicas at 06:48:31-32Z; the only user operation is the create."
+  },
+  "package_audit": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/lead_package_acceptance.json",
+  "resubmission_rule": "Only after preemption, release_quota or another external platform stop; identity-only regenerated package; native or code failure stops the chain.",
+  "execution": "Submit through ds4-exec and personal local StepMind Python; one combined Pi call reads the previous job, submits once and starts the detached monitor, then the Pi turn ends normally. Never stop a label owning a live launcher.",
+  "frozen_package_changed": false,
+  "last_resubmission": "This is the last platform-cause resubmission under D-P2-64-FIFTH; any further GPU job needs a new user decision."
+}

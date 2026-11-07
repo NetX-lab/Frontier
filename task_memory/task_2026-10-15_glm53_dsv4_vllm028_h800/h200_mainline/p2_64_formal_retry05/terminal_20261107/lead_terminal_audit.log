@@ -1,0 +1,26 @@
+{
+ "status": "PASS_TERMINAL_PLATFORM_CAUSE_NO_REFERENCE",
+ "checks": {
+  "job_identity": true,
+  "job_failed": true,
+  "only_user_operation_is_create": true,
+  "external_stops_have_no_stop_operation": true,
+  "external_stops_phase_stopped": true,
+  "other_replicas_stopped_by_rjob_controller": true,
+  "two_failed_containers_exit_1": true,
+  "launcher_exited_after_job_end": true,
+  "download_hash_identical": true
+ },
+ "archived_files": 68
+}
+{
+ "known_container_gpu_hours": 2.5866666666666664,
+ "container_clocks_complete": false,
+ "upper_bound_window_utc": [
+  "2026-11-07T05:58:41+00:00",
+  "2026-11-07T06:16:03+00:00"
+ ],
+ "upper_bound_seconds": 1042.0,
+ "counted_container_gpu_hours": 18.52,
+ "rule": "D-P2-64-FIFTH: without complete container clocks, 64 GPUs x scheduled wall time counts toward 128."
+}

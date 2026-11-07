@@ -1,0 +1,149 @@
+{
+ "observed_utc": "2026-11-07T06:52:25.127343+00:00",
+ "job": "exp-1107-144321-305543",
+ "creator": "i-fengyicheng",
+ "charged_group": "step_main",
+ "preemptible_label": "yes",
+ "status": {
+  "phase": "Failed",
+  "startTime": null,
+  "finishTime": "2026-11-07T06:48:31Z"
+ },
+ "tasks": {
+  "default": {
+   "replicas": 8,
+   "resources": [
+    {
+     "limits": {
+      "cpu": "64",
+      "mellanox.com/mlnx_rdma": "1",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8",
+      "rdma/mlnx_shared": "8"
+     },
+     "requests": {
+      "cpu": "64",
+      "memory": "500Gi",
+      "nvidia.com/gpu": "8"
+     }
+    }
+   ]
+  }
+ },
+ "replicas": [
+  {
+   "name": "exp-1107-144321-305543-1679091c",
+   "phase": "Stopped",
+   "node": "gpu-h200-0491.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "",
+     "state": {
+      "waiting": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1107-144321-305543-8f14e45f",
+   "phase": "Failed",
+   "node": "gpu-h200-0757.lgcm.sh.istep.fun",
+   "containers": []
+  },
+  {
+   "name": "exp-1107-144321-305543-a87ff679",
+   "phase": "Stopped",
+   "node": "gpu-h200-0047.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "",
+     "state": {
+      "waiting": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1107-144321-305543-c4ca4238",
+   "phase": "Stopped",
+   "node": "gpu-h200-0300.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "",
+     "state": {
+      "waiting": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1107-144321-305543-c81e728d",
+   "phase": "Stopped",
+   "node": "gpu-h200-1007.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "",
+     "state": {
+      "waiting": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1107-144321-305543-cfcd2084",
+   "phase": "Starting",
+   "node": "gpu-h200-1111.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "",
+     "state": {
+      "waiting": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1107-144321-305543-e4da3b7f",
+   "phase": "Stopped",
+   "node": "gpu-h200-0033.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "",
+     "state": {
+      "waiting": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "exp-1107-144321-305543-eccbc87e",
+   "phase": "Stopped",
+   "node": "gpu-h200-0023.lgcm.sh.istep.fun",
+   "containers": [
+    {
+     "name": "default",
+     "restartCount": 0,
+     "imageID": "",
+     "state": {
+      "waiting": null
+     }
+    }
+   ]
+  }
+ ],
+ "container_gpu_hours": null,
+ "known_container_gpu_hours": 0.0,
+ "container_clocks_complete": false
+}

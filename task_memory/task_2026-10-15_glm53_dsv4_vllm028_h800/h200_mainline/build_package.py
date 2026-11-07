@@ -82,6 +82,20 @@ CASES = {
                                  'generation 04 while queued; native DP startup coordination corrected; '
                                  'pair-warmed, wholly preemptible; GPU submission pending user approval beyond '
                                  'the four submissions used'),
+    'p2_64_formal_retry06': dict(source='formal', dp=4, h200_limit=32,
+                         native='p2-dp-startup-coordination', native_commit='a06a72a4326cba02234df6cfbdc21b78d3a15d26',
+                         case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
+                         run_tag='dsv4-h200-p2-64-formal-20261107-06',
+                         purpose='Formal P2 H200-64 generation 06 under D-P2-64-FIFTH, platform-cause '
+                                 'resubmission 1 of 2 after the external replica stops of generation 05; '
+                                 'native DP startup coordination corrected; pair-warmed, wholly preemptible'),
+    'p2_64_formal_retry07': dict(source='formal', dp=4, h200_limit=32,
+                         native='p2-dp-startup-coordination', native_commit='a06a72a4326cba02234df6cfbdc21b78d3a15d26',
+                         case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
+                         run_tag='dsv4-h200-p2-64-formal-20261107-07',
+                         purpose='Formal P2 H200-64 generation 07 under D-P2-64-FIFTH, platform-cause '
+                                 'resubmission 2 of 2 after the spot-GPU device-admission failure of generation 06; '
+                                 'native DP startup coordination corrected; pair-warmed, wholly preemptible'),
     'p2_64_formal': dict(source='formal', dp=4, h200_limit=32,
                          case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
                          run_tag='dsv4-h200-p2-64-formal-20261102-01',

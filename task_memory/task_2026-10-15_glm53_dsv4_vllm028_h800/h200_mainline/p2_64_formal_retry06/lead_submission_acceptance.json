@@ -1,0 +1,128 @@
+{
+  "status": "PASS_SUBMISSION_IDENTITY_AND_LAUNCHER_SURVIVAL",
+  "observed_utc": "2026-11-07T06:48:07.656097+00:00",
+  "decision": "D-P2-64-FIFTH",
+  "generation": 6,
+  "resubmissions_used": 1,
+  "job": "exp-1107-144321-305543",
+  "job_uid": "ceaa0653-8a7b-424b-b3e0-9c5bb52b7abd",
+  "job_creation_timestamp": "2026-11-07T06:43:21Z",
+  "launcher_pid": 3297045,
+  "submission_result": "SUBMITTED_ALL_CHECKS_PASS",
+  "failed_checks": [],
+  "checks_passed": 18,
+  "checks_total": 18,
+  "approval_checks": {
+    "config_charged_group": true,
+    "config_gpu_type": true,
+    "config_gpus_per_replica": true,
+    "config_preemptible": true,
+    "config_replicas": true,
+    "config_timeout": true,
+    "manifest_sha256_matches": true,
+    "receipt_approved": true,
+    "receipt_package_matches": true
+  },
+  "submission_pi_label": "p64-formal6-submit-1107j",
+  "submission_pi_turns": "Turn 1 ran the reader smoke test and stopped on I-010; turn 2 ran the single submission and the readback, exit 0.",
+  "launcher_alive_after_pi_exit": true,
+  "launcher_liveness_evidence": "HOST ps by Pi label p64-formal6-monitor-1107k (turn 3) at about 06:46:22Z: PID 3297045, PPID 659, SID 3297045, elapsed 03:05, argv .../p2_64_formal_retry06/package_01/launch.py; monitor.jsonl launcher_alive true at 2026-11-07T06:46:23.386635+00:00",
+  "first_monitor_read": {
+    "finishTime": null,
+    "launcher_alive": true,
+    "observed_utc": "2026-11-07T06:46:23.386635+00:00",
+    "phase": "Starting",
+    "queue_status": "approved",
+    "read_error": null,
+    "replica_errors": null,
+    "replica_phases": [
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting",
+      "Starting"
+    ],
+    "startTime": null,
+    "stop_annotations": {}
+  },
+  "monitor": {
+    "pi_label": "p64-formal6-monitor-1107k",
+    "pid": 3330330,
+    "interval_s": 300,
+    "max_hours": 36,
+    "output_dir": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor",
+    "pi_turns": "Turns 1-2 stopped on I-010 after the ps call; turn 3 ran one combined check-and-start call."
+  },
+  "package_manifest_sha256": "d70352ad05902eae58fcaea5f0f2709523675f16e3b2ad9830eb00a4bd4480fb",
+  "package_manifest_matches_approval": true,
+  "submission_scripts": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/submit_package.py",
+      "sha256": "3feea735fd79434ca6ed446cba7824c48f33fdae9b1198021db3b474605cfcf1"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/submit_package.sh",
+      "sha256": "61ec6bbe1d4686003a3a7eb5ed09ae7c5272845a2cac280e51a2cf5ea4e9af73"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/stepmind_env.sh",
+      "sha256": "e588cdb5c7ee75ae8a060f3323d1bd14ed5872f7b8cfa0ce7b0b268986592192"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/read_job.py",
+      "sha256": "71f206e5f9be3ee8f97696e1a624cec760853d5428d93168a03532f062de2596"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/monitor_job.py",
+      "sha256": "6912ab9cfb55f362f2ec24252e393bd0f58135692ff7c1d0e816732e8b2775fe"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_submission_acceptance.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/submission_acceptance.json",
+      "sha256": "affee41a39403170fd778d3685e566fce8efaa758403165b693f94cdc1f033cb"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_submission_identity.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/submission_identity.json",
+      "sha256": "ff220a367d7b14fa24239ecd4af79587d5156464e2b32a31c5a91210d6d9082d"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_launch_record.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/launch_record.json",
+      "sha256": "d2c7b83ab5a43423105697c8f60e54a60f464cd8fa747142b7723e600a212b0c"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_quota_snapshot.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/quota_snapshot.json",
+      "sha256": "142173eb62ddb1d04db0263c61e68f6fa75b845c55eca1e8c61e37c1d0c60600"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_check_only.txt",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/check_only.txt",
+      "sha256": "1097bc1c25714ba507076bb9656ad12386a6dfdc90df994419a9c7a462306c42"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_launcher_log_at_submission.txt",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/launcher.log",
+      "sha256": "a4c1b7ab3ef831bb49a6628dab95f6704f2fab6967a0f3744ec8a3db340b958b"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_reader_smoke_generation05.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/reader_smoke_generation05.json",
+      "sha256": "0b02a69b76d0ac32d17735b9599bb9c3be87fe7fee389612c67439f800ce3b83"
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/generation06_monitor_first_read.json",
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/change_0001.json",
+      "sha256": "bad116e2dd2be34290eec04efa7e6f3439d030201efe89431cfba880795fde4e"
+    }
+  ],
+  "scope": "Readback of exact-job receipts written by the submitting Pi turn, frozen manifest binding and HOST launcher survival observed by a separate Pi label. The lead made no direct platform API call.",
+  "native_reference_status": "PENDING",
+  "exact_container_gpu_hours": null
+}

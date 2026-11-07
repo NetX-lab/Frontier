@@ -1,0 +1,113 @@
+INFO 11-07 06:07:04 [config.py:779] Detected quantization_config.scale_fmt=ue8m0; enabling UE8M0 for DeepGEMM.
+INFO 11-07 06:07:29 [model.py:672] Resolved architecture: DeepseekV4ForCausalLM
+INFO 11-07 06:07:29 [model.py:690] Defaulting to tokenizer_mode='deepseek_v4' for DeepseekV4ForCausalLM
+INFO 11-07 06:07:29 [model.py:1965] Using max model len 7168
+WARNING 11-07 06:07:37 [arg_utils.py:2664] This model does not officially support disabling chunked prefill. Disabling this manually may cause the engine to crash or produce incorrect outputs.
+INFO 11-07 06:07:37 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor
+INFO 11-07 06:07:37 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.
+INFO 11-07 06:07:37 [vllm.py:1334] Auto-enabling VLLM_USE_BREAKABLE_CUDAGRAPH=1. Set VLLM_USE_BREAKABLE_CUDAGRAPH=0 to opt out.
+INFO 11-07 06:07:37 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 11-07 06:07:37 [nixl_utils.py:32] Setting UCX_RCACHE_MAX_UNRELEASED to '1024' to avoid a rare memory leak in UCX when using NIXL.
+INFO 11-07 06:07:37 [nixl_utils.py:72] NIXL is available
+INFO 11-07 06:07:37 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+INFO 11-07 06:07:37 [serve.py:231] Launching 1 data parallel engine(s) in headless mode, with head node address tcp://10.204.10.40:24571.
+[W1107 06:15:56.703338904 TCPStore.cpp:138] [c10d] recvValueWithTimeout failed on SocketImpl(fd=85, addr=[gpu-h200-0876.lgcm.sh.istep.fun]:47074, remote=[gpu-h200-0505.lgcm.sh.istep.fun]:52443): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?
+Exception raised from recvBytes at /__w/pytorch/pytorch/torch/csrc/distributed/c10d/Utils.hpp:787 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x7f2676763bfd in /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7f2676764bd2 in /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so)
+frame #2: c10::DistNetworkError::DistNetworkError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7f2676765092 in /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so)
+frame #3: <unknown function> + 0x66ad16d (0x7f25dfcf916d in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #4: <unknown function> + 0x66ae15b (0x7f25dfcfa15b in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #5: c10d::TCPStore::doWait(c10::ArrayRef<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::chrono::duration<long, std::ratio<1l, 1000l> >) + 0xc5 (0x7f25dfcf3625 in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #6: c10d::TCPStore::wait(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&, std::chrono::duration<long, std::ratio<1l, 1000l> > const&) + 0x7dc (0x7f25dfcf3eac in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #7: c10d::PrefixStore::wait(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&, std::chrono::duration<long, std::ratio<1l, 1000l> > const&) + 0x2f (0x7f25dfc7edef in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #8: gloo::rendezvous::PrefixStore::wait(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&, std::chrono::duration<long, std::ratio<1l, 1000l> > const&) + 0x109 (0x7f25e211f969 in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #9: gloo::transport::tcp::Context::createAndConnectAllPairs(std::shared_ptr<gloo::IStore>) + 0xa18 (0x7f25e213cac8 in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #10: gloo::rendezvous::Context::connectFullMesh(std::shared_ptr<gloo::rendezvous::Store>, std::shared_ptr<gloo::transport::Device>&) + 0x5c (0x7f25e211c3bc in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #11: c10d::ProcessGroupGloo::ProcessGroupGloo(c10::intrusive_ptr<c10d::Store, c10::detail::intrusive_target_default_null_type<c10d::Store> > const&, int, int, c10::intrusive_ptr<c10d::ProcessGroupGloo::Options, c10::detail::intrusive_target_default_null_type<c10d::ProcessGroupGloo::Options> >) + 0x44a (0x7f25dfcabf0a in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_cpu.so)
+frame #12: <unknown function> + 0xefb7be (0x7f25ef3507be in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_python.so)
+frame #13: <unknown function> + 0x3f2bb2 (0x7f25ee847bb2 in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_python.so)
+frame #14: VLLM::EngineCore_DP2() [0x581add]
+frame #15: VLLM::EngineCore_DP2() [0x54cb34]
+frame #16: _PyObject_Call + 0xf5 (0x54b445 in VLLM::EngineCore_DP2)
+frame #17: VLLM::EngineCore_DP2() [0x59ddd1]
+frame #18: VLLM::EngineCore_DP2() [0x599713]
+frame #19: <unknown function> + 0x3f107b (0x7f25ee84607b in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_python.so)
+frame #20: _PyObject_MakeTpCall + 0x13e (0x548ffe in VLLM::EngineCore_DP2)
+frame #21: _PyEval_EvalFrameDefault + 0xa89 (0x5d6f09 in VLLM::EngineCore_DP2)
+frame #22: _PyObject_Call_Prepend + 0x18a (0x54a84a in VLLM::EngineCore_DP2)
+frame #23: VLLM::EngineCore_DP2() [0x59dc3f]
+frame #24: VLLM::EngineCore_DP2() [0x599713]
+frame #25: PyObject_Call + 0x6c (0x54b0ac in VLLM::EngineCore_DP2)
+frame #26: _PyEval_EvalFrameDefault + 0x4cbe (0x5db13e in VLLM::EngineCore_DP2)
+frame #27: PyEval_EvalCode + 0x15b (0x5d544b in VLLM::EngineCore_DP2)
+frame #28: PyRun_StringFlags + 0xd3 (0x608483 in VLLM::EngineCore_DP2)
+frame #29: PyRun_SimpleStringFlags + 0x3e (0x6b403e in VLLM::EngineCore_DP2)
+frame #30: Py_RunMain + 0x481 (0x6bcd01 in VLLM::EngineCore_DP2)
+frame #31: Py_BytesMain + 0x2d (0x6bc71d in VLLM::EngineCore_DP2)
+frame #32: <unknown function> + 0x2a1ca (0x7f26779241ca in /lib/x86_64-linux-gnu/libc.so.6)
+frame #33: __libc_start_main + 0x8b (0x7f267792428b in /lib/x86_64-linux-gnu/libc.so.6)
+frame #34: _start + 0x25 (0x657bc5 in VLLM::EngineCore_DP2)
+
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346] EngineCore failed to start.
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346] Traceback (most recent call last):
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1309, in run_engine_core
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     engine_core = DPEngineCoreProc(*args, **kwargs)
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 2003, in __init__
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     super().__init__(
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     return func(*args, **kwargs)
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1071, in __init__
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     self._init_data_parallel(vllm_config)
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 2027, in _init_data_parallel
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     dp_group, dp_store = parallel_config.stateless_init_dp_group(return_store=True)
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py", line 664, in stateless_init_dp_group
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     raise e
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py", line 649, in stateless_init_dp_group
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     return stateless_init_torch_distributed_process_group(
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py", line 659, in stateless_init_torch_distributed_process_group
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     pg = init_gloo_process_group(
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]          ^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]   File "/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py", line 564, in init_gloo_process_group
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]     backend_class = ProcessGroupGloo(
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346]                     ^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330) ERROR 11-07 06:15:56 [core.py:1346] torch.distributed.DistNetworkError: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?
+(EngineCore_DP2 pid=1330) Process EngineCore_DP2:
+(EngineCore_DP2 pid=1330) Traceback (most recent call last):
+(EngineCore_DP2 pid=1330)   File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+(EngineCore_DP2 pid=1330)     self.run()
+(EngineCore_DP2 pid=1330)   File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+(EngineCore_DP2 pid=1330)     self._target(*self._args, **self._kwargs)
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1350, in run_engine_core
+(EngineCore_DP2 pid=1330)     raise e
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1309, in run_engine_core
+(EngineCore_DP2 pid=1330)     engine_core = DPEngineCoreProc(*args, **kwargs)
+(EngineCore_DP2 pid=1330)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 2003, in __init__
+(EngineCore_DP2 pid=1330)     super().__init__(
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore_DP2 pid=1330)     return func(*args, **kwargs)
+(EngineCore_DP2 pid=1330)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1071, in __init__
+(EngineCore_DP2 pid=1330)     self._init_data_parallel(vllm_config)
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 2027, in _init_data_parallel
+(EngineCore_DP2 pid=1330)     dp_group, dp_store = parallel_config.stateless_init_dp_group(return_store=True)
+(EngineCore_DP2 pid=1330)                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py", line 664, in stateless_init_dp_group
+(EngineCore_DP2 pid=1330)     raise e
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py", line 649, in stateless_init_dp_group
+(EngineCore_DP2 pid=1330)     return stateless_init_torch_distributed_process_group(
+(EngineCore_DP2 pid=1330)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py", line 659, in stateless_init_torch_distributed_process_group
+(EngineCore_DP2 pid=1330)     pg = init_gloo_process_group(
+(EngineCore_DP2 pid=1330)          ^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330)   File "/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py", line 564, in init_gloo_process_group
+(EngineCore_DP2 pid=1330)     backend_class = ProcessGroupGloo(
+(EngineCore_DP2 pid=1330)                     ^^^^^^^^^^^^^^^^^
+(EngineCore_DP2 pid=1330) torch.distributed.DistNetworkError: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?
+INFO 11-07 06:15:57 [utils.py:615] [shutdown] Process manager: send sigterm to process EngineCore_DP2
+INFO 11-07 06:15:57 [serve.py:258] Shutting down.

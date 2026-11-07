@@ -1,0 +1,178 @@
+{
+ "observed_utc": "2026-11-07T06:34:16.470331+00:00",
+ "job": "exp-1107-135759-122907",
+ "job_uid": "a2d12f21-f384-411e-9dc4-f596e0f3e86a",
+ "sources": {
+  "exp-1107-135759-122907": {
+   "kind": "RJob",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444892571",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-e4da3b7f": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444892662",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-c4ca4238": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444892771",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-a87ff679": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444892876",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-c81e728d": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444892994",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-1679091c": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444893120",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-cfcd2084": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444893205",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-eccbc87e": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444893295",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-135759-122907-8f14e45f": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45444893424",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  }
+ }
+}

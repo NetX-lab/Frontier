@@ -1,0 +1,166 @@
+{
+  "files": [
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/platform_terminal_receipt.json",
+      "destination": "platform_terminal_receipt.json",
+      "bytes": 2803,
+      "sha256": "b681f789bdd55eb23f38665e749ac610375792375c019c10fca9f4b235ef1995"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/terminal_receipt.out",
+      "destination": "terminal_receipt.out",
+      "bytes": 97,
+      "sha256": "5e5b06ace28153740e727e249456a1ee42aadc6cd35b5906f3bdb21f01ed00ca"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/events.out",
+      "destination": "events.out",
+      "bytes": 1635,
+      "sha256": "dcb1c9c2ec98a42690dc3da8fabc3afe76049386a13ba25e4545c2310637b37d"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/events.err",
+      "destination": "events.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/replica_logs.out",
+      "destination": "replica_logs.out",
+      "bytes": 320,
+      "sha256": "ae95086e57cd7ab40a3bc72c553d057b81be508018c35a4593e0b4b8178f44ac"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch/launcher.log",
+      "destination": "launcher.log",
+      "bytes": 2849,
+      "sha256": "97a81f7395fef09cc56135b547ae966addaf0c15474a951696d20bd4efcb88d8"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01/launcher_started.json",
+      "destination": "launcher_started.json",
+      "bytes": 258,
+      "sha256": "d7de0d1e784aabccb90923dbadc34f4c6e1257cd2e26fc95e5b222acd1d597dd"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/package_01/launcher_exit.json",
+      "destination": "launcher_exit.json",
+      "bytes": 361,
+      "sha256": "702ba99bdd4e66abd128a21284979b61da3c5e31b862f11c85c09c96f9e0b38b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/events/audit_all_operations.json",
+      "destination": "terminal_events/audit_all_operations.json",
+      "bytes": 40756,
+      "sha256": "a693e448cb60f35d61a166cf67f464eba72cef57b36a79c4ce8cac0fedff4c23"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/events/historical_events.json",
+      "destination": "terminal_events/historical_events.json",
+      "bytes": 50950,
+      "sha256": "f540dd42f44f1e1432486092f77269983e12e4dffe86b98aeb082568f448c653"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/events/live_events.json",
+      "destination": "terminal_events/live_events.json",
+      "bytes": 336788,
+      "sha256": "ca11c7dd84dc6dc0920a6e47dbf422ad00d0036f6e5f7bc6d729d44c81992629"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/events/query_log.json",
+      "destination": "terminal_events/query_log.json",
+      "bytes": 8176,
+      "sha256": "e7ca8c4cbe53597d395e22f2d40379907113d4f8a4f85d3477dc36c5d0aef045"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/change_0001.json",
+      "destination": "monitor/change_0001.json",
+      "bytes": 5200,
+      "sha256": "bad116e2dd2be34290eec04efa7e6f3439d030201efe89431cfba880795fde4e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/change_0002.json",
+      "destination": "monitor/change_0002.json",
+      "bytes": 5364,
+      "sha256": "e3b1c2b3b84e50ccf1301a72f654cb8311c957958e2c65c7e7157c6e48fe4718"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/final.json",
+      "destination": "monitor/final.json",
+      "bytes": 5364,
+      "sha256": "a91539c6e85b6053faaf1c5bd74aa8fef6560c1cab209a7bf2b14ad2ddf1d9b8"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/latest.json",
+      "destination": "monitor/latest.json",
+      "bytes": 5364,
+      "sha256": "e3b1c2b3b84e50ccf1301a72f654cb8311c957958e2c65c7e7157c6e48fe4718"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/monitor.jsonl",
+      "destination": "monitor/monitor.jsonl",
+      "bytes": 1210,
+      "sha256": "c974fe15af19e0b7b8909582f9bca3973a35970b9bb12df58af760ecc5729a57"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/monitor.log",
+      "destination": "monitor/monitor.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-monitor-1107k/scratch/monitor/monitor.pid",
+      "destination": "monitor/monitor.pid",
+      "bytes": 7,
+      "sha256": "47767669a0947dd7df2223cfcac63a73905e4eb9a7b2dfa9493bd76eb55ac1bd"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-1679091c.log",
+      "destination": "replica_logs/exp-1107-144321-305543-1679091c.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-8f14e45f.log",
+      "destination": "replica_logs/exp-1107-144321-305543-8f14e45f.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-a87ff679.log",
+      "destination": "replica_logs/exp-1107-144321-305543-a87ff679.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-c4ca4238.log",
+      "destination": "replica_logs/exp-1107-144321-305543-c4ca4238.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-c81e728d.log",
+      "destination": "replica_logs/exp-1107-144321-305543-c81e728d.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-cfcd2084.log",
+      "destination": "replica_logs/exp-1107-144321-305543-cfcd2084.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-e4da3b7f.log",
+      "destination": "replica_logs/exp-1107-144321-305543-e4da3b7f.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal6-terminal-1107l/scratch/logs_1/exp-1107-144321-305543-eccbc87e.log",
+      "destination": "replica_logs/exp-1107-144321-305543-eccbc87e.log",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    }
+  ]
+}

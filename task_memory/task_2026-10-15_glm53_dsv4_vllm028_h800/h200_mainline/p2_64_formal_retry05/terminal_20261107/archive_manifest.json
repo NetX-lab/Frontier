@@ -1,0 +1,412 @@
+{
+  "files": [
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/platform_terminal_receipt.json",
+      "destination": "platform_terminal_receipt.json",
+      "bytes": 4415,
+      "sha256": "ec8e3537fec1f316ebd2cc5450cea666fc5cff447f2ca0caa83aeb541b59440f"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/terminal_receipt.out",
+      "destination": "terminal_receipt.out",
+      "bytes": 97,
+      "sha256": "506ff7e6fae5f0fc4c4dad0a6a531fa6bf6d744623cb9c74cf3d62863a2e4623"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/copy_launcher.log",
+      "destination": "copy_launcher.log",
+      "bytes": 1420,
+      "sha256": "7d54254a6e7ead8339065054dff963e9ce6662798b9bfde5aa3567c207258cc4"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/events.out",
+      "destination": "events.out",
+      "bytes": 1631,
+      "sha256": "e0e3ff9303376732f2a4f86ea511059a256f1e95b3e354cdd998c6c8c9a6c583"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/events.err",
+      "destination": "events.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01/launcher_started.json",
+      "destination": "launcher_started.json",
+      "bytes": 258,
+      "sha256": "17b71822031817f72e9d00548129f7e59f24795adf50759a9ab76bc9cdf37c59"
+    },
+    {
+      "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/package_01/launcher_exit.json",
+      "destination": "launcher_exit.json",
+      "bytes": 361,
+      "sha256": "6abf8de278c106204ea2a1cf73225f0e133d33948c34928672e2d817f764437e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/events/audit_all_operations.json",
+      "destination": "terminal_events/audit_all_operations.json",
+      "bytes": 36967,
+      "sha256": "4076d3668c69ff539d83dc50ff5d2f98ce4714cf5272491dd3906468501d4492"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/events/historical_events.json",
+      "destination": "terminal_events/historical_events.json",
+      "bytes": 40317,
+      "sha256": "ef51c70632a3637531a1411c66fb310a4517bbae0540a80020d6eaffeef045c0"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/events/live_events.json",
+      "destination": "terminal_events/live_events.json",
+      "bytes": 3675,
+      "sha256": "2e22052c84de5bdeee3af5c16e33c77668a42c2941540004b05494892f5febd4"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-terminal-1107i/scratch/events/query_log.json",
+      "destination": "terminal_events/query_log.json",
+      "bytes": 8171,
+      "sha256": "8c1966e6caf0394aab41d1b81e0d2ebf9af28eee463a9651430becaaaac20c0d"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/change_0001.json",
+      "destination": "monitor/change_0001.json",
+      "bytes": 5200,
+      "sha256": "5c6b5d2b468534b5c1e1bc9aa44384c3c19835202fa16ab726da2f0a984594bb"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/change_0003.json",
+      "destination": "monitor/change_0003.json",
+      "bytes": 5284,
+      "sha256": "ecc5f3aa6907cacbc5fdca56cac1cab1e4ff7365765006dd3070e6a5f2209769"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/change_0004.json",
+      "destination": "monitor/change_0004.json",
+      "bytes": 5284,
+      "sha256": "a826711fc42876d59c4350e9d289774c74620087b3e00596dec7761b0fb54c9e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/change_0005.json",
+      "destination": "monitor/change_0005.json",
+      "bytes": 5406,
+      "sha256": "324dd99159e9e3b553e3d11786908d97dc62d61a67d5faa0fb7d8e3683c8771e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/final.json",
+      "destination": "monitor/final.json",
+      "bytes": 5406,
+      "sha256": "0f962d7d723e601b00191d894cb6fc0d5108034198887052b4cd1e86ae12a5fd"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/latest.json",
+      "destination": "monitor/latest.json",
+      "bytes": 5406,
+      "sha256": "324dd99159e9e3b553e3d11786908d97dc62d61a67d5faa0fb7d8e3683c8771e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/monitor.jsonl",
+      "destination": "monitor/monitor.jsonl",
+      "bytes": 2295,
+      "sha256": "82ed73cbc22bb25edaac78d07303dcdc00c08b5d17ce07c5b2ec05b0a683d2fb"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/monitor.log",
+      "destination": "monitor/monitor.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-monitor-1107f/scratch/monitor/monitor.pid",
+      "destination": "monitor/monitor.pid",
+      "bytes": 7,
+      "sha256": "2ebc01c2be16fb6bd4699f08ad55361f05e003f2102c08ca07c89482d44799f8"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-1679091c.log",
+      "destination": "replica_logs/exp-1107-135759-122907-1679091c.log",
+      "bytes": 3713,
+      "sha256": "2dcca454dbc6e7845c2fefba8ed055af855697724ef95819cafc3a1aef32fef7"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-8f14e45f.log",
+      "destination": "replica_logs/exp-1107-135759-122907-8f14e45f.log",
+      "bytes": 3884,
+      "sha256": "da363c394490e3e51832542deb2f6d862d789970bb81d73ef812f656a3c79023"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-a87ff679.log",
+      "destination": "replica_logs/exp-1107-135759-122907-a87ff679.log",
+      "bytes": 3885,
+      "sha256": "35299b3d4d99fbe15040eb3b18f9dc6dc5e37cfdd2800a802f7d6780af64f234"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-c4ca4238.log",
+      "destination": "replica_logs/exp-1107-135759-122907-c4ca4238.log",
+      "bytes": 3712,
+      "sha256": "565c52c67b2667f9179fac765320679f241c38706b691599f4fa2ce8213ece08"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-c81e728d.log",
+      "destination": "replica_logs/exp-1107-135759-122907-c81e728d.log",
+      "bytes": 3713,
+      "sha256": "d0a46229dcc9ca54127938f4816519a79a9882a2ccb2716355aaab99feee47a1"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-cfcd2084.log",
+      "destination": "replica_logs/exp-1107-135759-122907-cfcd2084.log",
+      "bytes": 3713,
+      "sha256": "5d7a5fa22c34dec4936c083dafe90713bdcabad89dbd8dc26e58e938db7a1388"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-e4da3b7f.log",
+      "destination": "replica_logs/exp-1107-135759-122907-e4da3b7f.log",
+      "bytes": 3712,
+      "sha256": "e49d12c70d803915cd6a5c9d636eb96f4543df049c255b51f7d69c59b34a84f9"
+    },
+    {
+      "source": "/data/ycfeng/tmp/ds4_runs/p64-formal5-logs-1107h/scratch/logs_1/exp-1107-135759-122907-eccbc87e.log",
+      "destination": "replica_logs/exp-1107-135759-122907-eccbc87e.log",
+      "bytes": 3711,
+      "sha256": "b4e4925333043fbc7e8c9d2e03f1b8f0edad01cb44866cdc60bf391c8bfce93d"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/launcher.json",
+      "destination": "cloud_copy/launcher.json",
+      "bytes": 117,
+      "sha256": "582c2ed1f9d80131605c7f1594c04326cededded9dca01ec8f2b822d2fca7d7c"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/ready.json",
+      "bytes": 71,
+      "sha256": "2e0dea6213ee9ef7bb045dd64567b3ecfdccb1a195178b1bcb0b6d94c63b9466"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/result.json",
+      "bytes": 16278,
+      "sha256": "d97dd959a017a44a404d877deca1da1a46e264ab98e770903243a70e47f5bfb6"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/server.log",
+      "bytes": 50023,
+      "sha256": "1da950f14ee495169494eb63354c303ac3814323638a23e02da49c4260fda07a"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0050.lgcm.sh.istep.fun/worker.log",
+      "bytes": 88,
+      "sha256": "54c49d995b1d94ab9305ce4fc6d9bc531b746288a6340e415e54ed80fe2b61bc"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/ready.json",
+      "bytes": 72,
+      "sha256": "8376006a1d56ffb91f770a03720c5ae24b8896048f890943e01ff633981924e3"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/result.json",
+      "bytes": 16376,
+      "sha256": "dcc830c7ef28e805923e1c3b4ba7d4d00a0597892daabc37409ba9c9aa5f85a3"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/server.log",
+      "bytes": 39897,
+      "sha256": "bf1636c410c3b62c9d454fd2ebdc8d98b938df3a8ff3abc3a79d739cc0599d77"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0196.lgcm.sh.istep.fun/worker.log",
+      "bytes": 117,
+      "sha256": "ce0b8fccf53f38df85c80253ff81f7eab28eaa965ad475283cf30adfbb0992e7"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/ready.json",
+      "bytes": 72,
+      "sha256": "83eccb38c2310a123a3026a3f3df289bd9a2dfe1cccf1e8502ce0bc51fe20f3c"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/result.json",
+      "bytes": 16376,
+      "sha256": "4c10dc7b6f23e8fb839bae39c9cb5f00e3f8af5a6eb72d3371e6a9e7b10c0842"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/server.log",
+      "bytes": 54638,
+      "sha256": "1174bb4836e75be52a5d16aed503ad56f753286157628be413495972acb71d57"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0238.lgcm.sh.istep.fun/worker.log",
+      "bytes": 117,
+      "sha256": "ce0b8fccf53f38df85c80253ff81f7eab28eaa965ad475283cf30adfbb0992e7"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/ready.json",
+      "bytes": 72,
+      "sha256": "03aee2a17a5843539a7de14b5b28955160ad7f7d71b9f67d3dc819b2d2b1fdc1"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/result.json",
+      "bytes": 16376,
+      "sha256": "a44d225e0512507e9060544a8c8978d2e83385c261f797310d07e8bc0199b198"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/server.log",
+      "bytes": 40994,
+      "sha256": "db9948a613544f0e255f4a460097a9507c8911d9c636382d4f31e9ed7ff89e9f"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0264.lgcm.sh.istep.fun/worker.log",
+      "bytes": 117,
+      "sha256": "ce0b8fccf53f38df85c80253ff81f7eab28eaa965ad475283cf30adfbb0992e7"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/ready.json",
+      "bytes": 72,
+      "sha256": "8fa7fb754afb901884a59818e505bb90a5b6c58f8ed25a11945266fb2ee9a80f"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/result.json",
+      "bytes": 16282,
+      "sha256": "75f09b31395ebb603b1a5d6b03b3502749268c97041281d8ba97cc2010ee9073"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/server.log",
+      "bytes": 9297,
+      "sha256": "8df107115829de34bce6f4e14198d0aef02db143b463aba7df078740fc127cc3"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0505.lgcm.sh.istep.fun/worker.log",
+      "bytes": 88,
+      "sha256": "54c49d995b1d94ab9305ce4fc6d9bc531b746288a6340e415e54ed80fe2b61bc"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/failed.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/failed.json",
+      "bytes": 704,
+      "sha256": "d190361c9f2f4ea8945b28099231faf8d4eef3f6431a88371c1dfec2c590ae7e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/native_stopped.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/native_stopped.json",
+      "bytes": 197,
+      "sha256": "fa920769385ce5d358fe1f6dfb0d787f5c58603e42d9769f5d7d4ee0af5de56b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/ready.json",
+      "bytes": 71,
+      "sha256": "179a0c1a166fbf12fc51f9470e9dea4a459a98f8769ef9739a4288b3561c75ea"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/result.json",
+      "bytes": 17299,
+      "sha256": "5a2992d6a6cde9eef6874f908726b3994448f1cac44611c6c3e0823dbaec5e93"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/server.log",
+      "bytes": 13643,
+      "sha256": "2304e359fb2d055bd7ffffd633c27761014018eec1761f6bfe85047f407f8741"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0790.lgcm.sh.istep.fun/worker.log",
+      "bytes": 774,
+      "sha256": "324564d6eb9a6d97d9675a4aba4eb95d463e0d1758ece97df4f75cc50ca37cd9"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/failed.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/failed.json",
+      "bytes": 704,
+      "sha256": "5b6abb646035a9b2eaf1fa874d3b87df7b6037c08f53d51e2cac8c0c899d21ae"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/native_stopped.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/native_stopped.json",
+      "bytes": 197,
+      "sha256": "fa920769385ce5d358fe1f6dfb0d787f5c58603e42d9769f5d7d4ee0af5de56b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/ready.json",
+      "bytes": 72,
+      "sha256": "4bb9fbda763d04e2a694dcf6086140f11a6fe3474b8fcee73b0dbf96cae68c14"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/result.json",
+      "bytes": 17303,
+      "sha256": "c975a03999f6f6a0ec517ddfc0c2ab816ae9ad54c85043fa98453a7e16ebc521"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/server.log",
+      "bytes": 13643,
+      "sha256": "dcb91f82fb5cae9b00e8af62db1450c1aae6d300139409cc3d062a0798218bdd"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0876.lgcm.sh.istep.fun/worker.log",
+      "bytes": 774,
+      "sha256": "324564d6eb9a6d97d9675a4aba4eb95d463e0d1758ece97df4f75cc50ca37cd9"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/ready.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/ready.json",
+      "bytes": 71,
+      "sha256": "48d1852d13ee8010d0113214338202d3bae2c75e89d66c137f7f71d14463487d"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/result.json",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/result.json",
+      "bytes": 16371,
+      "sha256": "a3d0cce75a8452d8b2b41476dd0aa60cf0b9ba384a6bc191ea54fd751d96285b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/server.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/server.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/worker.log",
+      "destination": "cloud_copy/artifacts/nodes/gpu-h200-0924.lgcm.sh.istep.fun/worker.log",
+      "bytes": 117,
+      "sha256": "ce0b8fccf53f38df85c80253ff81f7eab28eaa965ad475283cf30adfbb0992e7"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/artifacts/run_manifest.json",
+      "destination": "cloud_copy/artifacts/run_manifest.json",
+      "bytes": 12530,
+      "sha256": "c470bd477a134ba724d3ee7da9b89fdeb1938ed1f539ca1a49396132c49ea540"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/cloud_inventory.json",
+      "destination": "cloud_copy/cloud_inventory.json",
+      "bytes": 5892,
+      "sha256": "03ee1d49fc76094eac64668489bc57d3cbda3c860bb36e47d6137dc670684a87"
+    },
+    {
+      "source": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261104_05/dsv4-h200-p2-64-formal-20261104-05/download_receipt.json",
+      "destination": "cloud_copy/download_receipt.json",
+      "bytes": 851,
+      "sha256": "464c8a97d00978d85f9f2701cc1519a6d150fb284c5a875c0b9394b01dda72ee"
+    }
+  ]
+}

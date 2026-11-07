@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | I-012 opened and classified: generation06 failed at spot-GPU device admission before any container started; platform cause, generation07 (last resubmission) submitted. I-010 did not recur on two single-call turns. |
+| 2026-11-07 | I-011 opened and classified: external stops of three generation05 replicas cascaded into the job failure; platform cause, generation06 submitted. |
+| 2026-11-07 | I-010 recurred on four new labels after their first tool call; each resumed with a continuation prompt, and one combined call per turn completed the monitor start. |
 | 2026-11-07 | I-010 worked around: a lead-written single-run submission script driven by a Pi turn of at most three single tool calls submitted generation05 (`exp-1107-135759-122907`); the earlier process checks are corrected. |
 | 2026-11-07 | I-010 opened: the DS4 Pi provider duplicates tool calls inside one message, so every generation05 submission turn ends before the launch step; nothing submitted. |
 | 2026-11-01 | I-009 resolved at 06:36 UTC: name resolution works again; quota check passed and the supplement job `exp-1101-143721-849401` was submitted once. |
@@ -24,6 +27,31 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+
+## I-012: spot-GPU device-admission failure ends a job before any container starts (2026-11-07)
+
+- Observation: in generation06 (`exp-1107-144321-305543`) the 8 replicas started at 06:43:55-56Z and waited on their
+  nodes for spot GPUs to be released by preemption. At 06:48:30Z the kubelet on gpu-h200-0757 rejected replica
+  8f14e45f: `UnexpectedAdmissionError: Allocate failed due to requested number of devices unavailable for
+  nvidia.com/spot-gpu. Requested: 8, Available: 7, which is unexpected`. No container started. The platform recorded
+  `Some critical tasks failed.` and rjob-controller closed the other replicas at 06:48:31-47Z.
+- Inference: the scheduler placed the pod before the preempted job had released all 8 GPUs of the node. This is a
+  platform-side race, not a package, native or code defect.
+- Resolution: classified as a platform cause under D-P2-64-FIFTH; 8.57 GPUh counted as the upper bound; generation07
+  (`exp-1107-150132-396145`) submitted as resubmission 2 of 2, the last. Evidence:
+  `h200_mainline/p2_64_formal_retry06/terminal_20261107/`.
+
+## I-011: external replica stops of a preemptible job cascade into a job failure (2026-11-07)
+
+- Observation: in generation05 (`exp-1107-135759-122907`) three replicas entered phase Stopped from outside while
+  vLLM was starting (8f14e45f by 06:09:59Z, a87ff679 at 06:10:34Z, c81e728d at 06:15:56Z). The audit has no stop
+  operation on them and their logs show no native error. One of them was the decode DP head. Decode lanes DP1 and DP2
+  then lost its TCPStore, vLLM exited 0, the worker raised `Native server exited early: 0`, and both containers exited 1.
+  The platform's any-replica fail policy stopped the job at 06:16:02Z.
+- Inference: platform-side reclaim of spot GPUs of the preemptible job (no event names preemption). The cascade is the
+  expected reaction of the native worker to a lost DP peer, not a separate defect.
+- Resolution: classified as a platform cause under D-P2-64-FIFTH; generation06 (`exp-1107-144321-305543`) submitted
+  as resubmission 1 of 2. Evidence: `h200_mainline/p2_64_formal_retry05/terminal_20261107/`.
 
 ## I-010: provider stream error blocks the generation05 submission turns (2026-11-07)
 
@@ -48,6 +76,11 @@
   launcher PID 2753825. Monitoring uses the same pattern: Pi label `p64-formal5-monitor-1107f` started the detached
   read-only `h200_mainline/monitor_job.py` (PID 2774280). Later Pi turns keep to at most three single tool calls,
   with the work in lead-written scripts.
+- Recurrence (2026-11-07, 06:20-06:47Z): labels `p64-formal5-terminal-1107i`, `p64-formal6-submit-1107j` and
+  `p64-formal6-monitor-1107k` ended with the same `unfinished tool call` error, mostly right after the first tool call
+  of a turn. Resuming the same label with a prompt that continues from the last completed step worked; when the
+  second call also failed, folding the dependent steps into one combined command (the monitor start) completed the
+  step in one call. The lead checks the state before each resume, so no step runs twice.
 
 ## I-001: unit-test fixtures wrote into the worktree's Git directory (2026-10-28)
 

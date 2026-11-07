@@ -1,0 +1,4 @@
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+NATIVE_PD_STAGE await_replay
