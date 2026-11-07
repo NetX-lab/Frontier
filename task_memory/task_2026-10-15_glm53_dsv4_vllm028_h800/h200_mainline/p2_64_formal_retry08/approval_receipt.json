@@ -1,0 +1,45 @@
+{
+  "decision_id": "D-P2-64-SIXTH",
+  "recorded_at_utc": "2026-11-07T08:33:29.438492+00:00",
+  "user_reply": "补活性检查+夜间重提 (Recommended)",
+  "context": "2026-11-07 D-P2-64-SIXTH approval (requirements.md), after D-P2-64-FIFTH was exhausted by generation07.",
+  "status": "APPROVED_FIRST_SUBMISSION",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01",
+  "manifest_sha256": "1a2bbc13339b7c741cb8151611864c7e7815d8bb180588ffff2700ae888d3508",
+  "resources": {
+    "gpu_type": "H200",
+    "gpu_per_replica": 8,
+    "replicas": 8,
+    "total_gpus": 64,
+    "preemptible": true,
+    "charged_group": "step_main",
+    "timeout_s": 3600,
+    "container_gpu_hours_ceiling": 64
+  },
+  "jobs_authorized_under_decision": 3,
+  "jobs_used_before_this_submission": 0,
+  "platform_cause_resubmissions_authorized": 2,
+  "platform_cause_resubmissions_used_before_this_submission": 0,
+  "cumulative_container_gpu_hours_ceiling": 128,
+  "cumulative_container_gpu_hours_counted_before_this_submission": 0.0,
+  "gpu_hours_accounting": "New chain under D-P2-64-SIXTH; this job adds at most 64; a missing exact clock counts 64 x scheduled wall time.",
+  "change_reference": {
+    "previous_job": "exp-1107-150132-396145",
+    "previous_terminal_acceptance": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/terminal_20261107/lead_terminal_acceptance.json",
+    "issue": "issues.md I-013: a replica lost after the rendezvous leaves its peers waiting for the full startup timeout",
+    "harness_commit": "57caf2f79f79c8bc19e199ba64f75ca49e8baaf6",
+    "heartbeat": {
+      "heartbeat_interval_s": 10,
+      "peer_heartbeat_timeout_s": 180
+    }
+  },
+  "package_audit": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/lead_package_acceptance.json",
+  "resubmission_rule": "Only after preemption, release_quota or another external platform stop; identity-only regenerated package; native or code failure stops the chain.",
+  "timing": "Submit at a night-time low-demand hour (Beijing after midnight).",
+  "execution": "Submit through ds4-exec and personal local StepMind Python; one combined Pi call reads the previous job, submits once and starts the detached monitor. Never stop a label owning a live launcher.",
+  "frozen": {
+    "native_commit": "a06a72a4326cba02234df6cfbdc21b78d3a15d26",
+    "workload_promotion_r5_and_criteria": "unchanged",
+    "harness_change": "Only the approved peer heartbeat check in native_pd_worker.py"
+  }
+}

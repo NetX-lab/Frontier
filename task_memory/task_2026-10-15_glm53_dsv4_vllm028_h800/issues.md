@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | I-013 harness gap fixed under D-P2-64-SIXTH: peer heartbeat check in the native worker (harness 57caf2f7), packaged as generation08. |
 | 2026-11-07 | I-013 opened and classified: one generation07 replica stopped from outside after the rendezvous; the peers waited 30 minutes for the decode startup timeout. Platform cause; D-P2-64-FIFTH is exhausted. |
 | 2026-11-07 | I-012 opened and classified: generation06 failed at spot-GPU device admission before any container started; platform cause, generation07 (last resubmission) submitted. I-010 did not recur on two single-call turns. |
 | 2026-11-07 | I-011 opened and classified: external stops of three generation05 replicas cascaded into the job failure; platform cause, generation06 submitted. |
@@ -46,6 +47,11 @@
 - Resolution: classified as a platform cause. D-P2-64-FIFTH is exhausted, so nothing is resubmitted; a peer liveness
   check is part of the proposal for the next decision. Evidence:
   `h200_mainline/p2_64_formal_retry07/terminal_20261107/`.
+- Fix (D-P2-64-SIXTH): harness commit 57caf2f7 in `/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness`. Each node
+  refreshes `nodes/<host>/heartbeat.json` every 10 s from the rendezvous on; a waiting node fails once an undrained
+  peer's heartbeat is unchanged for more than 180 s. CPU check: the stopped-peer case now fails on the heartbeat
+  instead of the startup timeout. Packaged as generation08 (manifest 1a2bbc13...). It shortens the failure; it does
+  not prevent platform stops. [Test report](test_report_2026-11-07_p2_64_heartbeat_generation08_package.md).
 
 ## I-012: spot-GPU device-admission failure ends a job before any container starts (2026-11-07)
 

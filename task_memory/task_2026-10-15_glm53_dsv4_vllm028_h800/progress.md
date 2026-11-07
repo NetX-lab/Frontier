@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | Recorded D-P2-64-SIXTH step 1: the native peer heartbeat check (harness 57caf2f7), the generation08 build and audit, and the prepared night-time submission. |
 | 2026-11-07 | Recorded the generation07 platform-cause end (one replica stopped after the rendezvous, decode startup timeout, 41.81 GPUh counted, cumulative 68.90 of 128); D-P2-64-FIFTH exhausted, next GPU job needs a new decision. |
 | 2026-11-07 | Recorded the codex-implement cleanup 86673e2f (171 directories, 37.42 GiB) and its lead acceptance. |
 | 2026-11-07 | Recorded the generation06 platform-cause end (spot-GPU device-admission failure, no container, 8.57 GPUh counted) and the generation07 submission `exp-1107-150132-396145` (18/18 checks), resubmission 2 of 2, the last. |
@@ -525,6 +526,31 @@ The following completed A6 history retains its original all-request verdicts. D-
 - **in-progress, resumed same IDs only**: PASS-REPLAY-INPUTS needs the exact retained source-row/raw/config/cache paths; B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) needs phase-level findings. No duplicate agents or completed checks were restarted.
 - **pending**: repeatability producer -> business verification -> complete three-run rows/tables -> four CPU P2 replays and median3 held-out run. Unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched; changes are not yet committed.
 
+## D-P2-64-SIXTH — peer heartbeat check and generation08 package, 2026-11-07
+
+- completed — decision recorded in requirements.md (commit 9c5ae250): heartbeat check, then a night-time submission;
+  one job plus at most two platform-cause resubmissions; 64 H200 per job; chain ceiling 128 container GPUh.
+- completed — harness change. Reason: I-013 (a replica lost after the rendezvous left its peers waiting 1800 s).
+  Expectation: a waiting node fails within the configured limit after a peer's heartbeat stops. Method: direct lead
+  edit in `/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness` (the harness generation07 used, f33306d4; not
+  `p2-64-pair-warmup`). Each node writes `heartbeat.json` before `ready.json` and refreshes it from a daemon thread;
+  `await_condition` fails when an undrained peer's heartbeat content is unchanged for more than
+  `peer_heartbeat_timeout_s` on the local monotonic clock. Result: commit 57caf2f7; worker tests 18 passed, related
+  harness tests 101 passed; on the stopped-peer case the old worker hits `TimeoutError` after 10.01 s and the new one
+  fails on the heartbeat after 1.01 s.
+- completed — builder. CASES entry `p2_64_formal_retry08` and `PEER_HEARTBEAT` (interval 10 s, limit 180 s) in
+  `h200_mainline/build_package.py`. Build with `--harness /data/ycfeng/Frontier/.worktrees/p2-64-startup-harness`:
+  exit 0, check-only PASS, manifest 1a2bbc13339b7c741cb8151611864c7e7815d8bb180588ffff2700ae888d3508. The build's
+  bytecode cache in package_01 was removed (outside the seal).
+- completed — lead package audit `h200_mainline/p2_64_formal_retry08/lead_package_audit.py`:
+  PASS_PACKAGE_IDENTITY_HEARTBEAT_AND_CHECK_ONLY; 47 sealed, 40 identical, 7 changed (6 identity files plus the
+  worker); config adds only the two heartbeat fields.
+- completed — submission preparation: approval receipt, wrapper `/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal_retry08.sh`,
+  post-run command, Pi prompt and script `/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-submit-1107q.{md,sh}`.
+  [Test report](test_report_2026-11-07_p2_64_heartbeat_generation08_package.md).
+- pending — night-time submission at about 16:30Z (00:30 Beijing) through Pi label p64-formal8-submit-1107q, then
+  the detached monitor, terminal reads, copy on success and the post-run comparison.
+
 ## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
 
 - completed — mid-run diagnosis. Reason: replica cfcd2084 showed phase Stopped at the 07:31:52Z monitor read while the
@@ -547,9 +573,9 @@ The following completed A6 history retains its original all-request verdicts. D-
 - completed — lead terminal audit `h200_mainline/p2_64_formal_retry07/terminal_20261107/lead_terminal_audit.py`
   archived 35 files with sha256 and wrote `lead_terminal_acceptance.json` = PASS_TERMINAL_PLATFORM_CAUSE_NO_REFERENCE
   (17/17). [Test report](test_report_2026-11-07_p2_64_generation07_terminal.md).
-- pending — user decision. D-P2-64-FIFTH is exhausted (generation05 plus both resubmissions, all platform causes, no
-  reference). Next: the user decides whether and how to run P2-64 again; nothing is submitted until then. The prepared
-  post-run label p64-formal7-post-1107n was not launched.
+- completed — user decision. D-P2-64-FIFTH is exhausted (generation05 plus both resubmissions, all platform causes, no
+  reference). The user chose D-P2-64-SIXTH (section above). The prepared post-run label p64-formal7-post-1107n was not
+  launched.
 
 ## Task artifact cleanup through codex-implement — completed, 2026-11-07
 
@@ -616,7 +642,7 @@ The following completed A6 history retains its original all-request verdicts. D-
 
 ## Current session handoff — Codex CLI (2026-11-02)
 
-Current outcome (2026-11-07): see the section "Generation07 terminal cause — D-P2-64-FIFTH exhausted" above. Historical outcome (2026-11-04): Generation04 exp-1103-131952-259161 is Stopped at 2026-11-03T10:00:43Z. The successful stop audit and job annotations identify alimasiyilixiati / release_quota. Independent acceptance verifies 178/178 audit rows, 65/65 historical QueueWaiting events, null startTime, zero retained replicas and two raw cloud-read receipts showing no output directory. This supports never-scheduled status; no complete native reference exists. Launcher81539 observed the stop afterwards and exited0 at10:00:47.086386Z; it is absent. Terminal/cause recovery is complete; copy, pair coverage, R5 and metrics are NOT RUN for generation04. See h200_mainline/p2_64_formal_retry04/terminal_20261104/lead_terminal_acceptance.json. Generation05 package h200_mainline/p2_64_formal_retry05/package_01 is prepared and independently verified:47/47 sealed hashes,41 byte-identical files,6 exact identity/provenance changes, check-only PASS, manifest23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c. It is unsubmitted and awaits a new explicit resource decision; D-P2-64-FOURTH authorized only the fourth submission. Proposed resources remain64H200/all-preemptible/step_main/3600s/64GPUh for exactly one fifth run, with no automatic sixth. Frozen native/harness/promotion/workload, R5 and the completed Frontier replay remain unchanged. Historical35-job exact accounting remains158.27166666666665GPUh. Generation01 known subtotal4.053333333333334 and generation02 missing end clocks stay incomplete. Generation03/04 evidence supports zero container consumption while their generic exact-clock receipts remain null. Queue wall time is excluded. Ticket19 accounting and formal P2-64 remain open.
+Current outcome (2026-11-07): see the section "D-P2-64-SIXTH — peer heartbeat check and generation08 package" above. Historical outcome (2026-11-04): Generation04 exp-1103-131952-259161 is Stopped at 2026-11-03T10:00:43Z. The successful stop audit and job annotations identify alimasiyilixiati / release_quota. Independent acceptance verifies 178/178 audit rows, 65/65 historical QueueWaiting events, null startTime, zero retained replicas and two raw cloud-read receipts showing no output directory. This supports never-scheduled status; no complete native reference exists. Launcher81539 observed the stop afterwards and exited0 at10:00:47.086386Z; it is absent. Terminal/cause recovery is complete; copy, pair coverage, R5 and metrics are NOT RUN for generation04. See h200_mainline/p2_64_formal_retry04/terminal_20261104/lead_terminal_acceptance.json. Generation05 package h200_mainline/p2_64_formal_retry05/package_01 is prepared and independently verified:47/47 sealed hashes,41 byte-identical files,6 exact identity/provenance changes, check-only PASS, manifest23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c. It is unsubmitted and awaits a new explicit resource decision; D-P2-64-FOURTH authorized only the fourth submission. Proposed resources remain64H200/all-preemptible/step_main/3600s/64GPUh for exactly one fifth run, with no automatic sixth. Frozen native/harness/promotion/workload, R5 and the completed Frontier replay remain unchanged. Historical35-job exact accounting remains158.27166666666665GPUh. Generation01 known subtotal4.053333333333334 and generation02 missing end clocks stay incomplete. Generation03/04 evidence supports zero container consumption while their generic exact-clock receipts remain null. Queue wall time is excluded. Ticket19 accounting and formal P2-64 remain open.
 
 <a id="current-session-handoff--codex-cli-2026-10-31"></a>
 <a id="current-session-handoff--2026-10-25-mainline-correction"></a>

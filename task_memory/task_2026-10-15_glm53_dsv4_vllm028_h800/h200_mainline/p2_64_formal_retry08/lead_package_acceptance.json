@@ -1,0 +1,47 @@
+{
+  "status": "PASS_PACKAGE_IDENTITY_HEARTBEAT_AND_CHECK_ONLY",
+  "python": "3.10.6",
+  "command": "python3 h200_mainline/p2_64_formal_retry08/lead_package_audit.py",
+  "script_sha256": "e57b56f49c9797dfe2ec31bb11fa4d29b657412226c94d9db7a5e0abc77693c4",
+  "package": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01",
+  "manifest_sha256": "1a2bbc13339b7c741cb8151611864c7e7815d8bb180588ffff2700ae888d3508",
+  "sealed_files": 47,
+  "byte_identical_files": 40,
+  "changed_files": [
+    "case/inputs/native_config.json",
+    "case/manifest.yaml",
+    "config.json",
+    "evidence_readiness.json",
+    "native_pd_worker.py",
+    "overlay.json",
+    "source_lock.json"
+  ],
+  "allowed_changes": "Exact replacement of package root, run tag, cloud output, promotion build time, purpose, harness commit and the derived overlay and worker digests; the staged worker equals the heartbeat commit; config adds only the two heartbeat fields; all other bytes equal generation07.",
+  "heartbeat": {
+    "heartbeat_interval_s": 10,
+    "peer_heartbeat_timeout_s": 180
+  },
+  "harness_diff": [
+    "tests/comparison/calibration/native_pd_worker.py",
+    "tests/unit/test_native_pd_worker.py"
+  ],
+  "commits": {
+    "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness": "57caf2f79f79c8bc19e199ba64f75ca49e8baaf6",
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination": "a06a72a4326cba02234df6cfbdc21b78d3a15d26"
+  },
+  "check_only": {
+    "argv": [
+      "/data/ycfeng/envs/openmopd-py312/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01/launch.py",
+      "--check-only"
+    ],
+    "exit_code": 0,
+    "stdout": "INPUT_HASHES_PASS_NO_SUBMISSION\n"
+  },
+  "old_manifest_unchanged": "8fd5d9dc625bae451689775bfdcd578e3c7b60be6d0b7b08c0edbcc00703190a",
+  "decision": "D-P2-64-SIXTH",
+  "jobs_used_under_decision": 0,
+  "jobs_authorized_under_decision": 3,
+  "submission_status": "PENDING_NIGHT_SUBMISSION"
+}

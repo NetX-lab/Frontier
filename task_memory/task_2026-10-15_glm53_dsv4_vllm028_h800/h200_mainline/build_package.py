@@ -96,6 +96,13 @@ CASES = {
                          purpose='Formal P2 H200-64 generation 07 under D-P2-64-FIFTH, platform-cause '
                                  'resubmission 2 of 2 after the spot-GPU device-admission failure of generation 06; '
                                  'native DP startup coordination corrected; pair-warmed, wholly preemptible'),
+    'p2_64_formal_retry08': dict(source='formal', dp=4, h200_limit=32,
+                         native='p2-dp-startup-coordination', native_commit='a06a72a4326cba02234df6cfbdc21b78d3a15d26',
+                         case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
+                         run_tag='dsv4-h200-p2-64-formal-20261107-08',
+                         purpose='Formal P2 H200-64 generation 08 under D-P2-64-SIXTH, after the replica lost '
+                                 'past the rendezvous in generation 07; native peer heartbeat check added; '
+                                 'native DP startup coordination corrected; pair-warmed, wholly preemptible'),
     'p2_64_formal': dict(source='formal', dp=4, h200_limit=32,
                          case_id='dsv4-h200-p2-64-canonical-fixed128-qps1',
                          run_tag='dsv4-h200-p2-64-formal-20261102-01',
@@ -406,6 +413,9 @@ PROMOTION_PATH = HERE.parent / 'h3o_operator_costs/formal_p2_20261102/promotion/
 PROMOTION_SHA256 = 'd505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596'
 FORMAL_LAUNCH_INSERT = "from native_pd_worker import validate_promotion_receipt\nvalidate_promotion_receipt(config)\n"
 PREEMPTIBLE_LINE = '        replica=config["replica"], image=config["image"], positive_tags=[config["gpu_type"]],'
+# D-P2-64-SIXTH: each native node refreshes its heartbeat every interval; a waiting node
+# fails once an undrained peer's heartbeat is unchanged past the limit (18 refresh periods).
+PEER_HEARTBEAT = dict(heartbeat_interval_s=10, peer_heartbeat_timeout_s=180)
 
 
 def formal_harness_differences(case):
@@ -483,7 +493,7 @@ def formal_documents(case):
     config = relocate(case, json.loads(files['config.json']))
     config.update(run_tag=case.run_tag, job_tag=case.run_tag, output_dir=case.output_dir,
                   harness_worktree=str(case.harness), pair_warmup=True, preemptible=True,
-                  promotion_receipt=binding)
+                  promotion_receipt=binding, **PEER_HEARTBEAT)
     lock = relocate(case, json.loads(files['source_lock.json']))
     lock['harness_commit'] = case.harness_commit
     # Rebind unchanged staged modules to the same new reviewed commit too.
