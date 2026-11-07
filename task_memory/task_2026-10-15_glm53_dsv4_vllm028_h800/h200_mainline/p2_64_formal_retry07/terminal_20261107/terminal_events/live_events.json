@@ -1,0 +1,1785 @@
+{
+ "observed_utc": "2026-11-07T07:58:38.980662+00:00",
+ "job": "exp-1107-150132-396145",
+ "job_uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168",
+ "sources": {
+  "exp-1107-150132-396145": {
+   "kind": "RJob",
+   "count": 12,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [
+      {
+       "action": null,
+       "api_version": null,
+       "count": null,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170279",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-1679091c",
+       "metadata": {
+        "annotations": {
+         "kubebrain.brainpp.cn/showname": "exp-1107-150132-396145",
+         "rjob.brainpp.cn/rjob-name": "exp-1107-150132-396145"
+        },
+        "creation_timestamp": "2026-11-07 07:56:51+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:metadata": {
+            "f:annotations": {
+             ".": {},
+             "f:kubebrain.brainpp.cn/showname": {},
+             "f:rjob.brainpp.cn/rjob-name": {}
+            }
+           },
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:51+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-1679091c.fc6d46c97c56a2a7",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448305107",
+        "self_link": null,
+        "uid": "ea5b32aa-3291-4cb4-a7f1-b62c5da8e8b1"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": null,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170279",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-8f14e45f",
+       "metadata": {
+        "annotations": {
+         "kubebrain.brainpp.cn/showname": "exp-1107-150132-396145",
+         "rjob.brainpp.cn/rjob-name": "exp-1107-150132-396145"
+        },
+        "creation_timestamp": "2026-11-07 07:56:51+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:metadata": {
+            "f:annotations": {
+             ".": {},
+             "f:kubebrain.brainpp.cn/showname": {},
+             "f:rjob.brainpp.cn/rjob-name": {}
+            }
+           },
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:51+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-8f14e45f.bfbb0dd11a1fa08a",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448305109",
+        "self_link": null,
+        "uid": "6b15d721-1fcc-4878-888a-1f5e9c1fc0f9"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": null,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:49+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170279",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:49+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-a87ff679",
+       "metadata": {
+        "annotations": {
+         "kubebrain.brainpp.cn/showname": "exp-1107-150132-396145",
+         "rjob.brainpp.cn/rjob-name": "exp-1107-150132-396145"
+        },
+        "creation_timestamp": "2026-11-07 07:56:51+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:metadata": {
+            "f:annotations": {
+             ".": {},
+             "f:kubebrain.brainpp.cn/showname": {},
+             "f:rjob.brainpp.cn/rjob-name": {}
+            }
+           },
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:51+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-a87ff679.9e933d8d34f7bef5",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448305126",
+        "self_link": null,
+        "uid": "4e22eccd-3455-4290-b526-007ebb63afbc"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": null,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170279",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-c4ca4238",
+       "metadata": {
+        "annotations": {
+         "kubebrain.brainpp.cn/showname": "exp-1107-150132-396145",
+         "rjob.brainpp.cn/rjob-name": "exp-1107-150132-396145"
+        },
+        "creation_timestamp": "2026-11-07 07:56:51+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:metadata": {
+            "f:annotations": {
+             ".": {},
+             "f:kubebrain.brainpp.cn/showname": {},
+             "f:rjob.brainpp.cn/rjob-name": {}
+            }
+           },
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:51+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-c4ca4238.6044d7f849f3ba10",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448305125",
+        "self_link": null,
+        "uid": "4edf1c3d-0b51-489e-b73c-79b4a7e2b198"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": null,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170279",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-c81e728d",
+       "metadata": {
+        "annotations": {
+         "kubebrain.brainpp.cn/showname": "exp-1107-150132-396145",
+         "rjob.brainpp.cn/rjob-name": "exp-1107-150132-396145"
+        },
+        "creation_timestamp": "2026-11-07 07:56:51+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:metadata": {
+            "f:annotations": {
+             ".": {},
+             "f:kubebrain.brainpp.cn/showname": {},
+             "f:rjob.brainpp.cn/rjob-name": {}
+            }
+           },
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:51+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-c81e728d.b9d80a893e08535a",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448305127",
+        "self_link": null,
+        "uid": "5339a226-890b-493f-b6b9-702c6cdae8ba"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": null,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170279",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-e4da3b7f",
+       "metadata": {
+        "annotations": {
+         "kubebrain.brainpp.cn/showname": "exp-1107-150132-396145",
+         "rjob.brainpp.cn/rjob-name": "exp-1107-150132-396145"
+        },
+        "creation_timestamp": "2026-11-07 07:56:51+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:metadata": {
+            "f:annotations": {
+             ".": {},
+             "f:kubebrain.brainpp.cn/showname": {},
+             "f:rjob.brainpp.cn/rjob-name": {}
+            }
+           },
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:51+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-e4da3b7f.19eac6ce9b4f0068",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448305123",
+        "self_link": null,
+        "uid": "3178a167-521a-44bd-b521-787852ac3527"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 4,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170248",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Close replica/exp-1107-150132-396145-c81e728d",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:48+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145.18e5b43e808d2f98",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302993",
+        "self_link": null,
+        "uid": "077b62ae-fa0e-4957-a29d-c55c656a52d5"
+       },
+       "reason": "Close replica",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Warning"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 4,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170248",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Close replica/exp-1107-150132-396145-1679091c",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:48+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145.18e5b43e808faf7d",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448303008",
+        "self_link": null,
+        "uid": "4b9035ae-b56b-4777-970a-9cecf65bc10c"
+       },
+       "reason": "Close replica",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Warning"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 4,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170248",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Close replica/exp-1107-150132-396145-8f14e45f",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145.18e5b43e80947807",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302962",
+        "self_link": null,
+        "uid": "46b66da1-78e2-49e2-b9cd-eb2554652f57"
+       },
+       "reason": "Close replica",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Warning"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 4,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170248",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Close replica/exp-1107-150132-396145-e4da3b7f",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145.18e5b43e8096c367",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302951",
+        "self_link": null,
+        "uid": "f0d8eb73-2ca9-45ce-b7bb-78fdd7585b3c"
+       },
+       "reason": "Close replica",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Warning"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 4,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170248",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Close replica/exp-1107-150132-396145-c4ca4238",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145.18e5b43e809d0ee3",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302978",
+        "self_link": null,
+        "uid": "db4ae0b2-9a58-41d9-ba2b-00bfb035ce0b"
+       },
+       "reason": "Close replica",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Warning"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 4,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "RJob",
+        "name": "exp-1107-150132-396145",
+        "namespace": "shai-core",
+        "resource_version": "1638170248",
+        "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Close replica/exp-1107-150132-396145-a87ff679",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145.18e5b43e809e8498",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302855",
+        "self_link": null,
+        "uid": "2bf839da-69e1-4d3e-8b47-44052d0581bb"
+       },
+       "reason": "Close replica",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Warning"
+      }
+     ],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448379847",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-1679091c": {
+   "kind": "Replica",
+   "count": 1,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "Replica",
+        "name": "exp-1107-150132-396145-1679091c",
+        "namespace": "shai-core",
+        "resource_version": "1638170250",
+        "uid": "dc87e43f-dadb-43e7-92d4-09efbe05f349"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-1679091c",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-1679091c.18e5b43e81e0cdb6",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302801",
+        "self_link": null,
+        "uid": "ef27798c-2df3-4715-a68b-0b73c5030590"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      }
+     ],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448380072",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-e4da3b7f": {
+   "kind": "Replica",
+   "count": 2,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "Replica",
+        "name": "exp-1107-150132-396145-e4da3b7f",
+        "namespace": "shai-core",
+        "resource_version": "1638170253",
+        "uid": "ce876338-096d-4e1d-92d9-9bf1f6e04286"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-e4da3b7f",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-e4da3b7f.18e5b43eef2684e8",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448303037",
+        "self_link": null,
+        "uid": "c801478e-6043-4165-9fbb-dc3478c6448e"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "v1",
+        "field_path": "spec.containers{default}",
+        "kind": "Pod",
+        "name": "exp-1107-150132-396145-e4da3b7f",
+        "namespace": "shai-core",
+        "resource_version": "45446818635",
+        "uid": "a3e4023a-ce0b-4ac3-8be7-2fbeff846678"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Stopping container default",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:48+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {},
+            "f:host": {}
+           },
+           "f:type": {}
+          },
+          "manager": "kubelet",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:48+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-e4da3b7f.18e5b43eef710dca",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448301885",
+        "self_link": null,
+        "uid": "c64cc187-68c0-4dac-9e86-c6635442678f"
+       },
+       "reason": "Killing",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "kubelet",
+        "host": "gpu-h200-0023.lgcm.sh.istep.fun"
+       },
+       "type": "Normal"
+      }
+     ],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448381142",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-c4ca4238": {
+   "kind": "Replica",
+   "count": 2,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "Replica",
+        "name": "exp-1107-150132-396145-c4ca4238",
+        "namespace": "shai-core",
+        "resource_version": "1638170254",
+        "uid": "2a24e1e9-b219-48d1-8400-b56dff67ce5d"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-c4ca4238",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-c4ca4238.18e5b43eef3052b8",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448303048",
+        "self_link": null,
+        "uid": "54abba0e-c18a-4844-898b-f38da823d090"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "v1",
+        "field_path": "spec.containers{default}",
+        "kind": "Pod",
+        "name": "exp-1107-150132-396145-c4ca4238",
+        "namespace": "shai-core",
+        "resource_version": "45446818671",
+        "uid": "23b4260c-4ded-4e3c-a480-c3f2ff093b72"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Stopping container default",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:48+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {},
+            "f:host": {}
+           },
+           "f:type": {}
+          },
+          "manager": "kubelet",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:48+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-c4ca4238.18e5b43eefa6ff3a",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448301897",
+        "self_link": null,
+        "uid": "ba6b4413-ee45-4b42-ac39-4057f82c2ae4"
+       },
+       "reason": "Killing",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "kubelet",
+        "host": "gpu-h200-0047.lgcm.sh.istep.fun"
+       },
+       "type": "Normal"
+      }
+     ],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448381658",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-c81e728d": {
+   "kind": "Replica",
+   "count": 2,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [
+      {
+       "action": null,
+       "api_version": null,
+       "count": 2,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "v1",
+        "field_path": "spec.containers{default}",
+        "kind": "Pod",
+        "name": "exp-1107-150132-396145-c81e728d",
+        "namespace": "shai-core",
+        "resource_version": "45446818645",
+        "uid": "0a7c579d-700d-45c1-821a-13541ed4f568"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:53+00:00",
+       "message": "Stopping container default",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:47+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {},
+            "f:host": {}
+           },
+           "f:type": {}
+          },
+          "manager": "kubelet",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:53+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-c81e728d.18e5b43e8221f91d",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448306351",
+        "self_link": null,
+        "uid": "c8a9631b-b1ba-4c66-83ec-b68aa4b94e36"
+       },
+       "reason": "Killing",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "kubelet",
+        "host": "gpu-h200-0085.lgcm.sh.istep.fun"
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:48+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "Replica",
+        "name": "exp-1107-150132-396145-c81e728d",
+        "namespace": "shai-core",
+        "resource_version": "1638170249",
+        "uid": "560b2693-9d85-4b39-b749-bf094568b758"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:48+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-c81e728d",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-c81e728d.18e5b43eef2c7ee1",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448303043",
+        "self_link": null,
+        "uid": "c0c16715-8d9f-4ea7-a291-7a9f07bd3e72"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      }
+     ],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448381869",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-a87ff679": {
+   "kind": "Replica",
+   "count": 2,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:49+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "Replica",
+        "name": "exp-1107-150132-396145-a87ff679",
+        "namespace": "shai-core",
+        "resource_version": "1638170251",
+        "uid": "17062680-098f-4b24-909b-d8f66fa3483b"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:49+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-a87ff679",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-a87ff679.18e5b43ef8cdb228",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448303052",
+        "self_link": null,
+        "uid": "bdd00af4-8b3f-4f8a-9746-d0972b973771"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:49+00:00",
+       "involved_object": {
+        "api_version": "v1",
+        "field_path": "spec.containers{default}",
+        "kind": "Pod",
+        "name": "exp-1107-150132-396145-a87ff679",
+        "namespace": "shai-core",
+        "resource_version": "45446818637",
+        "uid": "4bfc3f22-64c4-403e-a4f0-fa70cebc692a"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:49+00:00",
+       "message": "Stopping container default",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {},
+            "f:host": {}
+           },
+           "f:type": {}
+          },
+          "manager": "kubelet",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-a87ff679.18e5b43efc6b42b7",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302471",
+        "self_link": null,
+        "uid": "8d46943a-5fb7-48a8-bf4b-81ae471c01a9"
+       },
+       "reason": "Killing",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "kubelet",
+        "host": "gpu-h200-0033.lgcm.sh.istep.fun"
+       },
+       "type": "Normal"
+      }
+     ],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448382070",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-8f14e45f": {
+   "kind": "Replica",
+   "count": 2,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "rjob.brainpp.cn/v1alpha1",
+        "field_path": null,
+        "kind": "Replica",
+        "name": "exp-1107-150132-396145-8f14e45f",
+        "namespace": "shai-core",
+        "resource_version": "1638170252",
+        "uid": "2114e154-2f38-46cd-9f5f-b4490247cbcb"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Deleted pod: exp-1107-150132-396145-8f14e45f",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:49+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {}
+           },
+           "f:type": {}
+          },
+          "manager": "rjob-controller",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:49+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-8f14e45f.18e5b43e81e6e3a2",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448302831",
+        "self_link": null,
+        "uid": "5cfc8fe2-3566-4c92-87dc-0d76f7832028"
+       },
+       "reason": "SuccessfulDelete",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "rjob-controller",
+        "host": null
+       },
+       "type": "Normal"
+      },
+      {
+       "action": null,
+       "api_version": null,
+       "count": 1,
+       "event_time": null,
+       "first_timestamp": "2026-11-07 07:56:47+00:00",
+       "involved_object": {
+        "api_version": "v1",
+        "field_path": "spec.containers{default}",
+        "kind": "Pod",
+        "name": "exp-1107-150132-396145-8f14e45f",
+        "namespace": "shai-core",
+        "resource_version": "45446818626",
+        "uid": "d8592db0-ee11-4db4-bb12-39826b480286"
+       },
+       "kind": null,
+       "last_timestamp": "2026-11-07 07:56:47+00:00",
+       "message": "Stopping container default",
+       "metadata": {
+        "annotations": null,
+        "creation_timestamp": "2026-11-07 07:56:47+00:00",
+        "deletion_grace_period_seconds": null,
+        "deletion_timestamp": null,
+        "finalizers": null,
+        "generate_name": null,
+        "generation": null,
+        "labels": null,
+        "managed_fields": [
+         {
+          "api_version": "v1",
+          "fields_type": "FieldsV1",
+          "fields_v1": {
+           "f:count": {},
+           "f:firstTimestamp": {},
+           "f:involvedObject": {},
+           "f:lastTimestamp": {},
+           "f:message": {},
+           "f:reason": {},
+           "f:source": {
+            "f:component": {},
+            "f:host": {}
+           },
+           "f:type": {}
+          },
+          "manager": "kubelet",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-07 07:56:47+00:00"
+         }
+        ],
+        "name": "exp-1107-150132-396145-8f14e45f.18e5b43e82602a44",
+        "namespace": "shai-core",
+        "owner_references": null,
+        "resource_version": "45448301043",
+        "self_link": null,
+        "uid": "cb011b0e-e2ab-4c38-ac34-efcd7dd8cad8"
+       },
+       "reason": "Killing",
+       "related": null,
+       "reporting_component": "",
+       "reporting_instance": "",
+       "series": null,
+       "source": {
+        "component": "kubelet",
+        "host": "gpu-h200-0491.lgcm.sh.istep.fun"
+       },
+       "type": "Normal"
+      }
+     ],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448382315",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-eccbc87e": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448382480",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-cfcd2084": {
+   "kind": "Replica",
+   "count": 0,
+   "pages": [
+    {
+     "api_version": "v1",
+     "items": [],
+     "kind": "EventList",
+     "metadata": {
+      "_continue": null,
+      "remaining_item_count": null,
+      "resource_version": "45448383378",
+      "self_link": null,
+      "shard_info": null
+     }
+    }
+   ],
+   "pagination_complete": true
+  }
+ }
+}

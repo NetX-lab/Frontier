@@ -1,0 +1,1231 @@
+{
+ "root": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07",
+ "files": [
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/ready.json",
+   72,
+   "2026-11-07T07:26:07.506197+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/result.json",
+   16281,
+   "2026-11-07T07:36:37.333444+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/server.log",
+   114095,
+   "2026-11-07T07:56:49.098712+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/server_ready.json",
+   384,
+   "2026-11-07T07:36:37.282582+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank0.json",
+   811749,
+   "2026-11-07T07:36:34.963831+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank1.json",
+   811749,
+   "2026-11-07T07:36:34.989077+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank2.json",
+   811750,
+   "2026-11-07T07:36:34.942200+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank3.json",
+   811750,
+   "2026-11-07T07:36:35.028875+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank4.json",
+   811750,
+   "2026-11-07T07:36:35.038427+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank5.json",
+   811750,
+   "2026-11-07T07:36:35.002420+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank6.json",
+   811750,
+   "2026-11-07T07:36:34.953311+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank7.json",
+   811750,
+   "2026-11-07T07:36:34.928176+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0023.lgcm.sh.istep.fun/worker.log",
+   117,
+   "2026-11-07T07:36:37.368850+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/ready.json",
+   71,
+   "2026-11-07T07:26:28.067872+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/result.json",
+   16375,
+   "2026-11-07T07:26:48.870784+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/server.log",
+   66896,
+   "2026-11-07T07:56:49.339400+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank0.json",
+   811754,
+   "2026-11-07T07:36:34.905694+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank1.json",
+   811754,
+   "2026-11-07T07:36:34.919389+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank2.json",
+   811761,
+   "2026-11-07T07:36:35.022746+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank3.json",
+   811761,
+   "2026-11-07T07:36:35.344816+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank4.json",
+   811761,
+   "2026-11-07T07:36:34.978864+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank5.json",
+   811761,
+   "2026-11-07T07:36:34.894862+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank6.json",
+   811761,
+   "2026-11-07T07:36:34.989728+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank7.json",
+   811761,
+   "2026-11-07T07:36:34.944934+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0033.lgcm.sh.istep.fun/worker.log",
+   117,
+   "2026-11-07T07:26:48.896990+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/failed.json",
+   1122,
+   "2026-11-07T07:56:46.005796+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/ready.json",
+   71,
+   "2026-11-07T07:26:04.699746+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/result.json",
+   16374,
+   "2026-11-07T07:26:45.438118+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/server.log",
+   66999,
+   "2026-11-07T07:56:46.036588+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank0.json",
+   811763,
+   "2026-11-07T07:56:46.095495+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank1.json",
+   811763,
+   "2026-11-07T07:56:46.124820+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank2.json",
+   811764,
+   "2026-11-07T07:56:46.146592+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank3.json",
+   811764,
+   "2026-11-07T07:56:46.086284+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank4.json",
+   811764,
+   "2026-11-07T07:56:46.114838+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank5.json",
+   811764,
+   "2026-11-07T07:56:46.136767+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank6.json",
+   811764,
+   "2026-11-07T07:56:46.072926+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank7.json",
+   811764,
+   "2026-11-07T07:56:46.105505+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0047.lgcm.sh.istep.fun/worker.log",
+   1167,
+   "2026-11-07T07:56:46.029964+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/ready.json",
+   71,
+   "2026-11-07T07:26:20.326344+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/result.json",
+   16375,
+   "2026-11-07T07:26:41.128528+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/server.log",
+   67000,
+   "2026-11-07T07:56:47.258970+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank0.json",
+   811762,
+   "2026-11-07T07:36:35.012299+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank1.json",
+   811762,
+   "2026-11-07T07:36:35.232720+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank2.json",
+   811763,
+   "2026-11-07T07:36:34.961462+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank3.json",
+   811763,
+   "2026-11-07T07:36:34.916767+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank4.json",
+   811763,
+   "2026-11-07T07:36:34.890989+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank5.json",
+   811763,
+   "2026-11-07T07:36:34.987044+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank6.json",
+   811763,
+   "2026-11-07T07:36:34.902227+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank7.json",
+   811763,
+   "2026-11-07T07:36:34.975887+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0085.lgcm.sh.istep.fun/worker.log",
+   117,
+   "2026-11-07T07:26:41.160749+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json",
+   738,
+   "2026-11-07T07:56:42.954636+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0300.lgcm.sh.istep.fun/native_stopped.json",
+   202,
+   "2026-11-07T07:56:45.115361+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0300.lgcm.sh.istep.fun/ready.json",
+   72,
+   "2026-11-07T07:26:02.212810+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0300.lgcm.sh.istep.fun/result.json",
+   17244,
+   "2026-11-07T07:56:45.159668+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0300.lgcm.sh.istep.fun/server.log",
+   9605,
+   "2026-11-07T07:56:43.292196+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0300.lgcm.sh.istep.fun/worker.log",
+   779,
+   "2026-11-07T07:56:45.183559+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0491.lgcm.sh.istep.fun/failed.json",
+   704,
+   "2026-11-07T07:56:47.024304+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0491.lgcm.sh.istep.fun/native_stopped.json",
+   197,
+   "2026-11-07T07:56:47.064025+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0491.lgcm.sh.istep.fun/ready.json",
+   71,
+   "2026-11-07T07:26:38.178259+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0491.lgcm.sh.istep.fun/result.json",
+   17299,
+   "2026-11-07T07:56:47.103436+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0491.lgcm.sh.istep.fun/server.log",
+   13643,
+   "2026-11-07T07:56:44.683726+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0491.lgcm.sh.istep.fun/worker.log",
+   774,
+   "2026-11-07T07:56:47.131649+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0726.lgcm.sh.istep.fun/ready.json",
+   72,
+   "2026-11-07T07:26:35.193074+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0726.lgcm.sh.istep.fun/result.json",
+   9386,
+   "2026-11-07T07:26:35.149462+00:00"
+  ],
+  [
+   "nodes/gpu-h200-0726.lgcm.sh.istep.fun/worker.log",
+   27,
+   "2026-11-07T07:26:35.182629+00:00"
+  ],
+  [
+   "nodes/gpu-h200-1007.lgcm.sh.istep.fun/failed.json",
+   903,
+   "2026-11-07T07:56:44.812075+00:00"
+  ],
+  [
+   "nodes/gpu-h200-1007.lgcm.sh.istep.fun/native_stopped.json",
+   203,
+   "2026-11-07T07:56:45.262874+00:00"
+  ],
+  [
+   "nodes/gpu-h200-1007.lgcm.sh.istep.fun/ready.json",
+   71,
+   "2026-11-07T07:25:41.640949+00:00"
+  ],
+  [
+   "nodes/gpu-h200-1007.lgcm.sh.istep.fun/result.json",
+   17503,
+   "2026-11-07T07:56:45.370932+00:00"
+  ],
+  [
+   "nodes/gpu-h200-1007.lgcm.sh.istep.fun/server.log",
+   13643,
+   "2026-11-07T07:56:44.483562+00:00"
+  ],
+  [
+   "nodes/gpu-h200-1007.lgcm.sh.istep.fun/worker.log",
+   973,
+   "2026-11-07T07:56:45.402517+00:00"
+  ],
+  [
+   "run_manifest.json",
+   12595,
+   "2026-11-07T07:01:28.469558+00:00"
+  ]
+ ],
+ "nodes": {
+  "gpu-h200-0023.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+    "ip": "10.204.6.121"
+   },
+   "server_ready.json": {
+    "role": "prefill",
+    "url": "http://10.204.6.121:8100",
+    "server_pid": 750,
+    "server_started_at_utc": "2026-11-07T07:26:48.737435+00:00",
+    "run_manifest_sha256": "07151bd4fd6b971aa1aa7121f696956ac2f1675787a6e2619aceffaa29cbbe46",
+    "run_generation": "v4-native-v028-h200-p2-64-formal-20261107-07",
+    "ready_at_utc": "2026-11-07T07:36:37.255734+00:00",
+    "health_status": 200
+   },
+   "result": {
+    "stage": "await_replay",
+    "observation_errors": [],
+    "server_pid": 750,
+    "server_started_at_utc": "2026-11-07T07:26:48.737435+00:00",
+    "versions": {
+     "torch": "2.13.0+cu130",
+     "vllm": "0.28.0",
+     "aiohttp": "3.14.3"
+    },
+    "plan": {
+     "role": "prefill",
+     "lane": 0,
+     "position": 0,
+     "urls": {
+      "prefill": "http://10.204.6.121:8100",
+      "decode": "http://10.204.12.65:8200"
+     },
+     "heads": {
+      "prefill": {
+       "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+       "ip": "10.204.6.121"
+      },
+      "decode": {
+       "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+       "ip": "10.204.12.65"
+      }
+     }
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous",
+    "NATIVE_PD_STAGE native_start",
+    "NATIVE_PD_STAGE native_launched",
+    "NATIVE_PD_STAGE await_replay"
+   ],
+   "server.log_tail": [
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:51] Available routes are:",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /openapi.json, Methods: HEAD, GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /docs, Methods: HEAD, GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /docs/oauth2-redirect, Methods: HEAD, GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /redoc, Methods: HEAD, GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /load, Methods: GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /version, Methods: GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /health, Methods: GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /metrics, Methods: GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /tokenize, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /detokenize, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/models, Methods: GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /ping, Methods: GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /ping, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /invocations, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/chat/completions, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/chat/completions/batch, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/responses, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/responses/{response_id}, Methods: GET",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/responses/{response_id}/cancel, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/completions, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/messages, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/messages/count_tokens, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /generative_scoring, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /scale_elastic_ep, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /is_scaling_elastic_ep, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/chat/completions/render, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/completions/render, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/chat/completions/derender, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /v1/completions/derender, Methods: POST",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:36:36 [launcher.py:60] Route: /inference/v1/generate, Methods: POST",
+    "(ApiServer_3 pid=1428) INFO:     Started server process [1428]",
+    "(ApiServer_3 pid=1428) INFO:     Waiting for application startup.",
+    "(ApiServer_1 pid=1426) INFO:     Started server process [1426]",
+    "(ApiServer_1 pid=1426) INFO:     Waiting for application startup.",
+    "(ApiServer_2 pid=1427) INFO:     Started server process [1427]",
+    "(ApiServer_2 pid=1427) INFO:     Waiting for application startup.",
+    "(ApiServer_0 pid=1425) INFO:     Started server process [1425]",
+    "(ApiServer_0 pid=1425) INFO:     Waiting for application startup.",
+    "(ApiServer_3 pid=1428) INFO:     Application startup complete.",
+    "(ApiServer_1 pid=1426) INFO:     Application startup complete.",
+    "(ApiServer_0 pid=1425) INFO:     Application startup complete.",
+    "(ApiServer_2 pid=1427) INFO:     Application startup complete.",
+    "(ApiServer_2 pid=1427) INFO:     10.204.6.121:36618 - \"GET /health HTTP/1.1\" 200 OK",
+    "(EngineCore_DP0 pid=1424) INFO 11-07 07:56:49 [core.py:1329] [shutdown] EngineCore: trigger received signal=SIGTERM",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:56:49 [launcher.py:114] [shutdown] API server: shutdown triggered",
+    "(ApiServer_0 pid=1425) INFO 11-07 07:56:49 [launcher.py:130] [shutdown] API server: stopping engine client mode=drain timeout=30s",
+    "(ApiServer_1 pid=1426) INFO 11-07 07:56:49 [launcher.py:114] [shutdown] API server: shutdown triggered",
+    "(ApiServer_2 pid=1427) INFO 11-07 07:56:49 [launcher.py:114] [shutdown] API server: shutdown triggered",
+    "(ApiServer_3 pid=1428) INFO 11-07 07:56:49 [launcher.py:114] [shutdown] API server: shutdown triggered",
+    "(ApiServer_1 pid=1426) INFO 11-07 07:56:49 [launcher.py:130] [shutdown] API server: stopping engine client mode=drain timeout=30s",
+    "INFO 11-07 07:56:49 [serve.py:398] Waiting up to 30 seconds for processes to exit",
+    "(EngineCore_DP0 pid=1424) INFO 11-07 07:56:49 [core.py:1465] [shutdown] EngineCore: start mode=drain timeout=30s",
+    "(ApiServer_2 pid=1427) INFO 11-07 07:56:49 [launcher.py:130] [shutdown] API server: stopping engine client mode=drain timeout=30s",
+    "(ApiServer_3 pid=1428) INFO 11-07 07:56:49 [launcher.py:130] [shutdown] API server: stopping engine client mode=drain timeout=30s",
+    "INFO 11-07 07:56:49 [utils.py:615] [shutdown] Process manager: send sigterm to process ApiServer_0",
+    "(EngineCore_DP0 pid=1424) INFO 11-07 07:56:49 [core.py:1496] [shutdown] EngineCore: request processing complete; starting resource teardown",
+    "INFO 11-07 07:56:49 [utils.py:615] [shutdown] Process manager: send sigterm to process ApiServer_1",
+    "(EngineCore_DP0 pid=1424) INFO 11-07 07:56:49 [core.py:1342] [shutdown] EngineCore: exiting busy loop",
+    "INFO 11-07 07:56:49 [utils.py:615] [shutdown] Process manager: send sigterm to process ApiServer_2"
+   ]
+  },
+  "gpu-h200-0033.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-0033.lgcm.sh.istep.fun",
+    "ip": "10.204.8.44"
+   },
+   "result": {
+    "stage": "await_replay",
+    "observation_errors": [],
+    "server_pid": 745,
+    "server_started_at_utc": "2026-11-07T07:26:48.809271+00:00",
+    "versions": {
+     "torch": "2.13.0+cu130",
+     "vllm": "0.28.0",
+     "aiohttp": "3.14.3"
+    },
+    "plan": {
+     "role": "prefill",
+     "lane": 1,
+     "position": 1,
+     "urls": {
+      "prefill": "http://10.204.6.121:8100",
+      "decode": "http://10.204.12.65:8200"
+     },
+     "heads": {
+      "prefill": {
+       "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+       "ip": "10.204.6.121"
+      },
+      "decode": {
+       "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+       "ip": "10.204.12.65"
+      }
+     }
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous",
+    "NATIVE_PD_STAGE native_start",
+    "NATIVE_PD_STAGE native_launched",
+    "NATIVE_PD_STAGE await_replay"
+   ],
+   "server.log_tail": [
+    "(Worker_DP1_TP0_EP8 pid=1565) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP1_TP0_EP8 pid=1565) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP0_EP8 pid=1565) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP1_TP0_EP8 pid=1565) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP0_EP8 pid=1565) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP1_TP0_EP8 pid=1565) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.38 GiB",
+    "(Worker_DP1_TP1_EP9 pid=1566) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110459977933` (102.87 GiB)",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:30:40  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:30:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:30:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:30:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP3_EP11 pid=1568) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP1_TP3_EP11 pid=1568) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.38 GiB",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:30:40  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:30:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:30:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:30:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP1_TP4_EP12 pid=1569) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP1_TP4_EP12 pid=1569) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.36 GiB",
+    "(Worker_DP1_TP2_EP10 pid=1567) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.61 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110476755149` (102.89 GiB",
+    "(Worker_DP1_TP6_EP14 pid=1571) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.61 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.35 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110501920973` (102.91 GiB",
+    "(Worker_DP1_TP5_EP13 pid=1570) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.36 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110480949453` (102.89 GiB",
+    "(Worker_DP1_TP0_EP8 pid=1565) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.61 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110476755149` (102.89 GiB)",
+    "(Worker_DP1_TP7_EP15 pid=1572) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.35 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110485143757` (102.9 GiB)",
+    "(Worker_DP1_TP3_EP11 pid=1568) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110459977933` (102.87 GiB",
+    "(Worker_DP1_TP4_EP12 pid=1569) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.61 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.36 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110497726669` (102.91 GiB",
+    "(Worker_DP1_TP5_EP13 pid=1570) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP0_EP8 pid=1565) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP1_EP9 pid=1566) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP7_EP15 pid=1572) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP6_EP14 pid=1571) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP4_EP12 pid=1569) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP2_EP10 pid=1567) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP3_EP11 pid=1568) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP1_TP0_EP8 pid=1565) INFO 11-07 07:36:34 [torch_utils.py:262] Reducing Torch threads from 8 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [core.py:354] init engine (profile, create kv cache, warmup model) took 455.57 s",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [nixl_utils.py:72] NIXL is available",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [factory.py:62] Creating v1 connector with name: NixlPullConnector and engine_id: 657a68ba-410b-40cb-b764-929f77ade939_dp1",
+    "(EngineCore_DP1 pid=1280) WARNING 11-07 07:36:35 [base.py:211] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [base_scheduler.py:101] Initializing NIXL Scheduler 657a68ba-410b-40cb-b764-929f77ade939_dp1",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:36:36 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:56:49 [core.py:1329] [shutdown] EngineCore: trigger received signal=SIGTERM",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:56:49 [core.py:1465] [shutdown] EngineCore: start mode=drain timeout=30s",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:56:49 [core.py:1496] [shutdown] EngineCore: request processing complete; starting resource teardown",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:56:49 [core.py:1342] [shutdown] EngineCore: exiting busy loop",
+    "INFO 11-07 07:56:49 [serve.py:256] Waiting up to 30 seconds for processes to exit",
+    "(EngineCore_DP1 pid=1280) INFO 11-07 07:56:49 [multiproc_executor.py:469] [shutdown] Executor: waiting for worker exit count=8",
+    "INFO 11-07 07:56:49 [utils.py:615] [shutdown] Process manager: send sigterm to process EngineCore_DP1",
+    "(Worker_DP1_TP0_EP8 pid=1565) INFO 11-07 07:56:49 [multiproc_executor.py:833] Parent process exited, terminating worker queues"
+   ]
+  },
+  "gpu-h200-0047.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-0047.lgcm.sh.istep.fun",
+    "ip": "10.204.6.67"
+   },
+   "failed.json": {
+    "host": "gpu-h200-0047.lgcm.sh.istep.fun",
+    "error": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run\n    await_condition(lambda: (root / 'replay_finished.json').is_file(),\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 233, in await_condition\n    raise RuntimeError(f'Native P/D peer failed: {failed}')\nRuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json'), PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-1007.lgcm.sh.istep.fun/failed.json')]\n"
+   },
+   "result": {
+    "stage": "await_replay",
+    "observation_errors": [],
+    "server_pid": 747,
+    "server_started_at_utc": "2026-11-07T07:26:45.380371+00:00",
+    "versions": {
+     "torch": "2.13.0+cu130",
+     "vllm": "0.28.0",
+     "aiohttp": "3.14.3"
+    },
+    "plan": {
+     "role": "prefill",
+     "lane": 2,
+     "position": 2,
+     "urls": {
+      "prefill": "http://10.204.6.121:8100",
+      "decode": "http://10.204.12.65:8200"
+     },
+     "heads": {
+      "prefill": {
+       "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+       "ip": "10.204.6.121"
+      },
+      "decode": {
+       "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+       "ip": "10.204.12.65"
+      }
+     }
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous",
+    "NATIVE_PD_STAGE native_start",
+    "NATIVE_PD_STAGE native_launched",
+    "NATIVE_PD_STAGE await_replay",
+    "Traceback (most recent call last):",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run",
+    "    await_condition(lambda: (root / 'replay_finished.json').is_file(),",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 233, in await_condition",
+    "    raise RuntimeError(f'Native P/D peer failed: {failed}')",
+    "RuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json'), PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p",
+    ""
+   ],
+   "server.log_tail": [
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:30:48  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:30:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:30:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP7_EP23 pid=1574) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP2_TP7_EP23 pid=1574) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.35 GiB",
+    "(Worker_DP2_TP1_EP17 pid=1568) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110459977933` (102.87 GiB",
+    "(Worker_DP2_TP7_EP23 pid=1574) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.35 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110485143757` (102.9 GiB)",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:30:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:30:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:30:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:30:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP2_EP18 pid=1569) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP2_TP2_EP18 pid=1569) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.38 GiB",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:30:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:30:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:30:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:30:55  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP2_TP5_EP21 pid=1572) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP2_TP5_EP21 pid=1572) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.36 GiB",
+    "(Worker_DP2_TP2_EP18 pid=1569) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.61 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110476755149` (102.89 GiB",
+    "(Worker_DP2_TP5_EP21 pid=1572) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.55/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.36 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110480949453` (102.89 GiB",
+    "(Worker_DP2_TP1_EP17 pid=1568) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP7_EP23 pid=1574) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP0_EP16 pid=1567) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP6_EP22 pid=1573) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP5_EP21 pid=1572) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP4_EP20 pid=1571) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP2_EP18 pid=1569) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP3_EP19 pid=1570) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP2_TP0_EP16 pid=1567) INFO 11-07 07:36:34 [torch_utils.py:262] Reducing Torch threads from 8 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [core.py:354] init engine (profile, create kv cache, warmup model) took 455.38 s",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [nixl_utils.py:72] NIXL is available",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [factory.py:62] Creating v1 connector with name: NixlPullConnector and engine_id: e6b02967-2c34-4ba6-9675-ef902efe7b38_dp2",
+    "(EngineCore_DP2 pid=1282) WARNING 11-07 07:36:35 [base.py:211] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [base_scheduler.py:101] Initializing NIXL Scheduler e6b02967-2c34-4ba6-9675-ef902efe7b38_dp2",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:36:36 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "INFO 11-07 07:56:46 [serve.py:256] Waiting up to 30 seconds for processes to exit",
+    "INFO 11-07 07:56:46 [utils.py:615] [shutdown] Process manager: send sigterm to process EngineCore_DP2",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:56:46 [core.py:1329] [shutdown] EngineCore: trigger received signal=SIGTERM",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:56:46 [core.py:1465] [shutdown] EngineCore: start mode=drain timeout=30s",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:56:46 [core.py:1496] [shutdown] EngineCore: request processing complete; starting resource teardown",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:56:46 [core.py:1342] [shutdown] EngineCore: exiting busy loop",
+    "(EngineCore_DP2 pid=1282) INFO 11-07 07:56:46 [multiproc_executor.py:469] [shutdown] Executor: waiting for worker exit count=8",
+    "(Worker_DP2_TP0_EP16 pid=1567) INFO 11-07 07:56:46 [multiproc_executor.py:833] Parent process exited, terminating worker queues"
+   ]
+  },
+  "gpu-h200-0085.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-0085.lgcm.sh.istep.fun",
+    "ip": "10.204.8.98"
+   },
+   "result": {
+    "stage": "await_replay",
+    "observation_errors": [],
+    "server_pid": 743,
+    "server_started_at_utc": "2026-11-07T07:26:41.077356+00:00",
+    "versions": {
+     "torch": "2.13.0+cu130",
+     "vllm": "0.28.0",
+     "aiohttp": "3.14.3"
+    },
+    "plan": {
+     "role": "prefill",
+     "lane": 3,
+     "position": 3,
+     "urls": {
+      "prefill": "http://10.204.6.121:8100",
+      "decode": "http://10.204.12.65:8200"
+     },
+     "heads": {
+      "prefill": {
+       "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+       "ip": "10.204.6.121"
+      },
+      "decode": {
+       "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+       "ip": "10.204.12.65"
+      }
+     }
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous",
+    "NATIVE_PD_STAGE native_start",
+    "NATIVE_PD_STAGE native_launched",
+    "NATIVE_PD_STAGE await_replay"
+   ],
+   "server.log_tail": [
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:30:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:30:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:30:55  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP1_EP25 pid=1564) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP3_TP1_EP25 pid=1564) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.38 GiB",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:30:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:30:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:30:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:30:55  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP2_EP26 pid=1565) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP3_TP2_EP26 pid=1565) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.38 GiB",
+    "(Worker_DP3_TP5_EP29 pid=1568) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.63/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.36 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110480949453` (102.89 GiB",
+    "(Worker_DP3_TP1_EP25 pid=1564) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.63/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110459977933` (102.87 GiB",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:30:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:30:48  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:30:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:30:55  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:35:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:35:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:35:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_fused_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_fused_tilelang`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:35:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`",
+    "(Worker_DP3_TP7_EP31 pid=1570) 2026-11-07 07:36:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`",
+    "(Worker_DP3_TP7_EP31 pid=1570) INFO 11-07 07:36:32 [model_runner.py:906] Graph capturing finished in 74 secs, took 2.35 GiB",
+    "(Worker_DP3_TP2_EP26 pid=1565) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.63/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.61 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.38 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110476755149` (102.89 GiB",
+    "(Worker_DP3_TP7_EP31 pid=1570) INFO 11-07 07:36:32 [gpu_worker.py:804] Free memory on device (137.63/139.81 GiB) on startup. Desired GPU memory utilization is (0.85, 118.84 GiB). Actual usage is 11.62 GiB for consumed memory (weights + non-torch), 1.82 GiB for peak activation, and 2.35 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=110485143757` (102.9 GiB)",
+    "(Worker_DP3_TP4_EP28 pid=1567) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP6_EP30 pid=1569) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP3_EP27 pid=1566) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP5_EP29 pid=1568) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP7_EP31 pid=1570) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP2_EP26 pid=1565) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP0_EP24 pid=1563) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP1_EP25 pid=1564) INFO 11-07 07:36:34 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.",
+    "(Worker_DP3_TP0_EP24 pid=1563) INFO 11-07 07:36:34 [torch_utils.py:262] Reducing Torch threads from 8 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [core.py:354] init engine (profile, create kv cache, warmup model) took 455.43 s",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [nixl_utils.py:72] NIXL is available",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [factory.py:62] Creating v1 connector with name: NixlPullConnector and engine_id: a8305b1b-46f7-4bd4-b80e-4c3ba8d5baae_dp3",
+    "(EngineCore_DP3 pid=1278) WARNING 11-07 07:36:35 [base.py:211] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [base_scheduler.py:101] Initializing NIXL Scheduler a8305b1b-46f7-4bd4-b80e-4c3ba8d5baae_dp3",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:36:36 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:56:47 [core.py:1329] [shutdown] EngineCore: trigger received signal=SIGTERM",
+    "INFO 11-07 07:56:47 [serve.py:256] Waiting up to 30 seconds for processes to exit",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:56:47 [core.py:1465] [shutdown] EngineCore: start mode=drain timeout=30s",
+    "INFO 11-07 07:56:47 [utils.py:615] [shutdown] Process manager: send sigterm to process EngineCore_DP3",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:56:47 [core.py:1496] [shutdown] EngineCore: request processing complete; starting resource teardown",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:56:47 [core.py:1342] [shutdown] EngineCore: exiting busy loop",
+    "(EngineCore_DP3 pid=1278) INFO 11-07 07:56:47 [multiproc_executor.py:469] [shutdown] Executor: waiting for worker exit count=8",
+    "(Worker_DP3_TP0_EP24 pid=1563) INFO 11-07 07:56:47 [multiproc_executor.py:833] Parent process exited, terminating worker queues"
+   ]
+  },
+  "gpu-h200-0300.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+    "ip": "10.204.12.65"
+   },
+   "failed.json": {
+    "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+    "error": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 345, in run\n    await_condition(healthy, config['startup_timeout_s'], native_required=True)\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 239, in await_condition\n    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')\nTimeoutError: Native P/D rendezvous or workload deadline exceeded\n"
+   },
+   "native_stopped.json": {
+    "signal": "SIGINT",
+    "returncode": 0,
+    "shutdown_order": {
+     "drained_before_stop": false,
+     "all_nodes_drained_before_head_stop": [],
+     "native_returned_before_requested_stop": false
+    }
+   },
+   "result": {
+    "stage": "finished",
+    "exception": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 345, in run\n    await_condition(healthy, config['startup_timeout_s'], native_required=True)\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 239, in await_condition\n    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')\nTimeoutError: Native P/D rendezvous or workload deadline exceeded\n",
+    "workload_returncode": 1,
+    "observation_errors": [],
+    "server_stop": {
+     "signal": "SIGINT",
+     "returncode": 0
+    },
+    "shutdown_order": {
+     "drained_before_stop": false,
+     "all_nodes_drained_before_head_stop": [],
+     "native_returned_before_requested_stop": false
+    },
+    "server_pid": 751,
+    "server_started_at_utc": "2026-11-07T07:26:42.903032+00:00",
+    "versions": {
+     "torch": "2.13.0+cu130",
+     "vllm": "0.28.0",
+     "aiohttp": "3.14.3"
+    },
+    "plan": {
+     "role": "decode",
+     "lane": 0,
+     "position": 4,
+     "urls": {
+      "prefill": "http://10.204.6.121:8100",
+      "decode": "http://10.204.12.65:8200"
+     },
+     "heads": {
+      "prefill": {
+       "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+       "ip": "10.204.6.121"
+      },
+      "decode": {
+       "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+       "ip": "10.204.12.65"
+      }
+     }
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous",
+    "NATIVE_PD_STAGE native_start",
+    "NATIVE_PD_STAGE native_launched",
+    "Traceback (most recent call last):",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 345, in run",
+    "    await_condition(healthy, config['startup_timeout_s'], native_required=True)",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 239, in await_condition",
+    "    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')",
+    "TimeoutError: Native P/D rendezvous or workload deadline exceeded",
+    "",
+    "NATIVE_PD_STAGE finished"
+   ],
+   "server.log_tail": [
+    "INFO 11-07 07:27:00 [api_utils.py:333]   \u2588\u2584\u2588\u2580 \u2588     \u2588     \u2588     \u2588  model   /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/model",
+    "INFO 11-07 07:27:00 [api_utils.py:333]    \u2580\u2580  \u2580\u2580\u2580\u2580\u2580 \u2580\u2580\u2580\u2580\u2580 \u2580     \u2580",
+    "INFO 11-07 07:27:00 [api_utils.py:333] ",
+    "INFO 11-07 07:27:00 [api_utils.py:272] non-default args: {'model_tag': '/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/model', 'api_server_count': 4, 'host': '10.204.12.65', 'port': 8200, 'model': '/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_",
+    "INFO 11-07 07:27:00 [config.py:779] Detected quantization_config.scale_fmt=ue8m0; enabling UE8M0 for DeepGEMM.",
+    "INFO 11-07 07:27:26 [model.py:672] Resolved architecture: DeepseekV4ForCausalLM",
+    "INFO 11-07 07:27:26 [model.py:690] Defaulting to tokenizer_mode='deepseek_v4' for DeepseekV4ForCausalLM",
+    "INFO 11-07 07:27:26 [model.py:1965] Using max model len 7168",
+    "WARNING 11-07 07:27:33 [arg_utils.py:2664] This model does not officially support disabling chunked prefill. Disabling this manually may cause the engine to crash or produce incorrect outputs.",
+    "INFO 11-07 07:27:33 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor",
+    "INFO 11-07 07:27:33 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.",
+    "INFO 11-07 07:27:33 [vllm.py:1334] Auto-enabling VLLM_USE_BREAKABLE_CUDAGRAPH=1. Set VLLM_USE_BREAKABLE_CUDAGRAPH=0 to opt out.",
+    "INFO 11-07 07:27:33 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "INFO 11-07 07:27:33 [nixl_utils.py:32] Setting UCX_RCACHE_MAX_UNRELEASED to '1024' to avoid a rare memory leak in UCX when using NIXL.",
+    "INFO 11-07 07:27:33 [nixl_utils.py:72] NIXL is available",
+    "INFO 11-07 07:27:33 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "INFO 11-07 07:27:49 [utils.py:1138] Started DP Coordinator process (PID: 1286)",
+    "INFO 11-07 07:27:49 [utils.py:241] Started 4 API server processes",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:08 [model.py:672] Resolved architecture: DeepseekV4ForCausalLM",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:08 [model.py:672] Resolved architecture: DeepseekV4ForCausalLM",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:08 [model.py:690] Defaulting to tokenizer_mode='deepseek_v4' for DeepseekV4ForCausalLM",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:08 [model.py:690] Defaulting to tokenizer_mode='deepseek_v4' for DeepseekV4ForCausalLM",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:08 [model.py:1965] Using max model len 7168",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:08 [model.py:1965] Using max model len 7168",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:08 [model.py:672] Resolved architecture: DeepseekV4ForCausalLM",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:08 [model.py:690] Defaulting to tokenizer_mode='deepseek_v4' for DeepseekV4ForCausalLM",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:08 [model.py:1965] Using max model len 7168",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:08 [model.py:672] Resolved architecture: DeepseekV4ForCausalLM",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:08 [model.py:690] Defaulting to tokenizer_mode='deepseek_v4' for DeepseekV4ForCausalLM",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:08 [model.py:1965] Using max model len 7168",
+    "(ApiServer_3 pid=1429) WARNING 11-07 07:28:15 [arg_utils.py:2664] This model does not officially support disabling chunked prefill. Disabling this manually may cause the engine to crash or produce incorrect outputs.",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:15 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:15 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:15 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:15 [nixl_utils.py:72] NIXL is available",
+    "(ApiServer_3 pid=1429) INFO 11-07 07:28:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "(ApiServer_0 pid=1426) WARNING 11-07 07:28:15 [arg_utils.py:2664] This model does not officially support disabling chunked prefill. Disabling this manually may cause the engine to crash or produce incorrect outputs.",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:15 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:15 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:15 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:15 [nixl_utils.py:72] NIXL is available",
+    "(ApiServer_2 pid=1428) WARNING 11-07 07:28:15 [arg_utils.py:2664] This model does not officially support disabling chunked prefill. Disabling this manually may cause the engine to crash or produce incorrect outputs.",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:15 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:15 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:15 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "(ApiServer_1 pid=1427) WARNING 11-07 07:28:15 [arg_utils.py:2664] This model does not officially support disabling chunked prefill. Disabling this manually may cause the engine to crash or produce incorrect outputs.",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])",
+    "(ApiServer_0 pid=1426) INFO 11-07 07:28:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:15 [nixl_utils.py:72] NIXL is available",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [nixl_utils.py:72] NIXL is available",
+    "(ApiServer_2 pid=1428) INFO 11-07 07:28:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms",
+    "INFO 11-07 07:56:42 [utils.py:615] [shutdown] Process manager: send sigterm to process ApiServer_0",
+    "INFO 11-07 07:56:42 [utils.py:615] [shutdown] Process manager: send sigterm to process ApiServer_1",
+    "INFO 11-07 07:56:42 [utils.py:615] [shutdown] Process manager: send sigterm to process ApiServer_2",
+    "INFO 11-07 07:56:42 [utils.py:615] [shutdown] Process manager: send sigterm to process ApiServer_3",
+    "INFO 11-07 07:56:43 [utils.py:615] [shutdown] Process manager: send sigterm to process EngineCore_DP0",
+    "INFO 11-07 07:56:43 [utils.py:615] [shutdown] Process manager: send sigterm to process VLLM_DP_Coordinator"
+   ]
+  },
+  "gpu-h200-0491.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-0491.lgcm.sh.istep.fun",
+    "ip": "10.204.8.22"
+   },
+   "failed.json": {
+    "host": "gpu-h200-0491.lgcm.sh.istep.fun",
+    "error": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run\n    await_condition(lambda: (root / 'replay_finished.json').is_file(),\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 235, in await_condition\n    raise RuntimeError(f'Native server exited early: {server.returncode}')\nRuntimeError: Native server exited early: 0\n"
+   },
+   "native_stopped.json": {
+    "signal": null,
+    "returncode": 0,
+    "shutdown_order": {
+     "drained_before_stop": false,
+     "all_nodes_drained_before_head_stop": [],
+     "native_returned_before_requested_stop": true
+    }
+   },
+   "result": {
+    "stage": "finished",
+    "exception": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run\n    await_condition(lambda: (root / 'replay_finished.json').is_file(),\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 235, in await_condition\n    raise RuntimeError(f'Native server exited early: {server.returncode}')\nRuntimeError: Native server exited early: 0\n",
+    "workload_returncode": 1,
+    "observation_errors": [],
+    "server_stop": {
+     "signal": null,
+     "returncode": 0
+    },
+    "shutdown_order": {
+     "drained_before_stop": false,
+     "all_nodes_drained_before_head_stop": [],
+     "native_returned_before_requested_stop": true
+    },
+    "server_pid": 677,
+    "server_started_at_utc": "2026-11-07T07:26:39.184074+00:00",
+    "versions": {
+     "torch": "2.13.0+cu130",
+     "vllm": "0.28.0",
+     "aiohttp": "3.14.3"
+    },
+    "plan": {
+     "role": "decode",
+     "lane": 1,
+     "position": 5,
+     "urls": {
+      "prefill": "http://10.204.6.121:8100",
+      "decode": "http://10.204.12.65:8200"
+     },
+     "heads": {
+      "prefill": {
+       "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+       "ip": "10.204.6.121"
+      },
+      "decode": {
+       "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+       "ip": "10.204.12.65"
+      }
+     }
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous",
+    "NATIVE_PD_STAGE native_start",
+    "NATIVE_PD_STAGE native_launched",
+    "NATIVE_PD_STAGE await_replay",
+    "Traceback (most recent call last):",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run",
+    "    await_condition(lambda: (root / 'replay_finished.json').is_file(),",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 235, in await_condition",
+    "    raise RuntimeError(f'Native server exited early: {server.returncode}')",
+    "RuntimeError: Native server exited early: 0",
+    "",
+    "NATIVE_PD_STAGE finished"
+   ],
+   "server.log_tail": [
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1309, in run_engine_core",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     engine_core = DPEngineCoreProc(*args, **kwargs)",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2003, in __init__",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     super().__init__(",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py\", line 178, in sync_wrapper",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     return func(*args, **kwargs)",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1071, in __init__",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     self._init_data_parallel(vllm_config)",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2027, in _init_data_parallel",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     dp_group, dp_store = parallel_config.stateless_init_dp_group(return_store=True)",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 664, in stateless_init_dp_group",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     raise e",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 649, in stateless_init_dp_group",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     return stateless_init_torch_distributed_process_group(",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 659, in stateless_init_torch_distributed_process_group",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     pg = init_gloo_process_group(",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]          ^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 564, in init_gloo_process_group",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]     backend_class = ProcessGroupGloo(",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346]                     ^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288) ERROR 11-07 07:56:43 [core.py:1346] torch.distributed.DistNetworkError: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?",
+    "(EngineCore_DP1 pid=1288) Process EngineCore_DP1:",
+    "(EngineCore_DP1 pid=1288) Traceback (most recent call last):",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/lib/python3.12/multiprocessing/process.py\", line 314, in _bootstrap",
+    "(EngineCore_DP1 pid=1288)     self.run()",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/lib/python3.12/multiprocessing/process.py\", line 108, in run",
+    "(EngineCore_DP1 pid=1288)     self._target(*self._args, **self._kwargs)",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1350, in run_engine_core",
+    "(EngineCore_DP1 pid=1288)     raise e",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1309, in run_engine_core",
+    "(EngineCore_DP1 pid=1288)     engine_core = DPEngineCoreProc(*args, **kwargs)",
+    "(EngineCore_DP1 pid=1288)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2003, in __init__",
+    "(EngineCore_DP1 pid=1288)     super().__init__(",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py\", line 178, in sync_wrapper",
+    "(EngineCore_DP1 pid=1288)     return func(*args, **kwargs)",
+    "(EngineCore_DP1 pid=1288)            ^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1071, in __init__",
+    "(EngineCore_DP1 pid=1288)     self._init_data_parallel(vllm_config)",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2027, in _init_data_parallel",
+    "(EngineCore_DP1 pid=1288)     dp_group, dp_store = parallel_config.stateless_init_dp_group(return_store=True)",
+    "(EngineCore_DP1 pid=1288)                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 664, in stateless_init_dp_group",
+    "(EngineCore_DP1 pid=1288)     raise e",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 649, in stateless_init_dp_group",
+    "(EngineCore_DP1 pid=1288)     return stateless_init_torch_distributed_process_group(",
+    "(EngineCore_DP1 pid=1288)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 659, in stateless_init_torch_distributed_process_group",
+    "(EngineCore_DP1 pid=1288)     pg = init_gloo_process_group(",
+    "(EngineCore_DP1 pid=1288)          ^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288)   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 564, in init_gloo_process_group",
+    "(EngineCore_DP1 pid=1288)     backend_class = ProcessGroupGloo(",
+    "(EngineCore_DP1 pid=1288)                     ^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP1 pid=1288) torch.distributed.DistNetworkError: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?",
+    "INFO 11-07 07:56:44 [utils.py:615] [shutdown] Process manager: send sigterm to process EngineCore_DP1",
+    "INFO 11-07 07:56:44 [serve.py:258] Shutting down."
+   ]
+  },
+  "gpu-h200-0726.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-0726.lgcm.sh.istep.fun",
+    "ip": "10.204.18.57"
+   },
+   "result": {
+    "stage": "rendezvous",
+    "observation_errors": [],
+    "plan": {
+     "role": null,
+     "lane": null,
+     "position": null,
+     "urls": null,
+     "heads": null
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous"
+   ]
+  },
+  "gpu-h200-1007.lgcm.sh.istep.fun": {
+   "ready.json": {
+    "host": "gpu-h200-1007.lgcm.sh.istep.fun",
+    "ip": "10.204.9.96"
+   },
+   "failed.json": {
+    "host": "gpu-h200-1007.lgcm.sh.istep.fun",
+    "error": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run\n    await_condition(lambda: (root / 'replay_finished.json').is_file(),\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 233, in await_condition\n    raise RuntimeError(f'Native P/D peer failed: {failed}')\nRuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json')]\n"
+   },
+   "native_stopped.json": {
+    "signal": "SIGINT",
+    "returncode": -2,
+    "shutdown_order": {
+     "drained_before_stop": false,
+     "all_nodes_drained_before_head_stop": [],
+     "native_returned_before_requested_stop": false
+    }
+   },
+   "result": {
+    "stage": "finished",
+    "exception": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run\n    await_condition(lambda: (root / 'replay_finished.json').is_file(),\n  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 233, in await_condition\n    raise RuntimeError(f'Native P/D peer failed: {failed}')\nRuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json')]\n",
+    "workload_returncode": 1,
+    "observation_errors": [],
+    "server_stop": {
+     "signal": "SIGINT",
+     "returncode": -2
+    },
+    "shutdown_order": {
+     "drained_before_stop": false,
+     "all_nodes_drained_before_head_stop": [],
+     "native_returned_before_requested_stop": false
+    },
+    "server_pid": 797,
+    "server_started_at_utc": "2026-11-07T07:26:42.460381+00:00",
+    "versions": {
+     "torch": "2.13.0+cu130",
+     "vllm": "0.28.0",
+     "aiohttp": "3.14.3"
+    },
+    "plan": {
+     "role": "decode",
+     "lane": 3,
+     "position": 7,
+     "urls": {
+      "prefill": "http://10.204.6.121:8100",
+      "decode": "http://10.204.12.65:8200"
+     },
+     "heads": {
+      "prefill": {
+       "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+       "ip": "10.204.6.121"
+      },
+      "decode": {
+       "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+       "ip": "10.204.12.65"
+      }
+     }
+    }
+   },
+   "worker.log_tail": [
+    "NATIVE_PD_STAGE rendezvous",
+    "NATIVE_PD_STAGE native_start",
+    "NATIVE_PD_STAGE native_launched",
+    "NATIVE_PD_STAGE await_replay",
+    "Traceback (most recent call last):",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 377, in run",
+    "    await_condition(lambda: (root / 'replay_finished.json').is_file(),",
+    "  File \"/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01/native_pd_worker.py\", line 233, in await_condition",
+    "    raise RuntimeError(f'Native P/D peer failed: {failed}')",
+    "RuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json')]",
+    "",
+    "NATIVE_PD_STAGE finished"
+   ],
+   "server.log_tail": [
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1309, in run_engine_core",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     engine_core = DPEngineCoreProc(*args, **kwargs)",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2003, in __init__",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     super().__init__(",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py\", line 178, in sync_wrapper",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     return func(*args, **kwargs)",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1071, in __init__",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     self._init_data_parallel(vllm_config)",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2027, in _init_data_parallel",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     dp_group, dp_store = parallel_config.stateless_init_dp_group(return_store=True)",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 664, in stateless_init_dp_group",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     raise e",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 649, in stateless_init_dp_group",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     return stateless_init_torch_distributed_process_group(",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 659, in stateless_init_torch_distributed_process_group",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     pg = init_gloo_process_group(",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]          ^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 564, in init_gloo_process_group",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]     backend_class = ProcessGroupGloo(",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346]                     ^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332) ERROR 11-07 07:56:43 [core.py:1346] torch.distributed.DistNetworkError: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?",
+    "(EngineCore_DP3 pid=1332) Process EngineCore_DP3:",
+    "(EngineCore_DP3 pid=1332) Traceback (most recent call last):",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/lib/python3.12/multiprocessing/process.py\", line 314, in _bootstrap",
+    "(EngineCore_DP3 pid=1332)     self.run()",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/lib/python3.12/multiprocessing/process.py\", line 108, in run",
+    "(EngineCore_DP3 pid=1332)     self._target(*self._args, **self._kwargs)",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1350, in run_engine_core",
+    "(EngineCore_DP3 pid=1332)     raise e",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1309, in run_engine_core",
+    "(EngineCore_DP3 pid=1332)     engine_core = DPEngineCoreProc(*args, **kwargs)",
+    "(EngineCore_DP3 pid=1332)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2003, in __init__",
+    "(EngineCore_DP3 pid=1332)     super().__init__(",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py\", line 178, in sync_wrapper",
+    "(EngineCore_DP3 pid=1332)     return func(*args, **kwargs)",
+    "(EngineCore_DP3 pid=1332)            ^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 1071, in __init__",
+    "(EngineCore_DP3 pid=1332)     self._init_data_parallel(vllm_config)",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py\", line 2027, in _init_data_parallel",
+    "(EngineCore_DP3 pid=1332)     dp_group, dp_store = parallel_config.stateless_init_dp_group(return_store=True)",
+    "(EngineCore_DP3 pid=1332)                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 664, in stateless_init_dp_group",
+    "(EngineCore_DP3 pid=1332)     raise e",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/config/parallel.py\", line 649, in stateless_init_dp_group",
+    "(EngineCore_DP3 pid=1332)     return stateless_init_torch_distributed_process_group(",
+    "(EngineCore_DP3 pid=1332)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 659, in stateless_init_torch_distributed_process_group",
+    "(EngineCore_DP3 pid=1332)     pg = init_gloo_process_group(",
+    "(EngineCore_DP3 pid=1332)          ^^^^^^^^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332)   File \"/usr/local/lib/python3.12/dist-packages/vllm/distributed/utils.py\", line 564, in init_gloo_process_group",
+    "(EngineCore_DP3 pid=1332)     backend_class = ProcessGroupGloo(",
+    "(EngineCore_DP3 pid=1332)                     ^^^^^^^^^^^^^^^^^",
+    "(EngineCore_DP3 pid=1332) torch.distributed.DistNetworkError: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?",
+    "INFO 11-07 07:56:44 [utils.py:615] [shutdown] Process manager: send sigterm to process EngineCore_DP3",
+    "INFO 11-07 07:56:44 [serve.py:258] Shutting down."
+   ]
+  }
+ }
+}

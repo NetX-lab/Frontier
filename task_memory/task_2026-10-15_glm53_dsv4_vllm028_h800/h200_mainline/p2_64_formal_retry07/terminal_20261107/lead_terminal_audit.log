@@ -1,0 +1,49 @@
+{
+ "status": "PASS_TERMINAL_PLATFORM_CAUSE_NO_REFERENCE",
+ "checks": {
+  "job_identity": true,
+  "job_failed_by_any_fail_policy": true,
+  "only_user_operation_is_create": true,
+  "stopped_replica_phase_stopped_with_stale_running_container": true,
+  "stopped_replica_has_no_stop_operation": true,
+  "stopped_replica_events_end_at_image_pull": true,
+  "stopped_node_record_ends_at_rendezvous": true,
+  "stopped_node_is_missing_decode_lane_2": true,
+  "stop_seen_between_monitor_reads": true,
+  "decode_head_startup_timeout": true,
+  "prefill_head_reached_server_ready": true,
+  "no_replay_started": true,
+  "two_failed_containers_exit_1": true,
+  "teardown_stops_by_rjob_controller": true,
+  "platform_ping_helper_error_on_every_replica": true,
+  "launcher_exited_after_job_end": true,
+  "platform_queries_pass": true
+ },
+ "archived_files": 35
+}
+{
+ "known_container_gpu_hours": 8.264444444444445,
+ "container_clocks_complete": false,
+ "upper_bound_window_utc": [
+  "2026-11-07T07:17:41+00:00",
+  "2026-11-07T07:56:53+00:00"
+ ],
+ "upper_bound_seconds": 2352.0,
+ "counted_container_gpu_hours": 41.81,
+ "counted_before": 27.09,
+ "cumulative_counted": 68.9,
+ "cap": 128,
+ "rule": "D-P2-64-FIFTH: without complete container clocks, 64 GPUs x scheduled wall time counts toward 128. The window runs from the first replica create to the later of the last stop and the last replica event."
+}
+{
+ "stop_window_utc": [
+  "2026-11-07T07:26:50.038805+00:00",
+  "2026-11-07T07:31:52.016870+00:00"
+ ],
+ "node_failures": {
+  "gpu-h200-0047": "RuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json'), PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-1007.lgcm.sh.istep.fun/failed.json')]",
+  "gpu-h200-0300": "TimeoutError: Native P/D rendezvous or workload deadline exceeded",
+  "gpu-h200-0491": "RuntimeError: Native server exited early: 0",
+  "gpu-h200-1007": "RuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json')]"
+ }
+}

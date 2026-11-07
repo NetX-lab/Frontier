@@ -1,0 +1,232 @@
+2026-11-07T15:01:28.4695581240 12595 run_manifest.json
+2026-11-07T15:25:41.6409493780 71 nodes/gpu-h200-1007.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:02.2128099300 72 nodes/gpu-h200-0300.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:04.6997459450 71 nodes/gpu-h200-0047.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:07.5061971930 72 nodes/gpu-h200-0023.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:20.3263437730 71 nodes/gpu-h200-0085.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:28.0678723400 71 nodes/gpu-h200-0033.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:35.1494621470 9386 nodes/gpu-h200-0726.lgcm.sh.istep.fun/result.json
+2026-11-07T15:26:35.1826287050 27 nodes/gpu-h200-0726.lgcm.sh.istep.fun/worker.log
+2026-11-07T15:26:35.1930736410 72 nodes/gpu-h200-0726.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:38.1782587450 71 nodes/gpu-h200-0491.lgcm.sh.istep.fun/ready.json
+2026-11-07T15:26:39.2299332400 16372 nodes/gpu-h200-0491.lgcm.sh.istep.fun/result.json
+2026-11-07T15:26:39.2561128190 117 nodes/gpu-h200-0491.lgcm.sh.istep.fun/worker.log
+2026-11-07T15:26:41.1285283730 16375 nodes/gpu-h200-0085.lgcm.sh.istep.fun/result.json
+2026-11-07T15:26:41.1607487970 117 nodes/gpu-h200-0085.lgcm.sh.istep.fun/worker.log
+2026-11-07T15:26:42.5061903680 16371 nodes/gpu-h200-1007.lgcm.sh.istep.fun/result.json
+2026-11-07T15:26:42.5356646180 117 nodes/gpu-h200-1007.lgcm.sh.istep.fun/worker.log
+2026-11-07T15:26:42.9142337280 16281 nodes/gpu-h200-0300.lgcm.sh.istep.fun/result.json
+2026-11-07T15:26:42.9379496030 88 nodes/gpu-h200-0300.lgcm.sh.istep.fun/worker.log
+2026-11-07T15:26:45.4381176020 16374 nodes/gpu-h200-0047.lgcm.sh.istep.fun/result.json
+2026-11-07T15:26:45.4615474560 117 nodes/gpu-h200-0047.lgcm.sh.istep.fun/worker.log
+2026-11-07T15:26:48.8707841700 16375 nodes/gpu-h200-0033.lgcm.sh.istep.fun/result.json
+2026-11-07T15:26:48.8969901400 117 nodes/gpu-h200-0033.lgcm.sh.istep.fun/worker.log
+2026-11-07T15:27:30.6429270340 1600 nodes/gpu-h200-0491.lgcm.sh.istep.fun/server.log
+2026-11-07T15:27:32.5965745260 1600 nodes/gpu-h200-1007.lgcm.sh.istep.fun/server.log
+2026-11-07T15:28:15.6945286630 9000 nodes/gpu-h200-0300.lgcm.sh.istep.fun/server.log
+2026-11-07T15:36:34.8909892210 811763 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank4.json
+2026-11-07T15:36:34.8932324950 811763 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank7.json
+2026-11-07T15:36:34.8948622050 811761 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank5.json
+2026-11-07T15:36:34.8999248480 811762 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank1.json
+2026-11-07T15:36:34.9022266680 811763 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank6.json
+2026-11-07T15:36:34.9056934740 811754 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank0.json
+2026-11-07T15:36:34.9167670280 811763 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank3.json
+2026-11-07T15:36:34.9189221660 811762 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank0.json
+2026-11-07T15:36:34.9193891180 811754 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank1.json
+2026-11-07T15:36:34.9281764890 811750 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank7.json
+2026-11-07T15:36:34.9421997420 811750 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank2.json
+2026-11-07T15:36:34.9449337180 811761 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank7.json
+2026-11-07T15:36:34.9533115210 811750 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank6.json
+2026-11-07T15:36:34.9614623100 811763 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank2.json
+2026-11-07T15:36:34.9631845790 811763 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank5.json
+2026-11-07T15:36:34.9638310910 811749 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank0.json
+2026-11-07T15:36:34.9758872730 811763 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank7.json
+2026-11-07T15:36:34.9788641790 811761 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank4.json
+2026-11-07T15:36:34.9870442910 811763 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank5.json
+2026-11-07T15:36:34.9883286600 811763 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank6.json
+2026-11-07T15:36:34.9890770990 811749 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank1.json
+2026-11-07T15:36:34.9897277620 811761 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank6.json
+2026-11-07T15:36:34.9976315520 811763 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank4.json
+2026-11-07T15:36:35.0024200150 811750 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank5.json
+2026-11-07T15:36:35.0104129170 811763 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank2.json
+2026-11-07T15:36:35.0122987150 811762 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank0.json
+2026-11-07T15:36:35.0212699350 811763 nodes/gpu-h200-0047.lgcm.sh.istep.fun/serving/rank3.json
+2026-11-07T15:36:35.0227458880 811761 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank2.json
+2026-11-07T15:36:35.0288745350 811750 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank3.json
+2026-11-07T15:36:35.0384269410 811750 nodes/gpu-h200-0023.lgcm.sh.istep.fun/serving/rank4.json
+2026-11-07T15:36:35.2327199750 811762 nodes/gpu-h200-0085.lgcm.sh.istep.fun/serving/rank1.json
+2026-11-07T15:36:35.3448158810 811761 nodes/gpu-h200-0033.lgcm.sh.istep.fun/serving/rank3.json
+2026-11-07T15:36:36.0234294320 65987 nodes/gpu-h200-0033.lgcm.sh.istep.fun/server.log
+2026-11-07T15:36:36.0244486120 66090 nodes/gpu-h200-0085.lgcm.sh.istep.fun/server.log
+2026-11-07T15:36:36.0252592320 66089 nodes/gpu-h200-0047.lgcm.sh.istep.fun/server.log
+2026-11-07T15:36:37.2552577110 112313 nodes/gpu-h200-0023.lgcm.sh.istep.fun/server.log
+2026-11-07T15:36:37.2825814730 384 nodes/gpu-h200-0023.lgcm.sh.istep.fun/server_ready.json
+2026-11-07T15:36:37.3334437870 16281 nodes/gpu-h200-0023.lgcm.sh.istep.fun/result.json
+2026-11-07T15:36:37.3688504740 117 nodes/gpu-h200-0023.lgcm.sh.istep.fun/worker.log
+== nodes/gpu-h200-0023.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-0023.lgcm.sh.istep.fun",
+  "ip": "10.204.6.121"
+}
+
+== nodes/gpu-h200-0033.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-0033.lgcm.sh.istep.fun",
+  "ip": "10.204.8.44"
+}
+
+== nodes/gpu-h200-0047.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-0047.lgcm.sh.istep.fun",
+  "ip": "10.204.6.67"
+}
+
+== nodes/gpu-h200-0085.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-0085.lgcm.sh.istep.fun",
+  "ip": "10.204.8.98"
+}
+
+== nodes/gpu-h200-0300.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-0300.lgcm.sh.istep.fun",
+  "ip": "10.204.12.65"
+}
+
+== nodes/gpu-h200-0491.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-0491.lgcm.sh.istep.fun",
+  "ip": "10.204.8.22"
+}
+
+== nodes/gpu-h200-0726.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-0726.lgcm.sh.istep.fun",
+  "ip": "10.204.18.57"
+}
+
+== nodes/gpu-h200-1007.lgcm.sh.istep.fun/ready.json
+{
+  "host": "gpu-h200-1007.lgcm.sh.istep.fun",
+  "ip": "10.204.9.96"
+}
+
+== nodes/gpu-h200-0023.lgcm.sh.istep.fun/server_ready.json
+{
+  "role": "prefill",
+  "url": "http://10.204.6.121:8100",
+  "server_pid": 750,
+  "server_started_at_utc": "2026-11-07T07:26:48.737435+00:00",
+  "run_manifest_sha256": "07151bd4fd6b971aa1aa7121f696956ac2f1675787a6e2619aceffaa29cbbe46",
+  "run_generation": "v4-native-v028-h200-p2-64-formal-20261107-07",
+  "ready_at_utc": "2026-11-07T07:36:37.255734+00:00",
+  "health_status": 200
+}
+
+== nodes/gpu-h200-0023.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+NATIVE_PD_STAGE await_replay
+
+== nodes/gpu-h200-0033.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+NATIVE_PD_STAGE await_replay
+
+== nodes/gpu-h200-0047.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+NATIVE_PD_STAGE await_replay
+
+== nodes/gpu-h200-0085.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+NATIVE_PD_STAGE await_replay
+
+== nodes/gpu-h200-0300.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+
+== nodes/gpu-h200-0491.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+NATIVE_PD_STAGE await_replay
+
+== nodes/gpu-h200-0726.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+
+== nodes/gpu-h200-1007.lgcm.sh.istep.fun/worker.log
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+NATIVE_PD_STAGE await_replay
+
+== nodes/gpu-h200-0023.lgcm.sh.istep.fun/server.log
+(ApiServer_2 pid=1427) INFO:     Waiting for application startup.
+(ApiServer_0 pid=1425) INFO:     Started server process [1425]
+(ApiServer_0 pid=1425) INFO:     Waiting for application startup.
+(ApiServer_3 pid=1428) INFO:     Application startup complete.
+(ApiServer_1 pid=1426) INFO:     Application startup complete.
+(ApiServer_0 pid=1425) INFO:     Application startup complete.
+(ApiServer_2 pid=1427) INFO:     Application startup complete.
+(ApiServer_2 pid=1427) INFO:     10.204.6.121:36618 - "GET /health HTTP/1.1" 200 OK
+== nodes/gpu-h200-0033.lgcm.sh.istep.fun/server.log
+(Worker_DP1_TP0_EP8 pid=1565) INFO 11-07 07:36:34 [torch_utils.py:262] Reducing Torch threads from 8 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.
+(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [core.py:354] init engine (profile, create kv cache, warmup model) took 455.57 s
+(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [nixl_utils.py:72] NIXL is available
+(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [factory.py:62] Creating v1 connector with name: NixlPullConnector and engine_id: 657a68ba-410b-40cb-b764-929f77ade939_dp1
+(EngineCore_DP1 pid=1280) WARNING 11-07 07:36:35 [base.py:211] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.
+(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [base_scheduler.py:101] Initializing NIXL Scheduler 657a68ba-410b-40cb-b764-929f77ade939_dp1
+(EngineCore_DP1 pid=1280) INFO 11-07 07:36:35 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore_DP1 pid=1280) INFO 11-07 07:36:36 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+== nodes/gpu-h200-0047.lgcm.sh.istep.fun/server.log
+(Worker_DP2_TP0_EP16 pid=1567) INFO 11-07 07:36:34 [torch_utils.py:262] Reducing Torch threads from 8 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.
+(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [core.py:354] init engine (profile, create kv cache, warmup model) took 455.38 s
+(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [nixl_utils.py:72] NIXL is available
+(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [factory.py:62] Creating v1 connector with name: NixlPullConnector and engine_id: e6b02967-2c34-4ba6-9675-ef902efe7b38_dp2
+(EngineCore_DP2 pid=1282) WARNING 11-07 07:36:35 [base.py:211] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.
+(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [base_scheduler.py:101] Initializing NIXL Scheduler e6b02967-2c34-4ba6-9675-ef902efe7b38_dp2
+(EngineCore_DP2 pid=1282) INFO 11-07 07:36:35 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore_DP2 pid=1282) INFO 11-07 07:36:36 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+== nodes/gpu-h200-0085.lgcm.sh.istep.fun/server.log
+(Worker_DP3_TP0_EP24 pid=1563) INFO 11-07 07:36:34 [torch_utils.py:262] Reducing Torch threads from 8 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.
+(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [core.py:354] init engine (profile, create kv cache, warmup model) took 455.43 s
+(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [nixl_utils.py:72] NIXL is available
+(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [factory.py:62] Creating v1 connector with name: NixlPullConnector and engine_id: a8305b1b-46f7-4bd4-b80e-4c3ba8d5baae_dp3
+(EngineCore_DP3 pid=1278) WARNING 11-07 07:36:35 [base.py:211] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.
+(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [base_scheduler.py:101] Initializing NIXL Scheduler a8305b1b-46f7-4bd4-b80e-4c3ba8d5baae_dp3
+(EngineCore_DP3 pid=1278) INFO 11-07 07:36:35 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore_DP3 pid=1278) INFO 11-07 07:36:36 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+== nodes/gpu-h200-0300.lgcm.sh.istep.fun/server.log
+(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor
+(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.
+(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(ApiServer_0 pid=1426) INFO 11-07 07:28:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(ApiServer_2 pid=1428) INFO 11-07 07:28:15 [nixl_utils.py:72] NIXL is available
+(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [nixl_utils.py:72] NIXL is available
+(ApiServer_2 pid=1428) INFO 11-07 07:28:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(ApiServer_1 pid=1427) INFO 11-07 07:28:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+== nodes/gpu-h200-0491.lgcm.sh.istep.fun/server.log
+INFO 11-07 07:27:30 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor
+INFO 11-07 07:27:30 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.
+INFO 11-07 07:27:30 [vllm.py:1334] Auto-enabling VLLM_USE_BREAKABLE_CUDAGRAPH=1. Set VLLM_USE_BREAKABLE_CUDAGRAPH=0 to opt out.
+INFO 11-07 07:27:30 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 11-07 07:27:30 [nixl_utils.py:32] Setting UCX_RCACHE_MAX_UNRELEASED to '1024' to avoid a rare memory leak in UCX when using NIXL.
+INFO 11-07 07:27:30 [nixl_utils.py:72] NIXL is available
+INFO 11-07 07:27:30 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+INFO 11-07 07:27:30 [serve.py:231] Launching 1 data parallel engine(s) in headless mode, with head node address tcp://10.204.12.65:24571.
+== nodes/gpu-h200-1007.lgcm.sh.istep.fun/server.log
+INFO 11-07 07:27:32 [cache.py:282] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor
+INFO 11-07 07:27:32 [vllm.py:1241] Disabling NCCL for DP synchronization when using async scheduling.
+INFO 11-07 07:27:32 [vllm.py:1334] Auto-enabling VLLM_USE_BREAKABLE_CUDAGRAPH=1. Set VLLM_USE_BREAKABLE_CUDAGRAPH=0 to opt out.
+INFO 11-07 07:27:32 [kernel.py:308] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 11-07 07:27:32 [nixl_utils.py:32] Setting UCX_RCACHE_MAX_UNRELEASED to '1024' to avoid a rare memory leak in UCX when using NIXL.
+INFO 11-07 07:27:32 [nixl_utils.py:72] NIXL is available
+INFO 11-07 07:27:32 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+INFO 11-07 07:27:32 [serve.py:231] Launching 1 data parallel engine(s) in headless mode, with head node address tcp://10.204.12.65:24571.

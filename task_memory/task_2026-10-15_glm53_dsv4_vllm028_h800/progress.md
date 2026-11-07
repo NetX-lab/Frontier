@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | Recorded the generation07 platform-cause end (one replica stopped after the rendezvous, decode startup timeout, 41.81 GPUh counted, cumulative 68.90 of 128); D-P2-64-FIFTH exhausted, next GPU job needs a new decision. |
 | 2026-11-07 | Recorded the codex-implement cleanup 86673e2f (171 directories, 37.42 GiB) and its lead acceptance. |
 | 2026-11-07 | Recorded the generation06 platform-cause end (spot-GPU device-admission failure, no container, 8.57 GPUh counted) and the generation07 submission `exp-1107-150132-396145` (18/18 checks), resubmission 2 of 2, the last. |
 | 2026-11-07 | Recorded the generation05 platform-cause end (external replica stops, 18.52 GPUh counted) and the generation06 submission `exp-1107-144321-305543` (18/18 checks), resubmission 1 of 2 under D-P2-64-FIFTH. |
@@ -524,6 +525,32 @@ The following completed A6 history retains its original all-request verdicts. D-
 - **in-progress, resumed same IDs only**: PASS-REPLAY-INPUTS needs the exact retained source-row/raw/config/cache paths; B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) needs phase-level findings. No duplicate agents or completed checks were restarted.
 - **pending**: repeatability producer -> business verification -> complete three-run rows/tables -> four CPU P2 replays and median3 held-out run. Unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched; changes are not yet committed.
 
+## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
+
+- completed — mid-run diagnosis. Reason: replica cfcd2084 showed phase Stopped at the 07:31:52Z monitor read while the
+  job stayed Running. Read-only Pi label p64-formal7-inspect-1107o (2 single-call turns, prompts `.md` and `.2.md`)
+  read the events, audit, live receipt and node records under the cloud run root. Result: gpu-h200-0726 stopped
+  writing after its rendezvous record at 07:26:35Z; prefill head ready at 07:36:37Z; the decode head waited for the
+  missing decode lane 2; no file changed after 07:36:40Z. The lead did not stop the job: the decode startup timeout
+  (1800 s) was due at about 07:57Z.
+- completed — terminal evidence. The job Failed at 07:56:47Z (`Task fail policy [any] caused undesired running
+  replicas.`); launcher exit 07:56:50Z. Read-only Pi label p64-formal7-terminal-1107p (one call, script
+  `/data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-terminal-1107p.sh` plus remote reader `.remote.py`) wrote the terminal
+  receipt, events and audit (all queries PASS), 8 replica logs and `native_tree.json` (8 nodes, 72 files) under its
+  scratch. No copy job: no native reference.
+- completed — cause. The decode head raised `TimeoutError` at its healthy wait; the other node failures are the
+  cascade. cfcd2084 has no stop operation, no event after the image pull and no native error; classification:
+  platform cause (inferred). [I-013](issues.md) records the harness gap: no liveness check for a peer that passed the
+  rendezvous.
+- completed — accounting. 8.264 GPUh known (two Failed containers); counted upper bound 64 x 2352 s (07:17:41Z first
+  replica create to 07:56:53Z last replica event) = 41.81 GPUh; cumulative 68.90 of 128.
+- completed — lead terminal audit `h200_mainline/p2_64_formal_retry07/terminal_20261107/lead_terminal_audit.py`
+  archived 35 files with sha256 and wrote `lead_terminal_acceptance.json` = PASS_TERMINAL_PLATFORM_CAUSE_NO_REFERENCE
+  (17/17). [Test report](test_report_2026-11-07_p2_64_generation07_terminal.md).
+- pending — user decision. D-P2-64-FIFTH is exhausted (generation05 plus both resubmissions, all platform causes, no
+  reference). Next: the user decides whether and how to run P2-64 again; nothing is submitted until then. The prepared
+  post-run label p64-formal7-post-1107n was not launched.
+
 ## Task artifact cleanup through codex-implement — completed, 2026-11-07
 
 - completed — codex request 86673e2f-3b87-4663-a948-1a9ec9eb03a4 removed 171 exact directories under `/data/ycfeng/tmp/glm53_dsv4` and `/data/ycfeng/tmp/ds4_runs` (pytest fixture trees, regenerable sklearn caches, superseded CPU fidelity case outputs, Node caches of finished Pi labels): 67,639 files, 37.42 GiB allocated; available space +36.41 GiB. Reason: the standing rule to remove invalid task artifacts after each checkpoint. Records: `cleanup_20261107/report.md`.
@@ -538,7 +565,7 @@ The following completed A6 history retains its original all-request verdicts. D-
 - completed — generation07 package. One entry `p2_64_formal_retry07` through the unchanged CASES registry; build exit 0. Lead audit `h200_mainline/p2_64_formal_retry07/lead_package_audit.py` = PASS_PACKAGE_IDENTITY_AND_CHECK_ONLY: 47 sealed, 41 byte-identical to generation06, the 6 identity files changed by exact replacements only, pins clean, check-only PASS, manifest 8fd5d9dc625bae451689775bfdcd578e3c7b60be6d0b7b08c0edbcc00703190a. Approval receipt (resubmission 2 of 2, 27.09 GPUh counted before), wrapper `/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal_retry07.sh` (only AUTHORIZATION and PKG differ; bash -n PASS) and `post_run_command.json` written.
 - completed — submission and monitor. Reason: I-010 breaks Pi turns after the first tool call, so the lead wrote one script `/data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-submit-1107m.sh` (reader read of generation06, one `submit_package.sh` call, readback, detached monitor start). Pi label p64-formal7-submit-1107m ran it in one call, exit 0. Result SUBMITTED_ALL_CHECKS_PASS: job exp-1107-150132-396145, UID 45849203-b2c0-4de5-9ef3-e3b4ad716168, created 07:01:32Z, launcher PID 3498815, 9/9 approval and 18/18 job checks, 0 controls. Monitor PID 3501222 (every 300 s, at most 36 h) under `/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch/monitor/`; launcher_alive true at 07:06:43Z after the Pi exit at 07:02:58Z; phase Pending, queue suspend for insufficient H200 quota. Lead acceptance `h200_mainline/p2_64_formal_retry07/lead_submission_acceptance.json` = PASS_SUBMISSION_IDENTITY_AND_LAUNCHER_SURVIVAL with eight `generation07_*` copies.
 - completed — [test report](test_report_2026-11-07_p2_64_generation06_terminal_generation07_submission.md).
-- in-progress — native execution of exp-1107-150132-396145. Next: terminal receipt and container clocks -> CPU-only copy and hash -> `h200_mainline/p2_64_formal_retry07/post_run_command.json` (pair coverage soft gate, R5, all-request and warm four-metric readings per repeat). This is the last resubmission under D-P2-64-FIFTH: if it ends without a reference, the chain stops and the next GPU job needs a new user decision.
+- completed — native execution of exp-1107-150132-396145 ended Failed at 07:56:47Z without a reference (section above).
 
 ## Generation05 terminal cause and generation06 submission — 2026-11-07
 
@@ -589,7 +616,7 @@ The following completed A6 history retains its original all-request verdicts. D-
 
 ## Current session handoff — Codex CLI (2026-11-02)
 
-Current outcome (2026-11-07): see the section "Generation06 terminal cause and generation07 submission" above. Historical outcome (2026-11-04): Generation04 exp-1103-131952-259161 is Stopped at 2026-11-03T10:00:43Z. The successful stop audit and job annotations identify alimasiyilixiati / release_quota. Independent acceptance verifies 178/178 audit rows, 65/65 historical QueueWaiting events, null startTime, zero retained replicas and two raw cloud-read receipts showing no output directory. This supports never-scheduled status; no complete native reference exists. Launcher81539 observed the stop afterwards and exited0 at10:00:47.086386Z; it is absent. Terminal/cause recovery is complete; copy, pair coverage, R5 and metrics are NOT RUN for generation04. See h200_mainline/p2_64_formal_retry04/terminal_20261104/lead_terminal_acceptance.json. Generation05 package h200_mainline/p2_64_formal_retry05/package_01 is prepared and independently verified:47/47 sealed hashes,41 byte-identical files,6 exact identity/provenance changes, check-only PASS, manifest23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c. It is unsubmitted and awaits a new explicit resource decision; D-P2-64-FOURTH authorized only the fourth submission. Proposed resources remain64H200/all-preemptible/step_main/3600s/64GPUh for exactly one fifth run, with no automatic sixth. Frozen native/harness/promotion/workload, R5 and the completed Frontier replay remain unchanged. Historical35-job exact accounting remains158.27166666666665GPUh. Generation01 known subtotal4.053333333333334 and generation02 missing end clocks stay incomplete. Generation03/04 evidence supports zero container consumption while their generic exact-clock receipts remain null. Queue wall time is excluded. Ticket19 accounting and formal P2-64 remain open.
+Current outcome (2026-11-07): see the section "Generation07 terminal cause — D-P2-64-FIFTH exhausted" above. Historical outcome (2026-11-04): Generation04 exp-1103-131952-259161 is Stopped at 2026-11-03T10:00:43Z. The successful stop audit and job annotations identify alimasiyilixiati / release_quota. Independent acceptance verifies 178/178 audit rows, 65/65 historical QueueWaiting events, null startTime, zero retained replicas and two raw cloud-read receipts showing no output directory. This supports never-scheduled status; no complete native reference exists. Launcher81539 observed the stop afterwards and exited0 at10:00:47.086386Z; it is absent. Terminal/cause recovery is complete; copy, pair coverage, R5 and metrics are NOT RUN for generation04. See h200_mainline/p2_64_formal_retry04/terminal_20261104/lead_terminal_acceptance.json. Generation05 package h200_mainline/p2_64_formal_retry05/package_01 is prepared and independently verified:47/47 sealed hashes,41 byte-identical files,6 exact identity/provenance changes, check-only PASS, manifest23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c. It is unsubmitted and awaits a new explicit resource decision; D-P2-64-FOURTH authorized only the fourth submission. Proposed resources remain64H200/all-preemptible/step_main/3600s/64GPUh for exactly one fifth run, with no automatic sixth. Frozen native/harness/promotion/workload, R5 and the completed Frontier replay remain unchanged. Historical35-job exact accounting remains158.27166666666665GPUh. Generation01 known subtotal4.053333333333334 and generation02 missing end clocks stay incomplete. Generation03/04 evidence supports zero container consumption while their generic exact-clock receipts remain null. Queue wall time is excluded. Ticket19 accounting and formal P2-64 remain open.
 
 <a id="current-session-handoff--codex-cli-2026-10-31"></a>
 <a id="current-session-handoff--2026-10-25-mainline-correction"></a>

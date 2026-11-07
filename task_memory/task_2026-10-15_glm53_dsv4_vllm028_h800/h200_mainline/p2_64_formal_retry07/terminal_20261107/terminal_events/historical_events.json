@@ -1,0 +1,1264 @@
+{
+ "observed_utc": "2026-11-07T07:58:40.868337+00:00",
+ "job": "exp-1107-150132-396145",
+ "job_uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168",
+ "request": {
+  "path": "/kapis/v1/tenants/shai/projects/shai-core/events",
+  "sortBy": "lastTimestamp:desc",
+  "pageSize": 100
+ },
+ "sources": {
+  "exp-1107-150132-396145": {
+   "kind": "RJob",
+   "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168",
+   "count": 39,
+   "total": 39,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145",
+      "kind": "RJob",
+      "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 39,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:49Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:48Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:48Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:48Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1107-150132-396145-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1107-150132-396145-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1107-150132-396145-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1107-150132-396145-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1107-150132-396145-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Close replica",
+       "message": "Close replica/exp-1107-150132-396145-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0085.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:12Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0085.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:21:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 528 Insufficient cpu, 773 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:21:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 530 Insufficient cpu, 774 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:19:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 529 Insufficient cpu, 772 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:19:07Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 526 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0491.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0033.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 527 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:46Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 526 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:36Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 525 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:36Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: coscheduling prefilter resource gap: map[] member gap 1. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 1, coscheduling: podGroup shai-core/exp-1107-150132-396145-default gets rejected due to Pod exp-1107-150132-396145-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-1679091c cannot find enough sibling pods, current pods number: 4, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-1679091c cannot find enough sibling pods, current pods number: 4, minMember of group: 8, pre-filter pod exp-1107-150132-396145-1679091c cannot find enough sibling pods, current pods number: 4, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-cfcd2084",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8, pre-filter pod exp-1107-150132-396145-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8, pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-eccbc87e",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8, pre-filter pod exp-1107-150132-396145-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Start replica",
+       "message": "Start replica/exp-1107-150132-396145-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=319.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:15:52Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=311.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:14:10Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "QueueWaiting",
+       "message": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=320.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:01:37Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-1679091c": {
+   "kind": "Replica",
+   "uid": "dc87e43f-dadb-43e7-92d4-09efbe05f349",
+   "count": 4,
+   "total": 4,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-1679091c",
+      "kind": "Replica",
+      "uid": "dc87e43f-dadb-43e7-92d4-09efbe05f349",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 4,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-1679091c",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-1007.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:10Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 525 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-1679091c cannot find enough sibling pods, current pods number: 4, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-1679091c cannot find enough sibling pods, current pods number: 4, minMember of group: 8, pre-filter pod exp-1107-150132-396145-1679091c cannot find enough sibling pods, current pods number: 4, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-e4da3b7f": {
+   "kind": "Replica",
+   "uid": "ce876338-096d-4e1d-92d9-9bf1f6e04286",
+   "count": 4,
+   "total": 4,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-e4da3b7f",
+      "kind": "Replica",
+      "uid": "ce876338-096d-4e1d-92d9-9bf1f6e04286",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 4,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-e4da3b7f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:48Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0023.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:11Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 525 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8, pre-filter pod exp-1107-150132-396145-e4da3b7f cannot find enough sibling pods, current pods number: 6, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-c4ca4238": {
+   "kind": "Replica",
+   "uid": "2a24e1e9-b219-48d1-8400-b56dff67ce5d",
+   "count": 4,
+   "total": 4,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-c4ca4238",
+      "kind": "Replica",
+      "uid": "2a24e1e9-b219-48d1-8400-b56dff67ce5d",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 4,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-c4ca4238",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:48Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0047.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:10Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 525 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8, pre-filter pod exp-1107-150132-396145-c4ca4238 cannot find enough sibling pods, current pods number: 3, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-c81e728d": {
+   "kind": "Replica",
+   "uid": "560b2693-9d85-4b39-b749-bf094568b758",
+   "count": 8,
+   "total": 8,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-c81e728d",
+      "kind": "Replica",
+      "uid": "560b2693-9d85-4b39-b749-bf094568b758",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 8,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-c81e728d",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:48Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0085.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:12Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0085.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:21:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 528 Insufficient cpu, 773 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:21:08Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 530 Insufficient cpu, 774 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:19:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 529 Insufficient cpu, 772 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:19:07Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 527 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:46Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 525 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-a87ff679": {
+   "kind": "Replica",
+   "uid": "17062680-098f-4b24-909b-d8f66fa3483b",
+   "count": 5,
+   "total": 5,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-a87ff679",
+      "kind": "Replica",
+      "uid": "17062680-098f-4b24-909b-d8f66fa3483b",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 5,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-a87ff679",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:49Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0033.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:11Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0033.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 526 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 525 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:36Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-8f14e45f": {
+   "kind": "Replica",
+   "uid": "2114e154-2f38-46cd-9f5f-b4490247cbcb",
+   "count": 6,
+   "total": 6,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-8f14e45f",
+      "kind": "Replica",
+      "uid": "2114e154-2f38-46cd-9f5f-b4490247cbcb",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 6,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "SuccessfulDelete",
+       "message": "Deleted pod: exp-1107-150132-396145-8f14e45f",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:56:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0491.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:11Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "Waiting for resources to be preempted in node gpu-h200-0491.lgcm.sh.istep.fun",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 526 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: not eligible due to a terminating pod on the nominated node., coscheduling: wait preempted pod terminating.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:47Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 526 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:36Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: coscheduling prefilter resource gap: map[] member gap 1. co-scheduling post filter, coscheduling prefilter resource gap: map[] member gap 1, coscheduling: podGroup shai-core/exp-1107-150132-396145-default gets rejected due to Pod exp-1107-150132-396145-8f14e45f is unschedulable even after PostFilter, assigned 0.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:42Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-eccbc87e": {
+   "kind": "Replica",
+   "uid": "1d4b456d-b70a-4485-98b5-b3d9ee3486f9",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-eccbc87e",
+      "kind": "Replica",
+      "uid": "1d4b456d-b70a-4485-98b5-b3d9ee3486f9",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0300.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:10Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: 1 node(s) had untolerated taint {zhisuan-test: true}, 3531 node(s) didn't match Pod's node affinity/selector, 525 Insufficient cpu, 769 Insufficient memory, 960 Insufficient nvidia.com/spot-gpu. preemption: .",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:18:35Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  },
+  "exp-1107-150132-396145-cfcd2084": {
+   "kind": "Replica",
+   "uid": "a0ded040-5ecb-4905-90cd-2485640e8b88",
+   "count": 2,
+   "total": 2,
+   "pages": [
+    {
+     "parameters": {
+      "name": "exp-1107-150132-396145-cfcd2084",
+      "kind": "Replica",
+      "uid": "a0ded040-5ecb-4905-90cd-2485640e8b88",
+      "sortBy": "lastTimestamp:desc",
+      "page": 1,
+      "pageSize": 100
+     },
+     "total": 2,
+     "rows": [
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "Pulling",
+       "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\"",
+       "source": {
+        "host": "gpu-h200-0726.lgcm.sh.istep.fun"
+       },
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:23:12Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      },
+      {
+       "metadata": {
+        "creationTimestamp": null
+       },
+       "involvedObject": {},
+       "reason": "FailedScheduling",
+       "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8, pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8.",
+       "source": {},
+       "firstTimestamp": null,
+       "lastTimestamp": "2026-11-07T07:17:41Z",
+       "eventTime": null,
+       "reportingComponent": "",
+       "reportingInstance": ""
+      }
+     ]
+    }
+   ],
+   "pagination_complete": true
+  }
+ }
+}

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | I-013 opened and classified: one generation07 replica stopped from outside after the rendezvous; the peers waited 30 minutes for the decode startup timeout. Platform cause; D-P2-64-FIFTH is exhausted. |
 | 2026-11-07 | I-012 opened and classified: generation06 failed at spot-GPU device admission before any container started; platform cause, generation07 (last resubmission) submitted. I-010 did not recur on two single-call turns. |
 | 2026-11-07 | I-011 opened and classified: external stops of three generation05 replicas cascaded into the job failure; platform cause, generation06 submitted. |
 | 2026-11-07 | I-010 recurred on four new labels after their first tool call; each resumed with a continuation prompt, and one combined call per turn completed the monitor start. |
@@ -27,6 +28,24 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+
+## I-013: a replica lost after the rendezvous leaves its peers waiting for the full startup timeout (2026-11-07)
+
+- Observation: in generation07 (`exp-1107-150132-396145`) gpu-h200-0726 (replica cfcd2084) wrote `ready.json` and its
+  rendezvous record at 07:26:35Z and nothing after. The replica reached phase Stopped between the monitor reads at
+  07:26:50Z and 07:31:52Z, with no stop operation in the audit, no event after the image pull, no native error and a
+  container state left at `running`. The other 7 nodes had planned it as decode lane 2, so the decode DP head never
+  became healthy and raised its 1800 s startup timeout at 07:56:45Z; the any-replica fail policy then ended the job.
+  41.81 GPUh counted (upper bound); no file in the run tree changed after 07:36:40Z, so the last 20 minutes
+  were spent waiting on the lost peer.
+- Inference: a platform-side stop of one replica (node loss or reclaim; the platform recorded no reason). A stopped
+  replica does not trigger the fail policy; only the later Failed replicas do.
+- Harness gap (observed): `native_pd_worker.py` checks only that 8 `ready.json` files exist and that no peer wrote
+  `failed.json`; it has no liveness check for a peer that passed the rendezvous and then disappeared, so the wait
+  lasts until `startup_timeout_s`. In generation05 the lost replica was the DP head, so the cascade was immediate.
+- Resolution: classified as a platform cause. D-P2-64-FIFTH is exhausted, so nothing is resubmitted; a peer liveness
+  check is part of the proposal for the next decision. Evidence:
+  `h200_mainline/p2_64_formal_retry07/terminal_20261107/`.
 
 ## I-012: spot-GPU device-admission failure ends a job before any container starts (2026-11-07)
 

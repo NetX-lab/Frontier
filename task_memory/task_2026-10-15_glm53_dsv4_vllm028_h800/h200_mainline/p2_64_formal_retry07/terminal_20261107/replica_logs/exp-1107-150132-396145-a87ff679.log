@@ -1,0 +1,58 @@
+{"@caller":"gitlab.basemind.com/basemind/brainpp/projects/kubebrain/cmd/worker-init/app/options.(*Options).Run","@file":"projects/kubebrain/cmd/worker-init/app/options/options.go:80","@level":"info","@msg":"SSHD not enabled","@timestamp":"2026-11-07T07:26:22.102Z"}
+2026-11-07 07:26:22: DEBUG: Calling worker_init, DISTRIBUTED_JOB_ENVS_INITIALIZED=
+2026-11-07 07:26:22: DEBUG: worker_init() function called
+2026-11-07 07:26:22: DEBUG: SCRIPT_PATH=/jobutils/scripts, BASE_DIR=/jobutils
+SOCKET_IP=10.204.8.44
+4 reranked to 3
+MASTER_NODE_NAME=gpu-h200-0023.lgcm.sh.istep.fun, LAST_NODE_NAME=gpu-h200-1007.lgcm.sh.istep.fun
+MASTER_SOCKET_ADDR=10.204.6.121, LAST_SOCKET_ADDR=10.204.9.96
+NODE_NAME=gpu-h200-0033.lgcm.sh.istep.fun
+GPU_TYPE=H200
+GPU_VENDOR=NVIDIA
+NODE_RANK=3
+NODE_COUNT=8
+MASTER_ADDR=10.204.6.121
+PROC_PER_NODE=8
+JOB_ID=exp-1107-150132-396145
+2026-11-07 07:26:25: [replica_labels] 2026-11-07 07:26:25.166 | WARNING  | utils:<module>:21 - clickhouse_connect 模块未安装，ClickHouse 功能将不可用。p2p_ping 等不需要 ClickHouse 的功能仍可正常使用。
+RDMA_NETWORK_LINK_TYPE=RoCE
+LLDP_INFO_FILE=/host-config/lldp-info.txt
+USE_BRAINVF=false
+NET_IF_PREFIX=brainpf
+Verifying all RoCEv2 GID indexes equal to 3 ...
+NCCL_SOCKET_IFNAME=bond0
+NVSHMEM_BOOTSTRAP_UID_SOCK_IFNAME=bond0
+NCCL_IB_HCA==mlx5_bond100,mlx5_bond101,mlx5_bond102,mlx5_bond103,mlx5_bond104,mlx5_bond105,mlx5_bond106,mlx5_bond107
+NCCL_IB_GID_INDEX=3
+Bond HCA detected, try to set NCCL_NET_PLUGIN=stepfun
+NCCL_NET_PLUGIN=stepfun
+NCCL_GIN_PLUGIN=
+LD_LIBRARY_PATH=/kubebrain:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64
+NVSHMEM_HCA_PE_MAPPING=mlx5_bond100:1:1,mlx5_bond101:1:1,mlx5_bond102:1:1,mlx5_bond103:1:1,mlx5_bond104:1:1,mlx5_bond105:1:1,mlx5_bond106:1:1,mlx5_bond107:1:1
+LLDP_INFO_FILE=/host-config/lldp-info.txt
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+2026-11-07 07:26:25: Ready to go.
+2026/11/07 07:26:25 [DEBUG] packaging-url , packaging-dir /workdir/src/rjob, Starting packaging server
+2026-11-07 07:26:28: [replica_labels] 2026-11-07 07:26:28.958 | WARNING  | utils:<module>:21 - clickhouse_connect 模块未安装，ClickHouse 功能将不可用。p2p_ping 等不需要 ClickHouse 的功能仍可正常使用。
+2026-11-07 07:26:32.326 | WARNING  | utils:<module>:21 - clickhouse_connect 模块未安装，ClickHouse 功能将不可用。p2p_ping 等不需要 ClickHouse 的功能仍可正常使用。
+11-07 07:26:32 - [   3] p2p_ping: Start to ping in background ...
+Traceback (most recent call last):
+  File "/jobutils/python/p2p_ping.py", line 585, in <module>
+    p2p_tests()
+  File "/jobutils/python/p2p_ping.py", line 465, in p2p_tests
+    p2p_test_all_nics("PING", icmp_ping, ALL_IPS,
+  File "/jobutils/python/p2p_ping.py", line 371, in p2p_test_all_nics
+    get_ifname_by_ip("127.0.0.1")
+  File "/jobutils/python/job_utils.py", line 94, in get_ifname_by_ip
+    result = subprocess.run(['ip', 'route', 'list', 'proto', 'kernel'], capture_output=True, check=True, text=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'ip'
+11-07 07:26:34 - [   3] p2p_ping: P2P ping test has ended
+ExitCode= -1

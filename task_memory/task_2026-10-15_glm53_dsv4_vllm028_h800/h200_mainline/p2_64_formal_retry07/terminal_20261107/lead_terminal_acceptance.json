@@ -1,0 +1,89 @@
+{
+  "status": "PASS_TERMINAL_PLATFORM_CAUSE_NO_REFERENCE",
+  "observed_utc": "2026-11-07T08:02:40.934399+00:00",
+  "python": "3.10.6",
+  "command": "python3 h200_mainline/p2_64_formal_retry07/terminal_20261107/lead_terminal_audit.py",
+  "script_sha256": "ce46ebc89b10710e3855b733422858c07afa85c91f919009cd9ece82aff0df50",
+  "job": "exp-1107-150132-396145",
+  "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168",
+  "finish_utc": "2026-11-07T07:56:47Z",
+  "cloud_run_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07",
+  "checks": {
+    "job_identity": true,
+    "job_failed_by_any_fail_policy": true,
+    "only_user_operation_is_create": true,
+    "stopped_replica_phase_stopped_with_stale_running_container": true,
+    "stopped_replica_has_no_stop_operation": true,
+    "stopped_replica_events_end_at_image_pull": true,
+    "stopped_node_record_ends_at_rendezvous": true,
+    "stopped_node_is_missing_decode_lane_2": true,
+    "stop_seen_between_monitor_reads": true,
+    "decode_head_startup_timeout": true,
+    "prefill_head_reached_server_ready": true,
+    "no_replay_started": true,
+    "two_failed_containers_exit_1": true,
+    "teardown_stops_by_rjob_controller": true,
+    "platform_ping_helper_error_on_every_replica": true,
+    "launcher_exited_after_job_end": true,
+    "platform_queries_pass": true
+  },
+  "cause": {
+    "classification": "PLATFORM_EXTERNAL_REPLICA_STOP (inferred)",
+    "stopped_replica": "cfcd2084",
+    "stopped_node": "gpu-h200-0726.lgcm.sh.istep.fun",
+    "stop_window_utc": [
+      "2026-11-07T07:26:50.038805+00:00",
+      "2026-11-07T07:31:52.016870+00:00"
+    ],
+    "stopped_replica_events": [
+      {
+        "utc": "2026-11-07T07:17:41+00:00",
+        "object": "exp-1107-150132-396145-cfcd2084",
+        "reason": "FailedScheduling",
+        "host": null,
+        "message": "0/4492 nodes are available: pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8. co-scheduling member not ready, pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8, pre-filter pod exp-1107-150132-396145-cfcd2084 cannot find enough sibling pods, current pods number: 1, minMember of group: 8."
+      },
+      {
+        "utc": "2026-11-07T07:23:12+00:00",
+        "object": "exp-1107-150132-396145-cfcd2084",
+        "reason": "Pulling",
+        "host": "gpu-h200-0726.lgcm.sh.istep.fun",
+        "message": "Pulling image \"hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635\""
+      }
+    ],
+    "node_failures": {
+      "gpu-h200-0047": "RuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json'), PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-1007.lgcm.sh.istep.fun/failed.json')]",
+      "gpu-h200-0300": "TimeoutError: Native P/D rendezvous or workload deadline exceeded",
+      "gpu-h200-0491": "RuntimeError: Native server exited early: 0",
+      "gpu-h200-1007": "RuntimeError: Native P/D peer failed: [PosixPath('/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_07/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-07/nodes/gpu-h200-0300.lgcm.sh.istep.fun/failed.json')]"
+    },
+    "basis": "Replica cfcd2084 on gpu-h200-0726 wrote ready.json and its rendezvous record at 07:26:35Z and nothing after; it reached phase Stopped between the monitor reads at 07:26:50Z and 07:31:52Z with no stop operation in the audit, no event after the image pull and no native error, and its container state stayed at the last reported running. The only user operation is the create; the job is preemptible. No event names preemption or node loss, so the classification is an inference. The p2p_ping helper error is present on all 8 replicas and is not specific.",
+    "cascade": "The other 7 nodes had planned gpu-h200-0726 as decode lane 2. The decode DP head never became healthy and raised its 1800 s startup timeout at 07:56:45Z; decode lane 1 then saw its headless server exit 0, decode lane 3 and prefill lane 2 saw the peer failure, and the any-replica fail policy stopped the rest through rjob-controller. No replay started."
+  },
+  "accounting": {
+    "known_container_gpu_hours": 8.264444444444445,
+    "container_clocks_complete": false,
+    "upper_bound_window_utc": [
+      "2026-11-07T07:17:41+00:00",
+      "2026-11-07T07:56:53+00:00"
+    ],
+    "upper_bound_seconds": 2352.0,
+    "counted_container_gpu_hours": 41.81,
+    "counted_before": 27.09,
+    "cumulative_counted": 68.9,
+    "cap": 128,
+    "rule": "D-P2-64-FIFTH: without complete container clocks, 64 GPUs x scheduled wall time counts toward 128. The window runs from the first replica create to the later of the last stop and the last replica event."
+  },
+  "business": {
+    "complete_native_reference": false,
+    "replay_started": false
+  },
+  "not_run": {
+    "cloud_copy": "No native reference; the read-only run-tree summary is archived instead",
+    "pair_coverage": "No native reference",
+    "R5": "No native reference",
+    "metrics_and_warm_reading": "No native reference"
+  },
+  "archived_files": 35,
+  "next": "D-P2-64-FIFTH is exhausted (generation05 and both platform-cause resubmissions used). Any further GPU job needs a new user decision."
+}
