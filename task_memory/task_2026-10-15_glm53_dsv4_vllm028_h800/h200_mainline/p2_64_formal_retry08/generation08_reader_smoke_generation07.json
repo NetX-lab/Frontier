@@ -1,0 +1,165 @@
+{
+  "errors": [],
+  "finished_utc": "2026-11-07T16:28:48.442373+00:00",
+  "job": {
+    "autoDeleteDuration": "120h0m0s",
+    "backoffLimit": 10,
+    "creationTimestamp": "2026-11-07T07:01:32Z",
+    "creator": "i-fengyicheng",
+    "finishTime": "2026-11-07T07:56:47Z",
+    "job_annotations": {
+      "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01",
+      "rjob.brainpp.cn/rjob-queue-approved": "2026-11-07T07:17:41.249402457Z",
+      "stepmind.com/queue-approved-stage": "stepmind-task-stage-1",
+      "stepmind.com/queue-elem-ranking": "7",
+      "stepmind.com/queue-name": "quotagroup-global-default",
+      "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=319.",
+      "stepmind.com/use-global-queue": "true"
+    },
+    "name": "exp-1107-150132-396145",
+    "namespace": "shai-core",
+    "phase": "Failed",
+    "preemptible": "yes",
+    "queue_name": "quotagroup-global-default",
+    "queue_status": "closed",
+    "quotagroup": "step_main",
+    "restartable": "false",
+    "startTime": null,
+    "stop_annotations": {
+      "rjob.brainpp.cn/system-stop-reason": "Task fail policy [any] caused undesired running replicas.",
+      "stepmind.com/queue-reason": "Waiting in queue \"quotagroup-global-default\". Insufficient GPU quota. Request: task \"default\" 8 GPU/replica x 8 replicas = 64 GPU (H200). Queue remaining: H200=319."
+    },
+    "taskSpecs": {
+      "default": {
+        "containers": [
+          {
+            "command_timeouts_s": [
+              3600
+            ],
+            "env_names": [
+              "AWS_ACCESS_KEY_ID",
+              "AWS_SECRET_ACCESS_KEY",
+              "DISTRIBUTED_JOB",
+              "ENABLE_SUBMODULE_COMMIT_CACHE",
+              "EXP_ID",
+              "HF_DATASETS_OFFLINE",
+              "HF_HUB_OFFLINE",
+              "HOST_NETWORK",
+              "KUBEBRAIN_CLUSTER_ENTRY",
+              "KUBEBRAIN_CLUSTER_ENTRY",
+              "KUBEBRAIN_NAMESPACE",
+              "KUBEBRAIN_NODE_NAME",
+              "KUBEBRAIN_QUOTA_GROUP",
+              "KUBEBRAIN_WORKSPACE_NAME",
+              "KUBEBRAIN_WORKSPACE_NAMESPACE",
+              "MC_DISABLE_METACACHE",
+              "PYTHONDONTWRITEBYTECODE",
+              "PYTHONPATH",
+              "TRANSFORMERS_OFFLINE",
+              "VLLM_CUDA_COMPATIBILITY_PATH",
+              "VLLM_ENABLE_CUDA_COMPATIBILITY",
+              "VLLM_LOGGING_LEVEL"
+            ],
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+            "limits": {
+              "cpu": "64",
+              "mellanox.com/mlnx_rdma": "1",
+              "memory": "500Gi",
+              "nvidia.com/gpu": "8",
+              "rdma/mlnx_shared": "8"
+            },
+            "name": "default",
+            "volumeMounts": [
+              "/.auth/accesskey_id",
+              "/.auth/accesskey_secret"
+            ]
+          }
+        ],
+        "maxRunningDuration": "0s",
+        "maxWaitDuration": "0s",
+        "positiveTags": [
+          "H200"
+        ],
+        "replicas": 8,
+        "restartPolicy": "Never",
+        "task_annotations": {
+          "kubebrain.brainpp.cn/filestore-volume": "100.96.128.195:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/package_01",
+          "mount.brainpp.cn/juicefs": "s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp;s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant"
+        },
+        "volumes": [
+          {
+            "name": "auth-info",
+            "type": [
+              "secret"
+            ]
+          }
+        ]
+      }
+    },
+    "uid": "45849203-b2c0-4de5-9ef3-e3b4ad716168"
+  },
+  "job_requested": "exp-1107-150132-396145",
+  "observed_utc": "2026-11-07T16:28:48.111757+00:00",
+  "operation": "read_only",
+  "replicas": {
+    "errors": [],
+    "rows": [
+      {
+        "created": null,
+        "ip": "10.204.9.96",
+        "name": "exp-1107-150132-396145-1679091c",
+        "node": null,
+        "phase": "Failed"
+      },
+      {
+        "created": null,
+        "ip": "10.204.6.121",
+        "name": "exp-1107-150132-396145-e4da3b7f",
+        "node": null,
+        "phase": "Stopped"
+      },
+      {
+        "created": null,
+        "ip": "10.204.6.67",
+        "name": "exp-1107-150132-396145-c4ca4238",
+        "node": null,
+        "phase": "Stopped"
+      },
+      {
+        "created": null,
+        "ip": "10.204.8.98",
+        "name": "exp-1107-150132-396145-c81e728d",
+        "node": null,
+        "phase": "Stopped"
+      },
+      {
+        "created": null,
+        "ip": "10.204.8.44",
+        "name": "exp-1107-150132-396145-a87ff679",
+        "node": null,
+        "phase": "Stopped"
+      },
+      {
+        "created": null,
+        "ip": "10.204.8.22",
+        "name": "exp-1107-150132-396145-8f14e45f",
+        "node": null,
+        "phase": "Stopped"
+      },
+      {
+        "created": null,
+        "ip": "10.204.12.65",
+        "name": "exp-1107-150132-396145-eccbc87e",
+        "node": null,
+        "phase": "Failed"
+      },
+      {
+        "created": null,
+        "ip": "10.204.18.57",
+        "name": "exp-1107-150132-396145-cfcd2084",
+        "node": null,
+        "phase": "Stopped"
+      }
+    ]
+  }
+}

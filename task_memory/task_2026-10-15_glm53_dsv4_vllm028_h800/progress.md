@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | Recorded the generation08 submission `exp-1108-002857-059466` at 16:28:57Z (27/27 checks), Running at 16:34Z. |
 | 2026-11-07 | Recorded the generation08 records commit 79634ae7, the prepared generation08 copy script, and the codex-implement cleanup of generation05-07 scratch duplicates (449 files, 32.5 MB). |
 | 2026-11-07 | Recorded D-P2-64-SIXTH step 1: the native peer heartbeat check (harness 57caf2f7), the generation08 build and audit, and the prepared night-time submission. |
 | 2026-11-07 | Recorded the generation07 platform-cause end (one replica stopped after the rendezvous, decode startup timeout, 41.81 GPUh counted, cumulative 68.90 of 128); D-P2-64-FIFTH exhausted, next GPU job needs a new decision. |
@@ -572,8 +573,17 @@ The following completed A6 history retains its original all-request verdicts. D-
   `exp-1020-203529-472675`, stopped on 2026-10-20, still runs on HOST and appends proxy-error tracebacks to
   `native_track_20261020/g0d_launch/launcher.log`, now 4.11 GB (2.88 GB at the earlier report). Not visible from this
   namespace; left untouched pending YC.
-- pending — night-time submission at about 16:30Z (00:30 Beijing) through Pi label p64-formal8-submit-1107q, then
-  the detached monitor, terminal reads, copy on success (p64-formal8-post-1107r) and the post-run comparison.
+- completed — night-time submission. Pre-checks at 16:28Z: ds4 HOST heartbeat fresh, manifest equals the approval
+  receipt, no launch evidence in package_01, harness 57caf2f7 and native a06a72a4 clean. Pi label
+  p64-formal8-submit-1107q (one turn, one tool call, exit 0) read generation07 once (Failed, 0 errors), submitted once:
+  `exp-1108-002857-059466`, UID 58a67493-ecdc-47e6-abb2-ab042a718957, created 16:28:57Z, launcher PID 1327251,
+  monitor PID 1329404 (300 s interval), SUBMITTED_ALL_CHECKS_PASS with 18 job checks and 9 approval checks, zero control
+  operations. Monitor: Starting / queue approved at 16:29:08Z (no queue wait, unlike the daytime jobs), all 8 replicas
+  Running at 16:34:19Z, launcher alive after the Pi exit. Lead record
+  `h200_mainline/p2_64_formal_retry08/lead_submission_acceptance.json` (PASS_SUBMISSION_IDENTITY_AND_LAUNCHER_SURVIVAL)
+  with the copied submission evidence `generation08_*`.
+- in-progress — native execution; read-only mid-run reads, then terminal reads, copy on success
+  (p64-formal8-post-1107r) and the post-run comparison.
 
 ## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
 

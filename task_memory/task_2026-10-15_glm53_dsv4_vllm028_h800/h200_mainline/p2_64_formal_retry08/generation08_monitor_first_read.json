@@ -1,0 +1,21 @@
+{
+ "finishTime": null,
+ "launcher_alive": true,
+ "observed_utc": "2026-11-07T16:29:08.196702+00:00",
+ "phase": "Starting",
+ "queue_status": "approved",
+ "read_error": null,
+ "replica_errors": null,
+ "replica_phases": [
+  "Starting",
+  "Starting",
+  "Starting",
+  "Starting",
+  "Starting",
+  "Starting",
+  "Starting",
+  "Starting"
+ ],
+ "startTime": null,
+ "stop_annotations": {}
+}
