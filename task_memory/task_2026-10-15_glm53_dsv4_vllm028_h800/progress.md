@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-07 | Recorded the codex-implement cleanup 86673e2f (171 directories, 37.42 GiB) and its lead acceptance. |
 | 2026-11-07 | Recorded the generation06 platform-cause end (spot-GPU device-admission failure, no container, 8.57 GPUh counted) and the generation07 submission `exp-1107-150132-396145` (18/18 checks), resubmission 2 of 2, the last. |
 | 2026-11-07 | Recorded the generation05 platform-cause end (external replica stops, 18.52 GPUh counted) and the generation06 submission `exp-1107-144321-305543` (18/18 checks), resubmission 1 of 2 under D-P2-64-FIFTH. |
 | 2026-11-07 | Recorded the generation05 submission (`exp-1107-135759-122907`, 18/18 checks), its detached monitor, and the correction of the earlier process checks. |
@@ -522,6 +523,11 @@ The following completed A6 history retains its original all-request verdicts. D-
 - **in-progress**: fresh all-scope current-table invocation (background shell `sh_196119829001zIT8h1deHASn6x`), receipt `a6_forward_attention_20261101/current_command.json`, identical-input/fold cache reuse, output `current_phase_heldout.json`. This finishes diagnostics absent from the earlier retained selected-scope output; no GPU or P2 replay has started.
 - **in-progress, resumed same IDs only**: PASS-REPLAY-INPUTS needs the exact retained source-row/raw/config/cache paths; B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) needs phase-level findings. No duplicate agents or completed checks were restarted.
 - **pending**: repeatability producer -> business verification -> complete three-run rows/tables -> four CPU P2 replays and median3 held-out run. Unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched; changes are not yet committed.
+
+## Task artifact cleanup through codex-implement — completed, 2026-11-07
+
+- completed — codex request 86673e2f-3b87-4663-a948-1a9ec9eb03a4 removed 171 exact directories under `/data/ycfeng/tmp/glm53_dsv4` and `/data/ycfeng/tmp/ds4_runs` (pytest fixture trees, regenerable sklearn caches, superseded CPU fidelity case outputs, Node caches of finished Pi labels): 67,639 files, 37.42 GiB allocated; available space +36.41 GiB. Reason: the standing rule to remove invalid task artifacts after each checkpoint. Records: `cleanup_20261107/report.md`.
+- completed — lead acceptance. Codex reported `partial` for four protected-path differences. `cleanup_20261107/lead_acceptance.py` traced each to concurrent lead work (the retry07 CASES entry in build_package.py, 81 new generation06-terminal and generation07 files, turn 2 of p64-formal6-submit-1107j after the inventory) and confirmed no deletion touches the P2-64 mainline: `ACCEPTED_DIFFERENCES_FROM_CONCURRENT_LEAD_WORK`, 11/11. 89 uncertain candidates stay. [Test report](test_report_2026-11-07_task_cleanup.md).
 
 ## Generation06 terminal cause and generation07 submission — 2026-11-07
 

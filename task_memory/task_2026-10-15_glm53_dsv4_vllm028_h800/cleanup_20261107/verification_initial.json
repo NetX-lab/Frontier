@@ -1,0 +1,90 @@
+{
+  "observed_utc": "2026-11-07T06:59:26.162271+00:00",
+  "receipt_status": "PARTIAL",
+  "manifest_entries": 172,
+  "deleted_entries": 171,
+  "protected_files_unchanged": 9246,
+  "protected_files_changed": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/build_package.py",
+      "before": {
+        "sha256": "ef8d750444eeda63006d27d6056b236112b1c93c9fba7c429a2242dba16214a0",
+        "size": 56371
+      },
+      "after": {
+        "sha256": "980d8ab3042b49361f642cd0f156472f512cd344a0c073b67253e5d17e87e212",
+        "size": 57042
+      }
+    }
+  ],
+  "protected_tree_count_changes": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+      "before": {
+        "exists": true,
+        "regular_file_count": 39591
+      },
+      "after": {
+        "exists": true,
+        "regular_file_count": 39672
+      }
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06",
+      "before": {
+        "exists": true,
+        "regular_file_count": 65
+      },
+      "after": {
+        "exists": true,
+        "regular_file_count": 96
+      }
+    }
+  ],
+  "missing_registered_worktrees": [],
+  "unlisted_missing_paths": [],
+  "unlisted_identity_changes": [
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/execution.json",
+      "before": [
+        64784,
+        1078146678
+      ],
+      "after": [
+        64784,
+        1078146685
+      ]
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/exit",
+      "before": [
+        64784,
+        1078146682
+      ],
+      "after": [
+        64784,
+        1078146678
+      ]
+    }
+  ],
+  "surviving_inventory_nodes": 128333,
+  "manifest_covered_inventory_nodes": 112502,
+  "snapshot_errors": [],
+  "errors": [],
+  "seals": {
+    "generation05_manifest_sha256": "23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c",
+    "generation05_manifest_expected": "23e26da6c02cc42e54134c12abfdfea298f64191e0f985a860505e374278227c",
+    "promotion_receipt_sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+    "promotion_receipt_expected": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596"
+  },
+  "preexisting_absent_protections": {
+    "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261103_03/dsv4-h200-p2-64-formal-20261103-03": "Referenced by /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/post_run_command.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation03": "Referenced by /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/post_run_command.json",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261103_04/dsv4-h200-p2-64-formal-20261103-04": "Referenced by /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/post_run_command.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation04": "Referenced by /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/post_run_command.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation05": "Referenced by /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/post_run_command.json",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_06/dsv4-h200-p2-64-formal-20261107-06": "Referenced by /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/post_run_command.json",
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation06": "Referenced by /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/post_run_command.json"
+  },
+  "status": "PARTIAL"
+}

@@ -1,0 +1,15 @@
+{
+  "observed_utc": "2026-11-07T06:56:27.692882+00:00",
+  "pins": {
+    "/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination": {
+      "expected": "a06a72a4326cba02234df6cfbdc21b78d3a15d26",
+      "observed": "a06a72a4326cba02234df6cfbdc21b78d3a15d26",
+      "matches": true
+    },
+    "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness": {
+      "expected": "f33306d40443cfc0c44842d6ee044f6703c736e7",
+      "observed": "f33306d40443cfc0c44842d6ee044f6703c736e7",
+      "matches": true
+    }
+  }
+}

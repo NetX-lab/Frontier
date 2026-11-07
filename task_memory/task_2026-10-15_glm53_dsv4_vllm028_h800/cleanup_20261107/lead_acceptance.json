@@ -1,0 +1,38 @@
+{
+  "observed_utc": "2026-11-07T07:13:34.316420+00:00",
+  "request": "86673e2f-3b87-4663-a948-1a9ec9eb03a4",
+  "status": "ACCEPTED_DIFFERENCES_FROM_CONCURRENT_LEAD_WORK",
+  "checks": {
+    "receipt_pass_and_no_missing_paths": true,
+    "only_builder_hash_changed": true,
+    "builder_after_equals_commit": true,
+    "only_two_tree_counts_changed": true,
+    "worktree_growth_equals_lead_new_files": true,
+    "lead_new_files_are_retry06_terminal_or_retry07": true,
+    "retry06_growth_equals_terminal_archive": true,
+    "identity_changes_are_label06_turn2": true,
+    "no_deletion_touches_mainline": true,
+    "post_run_reuse_run_present": true,
+    "seals_unchanged": true
+  },
+  "evidence": {
+    "inventory_window": [
+      "2026-11-07T06:42:27.139515+00:00",
+      "2026-11-07T06:42:40.029541+00:00"
+    ],
+    "protected_hash_window": [
+      "2026-11-07T06:55:11.148335+00:00",
+      "2026-11-07T06:59:06.152915+00:00"
+    ],
+    "builder_sha256": {
+      "before": "ef8d750444eeda63006d27d6056b236112b1c93c9fba7c429a2242dba16214a0",
+      "after": "980d8ab3042b49361f642cd0f156472f512cd344a0c073b67253e5d17e87e212",
+      "commit": "3d69016f"
+    },
+    "lead_new_files_in_window": 81,
+    "retry06_terminal_files": 31,
+    "label06_turn2_utc": "2026-11-07T06:43:09.321236+00:00",
+    "deleted_entries": 171,
+    "uncertain_retained": 89
+  }
+}

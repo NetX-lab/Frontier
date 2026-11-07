@@ -1,0 +1,8 @@
+{
+  "observed_utc": "2026-11-07T06:55:11.045185+00:00",
+  "scanned_processes": 7,
+  "hits": [],
+  "unreadable_count": 0,
+  "unreadable_paths": [],
+  "note": "No cmdline contents retained (credentials excluded). Permission limits do not establish that a path is unused."
+}

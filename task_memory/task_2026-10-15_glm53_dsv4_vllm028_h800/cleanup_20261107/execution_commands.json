@@ -1,0 +1,94 @@
+[
+  {
+    "argv": [
+      "timeout",
+      "300",
+      "python3",
+      "-u",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/prepare_deletion.py"
+    ],
+    "cwd": "/data/ycfeng",
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "started_utc": "2026-11-07T06:55:05.870051+00:00",
+    "finished_utc": "2026-11-07T06:55:11.066177+00:00",
+    "returncode": 0,
+    "stdout_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/prepare_deletion.stdout.log",
+    "stderr_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/prepare_deletion.stderr.log"
+  },
+  {
+    "argv": [
+      "timeout",
+      "600",
+      "python3",
+      "-u",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/protect_inputs.py",
+      "protected_hash_before.json"
+    ],
+    "cwd": "/data/ycfeng",
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "started_utc": "2026-11-07T06:55:11.066409+00:00",
+    "finished_utc": "2026-11-07T06:57:11.630705+00:00",
+    "returncode": 0,
+    "stdout_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/protect_inputs_protected_hash_before.stdout.log",
+    "stderr_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/protect_inputs_protected_hash_before.stderr.log"
+  },
+  {
+    "argv": [
+      "timeout",
+      "300",
+      "python3",
+      "-u",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/delete_entries.py"
+    ],
+    "cwd": "/data/ycfeng",
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "started_utc": "2026-11-07T06:57:11.653054+00:00",
+    "finished_utc": "2026-11-07T06:59:06.102101+00:00",
+    "returncode": 0,
+    "stdout_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/delete_entries.stdout.log",
+    "stderr_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/delete_entries.stderr.log"
+  },
+  {
+    "argv": [
+      "timeout",
+      "600",
+      "python3",
+      "-u",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/protect_inputs.py",
+      "protected_hash_after.json"
+    ],
+    "cwd": "/data/ycfeng",
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "started_utc": "2026-11-07T06:59:06.102506+00:00",
+    "finished_utc": "2026-11-07T06:59:17.857164+00:00",
+    "returncode": 0,
+    "stdout_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/protect_inputs_protected_hash_after.stdout.log",
+    "stderr_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/protect_inputs_protected_hash_after.stderr.log"
+  },
+  {
+    "argv": [
+      "timeout",
+      "300",
+      "python3",
+      "-u",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/verify_cleanup.py"
+    ],
+    "cwd": "/data/ycfeng",
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "started_utc": "2026-11-07T06:59:17.857597+00:00",
+    "finished_utc": "2026-11-07T06:59:26.175732+00:00",
+    "returncode": 0,
+    "stdout_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/verify_cleanup.stdout.log",
+    "stderr_log": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107/logs/verify_cleanup.stderr.log"
+  }
+]

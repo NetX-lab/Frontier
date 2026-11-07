@@ -1,0 +1,11 @@
+{
+  "observed_utc": "2026-11-07T06:57:11.652782+00:00",
+  "argv": [
+    "df",
+    "-B1",
+    "/data/ycfeng"
+  ],
+  "returncode": 0,
+  "stdout": "Filesystem         1B-blocks         Used    Available Use% Mounted on\n/dev/rbd1      1098974756864 871421964288 227552792576  80% /data\n",
+  "stderr": ""
+}

@@ -1,0 +1,2415 @@
+{
+  "observed_utc": "2026-11-07T06:55:11.045531+00:00",
+  "rows": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 138,
+        "allocated_bytes": 565248,
+        "logical_bytes": 45592,
+        "directory_count": 167,
+        "symlink_count": 27,
+        "special": 0,
+        "metadata_sha256": "d7c4e4cb5ccb8423fd2b5e2c145c21390b3265b6a40775447d370673cb4e2d47",
+        "max_time_ns": 1792266993282435537
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 69,
+        "allocated_bytes": 282624,
+        "logical_bytes": 22796,
+        "directory_count": 84,
+        "symlink_count": 14,
+        "special": 0,
+        "metadata_sha256": "c4e130acc3d9d1198c3863c731eaa0088661e0131adf447d0be1515d42585116",
+        "max_time_ns": 1792239393063204352
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t08/held_basetemp_20261017",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 6,
+        "allocated_bytes": 7294976,
+        "logical_bytes": 7278609,
+        "directory_count": 13,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "9cfd8acbd90f507ad2ddd82dd876adb3489cf637fa6d05b460960e8012c8299a",
+        "max_time_ns": 1792230252448509080
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t08/sync_basetemp_20261017",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 6,
+        "allocated_bytes": 2433024,
+        "logical_bytes": 2417244,
+        "directory_count": 13,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "5fd314512cf268574d3bd9b8441fc1c5328c78e62bfa2dc3392dbf1dbbd69601",
+        "max_time_ns": 1792230247436507208
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t08/dummy_basetemp_20261017",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 70,
+        "allocated_bytes": 32694272,
+        "logical_bytes": 32506237,
+        "directory_count": 157,
+        "symlink_count": 6,
+        "special": 0,
+        "metadata_sha256": "61cbca8e82c6db6fce2f0ff3588fe167aca529b3931f5d85086081dd99214c21",
+        "max_time_ns": 1792230216024495402
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/pytest_tmp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 101,
+        "allocated_bytes": 1261568,
+        "logical_bytes": 945630,
+        "directory_count": 263,
+        "symlink_count": 62,
+        "special": 0,
+        "metadata_sha256": "36145748a47facf7a6c5161f464a4022c2c9a2ab09bed0eff58c0b96b1fcc75a",
+        "max_time_ns": 1792389081760625811
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t08/pytest_basetemp_20261017",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 70,
+        "allocated_bytes": 32694272,
+        "logical_bytes": 32506351,
+        "directory_count": 157,
+        "symlink_count": 6,
+        "special": 0,
+        "metadata_sha256": "b03a2974389c213088963bc47d15df046840816f9556d27b82aa3770740c1d12",
+        "max_time_ns": 1792230138252465105
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c39_worker_review/pytest_final",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 69,
+        "allocated_bytes": 233472,
+        "logical_bytes": 11822,
+        "directory_count": 41,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "0470adbb15271d74c5fb7a6e9e1f778189a1188f6a50f66318500bb7b1a54b4d",
+        "max_time_ns": 1792414550651684240
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b22_review/pytest",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 180,
+        "allocated_bytes": 3072000,
+        "logical_bytes": 2669676,
+        "directory_count": 393,
+        "symlink_count": 50,
+        "special": 0,
+        "metadata_sha256": "b133140a4d3fe20e280dad7d089253709a39bb1937a3e898798e3f3ab3b53e47",
+        "max_time_ns": 1793296710268666555
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 3537,
+        "allocated_bytes": 22462464,
+        "logical_bytes": 15881785,
+        "directory_count": 452,
+        "symlink_count": 35,
+        "special": 0,
+        "metadata_sha256": "ba6921029ce179cd65544edf5a5b9ec3fdaf59fa50c607737ab1258d47298d53",
+        "max_time_ns": 1793690296076998621
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b25_review/pytest",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1529,
+        "allocated_bytes": 6344704,
+        "logical_bytes": 343027,
+        "directory_count": 908,
+        "symlink_count": 10,
+        "special": 0,
+        "metadata_sha256": "2cfe66aa098508e8b841e40e6dbd9486b0f5c413b76df3663d38627fd1f77269",
+        "max_time_ns": 1793342651824888808
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/startupB/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 675,
+        "allocated_bytes": 2764800,
+        "logical_bytes": 149072,
+        "directory_count": 382,
+        "symlink_count": 5,
+        "special": 0,
+        "metadata_sha256": "eb3c77815f9418f14fb8038a41f135470ac6fe4950a109a341600bf38a6a29ed",
+        "max_time_ns": 1792303149614189030
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t08/primary_late_join_basetemp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 6,
+        "allocated_bytes": 1134592,
+        "logical_bytes": 1120896,
+        "directory_count": 13,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "2748cec95e238fc9f9dc52704e7462c524dff0a9a1419b2aa62602b9c0869e1c",
+        "max_time_ns": 1792230884896712510
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c23_root_20261019/pytest_tmp_r2",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 101,
+        "allocated_bytes": 1261568,
+        "logical_bytes": 945723,
+        "directory_count": 263,
+        "symlink_count": 62,
+        "special": 0,
+        "metadata_sha256": "e22c2aa4def449be38d3f02d8255110748a10dee00cdbdc7e59fd553751cdc70",
+        "max_time_ns": 1792389133860600821
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t08/placement_basetemp_20261017",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 88,
+        "allocated_bytes": 24293376,
+        "logical_bytes": 24063760,
+        "directory_count": 204,
+        "symlink_count": 9,
+        "special": 0,
+        "metadata_sha256": "272c60584f78bbe8b9060566441dea511dc10ef9beb5dc24eec24325b6621875",
+        "max_time_ns": 1792230206664491848
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/q5_lead_review/pytest_tools",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 681,
+        "allocated_bytes": 91967488,
+        "logical_bytes": 90346056,
+        "directory_count": 262,
+        "symlink_count": 8,
+        "special": 0,
+        "metadata_sha256": "49850b7886dbd2bdfa1dfebf0d7f6f4c03821c519c62b23c44031e1e8ef0cb63",
+        "max_time_ns": 1793608830570689058
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest_br",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 40,
+        "allocated_bytes": 442368,
+        "logical_bytes": 385426,
+        "directory_count": 3,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "8b1c800aca1ae85bbd6a4d3e2138ff4b1cd1bff8f8c45ca56a17d59b6eb3da30",
+        "max_time_ns": 1793304329634300527
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c33_dp_policy_20261019/pytest_v028",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 18,
+        "allocated_bytes": 10280960,
+        "logical_bytes": 10233058,
+        "directory_count": 37,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "f64e4fbed36f74578316d62ba03ed89020f44fc594ee60543a018e381aa00bdd",
+        "max_time_ns": 1792397631356601422
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/pytest",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 500,
+        "allocated_bytes": 20492288,
+        "logical_bytes": 19134175,
+        "directory_count": 309,
+        "symlink_count": 72,
+        "special": 0,
+        "metadata_sha256": "7668aba1a44759f80179098191e29d9daa0b9a1b85fb11477318a625e7d0cdb0",
+        "max_time_ns": 1793170725872917568
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/q5_lead_review/pytest_harness",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 323,
+        "allocated_bytes": 1953792,
+        "logical_bytes": 957408,
+        "directory_count": 215,
+        "symlink_count": 12,
+        "special": 0,
+        "metadata_sha256": "e18312d15033c06b52f72f33c669a33ccc82d40e6db63919cd1e49dbc9cfadd8",
+        "max_time_ns": 1793608820858686904
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest_br2",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 20,
+        "allocated_bytes": 221184,
+        "logical_bytes": 192713,
+        "directory_count": 2,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "e1dcbce673829bb9ba80904b59b38f75baa9a3b4914c4e60e51cab8a726ce984",
+        "max_time_ns": 1793304348766303982
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o/routing_check/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 40,
+        "allocated_bytes": 442368,
+        "logical_bytes": 385316,
+        "directory_count": 4,
+        "symlink_count": 2,
+        "special": 0,
+        "metadata_sha256": "8a7b5a9fcd9a82c182969630bb22322e707022e109cdf323de1d042687fd2e6b",
+        "max_time_ns": 1793029589855007850
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b22_review/pytest_main",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 258,
+        "allocated_bytes": 3440640,
+        "logical_bytes": 2777841,
+        "directory_count": 499,
+        "symlink_count": 65,
+        "special": 0,
+        "metadata_sha256": "fe80227a3081edb6292de19a2e299c8769df4db40ec0b03ce041d57e0ff71558",
+        "max_time_ns": 1793296988028736330
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c33_dp_policy_20261019/pytest_legacy",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 85,
+        "allocated_bytes": 23437312,
+        "logical_bytes": 23215711,
+        "directory_count": 199,
+        "symlink_count": 9,
+        "special": 0,
+        "metadata_sha256": "0f1e8f81dd5d74a8eb68b7b82a25ead401fc4e440aa51eb6e9704814c701a912",
+        "max_time_ns": 1792397718492617344
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/startupB_review/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 450,
+        "allocated_bytes": 1843200,
+        "logical_bytes": 101914,
+        "directory_count": 255,
+        "symlink_count": 4,
+        "special": 0,
+        "metadata_sha256": "5878cdee7ac7238ad0c8c7735e099c6ab886592bbaf3dc9befe2db3578d48fdb",
+        "max_time_ns": 1792303239970168044
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/startup_primary/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 588,
+        "allocated_bytes": 2408448,
+        "logical_bytes": 147506,
+        "directory_count": 419,
+        "symlink_count": 30,
+        "special": 0,
+        "metadata_sha256": "00ea3bbea4723fcd980a2b322ae15a76e2630334a5266e508fea8bfddae9b272",
+        "max_time_ns": 1792303231510169795
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c13_sp_payload_20261018/pytest-focused",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 9,
+        "allocated_bytes": 192512,
+        "logical_bytes": 162076,
+        "directory_count": 34,
+        "symlink_count": 4,
+        "special": 0,
+        "metadata_sha256": "611ad4948f2f97f76d2f21b5ac97d28874fc358a40cb8e621443a363c0c69d83",
+        "max_time_ns": 1792338210365582092
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b23_review/pytest_br_main",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 40,
+        "allocated_bytes": 442368,
+        "logical_bytes": 385426,
+        "directory_count": 3,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "10381ea2f12d3997e368db46bdf69f393bf5601ee522772a776bcf22ed87efb0",
+        "max_time_ns": 1793304371554309566
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t08/late_join_repeat_basetemp_20261017",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 6,
+        "allocated_bytes": 1138688,
+        "logical_bytes": 1120976,
+        "directory_count": 13,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "08bea223f15c542682cf3f181984ffa5498a5790a81e8535924aeb4ac7a967b0",
+        "max_time_ns": 1792230246380506823
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/b25_review/pytest_composed",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1493,
+        "allocated_bytes": 6197248,
+        "logical_bytes": 337135,
+        "directory_count": 846,
+        "symlink_count": 4,
+        "special": 0,
+        "metadata_sha256": "f65fd3e74d7c95248b1e0cf70e4e885bb85772c9f7dc5cfd2bea2682376b3b94",
+        "max_time_ns": 1793342767004908631
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c16_glm_pd_root_20261019/pytest-isolated",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 93,
+        "allocated_bytes": 1081344,
+        "logical_bytes": 779769,
+        "directory_count": 225,
+        "symlink_count": 53,
+        "special": 0,
+        "metadata_sha256": "cd1ae549a04ea0c2d65a8a0ce0010c927701c092d246324ea5fdb07d03adc62d",
+        "max_time_ns": 1792344855079303815
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/pytest_known",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 8,
+        "allocated_bytes": 57344,
+        "logical_bytes": 25641,
+        "directory_count": 8,
+        "symlink_count": 4,
+        "special": 0,
+        "metadata_sha256": "9f1dc254440a2d117b1fcea87675be18481a4df29445d9df828997c847bef97f",
+        "max_time_ns": 1793174296374020802
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t09/identity_cpu_verification/pytest_tmp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 10,
+        "allocated_bytes": 49152,
+        "logical_bytes": 32078,
+        "directory_count": 6,
+        "symlink_count": 5,
+        "special": 0,
+        "metadata_sha256": "1624c6166f96df334c4b8ed04a83332f501f0c765912c6d98b3c4a946239eafe",
+        "max_time_ns": 1792315189525257740
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c12_static_shapes_20261018/pytest-focused",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 3,
+        "allocated_bytes": 20480,
+        "logical_bytes": 12124,
+        "directory_count": 10,
+        "symlink_count": 3,
+        "special": 0,
+        "metadata_sha256": "c58b3f6200f45d896fdc183ffe06a3383e5f3ed028c8a18de7cc6df8f776ca5c",
+        "max_time_ns": 1792337759817573775
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/admission_cpu_verification/pytest_tmp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 39,
+        "allocated_bytes": 159744,
+        "logical_bytes": 12066,
+        "directory_count": 38,
+        "symlink_count": 4,
+        "special": 0,
+        "metadata_sha256": "c73cf60ce75e200c66197b2da0d963cfd4882eea3972a594f57b39f3bf2725b4",
+        "max_time_ns": 1792315047609213908
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c20_root_validation_r3_20261019/pytest_tmp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 95,
+        "allocated_bytes": 1138688,
+        "logical_bytes": 835574,
+        "directory_count": 244,
+        "symlink_count": 59,
+        "special": 0,
+        "metadata_sha256": "00d4a28f3a82e50d2d8b7c7781cc9eeef3a819486404c2d0fbd6196fbbe3e312",
+        "max_time_ns": 1792348364355955571
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c16_glm_pd_root_r2_20261019/pytest-isolated",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 93,
+        "allocated_bytes": 1081344,
+        "logical_bytes": 779844,
+        "directory_count": 225,
+        "symlink_count": 53,
+        "special": 0,
+        "metadata_sha256": "98b28cb48454105956ad47afdbaac6e6c4daa7959c2ebe462fbfba560e053bf9",
+        "max_time_ns": 1792345563071503408
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/dp_sequence_root_w4peji6l/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 4993,
+        "allocated_bytes": 69861376,
+        "logical_bytes": 60988226,
+        "directory_count": 1794,
+        "symlink_count": 19,
+        "special": 0,
+        "metadata_sha256": "bb6b862b56134707df17bd2e78c8b2a56fc1147536e5eaa7effad8e93ad216c5",
+        "max_time_ns": 1792782685951502618
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/q1_window_warmup_20261021/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 18,
+        "allocated_bytes": 290816,
+        "logical_bytes": 254155,
+        "directory_count": 40,
+        "symlink_count": 18,
+        "special": 0,
+        "metadata_sha256": "0d8455ae7230238212c22e67b3eeb6806dd0b0121bac4e0039c73e1d0c4a72b3",
+        "max_time_ns": 1792584750955407278
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c13_sp_payload_root_20261018/pytest-isolated",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 24,
+        "allocated_bytes": 499712,
+        "logical_bytes": 433182,
+        "directory_count": 123,
+        "symlink_count": 23,
+        "special": 0,
+        "metadata_sha256": "d867e6c98961c5c3a1b11631029372f772525f54b58e2500aae439e60afe3735",
+        "max_time_ns": 1792338421813599101
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c33_dp_policy_20261019/pytest_clean_baseline",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 3,
+        "allocated_bytes": 151552,
+        "logical_bytes": 142637,
+        "directory_count": 8,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "3f34062e6e3011bb87c92ff9420bcdfc72daa2aebef968ecd5a53e917e7d1ff9",
+        "max_time_ns": 1792397782016627979
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/pytest_after_fix",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 123,
+        "allocated_bytes": 2416640,
+        "logical_bytes": 2161878,
+        "directory_count": 288,
+        "symlink_count": 12,
+        "special": 0,
+        "metadata_sha256": "42f1117952a97d07ec07f2a31e8878f036ece8a0ce8c62203e73bb559f0d44c1",
+        "max_time_ns": 1793174373250047873
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c13_sp_payload_review_20261018/pytest-focused",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 6,
+        "allocated_bytes": 172032,
+        "logical_bytes": 149994,
+        "directory_count": 25,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "7d4891ba4b1d0493fa35c4330cc25ffe78fe7a3b1cc1512bd13f9689e76bc6ee",
+        "max_time_ns": 1792338324905589090
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/pytest_regression",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 676,
+        "allocated_bytes": 23252992,
+        "logical_bytes": 21546512,
+        "directory_count": 698,
+        "symlink_count": 101,
+        "special": 0,
+        "metadata_sha256": "b758292b786f591101300adad389554e0a4beee3cf66a053b54e3fcd03a36326",
+        "max_time_ns": 1793174293486019756
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c17_v4_structural_root_20261019/pytest-isolated",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 95,
+        "allocated_bytes": 1138688,
+        "logical_bytes": 835709,
+        "directory_count": 235,
+        "symlink_count": 55,
+        "special": 0,
+        "metadata_sha256": "58ed723d0a3fcb4a2db0bde2b17a22799d5d51fe8cf90ccdd5cfc359973bb76a",
+        "max_time_ns": 1792346310119626837
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c12_static_shapes_review_20261018/pytest-focused",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 3,
+        "allocated_bytes": 20480,
+        "logical_bytes": 12124,
+        "directory_count": 10,
+        "symlink_count": 3,
+        "special": 0,
+        "metadata_sha256": "bd7442d8568276ce5bfc4e997e663c4d8ecfa71fc3c84d4d861a0bca7fe3766d",
+        "max_time_ns": 1792337929425595546
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c15_source_execution_root_20261019/pytest-isolated",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 24,
+        "allocated_bytes": 499712,
+        "logical_bytes": 433260,
+        "directory_count": 123,
+        "symlink_count": 23,
+        "special": 0,
+        "metadata_sha256": "b29cbe996c8cecca57cbbc57e526a501bbf938ad4fb692207e2da6ba18c1b383",
+        "max_time_ns": 1792342439230573069
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c17_v4_structural_root_r3_20261019/pytest-isolated",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 95,
+        "allocated_bytes": 1138688,
+        "logical_bytes": 835790,
+        "directory_count": 236,
+        "symlink_count": 56,
+        "special": 0,
+        "metadata_sha256": "3eb7facc7694e358e4b150a57b0625a340c72f7dd14d260b8a3c49941910017e",
+        "max_time_ns": 1792346545867639168
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c14_attention_workload_root_20261019/pytest-isolated",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 24,
+        "allocated_bytes": 499712,
+        "logical_bytes": 433286,
+        "directory_count": 123,
+        "symlink_count": 23,
+        "special": 0,
+        "metadata_sha256": "171edadb1eee2224eac165671e2d148301e6352b28b9511b765178847d4e5991",
+        "max_time_ns": 1792340601862042717
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 5009,
+        "allocated_bytes": 85307392,
+        "logical_bytes": 76761263,
+        "directory_count": 1934,
+        "symlink_count": 87,
+        "special": 0,
+        "metadata_sha256": "b3b3ebea7cc03034e20944d21960285d980793b7a40ae92c2d7544a605be4ce9",
+        "max_time_ns": 1793616301541012256
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c14_attention_workload_author_20261019/pytest-affected",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 11,
+        "allocated_bytes": 200704,
+        "logical_bytes": 166632,
+        "directory_count": 50,
+        "symlink_count": 8,
+        "special": 0,
+        "metadata_sha256": "4486fa392cfbe216c9d145419739b239b9b8757eaee52b1935ffa5c39a31c95e",
+        "max_time_ns": 1792340225385976694
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c15_source_execution_author_20261019/pytest-affected_cpu",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 6,
+        "allocated_bytes": 32768,
+        "logical_bytes": 12567,
+        "directory_count": 13,
+        "symlink_count": 6,
+        "special": 0,
+        "metadata_sha256": "f8b68467b66d03000889c912b4e6fae3cf005b89cd5cd338b42ca5939ecc0d18",
+        "max_time_ns": 1792342388082553298
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c31_bootstrap_review_20261019/pytest_tmp/pytest-of-brainpp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 407,
+        "allocated_bytes": 1667072,
+        "logical_bytes": 97249,
+        "directory_count": 237,
+        "symlink_count": 3,
+        "special": 0,
+        "metadata_sha256": "34471cde17c5e4c9f37f4fca2ba6cde03540d79784382abf7275dccc540a4603",
+        "max_time_ns": 1792394082584366909
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/pytest-of-brainpp/pytest-1",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 14,
+        "allocated_bytes": 49152,
+        "logical_bytes": 11941,
+        "directory_count": 9,
+        "symlink_count": 1,
+        "special": 0,
+        "metadata_sha256": "8348334fe5470d2b67d0c7d10e4422914e6785b51004e2cb0f3c9305b1e06938",
+        "max_time_ns": 1793615999888832332
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/pytest-of-brainpp/pytest-2",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 14,
+        "allocated_bytes": 663552,
+        "logical_bytes": 632649,
+        "directory_count": 48,
+        "symlink_count": 22,
+        "special": 0,
+        "metadata_sha256": "eb425d41bc74a47ed6a5e20b5f4cfb899921554a93cedf9fa0666e2deff1d93a",
+        "max_time_ns": 1793616152184929779
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c14_attention_workload_author_20261019/pytest-affected_final",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 11,
+        "allocated_bytes": 200704,
+        "logical_bytes": 166668,
+        "directory_count": 50,
+        "symlink_count": 8,
+        "special": 0,
+        "metadata_sha256": "14b2516b43caa6e399335f604a9bb4f1d6e15852e8bae8b686bf9c5e4abf039c",
+        "max_time_ns": 1792340556794033843
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c14_attention_workload_author_20261019/pytest-affected_review_scope",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 11,
+        "allocated_bytes": 200704,
+        "logical_bytes": 166710,
+        "directory_count": 50,
+        "symlink_count": 8,
+        "special": 0,
+        "metadata_sha256": "c2da51bc04f70ef0708706405695a4757a5073ee1d1b2e3393fa3bc1909209eb",
+        "max_time_ns": 1792340425654009321
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c23_zero_contract_review_20261019/final_candidate_review/pytest-temp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 12,
+        "allocated_bytes": 245760,
+        "logical_bytes": 226287,
+        "directory_count": 48,
+        "symlink_count": 9,
+        "special": 0,
+        "metadata_sha256": "e2598503b45c7780d2e5f4f204c5cf606822ee3c1f36c2ac05601abe33f2e85e",
+        "max_time_ns": 1792389093468621080
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c23_zero_contract_review_20261019/final_candidate_review/pytest-registry-temp",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 6,
+        "allocated_bytes": 221184,
+        "logical_bytes": 210431,
+        "directory_count": 59,
+        "symlink_count": 10,
+        "special": 0,
+        "metadata_sha256": "4aa2bd8840a99aefeabef76bc2255330e9ef7b5acdc516b341f1739e1a1eed7c",
+        "max_time_ns": 1792389135072600427
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_phase_heldout_scratch/fold_0",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1440,
+        "allocated_bytes": 290697216,
+        "logical_bytes": 288961173,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "860ac8e33930fbf32af08a58bee6043f7b464d53ab1aad3eeebf0d9f28950384",
+        "max_time_ns": 1793511874181066748
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_phase_heldout_scratch/fold_1",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1662,
+        "allocated_bytes": 292794368,
+        "logical_bytes": 290740991,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "fa6eea2902f506ecfb24ad7397c219354222a26aa9bad92d057675dd4aca17f5",
+        "max_time_ns": 1793512448753468395
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_phase_heldout_scratch/fold_2",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1662,
+        "allocated_bytes": 298147840,
+        "logical_bytes": 296134874,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "c0f7a7801161d8dd42c97e9db0d15ad5d4824c1cd192fbcc064e178b9ed84d8d",
+        "max_time_ns": 1793513005985741427
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_phase_heldout_scratch/fold_3",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1662,
+        "allocated_bytes": 300732416,
+        "logical_bytes": 298721159,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ea39010001b8d5e8c728681f49eec8a9327702b4edd8786efe6f6139efa2975b",
+        "max_time_ns": 1793513562929971329
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_phase_heldout_scratch/fold_4",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1422,
+        "allocated_bytes": 286105600,
+        "logical_bytes": 284371503,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "2f6cc0d887780da02ef49f709816dcbd61d0edff28987a1eb98db104d851d003",
+        "max_time_ns": 1793514052674333483
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/a6_median3_scratch/fold_0",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1440,
+        "allocated_bytes": 292741120,
+        "logical_bytes": 291018630,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "bac1e25f8efac568c2060c24bcde00fef27b2964fa4be5f930f8f3ab7c6513cb",
+        "max_time_ns": 1793520102065862160
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/a6_median3_scratch/fold_1",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1662,
+        "allocated_bytes": 295489536,
+        "logical_bytes": 293440184,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "61f412b6f37771317928e3b4807d3f008959dbdd39222c228212defdd92ed5a5",
+        "max_time_ns": 1793520591058086510
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/a6_median3_scratch/fold_2",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1662,
+        "allocated_bytes": 300138496,
+        "logical_bytes": 298116800,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "4feaff363f9efde8b0e35040f2519f91fbc0a3144c9f750e61ab9e6d5b357ef4",
+        "max_time_ns": 1793521086762339188
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/a6_median3_scratch/fold_3",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1662,
+        "allocated_bytes": 302129152,
+        "logical_bytes": 300124574,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "06773978c6976019b8e5b5f101b21db3230113a9c7b3f1e77fa87c67c9892346",
+        "max_time_ns": 1793521576782598711
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/a6_median3_scratch/fold_4",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 1422,
+        "allocated_bytes": 288739328,
+        "logical_bytes": 287015931,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ebd08f5d2294fbb4d62f1d696129b312d204abc5d5dce37e1bbfe5f31f6c9b61",
+        "max_time_ns": 1793522012830841739
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/root_balanced_callers_186dfef_tests/test_manager_cache_marker_is_w0",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 2,
+        "allocated_bytes": 4096,
+        "logical_bytes": 403,
+        "directory_count": 1,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "52d2cb5714ef9ed3eab3f2b14b75ffc9377a08c3e1ac7c569161d84dfeef6afd",
+        "max_time_ns": 1792663684392041055
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c33_root_20261019/fidelity/candidate-c33/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704028672,
+        "logical_bytes": 702875897,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a59966a3f7d9e2dd0725b8f7018449c434d464e02d10e381dfaa803553ca574f",
+        "max_time_ns": 1792398516444715164
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/c35_root_20261019/fidelity/candidate-c35/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704024576,
+        "logical_bytes": 702874994,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "41fad2596d8b86e1361c8a1845682274fec604fad9592982044e579edca8d79a",
+        "max_time_ns": 1792401993264951002
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/dsa_extend/fidelity/dsa-extend-0660717/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704036864,
+        "logical_bytes": 702878941,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "89cbb5723f773a03a69b3603ecc835398201a4dcead040ce522774dfc961baca",
+        "max_time_ns": 1792504042336178612
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/dsa_extend/fidelity/dsa-extend-b256648/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704036864,
+        "logical_bytes": 702878941,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "489a9e90d7a17d1604214ff9dba04e367a022697183263868a63d0186f105a63",
+        "max_time_ns": 1792503402979807015
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/entry2/fidelity/candidate_7003cf1d/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702886124,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "cf3dee66faf035d5f90fbcbca1eeed013ae6db2d2fb6fedfa69ed99382feda10",
+        "max_time_ns": 1793099656152626718
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/fidelity/candidate_826539f7/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704036864,
+        "logical_bytes": 702882351,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "dd25f18126b8cda6edf042589ebc387c76b2220a984498bf3716712255a2096b",
+        "max_time_ns": 1793080776018278651
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage3/fidelity/candidate_ffcd85e7/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702886124,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "579a1d5cdc30c020e7cbf42b5e110ce3547ea97b6794e0b3e7f47624c0fcbb64",
+        "max_time_ns": 1793270860396924371
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/fidelity/candidate_b6c28858/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702886124,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "dce6a62cb5c0dfed6b1420d7a9cb2a728a73cfa4253fad690ed00c4ce327fd88",
+        "max_time_ns": 1793277521990788632
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/fidelity_b24/candidate_901bc091/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702888280,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "91aedfe0ecf86cc7daab477c49aad50325ad7587969ea03a821bb9b646f6e607",
+        "max_time_ns": 1793359580393568393
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/fidelity_b26/candidate_50ed2061/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702888280,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "81b7f356f2299d95852374c5106a326738e486f08901c737210b45853106aa98",
+        "max_time_ns": 1793357606684513025
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/fidelity_b26b/candidate_49e7e5fa/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702888819,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "1e58fde4b551382a7fbd7680ca040d1ef117a9dbe75e1489f60e8eac36e5bff2",
+        "max_time_ns": 1793363985455360253
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/fidelity_b28/candidate_ee29d548/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702888280,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "1f5c1fdee024d6e4b9b9cf9ae81f1ba0f395ce1023de021302d486a35482ed02",
+        "max_time_ns": 1793419301996166042
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4/fidelity_b29/candidate_a69a5213/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702894286,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "43dfcfa3d05529cc77a8ba0824efb1e8a3bad4b66d49ccf97c1074764fdd7aed",
+        "max_time_ns": 1793440879612098386
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h4a2/fidelity/candidate_d6ea9661/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704036864,
+        "logical_bytes": 702878116,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "4725e0e5c93704537676e8d674470c3132b5d8957ea95cc7a2243990974d64a2",
+        "max_time_ns": 1792914050366046254
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h4b_item1/fidelity/candidate_5f907f66/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702884507,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "c95f75c52c9f2c984561f4c4455f01b80a9f5d143c205fe8b3af103e002e5e12",
+        "max_time_ns": 1792989843999472051
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h4b_item1/fidelity_96d9c1ef/candidate_96d9c1ef/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702889358,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "91d684c33c375ff202a2a0dbde3f04cf498351ea8272eb8de237e03344dff132",
+        "max_time_ns": 1792995764755811096
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h4b_item2/fidelity/candidate_item2/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704036864,
+        "logical_bytes": 702881987,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "6aeaa6b5f37ad0878c11cffed9ae6ca635101722c8d01a7b9796e93b3391fbc3",
+        "max_time_ns": 1793002353691886617
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h4c/fidelity/candidate_cefbbc9d/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704032768,
+        "logical_bytes": 702877577,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "0d6490f3b8f5060782fbb4d3e975cecaa0a868817c701d2578634632709a1b8a",
+        "max_time_ns": 1792934004785781673
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/merge_88771d9/fidelity/merge-88771d9/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704020480,
+        "logical_bytes": 702871634,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "2dc8f08a5ad3b0d189a6bcb598654cb3045fdb0e2df21a8885f4e7c110391070",
+        "max_time_ns": 1792495924643184386
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/merge_b67cb02/fidelity/merge-b67cb02/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704020480,
+        "logical_bytes": 702871634,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "6711556fe01ef6ed98cafe885a5e47d94b87e8dc02f5e2af271ac73b555dd165",
+        "max_time_ns": 1792497568544162292
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/merge_d215543/fidelity/merge-d215543/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704028672,
+        "logical_bytes": 702877562,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "cc45f65ccd53e294332c486ed094961b95bd762bdf84af8cbbce947be7d5c6a3",
+        "max_time_ns": 1792498952413270655
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/q1_window_warmup_20261021/fidelity/candidate_5bb8ea4/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702888594,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a08291180474cf8e3fe2381575ce409bb94e69acfb9eff770e30c0cebe1b94d6",
+        "max_time_ns": 1792585312479625353
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/root_dsa_full_dummy_merged_20261021/fidelity/candidate_d2878ed/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702893984,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "9a339882d8d72a403406d9a8ed182cc0c5469f040d96875c8fa1c719e7ba6987",
+        "max_time_ns": 1792593725143938921
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/root_p0_inputs_timeout_comm_20261021/fidelity/candidate_f15ab39/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702894523,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "0d800474c2df143b5b9e7748000d2bac5bedeca33c0c7d90e714c8b560bcf4db",
+        "max_time_ns": 1792590092101803239
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/root_v4_ab_merged_20261021/fidelity/candidate_936f913/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702889133,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "891fbc20f1dbc3512477b9ce38739ff115af34431465a8bd8e0ee50c2fe89ba9",
+        "max_time_ns": 1792584128899156595
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/root_v4_decode_prefill_merged_20261022/fidelity/candidate_947961d/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702895601,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "cfc97c5795e31b6bd49ab074ea30652e769cb8043b6116488d70f3b7630ea2fb",
+        "max_time_ns": 1792608595562232951
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/root_v4_prefill_20261022/fidelity/candidate_9d3df65/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702888055,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "4a495a4ece405390609ebd46235515a187d7fc365f85459f3229cc08d9bfe014",
+        "max_time_ns": 1792607058017663255
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/candidate-c20-boundaries-clean-20261019/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702891430,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "457baaae83298c52abb0eb63459373240e8c8fb710406887f713a0a11471cdeb",
+        "max_time_ns": 1792348755724018455
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/root_v4_grouped_2a84c58/candidate_2a84c58/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702894523,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "b5a01415c4fd7d958d119d8b67c372a2b81cd02bf641e21901f94a34bfbeaea4",
+        "max_time_ns": 1792571713034742604
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-call/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702676820,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a484f8b0cd640fb0eb4c2c99b2acea6e235d9b599b840db5981162aeb0af31c9",
+        "max_time_ns": 1792251343137602666
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-context/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702678437,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ca882adac2e701046f3a911aefd73f73e8fc1f0d13452d3ae34da644b5fbc712",
+        "max_time_ns": 1792266824494392137
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-fixture/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702678437,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "662adddfb4507b91ac79439a4108ae6ed6473534004f8796b7eaaeed4c87b2f1",
+        "max_time_ns": 1792294031152692564
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-cutlass-state/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702677359,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "5d59581167a23a2fd7aac94c29c8d905cce862ec2c1933659b4737444a200051",
+        "max_time_ns": 1792219193435757594
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t01/refactor_fidelity/candidate-native-tools/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703901696,
+        "logical_bytes": 702751380,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "da4c0affb7b0093c3021ee15d5dc5f1adb5ea5d0e7b3fc4ced102b4498cd4e79",
+        "max_time_ns": 1792206195252254611
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-dp-return/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702675203,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "5652446a041c760462110512ef8bee4b63f640a1f52240a25acdf55917e23268",
+        "max_time_ns": 1792222591918796899
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-dummy-host/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702675742,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "1e7ffb7dadd75bfcb67f0bb5fe3a49671c74f25d67de5296e025a7f636611056",
+        "max_time_ns": 1792221921538196922
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-engine-update/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702677359,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "fb96a11e3e6b9cbfdc62ad8a76b014e74d50d3056a572cf046a250cb49562d9a",
+        "max_time_ns": 1792295882944928399
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-done/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702675203,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "82724ec0e9a0b36bdb931c66fad0aa9c6f5cfa3af18072c9f65d6ea929a9dbb8",
+        "max_time_ns": 1792227105060002318
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-lifetime/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702677359,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "7b76207c87757c984ee3db6faee40507a55af3b7a6e146296899c187bc5bafca",
+        "max_time_ns": 1792235863470119644
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-pending/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702676820,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "308eff331c151fa8c3df610fd2c89801faaeac7d8032a3188f1d3cbd026569ff",
+        "max_time_ns": 1792239220635155006
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-prepare/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702676820,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ba7d31c6d350a2db3ff2f199eae8120030c22e3cb0fb374219f809b66f3f41a5",
+        "max_time_ns": 1792225968095942838
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-nixl-source/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702676281,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ceff5d3854d567a76a11c167c0fc847b9b6fb1a139aa5abbbb74a190d9cbfb2f",
+        "max_time_ns": 1792229069359912926
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/t02/refactor_fidelity/candidate-raw-admission-a1/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 703823872,
+        "logical_bytes": 702678976,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "5986b3dd56771f96a6058dda3293dd3aa1fc351372d09a44befaf3cd8328d381",
+        "max_time_ns": 1792319335655083235
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_20261021/fidelity/candidate_621b198/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702889133,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "e7af0bbcba1aafa2cf669bf42cd0c5e85e322debd8c5992d37f014259ce9bcb5",
+        "max_time_ns": 1792573183687162333
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_p2_20261021/fidelity/candidate_e3ce166/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702890750,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "607a8ed3ced024fefec4eda26b17b1084bb8f65d46c86b2b6bb26e45998fa2a6",
+        "max_time_ns": 1792582044382272044
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity/candidate_282cb11/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702892906,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "78efde1419ab012518795d0b9cd3890dcc8ea81703ba9e90c10ae43d8a4ca0c0",
+        "max_time_ns": 1792579969169387099
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/v4_isolated_decode_20261022/fidelity/candidate_631250b/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702889672,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a7c20e23418e65e2ee58366784d12e79efc05dd1d4b21338d1c698afc464024f",
+        "max_time_ns": 1792605247841001619
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/v4_isolated_decode_20261022/r1_fidelity/candidate_102c0c9/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702891289,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a56ec376a3f8b123ad76f4a6b18f80057b155f431cf3c0242b2dc7cebe137dee",
+        "max_time_ns": 1792606389485409543
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w3_review_fixes_20261020/fidelity/candidate-w3-review-fixes/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704045056,
+        "logical_bytes": 702885837,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "7837a4526e3d4ca0796339c00b3924426f9899efe11618beb42b8847ad898713",
+        "max_time_ns": 1792439295165027268
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w4_fp8_shared_20261020/fidelity/candidate-w4-fp8-shared/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704040960,
+        "logical_bytes": 702886390,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "c1aeb1d6bf7c1719c913217378015ae27285d74df0ef651cb7de0c92c97aa23c",
+        "max_time_ns": 1792477791822994285
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_sp_moe/fidelity/w7a_sp_moe_69fee0c/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704016384,
+        "logical_bytes": 702870304,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "c6ae09fc37284b16e6e862d182863f58bdd8453de74286df0a503da363b2a32a",
+        "max_time_ns": 1792494874774590708
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/w7a_sp_moe/fidelity/w7a_sp_moe_9dee7de/cases",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 528,
+        "allocated_bytes": 704016384,
+        "logical_bytes": 702870304,
+        "directory_count": 577,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "4f810e11aaa7ea5c475b012e7057423cea3cdca0d28eeb50e4f612e7c4f7fac1",
+        "max_time_ns": 1792494386662455818
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/cleanup-caches-1103c/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623632,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "bc06ebf8922c0731885720700f347f0881aa12d19f7ae3a676d2b1c4f516cf0b",
+        "max_time_ns": 1793690367768990828
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/cleanup-h200-1103a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584768,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "3c769d50c10d7caee141715d3a3e5b7ad779492f64c10bfc1dcca3ba1504d326",
+        "max_time_ns": 1793690709949240021
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/cleanup-replays-1103b/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584720,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "db24d9d735cc5a86eb27efd3aae9a725264aec314d3563996f5b44b04d466e9b",
+        "max_time_ns": 1793690710329240260
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/cupti-graph-sample-1027a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623584,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "c783ff4f6e2376396c0cf8a73634611ca48b88588aef20e8e06c19db513066b6",
+        "max_time_ns": 1793100304108692891
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g1h-submit-1028f/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623592,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a99d2ee73d43b8f95dc5e9d6fb5234bbbbda2c9edd083ed3595119648202f456",
+        "max_time_ns": 1793207024495444731
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g1h-submit-1028i/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623544,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "7b769285498798b6c4bf89eb337750df2d04274ad0a58f4bb0ad57625eca12e4",
+        "max_time_ns": 1793214257105109038
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g1h-supplement-submit-1029a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623512,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "76dd2ad330940e8ff1af27413d1a32f183a8719759f816ae6970eac669b9b81b",
+        "max_time_ns": 1793302087885770004
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g2h-block-fetch-1029c/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623552,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "56fc3b340a2617d7ddd6eb8a3ab3e44bd0d516bc25a23e88a902d6e2bf13a0d2",
+        "max_time_ns": 1793253918688038427
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g2h-block-submit-1029d/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623528,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "597b656effd6b82a010b16d1213d425771e3513e0d5a062e5388684808db84f4",
+        "max_time_ns": 1793255852640251999
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g2h-replay-follow-1029f/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623544,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "6b10e381210fd30e87678f1d777084576f6a5879e7e160d4e21cfa721d8003dd",
+        "max_time_ns": 1793267242183903743
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g2h-replay-submit-1029e/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623520,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "c7759a3d171d1d5c6fefdb6895f12aad3750587bea8aabb11c8b59168a534577",
+        "max_time_ns": 1793261149982330753
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g2h-runner-submit-1029a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623544,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ba06c5fb6d6d0ea352ff1470b3dbac55770c2167d83b4327454b9e5d0e97e16c",
+        "max_time_ns": 1793248570139189981
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g2h-runner-submit-1029b/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623616,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "2def2d7c6cd62c93f6c9f316f1b342708ec1ffeb6e0b2daadd64698c05ae58c9",
+        "max_time_ns": 1793256485128348950
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g2h-submit-1028k/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623600,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "67aca15104044c08c50cbfa45d5dfae63cbe24b1f2d6200f57ac22729861b305",
+        "max_time_ns": 1793217585585820304
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g3h-submit-1028g/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623528,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "21ef9f07ab9caf15fc32b5ef6bff7b8fee06d94cd9a4afa21bcc624a03531aba",
+        "max_time_ns": 1793207643079631888
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g5h-submit-1028c/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623576,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "c55c5c779a870d32a6b4ae3bc6351f5bd044557cfb4a4be40ba364dca61437ac",
+        "max_time_ns": 1793201726006169192
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g5h16-collect-1028b/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623632,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ecbf79fbaca9c15d144b10b810c6e835b0b957939b8a8fc6461c701b9ffd1662",
+        "max_time_ns": 1793194287712058758
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g5h16-collect-1028d/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623528,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "fd986949373be07f1ed8ef44c6da30430bf60448f507e28e407b73e4c592af63",
+        "max_time_ns": 1793201469654095808
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g5h16-iso-1028h/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623520,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "427f069853c32dc780cecf9657c4ea77996a4f76aabe1b13c4ddec98f3843c68",
+        "max_time_ns": 1793208878991969976
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g5h16-submit-1028a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584808,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a255ba56c13b951116bec994c45d9283c0dd4ee60a93c63a0d495f2cb607132b",
+        "max_time_ns": 1793194138827990594
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g5h32-collect-1028e/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623608,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "6f9caed66654e72d722212d0323b620b98ec1d4dd6393c68c74b7d066b7f0fb9",
+        "max_time_ns": 1793205949487083541
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/g5h32-iso-1030a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623584,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "1cfb45073a26f1f879bcddbdfbaa650708d3977b28cfd469fa599f8b134ef867",
+        "max_time_ns": 1793376190652210364
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/gpuh-clocks-1102a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623640,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "09ac7689773f24535a78f91922ee464b18d19975a8f663e91da42a84e545567b",
+        "max_time_ns": 1793605600473960456
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h200-lifecycle-submit-1025a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 9,
+        "allocated_bytes": 114688,
+        "logical_bytes": 92032,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "33b54a32ef95dba12880820c4e7db965bc94e5680803283748c64c30e3c599db",
+        "max_time_ns": 1792955220330923173
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h200-lifecycle-submit-1025b/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623496,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "4ed449de74cc3d96f08d87ba7a76a373d6f599d6ba82891ffb62182e23400bf8",
+        "max_time_ns": 1792955479639029837
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h200-p64-formal-submit-1102a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623632,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "835908b969079bb5a2b279e2c9be9e04483e01070502f4414667caecd5197c7a",
+        "max_time_ns": 1793618170021747114
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h200-p64-lifecycle-submit-1026a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623656,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "453f1b3b5914a19601012fbe6ee90b04e22e3601aeeacbc03fc4eb2e679038de",
+        "max_time_ns": 1792991121171584371
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h200-p64-wave-submit-1030a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623520,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "e80040354a4bebb9a4e372433eba1905caf3ca2c8fa5fb5f9c709b4692b4b2c7",
+        "max_time_ns": 1793343199280984524
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h200-ssh-copy-1025a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584792,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "fb869ea88b9b11fb1e035a586968ccf3dc7d5467ed50c65ea172b41763718024",
+        "max_time_ns": 1792944910758417062
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h200-ssh-copy-1025c/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623704,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "960b97ccb84e20056c5202e19e73be72e9a8f5e823d83c0a3fb1686320d7e2b1",
+        "max_time_ns": 1792951285993109281
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/h800-lifecycle-copy-1025d/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623584,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "8154bfd86aaf2f502b9a7ab7fd6ef26734d34ed65f7404bc190455aed8ca535b",
+        "max_time_ns": 1792969383731903898
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/nixl6144-q1-1101a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623576,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "a3cb98937e689d6d2e0e0f5620f78cea45fb5649aff51b6d4b3d14ec5ec42b43",
+        "max_time_ns": 1793566851044185771
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p1h-graph-bridge-1027a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623576,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "e4e9d3b0e861eb4e00ba61ab7d5787e21d700e07d12e9f6013a2bfb8a927cb6c",
+        "max_time_ns": 1793126821169164231
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-clocks-1102k/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623528,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "153d73ee438485d06fe80132e04ddbe5cb979ae8a3a641b80bed57cc86abf101",
+        "max_time_ns": 1793633543067544024
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-dp-port-repro-1102f/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584752,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "f08a33ac10adb458d324d00a1404c65ddcfb58d1660cff84a4ba8e0273a70e42",
+        "max_time_ns": 1793631099918482420
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal-copy-1102e/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584872,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "2205202b7e4d32d089b12d5edc785d39351bb7afd8cab6ed1f9c65be9c46478d",
+        "max_time_ns": 1793630162230036512
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal-rca-1102d/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623432,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "f7e3070445aa7222e6269ac8ae00f08f22761ec634168fdb05dac74bbb10a8f3",
+        "max_time_ns": 1793630409742149313
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102l/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623624,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "443124eaac6dbc2cbf6b1e77d5f6070ab687024e8bd3391f140ca053626146c8",
+        "max_time_ns": 1793633925663705365
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal2-1102n/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623648,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "430bcf664179b9076548d31fa355d59bebdf3719a17cec7f1d0af9b150b25f92",
+        "max_time_ns": 1793635483844357926
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal3-1103b/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584896,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "e561aefe8d6bad839cb1dbb653206e78ce41bf7cba2ec1921a0f9a0013d34ab9",
+        "max_time_ns": 1793669218757247420
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal3-build-1103a/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623528,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "399bb7b57511dcb416f1d5d0cffabc468cf328eca06dfa926f9b030e079630db",
+        "max_time_ns": 1793668448221065287
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal3-terminal-1103c/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623568,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "e1b3d03afe5a34603422d93026bf4f3b4bd0ced41887766e93e1a516e29c1bdd",
+        "max_time_ns": 1793669495365256516
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal4-prepare-1103d/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623560,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "d721b4a3e7ceb19b8d6711f8c6c8d41f3751f88b3291f8c2315f016e8a9aa776",
+        "max_time_ns": 1793669516945258133
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-formal5-prepare-1104b/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623576,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "edae726f2e88af379e636fea674748954dec59b3fb030e35b3b15603f9d320ff",
+        "max_time_ns": 1793727905350171879
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-image-cpu-1102i/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623640,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "5a587ab5ea9a085260e88d6b249004184c2f93edb98a9fa129578f83788d6fb0",
+        "max_time_ns": 1793633563507552745
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-mainline-integration-1102c/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 21,
+        "allocated_bytes": 2625536,
+        "logical_bytes": 2584864,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "4893a5dd30d9fc77285bab113d13916d3f7c892ed6d776185f1621de80d8859e",
+        "max_time_ns": 1793616301017011987
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-native-review-1102g/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 7,
+        "allocated_bytes": 98304,
+        "logical_bytes": 78972,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "44fd5f3c35367afd9bc27da19e5ee7288f1e3cbd5d5c219aef0f533c0ac6f89b",
+        "max_time_ns": 1793632692003169128
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-package-review-1102j/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623560,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "73fc6025bb64ccd11697c20fdb6f0a8b33c9b8d808eb3d7c55ec15b334ac3c49",
+        "max_time_ns": 1793633712351615659
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-reader-1102m/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623512,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "ced7086a8ac24d47bb1919ca65f2d29bc06d63268bc644275bb96a906e516969",
+        "max_time_ns": 1793634431451917217
+      }
+    },
+    {
+      "path": "/data/ycfeng/tmp/ds4_runs/p64-startup-inspect-1102b/scratch/node-compile-cache",
+      "errors": [],
+      "observed": {
+        "regular_file_count": 30,
+        "allocated_bytes": 2691072,
+        "logical_bytes": 2623520,
+        "directory_count": 2,
+        "symlink_count": 0,
+        "special": 0,
+        "metadata_sha256": "e77c22b60a583aa1a8b79d50b066e2f444c3131f719ec45629884a361766a8c5",
+        "max_time_ns": 1793615436004633629
+      }
+    }
+  ],
+  "candidate_count": 172,
+  "passed_count": 172
+}
