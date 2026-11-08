@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | I-015 opened and resolved: a launcher from the ended G0-D track had polled a deleted job for 18 days and grown its log to 4.33 GB; stopped on YC's approval after identity and job-state evidence. |
 | 2026-11-08 | I-014 resolved: the copy job later succeeded on its own and both copy routes hold identical job output (`PAYLOAD_IDENTICAL`), so the deviation has no numerical consequence. |
 | 2026-11-08 | I-014 opened: the generation08 CPU copy job stayed in Starting after an image pull failure; the copy came from the read-only SSH route instead. Also recorded that compare.py needs `PYTHONPATH` set to the repository root. |
 | 2026-11-07 | I-013 harness gap fixed under D-P2-64-SIXTH: peer heartbeat check in the native worker (harness 57caf2f7), packaged as generation08. |
@@ -31,6 +32,35 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+
+## I-015: a launcher from the ended G0-D track kept polling a deleted job for 18 days (2026-11-08, resolved)
+
+- Observation: pid 1878671, started 2026-10-20T12:35:25Z as
+  `/data/ycfeng/tmp/stepmind-env/bin/python -u native_track_20261020/g0d_launch/launch.py`, was still running on
+  2026-11-08. Every poll of its job `exp-1020-203529-472675` failed with a `ProxyError` on `127.0.0.1:51015`, the local
+  proxy port it was started with, and it wrote the full traceback each time. `native_track_20261020/g0d_launch/launcher.log`
+  had reached 4,332,828,936 bytes and grew 54,320 bytes per 20 s (about 230 MB/day). `launcher_exit.json` was never
+  written, so its `finally` block never ran.
+- Impact: the growing log blocked the `cleanup_20261107_gen05_07` run, which could not take a stable hash of the
+  protected inputs and therefore deleted nothing (its `implementation.md` records the same log growing during both
+  hash passes).
+- Inference: the launcher never reached a terminal job state because the proxy it captured at start no longer listens,
+  so its monitor loop could not observe the job and never exited. The job itself is long gone: a read on 2026-11-08
+  returned `NotFoundException`, 18 days after submission, so no live workload depended on the process. It was an H800
+  `codesign` job, unrelated to the current H200 step_main work.
+- Resolution: identified and stopped through Pi on HOST (label `g0d-stale-launcher-1108a`, two single-call turns), on
+  YC's approval of 2026-11-08 conditioned on identifying the writer and confirming its job was no longer running. The
+  stop was gated on the live argv matching the recorded argv exactly; one SIGTERM ended it in 0.5 s, with no children
+  and `ppid` 1. Evidence: `/data/ycfeng/tmp/ds4_runs/g0d-stale-launcher-1108a/scratch/{log_writers.json,stop_report.json}`,
+  status `STOPPED_LOG_QUIET`. Independent lead check: the log held 4,332,828,936 bytes with no growth over 25 s and its
+  mtime frozen at the SIGTERM instant.
+- Observed limit: in that read-only ds4 turn, `/proc/<pid>/{fd,cwd,exe}` returned `PermissionError` for this process
+  even at the same uid, while `/proc/<pid>/cmdline` and `stat` read normally and the signal was delivered. The scan's
+  open-file test therefore found no holder and the identification rests on argv. The kernel has no
+  `yama/ptrace_scope`, and the turn ran under bubblewrap, which creates a user namespace; a child user namespace cannot
+  ptrace-read a process outside it while signals still follow uid credentials. That explanation fits the evidence but
+  was not tested directly. Practical rule: identify host processes by argv in a `read-only` turn, and use a `write`
+  turn when open-file evidence is required.
 
 ## I-014: the generation08 CPU copy job starts late after an image pull failure (2026-11-07, resolved)
 

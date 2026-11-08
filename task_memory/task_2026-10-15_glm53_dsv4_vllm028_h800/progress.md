@@ -605,13 +605,18 @@ The following completed A6 history retains its original all-request verdicts. D-
   2.97/2.14/2.00/0.28%; all-request and warm readings PASS. **P2-64 formal PASS.**
   [Test report](test_report_2026-11-07_p2_64_generation08_formal.md).
 - completed — the copy-job question closed itself; see the copy bullet above. YC confirmed the follow-ups on 2026-11-08.
-- in-progress — identify the writer of `native_track_20261020/g0d_launch/launcher.log` (over 4.11 GB) through a host
-  process scan, confirm its job is terminal, then stop it. Claude cannot see host processes (PID 1 is `bwrap`), so the
-  scan goes through Pi on HOST; the stop stays gated on terminal-job evidence.
-- pending — cleanup via codex-implement once the growing log is stopped: the invalid `generation08` compare output, the
+- completed — the writer of `native_track_20261020/g0d_launch/launcher.log` was the G0-D launcher pid 1878671, running
+  since 2026-10-20 and polling the deleted job `exp-1020-203529-472675`; it is stopped and the log is quiet at
+  4,332,828,936 bytes (issues.md I-015). Pi label `g0d-stale-launcher-1108a`, two single-call read-only turns: turn 1
+  read the job once (`NotFoundException`, 18 days after submission) and scanned the host processes; turn 2 stopped the
+  process behind an exact-argv gate, one SIGTERM, exit in 0.5 s, `STOPPED_LOG_QUIET`. Lead check: no growth over 25 s,
+  mtime frozen at the SIGTERM instant. This removes the cleanup blocker that a changing protected input created.
+- pending — cleanup via codex-implement: the invalid `generation08` compare output, the
   duplicate platform-route copy, the superseded protected-hash snapshots, generation07/08 prompt and scratch
-  duplicates. The previous attempt (`cleanup_20261107_gen05_07`) deleted nothing because the host process check and a
-  stable protected-input hash were both unavailable; the growing log was one cause.
+  duplicates, and the 4.3 GB tail of repeated proxy tracebacks in the G0-D launcher log. The previous attempt
+  (`cleanup_20261107_gen05_07`) deleted nothing because the host process check and a stable protected-input hash were
+  both unavailable. The log is now quiet, and the host process check must come from the lead through Pi, since the
+  codex-implement executor runs in its own PID namespace and cannot perform it.
 
 ## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
 
