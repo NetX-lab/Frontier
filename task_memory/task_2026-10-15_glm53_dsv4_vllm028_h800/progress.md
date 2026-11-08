@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | Recorded the generation08 result: job Succeeded (23.31 GPUh exact), hash-identical SSH copy, R5 PASS, pair coverage COVERED, all four metrics within 10% in every repeat; P2-64 formal PASS. |
 | 2026-11-07 | Recorded the generation08 submission `exp-1108-002857-059466` at 16:28:57Z (27/27 checks), Running at 16:34Z. |
 | 2026-11-07 | Recorded the generation08 records commit 79634ae7, the prepared generation08 copy script, and the codex-implement cleanup of generation05-07 scratch duplicates (449 files, 32.5 MB). |
 | 2026-11-07 | Recorded D-P2-64-SIXTH step 1: the native peer heartbeat check (harness 57caf2f7), the generation08 build and audit, and the prepared night-time submission. |
@@ -582,8 +583,26 @@ The following completed A6 history retains its original all-request verdicts. D-
   Running at 16:34:19Z, launcher alive after the Pi exit. Lead record
   `h200_mainline/p2_64_formal_retry08/lead_submission_acceptance.json` (PASS_SUBMISSION_IDENTITY_AND_LAUNCHER_SURVIVAL)
   with the copied submission evidence `generation08_*`.
-- in-progress — native execution; read-only mid-run reads, then terminal reads, copy on success
-  (p64-formal8-post-1107r) and the post-run comparison.
+- completed — native execution. Mid-run reads (label p64-formal8-inspect-1107s, read-only; turn 2 hit I-010 and
+  ran nothing, turn 3 read): 8 heartbeats advancing; heads ready at 16:42:45Z (decode) and 16:42:53Z (prefill);
+  `REPLAY_DONE {"status": 0, "requests": 432}` and `replay_finished.json` at 16:53:47Z; 8/8 `drained.json`, no
+  `failed.json`. Monitor: Succeeded, finishTime 16:54:31Z, 8/8 replicas Succeeded; the launcher exited after the end.
+- completed — terminal reads (Pi p64-formal8-post-1107r, exit 0): terminal receipt, events, replica logs. Creator
+  i-fengyicheng, step_main, preemptible `yes`; 8/8 containers exit 0, restart 0, 1286-1332 s each; exact clocks
+  complete, **23.31 container GPUh** (D-P2-64-SIXTH: 23.31 of 128). Receipt copied into the controller run directory.
+- completed with deviation — copy. The CPU copy job `exp-1108-010820-461640` stayed in Starting after an image pull
+  failure on gpu-h200-0577 (issues.md I-014; read-only check p64-formal8-copyread-1107t). The copy came from the
+  read-only SSH route instead (Pi p64-formal8-sshcopy-1107u): `formal_p2_64_20261107_08_ssh`, 130 files,
+  75,585,300 bytes, HASH_IDENTICAL_DOWNLOAD; lead rehash 0 mismatches. The stuck job holds no GPU and was not stopped.
+- completed — post-run comparison. First run without `PYTHONPATH` stopped in `run_gate.py` (output `generation08`,
+  UNVERIFIED, for cleanup); rerun with the recorded environment: `generation08_run2/result.json` TOOLS_FINISHED, all
+  seven stages PASS. Pair coverage COVERED (16/16 pairs in every repeat), R5 PASS, routing MATCH, no formal openers.
+  Errors per repeat (TTFT/TPOT/E2E/THPT): repeat01 2.75/2.18/2.05/0.51%, repeat02 3.16/2.26/2.12/0.50%, repeat03
+  2.97/2.14/2.00/0.28%; all-request and warm readings PASS. **P2-64 formal PASS.**
+  [Test report](test_report_2026-11-07_p2_64_generation08_formal.md).
+- pending — YC decisions: stop the stuck copy job `exp-1108-010820-461640` with rjob_stop.sh or leave it; the old G0-D
+  launcher still writing `launcher.log`. Cleanup via codex-implement: the invalid `generation08` compare output, the
+  superseded protected-hash snapshots, generation07/08 prompt and scratch duplicates.
 
 ## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
 

@@ -1,0 +1,9 @@
+{
+  "tag": "dsv4-h200-p2-64-formal-20261107-08",
+  "case_id": "dsv4-h200-p2-64-canonical-fixed128-qps1",
+  "inputs": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/inputs",
+  "input_name": "p2_64r",
+  "r4": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/inputs/p2_64r/run_check_status.groundtruth_clean.json",
+  "r4_sha256": "aa650000df0b34e9679f19d860b23bc59491d9085144dc76b8f2339aecdd1c38",
+  "routing": "Frontier prices whole native lane steps from dsv4_step_cost.json, measured on P2-64p with the same balanced_topk routing as P2-64r; Frontier's routing model does not enter this prediction (MoE and EP costs are zero)."
+}

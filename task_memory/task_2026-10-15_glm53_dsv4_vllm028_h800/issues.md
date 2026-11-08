@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | I-014 opened: the generation08 CPU copy job stayed in Starting after an image pull failure; the copy came from the read-only SSH route instead. Also recorded that compare.py needs `PYTHONPATH` set to the repository root. |
 | 2026-11-07 | I-013 harness gap fixed under D-P2-64-SIXTH: peer heartbeat check in the native worker (harness 57caf2f7), packaged as generation08. |
 | 2026-11-07 | I-013 opened and classified: one generation07 replica stopped from outside after the rendezvous; the peers waited 30 minutes for the decode startup timeout. Platform cause; D-P2-64-FIFTH is exhausted. |
 | 2026-11-07 | I-012 opened and classified: generation06 failed at spot-GPU device admission before any container started; platform cause, generation07 (last resubmission) submitted. I-010 did not recur on two single-call turns. |
@@ -29,6 +30,23 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+
+## I-014: the generation08 CPU copy job stays in Starting after an image pull failure (2026-11-07)
+
+- Observation: the CPU-only copy job `exp-1108-010820-461640` (created 17:08:20Z by `cloud_copy.py submit`) was
+  placed on gpu-h200-0577. The image pull started at 17:15:15Z and failed at 17:16:25Z with `failed to read expected
+  number of bytes: unexpected EOF`; the replica then stayed in ImagePullBackOff (37 back-offs by 17:29:56Z) and the job
+  in phase Starting. Earlier copies took about 30 s from creation to `FINAL_STATUS`. Evidence (read-only):
+  `/data/ycfeng/tmp/ds4_runs/p64-formal8-copyread-1107t/scratch/copy_job_1.json` and `events_1/`.
+- Inference: a registry transfer failure on a node without the image cached; not caused by the run or the script.
+- Resolution: the copy came from the read-only SSH route of `h200-ssh-copy-1025c` (label `p64-formal8-sshcopy-1107u`):
+  130 files, `HASH_IDENTICAL_DOWNLOAD`, independently rehashed by the lead. The stuck job holds no GPU and was not
+  stopped; stopping it needs YC's decision. If it starts later, it writes only into its own new directory
+  `/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08`, which is then a duplicate for cleanup.
+- Related: the first compare.py run for generation08 lacked `PYTHONPATH` and stopped in `run_gate.py` with
+  `ModuleNotFoundError: No module named 'tests'` after R5 PASS. The retained command record sets
+  `PYTHONPATH="$REPO"`; `post_run_command.json` now records that environment, and the rerun finished.
+  [Test report](test_report_2026-11-07_p2_64_generation08_formal.md).
 
 ## I-013: a replica lost after the rendezvous leaves its peers waiting for the full startup timeout (2026-11-07)
 

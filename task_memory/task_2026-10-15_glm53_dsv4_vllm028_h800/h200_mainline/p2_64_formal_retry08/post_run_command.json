@@ -7,7 +7,7 @@
     "--case",
     "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01/case",
     "--download",
-    "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08/dsv4-h200-p2-64-formal-20261107-08",
+    "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08",
     "--controller-run",
     "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08",
     "--reference-checker",
@@ -15,8 +15,19 @@
     "--r4-python",
     "/data/ycfeng/envs/openmopd-py312/bin/python",
     "--output",
-    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08"
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2"
   ],
   "reuse_frontier_run": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64",
-  "expected": "TOOLS_FINISHED, selected R5 run PASS, coverage evidence verified, all-request and warm reading with all three repeats/four metrics retained."
+  "expected": "TOOLS_FINISHED, selected R5 run PASS, coverage evidence verified, all-request and warm reading with all three repeats/four metrics retained.",
+  "download_route": "The CPU copy job exp-1108-010820-461640 stayed in Starting (ImagePullBackOff on gpu-h200-0577, unexpected EOF at 17:16:25Z), so the copy came from the read-only SSH route of h200-ssh-copy-1025c (label p64-formal8-sshcopy-1107u): 130 files, HASH_IDENTICAL_DOWNLOAD. Planned path was /data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08/dsv4-h200-p2-64-formal-20261107-08.",
+  "env": {
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "first_attempt": {
+    "output": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08",
+    "status": "UNVERIFIED",
+    "cause": "run without PYTHONPATH; run_gate.py stopped with ModuleNotFoundError: No module named 'tests' after R5 PASS and coverage COVERED"
+  }
 }

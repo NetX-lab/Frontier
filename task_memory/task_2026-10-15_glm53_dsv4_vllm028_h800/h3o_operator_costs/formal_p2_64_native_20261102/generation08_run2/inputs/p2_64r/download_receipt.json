@@ -1,0 +1,51 @@
+{
+  "status": "HASH_IDENTICAL_DOWNLOAD",
+  "start_utc": "2026-11-07T17:32:29.496922+00:00",
+  "end_utc": "2026-11-07T17:32:33.613745+00:00",
+  "cloud_root": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_08/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08",
+  "remote_root": "/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_08/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08",
+  "local_root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts",
+  "files": 130,
+  "bytes": 75585300,
+  "inventory_sha256": "14dc2ae8b5f5f4a0fcdfc28a3a5591471b579d6b06d8cbfde8e998baa66c1ddb",
+  "mismatched": [],
+  "commands": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n timeout 900s python3 - /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_08/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08"
+      ],
+      "stdin": "from pathlib import Path\nimport hashlib,json,sys\nr=Path(sys.argv[1]); files=[]\nfor p in sorted(r.rglob('*')):\n if not p.is_file(): continue\n assert p.resolve().is_relative_to(r.resolve()),str(p)\n h=hashlib.sha256()\n with p.open('rb') as f:\n  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)\n files.append({'path':str(p.relative_to(r)),'bytes':p.stat().st_size,'sha256':h.hexdigest()})\nprint(json.dumps({'root':str(r),'files':files}))\n",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "shai-ycfeng",
+        "sudo -n tar -C /mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h200_p2_64_formal_20261107_08/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08 -cf - ."
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "tar",
+        "--no-same-owner",
+        "--no-same-permissions",
+        "-xf",
+        "-",
+        "-C",
+        "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts"
+      ],
+      "returncode": 0
+    }
+  ]
+}

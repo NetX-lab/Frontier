@@ -1,0 +1,681 @@
+{
+  "decision": "D-WARM-TARGET",
+  "classification": "RETAINED_CLEAN_REFERENCE_WARM_READING",
+  "all_request": {
+    "cell_id": "dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path",
+    "gate": "client",
+    "relative_error_limit": 0.1,
+    "ttft_semantic": "request_issue_to_first_output_token",
+    "sides": [
+      "frontier/a10",
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01",
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02",
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03"
+    ],
+    "formal_request_count": 128,
+    "routing_status": "MATCH",
+    "request_id_gaps": {},
+    "token_count_mismatches": {},
+    "blocked_status": null,
+    "client_metric_gaps": [],
+    "metrics": [
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "ttft_ms",
+        "metric_statistic": "mean",
+        "vllm": 705.1974647474708,
+        "frontier": 684.313826604259,
+        "absolute_error": -20.883638143211783,
+        "relative_error": 0.02961388715526672,
+        "status": "PASS",
+        "sample_count": 128,
+        "eligible_count": 128,
+        "excluded_count": 0,
+        "vllm_numerator": 270795.8264630288,
+        "vllm_denominator": 384,
+        "frontier_numerator": 87592.16980534515,
+        "frontier_denominator": 128
+      },
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "tpot_ms",
+        "metric_statistic": "mean",
+        "vllm": 24.751650847855682,
+        "frontier": 25.295336617652367,
+        "absolute_error": 0.543685769796685,
+        "relative_error": 0.021965636681715972,
+        "status": "PASS",
+        "sample_count": 128,
+        "eligible_count": 128,
+        "excluded_count": 0,
+        "vllm_numerator": 9504.633925576582,
+        "vllm_denominator": 384,
+        "frontier_numerator": 3237.803087059503,
+        "frontier_denominator": 128
+      },
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "request_e2e_time_ms",
+        "metric_statistic": "mean",
+        "vllm": 26026.136282103835,
+        "frontier": 26561.443186462628,
+        "absolute_error": 535.306904358793,
+        "relative_error": 0.02056805122959731,
+        "status": "PASS",
+        "sample_count": 128,
+        "eligible_count": 128,
+        "excluded_count": 0,
+        "vllm_numerator": 9994036.332327873,
+        "vllm_denominator": 384,
+        "frontier_numerator": 3399864.7278672163,
+        "frontier_denominator": 128
+      },
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "token_throughput_tps",
+        "metric_statistic": "window_rate",
+        "vllm": 6001.121550818262,
+        "frontier": 5975.251569855107,
+        "absolute_error": -25.869980963155285,
+        "relative_error": 0.00431085768619832,
+        "status": "PASS",
+        "sample_count": 128,
+        "eligible_count": 128,
+        "excluded_count": 0,
+        "vllm_numerator": 2752512,
+        "vllm_denominator": 458.6662637460977,
+        "frontier_numerator": 917504,
+        "frontier_denominator": 153.5506897531761
+      }
+    ],
+    "verdict": "PASS",
+    "repetitions": {
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01": {
+        "metrics": [
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "ttft_ms",
+            "metric_statistic": "mean",
+            "vllm": 703.6404160317034,
+            "frontier": 684.313826604259,
+            "absolute_error": -19.326589427444333,
+            "relative_error": 0.02746657097447562,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 90065.97325205803,
+            "vllm_denominator": 128,
+            "frontier_numerator": 87592.16980534515,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "tpot_ms",
+            "metric_statistic": "mean",
+            "vllm": 24.754559007601998,
+            "frontier": 25.295336617652367,
+            "absolute_error": 0.5407776100503696,
+            "relative_error": 0.02184557640006027,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3168.5835529730557,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3237.803087059503,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "request_e2e_time_ms",
+            "metric_statistic": "mean",
+            "vllm": 26027.554280808545,
+            "frontier": 26561.443186462628,
+            "absolute_error": 533.8889056540829,
+            "relative_error": 0.020512449994110536,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3331526.9479434937,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3399864.7278672163,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "token_throughput_tps",
+            "metric_statistic": "window_rate",
+            "vllm": 6006.098153573765,
+            "frontier": 5975.251569855107,
+            "absolute_error": -30.846583718657712,
+            "relative_error": 0.005135877391597953,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 917504,
+            "vllm_denominator": 152.76207223720849,
+            "frontier_numerator": 917504,
+            "frontier_denominator": 153.5506897531761
+          }
+        ],
+        "verdict": "PASS"
+      },
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02": {
+        "metrics": [
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "ttft_ms",
+            "metric_statistic": "mean",
+            "vllm": 706.6607760207262,
+            "frontier": 684.313826604259,
+            "absolute_error": -22.34694941646717,
+            "relative_error": 0.03162330523324778,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 90452.57933065295,
+            "vllm_denominator": 128,
+            "frontier_numerator": 87592.16980534515,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "tpot_ms",
+            "metric_statistic": "mean",
+            "vllm": 24.735165890361994,
+            "frontier": 25.295336617652367,
+            "absolute_error": 0.5601707272903731,
+            "relative_error": 0.022646734199128313,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3166.1012339663353,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3237.803087059503,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "request_e2e_time_ms",
+            "metric_statistic": "mean",
+            "vllm": 26010.735481861047,
+            "frontier": 26561.443186462628,
+            "absolute_error": 550.7077046015802,
+            "relative_error": 0.021172323442588695,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3329374.141678214,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3399864.7278672163,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "token_throughput_tps",
+            "metric_statistic": "window_rate",
+            "vllm": 6005.151197391296,
+            "frontier": 5975.251569855107,
+            "absolute_error": -29.899627536188746,
+            "relative_error": 0.004978996623628307,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 917504,
+            "vllm_denominator": 152.78616138733923,
+            "frontier_numerator": 917504,
+            "frontier_denominator": 153.5506897531761
+          }
+        ],
+        "verdict": "PASS"
+      },
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03": {
+        "metrics": [
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "ttft_ms",
+            "metric_statistic": "mean",
+            "vllm": 705.2912021899829,
+            "frontier": 684.313826604259,
+            "absolute_error": -20.97737558572385,
+            "relative_error": 0.029742857305730598,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 90277.2738803178,
+            "vllm_denominator": 128,
+            "frontier_numerator": 87592.16980534515,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "tpot_ms",
+            "metric_statistic": "mean",
+            "vllm": 24.765227645603055,
+            "frontier": 25.295336617652367,
+            "absolute_error": 0.5301089720493124,
+            "relative_error": 0.021405374488589878,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3169.949138637191,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3237.803087059503,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "request_e2e_time_ms",
+            "metric_statistic": "mean",
+            "vllm": 26040.119083641912,
+            "frontier": 26561.443186462628,
+            "absolute_error": 521.3241028207158,
+            "relative_error": 0.020020035282719013,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3333135.2427061647,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3399864.7278672163,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "token_throughput_tps",
+            "metric_statistic": "window_rate",
+            "vllm": 5992.135604615969,
+            "frontier": 5975.251569855107,
+            "absolute_error": -16.88403476086205,
+            "relative_error": 0.002817699043368718,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 917504,
+            "vllm_denominator": 153.11803012154996,
+            "frontier_numerator": 917504,
+            "frontier_denominator": 153.5506897531761
+          }
+        ],
+        "verdict": "PASS"
+      }
+    },
+    "formal_windows": {
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01": {
+        "first_submission_s": 8828196.945430702,
+        "last_token_s": 8828349.707502939,
+        "total_tokens": 917504
+      },
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02": {
+        "first_submission_s": 8828393.43964718,
+        "last_token_s": 8828546.225808566,
+        "total_tokens": 917504
+      },
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03": {
+        "first_submission_s": 8828590.052312989,
+        "last_token_s": 8828743.17034311,
+        "total_tokens": 917504
+      },
+      "frontier/a10": {
+        "first_submission_s": 0.0,
+        "last_token_s": 153.5506897531761,
+        "total_tokens": 917504
+      }
+    }
+  },
+  "all_request_verbatim": "{\n \"cell_id\": \"dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path\",\n \"gate\": \"client\",\n \"relative_error_limit\": 0.1,\n \"ttft_semantic\": \"request_issue_to_first_output_token\",\n \"sides\": [\n  \"frontier/a10\",\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01\",\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02\",\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03\"\n ],\n \"formal_request_count\": 128,\n \"routing_status\": \"MATCH\",\n \"request_id_gaps\": {},\n \"token_count_mismatches\": {},\n \"blocked_status\": null,\n \"client_metric_gaps\": [],\n \"metrics\": [\n  {\n   \"frontier_run\": \"frontier/a10\",\n   \"metric\": \"ttft_ms\",\n   \"metric_statistic\": \"mean\",\n   \"vllm\": 705.1974647474708,\n   \"frontier\": 684.313826604259,\n   \"absolute_error\": -20.883638143211783,\n   \"relative_error\": 0.02961388715526672,\n   \"status\": \"PASS\",\n   \"sample_count\": 128,\n   \"eligible_count\": 128,\n   \"excluded_count\": 0,\n   \"vllm_numerator\": 270795.8264630288,\n   \"vllm_denominator\": 384,\n   \"frontier_numerator\": 87592.16980534515,\n   \"frontier_denominator\": 128\n  },\n  {\n   \"frontier_run\": \"frontier/a10\",\n   \"metric\": \"tpot_ms\",\n   \"metric_statistic\": \"mean\",\n   \"vllm\": 24.751650847855682,\n   \"frontier\": 25.295336617652367,\n   \"absolute_error\": 0.543685769796685,\n   \"relative_error\": 0.021965636681715972,\n   \"status\": \"PASS\",\n   \"sample_count\": 128,\n   \"eligible_count\": 128,\n   \"excluded_count\": 0,\n   \"vllm_numerator\": 9504.633925576582,\n   \"vllm_denominator\": 384,\n   \"frontier_numerator\": 3237.803087059503,\n   \"frontier_denominator\": 128\n  },\n  {\n   \"frontier_run\": \"frontier/a10\",\n   \"metric\": \"request_e2e_time_ms\",\n   \"metric_statistic\": \"mean\",\n   \"vllm\": 26026.136282103835,\n   \"frontier\": 26561.443186462628,\n   \"absolute_error\": 535.306904358793,\n   \"relative_error\": 0.02056805122959731,\n   \"status\": \"PASS\",\n   \"sample_count\": 128,\n   \"eligible_count\": 128,\n   \"excluded_count\": 0,\n   \"vllm_numerator\": 9994036.332327873,\n   \"vllm_denominator\": 384,\n   \"frontier_numerator\": 3399864.7278672163,\n   \"frontier_denominator\": 128\n  },\n  {\n   \"frontier_run\": \"frontier/a10\",\n   \"metric\": \"token_throughput_tps\",\n   \"metric_statistic\": \"window_rate\",\n   \"vllm\": 6001.121550818262,\n   \"frontier\": 5975.251569855107,\n   \"absolute_error\": -25.869980963155285,\n   \"relative_error\": 0.00431085768619832,\n   \"status\": \"PASS\",\n   \"sample_count\": 128,\n   \"eligible_count\": 128,\n   \"excluded_count\": 0,\n   \"vllm_numerator\": 2752512,\n   \"vllm_denominator\": 458.6662637460977,\n   \"frontier_numerator\": 917504,\n   \"frontier_denominator\": 153.5506897531761\n  }\n ],\n \"verdict\": \"PASS\",\n \"repetitions\": {\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01\": {\n   \"metrics\": [\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"ttft_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 703.6404160317034,\n     \"frontier\": 684.313826604259,\n     \"absolute_error\": -19.326589427444333,\n     \"relative_error\": 0.02746657097447562,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 90065.97325205803,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 87592.16980534515,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"tpot_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 24.754559007601998,\n     \"frontier\": 25.295336617652367,\n     \"absolute_error\": 0.5407776100503696,\n     \"relative_error\": 0.02184557640006027,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 3168.5835529730557,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 3237.803087059503,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"request_e2e_time_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 26027.554280808545,\n     \"frontier\": 26561.443186462628,\n     \"absolute_error\": 533.8889056540829,\n     \"relative_error\": 0.020512449994110536,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 3331526.9479434937,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 3399864.7278672163,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"token_throughput_tps\",\n     \"metric_statistic\": \"window_rate\",\n     \"vllm\": 6006.098153573765,\n     \"frontier\": 5975.251569855107,\n     \"absolute_error\": -30.846583718657712,\n     \"relative_error\": 0.005135877391597953,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 917504,\n     \"vllm_denominator\": 152.76207223720849,\n     \"frontier_numerator\": 917504,\n     \"frontier_denominator\": 153.5506897531761\n    }\n   ],\n   \"verdict\": \"PASS\"\n  },\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02\": {\n   \"metrics\": [\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"ttft_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 706.6607760207262,\n     \"frontier\": 684.313826604259,\n     \"absolute_error\": -22.34694941646717,\n     \"relative_error\": 0.03162330523324778,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 90452.57933065295,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 87592.16980534515,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"tpot_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 24.735165890361994,\n     \"frontier\": 25.295336617652367,\n     \"absolute_error\": 0.5601707272903731,\n     \"relative_error\": 0.022646734199128313,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 3166.1012339663353,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 3237.803087059503,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"request_e2e_time_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 26010.735481861047,\n     \"frontier\": 26561.443186462628,\n     \"absolute_error\": 550.7077046015802,\n     \"relative_error\": 0.021172323442588695,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 3329374.141678214,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 3399864.7278672163,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"token_throughput_tps\",\n     \"metric_statistic\": \"window_rate\",\n     \"vllm\": 6005.151197391296,\n     \"frontier\": 5975.251569855107,\n     \"absolute_error\": -29.899627536188746,\n     \"relative_error\": 0.004978996623628307,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 917504,\n     \"vllm_denominator\": 152.78616138733923,\n     \"frontier_numerator\": 917504,\n     \"frontier_denominator\": 153.5506897531761\n    }\n   ],\n   \"verdict\": \"PASS\"\n  },\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03\": {\n   \"metrics\": [\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"ttft_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 705.2912021899829,\n     \"frontier\": 684.313826604259,\n     \"absolute_error\": -20.97737558572385,\n     \"relative_error\": 0.029742857305730598,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 90277.2738803178,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 87592.16980534515,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"tpot_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 24.765227645603055,\n     \"frontier\": 25.295336617652367,\n     \"absolute_error\": 0.5301089720493124,\n     \"relative_error\": 0.021405374488589878,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 3169.949138637191,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 3237.803087059503,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"request_e2e_time_ms\",\n     \"metric_statistic\": \"mean\",\n     \"vllm\": 26040.119083641912,\n     \"frontier\": 26561.443186462628,\n     \"absolute_error\": 521.3241028207158,\n     \"relative_error\": 0.020020035282719013,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 3333135.2427061647,\n     \"vllm_denominator\": 128,\n     \"frontier_numerator\": 3399864.7278672163,\n     \"frontier_denominator\": 128\n    },\n    {\n     \"frontier_run\": \"frontier/a10\",\n     \"metric\": \"token_throughput_tps\",\n     \"metric_statistic\": \"window_rate\",\n     \"vllm\": 5992.135604615969,\n     \"frontier\": 5975.251569855107,\n     \"absolute_error\": -16.88403476086205,\n     \"relative_error\": 0.002817699043368718,\n     \"status\": \"PASS\",\n     \"sample_count\": 128,\n     \"eligible_count\": 128,\n     \"excluded_count\": 0,\n     \"vllm_numerator\": 917504,\n     \"vllm_denominator\": 153.11803012154996,\n     \"frontier_numerator\": 917504,\n     \"frontier_denominator\": 153.5506897531761\n    }\n   ],\n   \"verdict\": \"PASS\"\n  }\n },\n \"formal_windows\": {\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01\": {\n   \"first_submission_s\": 8828196.945430702,\n   \"last_token_s\": 8828349.707502939,\n   \"total_tokens\": 917504\n  },\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02\": {\n   \"first_submission_s\": 8828393.43964718,\n   \"last_token_s\": 8828546.225808566,\n   \"total_tokens\": 917504\n  },\n  \"vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03\": {\n   \"first_submission_s\": 8828590.052312989,\n   \"last_token_s\": 8828743.17034311,\n   \"total_tokens\": 917504\n  },\n  \"frontier/a10\": {\n   \"first_submission_s\": 0.0,\n   \"last_token_s\": 153.5506897531761,\n   \"total_tokens\": 917504\n  }\n }\n}\n",
+  "reading_sha256": "07a5ffdf5e4d98f1b47a9a5b3c81c8ab6d08a45f625f5d3fe24f8d3ee0e72293",
+  "warm": {
+    "metrics": [
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "ttft_ms",
+        "metric_statistic": "mean",
+        "vllm": 705.1974647474708,
+        "frontier": 684.313826604259,
+        "absolute_error": -20.883638143211783,
+        "relative_error": 0.02961388715526672,
+        "status": "PASS",
+        "sample_count": 384,
+        "eligible_count": 384,
+        "excluded_count": 0,
+        "vllm_numerator": 270795.8264630288,
+        "vllm_denominator": 384,
+        "frontier_numerator": 262776.5094160355,
+        "frontier_denominator": 384
+      },
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "tpot_ms",
+        "metric_statistic": "mean",
+        "vllm": 24.751650847855682,
+        "frontier": 25.295336617652367,
+        "absolute_error": 0.543685769796685,
+        "relative_error": 0.021965636681715972,
+        "status": "PASS",
+        "sample_count": 384,
+        "eligible_count": 384,
+        "excluded_count": 0,
+        "vllm_numerator": 9504.633925576582,
+        "vllm_denominator": 384,
+        "frontier_numerator": 9713.409261178509,
+        "frontier_denominator": 384
+      },
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "request_e2e_time_ms",
+        "metric_statistic": "mean",
+        "vllm": 26026.136282103835,
+        "frontier": 26561.443186462628,
+        "absolute_error": 535.306904358793,
+        "relative_error": 0.02056805122959731,
+        "status": "PASS",
+        "sample_count": 384,
+        "eligible_count": 384,
+        "excluded_count": 0,
+        "vllm_numerator": 9994036.332327873,
+        "vllm_denominator": 384,
+        "frontier_numerator": 10199594.18360165,
+        "frontier_denominator": 384
+      },
+      {
+        "frontier_run": "frontier/a10",
+        "metric": "token_throughput_tps",
+        "metric_statistic": "window_rate",
+        "vllm": 6001.121550818262,
+        "frontier": 5975.251569855107,
+        "absolute_error": -25.869980963155285,
+        "relative_error": 0.00431085768619832,
+        "status": "PASS",
+        "sample_count": 384,
+        "eligible_count": 384,
+        "excluded_count": 0,
+        "vllm_numerator": 2752512,
+        "vllm_denominator": 458.6662637460977,
+        "frontier_numerator": 2752512,
+        "frontier_denominator": 460.6520692595283
+      }
+    ],
+    "repetitions": {
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01": {
+        "metrics": [
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "ttft_ms",
+            "metric_statistic": "mean",
+            "vllm": 703.6404160317034,
+            "frontier": 684.313826604259,
+            "absolute_error": -19.326589427444333,
+            "relative_error": 0.02746657097447562,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 90065.97325205803,
+            "vllm_denominator": 128,
+            "frontier_numerator": 87592.16980534515,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "tpot_ms",
+            "metric_statistic": "mean",
+            "vllm": 24.754559007601998,
+            "frontier": 25.295336617652367,
+            "absolute_error": 0.5407776100503696,
+            "relative_error": 0.02184557640006027,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3168.5835529730557,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3237.803087059503,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "request_e2e_time_ms",
+            "metric_statistic": "mean",
+            "vllm": 26027.554280808545,
+            "frontier": 26561.443186462628,
+            "absolute_error": 533.8889056540829,
+            "relative_error": 0.020512449994110536,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3331526.9479434937,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3399864.7278672163,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "token_throughput_tps",
+            "metric_statistic": "window_rate",
+            "vllm": 6006.098153573765,
+            "frontier": 5975.251569855107,
+            "absolute_error": -30.846583718657712,
+            "relative_error": 0.005135877391597953,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 917504,
+            "vllm_denominator": 152.76207223720849,
+            "frontier_numerator": 917504,
+            "frontier_denominator": 153.5506897531761
+          }
+        ],
+        "verdict": "PASS",
+        "excluded_request_ids": [],
+        "retained_request_count": 128
+      },
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02": {
+        "metrics": [
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "ttft_ms",
+            "metric_statistic": "mean",
+            "vllm": 706.6607760207262,
+            "frontier": 684.313826604259,
+            "absolute_error": -22.34694941646717,
+            "relative_error": 0.03162330523324778,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 90452.57933065295,
+            "vllm_denominator": 128,
+            "frontier_numerator": 87592.16980534515,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "tpot_ms",
+            "metric_statistic": "mean",
+            "vllm": 24.735165890361994,
+            "frontier": 25.295336617652367,
+            "absolute_error": 0.5601707272903731,
+            "relative_error": 0.022646734199128313,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3166.1012339663353,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3237.803087059503,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "request_e2e_time_ms",
+            "metric_statistic": "mean",
+            "vllm": 26010.735481861047,
+            "frontier": 26561.443186462628,
+            "absolute_error": 550.7077046015802,
+            "relative_error": 0.021172323442588695,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3329374.141678214,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3399864.7278672163,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "token_throughput_tps",
+            "metric_statistic": "window_rate",
+            "vllm": 6005.151197391296,
+            "frontier": 5975.251569855107,
+            "absolute_error": -29.899627536188746,
+            "relative_error": 0.004978996623628307,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 917504,
+            "vllm_denominator": 152.78616138733923,
+            "frontier_numerator": 917504,
+            "frontier_denominator": 153.5506897531761
+          }
+        ],
+        "verdict": "PASS",
+        "excluded_request_ids": [],
+        "retained_request_count": 128
+      },
+      "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03": {
+        "metrics": [
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "ttft_ms",
+            "metric_statistic": "mean",
+            "vllm": 705.2912021899829,
+            "frontier": 684.313826604259,
+            "absolute_error": -20.97737558572385,
+            "relative_error": 0.029742857305730598,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 90277.2738803178,
+            "vllm_denominator": 128,
+            "frontier_numerator": 87592.16980534515,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "tpot_ms",
+            "metric_statistic": "mean",
+            "vllm": 24.765227645603055,
+            "frontier": 25.295336617652367,
+            "absolute_error": 0.5301089720493124,
+            "relative_error": 0.021405374488589878,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3169.949138637191,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3237.803087059503,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "request_e2e_time_ms",
+            "metric_statistic": "mean",
+            "vllm": 26040.119083641912,
+            "frontier": 26561.443186462628,
+            "absolute_error": 521.3241028207158,
+            "relative_error": 0.020020035282719013,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 3333135.2427061647,
+            "vllm_denominator": 128,
+            "frontier_numerator": 3399864.7278672163,
+            "frontier_denominator": 128
+          },
+          {
+            "frontier_run": "frontier/a10",
+            "metric": "token_throughput_tps",
+            "metric_statistic": "window_rate",
+            "vllm": 5992.135604615969,
+            "frontier": 5975.251569855107,
+            "absolute_error": -16.88403476086205,
+            "relative_error": 0.002817699043368718,
+            "status": "PASS",
+            "sample_count": 128,
+            "eligible_count": 128,
+            "excluded_count": 0,
+            "vllm_numerator": 917504,
+            "vllm_denominator": 153.11803012154996,
+            "frontier_numerator": 917504,
+            "frontier_denominator": 153.5506897531761
+          }
+        ],
+        "verdict": "PASS",
+        "excluded_request_ids": [],
+        "retained_request_count": 128
+      }
+    },
+    "formal_request_repeat_count": 384,
+    "retained_request_repeat_count": 384,
+    "verdict": "PASS"
+  },
+  "openers": {
+    "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01": [],
+    "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02": [],
+    "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03": []
+  },
+  "empty_set_reproduction": "PASS_EXACT",
+  "method": "Paired exclusion per repeat; PD-POOL sums latency and rate numerators/denominators on both sides. Empty exclusions preserve the original ratio rounding with summed totals. No counterfactual replay.",
+  "sources": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows/sample.json",
+      "sha256": "eed0e9b56d12e2d9c1358ed5811438d75e73d8fcb0c8aa90f0c0b2447b55f878"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/reading.json",
+      "sha256": "07a5ffdf5e4d98f1b47a9a5b3c81c8ab6d08a45f625f5d3fe24f8d3ee0e72293"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/openers.json",
+      "sha256": "addd65af829db869eb6cc3fc660e0f45e5a1b5c242bf815d9de917d73451868c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+      "sha256": "f133e2beca01f1484614e4b96de4d3625c13b3c23b0db253caba723e2ef96f17"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows/vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01.csv",
+      "sha256": "d24b972d0bd01b7837450b1e1e5c7a55e38365c6b9ee2619341626c843f558b6"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows/vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02.csv",
+      "sha256": "4f6432305a5aae11f3107da3c148ecd72dbc3edac1f50844afde5b1aef83cf8d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows/vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03.csv",
+      "sha256": "44f287ad4fc1271cebc8473601d6e907086c5b87fa41a250b9a4df72762913fb"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows/frontier/a10.csv",
+      "sha256": "e2b8230556bd31d35d9563b2211e17e1534c86fef320f7deb9bf183f1bbdba0a"
+    }
+  ]
+}

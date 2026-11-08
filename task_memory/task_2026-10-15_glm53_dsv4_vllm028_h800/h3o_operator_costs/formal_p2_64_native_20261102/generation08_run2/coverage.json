@@ -1,0 +1,4404 @@
+{
+  "status": "COVERED",
+  "evidence_verified": true,
+  "soft_gate": true,
+  "run": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts",
+  "expected_pairs": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      3,
+      2
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "repetitions": {
+    "repeat01": {
+      "status": "COVERED",
+      "first_contacts_warmed_before_formal": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "pairs_reached_in_this_warmup": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "missing_warmup_pairs": [],
+      "new_contacts_in_this_warmup": [
+        {
+          "pair": [
+            0,
+            0
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+        },
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+        },
+        {
+          "pair": [
+            0,
+            3
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+        },
+        {
+          "pair": [
+            1,
+            0
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+        },
+        {
+          "pair": [
+            1,
+            1
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+        },
+        {
+          "pair": [
+            1,
+            3
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+        },
+        {
+          "pair": [
+            2,
+            0
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+        },
+        {
+          "pair": [
+            2,
+            1
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+        },
+        {
+          "pair": [
+            2,
+            2
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+        },
+        {
+          "pair": [
+            2,
+            3
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+        },
+        {
+          "pair": [
+            3,
+            0
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+        },
+        {
+          "pair": [
+            3,
+            1
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+        },
+        {
+          "pair": [
+            3,
+            2
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+        },
+        {
+          "pair": [
+            3,
+            3
+          ],
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat01",
+          "repeat": 1,
+          "phase": "warmup",
+          "window": {
+            "repeat": 1,
+            "phase": "warmup",
+            "origin_wall": 1794069779.9908037,
+            "origin_monotonic": 8828099.861058436,
+            "wall_minus_monotonic_s": 1785241680.1297452,
+            "end_wall": 1794069875.4040205
+          },
+          "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+        }
+      ],
+      "formal_openers": [],
+      "intended_pairs_verified": true,
+      "warmup_requests": [
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat01",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat01",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat01",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat01",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "matches": true
+        }
+      ],
+      "formal_requests_untargeted": true,
+      "idle_verified": true
+    },
+    "repeat02": {
+      "status": "COVERED",
+      "first_contacts_warmed_before_formal": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "pairs_reached_in_this_warmup": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "missing_warmup_pairs": [],
+      "new_contacts_in_this_warmup": [],
+      "formal_openers": [],
+      "intended_pairs_verified": true,
+      "warmup_requests": [
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat02",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat02",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat02",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat02",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat02",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat02",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat02",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat02",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat02",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat02",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat02",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat02",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat02",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat02",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat02",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat02",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "matches": true
+        }
+      ],
+      "formal_requests_untargeted": true,
+      "idle_verified": true
+    },
+    "repeat03": {
+      "status": "COVERED",
+      "first_contacts_warmed_before_formal": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "pairs_reached_in_this_warmup": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "missing_warmup_pairs": [],
+      "new_contacts_in_this_warmup": [],
+      "formal_openers": [],
+      "intended_pairs_verified": true,
+      "warmup_requests": [
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat03",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat03",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat03",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat03",
+          "intended_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 0,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat03",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat03",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat03",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat03",
+          "intended_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 1,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat03",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat03",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat03",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat03",
+          "intended_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 2,
+            "decode": 3
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat03",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 0
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat03",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 1
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat03",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 2
+          },
+          "matches": true
+        },
+        {
+          "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat03",
+          "intended_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "proxy_intended_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "observed_pair": {
+            "prefill": 3,
+            "decode": 3
+          },
+          "matches": true
+        }
+      ],
+      "formal_requests_untargeted": true,
+      "idle_verified": true
+    }
+  },
+  "first_contacts": [
+    {
+      "pair": [
+        0,
+        0
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+    },
+    {
+      "pair": [
+        0,
+        1
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+    },
+    {
+      "pair": [
+        0,
+        2
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+    },
+    {
+      "pair": [
+        0,
+        3
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0"
+    },
+    {
+      "pair": [
+        1,
+        0
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+    },
+    {
+      "pair": [
+        1,
+        1
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+    },
+    {
+      "pair": [
+        1,
+        2
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+    },
+    {
+      "pair": [
+        1,
+        3
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1"
+    },
+    {
+      "pair": [
+        2,
+        0
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+    },
+    {
+      "pair": [
+        2,
+        1
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+    },
+    {
+      "pair": [
+        2,
+        2
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+    },
+    {
+      "pair": [
+        2,
+        3
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2"
+    },
+    {
+      "pair": [
+        3,
+        0
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+    },
+    {
+      "pair": [
+        3,
+        1
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+    },
+    {
+      "pair": [
+        3,
+        2
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+    },
+    {
+      "pair": [
+        3,
+        3
+      ],
+      "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat01",
+      "repeat": 1,
+      "phase": "warmup",
+      "window": {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3"
+    }
+  ],
+  "idle": {
+    "verified": true,
+    "evidence": "7 boundaries; both roles, all 4 DP lanes and fresh phase completion counts",
+    "boundaries": [
+      {
+        "boundary": "before_repeat01_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat01_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat01_formal",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat02_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat02_formal",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat03_warmup",
+        "verified": true
+      },
+      {
+        "boundary": "after_repeat03_formal",
+        "verified": true
+      }
+    ]
+  },
+  "cohorts": [
+    {
+      "decode_lane": 0,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 802,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 812,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 803,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 809,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 810,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 804,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 805,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 811,
+          "local_stamp": "11-07 16:43:31",
+          "utc_second": 1794069811.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r000-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 0,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 827,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 837,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 836,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 826,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 828,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 824,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 830,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 834,
+          "local_stamp": "11-07 16:44:02",
+          "utc_second": 1794069842.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r012-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 0,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 855,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 867,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 863,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 859,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 865,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 853,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 857,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 861,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r012-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 0,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 877,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 883,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 879,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 873,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 881,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 869,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 871,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "line": 875,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r008-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 1,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 362,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 361,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 364,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 365,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 359,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 360,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 363,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 358,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 1,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 378,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 386,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 384,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 380,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 375,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 382,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 374,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 388,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 1,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 395,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 399,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 397,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 401,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 391,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 405,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 393,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 403,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 1,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 407,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 411,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 415,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 413,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 417,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 421,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 409,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+          "line": 419,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r009-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 2,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 360,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 364,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 372,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 363,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 361,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 368,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 359,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 358,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r014-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 2,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 378,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 386,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 388,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 380,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 374,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 382,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 376,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 384,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r014-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 2,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 394,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 402,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 403,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 396,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 390,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 398,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 392,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 400,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r014-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 2,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 417,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 419,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 421,
+          "local_stamp": "11-07 16:44:08",
+          "utc_second": 1794069848.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 413,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 407,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 409,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 415,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+          "line": 411,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r010-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 3,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 362,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 360,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 359,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 358,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 363,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 365,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 361,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 366,
+          "local_stamp": "11-07 16:44:03",
+          "utc_second": 1794069843.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 3,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 384,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 386,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 388,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 382,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 376,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 380,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 374,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 378,
+          "local_stamp": "11-07 16:44:04",
+          "utc_second": 1794069844.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 3,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 394,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 402,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 405,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 396,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 392,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 400,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 390,
+          "local_stamp": "11-07 16:44:05",
+          "utc_second": 1794069845.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 398,
+          "local_stamp": "11-07 16:44:06",
+          "utc_second": 1794069846.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    },
+    {
+      "decode_lane": 3,
+      "phase": "warmup",
+      "repeat": 1,
+      "tp_records": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 413,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 421,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 419,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 411,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 409,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 417,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 407,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+          "line": 415,
+          "local_stamp": "11-07 16:44:07",
+          "utc_second": 1794069847.0
+        }
+      ],
+      "candidate_first_contacts": [
+        "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+        "fixed-6144-1024-req128-qps1-warmup-r011-repeat01"
+      ],
+      "binding": "AMBIGUOUS_WITHIN_WARMUP_WINDOW",
+      "bound_request_id": null
+    }
+  ],
+  "event_derivation": {
+    "run": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts",
+    "mode": "clean",
+    "native_commit": "a06a72a4326cba02234df6cfbdc21b78d3a15d26",
+    "clock": {
+      "server_local_to_utc_offset_s": 0,
+      "resolution_s": 1,
+      "anchors": [
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server_ready.json",
+          "ready_at_utc": "2026-11-07T16:42:52.991923+00:00",
+          "log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server.log",
+          "starts": [
+            {
+              "line": 608,
+              "local_stamp": "11-07 16:42:52",
+              "utc_second": 1794069772.0
+            },
+            {
+              "line": 673,
+              "local_stamp": "11-07 16:42:52",
+              "utc_second": 1794069772.0
+            },
+            {
+              "line": 722,
+              "local_stamp": "11-07 16:42:52",
+              "utc_second": 1794069772.0
+            },
+            {
+              "line": 754,
+              "local_stamp": "11-07 16:42:52",
+              "utc_second": 1794069772.0
+            }
+          ],
+          "ready_minus_last_start_second_s": 0.9919230937957764
+        },
+        {
+          "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server_ready.json",
+          "ready_at_utc": "2026-11-07T16:42:45.989451+00:00",
+          "log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+          "starts": [
+            {
+              "line": 657,
+              "local_stamp": "11-07 16:42:45",
+              "utc_second": 1794069765.0
+            },
+            {
+              "line": 660,
+              "local_stamp": "11-07 16:42:45",
+              "utc_second": 1794069765.0
+            },
+            {
+              "line": 717,
+              "local_stamp": "11-07 16:42:45",
+              "utc_second": 1794069765.0
+            },
+            {
+              "line": 753,
+              "local_stamp": "11-07 16:42:45",
+              "utc_second": 1794069765.0
+            }
+          ],
+          "ready_minus_last_start_second_s": 0.9894509315490723
+        }
+      ],
+      "client_proxy_wall_minus_monotonic_range_s": [
+        1785241680.1297429,
+        1785241680.1297457
+      ],
+      "rule": "UTC civil seconds established by server start/readiness anchors; client/proxy phase epoch anchors map monotonic seconds."
+    },
+    "windows": [
+      {
+        "repeat": 1,
+        "phase": "warmup",
+        "origin_wall": 1794069779.9908037,
+        "origin_monotonic": 8828099.861058436,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794069875.4040205
+      },
+      {
+        "repeat": 1,
+        "phase": "formal",
+        "origin_wall": 1794069877.0749924,
+        "origin_monotonic": 8828196.94524674,
+        "wall_minus_monotonic_s": 1785241680.1297457,
+        "end_wall": 1794070029.8372486
+      },
+      {
+        "repeat": 2,
+        "phase": "warmup",
+        "origin_wall": 1794070031.303191,
+        "origin_monotonic": 8828351.173445936,
+        "wall_minus_monotonic_s": 1785241680.129745,
+        "end_wall": 1794070072.003753
+      },
+      {
+        "repeat": 2,
+        "phase": "formal",
+        "origin_wall": 1794070073.569217,
+        "origin_monotonic": 8828393.439471275,
+        "wall_minus_monotonic_s": 1785241680.1297457,
+        "end_wall": 1794070226.3555543
+      },
+      {
+        "repeat": 3,
+        "phase": "warmup",
+        "origin_wall": 1794070227.9353905,
+        "origin_monotonic": 8828547.80564521,
+        "wall_minus_monotonic_s": 1785241680.1297452,
+        "end_wall": 1794070268.6213205
+      },
+      {
+        "repeat": 3,
+        "phase": "formal",
+        "origin_wall": 1794070270.1815057,
+        "origin_monotonic": 8828590.051760579,
+        "wall_minus_monotonic_s": 1785241680.129745,
+        "end_wall": 1794070423.3000882
+      }
+    ],
+    "events": [
+      {
+        "decode_lane": 0,
+        "ordinal_per_tp": 0,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:43:31+00:00",
+          "2026-11-07T16:43:32+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 802,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 812,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 803,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 809,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 810,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 804,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 805,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 811,
+            "local_stamp": "11-07 16:43:31",
+            "utc_second": 1794069811.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r000-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 0,
+        "ordinal_per_tp": 1,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:02+00:00",
+          "2026-11-07T16:44:03+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 827,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 837,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 836,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 826,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 828,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 824,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 830,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 834,
+            "local_stamp": "11-07 16:44:02",
+            "utc_second": 1794069842.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r012-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 0,
+        "ordinal_per_tp": 2,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:03+00:00",
+          "2026-11-07T16:44:05+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 855,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 867,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 863,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 859,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 865,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 853,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 857,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 861,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r008-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r012-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 0,
+        "ordinal_per_tp": 3,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:05+00:00",
+          "2026-11-07T16:44:06+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 877,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 883,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 879,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 873,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 881,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 869,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 871,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+            "line": 875,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r004-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r008-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 1,
+        "ordinal_per_tp": 0,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:03+00:00",
+          "2026-11-07T16:44:04+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 362,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 361,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 364,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 365,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 359,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 360,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 363,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 358,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 1,
+        "ordinal_per_tp": 1,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:04+00:00",
+          "2026-11-07T16:44:05+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 378,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 386,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 384,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 380,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 375,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 382,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 374,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 388,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 1,
+        "ordinal_per_tp": 2,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:05+00:00",
+          "2026-11-07T16:44:06+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 395,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 399,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 397,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 401,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 391,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 405,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 393,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 403,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r009-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 1,
+        "ordinal_per_tp": 3,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:06+00:00",
+          "2026-11-07T16:44:07+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 407,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 411,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 415,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 413,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 417,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 421,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 409,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+            "line": 419,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r001-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r005-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r009-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 2,
+        "ordinal_per_tp": 0,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:03+00:00",
+          "2026-11-07T16:44:04+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 360,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 364,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 372,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 363,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 361,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 368,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 359,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 358,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r014-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 2,
+        "ordinal_per_tp": 1,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:04+00:00",
+          "2026-11-07T16:44:05+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 378,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 386,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 388,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 380,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 374,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 382,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 376,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 384,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r014-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 2,
+        "ordinal_per_tp": 2,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:05+00:00",
+          "2026-11-07T16:44:07+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 394,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 402,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 403,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 396,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 390,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 398,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 392,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 400,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r006-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r010-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r014-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 2,
+        "ordinal_per_tp": 3,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:07+00:00",
+          "2026-11-07T16:44:09+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 417,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 419,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 421,
+            "local_stamp": "11-07 16:44:08",
+            "utc_second": 1794069848.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 413,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 407,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 409,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 415,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+            "line": 411,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r002-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r010-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 3,
+        "ordinal_per_tp": 0,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:03+00:00",
+          "2026-11-07T16:44:04+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 362,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 360,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 359,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 358,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 363,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 365,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 361,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 366,
+            "local_stamp": "11-07 16:44:03",
+            "utc_second": 1794069843.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 3,
+        "ordinal_per_tp": 1,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:04+00:00",
+          "2026-11-07T16:44:05+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 384,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 386,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 388,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 382,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 376,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 380,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 374,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 378,
+            "local_stamp": "11-07 16:44:04",
+            "utc_second": 1794069844.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 3,
+        "ordinal_per_tp": 2,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:05+00:00",
+          "2026-11-07T16:44:07+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 394,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 402,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 405,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 396,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 392,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 400,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 390,
+            "local_stamp": "11-07 16:44:05",
+            "utc_second": 1794069845.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 398,
+            "local_stamp": "11-07 16:44:06",
+            "utc_second": 1794069846.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r007-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r011-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      },
+      {
+        "decode_lane": 3,
+        "ordinal_per_tp": 3,
+        "repeat": 1,
+        "phase": "warmup",
+        "interval_utc": [
+          "2026-11-07T16:44:07+00:00",
+          "2026-11-07T16:44:08+00:00"
+        ],
+        "tp_records": [
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 413,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 421,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 419,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 411,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 409,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 417,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 407,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          },
+          {
+            "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+            "line": 415,
+            "local_stamp": "11-07 16:44:07",
+            "utc_second": 1794069847.0
+          }
+        ],
+        "candidate_request_ids": [
+          "fixed-6144-1024-req128-qps1-warmup-r003-repeat01",
+          "fixed-6144-1024-req128-qps1-warmup-r011-repeat01"
+        ],
+        "bound_request_id": null,
+        "binding": "WARMUP_WINDOW_ONLY_NO_EXCLUSION"
+      }
+    ],
+    "first_contact_pairs": [
+      {
+        "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2",
+        "decode_lane": 0,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r008-repeat01"
+      },
+      {
+        "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2",
+        "decode_lane": 1,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r009-repeat01"
+      },
+      {
+        "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2",
+        "decode_lane": 2,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r010-repeat01"
+      },
+      {
+        "remote_engine_id": "0c3f2805-c549-4ead-a169-96e67df32930_dp2",
+        "decode_lane": 3,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r011-repeat01"
+      },
+      {
+        "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3",
+        "decode_lane": 0,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r012-repeat01"
+      },
+      {
+        "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3",
+        "decode_lane": 1,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r013-repeat01"
+      },
+      {
+        "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3",
+        "decode_lane": 2,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r014-repeat01"
+      },
+      {
+        "remote_engine_id": "28770798-ed98-4172-888d-d791edd00fc7_dp3",
+        "decode_lane": 3,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r015-repeat01"
+      },
+      {
+        "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1",
+        "decode_lane": 0,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r004-repeat01"
+      },
+      {
+        "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1",
+        "decode_lane": 1,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r005-repeat01"
+      },
+      {
+        "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1",
+        "decode_lane": 2,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r006-repeat01"
+      },
+      {
+        "remote_engine_id": "2e085f1d-f449-4f44-a852-d063dbc6ddc1_dp1",
+        "decode_lane": 3,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r007-repeat01"
+      },
+      {
+        "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0",
+        "decode_lane": 0,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r000-repeat01"
+      },
+      {
+        "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0",
+        "decode_lane": 1,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r001-repeat01"
+      },
+      {
+        "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0",
+        "decode_lane": 2,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r002-repeat01"
+      },
+      {
+        "remote_engine_id": "50b4e4e5-9302-482e-a30a-753b7bb32be5_dp0",
+        "decode_lane": 3,
+        "request_id": "fixed-6144-1024-req128-qps1-warmup-r003-repeat01"
+      }
+    ],
+    "formal_openers": [],
+    "validation": {
+      "status": "NOT_APPLICABLE_CLEAN_NO_LIFECYCLE"
+    },
+    "counts": {
+      "handshake_log_lines": 128,
+      "events": 16,
+      "warmup_events": 16,
+      "formal_events": 0
+    },
+    "sources": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server.log",
+        "sha256": "47ce6937ba07e9e38fcddba0833ffa726b55838d36d5d2d18a7e7dbc303e6ad2"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server_ready.json",
+        "sha256": "0691d8292dca3e196cc1780e607cb54334cb080dddb13b99c152102925a6d30b"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "1a3c1cf053718d47a044ec731ec00fd12cb485e97c1d4423a2d2954b7e5f623c"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0139.lgcm.sh.istep.fun/server.log",
+        "sha256": "c90665e3bdf2badd6a5342c1dc885e5e5413cf006753190ff72cd1d445f7a5ca"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "06c41d60f12bf5dd088323d451d242f6ce64ae1726b2173359ec9a349077ae58"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0180.lgcm.sh.istep.fun/server.log",
+        "sha256": "a16510bc3aec3c9c9230a3e92309a14009a7adcedc9f8ad8924d95c54a254c6c"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "73fd64dd61dae811d170e74bb60b120ae04f25a0d8feb50f5078e669161e8ac2"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0228.lgcm.sh.istep.fun/server.log",
+        "sha256": "a6ab1e351f8e57688fc3a955647447d9c024fa33500dc6b650b0c34a5a9ce18b"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "6f03d404afeab855f689b88452cfc8ad19cace1c772dccb2b54f37b718099132"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+        "sha256": "a210e461dc30afacae5de61127d7d7410fb15ec4b34982208db1153a5e99cdc4"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server_ready.json",
+        "sha256": "13d4cf0374cdbd8f96e27df32c25b64360f3c6921a63a1a92224b5478e69e400"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "c3550de3850a1fc57c27ad9251ba029c66fa19828e29121f86295641e54d51d2"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+        "sha256": "3068bd170feaffa61475d2e361c0554628608b3ddf847427a6dfdb909d1e775b"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "0a1f95b611b5a910227b2739a3e0ccc3fcb07ec4694600b7e5da41f5b424b15c"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+        "sha256": "03fd1860e321c67e45c98b4e05c796061354fc859c7a107863babc1d41335277"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "bf663d9a30d47f46cbdbbe335515ef8c0453afb2a6cebd63ea3e77df5ca486d8"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+        "sha256": "f17efe0fa5e7866d55195565f78cd878ef1a2ffd694161de8102abc8a12db3c5"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank0.json",
+        "sha256": "6691dabbba10ac7ec547d691fac6613439db6a61cadbb194e54d145f85f48333"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run/canonical_repetitions.json",
+        "sha256": "c41d3a3d941a420c7d32bb49e299f6429760aa5886cb0e38e76313cb1da2fa1e"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run/client_requests.jsonl",
+        "sha256": "e0a99b58b9974418000797faae31cfd13b06c87e1662c543decac3334dda7949"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run/proxy_requests.jsonl",
+        "sha256": "dbbf804b0e977ed6e420ec6bc93372f02b8a27fabdd855b36c76b1bb50cf692d"
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run_manifest.json",
+        "sha256": "45315f093c994f0af75ffcbcf36ab202297b2420c96452f576e8b5672dfdb0fe"
+      }
+    ]
+  },
+  "openers": {
+    "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat01": [],
+    "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat02": [],
+    "vllm/dsv4-h200-p2-64-formal-20261107-08-repeat03": []
+  },
+  "limitations": [
+    "Compatibility logs have one-second resolution; ambiguous warmup events retain candidates.",
+    "Later repetitions reuse warmed connections; no new handshake is required in each repeat.",
+    "Legacy untargeted controls cannot prove intended-pair matching."
+  ],
+  "sources": [
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server.log",
+      "sha256": "47ce6937ba07e9e38fcddba0833ffa726b55838d36d5d2d18a7e7dbc303e6ad2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server_ready.json",
+      "sha256": "0691d8292dca3e196cc1780e607cb54334cb080dddb13b99c152102925a6d30b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "1a3c1cf053718d47a044ec731ec00fd12cb485e97c1d4423a2d2954b7e5f623c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0139.lgcm.sh.istep.fun/server.log",
+      "sha256": "c90665e3bdf2badd6a5342c1dc885e5e5413cf006753190ff72cd1d445f7a5ca"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "06c41d60f12bf5dd088323d451d242f6ce64ae1726b2173359ec9a349077ae58"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0180.lgcm.sh.istep.fun/server.log",
+      "sha256": "a16510bc3aec3c9c9230a3e92309a14009a7adcedc9f8ad8924d95c54a254c6c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "73fd64dd61dae811d170e74bb60b120ae04f25a0d8feb50f5078e669161e8ac2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0228.lgcm.sh.istep.fun/server.log",
+      "sha256": "a6ab1e351f8e57688fc3a955647447d9c024fa33500dc6b650b0c34a5a9ce18b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "6f03d404afeab855f689b88452cfc8ad19cace1c772dccb2b54f37b718099132"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+      "sha256": "a210e461dc30afacae5de61127d7d7410fb15ec4b34982208db1153a5e99cdc4"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server_ready.json",
+      "sha256": "13d4cf0374cdbd8f96e27df32c25b64360f3c6921a63a1a92224b5478e69e400"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "c3550de3850a1fc57c27ad9251ba029c66fa19828e29121f86295641e54d51d2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+      "sha256": "3068bd170feaffa61475d2e361c0554628608b3ddf847427a6dfdb909d1e775b"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "0a1f95b611b5a910227b2739a3e0ccc3fcb07ec4694600b7e5da41f5b424b15c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+      "sha256": "03fd1860e321c67e45c98b4e05c796061354fc859c7a107863babc1d41335277"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "bf663d9a30d47f46cbdbbe335515ef8c0453afb2a6cebd63ea3e77df5ca486d8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+      "sha256": "f17efe0fa5e7866d55195565f78cd878ef1a2ffd694161de8102abc8a12db3c5"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "6691dabbba10ac7ec547d691fac6613439db6a61cadbb194e54d145f85f48333"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run/canonical_repetitions.json",
+      "sha256": "c41d3a3d941a420c7d32bb49e299f6429760aa5886cb0e38e76313cb1da2fa1e"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run/client_requests.jsonl",
+      "sha256": "e0a99b58b9974418000797faae31cfd13b06c87e1662c543decac3334dda7949"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run/proxy_requests.jsonl",
+      "sha256": "dbbf804b0e977ed6e420ec6bc93372f02b8a27fabdd855b36c76b1bb50cf692d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/run_manifest.json",
+      "sha256": "45315f093c994f0af75ffcbcf36ab202297b2420c96452f576e8b5672dfdb0fe"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/warm_target_20261101/identify_openers.py",
+      "sha256": "32a2ec4b58832313291c6b3d2e768a670ac2aa649132b8c2dd92492ffd1999de"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/coverage.py",
+      "sha256": "04ea0165364b791a80d372f37e6a57601e0d379c843bb7fb9fe3dffec8b58338"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "1a3c1cf053718d47a044ec731ec00fd12cb485e97c1d4423a2d2954b7e5f623c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "06c41d60f12bf5dd088323d451d242f6ce64ae1726b2173359ec9a349077ae58"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "73fd64dd61dae811d170e74bb60b120ae04f25a0d8feb50f5078e669161e8ac2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "6f03d404afeab855f689b88452cfc8ad19cace1c772dccb2b54f37b718099132"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "c3550de3850a1fc57c27ad9251ba029c66fa19828e29121f86295641e54d51d2"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "0a1f95b611b5a910227b2739a3e0ccc3fcb07ec4694600b7e5da41f5b424b15c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "bf663d9a30d47f46cbdbbe335515ef8c0453afb2a6cebd63ea3e77df5ca486d8"
+    },
+    {
+      "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "6691dabbba10ac7ec547d691fac6613439db6a61cadbb194e54d145f85f48333"
+    }
+  ]
+}
