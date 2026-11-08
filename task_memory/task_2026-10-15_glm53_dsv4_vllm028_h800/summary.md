@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | I-014 resolved: the planned CPU copy job later succeeded on its own, and both copy routes hold identical generation08 job output (`PAYLOAD_IDENTICAL`, 130 files, joint sha256 `5ef547e0...`), so the copy deviation has no numerical consequence for the P2-64 verdict. |
 | 2026-11-08 | Recorded P2-64 formal PASS with generation08 (exp-1108-002857-059466): R5 PASS, coverage COVERED, every repeat within 10% (worst 3.16%), 23.31 GPUh exact; copy via the read-only SSH route (I-014). |
 | 2026-11-07 | Recorded D-P2-64-SIXTH: peer heartbeat check in the native worker (harness 57caf2f7, 10 s refresh, 180 s limit), generation08 package built and audited (manifest 1a2bbc13...), night-time submission pending; new chain ceiling 128 GPUh, 0 counted. |
 | 2026-11-07 | Recorded the generation07 platform-cause end (one replica stopped after the rendezvous, decode startup timeout, 41.81 GPUh counted, cumulative 68.90 of 128); D-P2-64-FIFTH exhausted, next GPU job needs a new decision. |
