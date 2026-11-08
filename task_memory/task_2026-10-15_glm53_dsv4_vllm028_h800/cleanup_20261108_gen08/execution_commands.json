@@ -1,0 +1,90 @@
+{
+  "commands": [
+    {
+      "command": "python3 -B -",
+      "exit_code": 0,
+      "result": "PASS",
+      "stdin_description": "AST syntax parse of three scripts; assert 6 authorized and 7 preserved/outside paths against executor and independent-verifier allowlists; assert working-root derivation and no executor-helper imports in verifier."
+    },
+    {
+      "attempt": 1,
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/prepare_cleanup.py",
+      "error": "Unexpected pre-existing run records: host-created empty codex-implement-909a1443-fd16-4aa5-aa44-58537cab480c directory; preserved and allowed by revised record-directory guard.",
+      "exit_code": 1,
+      "result": "FAIL before hashing/deletion"
+    },
+    {
+      "attempt": 2,
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/prepare_cleanup.py",
+      "exit_code": 0,
+      "observed": "All candidate hashes recorded. Log rejected by a timestamp precision bug; four snapshots rejected by actual allocated-byte discrepancy.",
+      "result": "PASS inventory / PARTIAL_CLASSIFICATION"
+    },
+    {
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/finalize_preparation.py",
+      "exit_code": 0,
+      "observed": "174 eligible candidates; snapshots retained; integer timestamp correction; reused log SHA256; all four scripts parse.",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/execute_cleanup.py",
+      "exit_code": 1,
+      "observed": "174 files/36 directories deleted; 4 snapshots declined; zero execution errors.",
+      "result": "PARTIAL by design"
+    },
+    {
+      "attempt": 1,
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/verify_cleanup_final.py",
+      "exit_code": 0,
+      "observed": "805 hashes match; 964 remaining paths; zero unexpected missing/added/changed; all deletion/journal totals reconcile.",
+      "result": "PASS verification; assignment partial"
+    },
+    {
+      "command": "python3 -B -",
+      "error": "Final display expression used an absolute deleted path relative_to a relative task path; ValueError. Report generation uses resolved absolute paths. No record mutation or acceptance check failed.",
+      "exit_code": 1,
+      "result": "PARTIAL display",
+      "stdin_description": "Display-only JSON inspection of previous recorded hash matches, record-directory names, directory allocation, reclaimed GiB and first deleted entries."
+    },
+    {
+      "attempt": 2,
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/verify_cleanup_final.py",
+      "exit_code": 1,
+      "observed": "174 deletions and all required evidence/neighbours still match; one additionally protected task report replaced after first audit; 804 file signatures/hashes match.",
+      "result": "FAIL preservation only"
+    },
+    {
+      "attempt": 3,
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/verify_cleanup_final.py > task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/verification_rerun.json",
+      "exit_code": 1,
+      "observed": [
+        {
+          "changed_directories": [],
+          "changed_files": [
+            "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-11-07_p2_64_generation08_formal.md"
+          ],
+          "unexpected_added": [],
+          "unexpected_missing": []
+        }
+      ],
+      "result": "FAIL preservation only, persisted stdout"
+    },
+    {
+      "command": "python3 -B -",
+      "exit_code": 0,
+      "result": "PASS",
+      "stdin_description": "Check record_files.json against actual record sizes/hashes and ensure all 174 receipt rows are reproduced in report.md."
+    }
+  ],
+  "interpreter": "/usr/bin/python3",
+  "not_run": [
+    "Executor host-process scan (lead supplied evidence instead)",
+    "Git commands",
+    "Platform/RJob/GPU operations",
+    "Dependency changes",
+    "Deletion of declined snapshots",
+    "Deletion or traversal of duplicate platform-route copy"
+  ],
+  "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "working_root": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028"
+}

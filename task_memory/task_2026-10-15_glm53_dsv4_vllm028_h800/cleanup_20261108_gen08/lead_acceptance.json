@@ -1,0 +1,82 @@
+{
+ "accepted_utc": "2026-11-08T08:26:00+00:00",
+ "assignment": "cleanup_20261108_gen08/assignment.md",
+ "declined": {
+  "allocated_bytes": 300761088,
+  "executor_reason": "Observed counts/allocation differ from assignment table",
+  "files": 4,
+  "follow_up_assignment": "cleanup_20261108_gen08/assignment_2.md",
+  "follow_up_request_id": "a177497b-b00c-479c-b8f8-bad6e9cf604e",
+  "group": "previous_snapshots",
+  "lead_finding": "The decline was correct and the fault was the lead's. The assignment table stated 300,759,552 allocated bytes; the files hold 300,761,088, a difference of 1,536 bytes (3 blocks of 512). An independent re-measurement confirms the executor's figure. All four files' logical sizes and SHA256 values equal what the committed lead_acceptance.json of cleanup_20261107_gen05_07 records under snapshot_files_not_committed, so their evidence value is preserved and they remain invalid artifacts.",
+  "resolution": {
+   "allocation_difference_from_corrected_table": 0,
+   "deleted_allocated_bytes": 300761088,
+   "deleted_files": 4,
+   "deleted_logical_bytes": 300753869,
+   "lead_independent_check": "0 protected_hash files remain, 25 files in the directory, and the committed record still carries every one of the four deleted files with its size and hash",
+   "lead_rerun_of_verifier": "verify_cleanup_round2.py exit 0, PASS: 4 targets absent, 25/25 survivors hash-matched, cleanup_20261107_gen05_07/lead_acceptance.json unchanged at sha256 f15ce87b..., allocation difference 0",
+   "outcome": "implemented",
+   "receipt": "cleanup_20261108_gen08/deletion_receipt_round2.json",
+   "report": "cleanup_20261108_gen08/round2/codex-implement-a177497b-b00c-479c-b8f8-bad6e9cf604e/implementation.md",
+   "request_id": "a177497b-b00c-479c-b8f8-bad6e9cf604e"
+  }
+ },
+ "deleted": {
+  "allocated_bytes": 2193342464,
+  "empty_directories": 36,
+  "files": 174,
+  "groups": {
+   "generation08": {
+    "allocated_bytes": 78544896,
+    "expected_allocated_bytes": 78544896,
+    "files": 173
+   },
+   "launcher_log": {
+    "allocated_bytes": 2114797568,
+    "files": 1,
+    "logical_bytes": 4332828936,
+    "sha256": "8881b0800f66db063159124e173301897b97df70abe980365a94ea74c2b63d2f",
+    "sha256_matches_preserved_evidence": true
+   }
+  },
+  "logical_bytes": 4410876394
+ },
+ "executor": "codex-implement gpt-6.1-sol-sys-paygo, effort ultra, attempt 1",
+ "executor_report": "cleanup_20261108_gen08/codex-implement-909a1443-fd16-4aa5-aa44-58537cab480c/implementation.md",
+ "intervening_protected_input_change": {
+  "actor": "the lead",
+  "executor_evidence": "cleanup_20261108_gen08/intervening_report_change.json",
+  "executor_handling": "correct: it preserved the file, did not reset its baseline, and reported the change for the lead to identify",
+  "explanation": "The lead edited this report while the executor's final verification pass was running, adding an independent recomputation of the published metrics and its history row. That produced the sha256 d539743ac47498ac0a6d59bf403a82b008e5a10ae3c4a835220e2bb2b659edc2 at 10,310 bytes and mtime 2026-11-08T08:12:36.801866Z that the executor observed. Two later lead edits recorded the duplicate-copy removal, so the file now reads 11,113 bytes, sha256 9ccf6ebe2a748aca6a47ade00e38cb1d545889e59cdea5f55124ce8e1517d541.",
+  "lesson": "Do not edit task records inside an executor's protected-input scope while its verification pass is running. The follow-up assignment states the expected concurrent lead edits up front.",
+  "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-11-07_p2_64_generation08_formal.md",
+  "relation_to_cleanup": "none; the file is outside the deletion scope and no executor command writes it",
+  "second_observation": "The follow-up round reported one concurrent addition inside its record directory: this lead_acceptance.json file, written by the lead at 08:19:28Z while that round was preparing. It was protected as a pre-existing record and stayed unchanged through verification. The follow-up assignment had named the expected concurrent lead edits, so the executor reported it as an observation rather than an anomaly."
+ },
+ "lead_independent_checks": {
+  "cleanup_20261107_gen05_07_files": 29,
+  "g0d_launch_surviving_top_level_files": 30,
+  "generation08_absent": true,
+  "generation08_run2_files": 182,
+  "launcher_log_absent": true,
+  "launcher_log_evidence_sha256_unchanged": "b6d19959c93d42f115ed4353479cdecf7eca276ea131434782d5129a6e03236b",
+  "snapshot_hashes_match_committed_record": true,
+  "snapshots_remaining": 4,
+  "ssh_copy_files": 132
+ },
+ "lead_removed_out_of_repo_duplicate": {
+  "allocated_bytes": 76001280,
+  "files": 135,
+  "note": "outside the executor's write scope by the lead's decision, so the lead performed it directly",
+  "path": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08",
+  "reason": "redundant duplicate of the cloud run the comparison consumed through the SSH copy",
+  "receipt": "h200_mainline/p2_64_formal_retry08/platform_copy_removal.json",
+  "status": "REMOVED_SURVIVOR_INTACT"
+ },
+ "open": "none for this cleanup",
+ "reclaimed_allocated_bytes_total": 2570104832,
+ "reclaimed_basis": "Sum of st_blocks * 512 for the deleted single-link regular files: 2,193,342,464 from the first executor round, 300,761,088 from the follow-up round, and 76,001,280 from the out-of-repo removal the lead performed. No global free-space attribution is claimed, and the small audit records this cleanup itself added are not subtracted.",
+ "request_id": "909a1443-fd16-4aa5-aa44-58537cab480c",
+ "verdict": "ACCEPTED"
+}

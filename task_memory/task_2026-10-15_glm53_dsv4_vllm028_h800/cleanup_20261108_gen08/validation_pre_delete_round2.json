@@ -1,0 +1,20 @@
+{
+  "candidate_policy": "Each file hashed at preparation; frozen full signature rechecked immediately before unlink",
+  "candidate_summary": {
+    "allocated_bytes": 300761088,
+    "bytes": 300753869,
+    "files": 4
+  },
+  "manifest_sha256": "ebbfb489d0c75746d34ce10f36cddd72349f555abc314a7270b7632fd66c1983",
+  "metadata_checked": 30,
+  "observed_utc": "2026-11-08T08:20:50.217383+00:00",
+  "process_prerequisite": {
+    "clear_for_deletion": true,
+    "limitation": "Lead-supplied 2026-11-08 host scan, 289 processes; no executor process scan. 127 entries had unreadable links; lead reports 14/15 sampled entries had exited, the other was pid 1 /sbin/init. Raw roots name before/after but omit the two *_final snapshots. assignment_2.md explicitly accepts this scan for all four because their hashes have not changed since 2026-11-07. The follow-up sample and acceptance of omitted roots are lead-supplied, not findings of the raw scan.",
+    "observed_utc": "2026-11-08T07:59:12.772458+00:00",
+    "processes_scanned": 289,
+    "sha256": "20c553d72918382e08f7b636c9ab4d1896cd7f155c449fda5132534164340296",
+    "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/cleanup_scope_processes.json"
+  },
+  "status": "PASS"
+}

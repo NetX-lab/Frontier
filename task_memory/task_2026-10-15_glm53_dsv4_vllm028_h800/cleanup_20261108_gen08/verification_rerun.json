@@ -1,0 +1,90 @@
+{
+  "status": "FAIL",
+  "errors": [
+    {
+      "unexpected_missing": [],
+      "unexpected_added": [],
+      "changed_files": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-11-07_p2_64_generation08_formal.md"
+      ],
+      "changed_directories": []
+    }
+  ],
+  "expected_deleted": {
+    "files": 174,
+    "bytes": 4410876394,
+    "allocated_bytes": 2193342464
+  },
+  "actual_deleted": {
+    "files": 174,
+    "bytes": 4410876394,
+    "allocated_bytes": 2193342464
+  },
+  "removed_directory_count": 36,
+  "journal_event_counts": {
+    "will_delete_file": 174,
+    "deleted_file": 174,
+    "will_remove_empty_directory": 36,
+    "removed_empty_directory": 36
+  },
+  "scoped_protection": {
+    "expected_remaining_paths": 964,
+    "actual_remaining_paths": 964,
+    "hash_matched_files": 804,
+    "missing": [],
+    "added": [],
+    "changed_files": [
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/test_report_2026-11-07_p2_64_generation08_formal.md"
+    ],
+    "changed_directories": [],
+    "allowed_parent_directory_metadata_changes": [
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102",
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch"
+    ]
+  },
+  "preserved_evidence": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch/launcher_log_evidence.json",
+      "expected_sha256": "b6d19959c93d42f115ed4353479cdecf7eca276ea131434782d5129a6e03236b",
+      "actual_sha256": "b6d19959c93d42f115ed4353479cdecf7eca276ea131434782d5129a6e03236b",
+      "matches_recorded_hash": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/lead_acceptance.json",
+      "expected_sha256": "f15ce87bbd7921a9eb010ef3b8311c1222ad53a95bf3d558cfc705921efd822c",
+      "actual_sha256": "f15ce87bbd7921a9eb010ef3b8311c1222ad53a95bf3d558cfc705921efd822c",
+      "matches_recorded_hash": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/result.json",
+      "expected_sha256": "04a22daf12e4c94cd75a0c797623678ab431481357ca426abb3efbbac96f58a8",
+      "actual_sha256": "04a22daf12e4c94cd75a0c797623678ab431481357ca426abb3efbbac96f58a8",
+      "matches_recorded_hash": true
+    }
+  ],
+  "preserved_neighbours": [
+    {
+      "root": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2",
+      "files": 182,
+      "matched_files": 182,
+      "all_match": true
+    },
+    {
+      "root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh",
+      "files": 132,
+      "matched_files": 132,
+      "all_match": true
+    },
+    {
+      "root": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07",
+      "files": 29,
+      "matched_files": 29,
+      "all_match": true
+    }
+  ],
+  "launcher_sibling_records": {
+    "expected": 29,
+    "actual_matched": 29
+  }
+}

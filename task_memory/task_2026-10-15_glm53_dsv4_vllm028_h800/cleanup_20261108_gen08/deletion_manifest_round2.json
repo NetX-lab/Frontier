@@ -1,0 +1,930 @@
+{
+  "assignment_sha256": "a2c5eeec8073e8939f9a594dfa253939a0dbeb182b1c9ad465ad95f59ee15e60",
+  "authorized_empty_directories": [],
+  "before_inventory_sha256": "9801e54251858b00e821ec74c2af31d29d8fe9536a91bfe715ad698900e580cd",
+  "corrected_expected_allocated_bytes": 300761088,
+  "corrected_table": {
+    "protected_hash_after.json": [
+      75188388,
+      75190272,
+      "55c8d5d65e499451186a30af078a2301077b18735e35b2425baa1c73b091c1c3"
+    ],
+    "protected_hash_after_final.json": [
+      75188546,
+      75190272,
+      "9cf0b5b8c4cf1afa8094e26b4d3f7da758e45994bad8b1eef8dfabc756c7f265"
+    ],
+    "protected_hash_before.json": [
+      75188389,
+      75190272,
+      "8cb0e44aabf312785b149e59e305f05f8c4c21b8560d20c056b7db7d2faccda8"
+    ],
+    "protected_hash_before_final.json": [
+      75188546,
+      75190272,
+      "cd50532f06fd0d027b4bee62459e7f5bf0d5b0d806c6733ed191783ba5915b7b"
+    ]
+  },
+  "created_utc": "2026-11-08T08:20:41.396604+00:00",
+  "entries": [
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188389,
+      "group": "previous_snapshots",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json",
+      "sha256": "8cb0e44aabf312785b149e59e305f05f8c4c21b8560d20c056b7db7d2faccda8",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794042024316083947,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682223433,
+        "mode": 33152,
+        "mtime_ns": 1794042024316083947,
+        "nlink": 1,
+        "size": 75188389,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188388,
+      "group": "previous_snapshots",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json",
+      "sha256": "55c8d5d65e499451186a30af078a2301077b18735e35b2425baa1c73b091c1c3",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794043014444496267,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676194375,
+        "mode": 33152,
+        "mtime_ns": 1794043014444496267,
+        "nlink": 1,
+        "size": 75188388,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188546,
+      "group": "previous_snapshots",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before_final.json",
+      "sha256": "cd50532f06fd0d027b4bee62459e7f5bf0d5b0d806c6733ed191783ba5915b7b",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794044178212918356,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 683008570,
+        "mode": 33152,
+        "mtime_ns": 1794044178212918356,
+        "nlink": 1,
+        "size": 75188546,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188546,
+      "group": "previous_snapshots",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after_final.json",
+      "sha256": "9cf0b5b8c4cf1afa8094e26b4d3f7da758e45994bad8b1eef8dfabc756c7f265",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794044828673129817,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215200,
+        "mode": 33152,
+        "mtime_ns": 1794044828673129817,
+        "nlink": 1,
+        "size": 75188546,
+        "uid": 10250
+      }
+    }
+  ],
+  "first_run_parent_entries": [
+    {
+      "allocated_bytes": 4096,
+      "bytes": 4096,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794045078405215054,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 672035402,
+        "mode": 16893,
+        "mtime_ns": 1794045078405215054,
+        "nlink": 2,
+        "size": 4096,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 3836,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/assignment.md",
+      "sha256": "3c65246a870c8b93d51011713610bf055dfc5b5f481325d133b0222590b92ab2",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794040864727656152,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 672035403,
+        "mode": 33204,
+        "mtime_ns": 1794040864727656152,
+        "nlink": 1,
+        "size": 3836,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 3050,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/assignment_2.md",
+      "sha256": "03e494a983a948e48843a184a3e40e47a0b50494505e33e25997299507acbfc5",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794043358588625408,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676194379,
+        "mode": 33204,
+        "mtime_ns": 1794043358588625408,
+        "nlink": 1,
+        "size": 3050,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 12288,
+      "bytes": 10786,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/completion_check_immediate_final.json",
+      "sha256": "ceada6caa43f0e8c1685ea9feab316a74713759c4fd4868f211af9cbb2996f9f",
+      "signature": {
+        "blocks": 24,
+        "ctime_ns": 1794044207848927465,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 683008572,
+        "mode": 33152,
+        "mtime_ns": 1794044207848927465,
+        "nlink": 1,
+        "size": 10786,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 798720,
+      "bytes": 796733,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/deletion_journal_final.jsonl",
+      "sha256": "810f043070c49fe7f661d3c7443ffdf5421409f74e66192f06ee0112523ddd98",
+      "signature": {
+        "blocks": 1560,
+        "ctime_ns": 1794044230124934366,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 683008574,
+        "mode": 33152,
+        "mtime_ns": 1794044230124934366,
+        "nlink": 1,
+        "size": 796733,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 593920,
+      "bytes": 592838,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/deletion_manifest.json",
+      "sha256": "0a312cbbe0f75cc07a48fc0e0897e01cc4e7a3d4823a7cc911f13bd1101b8d92",
+      "signature": {
+        "blocks": 1160,
+        "ctime_ns": 1794041182615778844,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 677487997,
+        "mode": 33152,
+        "mtime_ns": 1794041182615778844,
+        "nlink": 1,
+        "size": 592838,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 593920,
+      "bytes": 593098,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/deletion_receipt.json",
+      "sha256": "f344285cb2cecf96bfd487802256c1545bfef08f91b7a8340271afd9a79efcec",
+      "signature": {
+        "blocks": 1160,
+        "ctime_ns": 1794043034500503878,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676194376,
+        "mode": 33152,
+        "mtime_ns": 1794043034500503878,
+        "nlink": 1,
+        "size": 593098,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 548864,
+      "bytes": 544923,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/deletion_receipt_final.json",
+      "sha256": "ef165696b0cc0550ef37645e211f89c6cc6e61935dcf3b77f867d267d6030695",
+      "signature": {
+        "blocks": 1072,
+        "ctime_ns": 1794044840613133864,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 683008573,
+        "mode": 33152,
+        "mtime_ns": 1794044840613133864,
+        "nlink": 1,
+        "size": 544923,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 22635,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execute_cleanup.py",
+      "sha256": "725ba48a6f541da2a16793defc6f574bca9de62e3a2f657c3db01c40f091782c",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794043887156820655,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682975150,
+        "mode": 33152,
+        "mtime_ns": 1794043887156820655,
+        "nlink": 1,
+        "size": 22635,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 3790,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execution_commands.json",
+      "sha256": "67f42587589f681927bb581b0211c63ba392e66863d99e0d7c375e69e78e953a",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794043133200541162,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682223428,
+        "mode": 33152,
+        "mtime_ns": 1794043133200541162,
+        "nlink": 1,
+        "size": 3790,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 4499,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/execution_commands_final.json",
+      "sha256": "f3f25417193b121d77aa2edc7a58bbf5547428a44826a3c6e694cd26e2904827",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794044905957156049,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215203,
+        "mode": 33152,
+        "mtime_ns": 1794044905957156049,
+        "nlink": 1,
+        "size": 4499,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 1618,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/lead_acceptance.json",
+      "sha256": "f15ce87bbd7921a9eb010ef3b8311c1222ad53a95bf3d558cfc705921efd822c",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794045078405215054,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215198,
+        "mode": 33204,
+        "mtime_ns": 1794045078405215054,
+        "nlink": 1,
+        "size": 1618,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 3790,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/lead_acceptance.py",
+      "sha256": "f9f0d537f24281bf1a19fe2d50d5caf78de5ad7fa864692bd46b0c4eb80ea336",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794045077737214822,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215197,
+        "mode": 33204,
+        "mtime_ns": 1794045077737214822,
+        "nlink": 1,
+        "size": 3790,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 23127,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/prepare_cleanup.py",
+      "sha256": "6287a37a8d2a9a8ec248222497894817af7e86d3af884097fac032591c66cca6",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794042095524119240,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 677487996,
+        "mode": 33152,
+        "mtime_ns": 1794042095524119240,
+        "nlink": 1,
+        "size": 23127,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 726,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/process_check.json",
+      "sha256": "996e78bb85b5ce4fd4fbcf8b6a2b88c03e989fd30d2ee9d4e0a8c9af7f6bbd68",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794041192231782451,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 677487998,
+        "mode": 33152,
+        "mtime_ns": 1794041192231782451,
+        "nlink": 1,
+        "size": 726,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188388,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json",
+      "sha256": "55c8d5d65e499451186a30af078a2301077b18735e35b2425baa1c73b091c1c3",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794043014444496267,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676194375,
+        "mode": 33152,
+        "mtime_ns": 1794043014444496267,
+        "nlink": 1,
+        "size": 75188388,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188546,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after_final.json",
+      "sha256": "9cf0b5b8c4cf1afa8094e26b4d3f7da758e45994bad8b1eef8dfabc756c7f265",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794044828673129817,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215200,
+        "mode": 33152,
+        "mtime_ns": 1794044828673129817,
+        "nlink": 1,
+        "size": 75188546,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188389,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json",
+      "sha256": "8cb0e44aabf312785b149e59e305f05f8c4c21b8560d20c056b7db7d2faccda8",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794042024316083947,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682223433,
+        "mode": 33152,
+        "mtime_ns": 1794042024316083947,
+        "nlink": 1,
+        "size": 75188389,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 75190272,
+      "bytes": 75188546,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before_final.json",
+      "sha256": "cd50532f06fd0d027b4bee62459e7f5bf0d5b0d806c6733ed191783ba5915b7b",
+      "signature": {
+        "blocks": 146856,
+        "ctime_ns": 1794044178212918356,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 683008570,
+        "mode": 33152,
+        "mtime_ns": 1794044178212918356,
+        "nlink": 1,
+        "size": 75188546,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 3731,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/record_files.json",
+      "sha256": "d857d558f2b30224ac15f8971bcc053b465c06a3db8b04a38fd5432cf51c0653",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794043133464541261,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676194378,
+        "mode": 33152,
+        "mtime_ns": 1794043133464541261,
+        "nlink": 1,
+        "size": 3731,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 12288,
+      "bytes": 8397,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/record_files_final.json",
+      "sha256": "ed7ff89b7a26734cc68d71557a145b262c5a714f5373afa19004d8f9598c3aaa",
+      "signature": {
+        "blocks": 24,
+        "ctime_ns": 1794044906397156196,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215204,
+        "mode": 33152,
+        "mtime_ns": 1794044906397156196,
+        "nlink": 1,
+        "size": 8397,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 3945,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/record_inputs_before_final.json",
+      "sha256": "854a70ebfe2d4fb1629540c0bbdaf7f053d22fff50afe3736e55ad0b692baf13",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794043545316694528,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 679821156,
+        "mode": 33152,
+        "mtime_ns": 1794043545316694528,
+        "nlink": 1,
+        "size": 3945,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 17571,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/report.md",
+      "sha256": "ddc2ec34f6f57bcefb75356f14e7e8cfb2193e3e6815605e280d7044467051cc",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794044905985156059,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682223440,
+        "mode": 33152,
+        "mtime_ns": 1794044905985156059,
+        "nlink": 1,
+        "size": 17571,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 16384,
+      "bytes": 14263,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/report_before_execution.md",
+      "sha256": "bcdb86bf419b8b407a6dca27352a9bfc55029b67e7124023b4452f8006525003",
+      "signature": {
+        "blocks": 32,
+        "ctime_ns": 1794043545316694528,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682975152,
+        "mode": 33152,
+        "mtime_ns": 1794043545316694528,
+        "nlink": 1,
+        "size": 14263,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 303104,
+      "bytes": 301910,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/validation_pre_delete_final.json",
+      "sha256": "df7783805a37bfbac6a2078c5d6ea3327c45f66b7dfa92e4e59b76108a922f4b",
+      "signature": {
+        "blocks": 592,
+        "ctime_ns": 1794044207204927281,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 683008571,
+        "mode": 33152,
+        "mtime_ns": 1794044207204927281,
+        "nlink": 1,
+        "size": 301910,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 1249,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/verification.json",
+      "sha256": "d862428b44b853f7d77ba33a4a7970bc001bc4a4c6ed71da01c9e14bd556544d",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794043061976514287,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676194377,
+        "mode": 33152,
+        "mtime_ns": 1794043061976514287,
+        "nlink": 1,
+        "size": 1249,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 12288,
+      "bytes": 12105,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/verification_final.json",
+      "sha256": "f51ca46a5fb4a6ef1db1b269c093b7e42a29fb7978b3a21c3bc1adaf40bdf110",
+      "signature": {
+        "blocks": 24,
+        "ctime_ns": 1794044840569133849,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215201,
+        "mode": 33152,
+        "mtime_ns": 1794044840569133849,
+        "nlink": 1,
+        "size": 12105,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 16384,
+      "bytes": 15366,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/verify_cleanup_final.py",
+      "sha256": "bd2d62056afdcfd2098ec96498c05ac42908d5d8ab36cdb52d8581a3ec87c3aa",
+      "signature": {
+        "blocks": 32,
+        "ctime_ns": 1794044049516879786,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682975161,
+        "mode": 33152,
+        "mtime_ns": 1794044049516879786,
+        "nlink": 1,
+        "size": 15366,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 7416,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/verify_preparation.py",
+      "sha256": "1787f2fc849f35b47df08ccaa1449de20abf2831520f2b68cd89ad38509bc6f3",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794042145440142217,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 677487999,
+        "mode": 33152,
+        "mtime_ns": 1794042145440142217,
+        "nlink": 1,
+        "size": 7416,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 19609,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/write_report_final.py",
+      "sha256": "243c07e4f13e9503199784551926b5107d33961bc6f52a9eed935492ce4ced39",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794044887897149917,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682975166,
+        "mode": 33152,
+        "mtime_ns": 1794044887897149917,
+        "nlink": 1,
+        "size": 19609,
+        "uid": 10250
+      }
+    }
+  ],
+  "groups": [
+    {
+      "eligible": true,
+      "entries": [
+        {
+          "allocated_bytes": 75190272,
+          "bytes": 75188389,
+          "group": "previous_snapshots",
+          "kind": "file",
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json",
+          "sha256": "8cb0e44aabf312785b149e59e305f05f8c4c21b8560d20c056b7db7d2faccda8",
+          "signature": {
+            "blocks": 146856,
+            "ctime_ns": 1794042024316083947,
+            "dev": 64784,
+            "gid": 10250,
+            "ino": 682223433,
+            "mode": 33152,
+            "mtime_ns": 1794042024316083947,
+            "nlink": 1,
+            "size": 75188389,
+            "uid": 10250
+          }
+        },
+        {
+          "allocated_bytes": 75190272,
+          "bytes": 75188388,
+          "group": "previous_snapshots",
+          "kind": "file",
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json",
+          "sha256": "55c8d5d65e499451186a30af078a2301077b18735e35b2425baa1c73b091c1c3",
+          "signature": {
+            "blocks": 146856,
+            "ctime_ns": 1794043014444496267,
+            "dev": 64784,
+            "gid": 10250,
+            "ino": 676194375,
+            "mode": 33152,
+            "mtime_ns": 1794043014444496267,
+            "nlink": 1,
+            "size": 75188388,
+            "uid": 10250
+          }
+        },
+        {
+          "allocated_bytes": 75190272,
+          "bytes": 75188546,
+          "group": "previous_snapshots",
+          "kind": "file",
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before_final.json",
+          "sha256": "cd50532f06fd0d027b4bee62459e7f5bf0d5b0d806c6733ed191783ba5915b7b",
+          "signature": {
+            "blocks": 146856,
+            "ctime_ns": 1794044178212918356,
+            "dev": 64784,
+            "gid": 10250,
+            "ino": 683008570,
+            "mode": 33152,
+            "mtime_ns": 1794044178212918356,
+            "nlink": 1,
+            "size": 75188546,
+            "uid": 10250
+          }
+        },
+        {
+          "allocated_bytes": 75190272,
+          "bytes": 75188546,
+          "group": "previous_snapshots",
+          "kind": "file",
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after_final.json",
+          "sha256": "9cf0b5b8c4cf1afa8094e26b4d3f7da758e45994bad8b1eef8dfabc756c7f265",
+          "signature": {
+            "blocks": 146856,
+            "ctime_ns": 1794044828673129817,
+            "dev": 64784,
+            "gid": 10250,
+            "ino": 676215200,
+            "mode": 33152,
+            "mtime_ns": 1794044828673129817,
+            "nlink": 1,
+            "size": 75188546,
+            "uid": 10250
+          }
+        }
+      ],
+      "errors": [],
+      "expected": {
+        "allocated_bytes": 300761088,
+        "bytes": 300753869,
+        "files": 4
+      },
+      "id": "previous_snapshots",
+      "observed": {
+        "allocated_bytes": 300761088,
+        "bytes": 300753869,
+        "files": 4
+      },
+      "paths": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before_final.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after_final.json"
+      ],
+      "reason": "Uncommitted bulk inventories; exact size/hash retained in unchanged lead_acceptance.json"
+    }
+  ],
+  "limitations": [
+    "Lead-supplied 2026-11-08 host scan, 289 processes; no executor process scan. 127 entries had unreadable links; lead reports 14/15 sampled entries had exited, the other was pid 1 /sbin/init. Raw roots name before/after but omit the two *_final snapshots. assignment_2.md explicitly accepts this scan for all four because their hashes have not changed since 2026-11-07. The follow-up sample and acceptance of omitted roots are lead-supplied, not findings of the raw scan.",
+    "No Git commands: committed status is lead-supplied; all 25 surviving files are protected.",
+    "Allocated bytes are st_blocks * 512 for single-link files; no global free-space attribution.",
+    "Runtime directories are host-owned and untouched. Task records outside this round are excluded."
+  ],
+  "planned": {
+    "allocated_bytes": 300761088,
+    "bytes": 300753869,
+    "files": 4
+  },
+  "previous_run": {
+    "baseline": {
+      "allocated_bytes": 831488,
+      "bytes": 829981,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/scoped_inventory_before_final.json",
+      "sha256": "a275b8c81cbb3351963270bf33b62bd50c77c96c2e3c51607777015aafcf9215",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794125462901847050,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203163575,
+        "mode": 33152,
+        "mtime_ns": 1794125462901847050,
+        "nlink": 1,
+        "size": 829981,
+        "uid": 10250
+      }
+    },
+    "journal": {
+      "allocated_bytes": 290816,
+      "bytes": 287370,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/deletion_journal.jsonl",
+      "sha256": "5983fa1b2c87a923154fec764151fe35b7a6282d288dc832d99b5132b6583ab5",
+      "signature": {
+        "blocks": 568,
+        "ctime_ns": 1794125490021852413,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203163578,
+        "mode": 33152,
+        "mtime_ns": 1794125490021852413,
+        "nlink": 1,
+        "size": 287370,
+        "uid": 10250
+      }
+    },
+    "journal_policy": "Round-two journal continues the first run through its SHA256 reference; first-run bytes remain unchanged.",
+    "manifest": {
+      "allocated_bytes": 319488,
+      "bytes": 317528,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/deletion_manifest_final.json",
+      "sha256": "8581e28f4c7a8f019615f493e1f58b8586fd6e7ca2a763cbb4c9387bf2f9004a",
+      "signature": {
+        "blocks": 624,
+        "ctime_ns": 1794125462957847060,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203163576,
+        "mode": 33152,
+        "mtime_ns": 1794125462957847060,
+        "nlink": 1,
+        "size": 317528,
+        "uid": 10250
+      }
+    },
+    "receipt": {
+      "allocated_bytes": 163840,
+      "bytes": 160646,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/deletion_receipt.json",
+      "sha256": "1e6b43c6c148f3731e6444c1376026e6d3e13e06a349a5f52d3bf12b82ffd9be",
+      "signature": {
+        "blocks": 320,
+        "ctime_ns": 1794125490045852418,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203163579,
+        "mode": 33152,
+        "mtime_ns": 1794125490045852418,
+        "nlink": 1,
+        "size": 160646,
+        "uid": 10250
+      }
+    },
+    "record_index": {
+      "allocated_bytes": 8192,
+      "bytes": 5863,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/record_files.json",
+      "sha256": "487542835a20ff888ffb7198c3299164a8c9294c2e5a969ea97840db0daa2846",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794125704213893210,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121729,
+        "mode": 33152,
+        "mtime_ns": 1794125704213893210,
+        "nlink": 1,
+        "size": 5863,
+        "uid": 10250
+      }
+    }
+  },
+  "process_prerequisite": {
+    "clear_for_deletion": true,
+    "limitation": "Lead-supplied 2026-11-08 host scan, 289 processes; no executor process scan. 127 entries had unreadable links; lead reports 14/15 sampled entries had exited, the other was pid 1 /sbin/init. Raw roots name before/after but omit the two *_final snapshots. assignment_2.md explicitly accepts this scan for all four because their hashes have not changed since 2026-11-07. The follow-up sample and acceptance of omitted roots are lead-supplied, not findings of the raw scan.",
+    "observed_utc": "2026-11-08T07:59:12.772458+00:00",
+    "processes_scanned": 289,
+    "sha256": "20c553d72918382e08f7b636c9ab4d1896cd7f155c449fda5132534164340296",
+    "source": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/cleanup_scope_processes.json"
+  },
+  "protected_evidence": [
+    {
+      "allocated_bytes": 4096,
+      "bytes": 1618,
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/lead_acceptance.json",
+      "sha256": "f15ce87bbd7921a9eb010ef3b8311c1222ad53a95bf3d558cfc705921efd822c",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794045078405215054,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 676215198,
+        "mode": 33204,
+        "mtime_ns": 1794045078405215054,
+        "nlink": 1,
+        "size": 1618,
+        "uid": 10250
+      }
+    }
+  ],
+  "round": 2,
+  "schema_version": 1,
+  "withdrawn_expected_allocated_bytes": 300759552,
+  "working_root": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028"
+}

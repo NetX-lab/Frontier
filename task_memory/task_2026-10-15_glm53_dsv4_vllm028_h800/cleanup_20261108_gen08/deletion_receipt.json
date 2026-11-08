@@ -1,0 +1,4177 @@
+{
+  "assignment_sha256": "83fa01bd9d9374555bf791176a531437ac93767a67f21e6a838ed9a9d4ee7d16",
+  "before_inventory_sha256": "a275b8c81cbb3351963270bf33b62bd50c77c96c2e3c51607777015aafcf9215",
+  "declined": [
+    {
+      "group": "previous_snapshots",
+      "paths": [
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before_final.json",
+        "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after_final.json"
+      ],
+      "reasons": [
+        "Observed counts/allocation differ from assignment table"
+      ]
+    }
+  ],
+  "deleted": [
+    {
+      "allocated_bytes": 4096,
+      "bytes": 865,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/case.json",
+      "sha256": "fd5f77acc2f46e22802b274ea5ac08e1b31cfefaa721bb513e1001d0e48119c0",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1613821917,
+        "mode": 33204,
+        "mtime_ns": 1794072875109311295,
+        "nlink": 1,
+        "size": 865,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 167936,
+      "bytes": 165004,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/coverage.json",
+      "sha256": "ca7fc43ec0754f98c01ecb281179f9222ad9733d82a975e226ccf33c60b587ff",
+      "signature": {
+        "blocks": 328,
+        "ctime_ns": 1794072821549278040,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1613821911,
+        "mode": 33204,
+        "mtime_ns": 1794072821549278040,
+        "nlink": 1,
+        "size": 165004,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 1505,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/matrix.json",
+      "sha256": "016fcb05160f9096e3a42b688a3ba420ec4b7fdff1533516c2b1a2d622775563",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1556176235,
+        "mode": 33204,
+        "mtime_ns": 1794072875109311295,
+        "nlink": 1,
+        "size": 1505,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 29074,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/analysis/run_check_status.groundtruth_clean.json",
+      "sha256": "5c4d545dfac95846cdfc593d2486dc64e86e1cedea271f6e3b7277930d6e1ded",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072875105311292,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1680732508,
+        "mode": 33204,
+        "mtime_ns": 1794072860561302427,
+        "nlink": 1,
+        "size": 29074,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 20911,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/cloud_inventory.json",
+      "sha256": "14dc2ae8b5f5f4a0fcdfc28a3a5591471b579d6b06d8cbfde8e998baa66c1ddb",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886587421,
+        "mode": 33152,
+        "mtime_ns": 1794072752597224662,
+        "nlink": 1,
+        "size": 20911,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 2297,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/download_receipt.json",
+      "sha256": "5af66119a1f08fefb7d18a8d6e5fb5294687af7c3c892b7d50786303f543e7a4",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886587420,
+        "mode": 33152,
+        "mtime_ns": 1794072753613225091,
+        "nlink": 1,
+        "size": 2297,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 359,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/launcher_receipt.json",
+      "sha256": "2bf8f9dc6da3b54b7afe00af084dffbe028cef5dc221e82e8831efe30b32e527",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886551766,
+        "mode": 33152,
+        "mtime_ns": 1794070474592753959,
+        "nlink": 1,
+        "size": 359,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 6161,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/platform_terminal_receipt.json",
+      "sha256": "0893375959926c58edbf9c469cb3bfe9db5ac9ecfd29867e374fa8c82547ca2c",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886551769,
+        "mode": 33152,
+        "mtime_ns": 1794071177344921068,
+        "nlink": 1,
+        "size": 6161,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 22,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/replay_finished.json",
+      "sha256": "1e3f6691f455051e8adb15d961e4bf3c7a17e83dd88b2afdd13315cc288250bb",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875105311292,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886551764,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 22,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 23334,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/canonical_repetitions.json",
+      "sha256": "c41d3a3d941a420c7d32bb49e299f6429760aa5886cb0e38e76313cb1da2fa1e",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794072875105311292,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1947163656,
+        "mode": 33152,
+        "mtime_ns": 1794070423000000000,
+        "nlink": 1,
+        "size": 23334,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 372736,
+      "bytes": 370244,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/client_requests.jsonl",
+      "sha256": "e0a99b58b9974418000797faae31cfd13b06c87e1662c543decac3334dda7949",
+      "signature": {
+        "blocks": 728,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1947163657,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 370244,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 74,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/proxy.log",
+      "sha256": "b3aa8b076c425cf27f0853c83e999a8b3005a6cf5adb9a4d348f9cade8ea614d",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1947163658,
+        "mode": 33152,
+        "mtime_ns": 1794070426000000000,
+        "nlink": 1,
+        "size": 74,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 557056,
+      "bytes": 555777,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/proxy_requests.jsonl",
+      "sha256": "dbbf804b0e977ed6e420ec6bc93372f02b8a27fabdd855b36c76b1bb50cf692d",
+      "signature": {
+        "blocks": 1088,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1947163659,
+        "mode": 33152,
+        "mtime_ns": 1794070423000000000,
+        "nlink": 1,
+        "size": 555777,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 28842,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/replay_summary.json",
+      "sha256": "e487e07e447a07c9caee452a41f41b00ac25ff761e3e06f4adcdb9f303466a9b",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1947163660,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 28842,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 29074,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run_check_status.groundtruth_clean.json",
+      "sha256": "5c4d545dfac95846cdfc593d2486dc64e86e1cedea271f6e3b7277930d6e1ded",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072875109311295,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886551773,
+        "mode": 33204,
+        "mtime_ns": 1794072860561302427,
+        "nlink": 1,
+        "size": 29074,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 16384,
+      "bytes": 12562,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run_manifest.json",
+      "sha256": "45315f093c994f0af75ffcbcf36ab202297b2420c96452f576e8b5672dfdb0fe",
+      "signature": {
+        "blocks": 32,
+        "ctime_ns": 1794072875105311292,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886551760,
+        "mode": 33152,
+        "mtime_ns": 1794068933000000000,
+        "nlink": 1,
+        "size": 12562,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 5091,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/manifest.json",
+      "sha256": "6c3d8be2953ab58679bc772f733ca712e9dcbc1b7bc59e3c5022bcaff4a54a58",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794072875077311277,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1344911960,
+        "mode": 33204,
+        "mtime_ns": 1794072875077311277,
+        "nlink": 1,
+        "size": 5091,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 20911,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/cloud_inventory.json",
+      "sha256": "14dc2ae8b5f5f4a0fcdfc28a3a5591471b579d6b06d8cbfde8e998baa66c1ddb",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794072875077311277,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487929,
+        "mode": 33152,
+        "mtime_ns": 1794072752597224662,
+        "nlink": 1,
+        "size": 20911,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 2297,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/download_receipt.json",
+      "sha256": "5af66119a1f08fefb7d18a8d6e5fb5294687af7c3c892b7d50786303f543e7a4",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875073311275,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487928,
+        "mode": 33152,
+        "mtime_ns": 1794072753613225091,
+        "nlink": 1,
+        "size": 2297,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 359,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/launcher_receipt.json",
+      "sha256": "2bf8f9dc6da3b54b7afe00af084dffbe028cef5dc221e82e8831efe30b32e527",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875073311275,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487925,
+        "mode": 33152,
+        "mtime_ns": 1794070474592753959,
+        "nlink": 1,
+        "size": 359,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 6161,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/platform_terminal_receipt.json",
+      "sha256": "0893375959926c58edbf9c469cb3bfe9db5ac9ecfd29867e374fa8c82547ca2c",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794072875073311275,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487926,
+        "mode": 33152,
+        "mtime_ns": 1794071177344921068,
+        "nlink": 1,
+        "size": 6161,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 22,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/replay_finished.json",
+      "sha256": "1e3f6691f455051e8adb15d961e4bf3c7a17e83dd88b2afdd13315cc288250bb",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875069311273,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487924,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 22,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 23334,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run/canonical_repetitions.json",
+      "sha256": "c41d3a3d941a420c7d32bb49e299f6429760aa5886cb0e38e76313cb1da2fa1e",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794072875069311273,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1478608362,
+        "mode": 33152,
+        "mtime_ns": 1794070423000000000,
+        "nlink": 1,
+        "size": 23334,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 372736,
+      "bytes": 370244,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run/client_requests.jsonl",
+      "sha256": "e0a99b58b9974418000797faae31cfd13b06c87e1662c543decac3334dda7949",
+      "signature": {
+        "blocks": 728,
+        "ctime_ns": 1794072875069311273,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1478608363,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 370244,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 74,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run/proxy.log",
+      "sha256": "b3aa8b076c425cf27f0853c83e999a8b3005a6cf5adb9a4d348f9cade8ea614d",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072875073311275,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1478608364,
+        "mode": 33152,
+        "mtime_ns": 1794070426000000000,
+        "nlink": 1,
+        "size": 74,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 557056,
+      "bytes": 555777,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run/proxy_requests.jsonl",
+      "sha256": "dbbf804b0e977ed6e420ec6bc93372f02b8a27fabdd855b36c76b1bb50cf692d",
+      "signature": {
+        "blocks": 1088,
+        "ctime_ns": 1794072875073311275,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1478608365,
+        "mode": 33152,
+        "mtime_ns": 1794070423000000000,
+        "nlink": 1,
+        "size": 555777,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 28842,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run/replay_summary.json",
+      "sha256": "e487e07e447a07c9caee452a41f41b00ac25ff761e3e06f4adcdb9f303466a9b",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072875073311275,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1478608366,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 28842,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 29074,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run_check_status.groundtruth_clean.json",
+      "sha256": "5c4d545dfac95846cdfc593d2486dc64e86e1cedea271f6e3b7277930d6e1ded",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072875073311275,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487927,
+        "mode": 33204,
+        "mtime_ns": 1794072860561302427,
+        "nlink": 1,
+        "size": 29074,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 16384,
+      "bytes": 12562,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run_manifest.json",
+      "sha256": "45315f093c994f0af75ffcbcf36ab202297b2420c96452f576e8b5672dfdb0fe",
+      "signature": {
+        "blocks": 32,
+        "ctime_ns": 1794072875069311273,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487923,
+        "mode": 33152,
+        "mtime_ns": 1794068933000000000,
+        "nlink": 1,
+        "size": 12562,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 177,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/openers.json",
+      "sha256": "addd65af829db869eb6cc3fc660e0f45e5a1b5c242bf815d9de917d73451868c",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072821549278040,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1613821912,
+        "mode": 33204,
+        "mtime_ns": 1794072821549278040,
+        "nlink": 1,
+        "size": 177,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 29074,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/analysis/run_check_status.groundtruth_clean.json",
+      "sha256": "5c4d545dfac95846cdfc593d2486dc64e86e1cedea271f6e3b7277930d6e1ded",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072860561302427,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1211316547,
+        "mode": 33204,
+        "mtime_ns": 1794072860561302427,
+        "nlink": 1,
+        "size": 29074,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 1199,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/engine.json",
+      "sha256": "ae8931b798b437551c857c441ee9885d6b44084dbefe14414c2de39f98984ea3",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820657277530,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1746665034,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 1199,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 57344,
+      "bytes": 55620,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/frontier.json",
+      "sha256": "3aac0a3f6b829a478b4a350614722d386398271d5eb0cf670299bc9a533c8cf4",
+      "signature": {
+        "blocks": 112,
+        "ctime_ns": 1794072820657277530,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1746665035,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 55620,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 21567,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/native_config.json",
+      "sha256": "31faae38e639e7a8b990ab93c08a591d5f27a3ae33e9a28255710a0d07485551",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794072820657277530,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1746665036,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 21567,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 321,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/trace/SHA256SUMS",
+      "sha256": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820657277530,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1815120135,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 321,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 4208,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/trace/manifest.json",
+      "sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794072820657277530,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1815120136,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 4208,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 32630,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/trace/request_ids.json",
+      "sha256": "318cd1ed1ab0bf98c54be354daa4817982733dc954831819fd3a2c2f8b2511f6",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072820657277530,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1815120137,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 32630,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 1986,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/trace/trace.csv",
+      "sha256": "2d557d7d923b71fbf62bc7e552d1fb547a8ec88c1e54660c0c76cc2de3c49ec2",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1815120138,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 1986,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 929,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/trace/warmup_pool.csv",
+      "sha256": "55a970c57ed6819fb3e50991aa159af0113e5b0fdbd6e47fc90d7a2f5038b99e",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1815120139,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 929,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 2304,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/manifest.yaml",
+      "sha256": "a4fbef93c8cd29e4415a32e9d1e2e2e9793966915b64730a69217de7a203cdda",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820657277530,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1680732506,
+        "mode": 33204,
+        "mtime_ns": 1794040192819351043,
+        "nlink": 1,
+        "size": 2304,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 359,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/launcher_receipt.json",
+      "sha256": "2bf8f9dc6da3b54b7afe00af084dffbe028cef5dc221e82e8831efe30b32e527",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820933277687,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 2013520883,
+        "mode": 33152,
+        "mtime_ns": 1794070474592753959,
+        "nlink": 1,
+        "size": 359,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 37,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/drained.json",
+      "sha256": "4cf4bcb68ab9be0acf9086bd6ebccd79a3ed60c9683a2199c2047487a24741c2",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917653,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 37,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "f4e9f7037bfe0f167eec708d0a906d6ba97d4ff23022796b3654f599d3df5888",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917654,
+        "mode": 33152,
+        "mtime_ns": 1794070432000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 533,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "1f41b244f16881f39e8bab967abb13f4924c0e04c13e0cc25b8a41d83519b103",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917655,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 533,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 71,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/ready.json",
+      "sha256": "142b2d88af12df9bf92647182c827eb0d0c127142adb17afc7ff27718934f779",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917656,
+        "mode": 33152,
+        "mtime_ns": 1794069156000000000,
+        "nlink": 1,
+        "size": 71,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 76,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/replay.log",
+      "sha256": "843c187d87fc09cc51b1f6e98fba1fcb888699c3b161df25643b2db02db95a88",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917657,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 76,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 18387,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/result.json",
+      "sha256": "9544948804c23f9805f44ad3e90cb3d9400b2a8dcbaed09fb756505e9ff50e81",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917658,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 18387,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 212992,
+      "bytes": 209589,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server.log",
+      "sha256": "47ce6937ba07e9e38fcddba0833ffa726b55838d36d5d2d18a7e7dbc303e6ad2",
+      "signature": {
+        "blocks": 416,
+        "ctime_ns": 1794072820665277535,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917659,
+        "mode": 33152,
+        "mtime_ns": 1794070452000000000,
+        "nlink": 1,
+        "size": 209589,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 383,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server_ready.json",
+      "sha256": "0691d8292dca3e196cc1780e607cb54334cb080dddb13b99c152102925a6d30b",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820665277535,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917660,
+        "mode": 33152,
+        "mtime_ns": 1794069773000000000,
+        "nlink": 1,
+        "size": 383,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830392,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "1a3c1cf053718d47a044ec731ec00fd12cb485e97c1d4423a2d2954b7e5f623c",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820665277535,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673437,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830392,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830392,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "7979971d71f5170de476ff6c6972b47bc467bcc6f4f6a327bc916a11ba361d55",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820669277537,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673438,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830392,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830393,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "738edd26fb317cc2f491b82fe193ff030e68e31ce690e4a863fc1598b17599e3",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820673277539,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673439,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830393,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830393,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "3692153a0f9668f4762c3fe4381cd070a61f7f9e8407419567101f236ba36cc3",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820673277539,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673440,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830393,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830393,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "29633df8aac7a3de4d78de5372e455881e539454ab8dba507ed26880c2ab24cc",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820677277542,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673441,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830393,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830393,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "8185e16a520f68363f563890276349e5184eb5839389f8ab7782cf7bea645ba4",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820681277544,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673442,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830393,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830393,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "701fbfb44398c2cd90e67da92162fc5885e8a1e6bef126af143659827fcc2b41",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820685277546,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673443,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830393,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 830393,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "9145e95f6c30347d8857ac342eaf7b2c1ee0d94856d110f69676fa616ca5f03c",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820685277546,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673444,
+        "mode": 33152,
+        "mtime_ns": 1794070440000000000,
+        "nlink": 1,
+        "size": 830393,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 196,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/worker.log",
+      "sha256": "fe9742c0170ac7cb067282c23bc3014475cac0534792bebfb66bbd3fd796e1b2",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820665277535,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917661,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 196,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 37,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/drained.json",
+      "sha256": "b44dec70c25f8d73ae879053f9b22b0d6eb9de3e6d8ee63ff0746591d21906a4",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820689277548,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509869,
+        "mode": 33152,
+        "mtime_ns": 1794070428000000000,
+        "nlink": 1,
+        "size": 37,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "dd6d08392028359013f3b570541a23cc5020816389d801a7c396057c1c5d0351",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820689277548,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509870,
+        "mode": 33152,
+        "mtime_ns": 1794070423000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 248,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820689277548,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509871,
+        "mode": 33152,
+        "mtime_ns": 1794070469000000000,
+        "nlink": 1,
+        "size": 248,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 71,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/ready.json",
+      "sha256": "f8e8c76d159523aa2d051b5971e854f33ea6490d9c2c5fe80ebf56d1107d62bd",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820689277548,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509872,
+        "mode": 33152,
+        "mtime_ns": 1794069143000000000,
+        "nlink": 1,
+        "size": 71,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 16690,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/result.json",
+      "sha256": "3d6c482e0b633b93c92c4398031122bba31cc527678f828a84377ff6ade966a5",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820689277548,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509873,
+        "mode": 33152,
+        "mtime_ns": 1794070469000000000,
+        "nlink": 1,
+        "size": 16690,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 389120,
+      "bytes": 385875,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/server.log",
+      "sha256": "c90665e3bdf2badd6a5342c1dc885e5e5413cf006753190ff72cd1d445f7a5ca",
+      "signature": {
+        "blocks": 760,
+        "ctime_ns": 1794072820689277548,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509874,
+        "mode": 33152,
+        "mtime_ns": 1794070467000000000,
+        "nlink": 1,
+        "size": 385875,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829422,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "06c41d60f12bf5dd088323d451d242f6ce64ae1726b2173359ec9a349077ae58",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820693277551,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121730,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829422,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829422,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "e418661d46407260232422343910e67de957f5ca428f2e286722d56438fc87c2",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820697277553,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121731,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829422,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829429,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "970b8eedde8aaf86626d2e0b3a3aa894f54de090ae48ede9c483aaca8795210c",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820697277553,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121732,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829429,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829429,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "6812e5e539209f90f2a544ea5d6418ca048d913fedd57ec655a9b8e6f0dda958",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820701277555,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121733,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829429,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829429,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "a7aad372dfa605c067a1ad76b6b88873e2e16cd2c702e741b589f6135e450ddd",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820705277558,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121734,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829429,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829429,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "4be86bb6bab5600d3cc7db2238befd6e5d2eefb56d38101edc0707acf92d3a1b",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820709277560,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121735,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829429,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829429,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "5ad2cf6c02e0b2a7d16221bcc8c21604b69398bb5cfd70c2bc60f5c224dbd292",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820709277560,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121736,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829429,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829429,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "95166bef4b4d3af422c9d20ef1b82008f9ff9ff4d4694cc37d944f2bf20d33f3",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820713277562,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121737,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829429,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 173,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/worker.log",
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820693277551,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509875,
+        "mode": 33152,
+        "mtime_ns": 1794070469000000000,
+        "nlink": 1,
+        "size": 173,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 37,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/drained.json",
+      "sha256": "b9e77f69d1d7037f1094876555a1dc7f1267ccfc0b0f070e90027023efa47f8d",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820713277562,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304684,
+        "mode": 33152,
+        "mtime_ns": 1794070428000000000,
+        "nlink": 1,
+        "size": 37,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "3d274e6599ca26fe2b825046740432272534253e7fba3170bab0da6140313d16",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820713277562,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304685,
+        "mode": 33152,
+        "mtime_ns": 1794070421000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 248,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820717277564,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304686,
+        "mode": 33152,
+        "mtime_ns": 1794070467000000000,
+        "nlink": 1,
+        "size": 248,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 72,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/ready.json",
+      "sha256": "2170f6ecad9337a780a12b3ff8dbaaa7a732bb1469c1e986847f667b2d535678",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820717277564,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304687,
+        "mode": 33152,
+        "mtime_ns": 1794069153000000000,
+        "nlink": 1,
+        "size": 72,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 16694,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/result.json",
+      "sha256": "7c8bd0cc7ea67d741323155a2b904932fcd8ef4dae86f52d2acdd90ecc583616",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820717277564,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304688,
+        "mode": 33152,
+        "mtime_ns": 1794070467000000000,
+        "nlink": 1,
+        "size": 16694,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 393216,
+      "bytes": 390981,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/server.log",
+      "sha256": "a16510bc3aec3c9c9230a3e92309a14009a7adcedc9f8ad8924d95c54a254c6c",
+      "signature": {
+        "blocks": 768,
+        "ctime_ns": 1794072820717277564,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304689,
+        "mode": 33152,
+        "mtime_ns": 1794070465000000000,
+        "nlink": 1,
+        "size": 390981,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829498,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "73fd64dd61dae811d170e74bb60b120ae04f25a0d8feb50f5078e669161e8ac2",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820721277567,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171362,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829498,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829498,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "562f830e356f62e5648a494c3b1fd70ff4af5c2cda3d2fc60ba602fb62e3e962",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820721277567,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171363,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829498,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829499,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "b0bb1a74d38dc626a548ca0cf064d1ad95c76ac250547cfc3a35fe09ae1b86cb",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820725277569,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171364,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829499,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829499,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "71c8e5038108b81f9437ba04dd32d0c383d63fad515c46ee231c834693322f6c",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820729277571,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171365,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829499,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829499,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "ee390b0ec1143acc30ddfdb49fa83f7cdc067bd8d16d8c2aef91187afaa6260e",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820729277571,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171366,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829499,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829499,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "730c6bb36617542ec4e2bad36930987cd05cbeb20123fc3bcae1c873a49cf6e2",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820733277573,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171367,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829499,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829499,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "e03c0af53bce2c4bbfdc5db03744a74cc0144659b8dd5c94e4de0349a0cf1acc",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820737277576,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171368,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829499,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829499,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "91239ddb72bb1ca3a157a2eccab9975824a367cdf0ec69838f15bd41fb192aee",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820741277578,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171369,
+        "mode": 33152,
+        "mtime_ns": 1794070454000000000,
+        "nlink": 1,
+        "size": 829499,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 173,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/worker.log",
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820717277564,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304690,
+        "mode": 33152,
+        "mtime_ns": 1794070467000000000,
+        "nlink": 1,
+        "size": 173,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 37,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/drained.json",
+      "sha256": "bf48ce093e6d8568f76c0779b71d3bd8b5eb4f9d9a711530c4369c02e805d475",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820741277578,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 408761922,
+        "mode": 33152,
+        "mtime_ns": 1794070428000000000,
+        "nlink": 1,
+        "size": 37,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "ff6470c6dfa92f0ac54c094492dc9a517ba7c0f90c8b611eeb230bced1819d2d",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820741277578,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 408761924,
+        "mode": 33152,
+        "mtime_ns": 1794070426000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 248,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820741277578,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 408761925,
+        "mode": 33152,
+        "mtime_ns": 1794070468000000000,
+        "nlink": 1,
+        "size": 248,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 72,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/ready.json",
+      "sha256": "a4faa1924b57781eb8c6c741d622e004ef77b64a89ea8e1cb641eb583031cc01",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820741277578,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 408761926,
+        "mode": 33152,
+        "mtime_ns": 1794069152000000000,
+        "nlink": 1,
+        "size": 72,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 16695,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/result.json",
+      "sha256": "a1fb3995acf57e6e34cd3c352e63af591f8676aea4a90b73557b94ae3492074d",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820741277578,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 409136038,
+        "mode": 33152,
+        "mtime_ns": 1794070468000000000,
+        "nlink": 1,
+        "size": 16695,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 401408,
+      "bytes": 400312,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/server.log",
+      "sha256": "a6ab1e351f8e57688fc3a955647447d9c024fa33500dc6b650b0c34a5a9ce18b",
+      "signature": {
+        "blocks": 784,
+        "ctime_ns": 1794072820741277578,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 409136039,
+        "mode": 33152,
+        "mtime_ns": 1794070466000000000,
+        "nlink": 1,
+        "size": 400312,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829362,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "6f03d404afeab855f689b88452cfc8ad19cace1c772dccb2b54f37b718099132",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820745277580,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350093,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829362,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829362,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "63c9ebbce0f3703bfc353c5c156ac301a9dd7adf4e92f6492eaa52fb0ff36bfe",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820749277583,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350094,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829362,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829363,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "05cfde56db4d58602f3e7d6211b9d271c54a671000b406bacd0ec3e42d6d7a4d",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820753277585,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350095,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829363,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829363,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "994a8f08be3ea0a7da01693b148e5c1ab3498fd70703b63a4b6dfe3fd7f0cd89",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820753277585,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350096,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829363,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829363,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "4b0fd58ba319492f2b89c20625f760f85d06feea75966ea0c6af617a73bb8937",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820757277587,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350097,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829363,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829363,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "ce0ac00e0ace8b4fda73c6ead65524414dde02977f16707fa6dd0a4099c0aadd",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820761277590,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350098,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829363,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829363,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "fdeca76978c1dc5fda03bb2a9b92bc064f1c1dccab04cf2d2950e261a1de0a85",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820761277590,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350099,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829363,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 831488,
+      "bytes": 829363,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "10b16a1dc1d241e441ece58c7cf87f0130ff3b4333ec9d5680b291c92197b2e1",
+      "signature": {
+        "blocks": 1624,
+        "ctime_ns": 1794072820765277592,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350100,
+        "mode": 33152,
+        "mtime_ns": 1794070455000000000,
+        "nlink": 1,
+        "size": 829363,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 173,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/worker.log",
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820745277580,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 409136040,
+        "mode": 33152,
+        "mtime_ns": 1794070468000000000,
+        "nlink": 1,
+        "size": 173,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 36,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/drained.json",
+      "sha256": "3e8e345436b8d5cc6947c726aa0ab5210a5982fc33d9726f71e477c04c09a148",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820765277592,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902918,
+        "mode": 33152,
+        "mtime_ns": 1794070428000000000,
+        "nlink": 1,
+        "size": 36,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "37a6a74e6443c21a90b83d7fa726d331fb9877c9cc936b73b54aa630cb3b8760",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820769277594,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902919,
+        "mode": 33152,
+        "mtime_ns": 1794070435000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 533,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "1f41b244f16881f39e8bab967abb13f4924c0e04c13e0cc25b8a41d83519b103",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820769277594,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902920,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 533,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 72,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/ready.json",
+      "sha256": "8e7feb0789333bee66e9367d9375e66288e1ba18527909732be81b38ad34e0eb",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820769277594,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902921,
+        "mode": 33152,
+        "mtime_ns": 1794069170000000000,
+        "nlink": 1,
+        "size": 72,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 16882,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/result.json",
+      "sha256": "2199db8e6f55db1f6dfc17cc8da6d8405e8a0f5dab948efc8eeecfe428c6b5f1",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820769277594,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902922,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 16882,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 229376,
+      "bytes": 226227,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+      "sha256": "a210e461dc30afacae5de61127d7d7410fb15ec4b34982208db1153a5e99cdc4",
+      "signature": {
+        "blocks": 448,
+        "ctime_ns": 1794072820769277594,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902923,
+        "mode": 33152,
+        "mtime_ns": 1794070447000000000,
+        "nlink": 1,
+        "size": 226227,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 383,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server_ready.json",
+      "sha256": "13d4cf0374cdbd8f96e27df32c25b64360f3c6921a63a1a92224b5478e69e400",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820769277594,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902924,
+        "mode": 33152,
+        "mtime_ns": 1794069765000000000,
+        "nlink": 1,
+        "size": 383,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415264,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "c3550de3850a1fc57c27ad9251ba029c66fa19828e29121f86295641e54d51d2",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820773277596,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612269,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415264,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415264,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "865f37166cf0a7f551fccdfb6bd4cfded81f98ab86b1db7e645151061d68244f",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820777277599,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612270,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415264,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415265,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "58ac77571c8551cc942c7111d8c070add5f27ce36aa8b1ee60587f8b151e3ea7",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820781277601,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612271,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415265,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415265,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "594957e04cc136d6314ab29a6f00af0d1a55dd62dda70c57c3fb732e165559fe",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820789277605,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612272,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415265,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415265,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "6e5e87337339b41f971c14ea9900b04300af33ad4e82d9c2a644da66add383c4",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820793277608,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612273,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415265,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415265,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "abd2a469c7bc1647dacc6f29b4cf7a7d10f95230de86e2696abc68d6ec69328e",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820797277610,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612274,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415265,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415265,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "9656ab3c9e63e5b97949fa3e8eec0e6d8950f79f17fe9639e3d2ed895f8c363f",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820801277612,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612275,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415265,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1417216,
+      "bytes": 1415265,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "6e29886fd5218ced2f75363cd0ceb997226e23a82c96c06614b9b157573647f1",
+      "signature": {
+        "blocks": 2768,
+        "ctime_ns": 1794072820805277614,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612276,
+        "mode": 33152,
+        "mtime_ns": 1794070436000000000,
+        "nlink": 1,
+        "size": 1415265,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 173,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/worker.log",
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820769277594,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902925,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 173,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 36,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/drained.json",
+      "sha256": "c373beb62b2b66293594f09ee9257f8e24e9da8803a33e948c2dfbb1de95ae38",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820809277617,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691108,
+        "mode": 33152,
+        "mtime_ns": 1794070428000000000,
+        "nlink": 1,
+        "size": 36,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "4bca57de5b543d053e91e1949db938f5024a4a63712a6e1bca55525ddbb4cefb",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820809277617,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691109,
+        "mode": 33152,
+        "mtime_ns": 1794070425000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 248,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820809277617,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691112,
+        "mode": 33152,
+        "mtime_ns": 1794070462000000000,
+        "nlink": 1,
+        "size": 248,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 72,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/ready.json",
+      "sha256": "e7494c0811f311ff0a3ff4126d923dea85f8a85d92100547eb4bb8535d54301b",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820809277617,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691116,
+        "mode": 33152,
+        "mtime_ns": 1794069159000000000,
+        "nlink": 1,
+        "size": 72,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 16693,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/result.json",
+      "sha256": "4053f58d99f71904c5040c2d6a97984e02f9aa808ce88e35701c531c70570480",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820809277617,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691117,
+        "mode": 33152,
+        "mtime_ns": 1794070462000000000,
+        "nlink": 1,
+        "size": 16693,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 385024,
+      "bytes": 384900,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+      "sha256": "3068bd170feaffa61475d2e361c0554628608b3ddf847427a6dfdb909d1e775b",
+      "signature": {
+        "blocks": 752,
+        "ctime_ns": 1794072820809277617,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691118,
+        "mode": 33152,
+        "mtime_ns": 1794070461000000000,
+        "nlink": 1,
+        "size": 384900,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410509,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "0a1f95b611b5a910227b2739a3e0ccc3fcb07ec4694600b7e5da41f5b424b15c",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820813277619,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270390,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410509,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410509,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "151ecbc46eed5cc2011830b3291418613cb7d0c7c7eca095153582b12702d84f",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820817277622,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270391,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410509,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410516,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "c2010d548e6ee7fd57bbe14d7623d0de9fa6e1a05c5c4af761a91cdf31acee0d",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820825277626,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270392,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410516,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410516,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "5d10b1ad036ac19634852e0cfe1dee85e51956624412208a55d4af8b305c8bf3",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820829277628,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270393,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410516,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410516,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "eecf0a6bc2939c565cab774387c3d94a8a84cfa7bb5a7906d17f6e79840b2704",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820833277631,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270394,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410516,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410516,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "c4b62a0002b099f73dd91dbd5f6505adf1f380f35f508f61a2a0f7fe213f4e1d",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820837277633,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270395,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410516,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410516,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "b8f83a4915eaeff99c070e348f68162d89afe4bbf83dcb9a21d65a6edeaa36a1",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820841277635,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270396,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410516,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1413120,
+      "bytes": 1410516,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "1986c2f168e930a6c40aa03bf067558e3319480e88b3311de3b0fde528fe50d4",
+      "signature": {
+        "blocks": 2760,
+        "ctime_ns": 1794072820845277637,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270397,
+        "mode": 33152,
+        "mtime_ns": 1794070449000000000,
+        "nlink": 1,
+        "size": 1410516,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 173,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/worker.log",
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820813277619,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691119,
+        "mode": 33152,
+        "mtime_ns": 1794070463000000000,
+        "nlink": 1,
+        "size": 173,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 36,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/drained.json",
+      "sha256": "cfe54ef67abe0514bc2e71d8b7018eefb13096ed3304e1f87fa038cda5032fce",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820849277640,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298004,
+        "mode": 33152,
+        "mtime_ns": 1794070428000000000,
+        "nlink": 1,
+        "size": 36,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "24817a2ad515d497f5db13d6f0bcb209ebe227e917ce14d6418adea4094dbed3",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820849277640,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298005,
+        "mode": 33152,
+        "mtime_ns": 1794070421000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 248,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820849277640,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298006,
+        "mode": 33152,
+        "mtime_ns": 1794070462000000000,
+        "nlink": 1,
+        "size": 248,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 72,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/ready.json",
+      "sha256": "4bbb289000ad5b16ce6317026b4fcb83ff8e1a00778d7d1a7718075be7779a5b",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820849277640,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298007,
+        "mode": 33152,
+        "mtime_ns": 1794069158000000000,
+        "nlink": 1,
+        "size": 72,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 16693,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/result.json",
+      "sha256": "b9958ea0932ef9b4266f0256c964f0421347aac1a0345732c27248bebf6cfced",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820849277640,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298008,
+        "mode": 33152,
+        "mtime_ns": 1794070463000000000,
+        "nlink": 1,
+        "size": 16693,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 393216,
+      "bytes": 392226,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+      "sha256": "03fd1860e321c67e45c98b4e05c796061354fc859c7a107863babc1d41335277",
+      "signature": {
+        "blocks": 768,
+        "ctime_ns": 1794072820849277640,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298009,
+        "mode": 33152,
+        "mtime_ns": 1794070460000000000,
+        "nlink": 1,
+        "size": 392226,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405525,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "bf663d9a30d47f46cbdbbe335515ef8c0453afb2a6cebd63ea3e77df5ca486d8",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820853277642,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875582871,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405525,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405525,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "04f0957c32b9298d86c2d6d6fe930b79966b409f6130e669246d65b7c9f0d65a",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820861277646,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875582872,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405525,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405526,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "5456b4193b1e191f3c958c8fc3128dd1618bddcc285d1cc6add78a5fb9a73df0",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820865277649,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875610517,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405526,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405526,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "7fbb65a5cea748512b3aa675058aff8b5088eb12823d458e1f19cb5ad73127eb",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820869277651,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875762880,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405526,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405526,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "fac49b4997e195ccf867469bee454de2be0fe6d8def85f931962669aead6d0ef",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820873277654,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875762881,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405526,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405526,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "e7ae71e3fe3bd845bd2dc167d51a462d8b458b60f6d4dfc3af6cf1d53f4819b5",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820877277655,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875762978,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405526,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405526,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "11a21a2bef6ca2f221296bd4e0f689865c8f1611ce454ec095fb89c9cc92a159",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820881277658,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875762983,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405526,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1405526,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "0874dec830671fa7c8950374b9313e255641bef283bc6d7c27ca9c9adab8c076",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820889277663,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875763103,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1405526,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 173,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/worker.log",
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820853277642,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298010,
+        "mode": 33152,
+        "mtime_ns": 1794070464000000000,
+        "nlink": 1,
+        "size": 173,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 36,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/drained.json",
+      "sha256": "9753e843ccac1e61ccd580af744ca9574916825c9b55640ef12a5190867c4f0a",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820889277663,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942045,
+        "mode": 33152,
+        "mtime_ns": 1794070429000000000,
+        "nlink": 1,
+        "size": 36,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 64,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/heartbeat.json",
+      "sha256": "765f73280f4f2761df4c8cb7fadd19c7419076e0f4355ab578cb3ca75d782310",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820889277663,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942046,
+        "mode": 33152,
+        "mtime_ns": 1794070422000000000,
+        "nlink": 1,
+        "size": 64,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 248,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/native_stopped.json",
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820889277663,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942047,
+        "mode": 33152,
+        "mtime_ns": 1794070462000000000,
+        "nlink": 1,
+        "size": 248,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 71,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/ready.json",
+      "sha256": "855078ca3630b4ffd1b91b5270dc542bf695f83c64f74f543bc93da044b2fbbe",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820889277663,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942048,
+        "mode": 33152,
+        "mtime_ns": 1794069169000000000,
+        "nlink": 1,
+        "size": 71,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 20480,
+      "bytes": 16690,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/result.json",
+      "sha256": "a6fe90a466e8770283478e46dcb711c31c41ad2cd23c2203f2babb1712e591b5",
+      "signature": {
+        "blocks": 40,
+        "ctime_ns": 1794072820889277663,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942049,
+        "mode": 33152,
+        "mtime_ns": 1794070463000000000,
+        "nlink": 1,
+        "size": 16690,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 405504,
+      "bytes": 401547,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+      "sha256": "f17efe0fa5e7866d55195565f78cd878ef1a2ffd694161de8102abc8a12db3c5",
+      "signature": {
+        "blocks": 792,
+        "ctime_ns": 1794072820893277665,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942050,
+        "mode": 33152,
+        "mtime_ns": 1794070460000000000,
+        "nlink": 1,
+        "size": 401547,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407661,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank0.json",
+      "sha256": "6691dabbba10ac7ec547d691fac6613439db6a61cadbb194e54d145f85f48333",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820897277667,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1014779348,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407661,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407661,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank1.json",
+      "sha256": "fed4aba25c6327d929503691f8d53f5208b0086bbc836115431404813a65e53c",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820901277669,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1014901363,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407661,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407662,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank2.json",
+      "sha256": "af6e4ba6dd1d65dd0be6e4a7b3bba30b94473c018cc2a8f7fc83be0647ea9034",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820905277672,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1014901364,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407662,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407662,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank3.json",
+      "sha256": "be782a8ac489dbec7faca4cb65ed42ca83a15a134b662cbfd0dcab3e6c00c7e6",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820909277674,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1014901365,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407662,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407662,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank4.json",
+      "sha256": "2a98f6ce1bb0a908e18e550d1b940bc8d9e1f7546f73e16b1f2fdf7dfe219371",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820913277676,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1007020864,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407662,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407662,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank5.json",
+      "sha256": "5742fb6f022221478b0da6bc54ae433113fb261a1a0a037ef96e1d714bb9bf8b",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820917277678,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1007020865,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407662,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407662,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank6.json",
+      "sha256": "69e8ccbe2b763df9073321f1c1be17fb5605b7ddbf57b8304c604516cec5889e",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820921277681,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1007020866,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407662,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 1409024,
+      "bytes": 1407662,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving/rank7.json",
+      "sha256": "4699017c5a8a80c98baeb3036d6fff347b0cb9d8179ed3822e0169f85cf08109",
+      "signature": {
+        "blocks": 2752,
+        "ctime_ns": 1794072820929277686,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1007020867,
+        "mode": 33152,
+        "mtime_ns": 1794070450000000000,
+        "nlink": 1,
+        "size": 1407662,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 173,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/worker.log",
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820893277665,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942051,
+        "mode": 33152,
+        "mtime_ns": 1794070463000000000,
+        "nlink": 1,
+        "size": 173,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 6161,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/platform_terminal_receipt.json",
+      "sha256": "0893375959926c58edbf9c469cb3bfe9db5ac9ecfd29867e374fa8c82547ca2c",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794072820933277687,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 2013520884,
+        "mode": 33152,
+        "mtime_ns": 1794071177344921068,
+        "nlink": 1,
+        "size": 6161,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 22,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/replay_finished.json",
+      "sha256": "1e3f6691f455051e8adb15d961e4bf3c7a17e83dd88b2afdd13315cc288250bb",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 2013520881,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 22,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 24576,
+      "bytes": 23334,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/canonical_repetitions.json",
+      "sha256": "c41d3a3d941a420c7d32bb49e299f6429760aa5886cb0e38e76313cb1da2fa1e",
+      "signature": {
+        "blocks": 48,
+        "ctime_ns": 1794072820929277686,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1077061931,
+        "mode": 33152,
+        "mtime_ns": 1794070423000000000,
+        "nlink": 1,
+        "size": 23334,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 372736,
+      "bytes": 370244,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/client_requests.jsonl",
+      "sha256": "e0a99b58b9974418000797faae31cfd13b06c87e1662c543decac3334dda7949",
+      "signature": {
+        "blocks": 728,
+        "ctime_ns": 1794072820929277686,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1077061932,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 370244,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 4096,
+      "bytes": 74,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/proxy.log",
+      "sha256": "b3aa8b076c425cf27f0853c83e999a8b3005a6cf5adb9a4d348f9cade8ea614d",
+      "signature": {
+        "blocks": 8,
+        "ctime_ns": 1794072820933277687,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1077061933,
+        "mode": 33152,
+        "mtime_ns": 1794070426000000000,
+        "nlink": 1,
+        "size": 74,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 557056,
+      "bytes": 555777,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/proxy_requests.jsonl",
+      "sha256": "dbbf804b0e977ed6e420ec6bc93372f02b8a27fabdd855b36c76b1bb50cf692d",
+      "signature": {
+        "blocks": 1088,
+        "ctime_ns": 1794072820933277687,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1077061934,
+        "mode": 33152,
+        "mtime_ns": 1794070423000000000,
+        "nlink": 1,
+        "size": 555777,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 32768,
+      "bytes": 28842,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run/replay_summary.json",
+      "sha256": "e487e07e447a07c9caee452a41f41b00ac25ff761e3e06f4adcdb9f303466a9b",
+      "signature": {
+        "blocks": 64,
+        "ctime_ns": 1794072820933277687,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1077061936,
+        "mode": 33152,
+        "mtime_ns": 1794070427000000000,
+        "nlink": 1,
+        "size": 28842,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 16384,
+      "bytes": 12562,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run_manifest.json",
+      "sha256": "45315f093c994f0af75ffcbcf36ab202297b2420c96452f576e8b5672dfdb0fe",
+      "signature": {
+        "blocks": 32,
+        "ctime_ns": 1794072820661277532,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 2013520882,
+        "mode": 33152,
+        "mtime_ns": 1794068933000000000,
+        "nlink": 1,
+        "size": 12562,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 8192,
+      "bytes": 4770,
+      "group": "generation08",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/result.json",
+      "sha256": "31d9225729dd2001f7356e611e38f56c7997703e2222d348e4f9890caffc8710",
+      "signature": {
+        "blocks": 16,
+        "ctime_ns": 1794072875981311760,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1613821918,
+        "mode": 33204,
+        "mtime_ns": 1794072875981311760,
+        "nlink": 1,
+        "size": 4770,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 2114797568,
+      "bytes": 4332828936,
+      "group": "launcher_log",
+      "kind": "file",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch/launcher.log",
+      "sha256": "8881b0800f66db063159124e173301897b97df70abe980365a94ea74c2b63d2f",
+      "signature": {
+        "blocks": 4130464,
+        "ctime_ns": 1794124495161655503,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 346583156,
+        "mode": 33152,
+        "mtime_ns": 1794124495161655503,
+        "nlink": 1,
+        "size": 4332828936,
+        "uid": 10250
+      }
+    }
+  ],
+  "deleted_summary": {
+    "allocated_bytes": 2193342464,
+    "bytes": 4410876394,
+    "files": 174
+  },
+  "directory_allocated_bytes_at_removal": 0,
+  "directory_allocated_bytes_before": 0,
+  "errors": [],
+  "finished_utc": "2026-11-08T08:11:30.040441+00:00",
+  "interpreter": "/usr/bin/python3",
+  "journal_sha256": "5983fa1b2c87a923154fec764151fe35b7a6282d288dc832d99b5132b6583ab5",
+  "manifest_sha256": "8581e28f4c7a8f019615f493e1f58b8586fd6e7ca2a763cbb4c9387bf2f9004a",
+  "process_prerequisite": {
+    "clear_for_deletion": true,
+    "copy": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/cleanup_scope_processes.json",
+    "limitation": "Lead-supplied host scan; no executor process scan. 127/289 entries had unreadable links; lead reports 14/15 sampled entries had exited and the other was pid 1 /sbin/init. Raw scope_roots names before/after snapshots but omits before_final/after_final; assignment explicitly accepts this file as the prerequisite for all three groups. The sample follow-up is supplied in the assignment, not in the raw scan JSON.",
+    "observed_utc": "2026-11-08T07:59:12.772458+00:00",
+    "processes_scanned": 289,
+    "sha256": "20c553d72918382e08f7b636c9ab4d1896cd7f155c449fda5132534164340296",
+    "source": "/data/ycfeng/tmp/ds4_runs/cleanup-scan-1108b/scratch/cleanup_scope_processes.json"
+  },
+  "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "reclaimed_bytes_basis": "Sum of st_blocks * 512 for deleted single-link regular files; directory blocks separate. No global free-space attribution.",
+  "removed_directories": [
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125477677849976,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 67673436,
+        "mode": 16893,
+        "mtime_ns": 1794125477677849976,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125478773850189,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 203121729,
+        "mode": 16893,
+        "mtime_ns": 1794125478773850189,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125480137850452,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 341171361,
+        "mode": 16893,
+        "mtime_ns": 1794125480137850452,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125481301850686,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 486350092,
+        "mode": 16893,
+        "mtime_ns": 1794125481301850686,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125482265850880,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 609612268,
+        "mode": 16893,
+        "mtime_ns": 1794125482265850880,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125482969851022,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 740270389,
+        "mode": 16893,
+        "mtime_ns": 1794125482969851022,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125484165851263,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 875582870,
+        "mode": 16893,
+        "mtime_ns": 1794125484165851263,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun/serving",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125485133851452,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1014779344,
+        "mode": 16893,
+        "mtime_ns": 1794125485133851452,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125475105849468,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1947163655,
+        "mode": 16893,
+        "mtime_ns": 1794125475105849468,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0031.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486145851648,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 4917652,
+        "mode": 16893,
+        "mtime_ns": 1794125486145851648,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0139.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486237851666,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 135509868,
+        "mode": 16893,
+        "mtime_ns": 1794125486237851666,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0180.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486345851687,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 273304683,
+        "mode": 16893,
+        "mtime_ns": 1794125486345851687,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0228.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486405851699,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 408761921,
+        "mode": 16893,
+        "mtime_ns": 1794125486405851699,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0472.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486489851715,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 536902917,
+        "mode": 16893,
+        "mtime_ns": 1794125486489851715,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0606.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486569851730,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 682691107,
+        "mode": 16893,
+        "mtime_ns": 1794125486569851730,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-0738.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486629851742,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 806298003,
+        "mode": 16893,
+        "mtime_ns": 1794125486629851742,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes/gpu-h200-1079.lgcm.sh.istep.fun",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486665851749,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 952942043,
+        "mode": 16893,
+        "mtime_ns": 1794125486665851749,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125486697851755,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886551755,
+        "mode": 16893,
+        "mtime_ns": 1794125486697851755,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/nodes",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125487389851889,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 2132499167,
+        "mode": 16893,
+        "mtime_ns": 1794125487389851889,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/run",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125485821851585,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1077061930,
+        "mode": 16893,
+        "mtime_ns": 1794125485821851585,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs/groundtruth_clean",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125487497851910,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1815120140,
+        "mode": 16893,
+        "mtime_ns": 1794125487497851910,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125487617851933,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 2013520880,
+        "mode": 16893,
+        "mtime_ns": 1794125487617851933,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/analysis",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125474389849324,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1680732507,
+        "mode": 16893,
+        "mtime_ns": 1794125474389849324,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case/runs",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125487781851965,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1746665038,
+        "mode": 16893,
+        "mtime_ns": 1794125487781851965,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r/run",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125476041849656,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1478608361,
+        "mode": 16893,
+        "mtime_ns": 1794125476041849656,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs/trace",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125476729849792,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1815120134,
+        "mode": 16893,
+        "mtime_ns": 1794125476729849792,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs/groundtruth_clean",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125487901851988,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1947163654,
+        "mode": 16893,
+        "mtime_ns": 1794125487901851988,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate/p2_64_r4_case",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125488013852010,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1613821916,
+        "mode": 16893,
+        "mtime_ns": 1794125488013852010,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs/p2_64r",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125488101852027,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1410487922,
+        "mode": 16893,
+        "mtime_ns": 1794125488101852027,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/analysis",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125476329849715,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1211316546,
+        "mode": 16893,
+        "mtime_ns": 1794125476329849715,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/inputs",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125488213852049,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1746665033,
+        "mode": 16893,
+        "mtime_ns": 1794125488213852049,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case/runs",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125488425852091,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1886551754,
+        "mode": 16893,
+        "mtime_ns": 1794125488425852091,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/gate",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125488725852152,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1556176234,
+        "mode": 16893,
+        "mtime_ns": 1794125488725852152,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/inputs",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125488945852196,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1344911959,
+        "mode": 16893,
+        "mtime_ns": 1794125488945852196,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08/r4_case",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125489169852241,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1680732505,
+        "mode": 16893,
+        "mtime_ns": 1794125489169852241,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    },
+    {
+      "allocated_bytes": 0,
+      "bytes": 6,
+      "kind": "directory",
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08",
+      "signature": {
+        "blocks": 0,
+        "ctime_ns": 1794125489397852287,
+        "dev": 64784,
+        "gid": 10250,
+        "ino": 1613821910,
+        "mode": 16893,
+        "mtime_ns": 1794125489397852287,
+        "nlink": 2,
+        "size": 6,
+        "uid": 10250
+      }
+    }
+  ],
+  "removed_directory_count": 36,
+  "schema_version": 1,
+  "started_utc": "2026-11-08T08:11:13.874289+00:00",
+  "status": "PARTIAL"
+}

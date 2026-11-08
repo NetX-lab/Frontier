@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | Cleaned up the generation08-era artifacts: 313 files and 36 empty directories, 2,570,104,832 allocated bytes: 178 in-repo files over two codex-implement rounds and the lead's 135-file out-of-repo duplicate removal; the published P2-64 metrics were also recomputed from the row CSVs and reproduce the report exactly. |
 | 2026-11-08 | I-015 opened and resolved: a launcher from the ended G0-D track had polled a deleted job for 18 days and grown its log to 4.33 GB; stopped on YC's approval after identity and job-state evidence. |
 | 2026-11-08 | I-014 resolved: the copy job later succeeded on its own and both copy routes hold identical job output (`PAYLOAD_IDENTICAL`), so the deviation has no numerical consequence. |
 | 2026-11-08 | I-014 opened: the generation08 CPU copy job stayed in Starting after an image pull failure; the copy came from the read-only SSH route instead. Also recorded that compare.py needs `PYTHONPATH` set to the repository root. |

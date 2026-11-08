@@ -1,0 +1,21 @@
+{
+  "candidate_summary": {
+    "allocated_bytes": 2193342464,
+    "bytes": 4410876394,
+    "files": 174
+  },
+  "log_policy": "SHA256 read once at preparation; unchanged dev/inode/size/allocation/mtime/ctime rechecked before unlink",
+  "manifest_sha256": "8581e28f4c7a8f019615f493e1f58b8586fd6e7ca2a763cbb4c9387bf2f9004a",
+  "metadata_checked": 1174,
+  "observed_utc": "2026-11-08T08:11:14.202763+00:00",
+  "process_prerequisite": {
+    "clear_for_deletion": true,
+    "copy": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/cleanup_scope_processes.json",
+    "limitation": "Lead-supplied host scan; no executor process scan. 127/289 entries had unreadable links; lead reports 14/15 sampled entries had exited and the other was pid 1 /sbin/init. Raw scope_roots names before/after snapshots but omits before_final/after_final; assignment explicitly accepts this file as the prerequisite for all three groups. The sample follow-up is supplied in the assignment, not in the raw scan JSON.",
+    "observed_utc": "2026-11-08T07:59:12.772458+00:00",
+    "processes_scanned": 289,
+    "sha256": "20c553d72918382e08f7b636c9ab4d1896cd7f155c449fda5132534164340296",
+    "source": "/data/ycfeng/tmp/ds4_runs/cleanup-scan-1108b/scratch/cleanup_scope_processes.json"
+  },
+  "status": "PASS"
+}

@@ -624,12 +624,16 @@ The following completed A6 history retains its original all-request verdicts. D-
   `h200_mainline/p2_64_formal_retry08/platform_copy_removal.json`, `REMOVED_SURVIVOR_INTACT`. The cross-check was
   re-run immediately beforehand and returned the same `PAYLOAD_IDENTICAL` verdict and joint hash, and the SSH copy's
   joint hash is unchanged across the removal. Total reclaimed across both: 2,269,343,744 allocated bytes.
-- in-progress — the four 75 MB protected-hash inventories of the previous run are still on disk. The executor declined
-  them correctly: the assignment table said 300,759,552 allocated bytes and the files hold 300,761,088, a 1,536-byte
-  error in the lead's table. The lead re-measured, confirmed the executor's figure, and confirmed that all four files'
-  sizes and sha256 values equal what the committed `cleanup_20261107_gen05_07/lead_acceptance.json` records under
-  `snapshot_files_not_committed`, so deleting them loses nothing. Follow-up request
-  `a177497b-b00c-479c-b8f8-bad6e9cf604e` with the corrected table (`cleanup_20261108_gen08/assignment_2.md`).
+- completed — the four 75 MB protected-hash inventories of the previous run are deleted too, 300,761,088 allocated
+  bytes, through follow-up request `a177497b-b00c-479c-b8f8-bad6e9cf604e` (`cleanup_20261108_gen08/assignment_2.md`,
+  receipt `deletion_receipt_round2.json`). The first round had declined them correctly: the assignment table said
+  300,759,552 allocated bytes and the files hold 300,761,088, a 1,536-byte error in the lead's table. The lead
+  re-measured, confirmed the executor's figure, and confirmed that all four files' sizes and sha256 values equal what
+  the committed `cleanup_20261107_gen05_07/lead_acceptance.json` records under `snapshot_files_not_committed`, so
+  deleting them lost nothing; the follow-up ran against the corrected table and reports a 0-byte difference. Lead
+  checks: `verify_cleanup_round2.py` exit 0 PASS, 0 `protected_hash` files remain, the directory holds its 25
+  committed files, and `lead_acceptance.json` is unchanged at sha256 `f15ce87b...`. Cleanup total: 2,570,104,832
+  allocated bytes over the three deletions, `lead_acceptance.json` verdict ACCEPTED.
 - The executor's final pass reported an intervening change to
   `test_report_2026-11-07_p2_64_generation08_formal.md` and asked who wrote it. That was the lead, editing the report
   while the verification ran. Its handling was right: it preserved the file, did not reset its baseline, and reported

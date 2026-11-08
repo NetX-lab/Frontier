@@ -1,0 +1,101 @@
+{
+  "artifacts": [
+    {
+      "bytes": 9117,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/prepare_cleanup_round2.py",
+      "sha256": "6055c3bc531ba58d546a0b04bc4c76ce4054e73920fc218a6697dcfe3c7f08ec"
+    },
+    {
+      "bytes": 6862,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/execute_cleanup_round2.py",
+      "sha256": "85fc72265ec64bdef94c9218c37987e19a6520a4ba582c27914e3404b267e168"
+    },
+    {
+      "bytes": 15217,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/verify_cleanup_round2.py",
+      "sha256": "a5cfa14b0a62ee38ee4d7af6bfa5566eba0dee685a7989a6a4485d2c74ad2d8e"
+    },
+    {
+      "bytes": 38768,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/scoped_inventory_before_round2.json",
+      "sha256": "9801e54251858b00e821ec74c2af31d29d8fe9536a91bfe715ad698900e580cd"
+    },
+    {
+      "bytes": 32971,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/deletion_manifest_round2.json",
+      "sha256": "ebbfb489d0c75746d34ce10f36cddd72349f555abc314a7270b7632fd66c1983"
+    },
+    {
+      "bytes": 1307,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/validation_pre_delete_round2.json",
+      "sha256": "bce176a48c4754ddaa83f7f49a0d1560ea383082a29d537e3ffb10cdce51169b"
+    },
+    {
+      "bytes": 4948,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/deletion_journal_round2.jsonl",
+      "sha256": "69d2267ca0eb90dc11f70f2631e1605989e4d7c1b8f0554ebaf74195651ddb16"
+    },
+    {
+      "bytes": 8152,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/deletion_receipt_round2.json",
+      "sha256": "5f1c9be4f286a8c33f0d4ebabc68b1bcf889cd2929dd224d8d425ee7e5b44458"
+    },
+    {
+      "bytes": 47267,
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/verification_round2.json",
+      "sha256": "b6e2032a35b14858c3a2cf1eff5ed7b0e3a7cb8dd6f38430ab95f281de66bfae"
+    }
+  ],
+  "commands": [
+    {
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/prepare_cleanup_round2.py",
+      "observed": "Exit 0; PASS_PREPARED; 4 files, 300753869 logical bytes, 300761088 allocated bytes, 25 first-run survivor matches; all three round-two scripts parsed with ast.parse.",
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/execute_cleanup_round2.py",
+      "observed": "Exit 0; PASS_EXECUTED; 4 deleted files, no removed directories, no declined files, no errors.",
+      "status": "PASS"
+    },
+    {
+      "command": "python3 -B task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/verify_cleanup_round2.py",
+      "observed": "Exit 0; PASS; all four targets absent; 25/25 survivor hash/metadata matches; 22 pre-existing record files preserved; 19/19 first-run saved record hashes matched; 8 journal events reconciled; no unexpected changes.",
+      "status": "PASS"
+    }
+  ],
+  "concurrent_record_addition": {
+    "actor": "Not independently identified; the content is a lead acceptance record. No executor command created this file.",
+    "bytes": 4230,
+    "content_verdict": "ACCEPTED_PARTIAL for the first run",
+    "mtime_utc": "2026-11-08T08:19:28.765946+00:00",
+    "observed": "Absent from initial directory listing; present before round-two preparation.",
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261108_gen08/lead_acceptance.json",
+    "preserved_after_preparation": true,
+    "sha256": "088c953ce9b2ab69cc4a145baa495645c273df903fb9758ad3cae619c05e4dd7"
+  },
+  "expected_parent_metadata_changes": {
+    "ctime_ns": {
+      "after": 1794126050529962493,
+      "before": 1794045078405215054
+    },
+    "mtime_ns": {
+      "after": 1794126050529962493,
+      "before": 1794045078405215054
+    }
+  },
+  "interpreter": "/usr/bin/python3",
+  "not_run": [
+    "Git commands",
+    "Host process scan",
+    "Platform/RJob operations",
+    "GPU operations",
+    "Dependency installation",
+    "Inventories of generation08_run2, SSH copy, launcher-log siblings, or task records outside round-two scope"
+  ],
+  "note": "Results transcribed from executed command outputs; original records untouched. Self excluded from artifact hashes.",
+  "observed_utc": "2026-11-08T08:21:24.188490+00:00",
+  "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "round": 2,
+  "schema_version": 1,
+  "working_root": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028"
+}

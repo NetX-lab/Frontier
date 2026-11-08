@@ -1,0 +1,208 @@
+{
+ "all_links_readable": false,
+ "clear_for_deletion": true,
+ "observed_utc": "2026-11-08T07:59:12.772458+00:00",
+ "operation": "read_only_scan_no_signal",
+ "processes_scanned": 289,
+ "processes_with_unreadable_links": 127,
+ "referencing_pids": [],
+ "referencing_processes": [],
+ "scope_roots": [
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json",
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json",
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08",
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch/launcher.log",
+  "/data/ycfeng/tmp/ds4_runs/p64-formal5-prepare-1104b/scratch",
+  "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch",
+  "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch",
+  "/data/ycfeng/tmp/ds4_runs/p64-formal7-inspect-1107o/scratch",
+  "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch",
+  "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-post-1107n.md",
+  "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-post-1107n.sh",
+  "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08"
+ ],
+ "scope_roots_present": {
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_after.json": true,
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/cleanup_20261107_gen05_07/protected_hash_before.json": true,
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08": true,
+  "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/native_track_20261020/g0d_launch/launcher.log": true,
+  "/data/ycfeng/tmp/ds4_runs/p64-formal5-prepare-1104b/scratch": true,
+  "/data/ycfeng/tmp/ds4_runs/p64-formal5-submit-1107e/scratch": true,
+  "/data/ycfeng/tmp/ds4_runs/p64-formal6-submit-1107j/scratch": true,
+  "/data/ycfeng/tmp/ds4_runs/p64-formal7-inspect-1107o/scratch": true,
+  "/data/ycfeng/tmp/ds4_runs/p64-formal7-submit-1107m/scratch": true,
+  "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-post-1107n.md": false,
+  "/data/ycfeng/tmp/ds4_runs/prompts/p64-formal7-post-1107n.sh": false,
+  "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08": true
+ },
+ "unreadable_sample": [
+  {
+   "argv": [
+    "/sbin/init"
+   ],
+   "pid": 1,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "/lib/systemd/systemd-udevd"
+   ],
+   "pid": 1020564,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "@dbus-daemon",
+    "--system",
+    "--address=systemd:"
+   ],
+   "pid": 1341266,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "/lib/systemd/systemd-logind"
+   ],
+   "pid": 1341333,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "/usr/libexec/polkitd",
+    "--no-debug"
+   ],
+   "pid": 1341413,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "sshd: brainpp [priv]"
+   ],
+   "pid": 1682266,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "sshd: brainpp@pts/1"
+   ],
+   "pid": 1682398,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "/usr/bin/python3",
+    "-I",
+    "/usr/lib/claude-vps/runtime.py"
+   ],
+   "pid": 1863795,
+   "unreadable": [
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "/usr/bin/python3",
+    "-I",
+    "/usr/lib/claude-vps/runtime.py"
+   ],
+   "pid": 1863947,
+   "unreadable": [
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "sshd: brainpp [priv]"
+   ],
+   "pid": 1960661,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "sshd: brainpp@pts/6"
+   ],
+   "pid": 1960716,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "sshd: brainpp [priv]"
+   ],
+   "pid": 2007740,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "sshd: brainpp@notty"
+   ],
+   "pid": 2007819,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "/usr/libexec/packagekitd"
+   ],
+   "pid": 2130895,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  },
+  {
+   "argv": [
+    "/usr/bin/containerd"
+   ],
+   "pid": 2137749,
+   "unreadable": [
+    "cwd",
+    "exe",
+    "fd"
+   ]
+  }
+ ]
+}
