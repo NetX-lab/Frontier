@@ -611,12 +611,23 @@ The following completed A6 history retains its original all-request verdicts. D-
   read the job once (`NotFoundException`, 18 days after submission) and scanned the host processes; turn 2 stopped the
   process behind an exact-argv gate, one SIGTERM, exit in 0.5 s, `STOPPED_LOG_QUIET`. Lead check: no growth over 25 s,
   mtime frozen at the SIGTERM instant. This removes the cleanup blocker that a changing protected input created.
-- pending — cleanup via codex-implement: the invalid `generation08` compare output, the
-  duplicate platform-route copy, the superseded protected-hash snapshots, generation07/08 prompt and scratch
-  duplicates, and the 4.3 GB tail of repeated proxy tracebacks in the G0-D launcher log. The previous attempt
-  (`cleanup_20261107_gen05_07`) deleted nothing because the host process check and a stable protected-input hash were
-  both unavailable. The log is now quiet, and the host process check must come from the lead through Pi, since the
-  codex-implement executor runs in its own PID namespace and cannot perform it.
+- in-progress — cleanup of the generation08-era artifacts, `cleanup_20261108_gen08/` (codex-implement request
+  `909a1443-fd16-4aa5-aa44-58537cab480c`). Three in-repo groups, about 2.38 GiB allocated: the invalid `generation08`
+  comparison output (173 files, UNVERIFIED, superseded by `generation08_run2`); the G0-D launcher log (2.0 GiB
+  allocated, 389,322 repeated poll tracebacks, identity preserved in the sibling `launcher_log_evidence.json`); and the
+  four 75 MB protected-hash inventories of the previous run, whose sizes and hashes are already recorded under
+  `snapshot_files_not_committed` in the committed `lead_acceptance.json`. The duplicate platform-route copy
+  (76,001,280 allocated bytes) lies outside the working root, so codex-implement cannot reach it and it stays with the
+  lead.
+- Prerequisites the first attempt lacked are now supplied: the host process check comes from the lead through Pi
+  (`cleanup-scan-1108b`, 289 processes, `clear_for_deletion: true`; 127 entries had unreadable links, of which 14 of 15
+  sampled had already exited and the last was pid 1), and the protected-input snapshot is scoped to the deletion's
+  neighbours instead of hashing 119,453 files twice.
+- The gen05-07 scratch cleanup is already complete and accepted: `cleanup_20261107_gen05_07/lead_acceptance.json`
+  records ACCEPTED with 449 files and 32,483,199 bytes deleted, 32 uncovered files kept, and all eight checks true, via
+  codex-implement request `15216d7e` after `890bf5f2` was blocked. Current state agrees: the 8 fully covered labels have
+  no `scratch` directory, the 5 partially covered labels hold exactly the 32 retained files, and both superseded
+  generation07 prompts are gone.
 
 ## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
 
