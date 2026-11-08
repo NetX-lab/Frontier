@@ -597,7 +597,8 @@ The following completed A6 history retains its original all-request verdicts. D-
   later pull succeeded, it ended Succeeded at 17:32:43Z and its launcher stopped it and exited. Cross-check 2026-11-08
   (`p2_64_formal_retry08/copy_route_crosscheck.py`, YC confirmed): both copies hold the same 130 job-output files,
   75,585,300 bytes, joint sha256 `5ef547e0a1206076...`; only each copy tool's own route files differ by design, so the
-  deviation has no numerical consequence (I-014 resolved). The platform-route copy is now a cleanup duplicate.
+  deviation has no numerical consequence (I-014 resolved). The platform-route copy was then removed as a duplicate; see
+  the cleanup bullets below.
 - completed — post-run comparison. First run without `PYTHONPATH` stopped in `run_gate.py` (output `generation08`,
   UNVERIFIED, for cleanup); rerun with the recorded environment: `generation08_run2/result.json` TOOLS_FINISHED, all
   seven stages PASS. Pair coverage COVERED (16/16 pairs in every repeat), R5 PASS, routing MATCH, no formal openers.
@@ -611,14 +612,29 @@ The following completed A6 history retains its original all-request verdicts. D-
   read the job once (`NotFoundException`, 18 days after submission) and scanned the host processes; turn 2 stopped the
   process behind an exact-argv gate, one SIGTERM, exit in 0.5 s, `STOPPED_LOG_QUIET`. Lead check: no growth over 25 s,
   mtime frozen at the SIGTERM instant. This removes the cleanup blocker that a changing protected input created.
-- in-progress — cleanup of the generation08-era artifacts, `cleanup_20261108_gen08/` (codex-implement request
-  `909a1443-fd16-4aa5-aa44-58537cab480c`). Three in-repo groups, about 2.38 GiB allocated: the invalid `generation08`
-  comparison output (173 files, UNVERIFIED, superseded by `generation08_run2`); the G0-D launcher log (2.0 GiB
-  allocated, 389,322 repeated poll tracebacks, identity preserved in the sibling `launcher_log_evidence.json`); and the
-  four 75 MB protected-hash inventories of the previous run, whose sizes and hashes are already recorded under
-  `snapshot_files_not_committed` in the committed `lead_acceptance.json`. The duplicate platform-route copy
-  (76,001,280 allocated bytes) lies outside the working root, so codex-implement cannot reach it and it stays with the
-  lead.
+- completed — cleanup of the generation08-era artifacts, `cleanup_20261108_gen08/` (codex-implement request
+  `909a1443-fd16-4aa5-aa44-58537cab480c`, lead verdict `ACCEPTED_PARTIAL` in `lead_acceptance.json`). Deleted 174 files
+  and 36 empty directories, 2,193,342,464 allocated bytes: the invalid `generation08` comparison output (173 files,
+  UNVERIFIED, superseded by `generation08_run2`) and the G0-D launcher log (2.0 GiB allocated, 389,322 repeated poll
+  tracebacks; the deleted file's sha256 equals the one in the sibling `launcher_log_evidence.json`). Lead checks: both
+  paths absent, `generation08_run2` 182 files and the SSH copy 132 files unchanged, the 29 launcher siblings and the 29
+  files of `cleanup_20261107_gen05_07` unchanged, evidence hashes unchanged.
+- completed — the lead removed the out-of-repo duplicate platform-route copy itself, since it lies outside what
+  codex-implement can write: 135 files, 76,001,280 allocated bytes, receipt
+  `h200_mainline/p2_64_formal_retry08/platform_copy_removal.json`, `REMOVED_SURVIVOR_INTACT`. The cross-check was
+  re-run immediately beforehand and returned the same `PAYLOAD_IDENTICAL` verdict and joint hash, and the SSH copy's
+  joint hash is unchanged across the removal. Total reclaimed across both: 2,269,343,744 allocated bytes.
+- in-progress — the four 75 MB protected-hash inventories of the previous run are still on disk. The executor declined
+  them correctly: the assignment table said 300,759,552 allocated bytes and the files hold 300,761,088, a 1,536-byte
+  error in the lead's table. The lead re-measured, confirmed the executor's figure, and confirmed that all four files'
+  sizes and sha256 values equal what the committed `cleanup_20261107_gen05_07/lead_acceptance.json` records under
+  `snapshot_files_not_committed`, so deleting them loses nothing. Follow-up request
+  `a177497b-b00c-479c-b8f8-bad6e9cf604e` with the corrected table (`cleanup_20261108_gen08/assignment_2.md`).
+- The executor's final pass reported an intervening change to
+  `test_report_2026-11-07_p2_64_generation08_formal.md` and asked who wrote it. That was the lead, editing the report
+  while the verification ran. Its handling was right: it preserved the file, did not reset its baseline, and reported
+  the change. Lesson recorded in `lead_acceptance.json`: do not edit task records inside an executor's protected-input
+  scope while its verification pass is running; the follow-up assignment names the expected concurrent lead edits.
 - Prerequisites the first attempt lacked are now supplied: the host process check comes from the lead through Pi
   (`cleanup-scan-1108b`, 289 processes, `clear_for_deletion: true`; 127 entries had unreadable links, of which 14 of 15
   sampled had already exited and the last was pid 1), and the protected-input snapshot is scoped to the deletion's

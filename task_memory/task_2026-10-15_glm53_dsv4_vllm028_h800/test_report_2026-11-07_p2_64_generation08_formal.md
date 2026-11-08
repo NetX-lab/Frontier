@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | Recorded the removal of the redundant duplicate platform-route copy after re-verifying both copies. |
+| 2026-11-08 | Added the independent recomputation of the four metrics from the row CSVs (`headline_recompute.py`), which reproduces the table exactly. |
 | 2026-11-08 | Recorded that the planned CPU copy job later succeeded and that both copy routes hold identical job output (`PAYLOAD_IDENTICAL`). |
 | 2026-11-07 | Created: generation08 native run, terminal receipt, hash-identical copy, pair coverage, R5 and the four-metric readings; P2-64 formal PASS. |
 
@@ -59,6 +61,12 @@ job ceiling. The ended D-P2-64-FIFTH chain counted 68.90 GPUh (upper bounds). Qu
   (`download_receipt.json` route and timings; `cloud_inventory.json`, whose root records the same cloud directory under
   the `/mnt/ws-jfs/ycfeng` and `/mnt/codesign-exp/ycfeng` mount views). The bytes the comparison consumed are therefore
   confirmed by the originally planned platform route as well, and the copy deviation carries no numerical consequence.
+- The duplicate platform-route copy was then removed on 2026-11-08 as redundant scratch, after re-running the
+  cross-check immediately beforehand (same `PAYLOAD_IDENTICAL` verdict and the same joint sha256; only its
+  `checked_utc` differs). Receipt: `p2_64_formal_retry08/platform_copy_removal.json`, 135 files, 76,001,280 allocated
+  bytes, `REMOVED_SURVIVOR_INTACT`, with the SSH copy's joint hash unchanged across the removal. The cross-check script
+  therefore no longer has two sides to compare; `copy_route_crosscheck.json` is the surviving evidence, and the cloud
+  source under `/mnt/codesign-exp/ycfeng` is untouched and remains the origin if that copy is ever needed again.
 
 ## Comparison
 
@@ -102,6 +110,13 @@ repeat: TTFT 684.31 ms, TPOT 25.30 ms, E2E 26,561.44 ms, THPT 5,975.25 tokens/s.
 
 The all-request reading (`gate/reading.json`, verdict PASS) and the warm reading (`warm_reading.json`, verdict PASS,
 D-WARM-TARGET) are identical here because no formal request needed exclusion. Largest error: TTFT repeat02, 3.16%.
+
+Every number in that table was recomputed from the row CSVs alone, independently of `compare.py`'s own summary, by
+`h200_mainline/p2_64_formal_retry08/headline_recompute.py` (result in `headline_recompute.json`). It reads
+`generation08_run2/gate/rows/frontier/a10.csv` and the three `gate/rows/vllm/*.csv` files, applies the TPOT filter
+`num_decode_tokens > 1`, and pools latency as the mean of the per-repeat means and throughput as total tokens over
+total span. All sixteen per-repeat values, all four pooled values and all twenty errors reproduce the table to the
+digits printed above; verdict `PASS`, worst `repeat02/ttft` 3.16%.
 
 **Verdict: P2-64 formal PASS** (all three repeats, all four metrics, all-request and warm readings, within 10%).
 
