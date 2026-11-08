@@ -1,0 +1,5 @@
+# mainline branch re-run after the -P portability fix, 2026-11-08T10:37:43Z
+# python 3.10.6, command: python -m pytest tests/unit/test_native_pd_worker.py -q -p no:cacheprovider
+.........................................                                [100%]
+41 passed in 1.14s
+exit=0

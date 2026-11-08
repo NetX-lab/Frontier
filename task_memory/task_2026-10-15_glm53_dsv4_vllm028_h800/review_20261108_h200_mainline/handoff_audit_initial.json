@@ -1,0 +1,739 @@
+{
+  "checks": [
+    {
+      "name": "p2_32 actual bounds:gpu-h200-0082.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0082.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          41
+        ]
+      }
+    },
+    {
+      "name": "p2_32 actual bounds:gpu-h200-0146.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0146.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "p2_32 actual bounds:gpu-h200-0710.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0710.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          41
+        ]
+      }
+    },
+    {
+      "name": "p2_32 actual bounds:gpu-h200-0938.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-canonical-20261025-01/artifacts/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "p2_32 node count",
+      "status": "PASS",
+      "detail": 4
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-0031.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0031.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          59
+        ]
+      }
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-0139.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0139.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-0180.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0180.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-0228.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0228.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-0472.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0472.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          59
+        ]
+      }
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-0606.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0606.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-0738.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-0738.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "generation08 actual bounds:gpu-h200-1079.lgcm.sh.istep.fun",
+      "status": "PASS",
+      "detail": {
+        "values": {
+          "--max-model-len": "7168",
+          "--max-num-batched-tokens": "8192",
+          "--pipeline-parallel-size": "1",
+          "--gpu-memory-utilization": "0.85",
+          "--load-format": "dummy"
+        },
+        "server_log": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08/artifacts/nodes/gpu-h200-1079.lgcm.sh.istep.fun/server.log",
+        "resolved_lines": [
+          14
+        ]
+      }
+    },
+    {
+      "name": "generation08 node count",
+      "status": "PASS",
+      "detail": 8
+    },
+    {
+      "name": "seven stages and comparison complete",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "historical command completion:0",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "historical command completion:1",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "historical command completion:2",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "historical command completion:3",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "historical command completion:4",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "actual R5 stdout",
+      "status": "PASS",
+      "detail": {
+        "run_tag": "dsv4-h200-p2-64-formal-20261107-08",
+        "status": "PASS",
+        "failed": [],
+        "derived_num_blocks": {}
+      }
+    },
+    {
+      "name": "read-only git rev-parse HEAD",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "read-only git status --short --untracked-files=no",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "read-only git diff abd1e14198b2b258921ccd669ac87c91f499e6dd..HEAD --stat -- frontier",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "retained review assertions:metrics_audit.json",
+      "status": "PASS",
+      "detail": {
+        "PASS": 157,
+        "FAIL": 0
+      }
+    },
+    {
+      "name": "retained review assertions:evidence_audit.json",
+      "status": "PASS",
+      "detail": {
+        "PASS": 861,
+        "FAIL": 0
+      }
+    },
+    {
+      "name": "retained review assertions:qualification_audit.json",
+      "status": "PASS",
+      "detail": {
+        "PASS": 906,
+        "FAIL": 0
+      }
+    },
+    {
+      "name": "retained review assertions:runtime_supplement.json",
+      "status": "FAIL",
+      "detail": {
+        "PASS": 98,
+        "FAIL": 9
+      }
+    }
+  ],
+  "notes": {
+    "historical_comparison_commands": [
+      {
+        "argv": [
+          "/data/ycfeng/envs/openmopd-py312/bin/python",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r5.py",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/r4_case",
+          "dsv4-h200-p2-64-formal-20261107-08",
+          "clean"
+        ],
+        "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+        "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+        "interpreter": "/data/ycfeng/envs/openmopd-py312/bin/python",
+        "started_utc": "2026-11-07T17:35:17.924414+00:00",
+        "exit_code": 0,
+        "stdout": "{\"run_tag\": \"dsv4-h200-p2-64-formal-20261107-08\", \"status\": \"PASS\", \"failed\": [], \"derived_num_blocks\": {}}\n",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "/data/ycfeng/envs/frontier-py310/bin/python",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/e2e_gate/run_gate.py",
+          "normalize",
+          "--matrix",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/matrix.json",
+          "--cell",
+          "dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path",
+          "--artifacts-root",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate",
+          "--vllm-run-dir",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/p2_64_r4_case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08",
+          "--frontier-run",
+          "a10=/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64",
+          "--output-dir",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows"
+        ],
+        "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+        "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+        "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+        "started_utc": "2026-11-07T17:35:26.806166+00:00",
+        "exit_code": 0,
+        "stdout": "wrote /data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows\n",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "/data/ycfeng/envs/frontier-py310/bin/python",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/e2e_gate/run_gate.py",
+          "gate",
+          "--matrix",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/matrix.json",
+          "--cell",
+          "dsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path",
+          "--rows",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows",
+          "--output",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/reading.json"
+        ],
+        "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+        "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+        "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+        "started_utc": "2026-11-07T17:35:27.539750+00:00",
+        "exit_code": 0,
+        "stdout": "ttft_ms                  vllm 705.1975 frontier 684.3138 rel 0.0296 PASS\ntpot_ms                  vllm 24.7517 frontier 25.2953 rel 0.0220 PASS\nrequest_e2e_time_ms      vllm 26026.1363 frontier 26561.4432 rel 0.0206 PASS\ntoken_throughput_tps     vllm 6001.1216 frontier 5975.2516 rel 0.0043 PASS\ndsv4-h200-p2-64-canonical-fixed128-qps1/a10_operator_path: PASS (routing MATCH)\n",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "/data/ycfeng/envs/frontier-py310/bin/python",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+          "--rows",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows",
+          "--reading",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/reading.json",
+          "--openers",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/openers.json",
+          "--output",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/warm_reading.json"
+        ],
+        "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+        "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+        "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+        "started_utc": "2026-11-07T17:35:28.062384+00:00",
+        "exit_code": 0,
+        "stdout": "PASS_EXACT original; warm=PASS retained=384\n",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "/data/ycfeng/envs/frontier-py310/bin/python",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/analysis/e2e_warm_reading.py",
+          "--rows",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/rows",
+          "--reading",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/gate/reading.json",
+          "--openers",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/empty_openers.json",
+          "--output",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_64_native_20261102/generation08_run2/empty_reading.json"
+        ],
+        "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+        "controller_python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+        "interpreter": "/data/ycfeng/envs/frontier-py310/bin/python",
+        "started_utc": "2026-11-07T17:35:28.548190+00:00",
+        "exit_code": 0,
+        "stdout": "PASS_EXACT original; warm=PASS retained=384\n",
+        "stderr": ""
+      }
+    ],
+    "environment": {
+      "executable": "/usr/bin/python3",
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "packages": {
+        "numpy": true,
+        "pandas": true,
+        "scipy": true,
+        "sklearn": true,
+        "pytest": false,
+        "fasteners": false,
+        "ddsketch": false,
+        "plotly": false
+      }
+    },
+    "bounded_heartbeat_log_search": [
+      {
+        "base": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08",
+        "files_read": 2,
+        "paths": [
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/generation08_check_only.txt",
+          "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/generation08_launcher_log_at_submission.txt"
+        ],
+        "matches": []
+      },
+      {
+        "base": "/data/ycfeng/tmp/glm53_dsv4/h200",
+        "files_read": 232,
+        "paths": [
+          "/data/ycfeng/tmp/glm53_dsv4/h200/build_p2_32_reference.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/build_p2_32_profile.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/build_p2_32_profile_02.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_32_reference.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_32_profile.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/build_p2_64_reference.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_reference.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/build_p2_64_profile.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_profile.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/gate_regression_native06.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/gate_regression_native06b.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/commit_a_files.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_32_lifecycle.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_32_lifecycle_02.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_lifecycle.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01_find_err.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_wave.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/launch_p2_64_formal.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_fix_cpu_01.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_fix_cpu_02.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_recovery_dry_01.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_recovery_build_01.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_recovery_harness_tests.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_recovery_build_02.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_reader_tests.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_tools_tests.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/r5_lead_control.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/audit_formal04_terminal.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/audit_formal05_package.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/gen07_build.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/compare_generation08.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/compare_generation08_run2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/monitor/quota_stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/monitor/quota_stderr.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/monitor/status_stderr.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/monitor/receipt_stderr.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r/exp-1025-152327-225209-eccbc87e.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r/exp-1025-152327-225209-c4ca4238.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r/exp-1025-152327-225209-c81e728d.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r/exp-1025-152327-225209-cfcd2084.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_2/exp-1025-152327-225209-eccbc87e.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_2/exp-1025-152327-225209-c4ca4238.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_2/exp-1025-152327-225209-c81e728d.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_2/exp-1025-152327-225209-cfcd2084.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32p/exp-1025-152329-181604-c4ca4238.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32p/exp-1025-152329-181604-cfcd2084.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32p/exp-1025-152329-181604-eccbc87e.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32p/exp-1025-152329-181604-c81e728d.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_3/exp-1025-152327-225209-eccbc87e.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_3/exp-1025-152327-225209-c4ca4238.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_3/exp-1025-152327-225209-c81e728d.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/logs/p2_32r_3/exp-1025-152327-225209-cfcd2084.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/r4/p2_32r.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/r4/p2_64r.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/r4/p2_32l.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/r4/p2_64l.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_32p.1.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_32p.2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_64p.1.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_64p.2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/h800.s1.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/h800.s2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_32p.s1.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_32p.s2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_64p.s1.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/step_cost_build/p2_64p.s2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/diag/p2_32d_run1.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/diag/p2_64d_run1.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/diag/p2_64d_run2.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/diag/native06_regression.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/gate/p2_32d.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/gate/p2_64d.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/build_package_01.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/build_package_02.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/analysis.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/analysis_v2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/build_p2_64_package_01.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/p2_64l_analysis.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/step_gaps_p2_64l.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/verify_p2_64l.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/verify_p2_64l_run.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/verify_p2_64l_more.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/first_contact_waits.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/scratch/iter_split.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/scratch/step_gaps.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle/scratch/commit_files.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge/download_remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge/replica_logs/exp-1028-024316-296035-cfcd2084.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_02/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/pytest_g1.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/pytest_g2.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/pytest_g3.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/pytest_g4.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/pytest_g5.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/pytest_g6.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/pytest_g7.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/rebuild.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/gaps.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/composition.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/commit_msg.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/census/head.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/census/head.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/census/work.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b3_verify/census/work.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g8.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g1.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g2.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g4.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g7.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g3.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g5.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/pytest_g6.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/plan_checks.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/b4_verify/commit_msg.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_03/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h_bridge_03/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/bridge_copy_sha256.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/groups.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/planners.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/bridge.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/composition.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/gaps.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/identity_p32.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/identity_p64.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/shape_p32.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/shape_p64.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b5_review/identity_p32.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b5_review/identity_p64.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/a4.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/aggregate.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/aggregate-command.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b6_review/row_composition.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/regression.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/known_failures.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/a4.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/cold_import.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/boundary.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b7_review/commit_msg.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/flags.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/dummy_scopes.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/key_rows.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/distinct.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/cols.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/planners.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_design/rules.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/before.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/before2.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/peek_ledger.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/diff_attention.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/diff_predictor.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/diff_etp_v4.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/diff_tests.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/final_diff_attention.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/final_diff_predictor.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/final_diff_etp_v4.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/final_diff_tests.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p1h03_verify/b8_review/after.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_01/cloud_1.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_01/cloud_2.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/cloud_1.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_02/cloud_2.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/cloud_1.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/cloud_2.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_01/cloud_3.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_01/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g3h_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g3h_01/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g3h_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_iso_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_iso_01/cloud_1.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_iso_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h16_iso_01/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_02/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_01/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_01/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_02/launch_replay.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_02/launch_block.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_02/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_02/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_02_block_early/listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_02_block_early/du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_03/launch_block.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_03/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_03/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_04/launch_replay.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_04/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g2h_runner_04/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g1h_s01/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_iso_01/launch.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_iso_01/remote_listing.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_iso_01/remote_du.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/g5h32_iso_01/cloud_1.txt",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/q5_lead_review/control.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/q5_lead_review/build.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/q5_lead_review/build2.out",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/focused.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/corrected_default_routing.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/frozen_check_only.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p64_mainline_lead_20261102/native_profile.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/collision.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline/rank0.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline/rank1.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline/rank2.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/baseline/rank3.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/collision/rank0.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/collision/rank1.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/collision/rank2.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/p2_64_failure_lead_20261102/collision/rank3.stdout.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/lifecycle_c09141cf79154ce89e63356fd74bf509/child.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/ds4_resume/p64-formal5-submit-1107d.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/ds4_resume/p64-formal5-submit-1107e.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/gen06_build/executor_build.log",
+          "/data/ycfeng/tmp/glm53_dsv4/h200/gen06_build/executor_build.stderr.log"
+        ],
+        "matches": []
+      },
+      {
+        "base": "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness",
+        "files_read": 0,
+        "paths": [],
+        "matches": []
+      }
+    ],
+    "git": [
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "rc": 0,
+        "stdout": "c30c338050fe8efb16e668fd574e496689eb3c90\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--short",
+          "--untracked-files=no"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "diff",
+          "abd1e14198b2b258921ccd669ac87c91f499e6dd..HEAD",
+          "--stat",
+          "--",
+          "frontier"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "audit_output_counts": {
+      "metrics_audit.json": {
+        "PASS": 157,
+        "FAIL": 0
+      },
+      "evidence_audit.json": {
+        "PASS": 861,
+        "FAIL": 0
+      },
+      "qualification_audit.json": {
+        "PASS": 906,
+        "FAIL": 0
+      },
+      "runtime_supplement.json": {
+        "PASS": 98,
+        "FAIL": 9
+      }
+    }
+  }
+}

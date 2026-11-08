@@ -1,0 +1,4812 @@
+{
+  "interpreter": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "checks": [
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_g0b_20261021/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1021-045514-040441",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_compute_20261021/observed/root_platform_terminal.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_dsv4_compute_20261021/observed/root_platform_terminal.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-canonical-20261025-01/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1025-152327-225209",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_profile/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-profile-20261025-01/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1025-152329-181604",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1025-155441-668927",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_profile/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1025-162315-604618",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_32_lifecycle/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-lifecycle-20261025-01/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1026-031327-540424",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_lifecycle/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-lifecycle-20261026-01/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1026-125836-702505",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1028-024316-296035.replica_only.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1028-024316-296035",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1028-031147-398843.replica_only.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1028-031147-398843",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1028-132243-707076.replica_only.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1028-132243-707076",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1028-210144-108044.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1028-210144-108044",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1028-231342-951824.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1028-231342-951824",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1028-231408-632060.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1028-231408-632060",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-010007-750668.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-010007-750668",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-010008-493772.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-010008-493772",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-012627-132543.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-012627-132543",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-020008-235508.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-020008-235508",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-035012-764213.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-035012-764213",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-113750-923871.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-113750-923871",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-135035-301114.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-135035-301114",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-135037-016686.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-135037-016686",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-141735-456588.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-141735-456588",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1029-154446-382293.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1029-154446-382293",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1030-021110-248027.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1030-021110-248027",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_wave/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-wave-20261030-01/platform_terminal_receipt.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1030-144848-164721",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1030-234535-245357.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1030-234535-245357",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/exp-1031-233253-628432_platform_20261031T153924Z.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/hardware_20261031/exp-1031-233305-902815_platform_20261031T153924Z.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/execution_20261101/platform_terminal.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/b30b/execution_links03_20261101/platform_terminal.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_repeatability_20261101/platform_03.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a6_three_run_20261101/platform_final.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/gpu_hours_clocks/receipts/exp-1102-030025-971155.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "clock arithmetic:exp-1102-030025-971155",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "35 ledger sum",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass1_all/attention_graph_replay_kernel_only.csv",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "pass1_all full population",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/tmp/glm53_dsv4/a6_pass_replays_20261101/tables/pass2_all/attention_graph_replay_kernel_only.csv",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "pass2_all full population",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0000-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0000-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0000-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0000-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0000-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0000-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0000-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0000-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0000-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0000-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:0",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:0",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all0",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all0",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0003-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0003-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0003-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0003-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0003-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0003-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0003-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0003-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0003-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0003-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:5",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:5",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all5",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all5",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0135-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0135-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0135-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0135-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0135-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0135-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0135-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0135-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0135-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0135-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:84",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:84",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all84",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all84",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0009-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0009-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0009-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0009-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0009-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0009-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0009-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0009-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0009-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0009-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:221",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:221",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all221",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all221",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0010-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0010-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0010-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0010-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0010-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0010-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0010-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0010-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0010-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0010-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:224",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:224",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all224",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all224",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0023-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0023-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0023-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0023-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0023-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0023-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0023-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0023-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0023-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0023-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:228",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:228",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all228",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all228",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0022-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0022-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0022-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0022-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0022-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0022-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0022-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0022-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0022-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0022-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:230",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:230",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all230",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all230",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0021-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0021-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0021-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0021-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0021-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0021-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0021-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0021-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0021-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0021-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:232",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:232",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all232",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all232",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0279-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0279-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0279-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0279-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0279-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0279-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0279-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0279-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0279-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0279-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:245",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:245",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all245",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all245",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0027-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0027-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0027-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0027-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0027-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0027-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0027-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0027-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0027-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0027-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:360",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:360",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all360",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all360",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0058-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0058-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0058-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0058-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0058-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0058-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0058-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0058-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0058-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0058-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:379",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:379",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all379",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all379",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0057-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0057-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0057-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0057-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0057-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0057-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0057-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0057-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0057-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0057-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:383",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:383",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all383",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all383",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0063-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0063-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0063-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0063-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0063-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0063-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0063-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0063-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0063-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0063-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:417",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:417",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all417",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all417",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0019-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0019-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0019-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0019-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0019-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0019-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0019-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0019-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0019-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0019-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:433",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:433",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all433",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all433",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0023-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0023-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0023-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0023-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0023-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0023-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0023-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0023-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0023-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0023-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:439",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:439",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all439",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all439",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0021-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0021-full', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0021-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0021-full', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0021-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0021-full', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0021-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0021-full', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0021-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0021-full', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:448",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:448",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all448",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all448",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1027-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1027-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1027-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1027-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1027-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1027-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1027-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1027-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1027-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1027-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:480",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:480",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all480",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all480",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1031-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1031-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1031-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1031-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1031-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1031-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1031-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1031-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1031-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1031-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:481",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:481",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all481",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all481",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1028-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1028-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1028-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1028-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1028-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1028-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1028-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1028-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1028-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1028-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:482",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:482",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all482",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all482",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1032-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1032-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1032-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1032-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1032-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1032-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1032-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1032-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1032-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1032-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:483",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:483",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all483",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all483",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1029-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1029-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1029-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1029-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1029-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1029-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1029-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1029-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1029-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1029-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:484",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:484",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all484",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all484",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1030-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1030-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1030-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1030-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1030-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1030-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1030-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1030-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1030-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1030-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:485",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:485",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all485",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all485",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1039-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1039-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1039-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1039-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1039-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1039-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1039-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1039-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1039-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1039-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:486",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:486",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all486",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all486",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1040-prefill', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1040-prefill', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1040-prefill', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1040-prefill', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1040-prefill', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1040-prefill', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1040-prefill', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1040-prefill', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1040-prefill', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1040-prefill', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:487",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:487",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all487",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all487",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0351-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0351-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0351-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0351-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0351-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0351-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0351-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0351-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0351-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0351-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:488",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:488",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all488",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all488",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0354-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0354-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0354-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0354-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0354-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0354-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0354-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0354-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0354-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0354-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:493",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:493",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all493",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all493",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0486-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0486-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0486-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0486-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0486-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0486-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0486-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0486-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0486-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0486-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:572",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:572",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all572",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all572",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0235-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0235-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0235-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0235-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0235-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0235-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0235-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0235-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0235-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0235-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:604",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:604",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all604",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all604",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0239-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0239-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0239-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0239-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0239-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0239-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0239-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0239-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0239-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0239-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:617",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:617",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all617",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all617",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0237-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0237-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0237-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0237-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0237-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0237-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0237-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0237-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1hs-e0-0237-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1hs-e0-0237-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:635",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:635",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all635",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all635",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0360-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0360-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0360-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0360-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0360-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0360-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0360-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0360-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0360-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0360-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:709",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:709",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all709",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all709",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0630-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0630-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0630-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0630-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0630-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0630-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0630-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0630-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0630-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0630-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:733",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:733",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all733",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all733",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0378-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0378-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0378-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0378-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0378-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0378-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0378-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0378-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0378-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0378-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:848",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:848",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all848",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all848",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0414-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0414-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0414-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0414-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0414-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0414-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0414-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0414-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0414-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0414-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:905",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:905",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all905",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all905",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0415-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0415-piecewise', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0415-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0415-piecewise', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0415-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0415-piecewise', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0415-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0415-piecewise', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-0415-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-0415-piecewise', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:920",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:920",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all920",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all920",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1033-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1033-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1033-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1033-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1033-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1033-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1033-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1033-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1033-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1033-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:968",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:968",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all968",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all968",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1037-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1037-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1037-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1037-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1037-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1037-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1037-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1037-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1037-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1037-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:969",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:969",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all969",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all969",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1034-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1034-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1034-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1034-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1034-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1034-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1034-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1034-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1034-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1034-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:970",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:970",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all970",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all970",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1038-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1038-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1038-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1038-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1038-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1038-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1038-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1038-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1038-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1038-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:971",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:971",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all971",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all971",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1035-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1035-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1035-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1035-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1035-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1035-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1035-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1035-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1035-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1035-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:972",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:972",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all972",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all972",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1036-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1036-dummy', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1036-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1036-dummy', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1036-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1036-dummy', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1036-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1036-dummy', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e0-1036-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e0-1036-dummy', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:973",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:973",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all973",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all973",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0702-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0702-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0702-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0702-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0702-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0702-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0702-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0702-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0702-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0702-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:974",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:974",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all974",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all974",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0813-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0813-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0813-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0813-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0813-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0813-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0813-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0813-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0813-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0813-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:1176",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:1176",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all1176",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all1176",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0711-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0711-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0711-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0711-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0711-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0711-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0711-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0711-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0711-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0711-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:1183",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:1183",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all1183",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all1183",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0705-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0705-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0705-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0705-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0705-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0705-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0705-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0705-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0705-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0705-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:1184",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:1184",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all1184",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all1184",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0948-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0948-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0948-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0948-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0948-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0948-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0948-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0948-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0948-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0948-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:1199",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:1199",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all1199",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all1199",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0717-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0717-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0717-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0717-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0717-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0717-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0717-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0717-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0717-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0717-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:1332",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:1332",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all1332",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all1332",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "omission unit",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0747-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0747-first_tail', 'csa', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0747-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0747-first_tail', 'csa', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0747-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0747-first_tail', 'hca', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0747-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0747-first_tail', 'hca', 'false')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass1_all('g1-e1-0747-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention shape:pass2_all('g1-e1-0747-first_tail', 'uncompressed', 'true')",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original composition:1420",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention original window:1420",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass1_all1420",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention independent value:pass2_all1420",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass1_all', ('FULL', 'decode'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass2_all', ('FULL', 'decode'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass1_all', ('FULL', 'dummy'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass2_all', ('FULL', 'dummy'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass1_all', ('NONE', 'dummy'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass2_all', ('NONE', 'dummy'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass1_all', ('NONE', 'prefill'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass2_all', ('NONE', 'prefill'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass1_all', ('PIECEWISE', 'decode'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass2_all', ('PIECEWISE', 'decode'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass1_all', ('PIECEWISE', 'dummy'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass2_all', ('PIECEWISE', 'dummy'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass1_all', ('PIECEWISE', 'first_tail'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "attention per-pass class limits:('pass2_all', ('PIECEWISE', 'first_tail'))",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "hash:/data/ycfeng/tmp/glm53_dsv4/nixl6144_q1_20261102/download/C_nixl/nixl_reads.jsonl",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight10",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight80",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight40",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight10",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight160",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight20",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight40",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight160",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight40",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight10",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight80",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight20",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight80",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight160",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight160",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight160",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight160",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight20",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight40",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight20",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight10",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight20",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight80",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight80",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight10",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight20",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight10",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight40",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight40",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight80",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight21",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight41",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight11",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight161",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight11",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight81",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight161",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight21",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight161",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight81",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight11",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight11",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight41",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight41",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight41",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight21",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight81",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight81",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight11",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight81",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight21",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight21",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight81",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight161",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight161",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight21",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight41",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight11",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight161",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight41",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight22",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight162",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight12",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight162",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight12",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight82",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight42",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight82",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight162",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight82",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight162",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight22",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight22",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight162",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight22",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs8_inflight82",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight162",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight42",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight42",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight42",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight42",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight42",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs1_inflight12",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight82",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs8_inflight12",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight22",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6144_pairs1_inflight12",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6143_pairs8_inflight22",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight12",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL data:t6145_pairs1_inflight82",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL population",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL affine coefficients",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL heldout physical and median:0",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL heldout physical and median:1",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL heldout physical and median:2",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "NIXL exact coordinate tails",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "promotion exact bytes prelaunch binding",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "promotion precedes generation08",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "fidelity:fidelity",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "fidelity:fidelity_b24",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "fidelity:fidelity_b26",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "fidelity:fidelity_b26b",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "fidelity:fidelity_b28",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "fidelity:fidelity_b29",
+      "status": "PASS",
+      "detail": null
+    }
+  ],
+  "summaries": {
+    "historical_gpu_hours": {
+      "rows": 35,
+      "sum": 158.27166666666665,
+      "clock_receipts_recomputed": 27,
+      "other_basis": [
+        "exp-1021-141138-593083",
+        "exp-1021-141138-594688",
+        "exp-1031-233253-628432",
+        "exp-1031-233305-902815",
+        "exp-1101-004206-443314",
+        "exp-1101-005741-958298",
+        "exp-1101-015820-503227",
+        "exp-1101-143721-849401"
+      ]
+    },
+    "formal_clock_receipts": [
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/failure_01_20261102/rca/terminal_receipt.json",
+        "job": "exp-1102-164536-160317",
+        "hours": 4.053333333333334,
+        "known_hours": null,
+        "complete": null
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/recovery_02_20261102/generation02_copy_terminal_receipt.json",
+        "job": "exp-1103-001335-240782",
+        "hours": 0.0,
+        "known_hours": 0.0,
+        "complete": true
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/recovery_02_20261102/generation02_platform_terminal_receipt.json",
+        "job": "exp-1102-233941-576872",
+        "hours": null,
+        "known_hours": 0.0,
+        "complete": false
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261102-02/platform_terminal_receipt.json",
+        "job": "exp-1102-233941-576872",
+        "hours": null,
+        "known_hours": 0.0,
+        "complete": false
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/generation03_platform_terminal_receipt.json",
+        "job": "exp-1103-092042-217677",
+        "hours": null,
+        "known_hours": 0.0,
+        "complete": false
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/terminal_20261104/platform_terminal_receipt.json",
+        "job": "exp-1103-131952-259161",
+        "hours": null,
+        "known_hours": 0.0,
+        "complete": false
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/terminal_20261107/platform_terminal_receipt.json",
+        "job": "exp-1107-135759-122907",
+        "hours": null,
+        "known_hours": 2.5866666666666664,
+        "complete": false
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/terminal_20261107/platform_terminal_receipt.json",
+        "job": "exp-1107-144321-305543",
+        "hours": null,
+        "known_hours": 0.0,
+        "complete": false
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/terminal_20261107/platform_terminal_receipt.json",
+        "job": "exp-1107-150132-396145",
+        "hours": null,
+        "known_hours": 8.264444444444445,
+        "complete": false
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/platform_terminal_receipt.json",
+        "job": "exp-1108-002857-059466",
+        "hours": 23.30666666666667,
+        "known_hours": 23.30666666666667,
+        "complete": true
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_lifecycle/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-lifecycle-20261026-01/platform_terminal_receipt.json",
+        "job": "exp-1026-125836-702505",
+        "hours": 26.302222222222223,
+        "known_hours": null,
+        "complete": null
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_profile/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01/platform_terminal_receipt.json",
+        "job": "exp-1025-162315-604618",
+        "hours": 24.54222222222222,
+        "known_hours": null,
+        "complete": null
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json",
+        "job": "exp-1025-155441-668927",
+        "hours": 24.322222222222223,
+        "known_hours": null,
+        "complete": null
+      },
+      {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_wave/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-wave-20261030-01/platform_terminal_receipt.json",
+        "job": "exp-1030-144848-164721",
+        "hours": 18.16888888888889,
+        "known_hours": null,
+        "complete": null
+      }
+    ],
+    "attention": {
+      "layer_counts": {
+        "('uncompressed', True)": 2,
+        "('csa', True)": 1,
+        "('hca', True)": 1,
+        "('csa', False)": 20,
+        "('hca', False)": 19
+      },
+      "lookup_keys": 6802,
+      "aggregated_lookup_keys": 5902,
+      "('pass1_all', ('FULL', 'decode'))": {
+        "count": 16,
+        "median_error": 0.010739781134507534,
+        "p90_error": 0.023245102418428427,
+        "maximum": 0.023628602903153047
+      },
+      "('pass2_all', ('FULL', 'decode'))": {
+        "count": 16,
+        "median_error": 0.008703165827731459,
+        "p90_error": 0.013468673710431778,
+        "maximum": 0.021962748499692167
+      },
+      "('pass1_all', ('FULL', 'dummy'))": {
+        "count": 6,
+        "median_error": 0.019160570012502386,
+        "p90_error": 0.02822792997530746,
+        "maximum": 0.036631508936941504
+      },
+      "('pass2_all', ('FULL', 'dummy'))": {
+        "count": 6,
+        "median_error": 0.011313497057378979,
+        "p90_error": 0.015002309065539253,
+        "maximum": 0.016159994978983242
+      },
+      "('pass1_all', ('NONE', 'dummy'))": {
+        "count": 1,
+        "median_error": 0.02227783566912702,
+        "p90_error": 0.02227783566912702,
+        "maximum": 0.02227783566912702
+      },
+      "('pass2_all', ('NONE', 'dummy'))": {
+        "count": 1,
+        "median_error": 0.022657180710289656,
+        "p90_error": 0.022657180710289656,
+        "maximum": 0.022657180710289656
+      },
+      "('pass1_all', ('NONE', 'prefill'))": {
+        "count": 1,
+        "median_error": 0.009715871581336577,
+        "p90_error": 0.009715871581336577,
+        "maximum": 0.009715871581336577
+      },
+      "('pass2_all', ('NONE', 'prefill'))": {
+        "count": 1,
+        "median_error": 0.006684138560677197,
+        "p90_error": 0.006684138560677197,
+        "maximum": 0.006684138560677197
+      },
+      "('pass1_all', ('PIECEWISE', 'decode'))": {
+        "count": 11,
+        "median_error": 0.010621144203984696,
+        "p90_error": 0.01787854155268493,
+        "maximum": 0.021492404677940766
+      },
+      "('pass2_all', ('PIECEWISE', 'decode'))": {
+        "count": 11,
+        "median_error": 0.010310876563774376,
+        "p90_error": 0.024647338785082136,
+        "maximum": 0.0260993728888293
+      },
+      "('pass1_all', ('PIECEWISE', 'dummy'))": {
+        "count": 6,
+        "median_error": 0.009741371658833296,
+        "p90_error": 0.020490719744068443,
+        "maximum": 0.02592715661259465
+      },
+      "('pass2_all', ('PIECEWISE', 'dummy'))": {
+        "count": 6,
+        "median_error": 0.0037805455903139147,
+        "p90_error": 0.010821127662831059,
+        "maximum": 0.014649555629247489
+      },
+      "('pass1_all', ('PIECEWISE', 'first_tail'))": {
+        "count": 7,
+        "median_error": 0.022947904002364114,
+        "p90_error": 0.03299592443238444,
+        "maximum": 0.03513093488298318
+      },
+      "('pass2_all', ('PIECEWISE', 'first_tail'))": {
+        "count": 7,
+        "median_error": 0.008659517024714937,
+        "p90_error": 0.02184603514885034,
+        "maximum": 0.02646289211643603
+      },
+      "maximum": 0.036631508936941504,
+      "comparisons": 96
+    },
+    "nixl": {
+      "records": 90,
+      "reader_trials": 12150,
+      "notifications": 80352,
+      "intercept_ms": 0.023652184281886778,
+      "bandwidth_gbps": 390.3934992825481,
+      "maximum_heldout_median_error": 0.009195178620907216,
+      "p2_coordinate_max_ms": 12.554511427879333
+    },
+    "promotion": {
+      "issued": "2026-11-02T07:38:49.523696+00:00",
+      "generation08_submission_utc": "2026-11-07T16:28:57Z",
+      "receipt_sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+      "actual_manifest_fields": {
+        "promotion_receipt": {
+          "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json",
+          "sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+          "build_utc": "2026-11-07T08:29:52.746840+00:00"
+        }
+      },
+      "git_history": "task_memory is ignored; no Git creation timestamp proof is available"
+    },
+    "fidelity": {
+      "fidelity": {
+        "identical": 77,
+        "mismatched": 0,
+        "unexpected_differences": 0,
+        "candidate_only_failures": []
+      },
+      "fidelity_b24": {
+        "identical": 77,
+        "mismatched": 0,
+        "unexpected_differences": 0,
+        "candidate_only_failures": []
+      },
+      "fidelity_b26": {
+        "identical": 77,
+        "mismatched": 0,
+        "unexpected_differences": 0,
+        "candidate_only_failures": []
+      },
+      "fidelity_b26b": {
+        "identical": 77,
+        "mismatched": 0,
+        "unexpected_differences": 0,
+        "candidate_only_failures": []
+      },
+      "fidelity_b28": {
+        "identical": 77,
+        "mismatched": 0,
+        "unexpected_differences": 0,
+        "candidate_only_failures": []
+      },
+      "fidelity_b29": {
+        "identical": 0,
+        "mismatched": 77,
+        "unexpected_differences": 0,
+        "candidate_only_failures": []
+      }
+    },
+    "historical_logs": {
+      "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_recovery_harness_tests.log": "...............................................................sssssssss [ 51%]\nssssssssss.........................................................ss    [100%]\n120 passed, 21 skipped in 52.92s\n"
+    }
+  }
+}

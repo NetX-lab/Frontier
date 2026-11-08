@@ -1,0 +1,801 @@
+CHECKS 861 PASS 861 FAIL 0
+{
+  "terminal": {
+    "seconds": [
+      1300.0,
+      1321.0,
+      1286.0,
+      1312.0,
+      1322.0,
+      1304.0,
+      1311.0,
+      1332.0
+    ],
+    "total_seconds": 10488.0,
+    "container_gpu_hours": 23.30666666666667
+  },
+  "native": {
+    "ranks": 64,
+    "rank0_memory": [
+      {
+        "host": "gpu-h200-0031.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      },
+      {
+        "host": "gpu-h200-0139.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      },
+      {
+        "host": "gpu-h200-0180.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      },
+      {
+        "host": "gpu-h200-0228.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      },
+      {
+        "host": "gpu-h200-0472.lgcm.sh.istep.fun",
+        "role": "decode",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      },
+      {
+        "host": "gpu-h200-0606.lgcm.sh.istep.fun",
+        "role": "decode",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      },
+      {
+        "host": "gpu-h200-0738.lgcm.sh.istep.fun",
+        "role": "decode",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      },
+      {
+        "host": "gpu-h200-1079.lgcm.sh.istep.fun",
+        "role": "decode",
+        "blocks": 112914,
+        "memory": {
+          "available_kv_cache_memory_bytes": 113184178381,
+          "cudagraph_memory_estimate": 0,
+          "peak_activation_memory": 1957858304,
+          "requested_memory": 127603313869,
+          "total_consumed": 12461277184
+        },
+        "resolved": {
+          "cache_config": {
+            "block_size": 256,
+            "cache_dtype": "fp8_ds_mla"
+          },
+          "kernel_config": {
+            "moe_backend": "auto"
+          },
+          "load_config": {
+            "load_format": "dummy"
+          },
+          "model_config": {
+            "architecture": "DeepseekV4ForCausalLM",
+            "dtype": "torch.bfloat16",
+            "quantization": "deepseek_v4_fp8"
+          },
+          "parallel_config": {
+            "all2all_backend": "allgather_reducescatter",
+            "enable_expert_parallel": true,
+            "tensor_parallel_size": 8
+          },
+          "scheduler_config": {
+            "async_scheduling": true,
+            "max_num_batched_tokens": 8192,
+            "max_num_seqs": 128
+          }
+        }
+      }
+    ],
+    "census": {
+      "role": {
+        "prefill": 32,
+        "decode": 32
+      },
+      "blocks": {
+        "112914": 64
+      },
+      "graph_configured": {
+        "FULL_AND_PIECEWISE": 64
+      },
+      "graph_dispatcher": {
+        "FULL_AND_PIECEWISE": 64
+      },
+      "moe_backend": {
+        "['MARLIN']": 64
+      },
+      "max_model_len": {
+        "None": 64
+      },
+      "scheduler": {
+        "vllm.v1.core.sched.async_scheduler.AsyncScheduler": 64
+      }
+    }
+  },
+  "coverage": {
+    "cohorts": 16,
+    "records": 128,
+    "bindings": {
+      "AMBIGUOUS_WITHIN_WARMUP_WINDOW": 16
+    }
+  },
+  "p2_32": {
+    "source": "abd1e14198b2b258921ccd669ac87c91f499e6dd",
+    "forwards": 23040,
+    "mode_counts": [
+      {
+        "role": "prefill",
+        "real": false,
+        "class": "dummy",
+        "mode": "NONE",
+        "count": 128
+      },
+      {
+        "role": "prefill",
+        "real": true,
+        "class": "prefill",
+        "mode": "NONE",
+        "count": 128
+      },
+      {
+        "role": "prefill",
+        "real": false,
+        "class": "dummy",
+        "mode": "FULL",
+        "count": 7936
+      },
+      {
+        "role": "decode",
+        "real": false,
+        "class": "dummy",
+        "mode": "FULL",
+        "count": 169
+      },
+      {
+        "role": "decode",
+        "real": false,
+        "class": "dummy",
+        "mode": "PIECEWISE",
+        "count": 1
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "first_tail_alone",
+        "mode": "PIECEWISE",
+        "count": 2
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "decode",
+        "mode": "FULL",
+        "count": 14423
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "decode",
+        "mode": "PIECEWISE",
+        "count": 127
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "first_tail_with_decodes",
+        "mode": "PIECEWISE",
+        "count": 126
+      }
+    ],
+    "scopes": [
+      "dsv4_block_table_write",
+      "dsv4_compressor_fused_compress_store",
+      "dsv4_compressor_projection",
+      "dsv4_compressor_save_partial_states",
+      "dsv4_embedding",
+      "dsv4_embedding_allreduce",
+      "dsv4_ep_dispatch_allgather",
+      "dsv4_ep_output_reduce_scatter",
+      "dsv4_final_norm",
+      "dsv4_fused_q_kv_prepare",
+      "dsv4_fused_qkv_projection",
+      "dsv4_fused_qkv_rmsnorm",
+      "dsv4_grouped_output_projection",
+      "dsv4_index_compressor_fused_compress_store",
+      "dsv4_index_compressor_projection",
+      "dsv4_index_compressor_save_partial_states",
+      "dsv4_index_fused_query_prepare",
+      "dsv4_index_query_projection",
+      "dsv4_index_scores",
+      "dsv4_index_short_context_fill",
+      "dsv4_index_topk",
+      "dsv4_index_weights_projection",
+      "dsv4_input_preparation",
+      "dsv4_lm_head",
+      "dsv4_logits_gather",
+      "dsv4_mhc_attn_post_ffn_pre",
+      "dsv4_mhc_ffn_post_attn_pre",
+      "dsv4_mhc_final_post",
+      "dsv4_mhc_first_pre",
+      "dsv4_mhc_head",
+      "dsv4_output_inv_rope_quant",
+      "dsv4_output_projection",
+      "dsv4_q_projection",
+      "dsv4_sampling",
+      "dsv4_sp_attention_allgather",
+      "dsv4_sp_attention_reduce_scatter",
+      "dsv4_sp_final_mhc_allgather",
+      "dsv4_sparse_attention",
+      "kv_cache_block_zero",
+      "moe_gating_linear",
+      "moe_gating_routing_topk",
+      "moe_grouped_gemm",
+      "share_expert_act",
+      "share_expert_down_proj",
+      "share_expert_up_proj"
+    ],
+    "collective_points": 44,
+    "unequal_collective_points": 4,
+    "kv_admission": {
+      "decode_replica1_lane0": {
+        "num_blocks": 109934,
+        "admission_blocks_at_max_model_len": 2940,
+        "max_concurrency": 37.39251700680272
+      },
+      "decode_replica1_lane1": {
+        "num_blocks": 109934,
+        "admission_blocks_at_max_model_len": 2940,
+        "max_concurrency": 37.39251700680272
+      },
+      "native": 37.34,
+      "native_admission_blocks": [
+        2944,
+        2944
+      ],
+      "status": "DIFFERS"
+    },
+    "a11": {
+      "forwards": {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32/forwards.jsonl.gz",
+        "rows": 23040,
+        "sha256": "cc718d40bce2aaa684348bdd88f4b61dda7c2731c28d771e9d2347afc4e7356a"
+      },
+      "collectives": {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_32/collectives.json",
+        "sha256": "7b38a30294f8586e4f2f9c403ec883ca199624c0c050f208f2c3ca6106215f97",
+        "calls": 6310644
+      },
+      "stage_end_events": 23040,
+      "stale_stage_end_events": 0,
+      "scope_mapping": {
+        "prepare": [
+          "dsv4_input_preparation"
+        ],
+        "post": [
+          "dsv4_lm_head",
+          "dsv4_logits_gather",
+          "dsv4_sampling"
+        ],
+        "own_columns": [
+          "dsv4_block_table_write",
+          "kv_cache_block_zero"
+        ],
+        "dispatch": [
+          "dsv4_attention_output_zero",
+          "dsv4_compressor_fused_compress_store",
+          "dsv4_compressor_projection",
+          "dsv4_compressor_save_partial_states",
+          "dsv4_embedding",
+          "dsv4_embedding_allreduce",
+          "dsv4_ep_dispatch_allgather",
+          "dsv4_ep_output_reduce_scatter",
+          "dsv4_final_norm",
+          "dsv4_fused_q_kv_prepare",
+          "dsv4_fused_qkv_projection",
+          "dsv4_fused_qkv_rmsnorm",
+          "dsv4_grouped_output_projection",
+          "dsv4_index_compressor_fused_compress_store",
+          "dsv4_index_compressor_projection",
+          "dsv4_index_compressor_save_partial_states",
+          "dsv4_index_fused_query_prepare",
+          "dsv4_index_query_projection",
+          "dsv4_index_scores",
+          "dsv4_index_short_context_fill",
+          "dsv4_index_topk",
+          "dsv4_index_weights_projection",
+          "dsv4_mhc_attn_post_ffn_pre",
+          "dsv4_mhc_ffn_post_attn_pre",
+          "dsv4_mhc_final_post",
+          "dsv4_mhc_first_pre",
+          "dsv4_mhc_head",
+          "dsv4_output_inv_rope_quant",
+          "dsv4_output_projection",
+          "dsv4_q_projection",
+          "dsv4_query_padding",
+          "dsv4_sp_attention_allgather",
+          "dsv4_sp_attention_reduce_scatter",
+          "dsv4_sp_final_mhc_allgather",
+          "dsv4_sparse_attention",
+          "moe_gating_linear",
+          "moe_gating_routing_topk",
+          "moe_grouped_gemm",
+          "moe_shuffling",
+          "share_expert_act",
+          "share_expert_down_proj",
+          "share_expert_up_proj"
+        ],
+        "unknown_scopes": "each is retained as its own column",
+        "coordination_and_overlap": "signed composed time minus mapped segments and own columns"
+      }
+    }
+  },
+  "p2_64": {
+    "source": "abd1e14198b2b258921ccd669ac87c91f499e6dd",
+    "forwards": 39680,
+    "mode_counts": [
+      {
+        "role": "prefill",
+        "real": false,
+        "class": "dummy",
+        "mode": "NONE",
+        "count": 384
+      },
+      {
+        "role": "prefill",
+        "real": true,
+        "class": "prefill",
+        "mode": "NONE",
+        "count": 128
+      },
+      {
+        "role": "prefill",
+        "real": false,
+        "class": "dummy",
+        "mode": "FULL",
+        "count": 14848
+      },
+      {
+        "role": "decode",
+        "real": false,
+        "class": "dummy",
+        "mode": "FULL",
+        "count": 606
+      },
+      {
+        "role": "decode",
+        "real": false,
+        "class": "dummy",
+        "mode": "PIECEWISE",
+        "count": 6
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "first_tail_alone",
+        "mode": "PIECEWISE",
+        "count": 4
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "decode",
+        "mode": "FULL",
+        "count": 23202
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "decode",
+        "mode": "PIECEWISE",
+        "count": 378
+      },
+      {
+        "role": "decode",
+        "real": true,
+        "class": "first_tail_with_decodes",
+        "mode": "PIECEWISE",
+        "count": 124
+      }
+    ],
+    "scopes": [
+      "dsv4_block_table_write",
+      "dsv4_compressor_fused_compress_store",
+      "dsv4_compressor_projection",
+      "dsv4_compressor_save_partial_states",
+      "dsv4_embedding",
+      "dsv4_embedding_allreduce",
+      "dsv4_ep_dispatch_allgather",
+      "dsv4_ep_output_reduce_scatter",
+      "dsv4_final_norm",
+      "dsv4_fused_q_kv_prepare",
+      "dsv4_fused_qkv_projection",
+      "dsv4_fused_qkv_rmsnorm",
+      "dsv4_grouped_output_projection",
+      "dsv4_index_compressor_fused_compress_store",
+      "dsv4_index_compressor_projection",
+      "dsv4_index_compressor_save_partial_states",
+      "dsv4_index_fused_query_prepare",
+      "dsv4_index_query_projection",
+      "dsv4_index_scores",
+      "dsv4_index_short_context_fill",
+      "dsv4_index_topk",
+      "dsv4_index_weights_projection",
+      "dsv4_input_preparation",
+      "dsv4_lm_head",
+      "dsv4_logits_gather",
+      "dsv4_mhc_attn_post_ffn_pre",
+      "dsv4_mhc_ffn_post_attn_pre",
+      "dsv4_mhc_final_post",
+      "dsv4_mhc_first_pre",
+      "dsv4_mhc_head",
+      "dsv4_output_inv_rope_quant",
+      "dsv4_output_projection",
+      "dsv4_q_projection",
+      "dsv4_sampling",
+      "dsv4_sp_attention_allgather",
+      "dsv4_sp_attention_reduce_scatter",
+      "dsv4_sp_final_mhc_allgather",
+      "dsv4_sparse_attention",
+      "kv_cache_block_zero",
+      "moe_gating_linear",
+      "moe_gating_routing_topk",
+      "moe_grouped_gemm",
+      "share_expert_act",
+      "share_expert_down_proj",
+      "share_expert_up_proj"
+    ],
+    "collective_points": 38,
+    "unequal_collective_points": 8,
+    "kv_admission": {
+      "decode_replica1_lane0": {
+        "num_blocks": 112914,
+        "admission_blocks_at_max_model_len": 2940,
+        "max_concurrency": 38.406122448979595
+      },
+      "decode_replica1_lane1": {
+        "num_blocks": 112914,
+        "admission_blocks_at_max_model_len": 2940,
+        "max_concurrency": 38.406122448979595
+      },
+      "decode_replica1_lane2": {
+        "num_blocks": 112914,
+        "admission_blocks_at_max_model_len": 2940,
+        "max_concurrency": 38.406122448979595
+      },
+      "decode_replica1_lane3": {
+        "num_blocks": 112914,
+        "admission_blocks_at_max_model_len": 2940,
+        "max_concurrency": 38.406122448979595
+      },
+      "native": 38.35,
+      "native_admission_blocks": [
+        2944,
+        2944
+      ],
+      "status": "DIFFERS"
+    },
+    "a11": {
+      "forwards": {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64/forwards.jsonl.gz",
+        "rows": 39680,
+        "sha256": "4507318110b06d5aafc298ffaf727ac20bb47bd341bd39104a40e022e7c5c745"
+      },
+      "collectives": {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/formal_p2_20261102/runs/p2_64/collectives.json",
+        "sha256": "8af0f669bdf3f58c327d02d94e5b4337592a915745a4f40992f4f64500b66a15",
+        "calls": 9002176
+      },
+      "stage_end_events": 39680,
+      "stale_stage_end_events": 0,
+      "scope_mapping": {
+        "prepare": [
+          "dsv4_input_preparation"
+        ],
+        "post": [
+          "dsv4_lm_head",
+          "dsv4_logits_gather",
+          "dsv4_sampling"
+        ],
+        "own_columns": [
+          "dsv4_block_table_write",
+          "kv_cache_block_zero"
+        ],
+        "dispatch": [
+          "dsv4_attention_output_zero",
+          "dsv4_compressor_fused_compress_store",
+          "dsv4_compressor_projection",
+          "dsv4_compressor_save_partial_states",
+          "dsv4_embedding",
+          "dsv4_embedding_allreduce",
+          "dsv4_ep_dispatch_allgather",
+          "dsv4_ep_output_reduce_scatter",
+          "dsv4_final_norm",
+          "dsv4_fused_q_kv_prepare",
+          "dsv4_fused_qkv_projection",
+          "dsv4_fused_qkv_rmsnorm",
+          "dsv4_grouped_output_projection",
+          "dsv4_index_compressor_fused_compress_store",
+          "dsv4_index_compressor_projection",
+          "dsv4_index_compressor_save_partial_states",
+          "dsv4_index_fused_query_prepare",
+          "dsv4_index_query_projection",
+          "dsv4_index_scores",
+          "dsv4_index_short_context_fill",
+          "dsv4_index_topk",
+          "dsv4_index_weights_projection",
+          "dsv4_mhc_attn_post_ffn_pre",
+          "dsv4_mhc_ffn_post_attn_pre",
+          "dsv4_mhc_final_post",
+          "dsv4_mhc_first_pre",
+          "dsv4_mhc_head",
+          "dsv4_output_inv_rope_quant",
+          "dsv4_output_projection",
+          "dsv4_q_projection",
+          "dsv4_query_padding",
+          "dsv4_sp_attention_allgather",
+          "dsv4_sp_attention_reduce_scatter",
+          "dsv4_sp_final_mhc_allgather",
+          "dsv4_sparse_attention",
+          "moe_gating_linear",
+          "moe_gating_routing_topk",
+          "moe_grouped_gemm",
+          "moe_shuffling",
+          "share_expert_act",
+          "share_expert_down_proj",
+          "share_expert_up_proj"
+        ],
+        "unknown_scopes": "each is retained as its own column",
+        "coordination_and_overlap": "signed composed time minus mapped segments and own columns"
+      }
+    }
+  },
+  "modules_over_2000": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py": 3060,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_execution_time_predictor.py": 8640,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/metrics/metrics_store.py": 5773,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/attention/main.py": 2161
+  }
+}

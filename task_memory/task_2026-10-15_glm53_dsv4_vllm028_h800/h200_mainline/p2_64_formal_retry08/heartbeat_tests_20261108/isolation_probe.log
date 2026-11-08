@@ -1,0 +1,21 @@
+# order-dependence isolation probe, 2026-11-08T11:32:01Z
+# worktree /data/ycfeng/Frontier/.worktrees/p2-64-startup-harness HEAD 57caf2f79f79c8bc19e199ba64f75ca49e8baaf6
+# python 3.10.6
+
+## probe A: the single case alone
+# command: python -m pytest tests/unit/test_native_pd_worker.py -q -p no:cacheprovider -k test_worker_forwards_canonical_clean_mode_and_idle_configuration
+.                                                                        [100%]
+1 passed, 17 deselected in 0.19s
+exitA=0
+
+## probe B: the auxiliary-fault parameterized group alone
+# command: python -m pytest tests/unit/test_native_pd_worker.py -q -p no:cacheprovider -k test_worker_separates_auxiliary_report_faults_from_native_failure
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+=========================== short test summary info ============================
+FAILED tests/unit/test_native_pd_worker.py::test_worker_separates_auxiliary_report_faults_from_native_failure[report_write_failure]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_separates_auxiliary_report_faults_from_native_failure[native_exit_at_replay_completion]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_separates_auxiliary_report_faults_from_native_failure[native_shutdown_error]
+3 failed, 1 passed, 14 deselected in 30.36s
+exitB=0

@@ -115,8 +115,9 @@ Every number in that table was recomputed from the row CSVs alone, independently
 `h200_mainline/p2_64_formal_retry08/headline_recompute.py` (result in `headline_recompute.json`). It reads
 `generation08_run2/gate/rows/frontier/a10.csv` and the three `gate/rows/vllm/*.csv` files, applies the TPOT filter
 `num_decode_tokens > 1`, and pools latency as the mean of the per-repeat means and throughput as total tokens over
-total span. All sixteen per-repeat values, all four pooled values and all twenty errors reproduce the table to the
-digits printed above; verdict `PASS`, worst `repeat02/ttft` 3.16%.
+total span. All four Frontier values, all twelve per-repeat vLLM values, all four pooled vLLM values and all sixteen
+relative errors (twelve per-repeat plus four pooled) reproduce the table to the digits printed above; verdict `PASS`,
+worst `repeat02/ttft` 3.16%.
 
 **Verdict: P2-64 formal PASS** (all three repeats, all four metrics, all-request and warm readings, within 10%).
 

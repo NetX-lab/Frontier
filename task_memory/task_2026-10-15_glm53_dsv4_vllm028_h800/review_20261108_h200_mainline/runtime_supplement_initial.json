@@ -1,0 +1,765 @@
+{
+  "interpreter": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "checks": [
+    {
+      "name": "all35 clocks:exp-1021-045514-040441",
+      "status": "PASS",
+      "detail": {
+        "containers": 4,
+        "gpu_hours": 6.337777777777778
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1021-141138-593083",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.03388888888888889
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1021-141138-594688",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.035555555555555556
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1025-152327-225209",
+      "status": "PASS",
+      "detail": {
+        "containers": 4,
+        "gpu_hours": 11.311111111111112
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1025-152329-181604",
+      "status": "PASS",
+      "detail": {
+        "containers": 4,
+        "gpu_hours": 11.755555555555556
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1025-155441-668927",
+      "status": "PASS",
+      "detail": {
+        "containers": 8,
+        "gpu_hours": 24.322222222222223
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1025-162315-604618",
+      "status": "PASS",
+      "detail": {
+        "containers": 8,
+        "gpu_hours": 24.54222222222222
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1026-031327-540424",
+      "status": "PASS",
+      "detail": {
+        "containers": 4,
+        "gpu_hours": 12.737777777777778
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1026-125836-702505",
+      "status": "PASS",
+      "detail": {
+        "containers": 8,
+        "gpu_hours": 26.302222222222223
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1028-024316-296035",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.11527777777777778
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1028-031147-398843",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.11694444444444445
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1028-132243-707076",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.195
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1028-210144-108044",
+      "status": "PASS",
+      "detail": {
+        "containers": 2,
+        "gpu_hours": 2.1266666666666665
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1028-231342-951824",
+      "status": "PASS",
+      "detail": {
+        "containers": 2,
+        "gpu_hours": 0.7511111111111111
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1028-231408-632060",
+      "status": "PASS",
+      "detail": {
+        "containers": 4,
+        "gpu_hours": 4.82
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-010007-750668",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.024722222222222222
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-010008-493772",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.0425
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-012627-132543",
+      "status": "PASS",
+      "detail": {
+        "containers": 2,
+        "gpu_hours": 0.5444444444444444
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-020008-235508",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.8358333333333333
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-035012-764213",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.06805555555555555
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-113750-923871",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.8511111111111112
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-135035-301114",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.84
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-135037-016686",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.006666666666666667
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-141735-456588",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.18833333333333332
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1029-154446-382293",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.8597222222222223
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1030-021110-248027",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.5925
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1030-144848-164721",
+      "status": "PASS",
+      "detail": {
+        "containers": 8,
+        "gpu_hours": 18.16888888888889
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1030-234535-245357",
+      "status": "PASS",
+      "detail": {
+        "containers": 4,
+        "gpu_hours": 3.4955555555555557
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1031-233253-628432",
+      "status": "PASS",
+      "detail": {
+        "containers": 2,
+        "gpu_hours": 0.18222222222222223
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1031-233305-902815",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.026111111111111113
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1101-004206-443314",
+      "status": "PASS",
+      "detail": {
+        "containers": 2,
+        "gpu_hours": 1.1022222222222222
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1101-005741-958298",
+      "status": "PASS",
+      "detail": {
+        "containers": 2,
+        "gpu_hours": 3.3155555555555556
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1101-015820-503227",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.30694444444444446
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1101-143721-849401",
+      "status": "PASS",
+      "detail": {
+        "containers": 1,
+        "gpu_hours": 0.9302777777777778
+      }
+    },
+    {
+      "name": "all35 clocks:exp-1102-030025-971155",
+      "status": "PASS",
+      "detail": {
+        "containers": 2,
+        "gpu_hours": 0.38666666666666666
+      }
+    },
+    {
+      "name": "client dispatch to proxy observed term",
+      "status": "PASS",
+      "detail": {
+        "count": 379,
+        "mean_ms": 0.6302366165891486
+      }
+    },
+    {
+      "name": "delay endpoints:proxy_to_api",
+      "status": "PASS",
+      "detail": {
+        "count": 128,
+        "mean_ms": 3.1129680573940277
+      }
+    },
+    {
+      "name": "delay endpoints:api_to_enqueue",
+      "status": "PASS",
+      "detail": {
+        "count": 128,
+        "mean_ms": 6.588563323020935
+      }
+    },
+    {
+      "name": "delay endpoints:prefill_update_to_response",
+      "status": "PASS",
+      "detail": {
+        "count": 128,
+        "mean_ms": 2.32846662402153
+      }
+    },
+    {
+      "name": "delay endpoints:response_to_decode_enqueue",
+      "status": "PASS",
+      "detail": {
+        "count": 128,
+        "mean_ms": 9.102704003453255
+      }
+    },
+    {
+      "name": "P2-32 native432 unique",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 native population:1/formal",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 native population:1/warmup",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 native population:2/formal",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 native population:2/warmup",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 native population:3/formal",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 native population:3/warmup",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 raw native to row CSV:1",
+      "status": "PASS",
+      "detail": {
+        "max_residual": 0.0
+      }
+    },
+    {
+      "name": "P2-32 raw native to row CSV:2",
+      "status": "PASS",
+      "detail": {
+        "max_residual": 0.0
+      }
+    },
+    {
+      "name": "P2-32 raw native to row CSV:3",
+      "status": "PASS",
+      "detail": {
+        "max_residual": 0.0
+      }
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank0.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank1.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank2.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank3.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank4.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank5.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank6.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0082.lgcm.sh.istep.fun/serving/rank7.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank0.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank1.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank2.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank3.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank4.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank5.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank6.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0146.lgcm.sh.istep.fun/serving/rank7.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank0.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank1.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank2.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank3.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank4.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank5.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank6.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0710.lgcm.sh.istep.fun/serving/rank7.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank0.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank1.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank2.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank3.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank4.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank5.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank6.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 worker:nodes/gpu-h200-0938.lgcm.sh.istep.fun/serving/rank7.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "P2-32 topology census",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_32/request_metrics.csv",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_32/system_metrics.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_32/metrics_ground_truth.jsonl",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_32/frontier_transfer_ledger.jsonl",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_32/op_precision_metadata.csv",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_64/request_metrics.csv",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_64/system_metrics.json",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_64/metrics_ground_truth.jsonl",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_64/frontier_transfer_ledger.jsonl",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "F4 actual artifact hash:p2_64/op_precision_metadata.csv",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "formal unequal EP scope:p2_32",
+      "status": "PASS",
+      "detail": {
+        "('prefill', 'NONE', False)": 256,
+        "('prefill', 'FULL', True)": 7936,
+        "('decode', 'FULL', True)": 14592,
+        "('decode', 'PIECEWISE', True)": 256
+      }
+    },
+    {
+      "name": "formal unequal EP scope:p2_64",
+      "status": "PASS",
+      "detail": {
+        "('prefill', 'NONE', False)": 512,
+        "('prefill', 'FULL', True)": 14848,
+        "('decode', 'FULL', True)": 23808,
+        "('decode', 'PIECEWISE', True)": 512
+      }
+    },
+    {
+      "name": "recorded percentile diagnostics",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "documented oversized module inventory",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "name": "native08 percentile:1/ttft_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 706.9394933059812,
+        "p95": 922.1755000762641
+      }
+    },
+    {
+      "name": "native08 percentile:1/tpot_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 24.767688289830936,
+        "p95": 24.840378179920442
+      }
+    },
+    {
+      "name": "native08 percentile:1/e2e_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 26039.45148177445,
+        "p95": 26273.40894928202
+      }
+    },
+    {
+      "name": "native08 percentile:2/ttft_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 704.838253557682,
+        "p95": 912.5321478582919
+      }
+    },
+    {
+      "name": "native08 percentile:2/tpot_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 24.72349390740764,
+        "p95": 24.870228065307074
+      }
+    },
+    {
+      "name": "native08 percentile:2/e2e_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 26009.466847404838,
+        "p95": 26293.082801532
+      }
+    },
+    {
+      "name": "native08 percentile:3/ttft_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 702.5389699265361,
+        "p95": 924.7801316902041
+      }
+    },
+    {
+      "name": "native08 percentile:3/tpot_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 24.775612451143395,
+        "p95": 24.84770831228657
+      }
+    },
+    {
+      "name": "native08 percentile:3/e2e_ms",
+      "status": "FAIL",
+      "detail": {
+        "p50": 26025.949608534575,
+        "p95": 26285.55286321789
+      }
+    },
+    {
+      "name": "heldout EP raw trace exact reproduction",
+      "status": "PASS",
+      "detail": null
+    }
+  ],
+  "summaries": {
+    "historical35_gpu_hours": 158.27166666666665,
+    "source_delay_means_ms": {
+      "client_dispatch_to_proxy": 0.6302366165891486,
+      "proxy_to_api": 3.1129680573940277,
+      "api_to_enqueue": 6.588563323020935,
+      "prefill_update_to_response": 2.32846662402153,
+      "response_to_decode_enqueue": 9.102704003453255
+    },
+    "p2_32_native": {
+      "workers": 32,
+      "ranks_by_role": {
+        "prefill": 16,
+        "decode": 16
+      }
+    },
+    "formal_forward_ep": {
+      "p2_32": {
+        "('prefill', 'NONE', False)": 256,
+        "('prefill', 'FULL', True)": 7936,
+        "('decode', 'FULL', True)": 14592,
+        "('decode', 'PIECEWISE', True)": 256
+      },
+      "p2_64": {
+        "('prefill', 'NONE', False)": 512,
+        "('prefill', 'FULL', True)": 14848,
+        "('decode', 'FULL', True)": 23808,
+        "('decode', 'PIECEWISE', True)": 512
+      }
+    },
+    "percentile_diagnostics": {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/diagnostics.csv",
+      "rows": 144,
+      "fields": [
+        "case",
+        "repeat",
+        "scope",
+        "side",
+        "metric",
+        "statistic",
+        "value",
+        "unit",
+        "gating",
+        "method"
+      ]
+    },
+    "modules_over_2000": {
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py": 3060,
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_execution_time_predictor.py": 8640,
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/metrics/metrics_store.py": 5773,
+      "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/attention/main.py": 2161
+    },
+    "headline_error_count": {
+      "per_repeat": 12,
+      "pooled": 4,
+      "total": 16,
+      "published_claim": 20
+    },
+    "depth_recomputed": "waves 122 depth median 18.56 min -37.77 max 18.9 g median 23.81 cpu median 4.68",
+    "ep_omitted_direct_gap_ms_per_unequal_wave": 0.04683602652499132,
+    "ep_128_unequal_waves_direct_gap_ms": 5.995011395198889
+  }
+}

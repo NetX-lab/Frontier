@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | Corrected the Status paragraph after the H200 mainline review: recorded the P2-H200-32 and P2-H200-64 formal four-metric passes and the dated 30% promotion receipt, and confined the "no receipt" statement to the H800 P0/P1 cases. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; stated which checklist applies to P0, mapped the two open P0 items to H4a, and deferred the H200 rows. |
 | 2026-10-23 | W128-V4-P0-CASE-BINDING: closed explicit P0 workload/client subitems from unchanged native06 R4; retained all-case checkboxes, memory-budget and10%/30% gates open. |
@@ -33,8 +34,14 @@ the shared artifact. Historical SharedGPT/tokenizer work is not a blocker.
 **Status:** shared workload, scoped H200 G0-A/G0-B and storage admission remain
 accepted only for their recorded scope. Grouped NIXL CPU structural/tracing is
 published at2a84c58/2ffd2cb, not native/full-serving acceptance. Graph/measured
-consumption and decode profiling now prioritize the H80032 P0 case. No formal
-four-metric or30% promotion receipt exists for V4. H200 costs/capacity are not
+consumption and decode profiling now prioritize the H80032 P0 case. For the two
+H200 cases, formal four-metric acceptance now exists: P2-H200-32 passed on
+2026-11-02 (worst5.61%), its30% promotion receipt
+`promotion/receipt_p2_32_to_p2_64.json` (sha256 `d505eece...`, issued
+2026-11-02T07:38:49Z, max error0.0561) was issued before the64-GPU build, and
+P2-H200-64 passed on 2026-11-07 with the generation08 reference (worst3.16%).
+No formal four-metric or30% promotion receipt exists for the H800 P0/P1 cases.
+H200 costs/capacity are not
 H800 qualification, and earlier single-role G0-B does not prove all P/D cases.
 
 ## Current Codex checkpoint — 2026-10-31

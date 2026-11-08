@@ -687,7 +687,7 @@ class ModelArchitectureProfile:
 
     @classmethod
     def deepseek_v4(cls) -> "ModelArchitectureProfile":
-        """Original V4 backbone identity with unsupported execution explicit."""
+        """V4 backbone identity with its measured execution scope explicit."""
 
         return cls(
             profile_id="deepseek_v4",
@@ -712,8 +712,8 @@ class ModelArchitectureProfile:
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "deepseek_v4"
             ),
-            # The non-sequence-parallel projection contract is metadata only.
-            # Native SP replicates shared weights; execution remains disabled.
+            # The non-sequence-parallel projection contract is metadata only;
+            # native SP replicates shared weights.
             layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
         )
 

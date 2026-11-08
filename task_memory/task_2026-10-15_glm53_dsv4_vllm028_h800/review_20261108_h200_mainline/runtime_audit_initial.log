@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/review_20261108_h200_mainline/audit_runtime.py", line 71, in <module>
+    j=load(p);inv=j['inventory'];g=inv['groups'];check('P2-32 worker:'+str(p.relative_to(base)),not j['observation_errors'] and g['tp_size']==8 and g['dp_size']==2 and g['ep_size']==16 and 'H200' in inv['device_identity']['name']);ranks[j['role']].add(g['world_rank'])
+KeyError: 'tp_size'

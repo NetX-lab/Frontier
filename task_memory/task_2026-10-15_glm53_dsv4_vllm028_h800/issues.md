@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | I-017 opened: the P2-64 startup-harness fix that made generation08 succeed lives only on branch `p2-64-startup-harness` (57caf2f7), which is not an ancestor of mainline HEAD, and its recorded CPU unit evidence does not reproduce today (12 failed / 6 passed). |
+| 2026-11-08 | I-016 opened and resolved: `tests/unit/test_native_pd_worker.py` passed the Python 3.11+ `-P` flag to a child interpreter, so 4 of 41 mainline unit tests failed on the declared 3.10 floor; replaced with a portable `sys.path` prelude and verified 41 passed. |
 | 2026-11-08 | Cleaned up the generation08-era artifacts: 313 files and 36 empty directories, 2,570,104,832 allocated bytes: 178 in-repo files over two codex-implement rounds and the lead's 135-file out-of-repo duplicate removal; the published P2-64 metrics were also recomputed from the row CSVs and reproduce the report exactly. |
 | 2026-11-08 | I-015 opened and resolved: a launcher from the ended G0-D track had polled a deleted job for 18 days and grown its log to 4.33 GB; stopped on YC's approval after identity and job-state evidence. |
 | 2026-11-08 | I-014 resolved: the copy job later succeeded on its own and both copy routes hold identical job output (`PAYLOAD_IDENTICAL`), so the deviation has no numerical consequence. |
@@ -33,6 +35,53 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+
+## I-017: the P2-64 startup-harness fix is not merged into mainline and its CPU evidence no longer reproduces (2026-11-08)
+
+- Observation: `git merge-base --is-ancestor 57caf2f7 HEAD` is false, and `git branch -a --contains 57caf2f7` lists only
+  `p2-64-startup-harness`. The mainline copy of `native_pd_worker.py` contains no occurrence of `heartbeat`; the copy in
+  `/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness` contains 28. The peer heartbeat check recorded as the I-013
+  resolution under D-P2-64-SIXTH, which the successful generation08 run used, therefore exists only on that branch.
+- Second observation: re-running the harness worktree's own unit evidence today gives `12 failed, 6 passed in 85.73s`
+  (`h200_mainline/p2_64_formal_retry08/heartbeat_tests_20261108/harness_worker_unit_tests.log`), against the recorded
+  `18 passed in 5.74s`. Four of the twelve failures are I-016's `-P` defect. The other eight all end in
+  `TimeoutError: Native P/D rendezvous or workload deadline exceeded`, meaning the test's `urlopen` -> `Health` stub was
+  never entered and the case waited out a real deadline.
+- Inference: the timeouts are order-dependent, not a defect in the sealed worker. The isolation probe
+  (`heartbeat_tests_20261108/isolation_probe.log`, 2026-11-08T11:32:01Z) shows two distinct patterns.
+  `test_worker_forwards_canonical_clean_mode_and_idle_configuration` passes alone in 0.19 s and fails inside the full
+  run, so it depends on state left by earlier cases. The parameterized group reproduces its own failure in isolation:
+  run by itself it still gives `3 failed, 1 passed in 30.36s`, with `[control]` passing and the next three parameters
+  timing out. Both patterns indicate a patch or module-state leak between cases in the harness branch's test module,
+  and the group's leak is self-contained in its first parameter. It is not root-caused yet.
+- Scope limit: generation08 ran natively on the platform and produced the accepted P2-64 reference, so no published
+  metric depends on this CPU evidence. The defect is in the harness branch's test isolation, not in the measurement.
+- Open work, recommended rather than performed: merge the `p2-64-startup-harness` worker and test changes back into
+  mainline, per the standing rule that worktree code and documentation return to the main branch on completion, and
+  root-cause the eight timeouts before accepting the merged tests. Both copies of `native_pd_worker.py` and of the test
+  module have diverged in opposite directions, so the merge touches the native measurement harness and needs its own
+  verification pass rather than a fast-forward.
+
+## I-016: a Python 3.11+ interpreter flag broke 4 mainline unit tests on the declared 3.10 floor (2026-11-08, resolved)
+
+- Observation: `python -m pytest tests/unit/test_native_pd_worker.py -q -p no:cacheprovider` on mainline HEAD gave
+  `4 failed, 37 passed in 1.19s` under `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6). Each failure asserted on
+  the child's stderr: `Unknown option: -P`, child return code 2. Failing cases:
+  `test_worker_launch_exports_staged_extension_path_to_real_child` and the three
+  `test_worker_child_ready_timeout_matches_configured_startup_budget` parameters.
+  Log: `h200_mainline/p2_64_formal_retry08/heartbeat_tests_20261108/worker_unit_tests.log`.
+- Cause: `tests/unit/test_native_pd_worker.py:122` launched the real probe child as
+  `[sys.executable, '-P', '-c', probe]`. `-P` (do not prepend the script directory or cwd to `sys.path`) exists only
+  from Python 3.11, while `environment.yml` pins `python=3.10` and `pyproject.toml` declares `requires-python >=3.10`.
+  Introduced on 2026-10-21 by `9c54f663` ("Export staged native extension path to serving child processes"), which added
+  these cases; the defect was latent because the module needs no GPU and had not been re-run on the floor interpreter
+  since.
+- Resolution: replaced the flag with a portable prelude prepended to the probe source, which strips `''` and the cwd
+  from `sys.path` inside the child before the import. This preserves the actual assertion, that the probe resolves
+  `native_full_structure` through the exported staged path rather than through the working directory. Verified
+  `41 passed in 1.14s`, exit 0 (`mainline_worker_tests_after_fix.log`).
+- Note on discovery: the codex-implement review of the H200 mainline did not find this, because that executor had no
+  pytest available and audited records and committed diffs only. It was found by running the suite directly.
 
 ## I-015: a launcher from the ended G0-D track kept polling a deleted job for 18 days (2026-11-08, resolved)
 

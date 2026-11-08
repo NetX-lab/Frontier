@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | Accepted the independent H200 mainline completion review: both H200 numerical cases confirmed complete, the mainline still INCOMPLETE on GPU-hour accounting; two record errors corrected and two new findings added (I-016 fixed, I-017 open). |
 | 2026-11-08 | Cleaned up the generation08-era artifacts: 313 files and 36 empty directories, 2,570,104,832 allocated bytes: 178 in-repo files over two codex-implement rounds and the lead's 135-file out-of-repo duplicate removal; the published P2-64 metrics were also recomputed from the row CSVs and reproduce the report exactly. |
 | 2026-11-08 | I-014 resolved: the planned CPU copy job later succeeded on its own, and both copy routes hold identical generation08 job output (`PAYLOAD_IDENTICAL`, 130 files, joint sha256 `5ef547e0...`), so the copy deviation has no numerical consequence for the P2-64 verdict. |
 | 2026-11-08 | Recorded P2-64 formal PASS with generation08 (exp-1108-002857-059466): R5 PASS, coverage COVERED, every repeat within 10% (worst 3.16%), 23.31 GPUh exact; copy via the read-only SSH route (I-014). |
@@ -123,6 +124,60 @@
 | 2026-10-18 | Completed documentation-only resume audit and main-path recovery; replaced the old A2-first handoff while preserving it in the before snapshot. |
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
+
+## H200 mainline completion review — accepted 2026-11-08
+
+An independent completion review was commissioned to answer whether the H200 mainline work, meaning DSV4 simulation
+support plus accuracy calibration, is actually complete, and whether errors or omitted critical executions exist.
+Executor: codex-implement `4c000c1e-7ba4-4ef2-a77f-e341a5c8b551` (gpt-6.1-sol-sys-paygo / ultra), read-only on code
+and git, writes confined to `review_20261108_h200_mainline/`, no platform or GPU operation.
+
+Accepted verdict: **the two H200 numerical cases are complete and correct; the H200 mainline as a whole is not
+complete, because actual GPU-hour accounting is still open.** The review re-derived both formal verdicts from the row
+CSVs with its own recomputation, independently of this task's `headline_recompute.py`, and found no headline numerical
+defect, no missing admitted native repeat, no retrospectively supplied promotion receipt, no forbidden whole-step
+input and no arbitrary multiplier on the inspected formal paths. P2-32 worst per-repeat error 5.6072% (repeat03 TTFT)
+and P2-64 generation08 worst 3.1623% (repeat02 TTFT), with all four metrics within 10% in every repeat in both the
+all-request and the warm reading. Six audits returned zero failures (157, 861, 906, 97, 107 and 28 checks).
+
+Four findings were raised. F1, GPU-hour accounting, is confirmed and remains the single criterion blocking literal
+completion; ticket 19 stays `PARTIAL` with its accounting checkbox unchecked, and no new GPU run is needed to close
+it. F2, unsupported heartbeat verification claims, is confirmed and escalated: the lead located that evidence in the
+unmerged `p2-64-startup-harness` worktree and re-running it there does not reproduce the recorded result. F3, a
+count overstatement in the generation08 formal report, and F4, five stale status statements across `plan.md`,
+ticket 17 and `frontier/model_architectures.py`, are corrected with case-specific scope; no H800 box was checked and
+no dated historical failure was erased.
+
+The lead added two findings the review could not reach, because its environment had no `pytest`:
+
+- **I-016, fixed.** Four of 41 mainline unit tests in `tests/unit/test_native_pd_worker.py` failed on the declared
+  Python 3.10 floor, because line 122 passed the 3.11-only `-P` interpreter flag to a child process (introduced
+  2026-10-21 by `9c54f663`). Replaced with a portable `sys.path` prelude that preserves the staged-path assertion;
+  verified `41 passed in 1.14s`, exit 0.
+- **I-017, open.** The peer heartbeat check that made generation08 succeed exists only on branch
+  `p2-64-startup-harness` (57caf2f7), which is not an ancestor of mainline HEAD. Re-running that worktree's own unit
+  evidence gives `12 failed, 6 passed` against the recorded `18 passed`; an isolation probe localizes the eight
+  timeouts to a test-isolation leak in that branch's test module rather than a worker defect, and it is not
+  root-caused. The merge is recommended rather than performed, because both copies of the worker and its test module
+  have diverged in opposite directions and the change touches the native measurement harness. Generation08 ran
+  natively and produced the accepted reference, so no published metric depends on this CPU evidence.
+
+Deliverables, relative to this task directory:
+
+- `review.md` section 12: lead acceptance, the disposition of all four findings, the two added findings, and the
+  remaining open items.
+- `test_report_2026-11-08_h200_mainline_review.md`: the lead's exact commands, expectations, actual results and
+  PASS/FAIL for the four test runs and the ten re-checks of the review's metric findings.
+- `review_20261108_h200_mainline/`: the assignment, the executor report and long-form `report.md`, and the six audit
+  scripts with their JSON and log outputs.
+- `h200_mainline/p2_64_formal_retry08/heartbeat_tests_20261108/`: the four raw test logs, including the isolation
+  probe.
+- `issues.md` I-016 and I-017.
+
+Open after this review: GPU-hour accounting reconciliation including generations 05-08; merging
+`p2-64-startup-harness` into mainline and root-causing its isolation leak; the two heartbeat claims the lead did not
+re-run (the `101 passed` suite and the `10.01 s / 1.01 s` stopped-peer timing comparison); and H800 P0/P1 as later
+scope, which H200 results never qualify.
 
 ## Completed task artifact cleanup — 2026-11-03
 

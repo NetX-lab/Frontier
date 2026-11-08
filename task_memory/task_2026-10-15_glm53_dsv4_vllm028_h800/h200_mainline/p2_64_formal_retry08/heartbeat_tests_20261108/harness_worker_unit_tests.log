@@ -1,0 +1,386 @@
+# harness worktree re-verification, 2026-11-08T10:37:59Z
+# worktree /data/ycfeng/Frontier/.worktrees/p2-64-startup-harness HEAD 57caf2f79f79c8bc19e199ba64f75ca49e8baaf6
+# python 3.10.6
+# command: python -m pytest tests/unit/test_native_pd_worker.py -q -p no:cacheprovider
+.FFFFFFF.FFFFF....                                                       [100%]
+=================================== FAILURES ===================================
+_ test_worker_separates_auxiliary_report_faults_from_native_failure[report_write_failure] _
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_separates_auxiliar1')
+case = 'report_write_failure'
+
+    @pytest.mark.parametrize("case", ["control", "report_write_failure",
+                                     "native_exit_at_replay_completion", "native_shutdown_error"])
+    def test_worker_separates_auxiliary_report_faults_from_native_failure(tmp_path, case):
+        result = exercise(native_pd_worker, tmp_path, case)
+>       assert "native_health_200" in result["events"]
+E       AssertionError: assert 'native_health_200' in ['server_launch', 'server_stop_called']
+
+tests/unit/test_native_pd_worker.py:287: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+_ test_worker_separates_auxiliary_report_faults_from_native_failure[native_exit_at_replay_completion] _
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_separates_auxiliar2')
+case = 'native_exit_at_replay_completion'
+
+    @pytest.mark.parametrize("case", ["control", "report_write_failure",
+                                     "native_exit_at_replay_completion", "native_shutdown_error"])
+    def test_worker_separates_auxiliary_report_faults_from_native_failure(tmp_path, case):
+        result = exercise(native_pd_worker, tmp_path, case)
+>       assert "native_health_200" in result["events"]
+E       AssertionError: assert 'native_health_200' in ['server_launch', 'server_stop_called']
+
+tests/unit/test_native_pd_worker.py:287: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+_ test_worker_separates_auxiliary_report_faults_from_native_failure[native_shutdown_error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_separates_auxiliar3')
+case = 'native_shutdown_error'
+
+    @pytest.mark.parametrize("case", ["control", "report_write_failure",
+                                     "native_exit_at_replay_completion", "native_shutdown_error"])
+    def test_worker_separates_auxiliary_report_faults_from_native_failure(tmp_path, case):
+        result = exercise(native_pd_worker, tmp_path, case)
+>       assert "native_health_200" in result["events"]
+E       AssertionError: assert 'native_health_200' in ['server_launch', 'server_stop_called']
+
+tests/unit/test_native_pd_worker.py:287: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+_______ test_worker_forwards_canonical_clean_mode_and_idle_configuration _______
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_forwards_canonical0')
+
+    def test_worker_forwards_canonical_clean_mode_and_idle_configuration(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, "canonical_clean")
+>       assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:305: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+_ test_worker_preserves_native_completion_when_client_admission_is_unverified __
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_preserves_native_c0')
+
+    def test_worker_preserves_native_completion_when_client_admission_is_unverified(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, "canonical_clean_admission_failure")
+>       assert result["worker_returncode"] == 4
+E       assert 1 == 4
+
+tests/unit/test_native_pd_worker.py:314: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+________ test_worker_uses_case_run_layout_and_retains_ordered_shutdown _________
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_uses_case_run_layo0')
+
+    def test_worker_uses_case_run_layout_and_retains_ordered_shutdown(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, "canonical_clean_standard_layout")
+>       assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:322: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+______ test_manifest_copy_failure_is_soft_and_native_work_still_completes ______
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_manifest_copy_failure_is_0')
+
+    def test_manifest_copy_failure_is_soft_and_native_work_still_completes(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, "canonical_clean_manifest_staging_failure")
+        assert result["observation_errors"]
+        assert "FileNotFoundError" in result["observation_errors"][0]
+>       assert result["worker_returncode"] == result["native_server_returncode"] == 0
+E       assert 1 == 0
+
+tests/unit/test_native_pd_worker.py:337: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_OBSERVATION_ERROR Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 314, in run
+    stage_run_manifest(config, root)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 143, in stage_run_manifest
+    manifest = json.loads(source.read_text())
+  File "/usr/lib/python3.10/pathlib.py", line 1134, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "/usr/lib/python3.10/pathlib.py", line 1119, in open
+    return self._accessor.open(self, mode, buffering, encoding, errors,
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-brainpp/pytest-5/test_manifest_copy_failure_is_0/canonical_clean_manifest_staging_failure__gvvhala/local-case/runs/groundtruth_clean/cpu-fixture/run_manifest.json'
+
+NATIVE_PD_STAGE native_start
+NATIVE_PD_OBSERVATION_ERROR Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 375, in run
+    manifest = json.loads(manifest_path.read_text())
+  File "/usr/lib/python3.10/pathlib.py", line 1134, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "/usr/lib/python3.10/pathlib.py", line 1119, in open
+    return self._accessor.open(self, mode, buffering, encoding, errors,
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-brainpp/pytest-5/test_manifest_copy_failure_is_0/canonical_clean_manifest_staging_failure__gvvhala/local-case/runs/groundtruth_clean/cpu-fixture/run_manifest.json'
+
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+__ test_serving_extension_receives_actual_generation_role_and_node_directory ___
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_serving_extension_receive0')
+
+    def test_serving_extension_receives_actual_generation_role_and_node_directory(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving')
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:354: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE native_launched
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 392, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 282, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+________ test_worker_launch_exports_staged_extension_path_to_real_child ________
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_launch_exports_sta0')
+
+    def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child')
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:371: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 107, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+_ test_worker_child_ready_timeout_matches_configured_startup_budget[3600-None] _
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_child_ready_timeou0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f46b730b4f0>
+budget = 3600, inherited = None
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:394: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 107, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+_ test_worker_child_ready_timeout_matches_configured_startup_budget[3600-600] __
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_child_ready_timeou1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f46b730a800>
+budget = 3600, inherited = '600'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:394: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 107, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+__ test_worker_child_ready_timeout_matches_configured_startup_budget[37-7200] __
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-5/test_worker_child_ready_timeou2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f46b7001ba0>
+budget = 37, inherited = '7200'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:394: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 107, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+=========================== short test summary info ============================
+FAILED tests/unit/test_native_pd_worker.py::test_worker_separates_auxiliary_report_faults_from_native_failure[report_write_failure]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_separates_auxiliary_report_faults_from_native_failure[native_exit_at_replay_completion]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_separates_auxiliary_report_faults_from_native_failure[native_shutdown_error]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_forwards_canonical_clean_mode_and_idle_configuration
+FAILED tests/unit/test_native_pd_worker.py::test_worker_preserves_native_completion_when_client_admission_is_unverified
+FAILED tests/unit/test_native_pd_worker.py::test_worker_uses_case_run_layout_and_retains_ordered_shutdown
+FAILED tests/unit/test_native_pd_worker.py::test_manifest_copy_failure_is_soft_and_native_work_still_completes
+FAILED tests/unit/test_native_pd_worker.py::test_serving_extension_receives_actual_generation_role_and_node_directory
+FAILED tests/unit/test_native_pd_worker.py::test_worker_launch_exports_staged_extension_path_to_real_child
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[3600-None]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[3600-600]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[37-7200]
+12 failed, 6 passed in 85.73s (0:01:25)
+exit=1

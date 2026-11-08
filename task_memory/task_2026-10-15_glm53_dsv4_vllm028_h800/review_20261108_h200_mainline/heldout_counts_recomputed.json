@@ -1,0 +1,117 @@
+{
+ "status": "PASS",
+ "moe_layers": 43,
+ "rule": "EP dispatch launches 3 kernels per layer when DP lanes are unequal (AllGatherV) and 1 when they are equal",
+ "runs": {
+  "p2_64/prefill/dp1/tp0": {
+   "trace": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792946231753991556.pt.trace.json.gz",
+   "classes": {
+    "FULL|dummy|real=False|lanes=equal": {
+     "forwards": 112,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 43, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 112,
+     "dispatch_per_layer=1": 112
+    },
+    "NONE|dummy|real=False|lanes=unequal": {
+     "forwards": 4,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 0, \"dispatch_allgatherv\": 129}, \"kernels\": {\"allgather\": 0, \"allgatherv\": 129, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 43, \"reduce_scatter\": 0}}": 4,
+     "dispatch_per_layer=3": 4
+    },
+    "NONE|prefill|real=True|lanes=equal": {
+     "forwards": 9,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 88, \"allgatherv\": 0, \"lamport_all_gather\": 0, \"lamport_reduce_scatter\": 0, \"reduce\": 0, \"reduce_scatter\": 86}}": 9,
+     "dispatch_per_layer=1": 9
+    },
+    "NONE|prefill|real=True|lanes=unequal": {
+     "forwards": 3,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 0, \"dispatch_allgatherv\": 129}, \"kernels\": {\"allgather\": 45, \"allgatherv\": 129, \"lamport_all_gather\": 0, \"lamport_reduce_scatter\": 0, \"reduce\": 43, \"reduce_scatter\": 43}}": 3,
+     "dispatch_per_layer=3": 3
+    }
+   }
+  },
+  "p2_64/decode/dp1/tp0": {
+   "trace": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-64-profile-20261025-01/artifacts/torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792946280760554510.pt.trace.json.gz",
+   "classes": {
+    "FULL|decode|real=True|lanes=equal": {
+     "forwards": 57,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 44, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 57,
+     "dispatch_per_layer=1": 57
+    },
+    "FULL|dummy|real=False|lanes=equal": {
+     "forwards": 110,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 43, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 110,
+     "dispatch_per_layer=1": 110
+    },
+    "PIECEWISE|decode|real=True|lanes=equal": {
+     "forwards": 2,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 44, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 2,
+     "dispatch_per_layer=1": 2
+    },
+    "PIECEWISE|dummy|real=False|lanes=equal": {
+     "forwards": 3,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 43, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 3,
+     "dispatch_per_layer=1": 3
+    },
+    "PIECEWISE|first_tail_alone|real=True|lanes=equal": {
+     "forwards": 1,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 44, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 1,
+     "dispatch_per_layer=1": 1
+    },
+    "PIECEWISE|first_tail_with_decodes|real=True|lanes=equal": {
+     "forwards": 1,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 44, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 1,
+     "dispatch_per_layer=1": 1
+    }
+   }
+  },
+  "p2_32/prefill/dp1/tp0": {
+   "trace": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces/prefill/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792942733290370462.pt.trace.json.gz",
+   "classes": {
+    "FULL|dummy|real=False|lanes=equal": {
+     "forwards": 101,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 43, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 101,
+     "dispatch_per_layer=1": 101
+    },
+    "NONE|dummy|real=False|lanes=unequal": {
+     "forwards": 3,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 0, \"dispatch_allgatherv\": 129}, \"kernels\": {\"allgather\": 0, \"allgatherv\": 129, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 43, \"reduce_scatter\": 0}}": 3,
+     "dispatch_per_layer=3": 3
+    },
+    "NONE|prefill|real=True|lanes=equal": {
+     "forwards": 23,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 88, \"allgatherv\": 0, \"lamport_all_gather\": 0, \"lamport_reduce_scatter\": 0, \"reduce\": 0, \"reduce_scatter\": 86}}": 23,
+     "dispatch_per_layer=1": 23
+    },
+    "NONE|prefill|real=True|lanes=unequal": {
+     "forwards": 1,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 0, \"dispatch_allgatherv\": 129}, \"kernels\": {\"allgather\": 45, \"allgatherv\": 129, \"lamport_all_gather\": 0, \"lamport_reduce_scatter\": 0, \"reduce\": 43, \"reduce_scatter\": 43}}": 1,
+     "dispatch_per_layer=3": 1
+    }
+   }
+  },
+  "p2_32/decode/dp1/tp0": {
+   "trace": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/dsv4-h200-p2-profile-20261025-01/artifacts/torch_traces/decode/dp1/dp1_pp0_tp0_dcp0_ep8_rank0.1792942680280151453.pt.trace.json.gz",
+   "classes": {
+    "FULL|decode|real=True|lanes=equal": {
+     "forwards": 58,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 44, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 58,
+     "dispatch_per_layer=1": 58
+    },
+    "FULL|dummy|real=False|lanes=equal": {
+     "forwards": 4,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 43, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 4,
+     "dispatch_per_layer=1": 4
+    },
+    "PIECEWISE|decode|real=True|lanes=equal": {
+     "forwards": 1,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 44, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 1,
+     "dispatch_per_layer=1": 1
+    },
+    "PIECEWISE|first_tail_alone|real=True|lanes=equal": {
+     "forwards": 1,
+     "{\"ep\": {\"combine\": 43, \"dispatch_allgather\": 43, \"dispatch_allgatherv\": 0}, \"kernels\": {\"allgather\": 44, \"allgatherv\": 0, \"lamport_all_gather\": 44, \"lamport_reduce_scatter\": 43, \"reduce\": 0, \"reduce_scatter\": 43}}": 1,
+     "dispatch_per_layer=1": 1
+    }
+   }
+  }
+ }
+}

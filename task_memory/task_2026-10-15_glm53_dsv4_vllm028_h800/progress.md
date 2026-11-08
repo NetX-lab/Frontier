@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | Accepted the codex-implement H200 mainline completion review: both H200 numerical cases confirmed complete, the mainline still INCOMPLETE on GPU-hour accounting; F3/F4 record errors corrected, and two new findings added (I-016 the Python 3.11-only `-P` flag breaking 4 mainline unit tests, now fixed; I-017 the unmerged `p2-64-startup-harness` deliverable whose recorded CPU evidence does not reproduce). |
 | 2026-11-08 | Recorded the generation08 result: job Succeeded (23.31 GPUh exact), hash-identical SSH copy, R5 PASS, pair coverage COVERED, all four metrics within 10% in every repeat; P2-64 formal PASS. |
 | 2026-11-07 | Recorded the generation08 submission `exp-1108-002857-059466` at 16:28:57Z (27/27 checks), Running at 16:34Z. |
 | 2026-11-07 | Recorded the generation08 records commit 79634ae7, the prepared generation08 copy script, and the codex-implement cleanup of generation05-07 scratch duplicates (449 files, 32.5 MB). |
@@ -528,6 +529,82 @@ The following completed A6 history retains its original all-request verdicts. D-
 - **in-progress**: fresh all-scope current-table invocation (background shell `sh_196119829001zIT8h1deHASn6x`), receipt `a6_forward_attention_20261101/current_command.json`, identical-input/fold cache reuse, output `current_phase_heldout.json`. This finishes diagnostics absent from the earlier retained selected-scope output; no GPU or P2 replay has started.
 - **in-progress, resumed same IDs only**: PASS-REPLAY-INPUTS needs the exact retained source-row/raw/config/cache paths; B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) needs phase-level findings. No duplicate agents or completed checks were restarted.
 - **pending**: repeatability producer -> business verification -> complete three-run rows/tables -> four CPU P2 replays and median3 held-out run. Unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched; changes are not yet committed.
+
+## H200 mainline completion review and lead acceptance — 2026-11-08
+
+Request: "codex to review whether the task's H200 mainline work (DSV4 support and accuracy calibration) is complete,
+and whether errors or omitted critical executions exist." Lead acceptance and the full disposition are in
+[review.md section 12](review.md#12-h200-mainline-completion-review--lead-acceptance-2026-11-08); the lead's own
+commands and actuals are in [test_report_2026-11-08_h200_mainline_review.md](test_report_2026-11-08_h200_mainline_review.md).
+
+- completed — assignment. Reason: the completion question needed an independent reader who had not written the
+  records. Expectation: a verdict grounded in the artifacts, not in the records' own claims. Method:
+  `review_20261108_h200_mainline/assignment.md`, naming ticket 19's Milestones/Acceptance/Status lines, tickets 17/18,
+  `plan.md:196` and `:217`, the 139 `D-*` decisions, the generation08 formal report and I-001 to I-015; writes confined
+  to `review_20261108_h200_mainline/`, no platform/RJob/GPU operation, read-only git. The brief was corrected before
+  submission: `a06a72a4...`, which the records cite beside harness `f33306d4`, is a **native vLLM source SHA** bound
+  into `vllm_replay.runtime_version`, not a commit in this repository. Result: the executor independently resolved it
+  in `/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination`.
+- completed — execution. codex-implement `4c000c1e-7ba4-4ef2-a77f-e341a5c8b551` (gpt-6.1-sol-sys-paygo / ultra,
+  session `01a1ba95-8a5d-7c21-b128-2363134ee32a`, 0 watchdog retries, self-report `implemented`, 37 min). Report:
+  `review_20261108_h200_mainline/codex-implement-4c000c1e-7ba4-4ef2-a77f-e341a5c8b551/implementation.md`, long form in
+  `review_20261108_h200_mainline/report.md`. Six audits, all zero-failure: metrics 157/157, evidence 861/861,
+  qualification 906/906, runtime 97/97, runtime supplement 107/107, handoff 28/28. Write scope held:
+  `git status --short --untracked-files=no` empty, nothing changed outside the review directory.
+- completed — accepted verdict. The two H200 numerical cases are complete and correct; the H200 mainline as a whole is
+  **not** complete, because actual GPU-hour accounting is still open. P2-32 worst per-repeat error
+  `0.05607176023817675` (repeat03/ttft), P2-64 generation08 worst `0.03162330523324778` (repeat02/ttft), all four
+  metrics within 10% in every repeat in both the all-request and warm readings. The executor reproduced every error
+  from the row CSVs with its own `audit_metrics.py`, whose pooled throughput divides total tokens by the sum of
+  per-repeat spans, matching this task's convention instead of reusing `headline_recompute.py`.
+- completed — pre-launch receipt binding independently re-checked by the lead. `promotion/receipt_p2_32_to_p2_64.json`,
+  sha256 `d505eece...`, issued 2026-11-02T07:38:49.523696+00:00, limit 0.3, 24 checked errors, max
+  `0.05607176023817675`, `result: true`. The same digest is embedded in the generation08 `config.json`,
+  `case/inputs/native_config.json` and run manifest, all built later, so ticket 19's "must exist before formal 64-GPU
+  submission, not supplied retrospectively" holds. The superseded P2-64 reference keeps its 12.25% all-request error
+  and is not retroactively promoted.
+- completed — F3 corrected. The generation08 formal report said "all sixteen per-repeat values ... all twenty errors";
+  the actual quantities are 4 Frontier values, 12 per-repeat vLLM values, 4 pooled vLLM values and 16 errors, which
+  `headline_recompute.json` confirms exactly. Prose corrected. The lead's assignment brief had repeated the same wrong
+  counts.
+- completed — F4 corrected, case-specific scope only, no H800 box checked and no dated historical failure erased.
+  `plan.md` line 207 ("New P2-64 reference acceptance remains open." -> formally accepted with generation08) and line
+  214 (execution/admission and the four warm errors no longer pending, worst 3.16%); `tickets/17-dsv4-canonical-case.md`
+  Status (records both H200 formal passes and the dated receipt, confines "no receipt" to H800 P0/P1);
+  `frontier/model_architectures.py:690` docstring and the stale "execution remains disabled" clause at line 716. The
+  two code edits are docstring and comment only; the `runtime_limitations` tuple they contradicted is unchanged and no
+  executable line was touched.
+- completed — new finding I-016, which the review could not have found. Reason for running the suite: F2 pointed at
+  missing CPU evidence, so the lead executed the tests the executor could not (its environment had no pytest,
+  `handoff_audit.log` ENVIRONMENT `"pytest": false`). Expectation: 41 passed. Method:
+  `PYTHONPATH=$PWD /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_native_pd_worker.py -q -p no:cacheprovider`
+  on mainline HEAD `c30c3380`. Result: `4 failed, 37 passed in 1.19s`, each failing on child stderr `Unknown option: -P`.
+  Cause: `tests/unit/test_native_pd_worker.py:122` passed the Python 3.11-only `-P` flag to a child interpreter while
+  the project floor is 3.10; introduced 2026-10-21 by `9c54f663`. Fixed with a portable `sys.path` prelude that strips
+  `''` and the cwd inside the child, preserving the staged-path assertion; re-verified `41 passed in 1.14s`, exit 0.
+- completed — new finding I-017, the unmerged harness deliverable. `git merge-base --is-ancestor 57caf2f7 HEAD` is
+  false and `git branch -a --contains 57caf2f7` lists only `p2-64-startup-harness`; the mainline
+  `native_pd_worker.py` has 0 `heartbeat` occurrences against 28 in the harness copy. Re-running that worktree's own
+  unit evidence gives `12 failed, 6 passed in 85.73s` against the recorded `18 passed in 5.74s`: 4 failures are I-016,
+  and 8 are `TimeoutError: Native P/D rendezvous or workload deadline exceeded`. The isolation probe settles the cause
+  as a test-isolation leak rather than a worker defect: the clean-mode case passes alone in 0.19 s, and the
+  auxiliary-fault group reproduces `3 failed, 1 passed in 30.36s` by itself with `[control]` passing. Generation08 ran
+  natively and produced the accepted reference, so no published metric depends on this CPU evidence. Logs:
+  `h200_mainline/p2_64_formal_retry08/heartbeat_tests_20261108/`.
+- pending — merging `p2-64-startup-harness` into mainline. Recommended, deliberately not performed: both copies of the
+  worker and of its test module have diverged in opposite directions, the change touches the native measurement
+  harness, and the harness branch's tests currently fail on an un-root-caused isolation leak. This needs its own
+  verification pass, not a fast-forward.
+- pending — GPU-hour accounting (F1), unchanged by this review and still the one criterion blocking literal
+  completion. The 35-job ledger totals 158.271667 container GPUh and excludes generations 05-08 (18.52 + 8.57 + 41.81
+  + 23.31 = 92.21 GPUh); generation01 has one of eight exact finish clocks (4.053333 GPUh known), generation02 has
+  `container_clocks_complete: false`, and generations 03/04 retain null exact totals. No metric depends on these
+  clocks, because the client intervals use dispatch/first-token/last-token monotonic timestamps. Ticket 19 stays
+  `PARTIAL` and its accounting box stays unchecked; no new GPU run is needed to close it.
+- pending — the two heartbeat claims the lead did not re-run: the `101 passed in 19.50 s` related-harness suite and the
+  `10.01 s / 1.01 s` old/new stopped-peer timing comparison.
+- pending — H800 P0/P1, later scope. H200 results never qualify H800, and no formal four-metric or 30% promotion
+  receipt exists for those cases.
 
 ## D-P2-64-SIXTH — peer heartbeat check and generation08 package, 2026-11-07
 

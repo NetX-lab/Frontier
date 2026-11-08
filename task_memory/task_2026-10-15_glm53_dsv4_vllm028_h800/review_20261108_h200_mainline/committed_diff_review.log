@@ -1,0 +1,616 @@
+$ git show 0fb8955d -- frontier/execution_time_predictor/analytical_kv_cache_transfer_predictor.py frontier/metrics/op_trace_utils.py
+rc=0
+commit 0fb8955d95469c49824676831a814bc3afc08042
+Author: fwyc0573 <935953068@qq.com>
+Date:   Sun Nov 1 14:46:27 2026 +0000
+
+    kv-transfer: price grouped V4 NIXL wire time on physical blocks
+    
+    Native NIXL registers the packed V4 cache as one region with one
+    block_stride descriptor per physical block, so each selected page of
+    any cache group moves the full 1,002,240-byte block. The grouped path
+    priced wire time on the structural component bytes (39,521,664 B for a
+    6144-token prompt instead of the native 46,103,040 B per handle).
+    
+    Wire time now uses selected pages times physical_block_size_bytes.
+    The recorded payload keeps its structural component bytes, so the
+    ownership and end-event checks are unchanged. The grouped op trace
+    records wire_bytes. Tests add the 256/257/6143 prompt boundaries and
+    check the priced time against the wire bytes (D-WARM-TWO-FIX item 1).
+
+diff --git a/frontier/metrics/op_trace_utils.py b/frontier/metrics/op_trace_utils.py
+index 76829c58..6efab133 100644
+--- a/frontier/metrics/op_trace_utils.py
++++ b/frontier/metrics/op_trace_utils.py
+@@ -823,7 +823,7 @@ def _build_grouped_kv_cache_transfer_meta(
+ ) -> Dict[str, Any]:
+     """Describe the reserved component pages, not a scalar attention tensor."""
+     from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
+-        get_grouped_nixl_payload,
++        get_grouped_nixl_payload, get_grouped_nixl_wire_bytes,
+     )
+ 
+     if transfer_info.kv_connector != "nixl" or len(batch.requests) != 1:
+@@ -891,7 +891,8 @@ def _build_grouped_kv_cache_transfer_meta(
+         "source_group_block_ids": {key: list(value) for key, value in transfer_info.source_group_block_ids.items()},
+         "target_group_block_ids": {key: list(value) for key, value in transfer_info.target_group_block_ids.items()},
+         "transferred_group_block_ids": {key: list(value) for key, value in transferred.items()},
+-        "native_wire_bytes_known": False,
++        "wire_bytes": get_grouped_nixl_wire_bytes(capacity, transferred),
++        "native_wire_bytes_known": True,
+     }
+ 
+ 
+
+$ git show a69a5213 --stat
+rc=0
+commit a69a52132257ca854a8759249bca65b32ffa06bf
+Merge: 43ecf847 13a348b7
+Author: fwyc0573 <935953068@qq.com>
+Date:   Sat Oct 31 09:51:23 2026 +0000
+
+    Merge B29: measured serving path ingress and handoff delays (ingress option A)
+
+ docs/cli/README.md                                 |  16 +
+ frontier/config/config.py                          |  17 +
+ frontier/config/kv_cache_transfer_config.py        |  17 +
+ frontier/events/cluster_batch_end_event.py         |   2 +-
+ frontier/simulator.py                              |  13 +-
+ .../h3o_operator_costs/a10/a10_driver.py           |  51 +-
+ .../h3o_operator_costs/b29/artifact_inventory.json | 567 ++++++++++++
+ .../h3o_operator_costs/b29/b28_config_check.json   |  20 +
+ .../b29/b28_snapshot_p2_32_base.json               | 960 ++++++++++++++++++++
+ .../b29/b28_snapshot_p2_32_candidate.json          | 964 +++++++++++++++++++++
+ .../b29/b28_snapshot_p2_64_base.json               | 960 ++++++++++++++++++++
+ .../b29/b28_snapshot_p2_64_candidate.json          | 964 +++++++++++++++++++++
+ .../h3o_operator_costs/b29/check_b28_config.py     |  25 +
+ .../b29/check_zero_base_identity.py                |  29 +
+ .../h3o_operator_costs/b29/config_snapshot.py      |  10 +
+ .../h3o_operator_costs/b29/environment.json        |  36 +
+ .../h3o_operator_costs/b29/final_checks.py         |  42 +
+ .../h3o_operator_costs/b29/focused_command.json    |  31 +
+ .../h3o_operator_costs/b29/focused_r2_command.json |  32 +
+ .../h3o_operator_costs/b29/focused_r3_command.json |  32 +
+ .../h3o_operator_costs/b29/ingress_values.py       |  42 +
+ .../h3o_operator_costs/b29/ingress_values.txt      |  13 +
+ .../b29/initial_replay_status.json                 |  26 +
+ .../h3o_operator_costs/b29/receipt_config_check.py |  47 +
+ .../b29/receipt_config_comparison.json             |  18 +
+ .../b29/regression_base_command.json               | 205 +++++
+ .../b29/regression_base_continue_command.json      | 206 +++++
+ .../b29/regression_base_final_command.json         | 207 +++++
+ .../b29/regression_base_helper_command.json        |  31 +
+ .../b29/regression_candidate_command.json          | 206 +++++
+ .../b29/regression_candidate_final_command.json    | 208 +++++
+ .../b29/regression_candidate_helper_command.json   |  31 +
+ .../h3o_operator_costs/b29/regression_compare.py   |  98 +++
+ .../b29/regression_comparison.txt                  |  55 ++
+ .../b29/regression_nonpasses.json                  | 495 +++++++++++
+ .../b29/regression_selection.json                  |  23 +
+ .../h3o_operator_costs/b29/regression_targets.json | 181 ++++
+ .../b29/regression_targets_initial.json            | 179 ++++
+ .../h3o_operator_costs/b29/replay_check.py         |  88 ++
+ .../b29/replay_p2_32_partial.json                  | 330 +++++++
+ .../h3o_operator_costs/b29/replay_results.json     | 706 +++++++++++++++
+ .../h3o_operator_costs/b29/replay_results.txt      |  18 +
+ .../b29/replay_status_native_env.json              |  26 +
+ .../h3o_operator_costs/b29/report.md               | 337 +++++++
+ .../h3o_operator_costs/b29/run_final_regression.py |  12 +
+ .../h3o_operator_costs/b29/run_pytest.py           |  20 +
+ .../b29/run_replays_native_env.py                  |  29 +
+ .../h3o_operator_costs/b29/run_smoke.sh            |  15 +
+ .../h3o_operator_costs/b29/source_diff.patch       | 368 ++++++++
+ .../h3o_operator_costs/b29/static_checks.json      |  39 +
+ .../h3o_operator_costs/b29/trace_selection.json    |  16 +
+ .../h3o_operator_costs/b29/zero_base_identity.json |  26 +
+ .../b29/zero_base_identity_audit.json              |  76 ++
+ tests/unit/test_dsv4_a10_tools.py                  |  74 ++
+ tests/unit/test_pdd_parallel_initializer.py        |   1 +
+ tests/unit/test_serving_path_delays.py             | 176 ++++
+ 56 files changed, 9404 insertions(+), 12 deletions(-)
+
+$ git show 13a348b7 -- frontier/config frontier/simulator.py frontier/events
+rc=0
+commit 13a348b75eda800b9066b49949f93b1c142a001b
+Author: fwyc0573 <935953068@qq.com>
+Date:   Sat Oct 31 09:51:18 2026 +0000
+
+    Add measured serving path ingress and handoff delays (B29, ingress option A)
+    
+    request_ingress_delay_ms delays the request arrival event while arrived_at
+    keeps the client arrival, so TTFT and E2E still start at the client.
+    request_handoff_delay_ms delays the KV transfer start after prefill for every
+    connector. Both default to 0; explicit zero is byte-identical to the base for
+    PDD and co-location. The A10 driver sets the measured P2-64 values (10.3 and
+    11.4 ms), adds --without-ingress for the B28 configuration and --field for
+    diagnostic variants, and records the CC backend type in the receipt.
+
+diff --git a/frontier/config/config.py b/frontier/config/config.py
+index a1dbbc0a..10fc4a4c 100644
+--- a/frontier/config/config.py
++++ b/frontier/config/config.py
+@@ -20,6 +20,7 @@ from frontier.config.flat_dataclass import create_flat_dataclass
+ from frontier.config.kv_cache_transfer_config import (
+     BaseKVCacheTransferConfig,
+     AnalyticalKVCacheTransferConfig,
++    _require_finite_non_negative,
+ )
+ from frontier.config.m2n_transfer_config import (
+     BaseM2NTransferConfig,
+@@ -142,6 +143,14 @@ class SimulationConfig(ABC):
+             "choices": ["online", "offline"],
+         },
+     )
++    request_ingress_delay_ms: float = field(
++        default=0.0,
++        metadata={
++            "help": "Serving path delay in milliseconds from client arrival, through "
++            "the proxy and first role API server, to the engine waiting queue. "
++            "Applies to request arrival events; arrived_at stays the client arrival."
++        },
++    )
+     offline_use_generated_request_arrivals: bool = field(
+         default=False,
+         metadata={
+@@ -369,6 +378,14 @@ class SimulationConfig(ABC):
+     )
+ 
+     def __post_init__(self):
++        _require_finite_non_negative(self.request_ingress_delay_ms, "request_ingress_delay_ms")
++        if (self.request_ingress_delay_ms > 0 and self.simulation_mode == "offline"
++                and not self.offline_use_generated_request_arrivals):
++            raise ValueError(
++                "request_ingress_delay_ms applies to request arrival events; "
++                "offline batch mode does not create them. Enable "
++                "offline_use_generated_request_arrivals or use online mode."
++            )
+         self._validate_open_source_release_architecture_guard()
+         self._validate_pdaf_trace_replay_contract()
+         self.performance_profiling_output_file = validate_output_filename(
+diff --git a/frontier/config/kv_cache_transfer_config.py b/frontier/config/kv_cache_transfer_config.py
+index d662fa30..69c86b6c 100644
+--- a/frontier/config/kv_cache_transfer_config.py
++++ b/frontier/config/kv_cache_transfer_config.py
+@@ -1,4 +1,5 @@
+ from dataclasses import dataclass, field
++import math
+ from typing import Optional
+ 
+ from frontier.config.base_poly_config import BasePolyConfig
+@@ -21,6 +22,12 @@ def _require_non_negative(value: float | int, field_name: str) -> None:
+         raise ValueError(f"{field_name} must be >= 0, got {value}")
+ 
+ 
++def _require_finite_non_negative(value: float, field_name: str) -> None:
++    if not math.isfinite(value):
++        raise ValueError(f"{field_name} must be finite and >= 0, got {value}")
++    _require_non_negative(value, field_name)
++
++
+ def _require_optional_positive(value: Optional[int], field_name: str) -> None:
+     if value is not None and value <= 0:
+         raise ValueError(f"{field_name} must be > 0 when set, got {value}")
+@@ -40,6 +47,15 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
+         metadata={"help": "Network latency in milliseconds for KV cache transfer."},
+     )
+     
++    request_handoff_delay_ms: float = field(
++        default=0.0,
++        metadata={
++            "help": "Serving path delay in milliseconds from prefill engine output, "
++            "through the prefill API server response and proxy, to the decode API "
++            "server enqueue for the decode engine."
++        },
++    )
++
+     # Transfer optimization configuration
+     enable_compression: bool = field(
+         default=False,
+@@ -91,6 +107,7 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
+     )
+ 
+     def __post_init__(self) -> None:
++        _require_finite_non_negative(self.request_handoff_delay_ms, "request_handoff_delay_ms")
+         _require_positive(self.network_bandwidth_gbps, "network_bandwidth_gbps")
+         _require_non_negative(self.network_latency_ms, "network_latency_ms")
+         _require_positive(self.compression_ratio, "compression_ratio")
+diff --git a/frontier/events/cluster_batch_end_event.py b/frontier/events/cluster_batch_end_event.py
+index 9e3ef587..a749e943 100644
+--- a/frontier/events/cluster_batch_end_event.py
++++ b/frontier/events/cluster_batch_end_event.py
+@@ -600,7 +600,7 @@ class ClusterBatchEndEvent(BaseEvent):
+                 )
+                 transfer_events.append(
+                     KVCacheTransferStartEvent(
+-                        time,
++                        time + kv_pred._config.request_handoff_delay_ms / 1000,
+                         source_replica_id=self._replica_id,
+                         source_replica_local_id=self._replica_local_id,
+                         target_cluster_type=target_cluster,
+diff --git a/frontier/simulator.py b/frontier/simulator.py
+index 8b83352b..3c169591 100644
+--- a/frontier/simulator.py
++++ b/frontier/simulator.py
+@@ -409,9 +409,7 @@ class Simulator:
+                     if self._config.is_disaggregated_mode()
+                     else ClusterType.MONOLITHIC
+                 )
+-                arrival_event = RequestArrivalEvent(
+-                    request.arrived_at, request, cluster_type
+-                )
++                arrival_event = self._request_arrival_event(request, cluster_type)
+ 
+                 if cluster_type in self._cluster_simulators:
+                     self._cluster_simulators[cluster_type].add_event(arrival_event)
+@@ -420,6 +418,13 @@ class Simulator:
+                         f"Cluster {cluster_type} not found for request arrival event"
+                     )
+ 
++    def _request_arrival_event(self, request, cluster_type) -> RequestArrivalEvent:
++        """Keep client arrival intact while delaying first-role queue entry."""
++        return RequestArrivalEvent(
++            request.arrived_at + self._config.request_ingress_delay_ms / 1000,
++            request, cluster_type,
++        )
++
+     def run(self) -> None:
+         """Run the simulation in either parallel or sequential mode."""
+         if self._parallel_mode:
+@@ -1339,7 +1344,7 @@ class Simulator:
+                     else ClusterType.MONOLITHIC
+                 )
+                 self._add_event(
+-                    RequestArrivalEvent(request.arrived_at, request, cluster_type)
++                    self._request_arrival_event(request, cluster_type)
+                 )
+ 
+     def _set_time(self, time: float) -> None:
+
+$ git show 57caf2f7 -- tests/comparison/calibration/native_pd_worker.py tests/unit/test_native_pd_worker.py
+rc=0
+commit 57caf2f79f79c8bc19e199ba64f75ca49e8baaf6
+Author: fwyc0573 <935953068@qq.com>
+Date:   Sat Nov 7 08:29:03 2026 +0000
+
+    Fail native P/D waits when a peer heartbeat stops
+    
+    Generation07 of the P2-64 formal run lost one replica after the rendezvous;
+    its peers waited the full 1800 s startup timeout. Each node now writes a
+    heartbeat before ready.json and refreshes it from a background thread.
+    Every wait fails once an undrained peer's heartbeat is unchanged for longer
+    than peer_heartbeat_timeout_s, measured on the local monotonic clock.
+
+diff --git a/tests/comparison/calibration/native_pd_worker.py b/tests/comparison/calibration/native_pd_worker.py
+index 108a2bc8..372ec7f2 100644
+--- a/tests/comparison/calibration/native_pd_worker.py
++++ b/tests/comparison/calibration/native_pd_worker.py
+@@ -12,6 +12,7 @@ import socket
+ import subprocess
+ import sys
+ import tempfile
++import threading
+ import time
+ import traceback
+ 
+@@ -214,6 +215,8 @@ def run(config):
+     server = replay = None
+     plan = None
+     exit_code = 1
++    stop_heartbeat = threading.Event()
++    peer_heartbeats = {}
+ 
+     def record(name):
+         result['stage'] = name
+@@ -225,12 +228,52 @@ def run(config):
+             print('NATIVE_PD_OBSERVATION_ERROR', error, flush=True)
+         print('NATIVE_PD_STAGE', name, flush=True)
+ 
++    def write_heartbeat(count):
++        write_json(node / 'heartbeat.json', dict(count=count, utc=datetime.now(timezone.utc).isoformat()))
++
++    def keep_heartbeat():
++        count = 1
++        while not stop_heartbeat.wait(config['heartbeat_interval_s']):
++            count += 1
++            try:
++                write_heartbeat(count)
++            except Exception:
++                # A node that cannot publish its heartbeat is judged by its
++                # peers through the staleness limit.
++                result['observation_errors'].append(traceback.format_exc())
++                print('NATIVE_PD_OBSERVATION_ERROR', result['observation_errors'][-1], flush=True)
++
++    heartbeat = threading.Thread(target=keep_heartbeat, name='native-pd-heartbeat', daemon=True)
++
++    def stale_peers():
++        """Name undrained peers whose heartbeat has not changed within the configured limit.
++
++        Change is measured on this node's monotonic clock, so peer clock skew
++        does not matter.
++        """
++        now = time.monotonic()
++        stale = []
++        for path in root.glob('nodes/*/heartbeat.json'):
++            peer = path.parent
++            if peer.name == host or (peer / 'drained.json').exists():
++                continue
++            beat = path.read_bytes()
++            if peer.name not in peer_heartbeats or peer_heartbeats[peer.name][0] != beat:
++                peer_heartbeats[peer.name] = (beat, now)
++            elif now - peer_heartbeats[peer.name][1] > config['peer_heartbeat_timeout_s']:
++                stale.append(peer.name)
++        return sorted(stale)
++
+     def await_condition(condition, timeout, *, native_required=False):
+         deadline = time.monotonic() + timeout
+         while True:
+             failed = list(root.glob('nodes/*/failed.json'))
+             if failed:
+                 raise RuntimeError(f'Native P/D peer failed: {failed}')
++            stale = stale_peers()
++            if stale:
++                raise RuntimeError(f"Native P/D peer heartbeat unchanged for more than "
++                                   f"{config['peer_heartbeat_timeout_s']} s: {stale}")
+             if native_required and server.poll() is not None:
+                 raise RuntimeError(f'Native server exited early: {server.returncode}')
+             if condition():
+@@ -254,6 +297,10 @@ def run(config):
+             if result['native_source_hashes'][name] != expected:
+                 raise ValueError(f'Locked native source mismatch: {name}')
+         record('rendezvous')
++        # The first heartbeat precedes ready.json, so every peer that passes
++        # the rendezvous is under the staleness check.
++        write_heartbeat(1)
++        heartbeat.start()
+         write_json(node / 'ready.json', dict(host=host, ip=primary_ipv4()))
+         await_condition(lambda: len(list(root.glob('nodes/*/ready.json'))) == config['replica'],
+                         config['peer_wait_seconds'])
+@@ -389,6 +436,10 @@ def run(config):
+         write_json(node / 'failed.json', dict(host=host, error=result['exception']))
+         print(result['exception'], flush=True)
+     finally:
++        # This node has drained or failed, so its peers no longer check its heartbeat.
++        stop_heartbeat.set()
++        if heartbeat.is_alive():
++            heartbeat.join()
+         if replay is not None and replay.poll() is None:
+             result['replay_stop'] = stop_server(replay, config['stop_timeout_s'])
+         if server is not None:
+diff --git a/tests/unit/test_native_pd_worker.py b/tests/unit/test_native_pd_worker.py
+index baa56bc9..56a409a0 100644
+--- a/tests/unit/test_native_pd_worker.py
++++ b/tests/unit/test_native_pd_worker.py
+@@ -10,6 +10,8 @@ import shutil
+ import subprocess
+ import sys
+ import tempfile
++import threading
++import time
+ import types
+ from unittest.mock import patch
+ 
+@@ -34,8 +36,12 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+         node.mkdir(parents=True)
+         (node / "ready.json").write_text(json.dumps({
+             "host": f"host{index}", "ip": f"10.0.0.{index + 1}"}))
+-        (node / "drained.json").write_text("{}")
++        if not (case.startswith("peer_heartbeat") and index == 3):
++            (node / "drained.json").write_text("{}")
+     (root / "nodes/host2/server_ready.json").write_text("{}")
++    if case.startswith("peer_heartbeat"):
++        (root / "nodes/host3/heartbeat.json").write_text('{"count": 1}')
++    health_polls = 0
+     events = []
+     replay_commands = []
+     server_environments = []
+@@ -140,6 +146,8 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+         "proxy_port": 30500, "serve_observers": {"prefill": {}, "decode": {}},
+         "peer_wait_seconds": 10, "startup_timeout_s": startup_timeout_s, "replay_timeout_s": 10,
+         "drain_seconds": 0, "stop_timeout_s": 10, "weight_suffixes": [".bin"],
++        "heartbeat_interval_s": 1,
++        "peer_heartbeat_timeout_s": 1 if case.startswith("peer_heartbeat") else 60,
+     }
+     if case.startswith("canonical_clean"):
+         config.update(mode="clean", idle_timeout_s=180, idle_poll_s=1)
+@@ -195,6 +203,20 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+             return True
+         return original_relative(path, other)
+ 
++    def urlopen(*args, **kwargs):
++        # Peer heartbeat cases hold the head's health wait for longer than the
++        # staleness limit; the live peer keeps beating and drains when health passes.
++        nonlocal health_polls
++        health_polls += 1
++        if case == "peer_heartbeat_live":
++            (root / "nodes/host3/heartbeat.json").write_text(json.dumps({"count": health_polls + 1}))
++            if health_polls > 3:
++                (root / "nodes/host3/drained.json").write_text("{}")
++                return Health()
++        if case.startswith("peer_heartbeat"):
++            raise OSError("CPU stand-in: native server not healthy yet")
++        return Health()
++
+     class Health:
+         status = 200
+ 
+@@ -222,7 +244,7 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+         stack.enter_context(patch.object(worker.subprocess, "Popen", side_effect=popen))
+         stack.enter_context(patch.object(worker.subprocess, "check_output", return_value="fake H800"))
+         stack.enter_context(patch.object(worker.importlib.metadata, "version", return_value="stub"))
+-        stack.enter_context(patch("urllib.request.urlopen", return_value=Health()))
++        stack.enter_context(patch("urllib.request.urlopen", side_effect=urlopen))
+         if case == "canonical_clean_standard_layout" or case.startswith('canonical_clean_serving'):
+             stack.enter_context(patch.object(worker, "stage_run_manifest",
+                 side_effect=lambda *args: events.append("prelaunch_manifest_staged")))
+@@ -231,10 +253,17 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None,
+                 events.append("head_native_stopped")
+                 (root / "nodes/host0/native_stopped.json").write_text('{"returncode":0,"signal":"SIGINT"}')
+             stack.enter_context(patch.object(worker.time, "sleep", side_effect=publish_head_stop))
++        started = time.monotonic()
+         code = worker.run(config)
++        elapsed = time.monotonic() - started
+     result = json.loads((root / "nodes" / own_host / "result.json").read_text())
+     return {
+-        "case": case, "worker_returncode": code, "events": events,
++        "case": case, "worker_returncode": code, "events": events, "elapsed_s": elapsed,
++        "exception": result.get("exception"),
++        "heartbeat": json.loads((root / "nodes" / own_host / "heartbeat.json").read_text())
++            if (root / "nodes" / own_host / "heartbeat.json").exists() else None,
++        "heartbeat_threads": [thread.name for thread in threading.enumerate()
++                              if thread.name == "native-pd-heartbeat"],
+         "native_server_returncode": result.get("server_stop", {}).get("returncode"),
+         "native_server_stop_signal": result.get("server_stop", {}).get("signal"),
+         "failed_sentinel": (root / "nodes" / own_host / "failed.json").exists(),
+@@ -381,3 +410,24 @@ def test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission(t
+     assert result['worker_returncode'] == result['native_server_returncode'] == 0
+     assert not result['failed_sentinel']
+     assert 'FRONTIER_NATIVE_SERVING_EVIDENCE_DIR' not in result['server_environments'][0]
++
++
++def test_stopped_peer_heartbeat_fails_the_startup_wait_before_its_timeout(tmp_path):
++    result = exercise(native_pd_worker, tmp_path, "peer_heartbeat_stopped")
++    assert result["worker_returncode"] == 1 and result["failed_sentinel"]
++    assert "RuntimeError: Native P/D peer heartbeat unchanged" in result["exception"]
++    assert "['host3']" in result["exception"]
++    assert "replay_launch" not in result["events"]
++    assert result["elapsed_s"] < 10
++    assert result["heartbeat"]["count"] >= 1
++    assert not result["heartbeat_threads"]
++
++
++def test_changing_peer_heartbeat_outlasts_the_staleness_limit(tmp_path):
++    result = exercise(native_pd_worker, tmp_path, "peer_heartbeat_live")
++    assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
++    assert result["exception"] is None
++    assert "native_health_200" in result["events"] and "replay_launch" in result["events"]
++    assert result["elapsed_s"] > 3
++    assert result["heartbeat"]["count"] >= 2
++    assert not result["heartbeat_threads"]
+
+$ git show f33306d4 --stat
+rc=0
+commit f33306d40443cfc0c44842d6ee044f6703c736e7
+Author: fwyc0573 <935953068@qq.com>
+Date:   Mon Nov 2 23:29:37 2026 +0800
+
+    Record the scoped startup harness verification
+
+ .../test_report_2026-11-02_startup_harness.md      | 24 ++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+$ git status --short --untracked-files=no
+rc=0
+
+$ git rev-parse HEAD
+rc=0
+c30c338050fe8efb16e668fd574e496689eb3c90
+$ git show 0fb8955d -- frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
+rc=0
+commit 0fb8955d95469c49824676831a814bc3afc08042
+Author: fwyc0573 <935953068@qq.com>
+Date:   Sun Nov 1 14:46:27 2026 +0000
+
+    kv-transfer: price grouped V4 NIXL wire time on physical blocks
+    
+    Native NIXL registers the packed V4 cache as one region with one
+    block_stride descriptor per physical block, so each selected page of
+    any cache group moves the full 1,002,240-byte block. The grouped path
+    priced wire time on the structural component bytes (39,521,664 B for a
+    6144-token prompt instead of the native 46,103,040 B per handle).
+    
+    Wire time now uses selected pages times physical_block_size_bytes.
+    The recorded payload keeps its structural component bytes, so the
+    ownership and end-event checks are unchanged. The grouped op trace
+    records wire_bytes. Tests add the 256/257/6143 prompt boundaries and
+    check the priced time against the wire bytes (D-WARM-TWO-FIX item 1).
+
+diff --git a/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py b/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
+index 233508b5..f654a788 100644
+--- a/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
++++ b/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
+@@ -22,7 +22,8 @@ def get_grouped_nixl_payload(cache_capacity, prompt_tokens, source_groups, targe
+     Source: pinned NIXL get_exchange_clipped_blocks and _apply_prefix_caching.
+     V4 compressor states use SlidingWindowMLASpec, not Mamba single-state slots.
+     Page bytes describe structural component payloads on one worker/lane, not
+-    wire descriptors, backing-slab padding, or a sum over TP ranks.
++    wire descriptors, backing-slab padding, or a sum over TP ranks; the wire
++    size of the selected pages is get_grouped_nixl_wire_bytes.
+     """
+     if not cache_capacity.is_grouped or cache_capacity.family_id != "deepseek_v4_attention":
+         raise ValueError("Grouped NIXL requires the V4 component capacity")
+@@ -63,6 +64,16 @@ def get_grouped_nixl_payload(cache_capacity, prompt_tokens, source_groups, targe
+     return transferred, payload_bytes
+ 
+ 
++def get_grouped_nixl_wire_bytes(cache_capacity, transferred):
++    """Bytes one worker/lane reads for the selected pages of every group.
++
++    Source: pinned NIXL base_worker._register_packed_kv_cache registers the
++    packed cache as one region with one block_stride descriptor per physical
++    block, so each selected page moves the full physical block.
++    """
++    return sum(map(len, transferred.values())) * cache_capacity.physical_block_size_bytes
++
++
+ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+     """Analytical KV cache transfer predictor using bandwidth and latency."""
+ 
+@@ -117,9 +128,10 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+     ) -> tuple[int, float]:
+         """Price source-backed component pages after a real D reservation.
+ 
+-        This is a structural whole-page payload per worker/lane. It is
+-        neither a native NIXL wire byte count nor an aggregate across ranks.
+-        Empty lookahead capacity reserved by D is deliberately excluded.
++        The returned size is a structural whole-page payload per worker/lane,
++        not an aggregate across ranks. Grouped V4 prices the wire time on the
++        physical blocks of the selected pages instead. Empty lookahead
++        capacity reserved by D is deliberately excluded.
+         """
+         if self._config.kv_connector != "nixl":
+             raise ValueError("Structural NIXL sizing requires kv_connector='nixl'")
+@@ -127,12 +139,13 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+             families = {spec.family_id for spec in replica_config.model_config.get_layer_attention_specs()}
+             if families != {cache_capacity.family_id}:
+                 raise ValueError("V4 NIXL capacity does not match the model")
+-            _, payload_bytes = get_grouped_nixl_payload(
++            transferred, payload_bytes = get_grouped_nixl_payload(
+                 cache_capacity, request.num_prefill_tokens,
+                 source_group_block_ids, target_group_block_ids,
+             )
+             return payload_bytes, self.get_transfer_time(
+-                ClusterType.PREFILL, ClusterType.DECODE, None, payload_bytes,
++                ClusterType.PREFILL, ClusterType.DECODE, None,
++                get_grouped_nixl_wire_bytes(cache_capacity, transferred),
+             )
+         family = bind_attention_family(replica_config.model_config).family
+         if family.family_id != "dsa_attention":
+$ git log -5 --oneline -- frontier/config/model_architectures.py frontier/execution_time_predictor/dsv4_runtime_composition.py frontier/memory_planner
+rc=0
+$ git diff abd1e14198b2b258921ccd669ac87c91f499e6dd..HEAD --stat -- frontier
+rc=0
+$ git log -6 --oneline -- frontier/model_architectures.py frontier/execution_time_predictor/dsv4_predictor.py frontier/execution_time_predictor/dsv4_composition.py frontier/scheduler/utils/memory_planner.py
+rc=0
+a571f3fe Accept V4 attention tables whose routing descriptors differ only in the package origin (B23)
+dd7b8932 Merge B20: cache the repeated pure computations of the V4 operator path
+ebdf3b28 Cache the repeated pure computations of the V4 operator path
+0dc74fd2 Admit V4 attention features per measured row group and add the A6 held-out audit
+ffcd85e7 Key DeepSeek-V4 sampling by the native logits-processing branch (B17b)
+c8c5e593 Price the DeepSeek-V4 model-runner operators and admit the PD roles (B17)
+$ git show abd1e14198b2b258921ccd669ac87c91f499e6dd --stat
+rc=0
+commit abd1e14198b2b258921ccd669ac87c91f499e6dd
+Author: fwyc0573 <935953068@qq.com>
+Date:   Mon Nov 2 03:09:44 2026 +0000
+
+    analysis: add the formal P2 replay runner with the adopted H200 NIXL pair
+    
+    The two-fix replays consumed the H800 NIXL pair from the B29 inputs. Ticket 19
+    forbids cross-hardware cost substitution in the formal run, so the formal P2
+    replays override only the two analytical KV transfer fields with the pair
+    adopted under D-P2-Q2-NIXL-TIMING.
+
+ .../formal_p2_20261102/run_formal_replay.py        | 167 +++++++++++++++++++++
+ 1 file changed, 167 insertions(+)
+$ (cwd=/data/ycfeng/Frontier/.real-engine/vLLM-BS/.worktrees/p2-dp-startup-coordination) git diff 2cf0a6915ce544dc493a0990f2ea38d81601128a..a06a72a4326cba02234df6cfbdc21b78d3a15d26 --stat -- vllm/model_executor/models/deepseek_v4/attention.py vllm/utils/multi_stream_utils.py
+rc=0

@@ -1,0 +1,63 @@
+CHECKS 107 PASS 98 FAIL 9
+{
+  "historical35_gpu_hours": 158.27166666666665,
+  "source_delay_means_ms": {
+    "client_dispatch_to_proxy": 0.6302366165891486,
+    "proxy_to_api": 3.1129680573940277,
+    "api_to_enqueue": 6.588563323020935,
+    "prefill_update_to_response": 2.32846662402153,
+    "response_to_decode_enqueue": 9.102704003453255
+  },
+  "p2_32_native": {
+    "workers": 32,
+    "ranks_by_role": {
+      "prefill": 16,
+      "decode": 16
+    }
+  },
+  "formal_forward_ep": {
+    "p2_32": {
+      "('prefill', 'NONE', False)": 256,
+      "('prefill', 'FULL', True)": 7936,
+      "('decode', 'FULL', True)": 14592,
+      "('decode', 'PIECEWISE', True)": 256
+    },
+    "p2_64": {
+      "('prefill', 'NONE', False)": 512,
+      "('prefill', 'FULL', True)": 14848,
+      "('decode', 'FULL', True)": 23808,
+      "('decode', 'PIECEWISE', True)": 512
+    }
+  },
+  "percentile_diagnostics": {
+    "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/assessment/diagnostics.csv",
+    "rows": 144,
+    "fields": [
+      "case",
+      "repeat",
+      "scope",
+      "side",
+      "metric",
+      "statistic",
+      "value",
+      "unit",
+      "gating",
+      "method"
+    ]
+  },
+  "modules_over_2000": {
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py": 3060,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/execution_time_predictor/sklearn_execution_time_predictor.py": 8640,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/metrics/metrics_store.py": 5773,
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/frontier/profiling/attention/main.py": 2161
+  },
+  "headline_error_count": {
+    "per_repeat": 12,
+    "pooled": 4,
+    "total": 16,
+    "published_claim": 20
+  },
+  "depth_recomputed": "waves 122 depth median 18.56 min -37.77 max 18.9 g median 23.81 cpu median 4.68",
+  "ep_omitted_direct_gap_ms_per_unequal_wave": 0.04683602652499132,
+  "ep_128_unequal_waves_direct_gap_ms": 5.995011395198889
+}

@@ -119,7 +119,13 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
                     'import importlib, json; '
                     'm = importlib.import_module("native_full_structure"); '
                     'print(json.dumps({"path": m.__file__, "class": m.FullModelInventory.__name__}))')
-                with real_popen([sys.executable, '-P', '-c', probe],
+                # Keep the working directory off the child's sys.path so the probe
+                # resolves the module through the exported staged path. The `-P`
+                # flag does this from Python 3.11 on; the project floor is 3.10.
+                probe = ('import os, sys; _cwd = os.getcwd(); '
+                         "sys.path[:] = [p for p in sys.path if p not in ('', _cwd)]; "
+                         + probe)
+                with real_popen([sys.executable, '-c', probe],
                     cwd=directory, env=child_env, stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE, text=True) as child:
                     stdout, stderr = child.communicate(timeout=30)

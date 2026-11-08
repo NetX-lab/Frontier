@@ -1,0 +1,991 @@
+CHECKS 906 PASS 762 FAIL 144
+{
+  "historical_gpu_hours": {
+    "rows": 35,
+    "sum": 158.27166666666665,
+    "clock_receipts_recomputed": 27,
+    "other_basis": [
+      "exp-1021-141138-593083",
+      "exp-1021-141138-594688",
+      "exp-1031-233253-628432",
+      "exp-1031-233305-902815",
+      "exp-1101-004206-443314",
+      "exp-1101-005741-958298",
+      "exp-1101-015820-503227",
+      "exp-1101-143721-849401"
+    ]
+  },
+  "formal_clock_receipts": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/failure_01_20261102/rca/terminal_receipt.json",
+      "job": "exp-1102-164536-160317",
+      "hours": 4.053333333333334,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/recovery_02_20261102/generation02_copy_terminal_receipt.json",
+      "job": "exp-1103-001335-240782",
+      "hours": 0.0,
+      "known_hours": 0.0,
+      "complete": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/recovery_02_20261102/generation02_platform_terminal_receipt.json",
+      "job": "exp-1102-233941-576872",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261102-02/platform_terminal_receipt.json",
+      "job": "exp-1102-233941-576872",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/generation03_platform_terminal_receipt.json",
+      "job": "exp-1103-092042-217677",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/terminal_20261104/platform_terminal_receipt.json",
+      "job": "exp-1103-131952-259161",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/terminal_20261107/platform_terminal_receipt.json",
+      "job": "exp-1107-135759-122907",
+      "hours": null,
+      "known_hours": 2.5866666666666664,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/terminal_20261107/platform_terminal_receipt.json",
+      "job": "exp-1107-144321-305543",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/terminal_20261107/platform_terminal_receipt.json",
+      "job": "exp-1107-150132-396145",
+      "hours": null,
+      "known_hours": 8.264444444444445,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/platform_terminal_receipt.json",
+      "job": "exp-1108-002857-059466",
+      "hours": 23.30666666666667,
+      "known_hours": 23.30666666666667,
+      "complete": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_lifecycle/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-lifecycle-20261026-01/platform_terminal_receipt.json",
+      "job": "exp-1026-125836-702505",
+      "hours": 26.302222222222223,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_profile/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01/platform_terminal_receipt.json",
+      "job": "exp-1025-162315-604618",
+      "hours": 24.54222222222222,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json",
+      "job": "exp-1025-155441-668927",
+      "hours": 24.322222222222223,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_wave/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-wave-20261030-01/platform_terminal_receipt.json",
+      "job": "exp-1030-144848-164721",
+      "hours": 18.16888888888889,
+      "known_hours": null,
+      "complete": null
+    }
+  ],
+  "attention": {
+    "('pass1_all', ('FULL', 'decode'))": {
+      "count": 16,
+      "median_error": 0.007832590636900186,
+      "p90_error": 0.025773693419841315,
+      "maximum": 0.03487865458022277
+    },
+    "('pass2_all', ('FULL', 'decode'))": {
+      "count": 16,
+      "median_error": 0.008959658255218522,
+      "p90_error": 0.016237498232348227,
+      "maximum": 0.029621744180401425
+    },
+    "('pass1_all', ('FULL', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.01734673702007327,
+      "p90_error": 0.03198666990993869,
+      "maximum": 0.033568978957538465
+    },
+    "('pass2_all', ('FULL', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.008083621643935054,
+      "p90_error": 0.02414007232741444,
+      "maximum": 0.024223691347844422
+    },
+    "('pass1_all', ('NONE', 'dummy'))": {
+      "count": 1,
+      "median_error": 0.018795812588666794,
+      "p90_error": 0.018795812588666794,
+      "maximum": 0.018795812588666794
+    },
+    "('pass2_all', ('NONE', 'dummy'))": {
+      "count": 1,
+      "median_error": 0.019176508615044833,
+      "p90_error": 0.019176508615044833,
+      "maximum": 0.019176508615044833
+    },
+    "('pass1_all', ('NONE', 'prefill'))": {
+      "count": 1,
+      "median_error": 0.009245976516683907,
+      "p90_error": 0.009245976516683907,
+      "maximum": 0.009245976516683907
+    },
+    "('pass2_all', ('NONE', 'prefill'))": {
+      "count": 1,
+      "median_error": 0.006215654384398026,
+      "p90_error": 0.006215654384398026,
+      "maximum": 0.006215654384398026
+    },
+    "('pass1_all', ('PIECEWISE', 'decode'))": {
+      "count": 11,
+      "median_error": 0.004291581418522944,
+      "p90_error": 0.015214575943511029,
+      "maximum": 0.02144754182204526
+    },
+    "('pass2_all', ('PIECEWISE', 'decode'))": {
+      "count": 11,
+      "median_error": 0.00765201679485208,
+      "p90_error": 0.010121170220722835,
+      "maximum": 0.0361369956054505
+    },
+    "('pass1_all', ('PIECEWISE', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.005214665960168962,
+      "p90_error": 0.006962936911857655,
+      "maximum": 0.007356470644808613
+    },
+    "('pass2_all', ('PIECEWISE', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.0073138849743385435,
+      "p90_error": 0.014140889436567081,
+      "maximum": 0.015133849014265078
+    },
+    "('pass1_all', ('PIECEWISE', 'first_tail'))": {
+      "count": 7,
+      "median_error": 0.013236248104135828,
+      "p90_error": 0.03780904624629984,
+      "maximum": 0.04412110653962244
+    },
+    "('pass2_all', ('PIECEWISE', 'first_tail'))": {
+      "count": 7,
+      "median_error": 0.006166134675415444,
+      "p90_error": 0.012409555254568142,
+      "maximum": 0.014919990793399365
+    },
+    "maximum": 0.04412110653962244,
+    "comparisons": 96
+  },
+  "nixl": {
+    "records": 90,
+    "reader_trials": 12150,
+    "notifications": 80352,
+    "intercept_ms": 0.023652184281886778,
+    "bandwidth_gbps": 390.3934992825481,
+    "maximum_heldout_median_error": 0.009195178620907216,
+    "p2_coordinate_max_ms": 12.554511427879333
+  },
+  "promotion": {
+    "issued": "2026-11-02T07:38:49.523696+00:00",
+    "generation08_submission_utc": "2026-11-07T16:28:57Z",
+    "receipt_sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+    "actual_manifest_fields": {
+      "promotion_receipt": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json",
+        "sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+        "build_utc": "2026-11-07T08:29:52.746840+00:00"
+      }
+    },
+    "git_history": "task_memory is ignored; no Git creation timestamp proof is available"
+  },
+  "fidelity": {
+    "fidelity": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b24": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b26": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b26b": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b28": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b29": {
+      "identical": 0,
+      "mismatched": 77,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    }
+  },
+  "historical_logs": {
+    "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_recovery_harness_tests.log": "...............................................................sssssssss [ 51%]\nssssssssss.........................................................ss    [100%]\n120 passed, 21 skipped in 52.92s\n"
+  }
+}
+FAILURES [
+  {
+    "name": "attention original composition:0",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all0",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all0",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:5",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all5",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all5",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:84",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all84",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all84",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:221",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all221",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all221",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:224",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all224",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all224",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:228",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all228",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all228",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:230",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all230",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all230",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:232",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all232",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all232",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:245",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all245",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all245",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:360",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all360",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all360",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:379",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all379",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all379",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:383",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all383",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all383",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:417",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all417",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all417",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:433",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all433",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all433",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:439",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all439",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all439",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:448",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all448",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all448",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:480",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all480",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all480",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:481",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all481",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all481",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:482",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all482",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all482",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:483",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all483",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all483",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:484",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all484",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all484",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:485",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all485",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all485",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:486",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all486",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all486",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:487",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all487",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all487",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:488",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all488",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all488",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:493",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all493",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all493",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:572",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all572",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all572",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:604",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all604",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all604",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:617",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all617",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all617",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:635",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all635",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all635",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:709",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all709",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all709",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:733",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all733",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all733",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:848",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all848",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all848",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:905",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all905",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all905",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:920",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all920",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all920",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:968",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all968",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all968",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:969",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all969",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all969",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:970",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all970",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all970",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:971",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all971",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all971",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:972",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all972",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all972",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:973",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all973",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all973",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:974",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all974",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all974",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:1176",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all1176",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all1176",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:1183",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all1183",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all1183",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:1184",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all1184",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all1184",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:1199",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all1199",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all1199",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:1332",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all1332",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all1332",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention original composition:1420",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass1_all1420",
+    "status": "FAIL",
+    "detail": null
+  },
+  {
+    "name": "attention independent value:pass2_all1420",
+    "status": "FAIL",
+    "detail": null
+  }
+]
