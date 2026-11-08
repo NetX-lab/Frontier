@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | I-014 resolved: the copy job later succeeded on its own and both copy routes hold identical job output (`PAYLOAD_IDENTICAL`), so the deviation has no numerical consequence. |
 | 2026-11-08 | I-014 opened: the generation08 CPU copy job stayed in Starting after an image pull failure; the copy came from the read-only SSH route instead. Also recorded that compare.py needs `PYTHONPATH` set to the repository root. |
 | 2026-11-07 | I-013 harness gap fixed under D-P2-64-SIXTH: peer heartbeat check in the native worker (harness 57caf2f7), packaged as generation08. |
 | 2026-11-07 | I-013 opened and classified: one generation07 replica stopped from outside after the rendezvous; the peers waited 30 minutes for the decode startup timeout. Platform cause; D-P2-64-FIFTH is exhausted. |
@@ -31,7 +32,7 @@
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
 
-## I-014: the generation08 CPU copy job stays in Starting after an image pull failure (2026-11-07)
+## I-014: the generation08 CPU copy job starts late after an image pull failure (2026-11-07, resolved)
 
 - Observation: the CPU-only copy job `exp-1108-010820-461640` (created 17:08:20Z by `cloud_copy.py submit`) was
   placed on gpu-h200-0577. The image pull started at 17:15:15Z and failed at 17:16:25Z with `failed to read expected
@@ -40,9 +41,17 @@
   `/data/ycfeng/tmp/ds4_runs/p64-formal8-copyread-1107t/scratch/copy_job_1.json` and `events_1/`.
 - Inference: a registry transfer failure on a node without the image cached; not caused by the run or the script.
 - Resolution: the copy came from the read-only SSH route of `h200-ssh-copy-1025c` (label `p64-formal8-sshcopy-1107u`):
-  130 files, `HASH_IDENTICAL_DOWNLOAD`, independently rehashed by the lead. The stuck job holds no GPU and was not
-  stopped; stopping it needs YC's decision. If it starts later, it writes only into its own new directory
-  `/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08`, which is then a duplicate for cleanup.
+  130 files, `HASH_IDENTICAL_DOWNLOAD`, independently rehashed by the lead. The job held no GPU throughout.
+- Closing evidence (2026-11-08): a later pull succeeded, so the job copied and ended Succeeded at 17:32:43Z and its own
+  launcher stopped it and exited (`p64-formal8-post-1107r/scratch/copy_launcher.log`, `FINAL_STATUS succeeded`). No stop
+  operation was needed. Its output went to its own directory
+  `/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08`, so the two routes give two local copies of the
+  same cloud run. `h200_mainline/p2_64_formal_retry08/copy_route_crosscheck.py` compared them: status
+  `PAYLOAD_IDENTICAL`, the same 130 job-output files, 75,585,300 bytes and joint sha256 `5ef547e0a1206076...` on both
+  sides, nothing present in one copy only and nothing differing. Only the two files each copy tool writes about its own
+  route differ by design (`download_receipt.json` route and timings; `cloud_inventory.json`, whose root records the same
+  cloud directory under the two mount views). The deviation therefore has no numerical consequence for the P2-64
+  verdict. The platform-route copy is now a duplicate for cleanup; the comparison consumed the SSH copy.
 - Related: the first compare.py run for generation08 lacked `PYTHONPATH` and stopped in `run_gate.py` with
   `ModuleNotFoundError: No module named 'tests'` after R5 PASS. The retained command record sets
   `PYTHONPATH="$REPO"`; `post_run_command.json` now records that environment, and the rerun finished.

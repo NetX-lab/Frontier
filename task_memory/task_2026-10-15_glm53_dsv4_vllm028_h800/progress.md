@@ -593,16 +593,25 @@ The following completed A6 history retains its original all-request verdicts. D-
 - completed with deviation — copy. The CPU copy job `exp-1108-010820-461640` stayed in Starting after an image pull
   failure on gpu-h200-0577 (issues.md I-014; read-only check p64-formal8-copyread-1107t). The copy came from the
   read-only SSH route instead (Pi p64-formal8-sshcopy-1107u): `formal_p2_64_20261107_08_ssh`, 130 files,
-  75,585,300 bytes, HASH_IDENTICAL_DOWNLOAD; lead rehash 0 mismatches. The stuck job holds no GPU and was not stopped.
+  75,585,300 bytes, HASH_IDENTICAL_DOWNLOAD; lead rehash 0 mismatches. The job held no GPU and needed no stop: a
+  later pull succeeded, it ended Succeeded at 17:32:43Z and its launcher stopped it and exited. Cross-check 2026-11-08
+  (`p2_64_formal_retry08/copy_route_crosscheck.py`, YC confirmed): both copies hold the same 130 job-output files,
+  75,585,300 bytes, joint sha256 `5ef547e0a1206076...`; only each copy tool's own route files differ by design, so the
+  deviation has no numerical consequence (I-014 resolved). The platform-route copy is now a cleanup duplicate.
 - completed — post-run comparison. First run without `PYTHONPATH` stopped in `run_gate.py` (output `generation08`,
   UNVERIFIED, for cleanup); rerun with the recorded environment: `generation08_run2/result.json` TOOLS_FINISHED, all
   seven stages PASS. Pair coverage COVERED (16/16 pairs in every repeat), R5 PASS, routing MATCH, no formal openers.
   Errors per repeat (TTFT/TPOT/E2E/THPT): repeat01 2.75/2.18/2.05/0.51%, repeat02 3.16/2.26/2.12/0.50%, repeat03
   2.97/2.14/2.00/0.28%; all-request and warm readings PASS. **P2-64 formal PASS.**
   [Test report](test_report_2026-11-07_p2_64_generation08_formal.md).
-- pending — YC decisions: stop the stuck copy job `exp-1108-010820-461640` with rjob_stop.sh or leave it; the old G0-D
-  launcher still writing `launcher.log`. Cleanup via codex-implement: the invalid `generation08` compare output, the
-  superseded protected-hash snapshots, generation07/08 prompt and scratch duplicates.
+- completed — the copy-job question closed itself; see the copy bullet above. YC confirmed the follow-ups on 2026-11-08.
+- in-progress — identify the writer of `native_track_20261020/g0d_launch/launcher.log` (over 4.11 GB) through a host
+  process scan, confirm its job is terminal, then stop it. Claude cannot see host processes (PID 1 is `bwrap`), so the
+  scan goes through Pi on HOST; the stop stays gated on terminal-job evidence.
+- pending — cleanup via codex-implement once the growing log is stopped: the invalid `generation08` compare output, the
+  duplicate platform-route copy, the superseded protected-hash snapshots, generation07/08 prompt and scratch
+  duplicates. The previous attempt (`cleanup_20261107_gen05_07`) deleted nothing because the host process check and a
+  stable protected-input hash were both unavailable; the growing log was one cause.
 
 ## Generation07 terminal cause — D-P2-64-FIFTH exhausted, 2026-11-07
 

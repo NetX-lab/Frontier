@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-08 | Recorded that the planned CPU copy job later succeeded and that both copy routes hold identical job output (`PAYLOAD_IDENTICAL`). |
 | 2026-11-07 | Created: generation08 native run, terminal receipt, hash-identical copy, pair coverage, R5 and the four-metric readings; P2-64 formal PASS. |
 
 ## Scope
@@ -36,11 +37,12 @@ job ceiling. The ended D-P2-64-FIFTH chain counted 68.90 GPUh (upper bounds). Qu
 
 ## Copy
 
-- The planned CPU copy job `exp-1108-010820-461640` (created 17:08:20Z) did not start: the platform placed it on
+- The planned CPU copy job `exp-1108-010820-461640` (created 17:08:20Z) was late to start: the platform placed it on
   gpu-h200-0577, which did not have the image; the pull failed at 17:16:25Z with `failed to read expected number of
   bytes: unexpected EOF`, followed by ImagePullBackOff (37 back-offs by 17:29:56Z, phase Starting). Read-only evidence:
   `/data/ycfeng/tmp/ds4_runs/p64-formal8-copyread-1107t/scratch/` (`copy_job_1.json`, `events_1/`). The job holds no GPU.
-  It was not stopped (a stop needs YC's decision).
+  A later pull succeeded: the job copied and ended Succeeded at 17:32:43Z, and its own launcher stopped it and exited
+  (`p64-formal8-post-1107r/scratch/copy_launcher.log`, `FINAL_STATUS succeeded`). No stop action was needed.
 - The copy instead used the read-only SSH route of `h200-ssh-copy-1025c` (label `p64-formal8-sshcopy-1107u`, script
   `/data/ycfeng/tmp/ds4_runs/prompts/p64-formal8-sshcopy-1107u.py`, the 1025c script with this one run and a new target
   directory): remote `sudo -n` hash inventory and `tar` stream of the one run root on shai-ycfeng, local rehash.
@@ -50,6 +52,13 @@ job ceiling. The ended D-P2-64-FIFTH chain counted 68.90 GPUh (upper bounds). Qu
 - Lead check: an independent local rehash of all 130 files against the inventory found 0 mismatches and no extra files.
 - `platform_terminal_receipt.json` (sha256 `08933759...47ca2c`) was copied into the controller run directory next to the
   launcher's `launcher_receipt.json`; `post_run_command.json` now points at the SSH copy and records the reason.
+- Because the planned route did finish, the two copies of the same cloud run were cross-checked on 2026-11-08
+  (`p2_64_formal_retry08/copy_route_crosscheck.py`, report `copy_route_crosscheck.json`, status `PAYLOAD_IDENTICAL`):
+  both hold the same 130 job-output files, 75,585,300 bytes, joint sha256 `5ef547e0a1206076...`, with no file present in
+  one copy only and none differing. Only the two files each copy tool writes about its own route differ by design
+  (`download_receipt.json` route and timings; `cloud_inventory.json`, whose root records the same cloud directory under
+  the `/mnt/ws-jfs/ycfeng` and `/mnt/codesign-exp/ycfeng` mount views). The bytes the comparison consumed are therefore
+  confirmed by the originally planned platform route as well, and the copy deviation carries no numerical consequence.
 
 ## Comparison
 
@@ -105,8 +114,9 @@ D-WARM-TARGET) are identical here because no formal request needed exclusion. La
 
 ## Limits
 
-- The inventory root records the shai-ycfeng view (`/mnt/ws-jfs/ycfeng/...`) of the same cloud directory the job wrote
-  as `/mnt/codesign-exp/ycfeng/...`.
+- The SSH inventory root records the shai-ycfeng view (`/mnt/ws-jfs/ycfeng/...`) of the same cloud directory the job
+  wrote as `/mnt/codesign-exp/ycfeng/...`. The cross-check above compares two local copies of that directory; it does
+  not re-read the cloud source, so it shows the two routes agree rather than independently re-verifying the cloud bytes.
 - Two replica audit reads in `p64-formal8-post-1107r/scratch/events/` timed out (ReadTimeout); the job and replica
   phases, container clocks and exit codes come from the terminal receipt, which read without error.
 - This verdict covers the P2-64 case with this workload; other ticket 19 cases and items stay as recorded there.

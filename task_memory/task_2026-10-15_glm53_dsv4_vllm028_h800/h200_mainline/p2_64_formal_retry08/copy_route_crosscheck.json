@@ -1,0 +1,52 @@
+{
+ "checked_utc": "2026-11-08T07:48:15.706186+00:00",
+ "consumed_by_comparison": "ssh_readonly",
+ "copies": {
+  "platform_cpu_rjob": {
+   "copy_tool_files": {
+    "cloud_inventory.json": {
+     "bytes": 20917,
+     "sha256": "f2808da54316aeea9c57a0fcc180c7a549dff9dcb14ea1bd22ac203176ad0e0a"
+    },
+    "download_receipt.json": {
+     "bytes": 854,
+     "sha256": "48975320bd85d182bc5551bcb294c4d6fe9750cd9e8ad67add92248a1c6ce3ce"
+    }
+   },
+   "files_total": 132,
+   "payload_bytes": 75585300,
+   "payload_files": 130,
+   "payload_joint_sha256": "5ef547e0a1206076a80b1716ccf84a8a55a1932acb04f4a15cd959183c53554a",
+   "root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08/dsv4-h200-p2-64-formal-20261107-08"
+  },
+  "ssh_readonly": {
+   "copy_tool_files": {
+    "cloud_inventory.json": {
+     "bytes": 20911,
+     "sha256": "14dc2ae8b5f5f4a0fcdfc28a3a5591471b579d6b06d8cbfde8e998baa66c1ddb"
+    },
+    "download_receipt.json": {
+     "bytes": 2297,
+     "sha256": "5af66119a1f08fefb7d18a8d6e5fb5294687af7c3c892b7d50786303f543e7a4"
+    }
+   },
+   "files_total": 132,
+   "payload_bytes": 75585300,
+   "payload_files": 130,
+   "payload_joint_sha256": "5ef547e0a1206076a80b1716ccf84a8a55a1932acb04f4a15cd959183c53554a",
+   "root": "/data/ycfeng/tmp/glm53_dsv4/h200/downloads/formal_p2_64_20261107_08_ssh/dsv4-h200-p2-64-formal-20261107-08"
+  }
+ },
+ "excluded_by_design": [
+  "cloud_inventory.json",
+  "download_receipt.json"
+ ],
+ "payload_diff": {
+  "hash_differing": [],
+  "only_in_platform_cpu_rjob": [],
+  "only_in_ssh_readonly": []
+ },
+ "run_tag": "dsv4-h200-p2-64-formal-20261107-08",
+ "script_sha256": "934f1a3c379012cd6ae1ce3f86050d7d44fcf0dd7c6b17fe8bc3b5c0bd04aff6",
+ "status": "PAYLOAD_IDENTICAL"
+}
