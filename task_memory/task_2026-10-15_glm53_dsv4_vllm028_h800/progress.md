@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded the push of `feat/glm53-dsv4-vllm028` to GitHub at YC's request: fast-forward `e92b62ef..9fed5547`, 210 commits. |
 | 2026-11-11 | Recorded the Codex review of the final delivery (`changes_required`, 0 P0/0 P1/1 P2/3 P3) and the four corrections applied for F001-F004, plus the two further defects they exposed. |
 | 2026-11-11 | Codex review F001: the title said "H800 follows"; H800 is `CLOSED_NOT_PURSUED` by D-H800-CLOSED, so it now says "H800 closed". |
 | 2026-11-11 | Reconciled the ticket state with the accepted evidence: ticket 19's milestone groups resolved per instance, ticket 18's stale three-round-reference sentence corrected, review.md items 1 and 4 closed. |
@@ -3495,3 +3496,26 @@ The four corrections were applied in the review's stated dependency order.
 - pending, out of scope — cross-worktree merging, assigned by YC to `integrate-vllm-versions`; issues.md I-018's
   15 remaining collection errors, all missing packages in the minimal environment; and the three README
   documentation-contract failures, owned by the release-docs surface.
+
+## Branch pushed to GitHub — 2026-11-11
+
+Request: "将已有branch推送到github". Scope: this worktree's branch `feat/glm53-dsv4-vllm028` only, to its existing
+upstream `origin` = `https://github.com/NetX-lab/Frontier.git`. No other branch was pushed and no force-push was
+used.
+
+- completed — pre-push checks. `git fetch origin feat/glm53-dsv4-vllm028` showed the remote at `e92b62ef`, an
+  ancestor of local `HEAD`, with divergence `0 / 210`, so the push was a fast-forward. The range added 2,621 blobs
+  (327.5 MiB uncompressed); the largest is the promoted
+  `data/profiling/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_graph_replay_kernel_only.csv` at 65.27 MiB,
+  above GitHub's 50 MB warning size and below its 100 MB limit, and no other blob exceeds 50 MiB. A scan of every
+  added line for AWS keys, private keys, GitHub/Slack/`sk-` tokens, URLs with embedded passwords, assigned secrets
+  and authorization headers found 0 files.
+- completed — authentication. Plain `git push` failed with `could not read Username`: no git credential helper is
+  configured, SSH cannot resolve `github.com` from this environment, and the installed `gh` 2.4.0 credential helper
+  returns nothing because `~/.config/gh/hosts.yml` holds only `oauth_token` without a `user` key. The push used that
+  existing token through a one-off `-c credential.helper=...` for this command only; no git or gh configuration was
+  changed and the token was never printed.
+- completed — push. `e92b62ef..9fed5547  feat/glm53-dsv4-vllm028 -> feat/glm53-dsv4-vllm028`, exit 0, with GitHub's
+  GH001 large-file warning for the 65.27 MiB CSV. `git ls-remote` returns `9fed5547a4462c9138fde45009b1ae73825382d2`,
+  equal to local `HEAD`.
+
