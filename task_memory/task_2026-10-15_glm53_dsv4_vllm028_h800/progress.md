@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Reconciled the ticket state with the accepted evidence: ticket 19's milestone groups resolved per instance, ticket 18's stale three-round-reference sentence corrected, review.md items 1 and 4 closed. |
 | 2026-11-11 | Resolved I-017: root-caused the eight order-dependent timeouts to a `patch.dict("sys.modules")` restore leak, fixed both test modules, established that the pair warmup was already forward-ported, cherry-picked the heartbeat onto mainline as `efbe09a9`, and verified it against an explicit baseline. |
 | 2026-11-11 | Recorded D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED: accounting waived, H800 closed, so the H200 mainline has no blocking acceptance item; only non-blocking I-017 hygiene remains. |
 | 2026-11-08 | Accepted the codex-implement H200 mainline completion review: both H200 numerical cases confirmed complete, the mainline still INCOMPLETE on GPU-hour accounting; F3/F4 record errors corrected, and two new findings added (I-016 the Python 3.11-only `-P` flag breaking 4 mainline unit tests, now fixed; I-017 the unmerged `p2-64-startup-harness` deliverable whose recorded CPU evidence does not reproduce). |
@@ -563,6 +564,22 @@ Authority: [requirements](requirements.md#original-request--decision-2026-11-11-
   the `10.01 s / 1.01 s` old/new stopped-peer timing comparison. Both closed on 2026-11-11: the timing comparison is
   verified by measurement (10.0215 s against 1.0172 s) and the suite figure is closed as not reproducible in any
   available environment.
+
+## Ticket state reconciled against the accepted evidence — 2026-11-11
+
+- completed — ticket 19 milestone groups resolved per instance. Reason: the 15 unchecked boxes were written to span
+  all then-active hardware instances, so they stayed open after both H200 cases passed and after D-H800-CLOSED.
+  Expectation: each box reads as satisfied, closed or waived with its evidence, and nothing is marked satisfied by
+  decision alone. Method: one dated resolution note per group plus the box state, naming
+  `test_report_2026-11-02_formal_p2_assessment.md` (P2-32), `test_report_2026-11-07_p2_64_generation08_formal.md`
+  (P2-64) and `receipt_p2_32_to_p2_64.json`. Result: status DONE for the active H200 scope, with GPU-hour accounting
+  `WAIVED_BY_USER` and the H800 instances `CLOSED_NOT_PURSUED`. All 21 relative links in the ticket resolve.
+- completed — ticket 18 status corrected. Its sentence "No priority case has an admitted formal three-round
+  reference" predated both formal references; P2-32 was admitted on 2026-11-02 and P2-64 generation08 on 2026-11-07
+  with 432/432 requests across three repeats and pair coverage COVERED in every repeat.
+- completed — `review.md` 12.5 items 1 and 4 closed with their decisions, and the F1/F2 disposition cells annotated;
+  the review had no mention of either closeout decision before this.
+- No measured value, verdict, evidence path or source file was changed by this reconciliation.
 
 ## H200 mainline completion review and lead acceptance — 2026-11-08
 

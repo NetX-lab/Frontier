@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Corrected the stale status sentence: both H200 priority cases have an admitted formal three-round reference (P2-32 on 2026-11-02, P2-64 generation08 on 2026-11-07); the H800 cases are `CLOSED_NOT_PURSUED`. |
 | 2026-11-08 | I-014 resolved: the planned CPU copy job later succeeded on its own, and both copy routes hold identical generation08 job output (`PAYLOAD_IDENTICAL`, 130 files, joint sha256 `5ef547e0...`), so the copy deviation has no numerical consequence for the P2-64 verdict. |
 | 2026-11-08 | Recorded P2-64 formal PASS with generation08 (exp-1108-002857-059466): R5 PASS, coverage COVERED, every repeat within 10% (worst 3.16%), 23.31 GPUh exact; copy via the read-only SSH route (I-014). |
 | 2026-11-07 | Recorded D-P2-64-SIXTH: peer heartbeat check in the native worker (harness 57caf2f7, 10 s refresh, 180 s limit), generation08 package built and audited (manifest 1a2bbc13...), night-time submission pending; new chain ceiling 128 GPUh, 0 counted. |
@@ -174,7 +175,11 @@ No new GLM16 activity or paired-model completion blocks current DSV4 reference
 acceptance. Retain all older GLM/V4 code,data,requests and original verdicts.
 
 **Status:** source-default MTP is resolved off;scoped historical G0-A/G0-B is
-retained. No priority case has an admitted formal three-round reference. GLM
+retained. Both H200 priority cases now have an admitted formal three-round
+reference: P2-H200-32 (2026-11-02) and P2-H200-64 (generation08, 2026-11-07,
+432/432 requests across three repeats, pair coverage COVERED in every repeat).
+The two H800 cases have none and are `CLOSED_NOT_PURSUED` by D-H800-CLOSED
+(2026-11-11). GLM
 gen03 retains child import FAIL (fixed9c54f663/10e7886);gen04 retains native600s
 startup FAIL after model/DeepGEMM warmup despite configured3600. Source618f05f
 exports the existing3600s;primary92PASS/native getter RED600->GREEN3600;no budget

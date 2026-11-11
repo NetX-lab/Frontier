@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded the ticket-state reconciliation: ticket 19's milestone groups resolved per instance (H200 satisfied, H800 `CLOSED_NOT_PURSUED`, accounting `WAIVED_BY_USER`), ticket 18's stale reference sentence corrected, and review.md items 1 and 4 closed. |
 | 2026-11-11 | Closed I-017: root-caused the eight order-dependent timeouts, fixed both test modules, established that the pair warmup was already forward-ported, merged the heartbeat onto mainline as `efbe09a9`, and closed both outstanding heartbeat claims. |
 | 2026-11-11 | Recorded the closeout decisions: GPU-hour accounting waived and H800 P0/P1 closed, so the H200 mainline has no remaining blocking acceptance item. |
 | 2026-11-08 | Accepted the independent H200 mainline completion review: both H200 numerical cases confirmed complete, the mainline still INCOMPLETE on GPU-hour accounting; two record errors corrected and two new findings added (I-016 fixed, I-017 open). |
@@ -174,7 +175,7 @@ all-request and the warm reading. Six audits returned zero failures (157, 861, 9
 
 Four findings were raised. F1, GPU-hour accounting, is confirmed and remains the single criterion blocking literal
 completion; ticket 19 stays `PARTIAL` with its accounting checkbox unchecked, and no new GPU run is needed to close
-it. F2, unsupported heartbeat verification claims, is confirmed and escalated: the lead located that evidence in the
+it (waived on 2026-11-11 by D-GPU-HOURS-NOT-REQUIRED). F2, unsupported heartbeat verification claims, is confirmed and escalated: the lead located that evidence in the
 unmerged `p2-64-startup-harness` worktree and re-running it there does not reproduce the recorded result. F3, a
 count overstatement in the generation08 formal report, and F4, five stale status statements across `plan.md`,
 ticket 17 and `frontier/model_architectures.py`, are corrected with case-specific scope; no H800 box was checked and
@@ -209,9 +210,9 @@ Deliverables, relative to this task directory:
 Open after this review: GPU-hour accounting reconciliation including generations 05-08; merging
 `p2-64-startup-harness` into mainline and root-causing its isolation leak; the two heartbeat claims the lead did not
 re-run (the `101 passed` suite and the `10.01 s / 1.01 s` stopped-peer timing comparison); and H800 P0/P1 as later
-scope, which H200 results never qualify. All but the accounting are since closed: the merge and the
-isolation leak on 2026-11-11 (issues.md I-017), both heartbeat claims the same day, the accounting by
-D-GPU-HOURS-NOT-REQUIRED and H800 by D-H800-CLOSED.
+scope, which H200 results never qualify. All four are since closed: the merge and the isolation leak on
+2026-11-11 (issues.md I-017), both heartbeat claims the same day, the accounting as `WAIVED_BY_USER` by
+D-GPU-HOURS-NOT-REQUIRED, and H800 as `CLOSED_NOT_PURSUED` by D-H800-CLOSED.
 
 ## I-017 closed: order-dependent timeouts root-caused, heartbeat merged into mainline — 2026-11-11
 
@@ -261,6 +262,21 @@ Open or deferred:
   module's owner.
 - Nine native/calibration modules and 93 individual cases cannot run in the minimal environment, so their status is
   unknown rather than passing, both before and after this change.
+
+## Ticket state reconciled against the accepted evidence — 2026-11-11
+
+After the two closeout decisions and the I-017 merge, the ticket files still carried the earlier open state, so
+they were brought in line with the evidence:
+
+- Ticket 19's four milestone groups (`frontier_reference_run`, `comparison_and_calibration`,
+  `promotion_32_to_64`, `final_acceptance`) are resolved per instance: satisfied for the two H200 DSV4 cases with
+  their report and receipt references, `CLOSED_NOT_PURSUED` for the H800 instances the same boxes covered, and
+  `WAIVED_BY_USER` for GPU-hour accounting. The ticket status is DONE for the active H200 scope.
+- Ticket 18's status sentence "No priority case has an admitted formal three-round reference" was stale; both H200
+  cases have one (P2-32 on 2026-11-02; P2-64 generation08 on 2026-11-07, 432/432 requests across three repeats).
+- `review.md` section 12.5 items 1 and 4, and the F1/F2 disposition cells, now carry their dated closures.
+
+No measured value, verdict or evidence path was changed by this reconciliation.
 
 ## Completed task artifact cleanup — 2026-11-03
 

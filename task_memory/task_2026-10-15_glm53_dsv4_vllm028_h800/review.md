@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Section 12.5 open items 1 and 4 closed by YC's decisions: GPU-hour accounting `WAIVED_BY_USER` (D-GPU-HOURS-NOT-REQUIRED) and H800 P0/P1 `CLOSED_NOT_PURSUED` (D-H800-CLOSED); F1 and F2 dispositions annotated. |
 | 2026-11-11 | Section 12.5 open items 2 and 3 closed: I-017 root-caused, fixed and merged into mainline, and both outstanding heartbeat claims resolved. |
 | 2026-11-08 | Added section 12: lead acceptance of the codex-implement H200 mainline review, the disposition of its four findings, two new findings the lead added, and the remaining open items. |
 | 2026-10-18 | Added section 11: current documentation-only audit, all-ticket evidence/status assessment, main-path recovery, official workflow checks, unresolved choices and execution handoff. Sections 1–10 remain historical. |
@@ -473,8 +474,8 @@ Independent audit totals, all with zero failures: `metrics_audit` 157/157, `evid
 
 | Finding | Classification | Lead disposition |
 | --- | --- | --- |
-| **F1** Actual GPU-hour accounting remains an acceptance blocker | Blocking completion defect; the limitation is honestly recorded but cannot be used to call the mainline finished | **Confirmed, remains open.** Ticket 19 line 203's own wording keeps the box open until all actual clocks are added. The 35-job ledger totals 158.271667 container GPUh and excludes generations 05–08 (18.52 + 8.57 + 41.81 + 23.31 = 92.21 GPUh). Generation01 has one of eight exact finish clocks (4.053333 GPUh known); generation02 has `container_clocks_complete: false`; generations 03 and 04 retain null exact totals. No metric depends on these clocks, because the client intervals use dispatch/first-token/last-token monotonic timestamps. Ticket 19 stays `PARTIAL` and the accounting box stays unchecked. No new GPU run is required to close it. |
-| **F2** Three heartbeat verification claims are supported only by prose | Verification record gap, separate from any numerical defect | **Confirmed and escalated.** The executor could not locate the stdout and correctly declined to equate "not located" with "not executed". The lead found the source: that evidence exists only in the unmerged worktree `/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness`. Re-running it there today gives `12 failed, 6 passed in 85.73s` against the recorded `18 passed in 5.74s`, so the record does not reproduce. Recorded as **I-017**; see `test_report_2026-11-08_h200_mainline_review.md` sections 3 and 4. |
+| **F1** Actual GPU-hour accounting remains an acceptance blocker | Blocking completion defect; the limitation is honestly recorded but cannot be used to call the mainline finished | **Confirmed, remains open.** Ticket 19 line 203's own wording keeps the box open until all actual clocks are added. The 35-job ledger totals 158.271667 container GPUh and excludes generations 05–08 (18.52 + 8.57 + 41.81 + 23.31 = 92.21 GPUh). Generation01 has one of eight exact finish clocks (4.053333 GPUh known); generation02 has `container_clocks_complete: false`; generations 03 and 04 retain null exact totals. No metric depends on these clocks, because the client intervals use dispatch/first-token/last-token monotonic timestamps. **Closed 2026-11-11 by D-GPU-HOURS-NOT-REQUIRED:** YC waived the criterion as unimportant, so the box is marked `WAIVED_BY_USER` rather than satisfied; every measured figure and known gap above is preserved and no estimate was promoted to an exact clock. No new GPU run was required. |
+| **F2** Three heartbeat verification claims are supported only by prose | Verification record gap, separate from any numerical defect | **Confirmed and escalated; closed 2026-11-11 (see 12.5 item 3).** The executor could not locate the stdout and correctly declined to equate "not located" with "not executed". The lead found the source: that evidence exists only in the unmerged worktree `/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness`. Re-running it there today gives `12 failed, 6 passed in 85.73s` against the recorded `18 passed in 5.74s`, so the record does not reproduce. Recorded as **I-017**; see `test_report_2026-11-08_h200_mainline_review.md` sections 3 and 4. |
 | **F3** The final report overcounts its own checked errors | Record-keeping arithmetic error, no verdict consequence | **Confirmed and corrected.** The actual quantities are 4 Frontier values, 12 per-repeat vLLM values, 4 pooled vLLM values, and 16 errors. `test_report_2026-11-07_p2_64_generation08_formal.md` prose was corrected. The executor also noted that the lead's own assignment brief repeated the same wrong counts, which is accurate. |
 | **F4** Several current-state statements contradict the completion evidence | Documentation and status errors | **Confirmed and corrected,** with the executor's scope constraint respected: case-specific corrections only, no global H800 boxes checked, no dated historical failure erased. Five entries corrected in `plan.md` (two cells), `tickets/17-dsv4-canonical-case.md` (Status paragraph), and `frontier/model_architectures.py` (one docstring, one comment clause; no executable line touched). |
 
@@ -501,7 +502,9 @@ Independent audit totals, all with zero failures: `metrics_audit` 157/157, `evid
 1. **GPU-hour accounting (F1).** Obtain the missing historical container clocks or authoritative never-started
    evidence, reconcile each generation separately, and merge generations 05–08 into the ledger. Estimates do
    not satisfy the present wording. If the clocks cannot be recovered, this returns to YC as an explicit
-   acceptance decision. Ticket 19 stays `PARTIAL`.
+   acceptance decision. Ticket 19 stays `PARTIAL`. **Closed 2026-11-11**: YC waived the criterion
+   (D-GPU-HOURS-NOT-REQUIRED), the ticket 19 box is `WAIVED_BY_USER` rather than satisfied, and the recorded clocks
+   and gaps are preserved unchanged.
 2. **Merge `p2-64-startup-harness` into mainline (I-017)**, and root-cause the eight order-dependent timeouts
    before accepting the merged tests. **Closed 2026-11-11**: root-caused to a `patch.dict("sys.modules")` restore leak
    in the test module, fixed on both branches, and the heartbeat cherry-picked onto mainline as `efbe09a9` with an
@@ -513,7 +516,9 @@ Independent audit totals, all with zero failures: `metrics_audit` 157/157, `evid
    closed as not reproducible, because its command needs `aiohttp` and no interpreter on this host has both `aiohttp`
    and Frontier's dependencies.
 4. **H800 P0/P1** remains later scope. H200 results never qualify H800, and no formal four-metric or 30%
-   promotion receipt exists for those cases.
+   promotion receipt exists for those cases. **Closed 2026-11-11** as `CLOSED_NOT_PURSUED` by D-H800-CLOSED:
+   P0 keeps its accepted scoped native06 R4 binding and DIAGNOSTIC-only prediction, and nothing is retroactively
+   marked PASS.
 
 ### 12.6 Verification and limits
 
