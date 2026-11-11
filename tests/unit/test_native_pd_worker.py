@@ -10,8 +10,15 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import types
 from unittest.mock import patch
+# Imported for its side effect: the worker imports urllib.request lazily, so
+# without this the submodule can enter sys.modules during the first test and the
+# patch.dict("sys.modules") restore then drops it while urllib keeps the stale
+# submodule attribute that patch("urllib.request.urlopen") resolves through.
+import urllib.request
 
 import pytest
 
@@ -36,9 +43,15 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
         node.mkdir(parents=True)
         (node / "ready.json").write_text(json.dumps({
             "host": f"host{index}", "ip": f"10.0.0.{index + 1}"}))
-        if not (lifecycle and index == 3 and lifecycle.get("peer_drained_at", 0) != 0):
+        # host3 stays undrained for the drain-quorum cases, which drain it on a
+        # schedule, and for the heartbeat cases, which judge it by staleness.
+        if not (index == 3 and (case.startswith("peer_heartbeat")
+                                or (lifecycle and lifecycle.get("peer_drained_at", 0) != 0))):
             (node / "drained.json").write_text("{}")
     (root / "nodes/host2/server_ready.json").write_text("{}")
+    if case.startswith("peer_heartbeat"):
+        (root / "nodes/host3/heartbeat.json").write_text('{"count": 1}')
+    health_polls = 0
     events = []
     replay_commands = []
     server_environments = []
@@ -175,6 +188,8 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
         "proxy_port": 30500, "serve_observers": {"prefill": {}, "decode": {}},
         "peer_wait_seconds": 10, "startup_timeout_s": startup_timeout_s, "replay_timeout_s": 10,
         "drain_seconds": 0, "stop_timeout_s": 10, "weight_suffixes": [".bin"],
+        "heartbeat_interval_s": 1,
+        "peer_heartbeat_timeout_s": 1 if case.startswith("peer_heartbeat") else 60,
     }
     if lifecycle is not None:
         config["peer_wait_seconds"] = 60
@@ -232,6 +247,20 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
             return True
         return original_relative(path, other)
 
+    def urlopen(*args, **kwargs):
+        # Peer heartbeat cases hold the head's health wait for longer than the
+        # staleness limit; the live peer keeps beating and drains when health passes.
+        nonlocal health_polls
+        health_polls += 1
+        if case == "peer_heartbeat_live":
+            (root / "nodes/host3/heartbeat.json").write_text(json.dumps({"count": health_polls + 1}))
+            if health_polls > 3:
+                (root / "nodes/host3/drained.json").write_text("{}")
+                return Health()
+        if case.startswith("peer_heartbeat"):
+            raise OSError("CPU stand-in: native server not healthy yet")
+        return Health()
+
     class Health:
         status = 200
 
@@ -259,7 +288,7 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
         stack.enter_context(patch.object(worker.subprocess, "Popen", side_effect=popen))
         stack.enter_context(patch.object(worker.subprocess, "check_output", return_value="fake H800"))
         stack.enter_context(patch.object(worker.importlib.metadata, "version", return_value="stub"))
-        stack.enter_context(patch("urllib.request.urlopen", return_value=Health()))
+        stack.enter_context(patch("urllib.request.urlopen", side_effect=urlopen))
         if case == "canonical_clean_standard_layout" or case.startswith('canonical_clean_serving'):
             stack.enter_context(patch.object(worker, "stage_run_manifest",
                 side_effect=lambda *args: events.append("prelaunch_manifest_staged")))
@@ -272,10 +301,17 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
                 events.append("head_native_stopped")
                 (root / "nodes/host0/native_stopped.json").write_text('{"returncode":0,"signal":"SIGINT"}')
             stack.enter_context(patch.object(worker.time, "sleep", side_effect=publish_head_stop))
+        started = time.monotonic()
         code = worker.run(config)
+        elapsed = time.monotonic() - started
     result = json.loads((root / "nodes" / own_host / "result.json").read_text())
     return {
-        "case": case, "worker_returncode": code, "events": events,
+        "case": case, "worker_returncode": code, "events": events, "elapsed_s": elapsed,
+        "exception": result.get("exception"),
+        "heartbeat": json.loads((root / "nodes" / own_host / "heartbeat.json").read_text())
+            if (root / "nodes" / own_host / "heartbeat.json").exists() else None,
+        "heartbeat_threads": [thread.name for thread in threading.enumerate()
+                              if thread.name == "native-pd-heartbeat"],
         "native_server_returncode": result.get("server_stop", {}).get("returncode"),
         "native_server_stop_signal": result.get("server_stop", {}).get("signal"),
         "failed_sentinel": (root / "nodes" / own_host / "failed.json").exists(),
@@ -539,3 +575,24 @@ def test_head_drain_quorum_and_membership_use_known_paths(
 def test_native_stop_exception_is_not_suppressed_by_diagnostic_timing(tmp_path):
     with pytest.raises(RuntimeError, match='Injected native stop error'):
         exercise(native_pd_worker, tmp_path, 'canonical_clean', lifecycle={'stop_raises': True})
+
+
+def test_stopped_peer_heartbeat_fails_the_startup_wait_before_its_timeout(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "peer_heartbeat_stopped")
+    assert result["worker_returncode"] == 1 and result["failed_sentinel"]
+    assert "RuntimeError: Native P/D peer heartbeat unchanged" in result["exception"]
+    assert "['host3']" in result["exception"]
+    assert "replay_launch" not in result["events"]
+    assert result["elapsed_s"] < 10
+    assert result["heartbeat"]["count"] >= 1
+    assert not result["heartbeat_threads"]
+
+
+def test_changing_peer_heartbeat_outlasts_the_staleness_limit(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "peer_heartbeat_live")
+    assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
+    assert result["exception"] is None
+    assert "native_health_200" in result["events"] and "replay_launch" in result["events"]
+    assert result["elapsed_s"] > 3
+    assert result["heartbeat"]["count"] >= 2
+    assert not result["heartbeat_threads"]

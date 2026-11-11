@@ -12,6 +12,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import traceback
 
@@ -231,6 +232,8 @@ def run(config):
     server = replay = None
     plan = None
     exit_code = 1
+    stop_heartbeat = threading.Event()
+    peer_heartbeats = {}
 
     def record(name):
         result['stage'] = name
@@ -242,12 +245,52 @@ def run(config):
             print('NATIVE_PD_OBSERVATION_ERROR', error, flush=True)
         print('NATIVE_PD_STAGE', name, flush=True)
 
+    def write_heartbeat(count):
+        write_json(node / 'heartbeat.json', dict(count=count, utc=datetime.now(timezone.utc).isoformat()))
+
+    def keep_heartbeat():
+        count = 1
+        while not stop_heartbeat.wait(config['heartbeat_interval_s']):
+            count += 1
+            try:
+                write_heartbeat(count)
+            except Exception:
+                # A node that cannot publish its heartbeat is judged by its
+                # peers through the staleness limit.
+                result['observation_errors'].append(traceback.format_exc())
+                print('NATIVE_PD_OBSERVATION_ERROR', result['observation_errors'][-1], flush=True)
+
+    heartbeat = threading.Thread(target=keep_heartbeat, name='native-pd-heartbeat', daemon=True)
+
+    def stale_peers():
+        """Name undrained peers whose heartbeat has not changed within the configured limit.
+
+        Change is measured on this node's monotonic clock, so peer clock skew
+        does not matter.
+        """
+        now = time.monotonic()
+        stale = []
+        for path in root.glob('nodes/*/heartbeat.json'):
+            peer = path.parent
+            if peer.name == host or (peer / 'drained.json').exists():
+                continue
+            beat = path.read_bytes()
+            if peer.name not in peer_heartbeats or peer_heartbeats[peer.name][0] != beat:
+                peer_heartbeats[peer.name] = (beat, now)
+            elif now - peer_heartbeats[peer.name][1] > config['peer_heartbeat_timeout_s']:
+                stale.append(peer.name)
+        return sorted(stale)
+
     def await_condition(condition, timeout, *, native_required=False):
         deadline = time.monotonic() + timeout
         while True:
             failed = list(root.glob('nodes/*/failed.json'))
             if failed:
                 raise RuntimeError(f'Native P/D peer failed: {failed}')
+            stale = stale_peers()
+            if stale:
+                raise RuntimeError(f"Native P/D peer heartbeat unchanged for more than "
+                                   f"{config['peer_heartbeat_timeout_s']} s: {stale}")
             if native_required and server.poll() is not None:
                 raise RuntimeError(f'Native server exited early: {server.returncode}')
             if condition():
@@ -271,6 +314,10 @@ def run(config):
             if result['native_source_hashes'][name] != expected:
                 raise ValueError(f'Locked native source mismatch: {name}')
         record('rendezvous')
+        # The first heartbeat precedes ready.json, so every peer that passes
+        # the rendezvous is under the staleness check.
+        write_heartbeat(1)
+        heartbeat.start()
         write_json(node / 'ready.json', dict(host=host, ip=primary_ipv4()))
         await_condition(lambda: len(list(root.glob('nodes/*/ready.json'))) == config['replica'],
                         config['peer_wait_seconds'])
@@ -415,6 +462,10 @@ def run(config):
         write_json(node / 'failed.json', dict(host=host, error=result['exception']))
         print(result['exception'], flush=True)
     finally:
+        # This node has drained or failed, so its peers no longer check its heartbeat.
+        stop_heartbeat.set()
+        if heartbeat.is_alive():
+            heartbeat.join()
         if replay is not None and replay.poll() is None:
             result['replay_stop'] = stop_server(replay, config['stop_timeout_s'])
         if server is not None:
