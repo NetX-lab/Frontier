@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED: YC waives the actual GPU-hour accounting criterion and closes the H800 P0/P1 scope, so the H200 mainline has no remaining blocking acceptance item. |
 | 2026-11-07 | Recorded D-P2-64-SIXTH: a peer liveness check in the native harness, then night-time submission; one generation08 job plus at most two platform-cause resubmissions, 64 H200 per job, new chain ceiling 128 container GPUh. |
 | 2026-11-07 | Recorded the standing request to clean invalid task artifacts promptly through codex-implement. |
 | 2026-11-07 | Recorded the mainline drift check and D-P2-64-FIFTH: one generation05 submission plus at most two platform-cause resubmissions, 64 H200 per job, cumulative ceiling 128 container GPUh. |
@@ -166,6 +167,43 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-11 — D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED
+
+> 无需care about gpu hour记账，不重要。
+> 你描述的 " 合并 p2-64-startup-harness，并先定位那 8 个顺序依赖的 timeout。"的含义是什么？
+> 后续不进行h800部分，closed it
+
+Context: the 2026-11-08 completion review ([review.md section 12](review.md#12-h200-mainline-completion-review--lead-acceptance-2026-11-08))
+accepted both H200 numerical cases as complete and correct, and identified actual GPU-hour accounting as the one
+acceptance criterion still blocking literal completion of ticket 19. It also left H800 P0/P1 as later scope.
+
+**D-GPU-HOURS-NOT-REQUIRED.** YC waives the actual GPU-hour accounting criterion as unimportant. Consequences:
+
+- Ticket 19's `final_acceptance` GPU-hour checkbox is closed as `WAIVED_BY_USER`, not as satisfied. The known figures
+  stay recorded exactly as measured, and the known gaps stay recorded as gaps: the 35-job ledger is 158.271667
+  container GPUh; generations 05-08 add 18.52 + 8.57 + 41.81 + 23.31 = 92.21 GPUh and are not merged into it;
+  generation01 has one of eight exact finish clocks (4.053333 GPUh known); generation02 has
+  `container_clocks_complete: false`; generations 03 and 04 retain null exact totals; the generation05-07 chain's
+  68.90 GPUh is an upper bound counted against authorization rather than an exact total.
+- No figure is promoted to "exact", no estimate is written in as a clock, and no reconciliation work is performed.
+- No numerical verdict is affected: the client metric intervals use dispatch/first-token/last-token monotonic
+  timestamps, not platform `startedAt`/`finishedAt`, so no metric ever depended on these clocks.
+
+**D-H800-CLOSED.** The H800 portion is closed and not continued. Consequences:
+
+- H800 P0-H800-32 and P1-H800-64 are closed as `CLOSED_NOT_PURSUED`. Their recorded state is preserved as-is:
+  P0's accepted scoped native06 R4 binding and DIAGNOSTIC-only prediction, no formal four-metric result, and no 30%
+  promotion receipt for either case.
+- The existing rule that H200 results never qualify H800 is unchanged; nothing is retroactively marked PASS, and no
+  dated historical failure is erased.
+- Tickets 10, 17, 18 and 19 keep their H800 rows, now labelled closed rather than pending.
+
+Combined effect: with the accounting criterion waived and the H800 scope closed, the H200 mainline of this task has no
+remaining blocking acceptance item. The remaining open work is non-blocking engineering hygiene, namely issues.md
+I-017 (the unmerged `p2-64-startup-harness` deliverable and its order-dependent test failures) and the two heartbeat
+claims that were never re-run. The pre-existing upstream `README.md` documentation-contract failures remain outside
+this task's scope.
 
 ## [Original Request / Decision] 2026-11-07 — D-P2-64-SIXTH
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded the closeout decisions: GPU-hour accounting waived and H800 P0/P1 closed, so the H200 mainline has no remaining blocking acceptance item. |
 | 2026-11-08 | Accepted the independent H200 mainline completion review: both H200 numerical cases confirmed complete, the mainline still INCOMPLETE on GPU-hour accounting; two record errors corrected and two new findings added (I-016 fixed, I-017 open). |
 | 2026-11-08 | Cleaned up the generation08-era artifacts: 313 files and 36 empty directories, 2,570,104,832 allocated bytes: 178 in-repo files over two codex-implement rounds and the lead's 135-file out-of-repo duplicate removal; the published P2-64 metrics were also recomputed from the row CSVs and reproduce the report exactly. |
 | 2026-11-08 | I-014 resolved: the planned CPU copy job later succeeded on its own, and both copy routes hold identical generation08 job output (`PAYLOAD_IDENTICAL`, 130 files, joint sha256 `5ef547e0...`), so the copy deviation has no numerical consequence for the P2-64 verdict. |
@@ -124,6 +125,35 @@
 | 2026-10-18 | Completed documentation-only resume audit and main-path recovery; replaced the old A2-first handoff while preserving it in the before snapshot. |
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
+
+## Closeout: accounting waived and H800 closed — 2026-11-11
+
+YC waived the actual GPU-hour accounting criterion as unimportant (**D-GPU-HOURS-NOT-REQUIRED**) and closed the H800
+portion (**D-H800-CLOSED**). With those two decisions, **the H200 mainline of this task has no remaining blocking
+acceptance item.** Both H200 cases are formal PASS with qualified inputs, a valid pre-launch 30% promotion receipt,
+and published values, errors, sources and limitations: P2-32 worst 5.61% and P2-64 worst 3.16%, all four metrics
+within 10% in every repeat under both readings.
+
+Labelling is explicit rather than implied. Ticket 19's accounting checkbox is closed as `WAIVED_BY_USER`, not as
+satisfied: every measured figure and every known gap is preserved unchanged, no estimate was promoted to an exact
+clock, and generations 05-08 (92.21 GPUh) remain unmerged into the 35-job ledger (158.271667 GPUh). No numerical
+verdict was ever affected, because the client metric intervals use dispatch/first-token/last-token monotonic
+timestamps rather than platform `startedAt`/`finishedAt`. The H800 rows are closed as `CLOSED_NOT_PURSUED`: P0 keeps
+its accepted scoped native06 R4 binding and DIAGNOSTIC-only prediction, neither H800 case has a formal four-metric
+result or a promotion receipt, nothing is retroactively marked PASS, and the rule that H200 results never qualify
+H800 stands.
+
+Remaining work is non-blocking engineering hygiene:
+
+- **I-017**, the unmerged `p2-64-startup-harness` deliverable. Narrowed on 2026-11-11: the two branches each carry
+  real commits on the same two files, the pair-warmup capability was implemented twice (mainline `e2289283b`, harness
+  `4861e680`), and only the heartbeat commit `57caf2f7` is genuinely absent from mainline. A leaked heartbeat daemon
+  thread is ruled out as the cause of the eight order-dependent timeouts, because the worker sets its stop event and
+  joins the thread inside a `finally` block; the leak is elsewhere and remains un-root-caused.
+- The two heartbeat claims never re-run: the `101 passed` related-harness suite and the `10.01 s / 1.01 s` old/new
+  stopped-peer timing comparison.
+- Pre-existing upstream `README.md` documentation-contract failures in `tests/unit/test_pdd_public_surface_docs.py`,
+  which also fail on `origin/main` and belong to the release-documentation owner.
 
 ## H200 mainline completion review — accepted 2026-11-08
 

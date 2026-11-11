@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | D-H800-CLOSED: the two H800 rows are closed as CLOSED_NOT_PURSUED with their recorded state preserved; the two H200 rows stay formal PASS. |
 | 2026-11-08 | Corrected the Status paragraph after the H200 mainline review: recorded the P2-H200-32 and P2-H200-64 formal four-metric passes and the dated 30% promotion receipt, and confined the "no receipt" statement to the H800 P0/P1 cases. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
 | 2026-10-25 | D-DSV4-H800-MAINLINE-CORRECTION: added the current route block; stated which checklist applies to P0, mapped the two open P0 items to H4a, and deferred the H200 rows. |
@@ -40,7 +41,7 @@ H200 cases, formal four-metric acceptance now exists: P2-H200-32 passed on
 `promotion/receipt_p2_32_to_p2_64.json` (sha256 `d505eece...`, issued
 2026-11-02T07:38:49Z, max error0.0561) was issued before the64-GPU build, and
 P2-H200-64 passed on 2026-11-07 with the generation08 reference (worst3.16%).
-No formal four-metric or30% promotion receipt exists for the H800 P0/P1 cases.
+The two H800 cases are closed as `CLOSED_NOT_PURSUED` by D-H800-CLOSED (2026-11-11): no formal four-metric result and no 30% promotion receipt exists for either, P0 keeps its accepted scoped native06 R4 binding and DIAGNOSTIC-only prediction, and nothing is retroactively marked PASS.
 H200 costs/capacity are not
 H800 qualification, and earlier single-role G0-B does not prove all P/D cases.
 

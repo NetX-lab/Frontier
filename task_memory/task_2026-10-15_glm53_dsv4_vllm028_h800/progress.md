@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED: accounting waived, H800 closed, so the H200 mainline has no blocking acceptance item; only non-blocking I-017 hygiene remains. |
 | 2026-11-08 | Accepted the codex-implement H200 mainline completion review: both H200 numerical cases confirmed complete, the mainline still INCOMPLETE on GPU-hour accounting; F3/F4 record errors corrected, and two new findings added (I-016 the Python 3.11-only `-P` flag breaking 4 mainline unit tests, now fixed; I-017 the unmerged `p2-64-startup-harness` deliverable whose recorded CPU evidence does not reproduce). |
 | 2026-11-08 | Recorded the generation08 result: job Succeeded (23.31 GPUh exact), hash-identical SSH copy, R5 PASS, pair coverage COVERED, all four metrics within 10% in every repeat; P2-64 formal PASS. |
 | 2026-11-07 | Recorded the generation08 submission `exp-1108-002857-059466` at 16:28:57Z (27/27 checks), Running at 16:34Z. |
@@ -529,6 +530,35 @@ The following completed A6 history retains its original all-request verdicts. D-
 - **in-progress**: fresh all-scope current-table invocation (background shell `sh_196119829001zIT8h1deHASn6x`), receipt `a6_forward_attention_20261101/current_command.json`, identical-input/fold cache reuse, output `current_phase_heldout.json`. This finishes diagnostics absent from the earlier retained selected-scope output; no GPU or P2 replay has started.
 - **in-progress, resumed same IDs only**: PASS-REPLAY-INPUTS needs the exact retained source-row/raw/config/cache paths; B-FORWARD-REVIEW (`ses_e69f04c05ffeKSDHTXKtDmR7O7`) needs phase-level findings. No duplicate agents or completed checks were restarted.
 - **pending**: repeatability producer -> business verification -> complete three-run rows/tables -> four CPU P2 replays and median3 held-out run. Unrelated `.cortexkit/`, `.pi/`, `remaining_measurements/` remain untouched; changes are not yet committed.
+
+## Closeout decisions — D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED, 2026-11-11
+
+Authority: [requirements](requirements.md#original-request--decision-2026-11-11--d-gpu-hours-not-required-and-d-h800-closed).
+
+- completed — GPU-hour accounting closed as `WAIVED_BY_USER`. Reason: YC judged it unimportant. Expectation: the
+  checkbox stops blocking acceptance without any measured figure being altered or any estimate being promoted to an
+  exact clock. Method: ticket 19's `final_acceptance` checkbox rewritten with the explicit `WAIVED_BY_USER` label and
+  the preserved figures and gaps; the dependency-chain row in `plan.md` updated. Result: no reconciliation performed,
+  generations 05-08 remain unmerged into the 35-job ledger (158.271667 GPUh), and no numerical verdict is touched,
+  because the client metric intervals use dispatch/first-token/last-token monotonic timestamps rather than platform
+  `startedAt`/`finishedAt`.
+- completed — H800 P0/P1 closed as `CLOSED_NOT_PURSUED`. Reason: YC closed the H800 portion. Expectation: the rows
+  stop being pending work while their recorded state survives unchanged. Method: `plan.md` H800 continuation row and
+  ticket 17's Status paragraph relabelled; dated historical snapshots in ticket 17 left untouched. Result: P0 keeps its
+  accepted scoped native06 R4 binding and DIAGNOSTIC-only prediction, neither case has a formal four-metric result or
+  a 30% promotion receipt, and the rule that H200 results never qualify H800 is unchanged.
+- completed — consequence recorded. The H200 mainline of this task has no remaining blocking acceptance item. Both
+  H200 cases are formal PASS with qualified inputs, a valid pre-launch promotion receipt and published values, errors,
+  sources and limitations.
+- pending, non-blocking — issues.md I-017: the `p2-64-startup-harness` worker change is still unmerged, and that
+  branch's own unit evidence does not reproduce. Narrowed on 2026-11-11 while explaining the item to YC: the two
+  branches are not one-sided, each carries real commits on the same two files, and the pair-warmup capability was
+  implemented twice (mainline `e2289283b`, harness `4861e680`), so only the heartbeat commit `57caf2f7` is genuinely
+  absent from mainline. A leaked heartbeat daemon thread is ruled out as the cause of the eight timeouts, because
+  `native_pd_worker.py:438-442` sets the stop event and joins the thread inside a `finally` block. The leak is
+  therefore elsewhere and is still not root-caused.
+- pending, non-blocking — the two heartbeat claims never re-run: the `101 passed in 19.50 s` related-harness suite and
+  the `10.01 s / 1.01 s` old/new stopped-peer timing comparison.
 
 ## H200 mainline completion review and lead acceptance — 2026-11-08
 

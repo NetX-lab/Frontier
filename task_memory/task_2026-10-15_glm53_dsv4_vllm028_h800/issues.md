@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | I-017 narrowed: the divergence is two parallel evolutions, not a missing feature (pair warmup implemented twice, only heartbeat 57caf2f7 absent from mainline), and a leaked heartbeat daemon thread is ruled out as the timeout cause. |
 | 2026-11-08 | I-017 opened: the P2-64 startup-harness fix that made generation08 succeed lives only on branch `p2-64-startup-harness` (57caf2f7), which is not an ancestor of mainline HEAD, and its recorded CPU unit evidence does not reproduce today (12 failed / 6 passed). |
 | 2026-11-08 | I-016 opened and resolved: `tests/unit/test_native_pd_worker.py` passed the Python 3.11+ `-P` flag to a child interpreter, so 4 of 41 mainline unit tests failed on the declared 3.10 floor; replaced with a portable `sys.path` prelude and verified 41 passed. |
 | 2026-11-08 | Cleaned up the generation08-era artifacts: 313 files and 36 empty directories, 2,570,104,832 allocated bytes: 178 in-repo files over two codex-implement rounds and the lead's 135-file out-of-repo duplicate removal; the published P2-64 metrics were also recomputed from the row CSVs and reproduce the report exactly. |
@@ -61,6 +62,17 @@
   root-cause the eight timeouts before accepting the merged tests. Both copies of `native_pd_worker.py` and of the test
   module have diverged in opposite directions, so the merge touches the native measurement harness and needs its own
   verification pass rather than a fast-forward.
+- Narrowed 2026-11-11, while explaining the item: the divergence is not one-sided. The harness branch carries four
+  commits mainline lacks (`4861e680`, `f7dc9416`, `f33306d4`, `57caf2f7`), and mainline carries six commits touching
+  the same two files, including `e2289283b` "Integrate P2-64 pair warmup into the calibration harness". The pair-warmup
+  capability was therefore implemented twice, once per branch, which is why the test module differs by 53 insertions
+  against 161 deletions and collects 41 cases on mainline against 18 on the harness branch. Only the heartbeat commit
+  `57caf2f7` is genuinely absent from mainline, so the merge is a reconciliation of two parallel evolutions, not the
+  transplant of a missing feature.
+- Also ruled out 2026-11-11: a leaked heartbeat daemon thread is not the cause of the eight timeouts.
+  `tests/comparison/calibration/native_pd_worker.py:438-442` sets `stop_heartbeat` and joins the thread inside a
+  `finally` block, so the thread does not survive a failing case. The leak is elsewhere in the test module and is still
+  not root-caused.
 
 ## I-016: a Python 3.11+ interpreter flag broke 4 mainline unit tests on the declared 3.10 floor (2026-11-08, resolved)
 
