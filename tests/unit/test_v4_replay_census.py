@@ -10,7 +10,6 @@ from types import SimpleNamespace
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "tests/analysis"))
 sys.path.insert(0, str(ROOT / "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/a10"))
 import a10_observer as observer
 import v4_replay_census as replay

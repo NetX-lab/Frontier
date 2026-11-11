@@ -1,12 +1,10 @@
 """Independent attention passes retain matching kernel costs and stream offsets."""
 import importlib.util
 from pathlib import Path
-import sys
 
 import pytest
 
 ANALYSIS = Path(__file__).resolve().parents[1] / "analysis"
-sys.path.insert(0, str(ANALYSIS))
 spec = importlib.util.spec_from_file_location("v4_attention_multipass_table", ANALYSIS / "v4_attention_multipass_table.py")
 table = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(table)

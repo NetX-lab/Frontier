@@ -102,7 +102,7 @@ def projected(plans):
     return measured, predicted, model
 
 
-def test_probe_c_writer_failure_is_closed_by_projected_union(projected):
+def test_probe_c_writer_failure_is_closed_by_the_promoted_supplement(projected):
     measured, predicted, model = projected
     # Preserve the reported request's exact feature bounds. The census does not
     # retain batch IDs/request lists, so this is a feature regression for the
@@ -114,12 +114,15 @@ def test_probe_c_writer_failure_is_closed_by_projected_union(projected):
     assert values["num_compressed_writes"] == 8
     record = dict(variant="csa", graph_runtime_mode="PIECEWISE", phase="first_tail",
                   plans_tile_schedule=True, scopes=["dsv4_compressor_fused_compress_store"], values=values, count=1)
-    before = check_requests([record], model_ranges(measured))
-    after = check_requests([record], model_ranges(pd.concat([measured, predicted], ignore_index=True)))
-    assert before["counts"]["missed_requests"] == 1
-    assert before["misses"][0]["violations"][0]["reasons"] == [dict(
-        column="num_compressed_writes", value=8, lower=1.0, upper=7.0, reason="outside measured group range")]
-    assert not after["misses"]
+    ranges = model_ranges(measured)
+    # The supplement rows promoted into the table measure writer counts up to 16,
+    # so the coordinate the probe reported outside the earlier 1..7 group range is
+    # now measured rather than projected.
+    group = ranges["dsv4_attention__dsv4_compressor_fused_compress_store__csa__PIECEWISE__first_tail__time"]
+    assert group["16.0"]["num_compressed_writes"] == (1.0, 16.0)
+    assert not check_requests([record], ranges)["misses"]
+    union = check_requests([record], model_ranges(pd.concat([measured, predicted], ignore_index=True)))
+    assert not union["misses"]
 
 
 @pytest.mark.parametrize("change,column", [("model", "model_key"), ("rows", "padded_rows"),

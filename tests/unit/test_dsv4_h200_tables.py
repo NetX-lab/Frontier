@@ -60,7 +60,7 @@ def test_revision_reader_does_not_import_the_job_launcher(tmp_path, promotion):
 
 
 @pytest.mark.parametrize("filename,count", [
-    ("attention_graph_replay_kernel_only.csv", 4945),
+    ("attention_graph_replay_kernel_only.csv", 7105),
     ("linear_op_kernel_only.csv", 41), ("moe_kernel_only.csv", 33), ("kernel_gap.csv", 4),
 ])
 def test_output_hashes_and_row_counts_equal_manifest(filename, count, promotion):
