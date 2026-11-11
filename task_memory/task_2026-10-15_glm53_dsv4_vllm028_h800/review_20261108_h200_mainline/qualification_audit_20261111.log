@@ -1,0 +1,283 @@
+CHECKS 907 PASS 907 FAIL 0
+{
+  "historical_gpu_hours": {
+    "rows": 35,
+    "sum": 158.27166666666665,
+    "clock_receipts_recomputed": 27,
+    "other_basis": [
+      "exp-1021-141138-593083",
+      "exp-1021-141138-594688",
+      "exp-1031-233253-628432",
+      "exp-1031-233305-902815",
+      "exp-1101-004206-443314",
+      "exp-1101-005741-958298",
+      "exp-1101-015820-503227",
+      "exp-1101-143721-849401"
+    ]
+  },
+  "formal_clock_receipts": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/failure_01_20261102/rca/terminal_receipt.json",
+      "job": "exp-1102-164536-160317",
+      "hours": 4.053333333333334,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/recovery_02_20261102/generation02_copy_terminal_receipt.json",
+      "job": "exp-1103-001335-240782",
+      "hours": 0.0,
+      "known_hours": 0.0,
+      "complete": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal/recovery_02_20261102/generation02_platform_terminal_receipt.json",
+      "job": "exp-1102-233941-576872",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_recovery/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261102-02/platform_terminal_receipt.json",
+      "job": "exp-1102-233941-576872",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry03/generation03_platform_terminal_receipt.json",
+      "job": "exp-1103-092042-217677",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry04/terminal_20261104/platform_terminal_receipt.json",
+      "job": "exp-1103-131952-259161",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry05/terminal_20261107/platform_terminal_receipt.json",
+      "job": "exp-1107-135759-122907",
+      "hours": null,
+      "known_hours": 2.5866666666666664,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry06/terminal_20261107/platform_terminal_receipt.json",
+      "job": "exp-1107-144321-305543",
+      "hours": null,
+      "known_hours": 0.0,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry07/terminal_20261107/platform_terminal_receipt.json",
+      "job": "exp-1107-150132-396145",
+      "hours": null,
+      "known_hours": 8.264444444444445,
+      "complete": false
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_formal_retry08/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-formal-20261107-08/platform_terminal_receipt.json",
+      "job": "exp-1108-002857-059466",
+      "hours": 23.30666666666667,
+      "known_hours": 23.30666666666667,
+      "complete": true
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_lifecycle/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-lifecycle-20261026-01/platform_terminal_receipt.json",
+      "job": "exp-1026-125836-702505",
+      "hours": 26.302222222222223,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_profile/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-profile-20261025-01/platform_terminal_receipt.json",
+      "job": "exp-1025-162315-604618",
+      "hours": 24.54222222222222,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_reference/package_01/case/runs/groundtruth_clean/dsv4-h200-p2-64-canonical-20261025-01/platform_terminal_receipt.json",
+      "job": "exp-1025-155441-668927",
+      "hours": 24.322222222222223,
+      "known_hours": null,
+      "complete": null
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_mainline/p2_64_wave/package_02/case/runs/groundtruth_clean/dsv4-h200-p2-64-wave-20261030-01/platform_terminal_receipt.json",
+      "job": "exp-1030-144848-164721",
+      "hours": 18.16888888888889,
+      "known_hours": null,
+      "complete": null
+    }
+  ],
+  "attention": {
+    "layer_counts": {
+      "('uncompressed', True)": 2,
+      "('csa', True)": 1,
+      "('hca', True)": 1,
+      "('csa', False)": 20,
+      "('hca', False)": 19
+    },
+    "lookup_keys": 6802,
+    "aggregated_lookup_keys": 5902,
+    "('pass1_all', ('FULL', 'decode'))": {
+      "count": 16,
+      "median_error": 0.010739781134507534,
+      "p90_error": 0.023245102418428427,
+      "maximum": 0.023628602903153047
+    },
+    "('pass2_all', ('FULL', 'decode'))": {
+      "count": 16,
+      "median_error": 0.008703165827731459,
+      "p90_error": 0.013468673710431778,
+      "maximum": 0.021962748499692167
+    },
+    "('pass1_all', ('FULL', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.019160570012502386,
+      "p90_error": 0.02822792997530746,
+      "maximum": 0.036631508936941504
+    },
+    "('pass2_all', ('FULL', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.011313497057378979,
+      "p90_error": 0.015002309065539253,
+      "maximum": 0.016159994978983242
+    },
+    "('pass1_all', ('NONE', 'dummy'))": {
+      "count": 1,
+      "median_error": 0.02227783566912702,
+      "p90_error": 0.02227783566912702,
+      "maximum": 0.02227783566912702
+    },
+    "('pass2_all', ('NONE', 'dummy'))": {
+      "count": 1,
+      "median_error": 0.022657180710289656,
+      "p90_error": 0.022657180710289656,
+      "maximum": 0.022657180710289656
+    },
+    "('pass1_all', ('NONE', 'prefill'))": {
+      "count": 1,
+      "median_error": 0.009715871581336577,
+      "p90_error": 0.009715871581336577,
+      "maximum": 0.009715871581336577
+    },
+    "('pass2_all', ('NONE', 'prefill'))": {
+      "count": 1,
+      "median_error": 0.006684138560677197,
+      "p90_error": 0.006684138560677197,
+      "maximum": 0.006684138560677197
+    },
+    "('pass1_all', ('PIECEWISE', 'decode'))": {
+      "count": 11,
+      "median_error": 0.010621144203984696,
+      "p90_error": 0.01787854155268493,
+      "maximum": 0.021492404677940766
+    },
+    "('pass2_all', ('PIECEWISE', 'decode'))": {
+      "count": 11,
+      "median_error": 0.010310876563774376,
+      "p90_error": 0.024647338785082136,
+      "maximum": 0.0260993728888293
+    },
+    "('pass1_all', ('PIECEWISE', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.009741371658833296,
+      "p90_error": 0.020490719744068443,
+      "maximum": 0.02592715661259465
+    },
+    "('pass2_all', ('PIECEWISE', 'dummy'))": {
+      "count": 6,
+      "median_error": 0.0037805455903139147,
+      "p90_error": 0.010821127662831059,
+      "maximum": 0.014649555629247489
+    },
+    "('pass1_all', ('PIECEWISE', 'first_tail'))": {
+      "count": 7,
+      "median_error": 0.022947904002364114,
+      "p90_error": 0.03299592443238444,
+      "maximum": 0.03513093488298318
+    },
+    "('pass2_all', ('PIECEWISE', 'first_tail'))": {
+      "count": 7,
+      "median_error": 0.008659517024714937,
+      "p90_error": 0.02184603514885034,
+      "maximum": 0.02646289211643603
+    },
+    "maximum": 0.036631508936941504,
+    "comparisons": 96
+  },
+  "nixl": {
+    "records": 90,
+    "reader_trials": 12150,
+    "notifications": 80352,
+    "intercept_ms": 0.023652184281886778,
+    "bandwidth_gbps": 390.3934992825481,
+    "maximum_heldout_median_error": 0.009195178620907216,
+    "p2_coordinate_max_ms": 12.554511427879333
+  },
+  "promotion": {
+    "issued": "2026-11-02T07:38:49.523696+00:00",
+    "generation08_submission_utc": "2026-11-07T16:28:57Z",
+    "receipt_sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+    "actual_manifest_fields": {
+      "promotion_receipt": {
+        "path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h3o_operator_costs/formal_p2_20261102/promotion/receipt_p2_32_to_p2_64.json",
+        "sha256": "d505eecea90c0ea0a285a3cff76086e11b2c3914a88ad2a188dd9c94323f7596",
+        "build_utc": "2026-11-07T08:29:52.746840+00:00"
+      }
+    },
+    "git_history": {
+      "adding_commit": "1a7950ed5ba9b766a5322313eb7e0f50fa76a2e4",
+      "committed_utc": "2026-11-02T07:39:13+00:00",
+      "committed_bytes_identical": true
+    }
+  },
+  "fidelity": {
+    "fidelity": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b24": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b26": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b26b": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b28": {
+      "identical": 77,
+      "mismatched": 0,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    },
+    "fidelity_b29": {
+      "identical": 0,
+      "mismatched": 77,
+      "unexpected_differences": 0,
+      "candidate_only_failures": []
+    }
+  },
+  "historical_logs": {
+    "/data/ycfeng/tmp/glm53_dsv4/h200/p2_dp_recovery_harness_tests.log": "...............................................................sssssssss [ 51%]\nssssssssss.........................................................ss    [100%]\n120 passed, 21 skipped in 52.92s\n"
+  }
+}
+FAILURES []

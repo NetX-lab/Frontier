@@ -4502,6 +4502,11 @@
       "detail": null
     },
     {
+      "name": "promotion receipt committed unchanged before submission",
+      "status": "PASS",
+      "detail": null
+    },
+    {
       "name": "fidelity:fidelity",
       "status": "PASS",
       "detail": null
@@ -4765,7 +4770,11 @@
           "build_utc": "2026-11-07T08:29:52.746840+00:00"
         }
       },
-      "git_history": "task_memory is ignored; no Git creation timestamp proof is available"
+      "git_history": {
+        "adding_commit": "1a7950ed5ba9b766a5322313eb7e0f50fa76a2e4",
+        "committed_utc": "2026-11-02T07:39:13+00:00",
+        "committed_bytes_identical": true
+      }
     },
     "fidelity": {
       "fidelity": {

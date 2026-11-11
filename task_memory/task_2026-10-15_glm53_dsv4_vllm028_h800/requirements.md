@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded D-MERGE-OWNED-ELSEWHERE: cross-worktree merging belongs to `integrate-vllm-versions`, this task delivers its own scope only, and a final Codex review was requested once no mainline execution task remained. |
 | 2026-11-11 | Recorded the closure of the two previously open hygiene items: issues.md I-017 is root-caused and merged into mainline as `efbe09a9`, and the two heartbeat claims are resolved. |
 | 2026-11-11 | Recorded D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED: YC waives the actual GPU-hour accounting criterion and closes the H800 P0/P1 scope, so the H200 mainline has no remaining blocking acceptance item. |
 | 2026-11-07 | Recorded D-P2-64-SIXTH: a peer liveness check in the native harness, then night-time submission; one generation08 job plus at most two platform-cause resubmissions, 64 H200 per job, new chain ceiling 128 container GPUh. |
@@ -168,6 +169,30 @@
 | 2026-10-18 | Recorded the explicit choice to preserve strict capture-getter device-state restrictions; routing content remains unimplemented without an exception or indefinite source investigation. |
 | 2026-10-18 | Reaffirmed concurrent ticket execution; assigned disjoint ticket02 collection, ticket04 selected-backend profiling, and ticket07 lifetime baseline preparation under unchanged prerequisites. |
 
+
+## [Original Request / Decision] 2026-11-11 — D-MERGE-OWNED-ELSEWHERE and the final review
+
+> 合并任务由其他worktree（integrate-vllm-versions）推进，你无需考虑合并，你只需将当前自己的任务完整交付即可。当前是否还有未处理，未通过的关键主线任务，是什么？如果没有，调用codex review
+
+**D-MERGE-OWNED-ELSEWHERE.** Cross-worktree merging of this branch is owned by the `integrate-vllm-versions`
+worktree and is out of this task's scope. This task delivers its own scope completely and does not plan, perform or
+block on the merge. The standing rule that worktree code and documentation return to the main branch on completion
+is satisfied here by that owner, not by this session.
+
+Answer to the status question, recorded as given: **no key mainline execution task remained unhandled or
+unpassed.** Both H200 formal cases are PASS (P2-32 worst 5.61%, P2-64 worst 3.16%, all four metrics within 10% in
+every repeat), GPU-hour accounting is `WAIVED_BY_USER` under D-GPU-HOURS-NOT-REQUIRED, the H800 scope is
+`CLOSED_NOT_PURSUED` under D-H800-CLOSED, and I-017 is root-caused, fixed and merged into mainline as `efbe09a9`.
+What remained was record bookkeeping plus work owned elsewhere: the merge above, the three README
+documentation-contract failures owned by the release-documentation surface, and issues.md I-018's modules that the
+minimal environment cannot collect.
+
+A final Codex review was therefore submitted as instructed (`gpt-6.1-sol-sys-paygo` / `ultra`, request
+`7053879f-03a9-4e51-ae74-c6bbab2891dd`). Its scope excluded the merge and the closed H800 portion. Verdict
+`changes_required` with 0 P0, 0 P1, 1 P2 and 3 P3 findings, all of them record or test-side defects; it independently
+reconfirmed both numerical acceptances. Its four corrections were applied as ordinary in-scope edits under the
+standing approval model; see [review.md section 13](review.md) and
+[test_report_2026-11-11_codex_review_fixes.md](test_report_2026-11-11_codex_review_fixes.md).
 
 ## [Original Request / Decision] 2026-11-11 — D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED
 

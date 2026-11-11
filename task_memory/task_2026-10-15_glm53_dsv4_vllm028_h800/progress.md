@@ -1,10 +1,12 @@
-# Progress: DSV4 H200 operator path in Codex CLI; H800 follows; GLM paused
+# Progress: DSV4 H200 operator path in Codex CLI; H800 closed; GLM paused
 
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded the Codex review of the final delivery (`changes_required`, 0 P0/0 P1/1 P2/3 P3) and the four corrections applied for F001-F004, plus the two further defects they exposed. |
+| 2026-11-11 | Codex review F001: the title said "H800 follows"; H800 is `CLOSED_NOT_PURSUED` by D-H800-CLOSED, so it now says "H800 closed". |
 | 2026-11-11 | Reconciled the ticket state with the accepted evidence: ticket 19's milestone groups resolved per instance, ticket 18's stale three-round-reference sentence corrected, review.md items 1 and 4 closed. |
 | 2026-11-11 | Resolved I-017: root-caused the eight order-dependent timeouts to a `patch.dict("sys.modules")` restore leak, fixed both test modules, established that the pair warmup was already forward-ported, cherry-picked the heartbeat onto mainline as `efbe09a9`, and verified it against an explicit baseline. |
 | 2026-11-11 | Recorded D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED: accounting waived, H800 closed, so the H200 mainline has no blocking acceptance item; only non-blocking I-017 hygiene remains. |
@@ -3405,3 +3407,91 @@ run a full verification pass. Full evidence:
 - pending, out of scope — issues.md I-018: `tests/unit/test_native_groundtruth_check.py:73` uses
   `extractall(..., filter="data")`, which reached 3.10 only in 3.10.12, so 61 cases error on the pinned 3.10.6
   interpreter. Pre-existing and identical before and after this change.
+
+
+## Codex review of the final delivery, and its four corrections — 2026-11-11
+
+Request: YC assigned cross-worktree merging to `integrate-vllm-versions`, asked whether any key mainline task was
+still unhandled or unpassed, and instructed that if none remained, a Codex review be called. The answer given was
+that no key mainline execution task remained: both H200 formal cases are PASS, GPU-hour accounting is
+`WAIVED_BY_USER`, H800 is `CLOSED_NOT_PURSUED`, and I-017 is resolved and merged. The review was then submitted.
+
+Review: `gpt-6.1-sol-sys-paygo` / `ultra`, request `7053879f-03a9-4e51-ae74-c6bbab2891dd`, verdict
+`changes_required` — 0 P0, 0 P1, 1 P2, 3 P3. It independently reconfirmed both acceptances (worst error 5.6072% at
+32 GPUs, 3.1623% at 64 GPUs, all admitted repeats retained) and found no defect in the simulator's executable path
+or in the calibration result. Report:
+`codex-review-7053879f-03a9-4e51-ae74-c6bbab2891dd/review.md`. Disposition: [review.md section 13](review.md).
+Verification: [test_report_2026-11-11_codex_review_fixes.md](test_report_2026-11-11_codex_review_fixes.md).
+
+The four corrections were applied in the review's stated dependency order.
+
+- completed — F001, six contradictory record statements. Reason: records written while H800 and GPU-hour
+  accounting were still open now read as current work after both were closed, and one exclusion sentence named
+  request IDs from a superseded reading. Expectation: each statement reflects the resolved state, with no measured
+  figure or dated verdict altered. Method: every claim re-derived from the artifact it cites before being written.
+  Result: ticket 19's GPU-hour box now separates the current waiver from the dated original criterion; its
+  exclusion sentence names the admitted 384/384 empty-opener populations with links to `p2_32_warm_reading.json`,
+  generation08's `warm_reading.json` and the superseded `p2_64_warm_reading.json`; its localization claim is
+  narrowed to "no further round after final qualification" with D-WARM-TARGET and D-WARM-TWO-FIX cited; ticket
+  17's Status no longer grants the closed H800 case current priority; ticket 17's Milestones gained per-instance
+  dispositions; and the `plan.md` / `summary.md` / `progress.md` titles read "H800 closed".
+- completed — F001's milestone ticks, including one over-reach the lead caught and reverted. A bulk
+  `- [ ]` to `- [x]` pass over ticket 17 ticked 11 boxes instead of 9, including the two H800 `P0 remaining`
+  boxes — exactly what the review forbade, since closed scope must not be presented as evidence-satisfied. Caught
+  by reading the diff before committing; both reverted, and a "Disposition 2026-11-11" paragraph was added that
+  explains why they stay unchecked. The full-model effective-runtime box is also left open, with its reason stated
+  rather than silently skipped. Evidence recomputed for the 9 ticked boxes: all five canonical workload files
+  rehash to both runs' `inputs_sha256`; each case's 432 client rows give 3 x (16 warmup + 128 formal), formal
+  status `{200}` / finish `{length}` / `{1024}` decode tokens, 786,432 in and 131,072 out per repetition, arrival
+  offsets exactly `0..127` s with maximum lateness 2.0 ms, zero warmup/formal transport-ID overlap, and 1.3-1.6 s
+  idle gaps between repetitions; both cases' groundtruth checks PASS on all eight sections; `preemptible_label`
+  is `no` for 32 GPUs and `yes` for 64.
+- completed — one more record of the same F001 class, found by re-reading every ticket's Status line before
+  closing. Ticket 11's two Status paragraphs still read as current while asserting that no 32-GPU formal
+  comparison and no 30% promotion receipt existed, and that the H200 formal scope and final delivery were
+  BLOCKED. Its own 2026-10-21 history row already moved those duties to ticket 19, which holds both PASS
+  results. Each paragraph now carries a dated disposition pointing at ticket 19, and the superseded sentences,
+  boxes and figures are kept as that dated record rather than removed.
+- completed — F002, collection-order coupling in the helper-importing unit modules. Reason: modules importing
+  helpers by bare name relied on whichever earlier module had inserted the directory into `sys.path` as a side
+  effect of its own import. Expectation: each module collectible on its own, with no module lost from the full
+  collection. Method: `tests/unit/conftest.py` resolves the helper directories before collection, since conftest
+  loads first; the two modules' own inserts were removed. Result: commits `c5f06a9b` and `01cc26fc`; collection
+  8,176 tests / 15 error modules with the conftest against 7,879 / 25 without it, so 10 modules repaired and no
+  new error; 0 shadowing collisions across 30 `tests/analysis` and 32 `tests/comparison/calibration` modules.
+- completed — F002 correction of my own first fix. The review named only the `tests/analysis` helpers, and my
+  first conftest resolved only that directory, so `test_dsv4_kernel_identity_check.py` still failed standalone
+  with `ModuleNotFoundError: No module named 'dsv4_kernel_identity_check'`, even though the full-run comparison
+  had listed it as fixed. Cause: in full runs `native_pd_worker.py` inserts the calibration directory itself.
+  Caught by rerunning the module in isolation instead of trusting the aggregate; conftest now resolves both
+  directories. Recorded as the second half of I-019.
+- completed — F004, the stale attention-table row count. Reason:
+  `tests/unit/test_dsv4_h200_tables.py:63` still expected 4,945 rows after the `fdb6e032` promotion added the
+  2,160 supplement rows. Expectation: the expectation equals both the table and its manifest entry. Result: 7,105;
+  module 13 passed with all four tables rehashing to their manifest digests. Recorded as I-020.
+- completed — I-021, a stale assertion that only became visible once F002 was fixed.
+  `test_probe_c_writer_failure_is_closed_by_projected_union` failed `assert 0 == 1`. Cause: written at `60dfafe7`
+  against the pre-supplement writer range `(1.0, 7.0)`, two hours before `fdb6e032` widened it to `(1.0, 16.0)`,
+  so the reported csa first-tail padded16/own11/writes8 coordinate is now measured rather than projected.
+  Retargeted and renamed to `test_probe_c_writer_failure_is_closed_by_the_promoted_supplement`, asserting the
+  measured range and no miss in either the measured ranges or their union. Module: 9 passed. The coverage
+  conclusion is stronger than the original assertion, not weaker.
+- completed — F003, the auditor's false Git-provenance statement. Reason:
+  `review_20261108_h200_mainline/audit_qualification.py` hard-coded "task_memory is ignored; no Git creation
+  timestamp proof is available", but the receipt was force-added, so Git does hold its creation time. Expectation:
+  a computed, asserted check rather than a corrected string, keeping the auditor self-verifying. Method: the
+  auditor now derives the adding commit, its committer date and the committed blob digest. Result: adding commit
+  `1a7950ed5ba9b766a5322313eb7e0f50fa76a2e4` at `2026-11-02T07:39:13+00:00`, 24 s after the receipt's
+  `issued_utc` and five days before the generation08 submission, with a byte-identical blob; new check
+  `promotion receipt committed unchanged before submission`; rerun `CHECKS 907 PASS 907 FAIL 0` in 11.4 s, logged
+  to `qualification_audit_20261111.log`. `report.md:96` carries the dated correction, and the earlier audit logs
+  are kept so the superseded statement stays visible in its original output. Recorded as I-022.
+- completed — regression state unchanged. Release sanity `3 failed, 17 passed`, the same three pre-existing README
+  documentation-contract ids owned by the release-docs surface; accuracy gate plus native worker `83 passed`.
+- observation, no change made — the single pandas `DtypeWarning` from the promoted attention table is benign.
+  Columns 49-50 are `is_prefill` and `is_mixed_batch`, left blank on 65 of 7,105 `phase=dummy` DP dummy-forward
+  rows, so pandas infers `object`. The predictor's phase lookup matches only `decode`, `prefill` and
+  `first_tail`, so no lookup is affected. Neither the table nor its manifest digests were touched.
+- pending, out of scope — cross-worktree merging, assigned by YC to `integrate-vllm-versions`; issues.md I-018's
+  15 remaining collection errors, all missing packages in the minimal environment; and the three README
+  documentation-contract failures, owned by the release-docs surface.

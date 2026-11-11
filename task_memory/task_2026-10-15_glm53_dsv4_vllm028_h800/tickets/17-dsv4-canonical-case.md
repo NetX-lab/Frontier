@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Codex review F001: corrected the Status sentence that still prioritized the closed H800 32 P0 case, gave each milestone group its per-instance disposition with the evidence behind it, ticked the H200-established boxes, kept the full-model effective-runtime box open with a stated reason, and recorded why the two H800 `P0 remaining` boxes stay unchecked. |
 | 2026-11-11 | D-H800-CLOSED: the two H800 rows are closed as CLOSED_NOT_PURSUED with their recorded state preserved; the two H200 rows stay formal PASS. |
 | 2026-11-08 | Corrected the Status paragraph after the H200 mainline review: recorded the P2-H200-32 and P2-H200-64 formal four-metric passes and the dated 30% promotion receipt, and confined the "no receipt" statement to the H800 P0/P1 cases. |
 | 2026-10-31 | Synchronized current Codex/H200 operator evidence and pending work; preserved historical snapshots and qualification requirements. |
@@ -35,8 +36,10 @@ the shared artifact. Historical SharedGPT/tokenizer work is not a blocker.
 **Status:** shared workload, scoped H200 G0-A/G0-B and storage admission remain
 accepted only for their recorded scope. Grouped NIXL CPU structural/tracing is
 published at2a84c58/2ffd2cb, not native/full-serving acceptance. Graph/measured
-consumption and decode profiling now prioritize the H80032 P0 case. For the two
-H200 cases, formal four-metric acceptance now exists: P2-H200-32 passed on
+consumption and decode profiling prioritized the H80032 P0 case until
+D-H800-CLOSED (2026-11-11); that priority lapsed with the closure, and both are
+now carried only by the two H200 cases as part of their accepted formal results.
+For the two H200 cases, formal four-metric acceptance now exists: P2-H200-32 passed on
 2026-11-02 (worst5.61%), its30% promotion receipt
 `promotion/receipt_p2_32_to_p2_64.json` (sha256 `d505eece...`, issued
 2026-11-02T07:38:49Z, max error0.0561) was issued before the64-GPU build, and
@@ -83,31 +86,62 @@ This is not all-case ticket completion; every existing milestone checkbox below 
 - [ ] P0 remaining: reconcile retained native memory scalars/grouped54740-block allocation with complete non-KV and Frontier KV-capacity budget; zero native graph estimate is not proof of zero overhead.
 - [ ] P0 remaining: qualified operator/graph/physicalTP8 costs and complete non-dummy Frontier prediction, then ticket19's independent10% final/30% promotion gates. Native reference metrics alone cannot close either numerical gate.
 
+**Disposition 2026-11-11.** The two `P0 remaining` boxes above stay unchecked: they belong to the H800 P0 case, which is `CLOSED_NOT_PURSUED` by D-H800-CLOSED. No memory reconciliation, qualified H800 operator cost or H800 numerical gate was produced, and none is marked satisfied. The five `P0 only` boxes keep their original scoped H800 evidence. The case table above is the October snapshot; current per-case status is the ticket Status and the Milestones below.
+
 ## Milestones
 
 ### canonical_manifest
-- [ ] Bind V4 to `data/processed_traces/canonical_fixed_6144_1024_req128_qps1/` and its checksums; reuse the shared artifact instead of creating a second byte-identical manifest.
-- [ ] Verify all 128 formal identities, arrivals `0..127` seconds, exact 6144/1024 lengths, and totals 786432 input / 131072 output / 917504 combined tokens per repetition. Confirm native prompt token IDs are valid for V4 and preserve exact counts without tokenizer/chat expansion, clipping or early output termination.
-- [ ] Bind the disjoint 16-request same-shape QPS-1.0 warmup pool to an independent warmup before every clean repetition. Prompt content uses stable template IDs, not repetition-qualified transport IDs. Preserve the earlier SharedGPT artifacts unchanged and do not inherit their selection or retiming rule.
+
+**Resolved 2026-11-11 per instance.** P2-H200-32 and P2-H200-64: both admitted formal runs consumed the checked-in
+canonical artifact itself — `trace.csv`, `request_ids.json`, `warmup_pool.csv`, `manifest.json` and `SHA256SUMS` under
+`data/processed_traces/canonical_fixed_6144_1024_req128_qps1/` rehash to the five `inputs_sha256` entries in each run
+manifest, so no second copy was created. Each retained `run/client_requests.jsonl` holds 432 rows = 3 x (16 warmup +
+128 formal); every formal row is HTTP 200, `finish_reason=length`, 6144 prompt and 1024 output tokens, giving 786432
+input / 131072 output / 917504 combined tokens per repetition; per-repeat arrival offsets floor to exactly `0..127`
+seconds with at most 2.1 ms send lateness; the warmup and formal ID sets are disjoint; and `template_request_id`
+carries the stable template while `request_id` carries the repetition-qualified transport ID. The two H800 instances
+these boxes also covered are `CLOSED_NOT_PURSUED` by D-H800-CLOSED, closed by decision rather than satisfied.
+- [x] Bind V4 to `data/processed_traces/canonical_fixed_6144_1024_req128_qps1/` and its checksums; reuse the shared artifact instead of creating a second byte-identical manifest.
+- [x] Verify all 128 formal identities, arrivals `0..127` seconds, exact 6144/1024 lengths, and totals 786432 input / 131072 output / 917504 combined tokens per repetition. Confirm native prompt token IDs are valid for V4 and preserve exact counts without tokenizer/chat expansion, clipping or early output termination.
+- [x] Bind the disjoint 16-request same-shape QPS-1.0 warmup pool to an independent warmup before every clean repetition. Prompt content uses stable template IDs, not repetition-qualified transport IDs. Preserve the earlier SharedGPT artifacts unchanged and do not inherit their selection or retiming rule.
 
 ### serving_configuration
-- [ ] Verify the requested32-GPU P16+D16/TP8/DP2/EP16/PP1 and64-GPU
+
+**Resolved 2026-11-11 per instance, except the full-model effective-runtime box.** P2-H200-32 and P2-H200-64: the
+retained `run_check_status.groundtruth_clean.json` returns PASS for `native_workers` (4 distinct nodes x 8 GPUs and 8
+distinct nodes x 8 GPUs, both roles, every configured DP lane, source/model/GPU verified), `requests_and_idle_lanes`
+(7 boundaries over all 2 and all 4 DP lanes), `rank_runtime_graph` (32 and 64 physical ranks, 6 phases per rank, with
+per-rank eager prefill forwards and decode PIECEWISE/FULL replay counts), `native_lifecycle` and `terminal_status`.
+Resource classes match the required ones: `platform_terminal_receipt.json` records `preemptible_label` `no` for the
+32-GPU case and `yes` for the 64-GPU case. The feature policy, the `max_model_len >= 7168` /
+`max_num_batched_tokens >= max_model_len` native evidence and the memory/KV budget are bound in ticket 19's resolved
+`native_reference` group and the two formal reports. The two H800 instances are `CLOSED_NOT_PURSUED` by
+D-H800-CLOSED.
+- [x] Verify the requested32-GPU P16+D16/TP8/DP2/EP16/PP1 and64-GPU
   P32+D32/TP8/DP4/EP32/PP1 layouts per role on the actual hardware. Record native
   refusal as BLOCKED; do not silently downgrade a priority task.
-- [ ] Freeze the common native feature policy per case: online P/D, thinking,
+- [x] Freeze the common native feature policy per case: online P/D, thinking,
   prefix and chunking off, graph/quantization on and dummy weights. Apply
   H800 non-preemptible, H20032 non-preemptible and H20064 preemptible classes.
-- [ ] Require max_model_len>=7168 and max_num_batched_tokens>=max_model_len with chunking off; record native limits/graph/capture. Retarget05/06/09 to P6144/context0 and successful full-hit Dq1 cached6143..7166/attention6144..7167, including compression/page boundaries and first-tail phase. Returned7168 is distinct from computed KV7167.
-- [ ] Preserve native-default MTP off and verify final-command/runtime parity and quantization via ticket18. Retain accepted kv_cache_dtype=fp8 resolving to fp8_ds_mla; do not substitute auto or conflate cache/group/kernel block sizes. Full-model effective evidence remains pending.
-- [ ] Record the KV-transfer connector and configuration, and the memory and KV-capacity budget after ticket 18's non-KV overhead evidence.
+- [x] Require max_model_len>=7168 and max_num_batched_tokens>=max_model_len with chunking off; record native limits/graph/capture. Retarget05/06/09 to P6144/context0 and successful full-hit Dq1 cached6143..7166/attention6144..7167, including compression/page boundaries and first-tail phase. Returned7168 is distinct from computed KV7167.
+- [ ] Preserve native-default MTP off and verify final-command/runtime parity and quantization via ticket18. Retain accepted kv_cache_dtype=fp8 resolving to fp8_ds_mla; do not substitute auto or conflate cache/group/kernel block sizes. **Open 2026-11-11 for a stated reason, not as an H200 prerequisite:** the two admitted H200 results retain their per-rank effective graph phases and the accepted `fp8` -> `fp8_ds_mla` resolution, but full-model effective-runtime evidence in the ticket 01 sense (real weights rather than the dummy weights this contract requires) was never collected and is excluded by the dummy-weight policy above. No active DSV4 acceptance criterion depends on it. For the H800 instances the box is `CLOSED_NOT_PURSUED` by D-H800-CLOSED.
+- [x] Record the KV-transfer connector and configuration, and the memory and KV-capacity budget after ticket 18's non-KV overhead evidence.
 
 ### metric_binding
-- [ ] Bind the four independent≤10% gates directly under19:mean client TTFT,
+
+**Resolved 2026-11-11 per instance.** P2-H200-32 and P2-H200-64: the four gates are bound with exactly these
+definitions and independently recomputed from raw timestamps in the 2026-11-11 review, giving worst per-repeat errors
+5.6072% and 3.1623%; the 127 s arrival span is not used as the THPT window. Each case ran 3 clean repetitions in one
+job with its own warmup and window, both roles idle between repetitions (gaps of 1.29-1.58 s between a repetition's
+last completion and the next repetition's first dispatch), and 128 exact-length completions in every repetition with
+no population filtering and no warmup contribution to formal totals. The two H800 instances are `CLOSED_NOT_PURSUED`
+by D-H800-CLOSED.
+- [x] Bind the four independent≤10% gates directly under19:mean client TTFT,
   mean request TPOT `(E2E-TTFT)/1023`,mean request E2E and total THPT
   `917504/(last_formal_last_token_completion-first_formal_submission)` per repeat.
   The127s arrival span is not THPT window. P90 remains recommendation,not approved
   implementation. Non-identical endpoints remain COVERAGE_MISS,not redefined.
-- [ ] Bind 3 clean repetitions in one job, independent warmup/window for each, both roles idle between repetitions, and all 128 exact-length completions in every repetition. Record non-gating diagnostics and all failures/unfinished requests; no population filtering or warmup contribution to formal totals.
+- [x] Bind 3 clean repetitions in one job, independent warmup/window for each, both roles idle between repetitions, and all 128 exact-length completions in every repetition. Record non-gating diagnostics and all failures/unfinished requests; no population filtering or warmup contribution to formal totals.
 
 ## Acceptance
 

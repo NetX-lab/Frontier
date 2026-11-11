@@ -6,6 +6,7 @@ Current authority: D-H200-MAINLINE-CONTINUE, decision 46 and D-CODEX-DIRECT-RJOB
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Codex review F001 class: both Status paragraphs read as current while ticket 19 already held both H200 PASS results, so each now carries a dated disposition pointing at ticket 19; no historical statement, box or figure was removed. |
 | 2026-11-02 | Formal P2 assessed ([report](../test_report_2026-11-02_formal_p2_assessment.md)): replays with the H200 NIXL pair identical to two-fix apart from the pair; P2-32 formal PASS; P2-64 BLOCKED_ON_DECISION on the pre-launch promotion receipt; ticket stays OPEN. |
 | 2026-11-02 | Q3 complete: YC chose payload route C (D-P2-PAYLOAD-C); the native per-pair READ bound equals the priced 46,103,040 B, all four checks PASS, payload QUALIFIED (source-derived, metric-invariant); formal P2 assessment next; ticket stays OPEN. |
 | 2026-11-01 | Q2 complete: nixl6144 measured (0.346 container GPUh) and D-P2-Q2-NIXL-TIMING made the H200 affine NIXL pair (390.39 Gbit/s, 0.0237 ms) the formal P2 timing input at the measured coordinate; P2 outputs unchanged by the event proof; payload route waits for YC; ticket stays OPEN. |
@@ -66,9 +67,16 @@ H200 priorities/non-preemptible32/promotion30%/final10% unchanged,DSV4-only acti
 ### Earlier execution snapshot — historical; see current status above
 
 **Status:** retained H200 operator/runtime evidence is available within its
-recorded scope. Neither32-GPU formal comparison nor its30% promotion receipt
-exists. H20064 basic validation is eligible independently; its formal campaign
-is BLOCKED. Old incompatible H20064 packages are paused rather than submitted.
+recorded scope. **Superseded 2026-11-11:** this ticket's H200 formal duties moved
+to ticket [19](19-comparison-and-acceptance.md) on 2026-10-21 (see the history row
+for that date), and both cases have since passed there — P2-H200-32 on 2026-11-02
+with its `promotion/receipt_p2_32_to_p2_64.json` issued before the 64-GPU build,
+and P2-H200-64 on 2026-11-07. The sentence that follows, and this ticket's own
+`p2_h200_32` and `p2_h200_64` boxes, state this ticket's scope as of 2026-11-02
+and are kept as that dated record rather than as the current state; read ticket 19
+for the delivered result. As of 2026-11-02, neither32-GPU formal comparison nor
+its30% promotion receipt existed under this ticket. H20064 basic validation is
+eligible independently; its formal campaign is BLOCKED here. Old incompatible H20064 packages are paused rather than submitted.
 Only DSV4 advances now. GLM all tiers are PAUSED_PENDING_USER_APPROVAL;old GLM
 source/data/UNVERIFIED references remain retained,not PASS or a DSV4 blocker.
 GLM FULL KERNEL_ONLY proposal stays parked,not the current approval question.
@@ -144,7 +152,7 @@ Frontier C22 `b5120e6` contains one scoped test file; native C21 `a589f86bd` con
 
 The H800 evidence is reported without waiting for H200.
 
-**Status:** BLOCKED for this ticket's formal H200 scope and final delivery on the dependencies above. The blanket 2026-10-17 H200 submission pause is superseded by D-H800-FIRST-H200-FALLBACK and D-H200-TEMPORARY-ROUTE: when approved GPU work is needed, check/submit H800 RJobs first; if H800 quota is insufficient, use H200 with at most 70 GPUs and non-preemptible RJobs (D-GPU-H800-UNLIMITED-H200-70, 2026-10-20). Routine fallback tests do not wait for this formal scope freeze, do not close its milestones and cannot qualify H800-specific cells. Record actual hardware/runtime/backend identities. The historical ticket01 job `exp-1017-015318-641429` finished Failed; no replacement is implied by this documentation update. Formal H200 criteria remain recorded, not waived or completed. H800 legacy-regression and delivery work may proceed when their ticket10 blockers close.
+**Status:** BLOCKED for this ticket's formal H200 scope and final delivery on the dependencies above. **Superseded 2026-11-11:** the H200 formal scope and its delivery live in ticket [19](19-comparison-and-acceptance.md), which is DONE for the active H200 DSV4 scope; this paragraph records this ticket's own blocked dependencies and the GPU-route rules, not the task's delivery state. The blanket 2026-10-17 H200 submission pause is superseded by D-H800-FIRST-H200-FALLBACK and D-H200-TEMPORARY-ROUTE: when approved GPU work is needed, check/submit H800 RJobs first; if H800 quota is insufficient, use H200 with at most 70 GPUs and non-preemptible RJobs (D-GPU-H800-UNLIMITED-H200-70, 2026-10-20). Routine fallback tests do not wait for this formal scope freeze, do not close its milestones and cannot qualify H800-specific cells. Record actual hardware/runtime/backend identities. The historical ticket01 job `exp-1017-015318-641429` finished Failed; no replacement is implied by this documentation update. Formal H200 criteria remain recorded, not waived or completed. H800 legacy-regression and delivery work may proceed when their ticket10 blockers close.
 
 ## Calibration workflow preparation
 

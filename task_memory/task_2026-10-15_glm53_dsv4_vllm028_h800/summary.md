@@ -1,9 +1,11 @@
-# Task archive: DSV4 H200 operator simulation in Codex CLI; H800 follows; GLM paused
+# Task archive: DSV4 H200 operator simulation in Codex CLI; H800 closed; GLM paused
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Added the final-delivery section: the Codex review (`changes_required`, 0 P0/0 P1/1 P2/3 P3), the four corrections applied, the two further defects they exposed, and the closing delivery state. |
+| 2026-11-11 | Codex review F001: the title said "H800 follows"; H800 is `CLOSED_NOT_PURSUED` by D-H800-CLOSED, so it now says "H800 closed". |
 | 2026-11-11 | Recorded the ticket-state reconciliation: ticket 19's milestone groups resolved per instance (H200 satisfied, H800 `CLOSED_NOT_PURSUED`, accounting `WAIVED_BY_USER`), ticket 18's stale reference sentence corrected, and review.md items 1 and 4 closed. |
 | 2026-11-11 | Closed I-017: root-caused the eight order-dependent timeouts, fixed both test modules, established that the pair warmup was already forward-ported, merged the heartbeat onto mainline as `efbe09a9`, and closed both outstanding heartbeat claims. |
 | 2026-11-11 | Recorded the closeout decisions: GPU-hour accounting waived and H800 P0/P1 closed, so the H200 mainline has no remaining blocking acceptance item. |
@@ -126,6 +128,86 @@
 | 2026-10-18 | Execution resumed after review; recorded partial static contracts, focused tests and ongoing frozen fidelity/C03/C04 work. |
 | 2026-10-18 | Completed documentation-only resume audit and main-path recovery; replaced the old A2-first handoff while preserving it in the before snapshot. |
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
+
+## Final delivery: Codex review and its four corrections — 2026-11-11
+
+**Delivery state: the H200 mainline of this task is delivered.** Both formal cases are PASS, the record corrections
+the final review required are applied and verified, and no key mainline execution task remains open. Cross-worktree
+merging is excluded by YC's instruction and owned by `integrate-vllm-versions`.
+
+A final independent review was commissioned once no mainline execution task remained
+(`gpt-6.1-sol-sys-paygo` / `ultra`, request `7053879f-03a9-4e51-ae74-c6bbab2891dd`, report
+`codex-review-7053879f-03a9-4e51-ae74-c6bbab2891dd/review.md`). Verdict `changes_required`: **0 P0, 0 P1, 1 P2,
+3 P3.** The review independently reconfirmed both acceptances — worst relative error 5.6072% for the 32-GPU case and
+3.1623% for the 64-GPU case, with every admitted repetition retained — and found no defect in the simulator's
+executable path, the calibration result or the acceptance arithmetic. All four findings were record or test-side
+defects, and all four are corrected.
+
+| Finding | Correction | Evidence |
+| --- | --- | --- |
+| F001 (P2) Current records contradict the resolved scope and retained population | Six statements repaired across ticket 19, ticket 17 and the three document titles: the GPU-hour waiver reads as the current state with the original criterion as dated history; the exclusion sentence names the admitted 384/384 empty-opener populations instead of five IDs from a superseded reading; the localization claim is narrowed with its decisions cited; the closed H800 case no longer holds current priority; and ticket 17's Milestones carry per-instance dispositions with 9 ticked H200 boxes, 2 H800 boxes explicitly left unchecked and 1 open box with a stated reason | Every claim re-derived from the cited artifact; see the test report section 7 |
+| F002 (P3) Attention test modules depend on another module's collection-time path mutation | `tests/unit/conftest.py` resolves both helper directories before collection; the modules' own `sys.path` inserts removed. Measurement showed 10 affected modules, not the 2 reported | Commits `c5f06a9b`, `01cc26fc`; collection 8,176 / 15 errors with the conftest against 7,879 / 25 without |
+| F003 (P3) The qualification auditor falsely states that Git provenance is unavailable | The hard-coded limitation is replaced by a computed, asserted check: the receipt's adding commit `1a7950ed5…` at `2026-11-02T07:39:13+00:00`, 24 s after `issued_utc` and five days before the generation08 submission, with a byte-identical committed blob | Auditor rerun `CHECKS 907 PASS 907 FAIL 0`; dated correction at `review_20261108_h200_mainline/report.md:96` |
+| F004 (P3) The promotion test expects the superseded 4,945-row attention table | Expectation corrected to the promoted 7,105 rows, matching both the table and its manifest entry | `tests/unit/test_dsv4_h200_tables.py`: 13 passed, all four tables rehashing to their manifest digests |
+
+Two further defects surfaced while applying those corrections, both recorded in `issues.md`:
+
+- **I-021.** Once `test_v4_attention_supplement.py` became collectible on its own, a test written against the
+  pre-supplement writer range `(1.0, 7.0)` failed, two hours older than the promotion that widened the measured
+  range to `(1.0, 16.0)`. Retargeted to assert the measured range directly, which is a stronger coverage conclusion
+  than the original projected-union assertion.
+- **The calibration half of I-019.** The review named only the `tests/analysis` helpers; a first conftest resolving
+  only that directory left one module still failing standalone. Caught by rerunning the module in isolation rather
+  than trusting the aggregate comparison, then fixed.
+
+No correction altered a measured value, a manifest digest, a promoted table or a dated historical verdict.
+GPU-hour accounting remains `WAIVED_BY_USER` and H800 remains `CLOSED_NOT_PURSUED`; the F001 corrections make those
+two states explicit in records that previously read as current open work. Regression state is unchanged: release
+sanity `3 failed, 17 passed`, the same three pre-existing README documentation-contract identifiers owned by the
+release-docs surface, and the accuracy gate plus native worker at `83 passed`.
+
+Final ticket status, as recorded in each ticket file:
+
+| Ticket | Final status |
+| --- | --- |
+| 00 baseline audit | `done` |
+| 01 runtime lock and native qualification | `PARTIAL` — runtime environment plus reduced G0-A and scoped G0-B evidence only |
+| 02 observer instrumentation gate | `PARTIAL` — local hooks and selected observations; complete schema and causal adapters open |
+| 03 layer, cache and routing inventory | `PARTIAL` — source inventories and contracts exist; shared Step consumer work open |
+| 04 GLM-5.3 DSA family | `PARTIAL`, with the structural co-location gate DONE for its three recorded cases |
+| 05 DSV4-Flash family | `PARTIAL` — native06 P0 reference accepted at R4; full05 cost and predictor qualification open |
+| 06 communication measurement | `PARTIAL` — P0 binds the retained EP16 rows and exact supplement |
+| 07 NIXL PD integration | `PARTIAL` baseline and source preparation |
+| 08 workflow delta and PD placement | `PARTIAL` — source deltas and capacity admission accepted within source/CPU scope |
+| 09 predictor bundle | `PARTIAL` identity, reuse and structural preparation |
+| 10 H800 predictive E2E | `NOT STARTED`; H800 scope `CLOSED_NOT_PURSUED` by D-H800-CLOSED |
+| 11 H200 regression delivery | `BLOCKED` for this ticket's own dependencies; its H200 formal duties moved to ticket 19 on 2026-10-21 and are delivered there |
+| 12 decision D-PD | `PARTIAL` structural contract; native lifecycle acceptance blocked on native evidence |
+| 13 decision D-async | `BLOCKED` on native evidence |
+| 14 decision D-routing | `BLOCKED` on native evidence |
+| 15 decision D-DP-PD | `BLOCKED` on native evidence |
+| 16 GLM canonical case | `PAUSED_PENDING_USER_APPROVAL` under D-DSV4-ONLY-GLM-PAUSED |
+| 17 DSV4 canonical case | H200 formal four-metric acceptance exists for both cases; the two H800 cases are `CLOSED_NOT_PURSUED` |
+| 18 native ground truth H200 | both H200 cases have an admitted formal three-round reference; the H800 cases have none and are `CLOSED_NOT_PURSUED` |
+| 19 comparison and acceptance | `DONE` for the active H200 DSV4 scope — P2-32 and P2-64 formal PASS, accounting `WAIVED_BY_USER` |
+
+The `PARTIAL` and `BLOCKED` tickets above are the H800, GLM and full-serving scope that D-H800-CLOSED and
+D-DSV4-ONLY-GLM-PAUSED closed or paused. None is retroactively marked PASS, and none blocks the delivered H200
+scope.
+
+Open and deferred work after delivery, none of it blocking this task's acceptance:
+
+- Cross-worktree merging of this branch, owned by `integrate-vllm-versions`.
+- `issues.md` I-018: 15 `tests/unit` modules cannot be collected under the pinned 3.10.6 interpreter because the
+  minimal release environment omits their packages, so those cases stay unknown rather than passing.
+- The three README documentation-contract failures, owned by the release-documentation surface.
+- Full-model effective-runtime evidence in the ticket 01 sense, never collected for the H200 cases and excluded by
+  the dummy-weight policy; its milestone box stays open with that reason recorded.
+
+Commands, environment, expected-versus-actual values and PASS/FAIL for every correction:
+[test_report_2026-11-11_codex_review_fixes.md](test_report_2026-11-11_codex_review_fixes.md). Per-finding
+disposition: [review.md section 13](review.md). Verification limits: the review's own validation and the lead's
+verification are both CPU and artifact only, with no GPU or native run and no formal replay repeated.
 
 ## Closeout: accounting waived and H800 closed — 2026-11-11
 

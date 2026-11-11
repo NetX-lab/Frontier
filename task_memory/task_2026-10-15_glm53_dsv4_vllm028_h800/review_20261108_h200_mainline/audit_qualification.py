@@ -108,7 +108,11 @@ for k,v in manifest.items():
  if 'promotion' in k or 'created' in k or 'started' in k or 'time' in k: checksummaries[k]=v
 check('promotion exact bytes prelaunch binding',sha(receipt) in json.dumps(config) and sha(receipt) in json.dumps(manifest))
 submission=load(T/'h200_mainline/p2_64_formal_retry08/lead_submission_acceptance.json')['job_creation_timestamp'];check('promotion precedes generation08',datetime.datetime.fromisoformat(issued)<datetime.datetime.fromisoformat(submission.replace('Z','+00:00')))
-summaries['promotion']={'issued':issued,'generation08_submission_utc':submission,'receipt_sha256':sha(receipt),'actual_manifest_fields':checksummaries,'git_history':'task_memory is ignored; no Git creation timestamp proof is available'}
+# Corrected 2026-11-11 (Codex review F003): task_memory is gitignored but this receipt was force-added, so Git does carry its creation timestamp.
+gitlog=subprocess.run(['git','log','--follow','--diff-filter=A','--format=%H %cI','--',str(receipt.relative_to(ROOT))],cwd=ROOT,capture_output=True,text=True).stdout.split()
+commit,committed_utc=gitlog[0],gitlog[1];blob=subprocess.run(['git','show',commit+':'+str(receipt.relative_to(ROOT))],cwd=ROOT,capture_output=True).stdout
+check('promotion receipt committed unchanged before submission',hashlib.sha256(blob).hexdigest()==sha(receipt) and datetime.datetime.fromisoformat(committed_utc)<datetime.datetime.fromisoformat(submission.replace('Z','+00:00')))
+summaries['promotion']={'issued':issued,'generation08_submission_utc':submission,'receipt_sha256':sha(receipt),'actual_manifest_fields':checksummaries,'git_history':{'adding_commit':commit,'committed_utc':committed_utc,'committed_bytes_identical':hashlib.sha256(blob).hexdigest()==sha(receipt)}}
 # Historical regression evidence remains detailed after approved cleanup.
 fid=Path('/data/ycfeng/tmp/glm53_dsv4/h3o_b/stage4');summaries['fidelity']={}
 for stage in ['fidelity','fidelity_b24','fidelity_b26','fidelity_b26b','fidelity_b28','fidelity_b29']:

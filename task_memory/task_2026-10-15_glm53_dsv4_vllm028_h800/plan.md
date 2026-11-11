@@ -1,9 +1,10 @@
-# Plan: DSV4 H200 operator simulation and calibration; H800 follows; GLM paused
+# Plan: DSV4 H200 operator simulation and calibration; H800 closed; GLM paused
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Codex review F001: the title said "H800 follows"; H800 is `CLOSED_NOT_PURSUED` by D-H800-CLOSED, so it now says "H800 closed". |
 | 2026-11-11 | D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED: the GPU-hour accounting criterion is waived and the H800 P0/P1 continuation is closed, leaving the H200 mainline with no blocking acceptance item. |
 | 2026-11-08 | Corrected two stale status cells after the H200 mainline review: the new P2-64 reference is formally accepted, and its execution, admission and four warm errors (worst 3.16%) are no longer pending. GPU-hour accounting stays open. |
 | 2026-11-08 | P2-64 formal PASS with generation08 (exp-1108-002857-059466): dependency chain closed, 23.31 GPUh counted. |

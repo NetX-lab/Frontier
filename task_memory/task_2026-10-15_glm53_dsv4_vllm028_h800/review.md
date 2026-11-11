@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Added section 13: the Codex review of the final delivery, its verdict, the per-finding disposition F001-F004, the two further defects its fixes exposed, and the verification evidence. |
 | 2026-11-11 | Section 12.5 open items 1 and 4 closed by YC's decisions: GPU-hour accounting `WAIVED_BY_USER` (D-GPU-HOURS-NOT-REQUIRED) and H800 P0/P1 `CLOSED_NOT_PURSUED` (D-H800-CLOSED); F1 and F2 dispositions annotated. |
 | 2026-11-11 | Section 12.5 open items 2 and 3 closed: I-017 root-caused, fixed and merged into mainline, and both outstanding heartbeat claims resolved. |
 | 2026-11-08 | Added section 12: lead acceptance of the codex-implement H200 mainline review, the disposition of its four findings, two new findings the lead added, and the remaining open items. |
@@ -528,3 +529,74 @@ evidence; section 5 is a re-reading of existing artifacts. The executor's own se
 explicitly bounded (2 logs in retry08, 232 logs under the H200 scratch root, raw downloads and private state
 excluded) and is not an exhaustive search of every historical session archive.
 
+
+## 13. Codex review of the final delivery (2026-11-11)
+
+### 13.1 Request and reviewed scope
+
+| Field | Value |
+| --- | --- |
+| Reviewer | StepCode Codex, `gpt-6.1-sol-sys-paygo`, effort `ultra` (StepCode 1.2.88 / Codex 0.166.0) |
+| Request ID | `7053879f-03a9-4e51-ae74-c6bbab2891dd` |
+| Report | `codex-review-7053879f-03a9-4e51-ae74-c6bbab2891dd/review.md` |
+| Working directory | `/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028` |
+| Requested scope | Whether this task's H200 delivery (DSV4 simulation support plus accuracy calibration) is complete and correct, and whether its records and evidence agree |
+| Excluded by the request | Cross-worktree merging, which YC assigned to `integrate-vllm-versions`, and the closed H800 scope |
+| Verdict | `changes_required` — 0 P0, 0 P1, 1 P2, 3 P3 |
+
+The review confirmed both H200 numerical acceptances independently: worst relative error 5.6072% for the 32-GPU
+case and 3.1623% for the 64-GPU case, with every admitted repetition retained. It found no defect in the
+simulator's executable path, in the calibration result, or in the acceptance arithmetic. All four findings are
+record or test-side defects, and the lead applied all four as ordinary in-scope corrections.
+
+### 13.2 Disposition of the four findings
+
+| Finding | Severity | Classification | Lead disposition |
+| --- | --- | --- | --- |
+| **F001** Current acceptance records still contradict the resolved scope and retained population | P2 | Record contradiction, no numerical consequence | **Confirmed and corrected.** Six statements repaired: ticket 19's GPU-hour box now reads the waiver as the current state and the original criterion as dated history; its exclusion sentence now names the admitted 384/384 empty-opener populations instead of five request IDs that belong to the superseded `p2_64_warm_reading.json`; its localization claim is narrowed to "no further round after final qualification" with D-WARM-TARGET and D-WARM-TWO-FIX cited in place; ticket 17's Status no longer gives the closed H800 case current priority; ticket 17's Milestones gained per-instance dispositions, 9 newly ticked H200-established boxes and a stated reason for the one box left open; and the `plan.md` / `summary.md` / `progress.md` titles read "H800 closed" instead of "H800 follows". No measured figure, dated FAIL or historical verdict was altered. |
+| **F002** Two attention test modules depend on another module's collection-time path mutation | P3 | Test-harness fragility | **Confirmed, corrected, and found to be wider than reported.** `tests/unit/conftest.py` now resolves both helper directories — `tests/analysis` and `tests/comparison/calibration` — before collection, and the two modules' own `sys.path` inserts were removed. Measuring the whole directory showed the same defect in 10 modules, not 2, including `test_dsv4_kernel_identity_check.py`, which was collecting only because an earlier module's import of `native_pd_worker` inserted the calibration directory as a side effect. Commits `c5f06a9b` and `01cc26fc`. |
+| **F003** Qualification audit falsely states that Git provenance for the promotion receipt is unavailable | P3 | False limitation statement in a self-verifying auditor | **Confirmed and corrected at its cause.** `task_memory` is gitignored, but the receipt was force-added, so Git does hold its creation time. `review_20261108_h200_mainline/audit_qualification.py` now computes the adding commit `1a7950ed5…` (`2026-11-02T07:39:13+00:00`, 24 s after the receipt's `issued_utc`) and its committed blob digest, and asserts both in the new check `promotion receipt committed unchanged before submission`. The rerun is 907 checks, 907 PASS, 0 FAIL. The hard-coded string is gone rather than reworded, and `report.md:96` carries a dated correction. The earlier audit logs are kept, so the superseded statement stays visible in its original run output. |
+| **F004** H200 promotion test still expects the superseded 4,945-row attention table | P3 | Stale test expectation | **Confirmed and corrected.** `tests/unit/test_dsv4_h200_tables.py:63` now expects 7,105 rows, which is the 4,945 G1h-02 rows plus the 2,160 supplement rows promoted in `fdb6e032`, and equals the `h200_tables/manifest.json` entry. Module: 13 passed, with all four tables rehashing to their manifest digests. Commit `c5f06a9b`. |
+
+### 13.3 Two further defects the corrections exposed
+
+- **I-021, a stale assertion hidden behind F002.** Once `test_v4_attention_supplement.py` became collectible on
+  its own, `test_probe_c_writer_failure_is_closed_by_projected_union` failed `assert 0 == 1`. It was written at
+  `60dfafe7` against the pre-supplement measured writer range `(1.0, 7.0)`, two hours before the promotion
+  `fdb6e032` widened that range to `(1.0, 16.0)`. The reported csa first-tail padded16/own11/writes8 coordinate is
+  now measured directly, so the projected union adds nothing. Retargeted and renamed to
+  `test_probe_c_writer_failure_is_closed_by_the_promoted_supplement`, which asserts the measured range and that
+  neither the measured ranges nor their union reports a miss. The coverage conclusion is stronger than the
+  original test asserted, not weaker.
+- **I-019's calibration-path half.** The review's F002 named only the `tests/analysis` helpers. A first conftest
+  that resolved only that directory left `test_dsv4_kernel_identity_check.py` still failing standalone with
+  `ModuleNotFoundError: No module named 'dsv4_kernel_identity_check'`. The lead caught this by rerunning the
+  module in isolation rather than trusting the full-run comparison, and extended the conftest.
+
+Both are recorded in `issues.md` as I-019 to I-022 together with the F003 provenance defect and the stale row
+count.
+
+### 13.4 What the review did not change
+
+- The four accepted metrics and both PASS verdicts stand unaltered; no correction touched a measured value, a
+  manifest digest or a promoted table.
+- GPU-hour accounting stays `WAIVED_BY_USER` (D-GPU-HOURS-NOT-REQUIRED) and H800 P0/P1 stay
+  `CLOSED_NOT_PURSUED` (D-H800-CLOSED). The F001 corrections make those two states explicit where records
+  previously read as current open work; they do not reopen or retroactively satisfy either.
+- The three README documentation-contract failures in the release sanity set are unchanged. They belong to the
+  release-docs surface, not to this task, and the review did not attribute them here.
+- Cross-worktree merging remains out of scope by YC's instruction and was not performed.
+
+### 13.5 Verification and limits
+
+Commands, environment, expected-versus-actual values and PASS/FAIL for every correction are in
+[test_report_2026-11-11_codex_review_fixes.md](test_report_2026-11-11_codex_review_fixes.md). Summary: unit
+collection 8,176 tests / 15 error modules with the conftest against 7,879 / 25 without it, 10 modules repaired
+and no new error; 12 modules standalone, 363 tests, all passed; 11 of them give 237 passed in both declaration
+and reverse order; the qualification auditor 907/907 PASS; release sanity unchanged at 3 failed / 17 passed; the
+accuracy gate plus native worker 83 passed.
+
+Limits carried from the review itself: its validation was CPU and artifact only, no GPU or native run and no
+full formal replay was repeated, and its broader CPU suite pass was only partial. The lead's verification shares
+those limits: it recomputes retained local artifacts and runs CPU tests, and the 15 remaining collection errors
+need packages the minimal environment omits (I-018), so those cases stay unknown rather than passing.

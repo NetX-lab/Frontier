@@ -1,0 +1,26 @@
+{
+  "status": "completed",
+  "request_id": "7053879f-03a9-4e51-ae74-c6bbab2891dd",
+  "model": "gpt-6.1-sol-sys-paygo",
+  "effort": "ultra",
+  "stepcode_version": "1.2.88",
+  "codex_version": "0.166.0",
+  "cwd": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028",
+  "write_paths": [
+    "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028"
+  ],
+  "lark_write_paths": [
+    "/data/ycfeng/stepcode-codex-home/.stepcode/codex/lark-cli",
+    "/home/brainpp/.local/share/lark-cli"
+  ],
+  "started_at": 1794379974.009355,
+  "host_network_namespace": "net:[4026531992]",
+  "caller_network_namespace": "net:[4026532553]",
+  "stdout_path": "/data/ycfeng/tmp/codex-review/7053879f-03a9-4e51-ae74-c6bbab2891dd/stdout.jsonl",
+  "stderr_path": "/data/ycfeng/tmp/codex-review/7053879f-03a9-4e51-ae74-c6bbab2891dd/stderr.log",
+  "result_path": "/home/brainpp/.local/state/codex-review/requests/7053879f-03a9-4e51-ae74-c6bbab2891dd/result.json",
+  "verdict": "changes_required",
+  "summary": "changes_required: 0 P0, 0 P1, 1 P2 and 3 P3 findings.\nBoth H200 numerical acceptances are supported: worst errors 5.6072% (32 GPUs) and 3.1623% (64 GPUs), with all admitted repeats retained.\nCorrections are needed for contradictory current records, two order-dependent test imports, a stale 4,945-row assertion and an incorrect Git-provenance limitation.\nValidation was CPU/artifact only; GPU/native and full formal replays were not rerun, and the broader CPU suite was only partially completed.",
+  "report_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/codex-review-7053879f-03a9-4e51-ae74-c6bbab2891dd/review.md",
+  "finished_at": 1794381961.776564
+}

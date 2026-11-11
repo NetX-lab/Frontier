@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Opened and resolved I-019 to I-022 from the Codex review of the final delivery: collection-order coupling in five unit modules, a stale H200 row-count expectation, a supplement test frozen at a pre-promotion range, and a false Git-provenance claim in the qualification auditor. |
 | 2026-11-11 | Resolved I-017: root cause of the eight order-dependent timeouts, the corrected pair-warmup finding, the merge direction evidence, and the fixes on both branches. Added I-018. |
 | 2026-11-11 | I-017 narrowed: the divergence is two parallel evolutions, not a missing feature (pair warmup implemented twice, only heartbeat 57caf2f7 absent from mainline), and a leaked heartbeat daemon thread is ruled out as the timeout cause. Superseded the same day: the pair warmup was forward-ported, not implemented twice. |
 | 2026-11-08 | I-017 opened: the P2-64 startup-harness fix that made generation08 succeed lives only on branch `p2-64-startup-harness` (57caf2f7), which is not an ancestor of mainline HEAD, and its recorded CPU unit evidence does not reproduce today (12 failed / 6 passed). |
@@ -37,6 +38,64 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+## I-022: the qualification auditor reported a Git-provenance limitation that does not hold (2026-11-11, resolved)
+
+- Observation: `review_20261108_h200_mainline/audit_qualification.py:111` wrote the fixed string
+  `task_memory is ignored; no Git creation timestamp proof is available` into the promotion summary, and
+  `qualification_audit.json` carried it forward. `report.md:96` repeated it as a stated limit of that review.
+- Cause: `task_memory/` is gitignored, so the statement was assumed rather than checked. The promotion receipt was
+  force-added like the rest of the task records, so Git does carry its creation time.
+- Evidence: `git log --follow --diff-filter=A` on the receipt gives commit `1a7950ed5ba9b766a5322313eb7e0f50fa76a2e4`
+  at `2026-11-02T07:39:13+00:00`, 24 seconds after its recorded `issued_utc` of `2026-11-02T07:38:49.523696+00:00`,
+  and the committed blob is byte-identical to the current file (sha256 `d505eece...7596`).
+- Fix: the auditor now computes the adding commit and its committer date and asserts them in the new check
+  `promotion receipt committed unchanged before submission`, instead of recording a claim. The rerun is 907/907 PASS
+  (`review_20261108_h200_mainline/qualification_audit_20261111.log`); the earlier log is kept as history.
+- Impact on conclusions: none. The ordering conclusion was already supported by the pre-launch manifest and launch
+  receipts; it now also has independent Git corroboration. Found by the 2026-11-11 Codex review (F003).
+
+## I-021: a supplement test froze a pre-promotion range and asserted the wrong conclusion (2026-11-11, resolved)
+
+- Observation: `tests/unit/test_v4_attention_supplement.py::test_probe_c_writer_failure_is_closed_by_projected_union`
+  fails with `assert 0 == 1` when the module is collected on its own.
+- Cause: the test was written at `60dfafe7` (2026-10-29 17:59) against the pre-supplement measured writer range
+  `(1.0, 7.0)`, so the probe-reported csa first-tail padded16/own11/writes8 coordinate was outside it and had to be
+  closed by the projected union. The supplement promotion `fdb6e032` two hours later (20:09) widened the measured
+  range to `(1.0, 16.0)`, so the same coordinate is now measured directly and the projected union adds nothing.
+- Why it was never caught: the module could not be collected standalone (I-019), so the stale assertion only ever ran
+  after a sibling module had already imported the helper, and the full-suite runs that did reach it predate the
+  promotion.
+- Fix: the test is retargeted and renamed to `test_probe_c_writer_failure_is_closed_by_the_promoted_supplement`,
+  asserting the measured range `(1.0, 16.0)` and that neither the measured ranges nor their union report a miss. The
+  module is `9 passed` standalone.
+- Impact on conclusions: none on any measurement. The coverage claim is stronger than the test asserted, not weaker.
+
+## I-020: the H200 table test expected the pre-supplement row count (2026-11-11, resolved)
+
+- Observation: `tests/unit/test_dsv4_h200_tables.py:63` expected 4,945 rows in
+  `attention_graph_replay_kernel_only.csv`, while the promoted table and its `manifest.json` both hold 7,105.
+- Cause: the promotion commit `fdb6e032` added the 2,160 supplement rows to the 4,945 G1h-02 rows and updated the
+  manifest, but not this expectation. The parametrized case also asserts `promotion.row_count(path) == entry[...]`,
+  so the test compared the table against its own manifest correctly and then failed on the stale literal.
+- Fix: the expectation is now 7,105. All four tables rehash to their manifest entries, and the module is `13 passed`.
+- Impact on conclusions: none. Found by the 2026-11-11 Codex review (F004).
+
+## I-019: five unit modules depended on another module's import-time `sys.path` mutation (2026-11-11, resolved)
+
+- Observation: `test_v4_attention_coverage.py`, `test_v4_attention_heldout.py`, `test_v4_attention_package_difference.py`,
+  `test_v4_attention_phase_heldout.py` and `test_v4_attention_supplement.py` each report `no tests collected, 1 error`
+  with `ModuleNotFoundError: No module named 'v4_attention_coverage'` when run on their own.
+- Cause: those modules import helpers from `tests/analysis` by name, but only
+  `test_v4_attention_multipass_table.py` and `test_v4_replay_census.py` inserted that directory into `sys.path` at
+  import time. Whether the five collected at all depended on collection order.
+- Fix: `tests/unit/conftest.py` resolves `tests/analysis` once, before collection, and the two redundant per-module
+  inserts are removed. A full `tests/unit` collect-only goes from 25 error modules to 15 and collects 8,176 instead of
+  7,879 tests, with no newly introduced error; the 10 modules it repairs include `test_dsv4_kernel_identity_check.py`,
+  `test_native_dp_wave_timeline.py` and `test_v4_collective_kernels.py`, which were not in the reported set.
+- Consequence found by the fix: the newly collectible supplement module exposed the stale assertion I-021.
+- Impact on conclusions: none on any measurement; these modules passed whenever they were collected. Found by the
+  2026-11-11 Codex review (F002).
+
 ## I-018: 61 native ground-truth cases fail on the pinned 3.10.6 interpreter because `tarfile` filtering predates it (2026-11-11, open, out of scope)
 
 - Observation: `tests/unit/test_native_groundtruth_check.py:73` calls `stream.extractall(root, filter="data")`. On
@@ -53,7 +112,8 @@
 - Related environment limits in the same group, also pre-existing: 33 cases need `torch`, 16 need `aiohttp`, and 2 need
   a real vLLM engine. Nine further native/calibration modules cannot be collected at all for the same reasons, plus
   `native_dp_wave_timeline` not being on `sys.path`. The minimal release environment intentionally omits these
-  packages, so those cases are unknown rather than passing.
+  packages, so those cases are unknown rather than passing. **Updated 2026-11-11:** the `sys.path` part is fixed
+  by I-019, which leaves 15 error modules in a full `tests/unit` collect-only, all of them missing packages.
 
 ## I-017: the P2-64 startup-harness fix is not merged into mainline and its CPU evidence no longer reproduces (2026-11-08, resolved 2026-11-11)
 
