@@ -4,13 +4,13 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Section 12.5 open items 2 and 3 closed: I-017 root-caused, fixed and merged into mainline, and both outstanding heartbeat claims resolved. |
 | 2026-11-08 | Added section 12: lead acceptance of the codex-implement H200 mainline review, the disposition of its four findings, two new findings the lead added, and the remaining open items. |
 | 2026-10-18 | Added section 11: current documentation-only audit, all-ticket evidence/status assessment, main-path recovery, official workflow checks, unresolved choices and execution handoff. Sections 1–10 remain historical. |
 | 2026-10-15 | Reviewed the existing planning package against the binding sources, approved decisions, execution rules, and inspected repository code. |
 | 2026-10-15 | Added §9: the item-by-item disposition of every finding, the remediation applied, and its verification. Sections 1–8 are kept as the original review. |
 | 2026-10-15 | Added §9.4: independent re-review of the remediation and the five precision fixes R1–R5. |
 | 2026-10-15 | Added §10: ticket 00 phase review, its findings, the fixes, and the primary spot checks. |
-
 ## Current review entry
 
 Read **section 12** for the 2026-11-08 lead acceptance of the H200 mainline review, which carries the current
@@ -493,7 +493,8 @@ Independent audit totals, all with zero failures: `metrics_audit` 157/157, `evid
   that branch, against the standing rule that worktree code and documentation return to the main branch on
   completion. The merge is **recommended, not performed**: both copies of the worker and of its test module
   have diverged in opposite directions, the change touches the native measurement harness, and the harness
-  branch's own tests currently fail on an un-root-caused isolation leak.
+  branch's own tests currently fail on an un-root-caused isolation leak. Performed on 2026-11-11 as `efbe09a9`
+  after root-causing the leak; see 12.5 item 2.
 
 ### 12.5 Open items after this review
 
@@ -502,9 +503,15 @@ Independent audit totals, all with zero failures: `metrics_audit` 157/157, `evid
    not satisfy the present wording. If the clocks cannot be recovered, this returns to YC as an explicit
    acceptance decision. Ticket 19 stays `PARTIAL`.
 2. **Merge `p2-64-startup-harness` into mainline (I-017)**, and root-cause the eight order-dependent timeouts
-   before accepting the merged tests.
+   before accepting the merged tests. **Closed 2026-11-11**: root-caused to a `patch.dict("sys.modules")` restore leak
+   in the test module, fixed on both branches, and the heartbeat cherry-picked onto mainline as `efbe09a9` with an
+   identical 93-id failure set against an explicit baseline
+   ([report](test_report_2026-11-11_i017_heartbeat_merge.md)).
 3. **The remaining two heartbeat claims.** The lead re-ran only the 18-test module. The `101 passed in 19.50 s`
-   suite and the `10.01 s / 1.01 s` old/new stopped-peer timing comparison are still unverified.
+   suite and the `10.01 s / 1.01 s` old/new stopped-peer timing comparison are still unverified. **Closed
+   2026-11-11**: the timing comparison is reproduced by measurement as 10.0215 s against 1.0172 s; the suite figure is
+   closed as not reproducible, because its command needs `aiohttp` and no interpreter on this host has both `aiohttp`
+   and Frontier's dependencies.
 4. **H800 P0/P1** remains later scope. H200 results never qualify H800, and no formal four-metric or 30%
    promotion receipt exists for those cases.
 

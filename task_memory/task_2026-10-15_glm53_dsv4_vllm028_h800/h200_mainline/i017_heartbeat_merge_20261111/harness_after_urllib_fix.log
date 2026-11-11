@@ -1,0 +1,172 @@
+..........FFFF....                                                       [100%]
+=================================== FAILURES ===================================
+________ test_worker_launch_exports_staged_extension_path_to_real_child ________
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-12/test_worker_launch_exports_sta0')
+
+    def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child')
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:376: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 112, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+_ test_worker_child_ready_timeout_matches_configured_startup_budget[3600-None] _
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-12/test_worker_child_ready_timeou0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa2a040ecb0>
+budget = 3600, inherited = None
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:399: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 112, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+_ test_worker_child_ready_timeout_matches_configured_startup_budget[3600-600] __
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-12/test_worker_child_ready_timeou1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa2a056e950>
+budget = 3600, inherited = '600'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:399: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 112, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+__ test_worker_child_ready_timeout_matches_configured_startup_budget[37-7200] __
+
+tmp_path = PosixPath('/tmp/pytest-of-brainpp/pytest-12/test_worker_child_ready_timeou2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa2a040fc10>
+budget = 37, inherited = '7200'
+
+    @pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+    def test_worker_child_ready_timeout_matches_configured_startup_budget(
+            tmp_path, monkeypatch, budget, inherited):
+        name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+        if inherited is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, inherited)
+        result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+>       assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+E       assert (1 == 0)
+
+tests/unit/test_native_pd_worker.py:399: AssertionError
+----------------------------- Captured stdout call -----------------------------
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/comparison/calibration/native_pd_worker.py", line 370, in run
+    server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1104, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1108, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1169, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/p2-64-startup-harness/tests/unit/test_native_pd_worker.py", line 112, in popen
+    assert child.returncode == 0, stderr
+AssertionError: Unknown option: -P
+  usage: /data/ycfeng/envs/frontier-py310/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+  Try `python -h' for more information.
+  
+assert 2 == 0
+ +  where 2 = <Popen: returncode: 2 args: ['/data/ycfeng/envs/frontier-py310/bin/python', ...>.returncode
+
+NATIVE_PD_STAGE finished
+=========================== short test summary info ============================
+FAILED tests/unit/test_native_pd_worker.py::test_worker_launch_exports_staged_extension_path_to_real_child
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[3600-None]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[3600-600]
+FAILED tests/unit/test_native_pd_worker.py::test_worker_child_ready_timeout_matches_configured_startup_budget[37-7200]
+4 failed, 14 passed in 12.37s

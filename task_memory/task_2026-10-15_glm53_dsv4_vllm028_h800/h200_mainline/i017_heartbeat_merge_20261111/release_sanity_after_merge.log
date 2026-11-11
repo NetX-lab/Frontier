@@ -1,0 +1,53 @@
+..FFF...............                                                     [100%]
+=================================== FAILURES ===================================
+_____ test_top_level_docs_advertise_supported_pdd_without_upcoming_claims ______
+
+    def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> None:
+        for relative_path in PUBLIC_DOCS[1:]:
+            text = _read(relative_path)
+            assert "pd-disaggregation" in text, relative_path
+            assert "pdd/run_all.sh" in text, relative_path
+    
+        top_level_readme = _read("README.md")
+        assert "Prefill-Decode Disaggregation (PDD)" in top_level_readme
+>       assert "sequential Attention-FFN Disaggregation (PD-AF)" in top_level_readme
+E       assert 'sequential Attention-FFN Disaggregation (PD-AF)' in '<div align="center">\n\n<img src="figs/icon-frontier-transparent.png" alt="Frontier logo" width="300" />\n\n# Frontie.../div>\n\n## License\n\nThis project is licensed under the MIT license - see the [LICENSE](LICENSE) file for details.\n'
+
+tests/unit/test_pdd_public_surface_docs.py:59: AssertionError
+_____________ test_public_docs_require_sequential_pdd_release_mode _____________
+
+    def test_public_docs_require_sequential_pdd_release_mode() -> None:
+        for relative_path in PDD_PARALLEL_CONTRACT_DOCS:
+            text = _read(relative_path)
+>           assert (
+                "PDD public release execution is sequential-only"
+                in text
+            ), relative_path
+E           AssertionError: README.md
+E           assert 'PDD public release execution is sequential-only' in '<div align="center">\n\n<img src="figs/icon-frontier-transparent.png" alt="Frontier logo" width="300" />\n\n# Frontie.../div>\n\n## License\n\nThis project is licensed under the MIT license - see the [LICENSE](LICENSE) file for details.\n'
+
+tests/unit/test_pdd_public_surface_docs.py:85: AssertionError
+__ test_public_docs_state_internal_parallel_pdd_boundary_and_current_evidence __
+
+    def test_public_docs_state_internal_parallel_pdd_boundary_and_current_evidence() -> None:
+        internal_contract = (
+            "The parallel PDD implementation remains covered by internal correctness "
+            "tests but is not a supported release path."
+        )
+        performance_contract = (
+            "Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median "
+            "slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E."
+        )
+    
+        for relative_path in PDD_PARALLEL_CONTRACT_DOCS:
+            text = _read(relative_path)
+>           assert internal_contract in text, relative_path
+E           AssertionError: README.md
+E           assert 'The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.' in '<div align="center">\n\n<img src="figs/icon-frontier-transparent.png" alt="Frontier logo" width="300" />\n\n# Frontie.../div>\n\n## License\n\nThis project is licensed under the MIT license - see the [LICENSE](LICENSE) file for details.\n'
+
+tests/unit/test_pdd_public_surface_docs.py:123: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_pdd_public_surface_docs.py::test_top_level_docs_advertise_supported_pdd_without_upcoming_claims
+FAILED tests/unit/test_pdd_public_surface_docs.py::test_public_docs_require_sequential_pdd_release_mode
+FAILED tests/unit/test_pdd_public_surface_docs.py::test_public_docs_state_internal_parallel_pdd_boundary_and_current_evidence
+3 failed, 17 passed in 0.64s

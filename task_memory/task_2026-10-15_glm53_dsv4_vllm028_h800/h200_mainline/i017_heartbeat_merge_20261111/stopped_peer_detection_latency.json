@@ -1,0 +1,63 @@
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_pd_worker.py", line 414, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_pd_worker.py", line 299, in await_condition
+    raise TimeoutError('Native P/D rendezvous or workload deadline exceeded')
+TimeoutError: Native P/D rendezvous or workload deadline exceeded
+
+NATIVE_PD_STAGE finished
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_pd_worker.py", line 414, in run
+    await_condition(healthy, config['startup_timeout_s'], native_required=True)
+  File "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/tests/comparison/calibration/native_pd_worker.py", line 292, in await_condition
+    raise RuntimeError(f"Native P/D peer heartbeat unchanged for more than "
+RuntimeError: Native P/D peer heartbeat unchanged for more than 1 s: ['host3']
+
+NATIVE_PD_STAGE finished
+NATIVE_PD_STAGE rendezvous
+NATIVE_PD_STAGE native_start
+NATIVE_PD_STAGE await_replay
+NATIVE_PD_STAGE replay
+NATIVE_PD_STAGE drain_returned
+NATIVE_PD_STAGE finished
+{
+  "interpreter": "3.10.6",
+  "startup_timeout_s": 10,
+  "peer_heartbeat_timeout_s_when_enabled": 1,
+  "measurements": [
+    {
+      "case": "peer_heartbeat_stopped",
+      "staleness_check": "disabled",
+      "elapsed_s": 10.02150307688862,
+      "worker_returncode": 1,
+      "failed_sentinel": true,
+      "heartbeat_count": 11,
+      "heartbeat_threads_left": [],
+      "terminal_exception": "TimeoutError: Native P/D rendezvous or workload deadline exceeded"
+    },
+    {
+      "case": "peer_heartbeat_stopped",
+      "staleness_check": "enabled",
+      "elapsed_s": 1.0172390919178724,
+      "worker_returncode": 1,
+      "failed_sentinel": true,
+      "heartbeat_count": 2,
+      "heartbeat_threads_left": [],
+      "terminal_exception": "RuntimeError: Native P/D peer heartbeat unchanged for more than 1 s: ['host3']"
+    },
+    {
+      "case": "peer_heartbeat_live",
+      "staleness_check": "enabled",
+      "elapsed_s": 3.014487938955426,
+      "worker_returncode": 0,
+      "failed_sentinel": false,
+      "heartbeat_count": 4,
+      "heartbeat_threads_left": [],
+      "terminal_exception": null
+    }
+  ]
+}

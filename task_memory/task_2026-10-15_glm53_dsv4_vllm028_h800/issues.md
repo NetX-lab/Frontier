@@ -4,7 +4,8 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-11-11 | I-017 narrowed: the divergence is two parallel evolutions, not a missing feature (pair warmup implemented twice, only heartbeat 57caf2f7 absent from mainline), and a leaked heartbeat daemon thread is ruled out as the timeout cause. |
+| 2026-11-11 | Resolved I-017: root cause of the eight order-dependent timeouts, the corrected pair-warmup finding, the merge direction evidence, and the fixes on both branches. Added I-018. |
+| 2026-11-11 | I-017 narrowed: the divergence is two parallel evolutions, not a missing feature (pair warmup implemented twice, only heartbeat 57caf2f7 absent from mainline), and a leaked heartbeat daemon thread is ruled out as the timeout cause. Superseded the same day: the pair warmup was forward-ported, not implemented twice. |
 | 2026-11-08 | I-017 opened: the P2-64 startup-harness fix that made generation08 succeed lives only on branch `p2-64-startup-harness` (57caf2f7), which is not an ancestor of mainline HEAD, and its recorded CPU unit evidence does not reproduce today (12 failed / 6 passed). |
 | 2026-11-08 | I-016 opened and resolved: `tests/unit/test_native_pd_worker.py` passed the Python 3.11+ `-P` flag to a child interpreter, so 4 of 41 mainline unit tests failed on the declared 3.10 floor; replaced with a portable `sys.path` prelude and verified 41 passed. |
 | 2026-11-08 | Cleaned up the generation08-era artifacts: 313 files and 36 empty directories, 2,570,104,832 allocated bytes: 178 in-repo files over two codex-implement rounds and the lead's 135-file out-of-repo duplicate removal; the published P2-64 metrics were also recomputed from the row CSVs and reproduce the report exactly. |
@@ -36,8 +37,25 @@
 | 2026-10-29 | I-002 opened: two `test_balanced_routing.py` cases fail on main since B16b; the module is skipped without torch, so earlier suites did not run it. |
 | 2026-10-28 | Created: unit-test fixtures wrote into this worktree's Git directory through an exported `GIT_DIR`. |
 | 2026-10-28 | I-001 resolved: repair applied after YC's approval and verified. |
+## I-018: 61 native ground-truth cases fail on the pinned 3.10.6 interpreter because `tarfile` filtering predates it (2026-11-11, open, out of scope)
 
-## I-017: the P2-64 startup-harness fix is not merged into mainline and its CPU evidence no longer reproduces (2026-11-08)
+- Observation: `tests/unit/test_native_groundtruth_check.py:73` calls `stream.extractall(root, filter="data")`. On
+  `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6) this raises
+  `TypeError: TarFile.extractall() got an unexpected keyword argument 'filter'`, 42 times across 61 erroring cases in
+  that module.
+- Cause: the `filter` parameter reached 3.10 only in 3.10.12. This is not a violation of the declared `python=3.10`
+  floor, which an up-to-date 3.10.x satisfies; it is specific to this older pinned interpreter.
+- Found while establishing the I-017 regression baseline, so it is pre-existing and identical before and after that
+  change. The same defect class as I-016, where a Python 3.11+ interpreter flag was used on the 3.10 floor.
+- Not fixed: the resolution is a 3.10.12-or-newer interpreter, and dropping or conditioning the `filter` argument would
+  change extraction semantics, which needs a deliberate decision rather than a compatibility guard. Recorded for the
+  owner of that module.
+- Related environment limits in the same group, also pre-existing: 33 cases need `torch`, 16 need `aiohttp`, and 2 need
+  a real vLLM engine. Nine further native/calibration modules cannot be collected at all for the same reasons, plus
+  `native_dp_wave_timeline` not being on `sys.path`. The minimal release environment intentionally omits these
+  packages, so those cases are unknown rather than passing.
+
+## I-017: the P2-64 startup-harness fix is not merged into mainline and its CPU evidence no longer reproduces (2026-11-08, resolved 2026-11-11)
 
 - Observation: `git merge-base --is-ancestor 57caf2f7 HEAD` is false, and `git branch -a --contains 57caf2f7` lists only
   `p2-64-startup-harness`. The mainline copy of `native_pd_worker.py` contains no occurrence of `heartbeat`; the copy in
@@ -73,6 +91,47 @@
   `tests/comparison/calibration/native_pd_worker.py:438-442` sets `stop_heartbeat` and joins the thread inside a
   `finally` block, so the thread does not survive a failing case. The leak is elsewhere in the test module and is still
   not root-caused.
+- Root cause, confirmed 2026-11-11: the worker imports `urllib.request` lazily inside its lane-0 health wait, and the
+  test module did not import it at module scope. `patch.dict("sys.modules", {...})` restores by clear-and-update, so a
+  submodule first imported inside the patched block is *removed* from `sys.modules` on exit while the parent `urllib`
+  package keeps its `request` attribute. `mock._get_target("urllib.request.urlopen")` resolves through that stale
+  attribute, so from the second case onward the stub was installed on an orphaned module object; the worker's lazy
+  import then built a different module carrying the real `urlopen`, issued real HTTP, caught `OSError`, and polled
+  until the deadline. A direct probe recorded the two rounds: round 1 patch target, `sys.modules` entry and the id the
+  worker sees are all `140368560772480` and the worker gets the stub; round 2 the patch target is unchanged while
+  `sys.modules` holds `94449546228704` and the worker sees `140368553766288`, so it does not. After each block exit the
+  probe reported `'urllib.request' in sys.modules = False` with the attribute still present.
+- Why mainline's 41 cases passed with the same latent pattern: incidentally, not by design. Mainline's worker imports
+  `vllm_replay` at module scope (`native_pd_worker.py:19`) and `tests/comparison/dp_placement_pp/vllm_replay.py:98`
+  imports `urllib.request`, so the key was already present at collection time. Measured: importing the test module
+  leaves `'urllib.request' in sys.modules` `True` on mainline and `False` on the harness branch. Both test modules now
+  import `urllib.request` at module scope, which makes the guarantee explicit instead of inherited.
+- Correction to this entry's own framing: the pair-warmup capability was **not** implemented twice in a way that needed
+  reconciling. Mainline commit `e2289283b` forward-ported harness `4861e680` essentially verbatim.
+  `tests/comparison/calibration/pd_proxy.py` and `tests/unit/test_native_pair_warmup.py` diff to zero lines between the
+  branches, the worker's two warmup lines are identical, and every warmup-bearing line in `vllm_replay.py` and
+  `pd_replay.py` is identical; those two files' divergence is entirely mainline's *extra* `NATIVE_WORKER_EXTENSIONS`,
+  `scheduler_cls` and profiling-window work. The 41-against-18 case count and the 53/161 line delta come from the
+  harness branch being behind mainline, not from a duplicated feature.
+- Merge direction, established rather than assumed: the harness worker is byte-identical to the sealed copy that
+  produced the accepted generation08 result (`diff` 0 lines against
+  `h200_mainline/p2_64_formal_retry08/package_01/native_pd_worker.py`, both 478 lines), and the harness branch forked at
+  `b62c155a` (2026-10-23) before mainline's serving-ownership, profiling-window, ordered-shutdown and PROFILE04 work.
+  The branches differ across 281 files with 35,716 deletions on the harness side, so a whole-branch merge would have
+  reverted mainline. Only `57caf2f7` was genuinely missing, and it was cherry-picked.
+- Resolution: harness commit `0d7b6cb5` fixes the state leak and the `-P` defect on that branch (`18 passed`, and
+  `18 passed` again in reverse collection order, matching the recorded `18 passed in 5.74s`). Mainline commit
+  `efbe09a9` ports the heartbeat and the same module-scope import (`43 passed`, and `43 passed` in reverse order).
+  Against an explicit `HEAD~1` baseline across 15 native/calibration modules the 93 `FAILED`/`ERROR` node ids are an
+  identical set, with the two new heartbeat cases as the only difference. Release sanity and the accuracy gate are
+  unchanged (`3 failed, 17 passed` with the same three pre-existing README ids; `40 passed`). The commit touches no
+  `frontier/` file, so simulator fidelity is unaffected by construction. Full evidence:
+  [test_report_2026-11-11_i017_heartbeat_merge.md](test_report_2026-11-11_i017_heartbeat_merge.md).
+- Integration point the harness branch could not have covered: mainline's ordered shutdown now runs a drain-quorum wait
+  and `stop_heartbeat.set()` sits at the top of that block. Every node writes `drained.json` (line 451) before the
+  `finally` (line 464) stops its heartbeat, `stale_peers()` skips peers that have `drained.json`, and the `failed.json`
+  check still precedes the staleness check, so no false staleness is reachable during shutdown. A peer that dies without
+  writing either sentinel is flagged stale, which is the intended behavior.
 
 ## I-016: a Python 3.11+ interpreter flag broke 4 mainline unit tests on the declared 3.10 floor (2026-11-08, resolved)
 
@@ -171,6 +230,11 @@
   peer's heartbeat is unchanged for more than 180 s. CPU check: the stopped-peer case now fails on the heartbeat
   instead of the startup timeout. Packaged as generation08 (manifest 1a2bbc13...). It shortens the failure; it does
   not prevent platform stops. [Test report](test_report_2026-11-07_p2_64_heartbeat_generation08_package.md).
+- Merged 2026-11-11: the fix now also lives on `feat/glm53-dsv4-vllm028` as commit `efbe09a9` (issues.md I-017), so it
+  is no longer confined to the harness worktree. Measured on the merged code: with the staleness limit neutralized, the
+  stopped-peer case takes 10.0215 s against a 10 s startup budget and ends in `TimeoutError`; with the check active it
+  takes 1.0172 s and names the lost peer. At the real run's settings a replica lost after the rendezvous is detected in
+  about 181 s rather than 1800 s.
 
 ## I-012: spot-GPU device-admission failure ends a job before any container starts (2026-11-07)
 

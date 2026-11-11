@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Closed I-017: root-caused the eight order-dependent timeouts, fixed both test modules, established that the pair warmup was already forward-ported, merged the heartbeat onto mainline as `efbe09a9`, and closed both outstanding heartbeat claims. |
 | 2026-11-11 | Recorded the closeout decisions: GPU-hour accounting waived and H800 P0/P1 closed, so the H200 mainline has no remaining blocking acceptance item. |
 | 2026-11-08 | Accepted the independent H200 mainline completion review: both H200 numerical cases confirmed complete, the mainline still INCOMPLETE on GPU-hour accounting; two record errors corrected and two new findings added (I-016 fixed, I-017 open). |
 | 2026-11-08 | Cleaned up the generation08-era artifacts: 313 files and 36 empty directories, 2,570,104,832 allocated bytes: 178 in-repo files over two codex-implement rounds and the lead's 135-file out-of-repo duplicate removal; the published P2-64 metrics were also recomputed from the row CSVs and reproduce the report exactly. |
@@ -125,7 +126,6 @@
 | 2026-10-18 | Completed documentation-only resume audit and main-path recovery; replaced the old A2-first handoff while preserving it in the before snapshot. |
 | 2026-10-18 | Earlier pause archive retained completed preparations and incomplete/unapplied A2; no model completion was claimed. |
 
-
 ## Closeout: accounting waived and H800 closed — 2026-11-11
 
 YC waived the actual GPU-hour accounting criterion as unimportant (**D-GPU-HOURS-NOT-REQUIRED**) and closed the H800
@@ -143,15 +143,17 @@ its accepted scoped native06 R4 binding and DIAGNOSTIC-only prediction, neither 
 result or a promotion receipt, nothing is retroactively marked PASS, and the rule that H200 results never qualify
 H800 stands.
 
-Remaining work is non-blocking engineering hygiene:
+Remaining work was non-blocking engineering hygiene, and the first two items are now closed:
 
-- **I-017**, the unmerged `p2-64-startup-harness` deliverable. Narrowed on 2026-11-11: the two branches each carry
-  real commits on the same two files, the pair-warmup capability was implemented twice (mainline `e2289283b`, harness
-  `4861e680`), and only the heartbeat commit `57caf2f7` is genuinely absent from mainline. A leaked heartbeat daemon
-  thread is ruled out as the cause of the eight order-dependent timeouts, because the worker sets its stop event and
-  joins the thread inside a `finally` block; the leak is elsewhere and remains un-root-caused.
+- **I-017**, the unmerged `p2-64-startup-harness` deliverable, **resolved 2026-11-11**. Narrowed first: the two
+  branches each carry real commits on the same two files, and only the heartbeat commit `57caf2f7` is genuinely absent
+  from mainline; the pair warmup was forward-ported, not implemented twice. A leaked heartbeat daemon thread is ruled
+  out as the cause of the eight order-dependent timeouts, because the worker sets its stop event and joins the thread
+  inside a `finally` block. The leak is the `patch.dict("sys.modules")` submodule restore; it is fixed on both
+  branches and the heartbeat is merged into mainline as `efbe09a9` (see the 2026-11-11 section below).
 - The two heartbeat claims never re-run: the `101 passed` related-harness suite and the `10.01 s / 1.01 s` old/new
-  stopped-peer timing comparison.
+  stopped-peer timing comparison. Both closed on 2026-11-11, the timing comparison by measurement and the suite figure
+  as not reproducible.
 - Pre-existing upstream `README.md` documentation-contract failures in `tests/unit/test_pdd_public_surface_docs.py`,
   which also fail on `origin/main` and belong to the release-documentation owner.
 
@@ -207,7 +209,58 @@ Deliverables, relative to this task directory:
 Open after this review: GPU-hour accounting reconciliation including generations 05-08; merging
 `p2-64-startup-harness` into mainline and root-causing its isolation leak; the two heartbeat claims the lead did not
 re-run (the `101 passed` suite and the `10.01 s / 1.01 s` stopped-peer timing comparison); and H800 P0/P1 as later
-scope, which H200 results never qualify.
+scope, which H200 results never qualify. All but the accounting are since closed: the merge and the
+isolation leak on 2026-11-11 (issues.md I-017), both heartbeat claims the same day, the accounting by
+D-GPU-HOURS-NOT-REQUIRED and H800 by D-H800-CLOSED.
+
+## I-017 closed: order-dependent timeouts root-caused, heartbeat merged into mainline — 2026-11-11
+
+Overview: YC approved fixing the test-state leak behind the eight order-dependent timeouts, reconciling the two
+pair-warmup versions, merging the harness branch's heartbeat work into mainline, and verifying the result. All four
+parts are complete. The code that produced the accepted P2-64 generation08 reference now lives on
+`feat/glm53-dsv4-vllm028` and its test module passes in any collection order.
+
+Deliverables:
+
+- `tests/comparison/calibration/native_pd_worker.py` and `tests/unit/test_native_pd_worker.py` on
+  `feat/glm53-dsv4-vllm028`, commit `efbe09a9`: the peer-heartbeat staleness check ported from harness `57caf2f7`,
+  plus a module-scope `urllib.request` import in the test module. 111 insertions, 3 deletions, no `frontier/` file
+  touched.
+- `tests/unit/test_native_pd_worker.py` on `p2-64-startup-harness`, commit `0d7b6cb5`: the same module-scope import and
+  the portable `sys.path` prelude in place of the Python 3.11+ `-P` flag.
+- [test_report_2026-11-11_i017_heartbeat_merge.md](test_report_2026-11-11_i017_heartbeat_merge.md): root cause, the
+  mainline/harness asymmetry, the pair-warmup reconciliation evidence, the merge-direction evidence, conflict
+  resolution, the integration check and all verification.
+- `h200_mainline/i017_heartbeat_merge_20261111/`: eight raw test logs plus
+  `stopped_peer_detection_latency.json`.
+- `issues.md` I-017 resolution and the new I-018.
+
+Observed validation results:
+
+- Root cause confirmed: `patch.dict("sys.modules", {...})` restores by clear-and-update, removing a submodule first
+  imported inside the block while the parent package keeps its attribute, so `patch("urllib.request.urlopen")` stubbed
+  an orphaned module and the worker's lazy re-import used the real `urlopen`. Mainline passed only incidentally,
+  because its worker's `vllm_replay` import pulls `urllib.request` in at collection time.
+- Harness module: `18 passed` forward and reversed, against today's starting point of `12 failed, 6 passed`.
+- Mainline module: `43 passed` forward and reversed.
+- Regression: across 15 native/calibration modules, the 93 `FAILED`/`ERROR` node ids are an identical set against an
+  explicit `HEAD~1` baseline; the only difference is the two new heartbeat cases. Release sanity unchanged
+  (`3 failed, 17 passed`, the same three pre-existing README ids) and the accuracy gate `40 passed`.
+- Pair warmup needed no reconciliation: `pd_proxy.py` and `test_native_pair_warmup.py` diff to zero lines between the
+  branches and every warmup-bearing line elsewhere is identical. The earlier "implemented twice" reading is corrected.
+- The recorded `10.01 s / 1.01 s` stopped-peer claim is reproduced by measurement: 10.0215 s with the staleness limit
+  neutralized against 1.0172 s with it enabled.
+
+Open or deferred:
+
+- The `101 passed in 19.50 s` related-harness figure is closed as not reproducible: its command needs `aiohttp`, which
+  the minimal release environment omits, and no interpreter on this host has both `aiohttp` and Frontier's
+  dependencies. Superseded by the baseline comparison above.
+- `issues.md` I-018: 61 cases in `tests/unit/test_native_groundtruth_check.py` error on the pinned 3.10.6 interpreter
+  because `extractall(..., filter=...)` reached 3.10 only in 3.10.12. Pre-existing, out of scope, recorded for that
+  module's owner.
+- Nine native/calibration modules and 93 individual cases cannot run in the minimal environment, so their status is
+  unknown rather than passing, both before and after this change.
 
 ## Completed task artifact cleanup — 2026-11-03
 

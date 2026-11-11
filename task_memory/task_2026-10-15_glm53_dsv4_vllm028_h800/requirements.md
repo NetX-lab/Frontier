@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-11-11 | Recorded the closure of the two previously open hygiene items: issues.md I-017 is root-caused and merged into mainline as `efbe09a9`, and the two heartbeat claims are resolved. |
 | 2026-11-11 | Recorded D-GPU-HOURS-NOT-REQUIRED and D-H800-CLOSED: YC waives the actual GPU-hour accounting criterion and closes the H800 P0/P1 scope, so the H200 mainline has no remaining blocking acceptance item. |
 | 2026-11-07 | Recorded D-P2-64-SIXTH: a peer liveness check in the native harness, then night-time submission; one generation08 job plus at most two platform-cause resubmissions, 64 H200 per job, new chain ceiling 128 container GPUh. |
 | 2026-11-07 | Recorded the standing request to clean invalid task artifacts promptly through codex-implement. |
@@ -202,7 +203,9 @@ acceptance criterion still blocking literal completion of ticket 19. It also lef
 Combined effect: with the accounting criterion waived and the H800 scope closed, the H200 mainline of this task has no
 remaining blocking acceptance item. The remaining open work is non-blocking engineering hygiene, namely issues.md
 I-017 (the unmerged `p2-64-startup-harness` deliverable and its order-dependent test failures) and the two heartbeat
-claims that were never re-run. The pre-existing upstream `README.md` documentation-contract failures remain outside
+claims that were never re-run. Both were closed later the same day: I-017 is root-caused and merged into mainline as
+`efbe09a9`, and the two heartbeat claims are resolved, one by measurement and one as not reproducible
+([report](test_report_2026-11-11_i017_heartbeat_merge.md)). The pre-existing upstream `README.md` documentation-contract failures remain outside
 this task's scope.
 
 ## [Original Request / Decision] 2026-11-07 — D-P2-64-SIXTH
