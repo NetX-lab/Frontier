@@ -72,6 +72,14 @@ Frontier is designed for what-if studies that would be expensive or slow to run 
   </tr>
 </table>
 
+## Research Using Frontier
+
+Frontier has also been used by other groups to study serving system design:
+
+<table align="center"> <tr> <th align="left">Work</th> <th align="left">Venue</th> <th align="left">Institutions</th> </tr> <tr> <td><a href="https://dl.acm.org/doi/abs/10.1145/3789240.3829124">Dynamic Compute and Network Orchestration for Disaggregated RL</a></td> <td>SIGCOMM&nbsp;'26</td> <td>CUHK, StepFun</td> </tr> <tr> <td><a href="https://arxiv.org/pdf/2611.12304v1">Evolving Infra: Agent-Adaptive LLM Serving at Scale</a></td> <td>arXiv</td> <td>Georgia Tech, UIUC, UC Berkeley, NVIDIA, OpenAI, MIT</td> </tr> </table>
+
+
+
 ## Quick Start and Examples
 
 Install the release package and test extras from the repository root.
