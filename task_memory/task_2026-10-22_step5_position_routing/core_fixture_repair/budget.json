@@ -1,0 +1,21 @@
+{
+  "task_id": "D29-CORE-AFFECTED-FIXTURES",
+  "base": "e49b26f849ed5edc87b4c443ce753db64d8e5a07",
+  "registry_import": "a5189e199208022a341b377b0fb8c542030907f3",
+  "registry_merge": "acea99e4",
+  "repair_added": 45,
+  "repair_deleted": 27,
+  "repair_gross": 72,
+  "repair_ceiling": 80,
+  "core_gross": 3833,
+  "core_ceiling": 4404,
+  "core_allocated_paths": 46,
+  "original_review_gross": 228,
+  "original_review_ceiling": 230,
+  "python": "3.10.6",
+  "paths": [
+    {"path": "tests/unit/test_moe_routing_runtime.py", "added": 20, "deleted": 26, "baseline_gross": 53, "cap": 110},
+    {"path": "tests/unit/test_moe_grouped_gemm_padded_features.py", "added": 25, "deleted": 1, "baseline_gross": 197, "cap": 210}
+  ],
+  "status": "PASS aggregate/grouped caps/AST; original seven-path delta228/230 unchanged"
+}

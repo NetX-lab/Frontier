@@ -1,0 +1,250 @@
+{
+  "task_id": "D29-PREPARED-PARENT-ARCHIVE",
+  "component_task_id": "D29-PREPARED-POINT-REUSE",
+  "status": "ACCEPTED_CPU_PREPARED_POINT_COMPONENT",
+  "modification_history": [
+    {
+      "date": "2026-10-23",
+      "change": "Archive primary acceptance, separate independent review axes, existing parent execution receipts and Git-derived retained accounting without rerunning tests or probes."
+    }
+  ],
+  "base_commit": "caffccbb48011f0140359d391ad75b58906ff15b",
+  "code_commit": "0be11762d0f83e9db77658a1447a672507166872",
+  "owner_records_commit": "b476907e9afe865476e0a3a6720f8eb4e3290c40",
+  "integration_commit": "eece87b2378bf86c6673b74f1a769f566bc5792a",
+  "archive_worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-prepared-archive",
+  "executed_worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-prepared-point",
+  "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "submodule_pin_unchanged": true,
+  "submodule_checkout_or_initialization_performed": false,
+  "review": {
+    "standards": {
+      "session_id": "ses_e97039e03ffeu3ZRIC116k0GwS",
+      "result": "No findings",
+      "findings": []
+    },
+    "spec": {
+      "session_id": "ses_e97039de3ffe8fnhZlDO38w5lY",
+      "result": "No findings",
+      "findings": []
+    },
+    "provenance": "Primary-supplied independent static reviews of actual source, complete three-path diff, interface_receipt.md and source/receipt lifetime. Neither reviewer reran tests or hashes. Primary accepted after its separate execution verification.",
+    "contract": "task_memory/task_2026-10-22_step5_position_routing/prepared_point_repair/interface_receipt.md",
+    "component_design_md_exists": false
+  },
+  "environment": {
+    "host": "kun-workspace-vgen2",
+    "python": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "python_version": "CPython 3.10.6",
+    "execution": "CPU only; sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp",
+    "pytest_timeout_seconds": 240,
+    "trainer_timeout_seconds": 60,
+    "wave_and_comparison_timeout_seconds": 60,
+    "scratch": "/data/ycfeng/tmp",
+    "exact_commands_record": "task_memory/task_2026-10-22_step5_position_routing/resumed_performance/test_report_2026-10-23_prepared_point_repair.md"
+  },
+  "parent_test_results": {
+    "affected_six_files": {
+      "raw_status": "PASS_WITH_EXISTING_SKIP",
+      "tests": 83,
+      "passed": 82,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "xml_seconds": 132.253,
+      "log_seconds": 132.25,
+      "skip_case": "tests.unit.test_moe_position_routing::test_one_source_tensor_interface_preserves_masks_and_request_intervals",
+      "skip_reason": "could not import 'torch': No module named 'torch'",
+      "coverage_limit": "Shared manager/binding/runtime selection; independent trainer evidence is separate."
+    },
+    "separate_trainers": {
+      "raw_status": "PASS",
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_seconds": 6.075,
+      "log_seconds": 6.07,
+      "coverage": "Existing both-trainer/preflight path and independent selected actual fit/cache native-context binding; current-repository CPU writer with both external writer overrides unset."
+    },
+    "counts_are_not_summed": true,
+    "archive_reran_tests": false
+  },
+  "parent_wave": {
+    "executed_source": "b476907e9afe865476e0a3a6720f8eb4e3290c40",
+    "query_sha256": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc",
+    "executed_source_status": "",
+    "diagnostic_preparation": false,
+    "diagnostic_variable": "none",
+    "numerical_cache": false,
+    "raw_read_suppression": false,
+    "profiled": false,
+    "requested_layer": 60,
+    "derived_scope": "Complete captured 208-operator DECODE wave at layer60, logical position6147, EP0-15; production predictor/public stage/metadata/flush replay, not a complete simulator workflow or GPU ground truth.",
+    "raw_wave_scope": "actual 16-participant DECODE layer61 at logical position6147, production wave predictor/public stage/metadata/flush; unrelated event queue, attention, scheduler and full initialization excluded",
+    "raw_comparison_scope": "8MiB actual tail, subset of layer61 operators; no full op trace census",
+    "stale_scope_disposition": "Both descriptive literals are inherited from the reusable layer61 script. Preserve raw artifacts unchanged. The executed --layer 60 replacement, captured source geometry, result.layer=60, retained trace layers, counts and complete per-pair proof checks establish the actual scope; primary acceptance does not trust the stale labels.",
+    "preparation_counts": {
+      "rows": 1,
+      "keys": 1,
+      "row_entries": 16464,
+      "artifact_entries": 168
+    },
+    "timings": [
+      {
+        "pricing_s": 1.7261437461711466,
+        "emit_s": 0.16251190891489387,
+        "flush_s": 0.13113739527761936,
+        "wall_s": 2.01979305036366,
+        "events": 208,
+        "json_parse_calls": 3258,
+        "artifact_reads": 80
+      },
+      {
+        "pricing_s": 1.0362420910969377,
+        "emit_s": 0.05939718196168542,
+        "flush_s": 0.13097241567447782,
+        "wall_s": 1.226611688733101,
+        "events": 208,
+        "json_parse_calls": 1968,
+        "artifact_reads": 80
+      }
+    ],
+    "full_pricing_payload_sha256": [
+      "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    ],
+    "comparison": {
+      "captured_pairs": 208,
+      "replay_pairs": 208,
+      "checked_pairs": 208,
+      "mismatches": [],
+      "duration_comparison": "Exact equality for each pair, not tolerance-based GPU calibration.",
+      "complete_proof_fields": ["collective_plan", "collective_cost", "operator_cost", "native_context", "routing_source"],
+      "archive_execution": "Read existing result/count/hash records only; no comparison or wave rerun."
+    },
+    "retained_trace": {
+      "event_rows": 416,
+      "unique_ep_operator_pairs": 208,
+      "global_layers": [[60]]
+    },
+    "trace_390_in_executed_worktree": false,
+    "executed_trace_sha256": "f66f9df95422ad734707e723a38a516143e90fe80274c80dd169babf9a375939",
+    "trace_timing_limit": "The executed prepared-point tree retains the trace bytes from79, not390. Its approximately0.131s flush cannot be combined with separate trace speedups or described as measured integrated-union timing."
+  },
+  "owner_evidence_only": {
+    "matrix_source": "0be11762d0f83e9db77658a1447a672507166872",
+    "positive_records": 36,
+    "negative_records": 24,
+    "parent_reran_owner_matrix": false,
+    "provenance": "Owner matrix-final01 uses the existing fixture-construction seam and frozen original query versus candidate production query. Primary's earlier prototype matrix is different evidence, not a rerun of this owner matrix.",
+    "report": "task_memory/task_2026-10-22_step5_position_routing/prepared_point_repair/test_report_2026-10-23_prepared_point_reuse.md",
+    "historical_red": "1 FAIL / 2 PASS before source change",
+    "final_focused_green": "3 PASS",
+    "final_affected": "82 PASS / 1 existing Torch SKIP / 0 FAIL / 0 ERROR",
+    "separate_trainers": "2 PASS / 0 FAIL / 0 ERROR / 0 SKIP"
+  },
+  "git_accounting": {
+    "baseline": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+    "prior_accepted_tree": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+    "prior_audit": "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/performance_scope/d29_final_budget_audit_receipt06.json",
+    "paths": [
+      {
+        "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+        "step_added": 73, "step_deleted": 19, "step_gross": 92, "step_cap": 180,
+        "prior_gross": 143, "cumulative_added": 191, "cumulative_deleted": 6, "cumulative_gross": 197, "retained_cap": 323,
+        "retained_delta": 54,
+        "sha256": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc"
+      },
+      {
+        "path": "tests/unit/test_prediction_measurement_bindings.py",
+        "step_added": 45, "step_deleted": 0, "step_gross": 45, "step_cap": 45,
+        "prior_gross": 254, "cumulative_added": 299, "cumulative_deleted": 0, "cumulative_gross": 299, "retained_cap": 299,
+        "retained_delta": 45,
+        "sha256": "7fc5f851cfcac0b4f676ec21a39812389e8c0d7427faf24e858a4cacf2087912"
+      },
+      {
+        "path": "tests/unit/test_moe_routing_runtime.py",
+        "step_added": 22, "step_deleted": 0, "step_gross": 22, "step_cap": 25,
+        "prior_gross": 53, "cumulative_added": 75, "cumulative_deleted": 0, "cumulative_gross": 75, "retained_cap": 78,
+        "retained_delta": 22,
+        "sha256": "87c1ebb9c92fca27cc37bc34b7b63534b86f8920c4325f835c44d11352b86805"
+      },
+      {
+        "path": "frontier/metrics/trace_store.py",
+        "prior_gross": 0, "cumulative_added": 7, "cumulative_deleted": 7, "cumulative_gross": 14, "retained_cap": 20,
+        "retained_delta": 14,
+        "sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d"
+      }
+    ],
+    "prepared_step": {"added": 140, "deleted": 19, "gross": 159, "cap": 250},
+    "prepared_retained_delta": 121,
+    "combined_retained_delta": 135,
+    "step_totals_are_not_added_to_prior_retained_total": true,
+    "prior_audit_target_rows_match_recomputed_git": true,
+    "prepared_three_files_byte_identical_to_owner_code": true,
+    "integrated_trace_byte_identical_to_390": true,
+    "worktree_source_bytes_match_integration_commit": true,
+    "only_four_frontier_tests_data_dockerfile_paths_changed_since79": true,
+    "all18_amendment_donor_paths_unchanged_since79": true,
+    "module_size_doc_unchanged_since79": true,
+    "measured_totals": {
+      "basis": "Accepted audit06 plus recomputed baseline-relative retained differences on exactly four integrated paths; unchanged native/PRICING contributions carried from audit06.",
+      "core_source": {"prior": 3970, "measured": 4105, "cap": 4404},
+      "native": {"measured": 1350, "cap": 1582},
+      "pricing": {"measured": 3920, "cap": 3956},
+      "source_test_config": {"prior": 9240, "measured": 9375, "cap": 9942},
+      "extras": {"module_size_doc": 12, "gitlink": 2},
+      "global": {"prior": 9254, "measured": 9389, "cap": 10000}
+    },
+    "effective_allocated_paths": 112,
+    "final112_path_union_audit": "PENDING; this four-path differential archive is not that audit."
+  },
+  "artifacts_sha256": {
+    "/data/ycfeng/tmp/d29_prepared_point_parent01.xml": "330f4d5e2aed17bb3d68691a6c0304dce943a7914795484a6a225e8a7c338e4b",
+    "/data/ycfeng/tmp/d29_prepared_point_parent01.log": "c334bb09dc134ec2f5e1d1be0f6e1b218e4cd2670ba206126834e393d26009fc",
+    "/data/ycfeng/tmp/d29_prepared_point_parent_trainers01.xml": "98043f07a8a2bfc140138b9c21975173ff3b2909de7184c1612fbb7930732e2c",
+    "/data/ycfeng/tmp/d29_prepared_point_parent_trainers01.log": "f8ae2d68869b870c47a8b8dc567d42c62985c22ee31d0c1019f4fd86456651be",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/parent-layer60-01/result.json": "9644c4e86139f23a071e3b61f2ac0f8f97f67ccedde1e32f06eaba0bf9ed0808",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/parent-layer60-01/op_traces.jsonl": "28e32825c0ed355c505d3c652fe9d3a67051f89aa0d8a33d0ac945fa4f8a09d5",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/parent-layer60-01.log": "cd4a6bff0f09408cad71d04941165c4d21446f80cd3a40864e68b1445ed15333",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/parent-layer60-01-comparison.log": "ec141c2857add9f267c67285204e56633572c364711b86b521a424946809f585",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/parent-layer60-01-actual_comparison.json": "bdc04abea031d2d457a8e15d6db1db2ce0f8c53918223c8e3127947a7d14602b",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/candidate_wave.py": "1946c316d521d886b09e469a3492f94260204a4c2ed03544beadc30e35ce9602",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/candidate_compare.py": "b580275d67843a73f29d2d8ab1a46cfdb836a16099db75a2e20661160b7aa173",
+    "/data/ycfeng/tmp/d29_main08_residual_repro/parent-layer60-source.json": "23486bceac94e23e6bab2dc8c851300ed353bc71000e1ba6aa2e28b393655694",
+    "/data/ycfeng/tmp/d29_main08_residual_repro/compare_actual_wave.py": "fa045662d96380b52097a7b4295380905f968ec7cf6b0998c9a3ad00ce9ee0be",
+    "/data/ycfeng/tmp/d29_prepared_point_repair/matrix-final01/matrix_result.json": "c61eac32f8cefdf469a593d9b40f217750e7d5947cbad2a37ba1188b466fca22",
+    "task_memory/task_2026-10-22_step5_position_routing/prepared_point_repair/prepared_point_repair.diff": "23332fb8c936d09d55eec43703bd51798d84eb7d8346f5eb2ee36f969081b7db",
+    "task_memory/task_2026-10-22_step5_position_routing/prepared_point_repair/interface_receipt.md": "af60a432203caf7b405705bb688745f45c767cdd6e426a948adf3cc4334c6977",
+    "task_memory/task_2026-10-22_step5_position_routing/prepared_point_repair/source_receipt.json": "d74c9d504117267e8ee01a8d59b76334034207bf46a4b1553e7b4e29039ceb46",
+    "task_memory/task_2026-10-22_step5_position_routing/prepared_point_repair/budget.json": "e5cf28b83e3dac6047e019b219f9b2a0f909375272d12080ad2d5305457c79b7",
+    "task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/performance_scope/d29_final_budget_audit_receipt06.json": "01bec0586352ec7c5e47a533195dc294c142b900cc12bda3af3bc5e682d6b460"
+  },
+  "archive_verification": {
+    "mode": "Read-only Git object/diff accounting, raw XML/JSON parsing and artifact SHA256 inspection; edits only to the three assigned records.",
+    "git_version": "2.34.1",
+    "python_version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "artifact_hashes_checked": 19,
+    "source_receipt_hashes_checked": 4,
+    "historical_review_sections_preserved": true,
+    "json_status_scope_arithmetic": "PASS",
+    "active_commit_hooks": [],
+    "resolved_archive_checker_error": "Initial prefix-equality assertion stripped only the baseline final newline. Exact existing-prefix comparison passes; no artifact/source change was required.",
+    "tests_probes_source_edits_new_agents_network_platform_gpu": "NONE"
+  },
+  "observed_vs_inferred": {
+    "observed": "Existing raw XML statuses, result timings/counts/source binding, complete comparison checks, artifact hashes and Git bytes/diffs.",
+    "derived": "Accurate layer60/208-pair scope and retained totals4105/9375/9389 from those records and the prior accepted audit.",
+    "reported_not_new_execution": "Independent review findings and primary acceptance; owner matrix and historical RED/GREEN remain their original provenance."
+  },
+  "final_gate_limits": [
+    "Component acceptance only; no complete6144/1024 CLI or2400s workflow pass.",
+    "No integrated-union timing claim or addition of prepared timing to separate trace speedups.",
+    "Final112-path union accounting/review/freeze and fresh strict77/full-unit regression acceptance remain pending for the new union.",
+    "No final-source T2 seal, native runtime, GPU, G3 or four-metric E2E acceptance is established here; original gates and each E2E error<=10% remain unchanged.",
+    "No independent public-consumer qualification or supported nested in-place row mutation is added.",
+    "Raw stale labels, historical failures/skips and source receipts are preserved; no raw artifact is rewritten and no successful check is rerun."
+  ]
+}

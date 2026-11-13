@@ -83,6 +83,7 @@ def test_mxfp4_wrapper_exports_actual_backend_outside_numeric_stats(native_runti
         expert_hidden_dim=256, router_topk=1, num_tensor_parallel_workers=1,
         _dtype=torch.bfloat16, per_channel_quant=False, block_shape=None,
         profile_method="device_event", output_dir=None, quantization_mode="mxfp4",
+        activation="silu",
     ).items():
         setattr(wrapper, name, value)
     row = wrapper.profile_grouped_gemm(2, routing_inputs=dict(

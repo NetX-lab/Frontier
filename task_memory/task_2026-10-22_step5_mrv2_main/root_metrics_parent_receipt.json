@@ -1,0 +1,100 @@
+{
+  "task_id": "D23-ROOT-METRICS",
+  "phase": "source acceptance and actual05 launch",
+  "tested_source": "7c70461",
+  "merged_source": "26db654cbbb38b361990aa1aa8ae1dad5db8e000",
+  "parent_tests": {
+    "passed": 167,
+    "deselected": 1,
+    "failures": 0,
+    "errors": 0,
+    "pytest_wall_s": 46.71,
+    "inherited_exclusion": "structured_attention_legacy_coverage_uses_family_execution_time_attrs"
+  },
+  "review": {
+    "session": "ses_e9f8b6cffffeSZiBfBvZkmXBQa",
+    "verdict": "No findings",
+    "P1": "resolved"
+  },
+  "evidence": [
+    {
+      "path": "/data/ycfeng/tmp/d23_root_p1_parent01.log",
+      "bytes": 275,
+      "sha256": "c9cf416124b5ce2318961ebcee2bf2bd0f9130055e3406f84a3da51c0759b513"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d23_root_p1_parent01.xml",
+      "bytes": 25698,
+      "sha256": "16c34927f6897d249dc0e673ffb3dd64bdb8be6d61d4c6a3e7a23517b4cc677d"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d23_root_metrics_7c70461.diff",
+      "bytes": 40213,
+      "sha256": "86e8b54faea3f29d3534a3086af2eb83f1916d8397ee252f7892be74b2708b8a"
+    }
+  ],
+  "input_preflight": {
+    "status": "PASS",
+    "unchanged_profile_inputs": 8,
+    "inputs": [
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json",
+        "sha256": "417492f6223f83bc702b815cd8a4280323afb60600fd68fe9b9636cc0077fffd",
+        "bytes": 3263
+      },
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/linear_op.csv",
+        "sha256": "ef87242b51dc5fba77bd99cae925dfd8ef9b939ca1b143c3c7bfabbf5065a96a",
+        "bytes": 1357350
+      },
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/moe.csv",
+        "sha256": "ba4ea21068e75267d202112076d0270d3f1d5722463008f26818f1cba7a772c9",
+        "bytes": 674341
+      },
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/linear_op.csv",
+        "sha256": "cda9d3227353dfead47044060a09b802cebd0271f922be8d91574b91057e96b2",
+        "bytes": 1357374
+      },
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/moe.csv",
+        "sha256": "b54148482a0de444eeca2ff14c1782ec4152563fa4628531a466a205f328ff6d",
+        "bytes": 674353
+      },
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv",
+        "sha256": "27baaf5c63315a41e5a78096aa318d50c4c134cae5c338abd8a940cae61b7179",
+        "bytes": 5606492481
+      },
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_kernel_only.csv",
+        "sha256": "b00a44e2e62efde9313f3e38f04d9d320558d78d15dbae13be747926c7c7dd81",
+        "bytes": 10964211
+      },
+      {
+        "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_kernel_gap.csv",
+        "sha256": "8a7d7ed0fe08428b52ccb350324fe6ddbd5c7181e5545844a931549060752555",
+        "bytes": 86
+      }
+    ],
+    "integration_files_identical_to": "e54f9457"
+  },
+  "actual05_at_launch": {
+    "source_worktree": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-main",
+    "modes": [
+      "offline",
+      "online"
+    ],
+    "child_timeout_s": 2400,
+    "status": "in-progress",
+    "native_admitted": false
+  },
+  "fidelity_at_launch": {
+    "baseline": "0cdd6cb",
+    "baseline_executed": 77,
+    "candidate": "26db654",
+    "driver": "32fb934",
+    "comparison": "pending"
+  }
+}

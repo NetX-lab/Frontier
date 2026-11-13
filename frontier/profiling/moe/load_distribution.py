@@ -177,6 +177,7 @@ def compute_expert_token_counts(
     """
     # Flatten topk_ids and count occurrences of each expert
     topk_ids_flat = topk_ids.flatten().cpu()
+    topk_ids_flat = topk_ids_flat[topk_ids_flat >= 0]
     counts = torch.bincount(topk_ids_flat, minlength=num_experts)
     return counts.numpy().astype(int).tolist()
 

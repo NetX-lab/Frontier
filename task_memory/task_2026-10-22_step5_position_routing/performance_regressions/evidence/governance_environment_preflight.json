@@ -1,0 +1,43 @@
+{
+  "purpose": "Existing dependency availability for conditional governance52 only; not a test run.",
+  "pythonpath": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06:/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/tests/unit:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+  "packages": {
+    "python": "3.12.13",
+    "pytest": {
+      "version": "9.0.2",
+      "origin": "/data/ycfeng/envs/asyncopd-py312/lib/python3.12/site-packages/pytest/__init__.py"
+    },
+    "numpy": {
+      "version": "2.2.6",
+      "origin": "/data/ycfeng/envs/asyncopd-py312/lib/python3.12/site-packages/numpy/__init__.py"
+    },
+    "pandas": {
+      "version": "3.0.1",
+      "origin": "/data/ycfeng/envs/asyncopd-py312/lib/python3.12/site-packages/pandas/__init__.py"
+    },
+    "scikit-learn": {
+      "version": "1.7.2",
+      "origin": "/data/ycfeng/tmp/d29_py312_cpu_extras01/site/sklearn/__init__.py"
+    },
+    "plotly": {
+      "version": "7.1.0",
+      "origin": "/data/ycfeng/tmp/d29_py312_cpu_extras01/site/plotly/__init__.py"
+    },
+    "fasteners": {
+      "version": "0.20",
+      "origin": "/data/ycfeng/tmp/d29_py312_cpu_extras01/site/fasteners/__init__.py"
+    },
+    "ddsketch": {
+      "version": "3.0.1",
+      "origin": "/data/ycfeng/tmp/d29_py312_cpu_extras01/site/ddsketch/__init__.py"
+    },
+    "torch": {
+      "version": "2.9.1",
+      "origin": "/data/ycfeng/envs/asyncopd-py312/lib/python3.12/site-packages/torch/__init__.py"
+    },
+    "aiohttp": {
+      "version": "3.13.3",
+      "origin": "/data/ycfeng/envs/asyncopd-py312/lib/python3.12/site-packages/aiohttp/__init__.py"
+    }
+  }
+}

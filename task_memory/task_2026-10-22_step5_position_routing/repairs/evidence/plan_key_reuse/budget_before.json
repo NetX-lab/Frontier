@@ -1,0 +1,70 @@
+{
+  "source_commit": "64c83ac4786cd76d2cd248e1149ce2adf4c4fa7f",
+  "snapshot_source": "db581ff6ad43e1ce57361ed00fc4be0256e85a45",
+  "status": "PRE_IMPLEMENTATION_ALLOCATION_PASS",
+  "rows": 114,
+  "counts": {
+    "core_source": 49,
+    "native": 19,
+    "pricing": 46
+  },
+  "caps": {
+    "core_source": 4404,
+    "native": 1582,
+    "pricing": 3956
+  },
+  "actual": {
+    "core_source": 4173,
+    "native": 1350,
+    "pricing": 3940
+  },
+  "source_actual": 9463,
+  "global_component": 9477,
+  "replayed_after_79_audit": [
+    "trace_serialization_scope_amendment.json",
+    "prepared_point_scope_amendment.json",
+    "immutable_cost_fields_scope_amendment.json",
+    "collective_artifact_bytes_scope_amendment.json",
+    "run_input_snapshot_scope_amendment.json"
+  ],
+  "selected": {
+    "frontier/cc_backend/collective_plan.py": {
+      "owner": "pricing",
+      "cap": 136,
+      "actual": 136,
+      "kind": "superproject",
+      "new_cap": 140
+    },
+    "tests/unit/test_step5_moe_pricing.py": {
+      "owner": "pricing",
+      "cap": 300,
+      "actual": 300,
+      "kind": "superproject",
+      "new_cap": 311
+    },
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": {
+      "owner": "pricing",
+      "cap": 99,
+      "actual": 93,
+      "kind": "superproject",
+      "new_cap": 93
+    },
+    "frontier/cc_backend/base_cc_backend.py": {
+      "owner": "pricing",
+      "cap": 16,
+      "actual": 14,
+      "kind": "superproject",
+      "new_cap": 14
+    },
+    "tests/unit/test_collective_sim_cc_backend.py": {
+      "owner": "pricing",
+      "cap": 243,
+      "actual": 236,
+      "kind": "superproject",
+      "new_cap": 236
+    }
+  },
+  "step_cap": 17,
+  "retained_growth_cap": 15,
+  "limits": "Non-superproject333+99 and documentation12/gitlink2 inherit accepted frozen audit values; this is allocation reconciliation, not final independent union acceptance."
+}

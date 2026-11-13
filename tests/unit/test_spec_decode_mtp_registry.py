@@ -147,6 +147,39 @@ def test_param_counter_target_embedded_mtp_allows_empty_spec_model_name() -> Non
     assert counter.get_num_mtp_parameters_per_device() > 0
 
 
+@pytest.mark.parametrize("tie_word_embeddings", [None, True, False])
+def test_target_embedded_mtp_pp2_preserves_legacy_parameter_accounting(
+    tie_word_embeddings: bool | None,
+) -> None:
+    from frontier.config import ReplicaConfig, SpeculativeDecodingConfig
+    from frontier.types import ClusterType
+    from frontier.utils.param_counter import ParamCounter
+
+    replica = ReplicaConfig(
+        model_name="Phi-tiny-MoE-instruct",
+        attn_tensor_parallel_size=4,
+        moe_tensor_parallel_size=2,
+        moe_expert_parallel_size=2,
+        num_pipeline_stages=2,
+        total_expert_num=8,
+        router_topk=2,
+        speculative_decoding_config=SpeculativeDecodingConfig(
+            enabled=True,
+            method="qwen3_next_mtp",
+            mtp_n_predict=2,
+            mtp_num_layers=1,
+        ),
+    )
+    assert replica.model_config.tie_word_embeddings is None
+    replica.model_config.tie_word_embeddings = tie_word_embeddings
+    counter = ParamCounter(replica, ClusterType.MONOLITHIC)
+
+    # The retained legacy PP2 run owns 505,819,136 parameters per device.
+    expected_parameters = 538_652_672 if tie_word_embeddings is False else 505_819_136
+    assert counter.get_num_parameters_per_device() == expected_parameters
+    assert counter.get_parameter_memory_per_device_bytes() == 2 * expected_parameters
+
+
 def test_speculative_decoding_config_accepts_runtime_mtp_registry_methods() -> None:
     from frontier.config.config import SpeculativeDecodingConfig
     from frontier.spec_decode.runtime import MTP_METHOD_FAMILIES

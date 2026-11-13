@@ -1,0 +1,70 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_request_free_batch_has_its_own_no_cache_identity[0] ___________
+
+layer_id = 0
+
+    @pytest.mark.parametrize("layer_id", [0, 3])
+    def test_request_free_batch_has_its_own_no_cache_identity(layer_id):
+        model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+        predictor = _predictor(model, {}, MeasurementType.KERNEL_ONLY)
+        batch = DummyForwardBatch(0, 0, 0)
+>       features, workload = step5_batch_features(predictor, batch, layer_id)
+
+tests/unit/test_step5_measured_replay.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+predictor = <test_on_demand_prediction_contract._ConcretePredictor object at 0x7f558d85c520>
+batch = batch id = 0
+decode_attn_original_replica_id=None, decode_attn_original_replica_local_id=None
+num req = 1, []
+------------
+layer_id = 0
+
+    def step5_batch_features(predictor, batch, layer_id):
+        """Bind actual batch extents to the same source geometry used by the producer."""
+        from frontier.entities.batch import DummyForwardBatch
+    
+        if isinstance(batch, DummyForwardBatch):
+>           raise ValueError("Step measured request-free attention coverage is unavailable")
+E           ValueError: Step measured request-free attention coverage is unavailable
+
+frontier/execution_time_predictor/step5_cost.py:64: ValueError
+----------------------------- Captured stdout call -----------------------------
+WARNING 20:31:54 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.model_architectures:model_architectures.py:1404 Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+___________ test_request_free_batch_has_its_own_no_cache_identity[3] ___________
+
+layer_id = 3
+
+    @pytest.mark.parametrize("layer_id", [0, 3])
+    def test_request_free_batch_has_its_own_no_cache_identity(layer_id):
+        model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+        predictor = _predictor(model, {}, MeasurementType.KERNEL_ONLY)
+        batch = DummyForwardBatch(0, 0, 0)
+>       features, workload = step5_batch_features(predictor, batch, layer_id)
+
+tests/unit/test_step5_measured_replay.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+predictor = <test_on_demand_prediction_contract._ConcretePredictor object at 0x7f54415f3b80>
+batch = batch id = 1
+decode_attn_original_replica_id=None, decode_attn_original_replica_local_id=None
+num req = 1, []
+------------
+layer_id = 3
+
+    def step5_batch_features(predictor, batch, layer_id):
+        """Bind actual batch extents to the same source geometry used by the producer."""
+        from frontier.entities.batch import DummyForwardBatch
+    
+        if isinstance(batch, DummyForwardBatch):
+>           raise ValueError("Step measured request-free attention coverage is unavailable")
+E           ValueError: Step measured request-free attention coverage is unavailable
+
+frontier/execution_time_predictor/step5_cost.py:64: ValueError
+=========================== short test summary info ============================
+FAILED tests/unit/test_step5_measured_replay.py::test_request_free_batch_has_its_own_no_cache_identity[0]
+FAILED tests/unit/test_step5_measured_replay.py::test_request_free_batch_has_its_own_no_cache_identity[3]
+2 failed, 3 deselected in 1.95s

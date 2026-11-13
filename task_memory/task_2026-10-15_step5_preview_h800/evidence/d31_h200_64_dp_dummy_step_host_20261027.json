@@ -1,0 +1,38 @@
+{
+  "schema": "dp_dummy_step_host_time.v1",
+  "admission": "admitted",
+  "provenance": {
+    "job_id": "exp-1027-141317-610373",
+    "stage": "/data/ycfeng/tmp/step5_d31_workload_20261027/h200_64_hostprobe01/stage",
+    "source_commit": "02bd453aa31b8bce7218433411e066be9623d546",
+    "probe_sha256": "8b4ee896d5f164bc039609bec4aef6193a09f4df1ca4a2636478f42a025de143",
+    "estimator": "tests/integration/step5_pd/dp_dummy_step_host_time.py",
+    "estimator_sha256": "41c2f33db22d1a31ddc16f6033a4679202709d53bfaf66ced162033f0789e028",
+    "statistic": "mean of the all-dummy group cadence samples of the formal windows, excluding ordinals up to 3 after a real step",
+    "perturbation": "PASS",
+    "report": "/data/ycfeng/tmp/d31_diag/cadence/final/dp4_report.json"
+  },
+  "model_architecture_profile": "step5",
+  "device": "h200",
+  "decode_cuda_graph_mode": "full_and_piecewise",
+  "topology": {
+    "attention_tp": 8,
+    "attention_dp": 4,
+    "moe_ep": 32,
+    "pipeline_stages": 1
+  },
+  "roles": {
+    "prefill": {
+      "group_cadence_ms": 6.013523286986499,
+      "samples": 3481,
+      "p50_ms": 5.43056375,
+      "p90_ms": 7.1249727499999995,
+      "window_means_ms": [
+        6.026543252590674,
+        6.009476605736301,
+        6.004561731601731
+      ],
+      "window_mean_cv": 0.0015664547014732132
+    }
+  }
+}

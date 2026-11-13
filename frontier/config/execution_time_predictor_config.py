@@ -36,6 +36,18 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
         default="./data/profiling/network/{NETWORK_DEVICE}/send_recv.csv",
         metadata={"help": "Path to the send recv input file."},
     )
+    nixl_read_profile: Optional[str] = field(
+        default=None,
+        metadata={"help": "Explicit NIXL prefix geometry and READ-to-GPU-ready cost JSON; required for grouped measured NIXL."},
+    )
+    kv_block_zeroing_host_profile: Optional[str] = field(
+        default=None,
+        metadata={"help": "Measured Step KV side-storage reset host time JSON (kv_block_zeroing_host_time.v1); delays the DP forward start of resetting steps. Unset: no host term."},
+    )
+    dp_dummy_step_host_profile: Optional[str] = field(
+        default=None,
+        metadata={"help": "Measured DP dummy-step group cadence JSON (dp_dummy_step_host_time.v1) for the Step PREFILL role; paces the hosts of all-dummy DP forwards. Unset: every dummy forward blocks its host until its device end."},
+    )
     cpu_overhead_input_file: str = field(
         default="./data/profiling/cpu_overhead/{NETWORK_DEVICE}/{MODEL}/cpu_overheads.csv",
         metadata={"help": "Path to the cpu overhead input file."},

@@ -1,0 +1,34 @@
+{
+  "status": "PASS_STATIC_PROFILE_PROPOSAL_ONLY",
+  "finished_utc": "2026-10-25T06:31:51.295139+00:00",
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "d41b1f8f46f5c7a96e3e5b198b6907c446cad98e",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  },
+  "active_bindings": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_profile_bindings.json",
+  "bindings_sha256": "ceac047f8c18fb046109210fcbc74a34f9bd5a9b0306ca147837c8e4e4c1e7e4",
+  "initial_directory_defect_reproduced": {
+    "type": "FileNotFoundError",
+    "message": "[Errno 2] No such file or directory: '/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/joint_setup.py'",
+    "before_setup_or_pricing": true
+  },
+  "source_paths": 25,
+  "input_paths": 6,
+  "fixture_metadata_paths": 262,
+  "changed_cache_metadata_paths": 14,
+  "reviewed_script_hashes": 3,
+  "full_reference_ledger_rows": 16,
+  "full_reference_operator_rows": 208,
+  "full_reference_compute_proofs": 144,
+  "pricing_calls": 0,
+  "workload_calls": 0,
+  "required_shape_calls": 0,
+  "platform_calls": 0,
+  "model_loads": 0,
+  "cprofile_application_executions": 0,
+  "configured_memory_max": "30G",
+  "proposal_approved": false,
+  "wall_s": 0.22124524880200624
+}

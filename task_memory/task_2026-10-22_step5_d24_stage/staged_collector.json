@@ -1,0 +1,261 @@
+{
+  "task_id": "D24-NATIVE-STAGE",
+  "status": "PASS_STAGED_COLLECTOR_48_CALLER_CASES",
+  "observer_origin": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_observation.py",
+  "observer_sha256": "774280921282530c3df3eb22d8f20435d8b99766ffe412f7cafac20a045e5b81",
+  "reference_origin": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_reference.py",
+  "reference_sha256": "30fbfd0a9eb440cc5dd42e3fc550eff2c2f1782fabdbce1bea92212bca8f7698",
+  "reused_test": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage/tests/unit/test_step5_native_reference.py:test_first_tail_values_use_actual_and_full_local_worker_callers",
+  "cases": [
+    {
+      "prompt": 6143,
+      "rank": 0,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 0,
+      "client": "reference"
+    },
+    {
+      "prompt": 6143,
+      "rank": 1,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 1,
+      "client": "reference"
+    },
+    {
+      "prompt": 6143,
+      "rank": 2,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 2,
+      "client": "reference"
+    },
+    {
+      "prompt": 6143,
+      "rank": 3,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 3,
+      "client": "reference"
+    },
+    {
+      "prompt": 6143,
+      "rank": 4,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 4,
+      "client": "reference"
+    },
+    {
+      "prompt": 6143,
+      "rank": 5,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 5,
+      "client": "reference"
+    },
+    {
+      "prompt": 6143,
+      "rank": 6,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 6,
+      "client": "reference"
+    },
+    {
+      "prompt": 6143,
+      "rank": 7,
+      "client": "actual"
+    },
+    {
+      "prompt": 6143,
+      "rank": 7,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 0,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 0,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 1,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 1,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 2,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 2,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 3,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 3,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 4,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 4,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 5,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 5,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 6,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 6,
+      "client": "reference"
+    },
+    {
+      "prompt": 6144,
+      "rank": 7,
+      "client": "actual"
+    },
+    {
+      "prompt": 6144,
+      "rank": 7,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 0,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 0,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 1,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 1,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 2,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 2,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 3,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 3,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 4,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 4,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 5,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 5,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 6,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 6,
+      "client": "reference"
+    },
+    {
+      "prompt": 6145,
+      "rank": 7,
+      "client": "actual"
+    },
+    {
+      "prompt": 6145,
+      "rank": 7,
+      "client": "reference"
+    }
+  ],
+  "asserted": [
+    "computed page and predecessor only",
+    "BF16 raw and uint8 mean exact bytes/hashes",
+    "all eight TP ranks actual and independent callers",
+    "complete logical census unchanged",
+    "later checkpoints hash-only",
+    "two existing synchronizations and one existing copy/reservation per sample",
+    "continuity remains UNVERIFIED"
+  ],
+  "native_hardware_executed": false
+}

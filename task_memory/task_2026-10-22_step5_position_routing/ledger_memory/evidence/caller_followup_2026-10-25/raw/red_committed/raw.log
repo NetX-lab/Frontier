@@ -1,0 +1,53 @@
+Running scope as unit: run-r81a4ad4a58e84b12b62c43df69ea78d9.scope
+WARNING 00:35:24 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+WARNING 00:35:24 model_architectures.py:1392] Model architecture profile fallback selected generic for name=meta-llama/Llama-2-7b-hf, model_arch=generic
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  co-location
+======================================================================
+Total Clusters: 1
+Total World Size: 1
+Server count: 1
+
+Cluster Type: MONOLITHIC
+   Cluster World Size: 1
+   Num Replicas (Instances): 1
+   Replica World Size: 1
+   Configuration: PP1 × (Attn_TP1 x Attn_DP1) | (MoE_TP1 x MoE_EP1)
+   Total Expert Num: 1
+   Local Expert Num: None
+--------------------------------------------------
+======================================================================
+
+Traceback (most recent call last):
+  File "<stdin>", line 18, in <module>
+  File "<committed-6c2f179c-performance>", line 82, in save_state
+  File "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/cloudpickle/cloudpickle.py", line 1313, in dump
+    return super().dump(obj)
+  File "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/cloudpickle/cloudpickle.py", line 972, in _file_reduce
+    raise pickle.PicklingError(
+_pickle.PicklingError: Cannot pickle files that are not opened for reading: w
+
+{
+  "task_id": "D29-EP-LANE-LEDGER-IMPLEMENTATION",
+  "status": "EXPECTED_RED_CAPTURED",
+  "tested_save_state_revision": "6c2f179c9117256bb7086441b0c11a1459f48674",
+  "tested_source_sha256": "909c706e35429341a7552d407e102504223ecb614dac4b486fffd24454b1df7a",
+  "actual_save_state_outcome": "RAISED_PICKLING_ERROR",
+  "exception_type": "PicklingError",
+  "exception_message": "Cannot pickle files that are not opened for reading: w",
+  "real_store": true,
+  "nonempty_count": 1,
+  "writer_mode": "w",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "configured_memory_max_bytes": 32212254720,
+  "effective_cgroup_limit_and_peak": "not measured",
+  "limitations": [
+    "Expected-failure capture of exact committed pre-repair function, not candidate acceptance",
+    "No pricing, event execution or native/fullCLI run"
+  ]
+}

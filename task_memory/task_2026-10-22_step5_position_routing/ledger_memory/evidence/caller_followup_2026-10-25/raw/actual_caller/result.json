@@ -1,0 +1,60 @@
+{
+  "task_id": "D29-EP-LANE-LEDGER-IMPLEMENTATION",
+  "status": "PASS_ACTUAL_SAVE_LOAD_CALLER",
+  "source_mode": "current actual save_state/load_state; real MetricsStore writer; exact current main digest AST, not a patched proposal",
+  "scenarios": [
+    {
+      "status": "PASS",
+      "historical_count": 0,
+      "restored_count": 0,
+      "terminal_count": 4,
+      "fresh_writer_identity": true,
+      "fresh_output_path": "/data/ycfeng/tmp/d29_ledger_stream_followup_actual_caller/count_0/destination/meta_llama_llama_2_7b_hf/offline_batch/run_2026_10_25_00_30_59_125033/frontier_ep_wave_lane_ledger.jsonl",
+      "old_output_path": "/data/ycfeng/tmp/d29_ledger_stream_followup_actual_caller/count_0/source/meta_llama_llama_2_7b_hf/offline_batch/run_2026_10_25_00_30_59_099581/frontier_ep_wave_lane_ledger.jsonl",
+      "old_output_absent": true,
+      "old_output_unchanged": true,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "new_output_bytes": 7124,
+      "new_output_sha256": "f63c0297e9dffe14d25d929fc3488d6d7c0f9eb6b1ff15393f24d49fe03e34a7",
+      "ordered_three_row_digest": "573cd63c5d0807c8a3ebbe60bc545a57d080ea2505cd28ea13bb77f3b86f5614",
+      "later_single_row_digest": "199b3570b5166328eb7cfe4e4bfe50cfe38d6aec4abe554242ea6af13505baae",
+      "zero_increment_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state_receipt": {
+        "counter_snapshot": true,
+        "iteration_boundary": true,
+        "pending_ledger_objects_rebound": 0
+      }
+    },
+    {
+      "status": "PASS",
+      "historical_count": 3,
+      "restored_count": 3,
+      "terminal_count": 7,
+      "fresh_writer_identity": true,
+      "fresh_output_path": "/data/ycfeng/tmp/d29_ledger_stream_followup_actual_caller/count_3/destination/meta_llama_llama_2_7b_hf/offline_batch/run_2026_10_25_00_30_59_140020/frontier_ep_wave_lane_ledger.jsonl",
+      "old_output_path": "/data/ycfeng/tmp/d29_ledger_stream_followup_actual_caller/count_3/source/meta_llama_llama_2_7b_hf/offline_batch/run_2026_10_25_00_30_59_131980/frontier_ep_wave_lane_ledger.jsonl",
+      "old_output_absent": false,
+      "old_output_unchanged": true,
+      "source_sha256": "6be83f0e97cc1ae315a3b108ece4b185ac1b06517375a3d3b58cedf3d9102d30",
+      "new_output_bytes": 7124,
+      "new_output_sha256": "f63c0297e9dffe14d25d929fc3488d6d7c0f9eb6b1ff15393f24d49fe03e34a7",
+      "ordered_three_row_digest": "573cd63c5d0807c8a3ebbe60bc545a57d080ea2505cd28ea13bb77f3b86f5614",
+      "later_single_row_digest": "199b3570b5166328eb7cfe4e4bfe50cfe38d6aec4abe554242ea6af13505baae",
+      "zero_increment_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state_receipt": {
+        "counter_snapshot": true,
+        "iteration_boundary": true,
+        "pending_ledger_objects_rebound": 0
+      }
+    }
+  ],
+  "wall_s": 0.05397061910480261,
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "configured_memory_max_bytes": 32212254720,
+  "effective_cgroup_limit_and_peak": "not measured",
+  "limitations": [
+    "Synthetic reporting state with no event/pricing execution",
+    "No fullCLI, native, G3, E2E, runtime or full-workload RSS acceptance"
+  ]
+}

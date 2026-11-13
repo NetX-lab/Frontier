@@ -1,0 +1,14 @@
+{
+  "status": "PASS_PERSONAL_CLOUD_WRITE_READ_DELETE",
+  "timestamp": "2026-10-24T13:29:38.694000+00:00",
+  "caller": "i-fengyicheng",
+  "writer_uid": 0,
+  "personal_path": "/mnt/ws-jfs/ycfeng",
+  "test_path": "/mnt/ws-jfs/ycfeng/frontier/step5_position_routing/task_2026-10-22_step5_position_routing/storage_control_02ef242d61d3475bb07950aa306c70f0/write_read_delete.json",
+  "bytes": 2406,
+  "full_bytes_equal": true,
+  "test_file_removed": true,
+  "test_directory_removed": true,
+  "existing_permissions_changed": false,
+  "scope": "Approved storage-only control; no production shape invocation or GPU/platform operation."
+}

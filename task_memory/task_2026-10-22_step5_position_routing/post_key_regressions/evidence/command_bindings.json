@@ -1,0 +1,38 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "scripts": [
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/run_suite.py",
+      "sha256": "1733444c2b65bac2171e4c855484e602bb1c222499c92667f489b3ebe3612f0a",
+      "bytes": 8153
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/audit_strict.py",
+      "sha256": "8533ab05092c5861f6b58dedb24a1f1c2f1b2e22874c34c2f41ef39249851d89",
+      "bytes": 2753
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/compare_results.py",
+      "sha256": "2f18e3616e00f256433206452535a4c13b9f8abcff945553f68130c7ab7c2900",
+      "bytes": 5251
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/run_suite.py",
+      "sha256": "62ce1aa3e4f6229c7e782bcd98eb2048ef35d88e790e607a9e2ae493908d392a",
+      "bytes": 7118
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/compare_results.py",
+      "sha256": "aab8d53849d5ef23ac2f804a9fdb391531f4d9c39fb19bae891fa70d9371d084",
+      "bytes": 8512
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_workflow_fidelity_20261022/audit_evidence.py",
+      "sha256": "8d985f0f964c5ec6b16b4a0c3963490db38de26b9e0ec664927479ca849b4cb9",
+      "bytes": 7471
+    }
+  ],
+  "fidelity_and_unit_gate_source_unchanged": true,
+  "only_frozen_paths_labels_resource_identity_rebound": true,
+  "added79_comparison_no_alias_or_gate_exception": true
+}

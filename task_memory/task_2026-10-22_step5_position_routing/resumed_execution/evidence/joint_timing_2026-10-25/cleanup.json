@@ -1,0 +1,48 @@
+{
+  "status": "PASS_SIX_COMPLETED_DUPLICATE_OUTPUTS_REMOVED_AFTER_EXACT_ARCHIVE_CHECK",
+  "collected_utc": "2026-10-25T04:17:44.882729+00:00",
+  "authority": "D29 codesign test-storage and timely completed-disposable cleanup decision; active/cited inputs and other-session files retained",
+  "files": [
+    {
+      "removed": "/data/ycfeng/tmp/d29_current_joint_20261025_01/cold/pricing_payload.json",
+      "retained_full_archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/joint_timing_2026-10-25/outputs/cold/pricing_payload.json.gz",
+      "original_bytes": 647510,
+      "original_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    },
+    {
+      "removed": "/data/ycfeng/tmp/d29_current_joint_20261025_01/cold/frontier_ep_wave_lane_ledger.jsonl",
+      "retained_full_archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/joint_timing_2026-10-25/outputs/cold/frontier_ep_wave_lane_ledger.jsonl.gz",
+      "original_bytes": 2309529,
+      "original_sha256": "2cbb18d5465d028a59b4b5e402830681c928596e766fa6f10e50ed179bc4f063"
+    },
+    {
+      "removed": "/data/ycfeng/tmp/d29_current_joint_20261025_01/cold/op_traces.jsonl",
+      "retained_full_archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/joint_timing_2026-10-25/outputs/cold/op_traces.jsonl.gz",
+      "original_bytes": 2889856,
+      "original_sha256": "54eac652d9aefbbb75bb33e36837a9ae69ba7445edc717aa0a55466764c05a4f"
+    },
+    {
+      "removed": "/data/ycfeng/tmp/d29_current_joint_20261025_01/warm/pricing_payload.json",
+      "retained_full_archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/joint_timing_2026-10-25/outputs/warm/pricing_payload.json.gz",
+      "original_bytes": 647510,
+      "original_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    },
+    {
+      "removed": "/data/ycfeng/tmp/d29_current_joint_20261025_01/warm/frontier_ep_wave_lane_ledger.jsonl",
+      "retained_full_archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/joint_timing_2026-10-25/outputs/warm/frontier_ep_wave_lane_ledger.jsonl.gz",
+      "original_bytes": 2309646,
+      "original_sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a"
+    },
+    {
+      "removed": "/data/ycfeng/tmp/d29_current_joint_20261025_01/warm/op_traces.jsonl",
+      "retained_full_archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/joint_timing_2026-10-25/outputs/warm/op_traces.jsonl.gz",
+      "original_bytes": 2891377,
+      "original_sha256": "62f233ca391e2d5fe2cbcbbcef86a9099018e545cbb358229e7a9f08ea67a96b"
+    }
+  ],
+  "removed_bytes": 11695428,
+  "wall_s": 0.06061844015493989,
+  "new_runtime_calls": 0,
+  "new_platform_calls": 0,
+  "preserved_scratch_receipts": true
+}

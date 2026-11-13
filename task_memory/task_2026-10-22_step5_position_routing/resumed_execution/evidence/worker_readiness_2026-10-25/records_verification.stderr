@@ -1,0 +1,7 @@
+Running scope as unit: run-r06d7f3dd05f14bc1ba7e34fcc8a5165f.scope
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/d29_worker_readiness_parent_20261025_01/verify_records.py", line 57, in <module>
+    require(parent['job_name'] in text, 'Missing single-job identity')
+  File "/data/ycfeng/tmp/d29_worker_readiness_parent_20261025_01/verify_records.py", line 15, in require
+    raise AssertionError(message)
+AssertionError: Missing single-job identity

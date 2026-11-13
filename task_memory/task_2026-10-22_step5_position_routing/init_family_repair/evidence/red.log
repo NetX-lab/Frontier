@@ -1,0 +1,42 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_moe_loader_derives_family_once_without_skipping_unselected_rows _____
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_init_family_repair.ePNCE48J/red-temp/test_moe_loader_derives_family0')
+
+    def test_moe_loader_derives_family_once_without_skipping_unselected_rows(tmp_path):
+        from unittest.mock import patch
+        from frontier.attention import step5
+        from frontier.config.model_config import BaseModelConfig
+        from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
+    
+        model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+        rows, facts = _position_source_rows(model)
+        rows = pd.concat([rows, rows.iloc[:1].assign(moe_layer_ids="3")], ignore_index=True)
+        path = tmp_path / "moe.csv"
+        rows.to_csv(path, index=False)
+        fact = facts["moe_input_quantize"]
+        replica = SimpleNamespace(model_config=model)
+        loader = ProfilingDataFrameLoaders()
+        expected = pd.read_csv(path, float_precision="round_trip")
+        with patch.object(step5, "validate_step5_config", wraps=step5.validate_step5_config) as derive:
+            for _ in range(2):
+                derive.reset_mock()
+                loaded = loader._load_moe_df(str(path), replica, tensor_parallel_size=1,
+                    layer_contract=fact["layer_contract"], operator_name="moe_input_quantize", operator_facts=fact)
+                pd.testing.assert_frame_equal(loaded, expected.iloc[:2].assign(
+                    source_profiling_precision="BF16", profiling_precision="FP8"))
+>               assert derive.call_count == 1
+E               AssertionError: assert 9 == 1
+E                +  where 9 = <MagicMock name='validate_step5_config' id='140655865282320'>.call_count
+
+tests/unit/test_moe_grouped_gemm_padded_features.py:322: AssertionError
+----------------------------- Captured stdout call -----------------------------
+WARNING 17:37:32 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+INFO 17:37:32 profiling_dataframe_loaders.py:697] Original MoE data: 3 rows, 26 columns
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.model_architectures:model_architectures.py:1404 Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+INFO     frontier.execution_time_predictor.profiling_dataframe_loaders:profiling_dataframe_loaders.py:697 Original MoE data: 3 rows, 26 columns
+=========================== short test summary info ============================
+FAILED tests/unit/test_moe_grouped_gemm_padded_features.py::test_moe_loader_derives_family_once_without_skipping_unselected_rows
+1 failed in 1.85s

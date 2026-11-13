@@ -1,0 +1,22 @@
+--- a/frontier/cc_backend/collective_plan.py
++++ b/frontier/cc_backend/collective_plan.py
+@@ -1,7 +1,7 @@
+ """Immutable workload and evidence for the selected Step TP8/DP2 model."""
+ from __future__ import annotations
+ 
+-from dataclasses import asdict, dataclass
++from dataclasses import dataclass, fields
+ import json
+ import math
+ from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+@@ -84,7 +84,9 @@
+                      for root in ((None,) if uniform else (0, 1)))
+ 
+     def to_dict(self):
+-        return {**asdict(self), "context": json.loads(self.context_json),
++        return {**{f.name: getattr(self, f.name) for f in fields(self)},
++                "tensors": tuple({f.name: getattr(t, f.name) for f in fields(t)} for t in self.tensors),
++                "context": json.loads(self.context_json),
+                 "buffers": json.loads(self.buffer_json), "stages": self.stages,
+                 "native_grouping": "outer_tensor_group/nested_root_group"}
+ 

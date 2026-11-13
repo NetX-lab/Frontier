@@ -1,0 +1,83 @@
+{
+  "kind": "cpu_fixture",
+  "native_admitted": false,
+  "input_root": "/data/ycfeng/tmp/d23_main_fixture02",
+  "attention_unchanged": {
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_kernel_only.csv": {
+      "sha256": "b00a44e2e62efde9313f3e38f04d9d320558d78d15dbae13be747926c7c7dd81",
+      "matches_actual03": true,
+      "bytes": 10964211
+    },
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv": {
+      "sha256": "27baaf5c63315a41e5a78096aa318d50c4c134cae5c338abd8a940cae61b7179",
+      "matches_actual03": true,
+      "bytes": 5606492481
+    }
+  },
+  "compute": {
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/linear_op.csv": {
+      "rows": 24,
+      "sha256": "cda9d3227353dfead47044060a09b802cebd0271f922be8d91574b91057e96b2",
+      "old_sha256": "f6e1ac57d9383db0c2debc02ae241eb6ba0f126a65e038a16191eb106c79997b",
+      "measurement": [
+        "KERNEL_ONLY"
+      ],
+      "token_counts": [
+        1,
+        2,
+        16,
+        32,
+        6144,
+        6145
+      ],
+      "scope": "typed linear local+aggregate widths"
+    },
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/moe.csv": {
+      "rows": 12,
+      "sha256": "b54148482a0de444eeca2ff14c1782ec4152563fa4628531a466a205f328ff6d",
+      "old_sha256": "c05b10c1601ae204bebf3742b969ea1aebb55945d43662c2d95fb6bbfc69a20d",
+      "measurement": [
+        "KERNEL_ONLY"
+      ],
+      "token_counts": [
+        2,
+        32,
+        6145
+      ],
+      "scope": "existing balanced materializer nonempty EP loads"
+    },
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/linear_op.csv": {
+      "rows": 24,
+      "sha256": "ef87242b51dc5fba77bd99cae925dfd8ef9b939ca1b143c3c7bfabbf5065a96a",
+      "old_sha256": "1888054d21b1a0a6e14a26c4acce11b84c2b3c6a327f34cf791ce01482344d81",
+      "measurement": [
+        "CUDA_EVENT"
+      ],
+      "token_counts": [
+        1,
+        2,
+        16,
+        32,
+        6144,
+        6145
+      ],
+      "scope": "typed linear local+aggregate widths"
+    },
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/moe.csv": {
+      "rows": 12,
+      "sha256": "ba4ea21068e75267d202112076d0270d3f1d5722463008f26818f1cba7a772c9",
+      "old_sha256": "b49b1aa9b9190c121d9bc01fb35fa617a8daf120bdebd6d0006072aae5e778d2",
+      "measurement": [
+        "CUDA_EVENT"
+      ],
+      "token_counts": [
+        2,
+        32,
+        6145
+      ],
+      "scope": "existing balanced materializer nonempty EP loads"
+    }
+  },
+  "tested_core": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+  "manifest_sha256": "417492f6223f83bc702b815cd8a4280323afb60600fd68fe9b9636cc0077fffd"
+}

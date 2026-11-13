@@ -1,0 +1,39 @@
+{
+  "argv": [
+    "timeout",
+    "60s",
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "TMPDIR=/data/ycfeng/tmp",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "NUMEXPR_NUM_THREADS=1",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/compare_final_unit.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "start_utc": "2026-10-24T18:52:25.922809+00:00",
+  "end_utc": "2026-10-24T18:52:26.100590+00:00",
+  "duration_s": 0.1777771762572229,
+  "returncode": 0,
+  "script_sha256": "9dfc87e46c242ff64ab7705eb7b8fb87712c06823699ee91b51b6acfb8aade38",
+  "metadata_correction": "Baseline receipt names the identical package-version object python_versions; equality predicate remains exact.",
+  "first_failure": {
+    "returncode": 1,
+    "log": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/unit_compare_first_failure.log",
+    "timing": "not independently captured"
+  }
+}

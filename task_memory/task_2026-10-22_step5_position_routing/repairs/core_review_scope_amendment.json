@@ -1,0 +1,69 @@
+{
+  "decision_id": "D29-CORE-REVIEW-REPAIR",
+  "status": "ROOT_ALLOCATED_EXISTING_OWNER_QUOTA",
+  "apply_after": "registry_scope_amendment.json",
+  "owner": "core_source",
+  "owner_total_ceiling": 4404,
+  "effective_unique_paths": 109,
+  "total_gross_ceiling": 10000,
+  "repair_delta_ceiling": 230,
+  "repair_paths": [
+    "frontier/profiling/moe/moe_impl.py",
+    "frontier/profiling/moe/moe_wrapper.py",
+    "frontier/moe_routing_runtime.py",
+    "tests/integration/run_step5_measured_main.py",
+    "tests/unit/test_step5_moe_profiling.py",
+    "tests/unit/test_moe_profiling_output_metadata.py",
+    "tests/integration/test_step5_measured_main.py"
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "tests/unit/test_step5_moe_profiling.py", "before": 290, "delta": 60, "after": 350},
+    {"path": "tests/unit/test_moe_profiling_output_metadata.py", "before": 85, "delta": 50, "after": 135},
+    {"path": "tests/integration/test_step5_measured_main.py", "before": 153, "delta": 90, "after": 243},
+    {"path": "frontier/moe_routing_runtime.py", "before": 123, "delta": 10, "after": 133},
+    {"path": "tests/integration/run_step5_measured_main.py", "before": 91, "delta": -25, "after": 66},
+    {"path": "frontier/execution_time_predictor/prediction_family_trainers.py", "before": 108, "delta": -20, "after": 88},
+    {"path": "frontier/execution_time_predictor/layer_contract_resolution.py", "before": 45, "delta": -20, "after": 25},
+    {"path": "frontier/profiling/common/step5_job.py", "before": 110, "delta": -30, "after": 80},
+    {"path": "frontier/profiling/common/runtime_identity.py", "before": 176, "delta": -30, "after": 146},
+    {"path": "frontier/profiling/moe/main.py", "before": 171, "delta": -35, "after": 136},
+    {"path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py", "before": 27, "delta": -10, "after": 17},
+    {"path": "frontier/execution_time_predictor/step5.py", "before": 81, "delta": -30, "after": 51},
+    {"path": "tests/integration/step5_measured_compute_fixture.py", "before": 230, "delta": -75, "after": 155},
+    {"path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", "before": 138, "delta": -20, "after": 118},
+    {"path": "tests/unit/test_prediction_measurement_bindings.py", "before": 180, "delta": 20, "after": 200},
+    {"path": "frontier/profiling/moe/moe_wrapper.py", "before": 194, "delta": -15, "after": 179},
+    {"path": "tests/unit/test_moe_routing_runtime.py", "before": 60, "delta": 50, "after": 110},
+    {"path": "tests/unit/test_moe_grouped_gemm_padded_features.py", "before": 180, "delta": 30, "after": 210}
+  ],
+  "exclusive_registry_paths": [
+    "frontier/execution_time_predictor/prediction_model_registry.py",
+    "tests/unit/test_prediction_measurement_bindings.py",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py"
+  ],
+  "producer_diagnostics_persistence": {
+    "source_commit": "a7e2a3ca6a12367a6955b905a9e061494766106d",
+    "path": "frontier/profiling/moe/moe_wrapper.py",
+    "source_delta_gross": 3,
+    "existing_path_ceiling": 179,
+    "verification": "Retain full point diagnostics in the actual profile row and serialized output while compute context remains stable. Use the existing owned profiling tests; this work stays inside the230 repair delta."
+  },
+  "registry_view_review_repair": {
+    "owner": "registry",
+    "base_source": "8f96408cf6fbb19c45a918b2464aea3ddff29f1a",
+    "remaining_repair_delta": 58,
+    "total_registry_repair_ceiling": 360,
+    "paths": ["frontier/execution_time_predictor/prediction_model_registry.py", "tests/unit/test_prediction_measurement_bindings.py"],
+    "purpose": "Lossless mixed legacy/native family and cluster views; preserve strict single-model ambiguity. Transfer20 unused predictor lines to the existing binding test."
+  },
+  "affected_fixture_repair": {
+    "decision_id": "D29-CORE-AFFECTED-FIXTURES",
+    "owner": "core_source",
+    "base_source": "e49b26f849ed5edc87b4c443ce753db64d8e5a07",
+    "repair_delta_ceiling": 80,
+    "paths": ["tests/unit/test_moe_routing_runtime.py", "tests/unit/test_moe_grouped_gemm_padded_features.py"],
+    "purpose": "Repair five integration failures: supply canonical source descriptors and census to three training fixtures, and actual model/group/registry state to two runtime fixtures. Preserve all assertions and admission checks. This separate test-only allocation uses existing CORE headroom; no new approved path."
+  },
+  "notes": "No new approved-union paths or aggregate budget. Grouped path adjustments are zero-sum after the registry overlay. CORE seven-path repair delta stays230, registry delta stays360; affected two-file fixture repair receives a separate80 within CORE4404. Transfer45 unused runner,15 wrapper and20 fixture-producer allowance to the two affected tests. Registry four-path work remains exclusive to its separate worktree. Root reassesses concrete overage instead of permitting implicit borrowing."
+}

@@ -1,0 +1,36 @@
+{
+  "status": "BUDGET_RECONCILED",
+  "source_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+  "proposal_sha256": "84668ef18022f4a54b5ad071545cafa456e2c6f7af3f250fb126e0f58b299dad",
+  "owners": {
+    "core_source": [
+      46,
+      4404,
+      4404,
+      3833
+    ],
+    "native": [
+      19,
+      1582,
+      1582,
+      1350
+    ],
+    "pricing": [
+      46,
+      3956,
+      3956,
+      3879
+    ]
+  },
+  "source_gross": 9062,
+  "global_gross": 9076,
+  "remaining_global": 924,
+  "allocated_paths": 111,
+  "actual_changed_paths": 110,
+  "changed_allowances": 46,
+  "per_path_violations": 0,
+  "superproject_remeasured": 8630,
+  "submodule_remeasured": 333,
+  "module_note_gross": 12,
+  "qualification": "BUDGET_ONLY_NOT_RUNTIME"
+}

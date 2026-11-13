@@ -1,0 +1,283 @@
+{
+  "actual_dummy_groups": 13,
+  "PASS": 13,
+  "producer_rows": 26,
+  "full_raw_null_groups": 5,
+  "results": [
+    {
+      "rank": [
+        "prefill",
+        0,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "NONE",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0324.host.platform.shaipower.com/pd_state/prefill_pid_2199.jsonl:79"
+    },
+    {
+      "rank": [
+        "prefill",
+        0,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "FULL",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": 1,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0324.host.platform.shaipower.com/pd_state/prefill_pid_2199.jsonl:86"
+    },
+    {
+      "rank": [
+        "prefill",
+        1,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "NONE",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0383.host.platform.shaipower.com/pd_state/prefill_pid_2787.jsonl:45"
+    },
+    {
+      "rank": [
+        "prefill",
+        1,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "FULL",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": 1,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0383.host.platform.shaipower.com/pd_state/prefill_pid_2787.jsonl:86"
+    },
+    {
+      "rank": [
+        "decode",
+        0,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "FULL",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": 1,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0420.host.platform.shaipower.com/pd_state/decode_pid_4723.jsonl:46"
+    },
+    {
+      "rank": [
+        "decode",
+        0,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "PIECEWISE",
+        "num_tokens": 32,
+        "num_reqs": null,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        32
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0420.host.platform.shaipower.com/pd_state/decode_pid_4723.jsonl:14656"
+    },
+    {
+      "rank": [
+        "decode",
+        0,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "PIECEWISE",
+        "num_tokens": 16,
+        "num_reqs": null,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        16
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0420.host.platform.shaipower.com/pd_state/decode_pid_4723.jsonl:20189"
+    },
+    {
+      "rank": [
+        "decode",
+        0,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "NONE",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0420.host.platform.shaipower.com/pd_state/decode_pid_4723.jsonl:35366"
+    },
+    {
+      "rank": [
+        "decode",
+        1,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "FULL",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": 1,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0589.host.platform.shaipower.com/pd_state/decode_pid_2594.jsonl:45"
+    },
+    {
+      "rank": [
+        "decode",
+        1,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "PIECEWISE",
+        "num_tokens": 16,
+        "num_reqs": null,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        16
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0589.host.platform.shaipower.com/pd_state/decode_pid_2594.jsonl:111"
+    },
+    {
+      "rank": [
+        "decode",
+        1,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "PIECEWISE",
+        "num_tokens": 24,
+        "num_reqs": null,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        24
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0589.host.platform.shaipower.com/pd_state/decode_pid_2594.jsonl:300"
+    },
+    {
+      "rank": [
+        "decode",
+        1,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "FULL",
+        "num_tokens": 2,
+        "num_reqs": 2,
+        "uniform_token_count": 1,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1,
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0589.host.platform.shaipower.com/pd_state/decode_pid_2594.jsonl:302"
+    },
+    {
+      "rank": [
+        "decode",
+        1,
+        0
+      ],
+      "descriptor": {
+        "cg_mode": "NONE",
+        "num_tokens": 1,
+        "num_reqs": 1,
+        "uniform_token_count": null,
+        "max_query_len": null,
+        "num_active_loras": 0,
+        "num_ubatches": 1
+      },
+      "queries": [
+        1
+      ],
+      "status": "PASS",
+      "evidence": "evidence/nodes/gpu-h800-0589.host.platform.shaipower.com/pd_state/decode_pid_2594.jsonl:30680"
+    }
+  ],
+  "limits": "Local descriptor parsing and CPU fixture fit/cache only; no native timing/profile/G3 admission."
+}

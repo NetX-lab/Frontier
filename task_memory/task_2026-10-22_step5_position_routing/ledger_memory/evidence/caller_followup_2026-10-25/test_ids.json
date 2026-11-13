@@ -1,0 +1,538 @@
+{
+  "checkout_tests": [
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[offline-PREFILL]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[offline-DECODE]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[online-PREFILL]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[online-DECODE]",
+      "status": "PASS",
+      "message": null
+    }
+  ],
+  "ep": [
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_expanded_traces_preserve_actual_global_ids_and_family_metadata",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_aggregate_traces_group_family_variant_and_operation",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_requested_operator_metrics_do_not_require_utilization",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_aggregate_trace_keeps_distinct_variants_separate",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_dense_metrics_adapter_predicts_each_actual_dense_layer_and_preserves_owner",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_ep_wave_retains_actual_predictions_only_when_requested[False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_ep_wave_retains_actual_predictions_only_when_requested[True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_ledger_projects_every_family_and_charges_owner_once",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_requested_ledger_completes_without_utilization_metrics",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_disabled_reporting_does_not_build_projection_records[False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_disabled_reporting_does_not_build_projection_records[True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_ep_lane_reporting_preserves_work_and_barrier_gaps",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_ep_and_attention_share_source_batch_expansion_decision[False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_stage_reporting_contract::test_ep_and_attention_share_source_batch_expansion_decision[True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[False-False-False-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[False-False-True-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[False-False-False-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[False-True-True-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[True-False-False-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[True-False-True-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[True-False-False-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_ep_context_is_built_only_once_per_traced_positive_phase[True-True-True-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_wave_trace_context::test_step5_real_wave_metrics_trace_and_ledger_share_physical_proofs",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_trace::test_resolve_trace_identity_uses_single_source_batch_id",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_trace::test_resolve_trace_identity_keeps_wave_id_for_merged_source_batches",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_trace::test_build_trace_identity_expands_source_requests_and_epochs",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_trace::test_build_trace_identity_rejects_duplicate_request_ids",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_trace::test_build_trace_identity_rejects_coercible_source_epoch",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_ep_trace::test_workload_trace_accepts_formatter_callback",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.unit.test_typed_ep_trace_contract::test_ep_trace_helper_consumes_typed_lane_descriptor",
+      "status": "PASS",
+      "message": null
+    }
+  ],
+  "integration": [
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[None-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[None-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[None-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[gate-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[gate-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[gate-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[router-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[router-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[router-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[prepare-None-False]",
+      "status": "SKIP",
+      "message": "No source prepare is reached by this binding"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[prepare-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[prepare-float8_e4m3fn-True]",
+      "status": "SKIP",
+      "message": "No source prepare is reached by this binding"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[all-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[all-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[all-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[operator-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[operator-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[operator-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[zero_operator-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[zero_operator-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[zero_operator-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[peer_only-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[peer_only-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[peer_only-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[duration-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[duration-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[duration-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[count-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[count-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[count-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[norm-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[norm-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[norm-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[inapplicable-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[inapplicable-float8_e4m3fn-False]",
+      "status": "SKIP",
+      "message": "Source prepare is applicable to this binding"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[inapplicable-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[mismatch-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[mismatch-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[mismatch-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[fractional-None-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[fractional-float8_e4m3fn-False]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[fractional-float8_e4m3fn-True]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_real_ep_lane_ledger_releases_rows_and_preserves_bytes",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[missing-FileNotFoundError-frontier_ep_wave_lane_ledger]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[empty-AssertionError-Missing actual position source census]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[malformed-JSONDecodeError-Expecting]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[source-AssertionError-Missing actual position source census]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[null-TypeError-not iterable]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[null_source-TypeError-not subscriptable]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[proof-AssertionError-Missing exact positive compute pair]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[precedence-AssertionError-Missing exact positive compute pair]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare[None-False]",
+      "status": "SKIP",
+      "message": "could not import 'torch': No module named 'torch'"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare[float8_e4m3fn-False]",
+      "status": "SKIP",
+      "message": "could not import 'torch': No module named 'torch'"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare[float8_e4m3fn-True]",
+      "status": "SKIP",
+      "message": "could not import 'torch': No module named 'torch'"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_real_graph_padding_does_not_duplicate_requests_or_context",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_producer_rows_reach_real_automatic_shared_fit_and_cache[KERNEL_ONLY]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_producer_rows_reach_real_automatic_shared_fit_and_cache[CUDA_EVENT]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_mrv2_dummy_rows_preserve_inputbatch_descriptor[1-1-none-None]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_mrv2_dummy_rows_preserve_inputbatch_descriptor[16-None-piecewise-None]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_mrv2_dummy_rows_preserve_inputbatch_descriptor[1-1-full-1]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_actual_main_command_retains_capacity_graph_topology_and_measured_read",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[offline-PREFILL]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[offline-DECODE]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[online-PREFILL]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[online-DECODE]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_context_row_contract_reuse_matches_independent_workload_build",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_compute_fixture_covers_exact_native_bound_aggregate_and_ep_loads",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_exact_ep_fixture_replays_shared_cache_duration_count_and_missing_coverage",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_corrected_attention_fixture_has_exact_canonical_boundary_shapes_and_no_old_prefill",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_historical_fixture_cannot_be_read_or_refreshed",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_corrected_shapes_fit_and_match_actual_agreed_batch_keys[KERNEL_ONLY]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_corrected_shapes_fit_and_match_actual_agreed_batch_keys[CUDA_EVENT]",
+      "status": "PASS",
+      "message": null
+    }
+  ]
+}

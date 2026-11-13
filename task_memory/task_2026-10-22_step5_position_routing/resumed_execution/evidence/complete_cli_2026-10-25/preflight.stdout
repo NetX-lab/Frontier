@@ -1,0 +1,8 @@
+{
+  "status": "PASS_COMPLETE_CLI_STATIC_DRY_RUN_AND_ORIGINAL_SDK_ONLY",
+  "plan_sha256": "fafd6776f36e68db9e4a925564245ad1a34c5c0168a0206b7843eadb49793303",
+  "syntax": "PASS_TWO_PYTHON_AND_BASH_N",
+  "new_platform_calls": 0,
+  "new_workload_calls": 0,
+  "wall_s": 4.0540569350123405
+}

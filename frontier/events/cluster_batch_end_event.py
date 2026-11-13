@@ -554,6 +554,10 @@ class ClusterBatchEndEvent(BaseEvent):
         )
         replica_scheduler.on_batch_end(self._batch)
 
+        cluster_scheduler.on_replica_batch_end(
+            time, self._replica_id, self._replica_local_id, self._batch
+        )
+
         memory_usage_percent = replica_scheduler.memory_usage_percent
         metrics_store.on_batch_end(
             time,
@@ -574,23 +578,28 @@ class ClusterBatchEndEvent(BaseEvent):
         target_cluster = cluster_scheduler._get_decode_target_cluster()
 
         transfer_events: List[BaseEvent] = []
+        kv_connector = kv_pred._config.kv_connector
         for request in self._batch.requests:
             if request.is_prefill_complete and request.num_decode_tokens > 0:
-                kv_cache_size_bytes, transfer_time_ms = (
-                    kv_pred.get_transfer_info_for_request(
-                        source_cluster_type=self._cluster_type,
-                        target_cluster_type=target_cluster,
-                        request=request,
-                        replica_config=replica_config,
+                if kv_connector == "nixl":
+                    kv_cache_size_bytes = None
+                    transfer_time_ms = None
+                else:
+                    kv_cache_size_bytes, transfer_time_ms = (
+                        kv_pred.get_transfer_info_for_request(
+                            source_cluster_type=self._cluster_type,
+                            target_cluster_type=target_cluster,
+                            request=request,
+                            replica_config=replica_config,
+                        )
                     )
-                )
 
                 from frontier.entities.batch import Batch as SingleBatch
 
                 single_request_batch = SingleBatch(
                     replica_id=self._replica_id,
                     requests=[request],
-                    num_tokens=[request.num_prefill_tokens],
+                    num_tokens=[request.prefill_compute_target],
                     is_moe=replica_config.model_config.is_moe,
                 )
                 transfer_events.append(
@@ -604,6 +613,7 @@ class ClusterBatchEndEvent(BaseEvent):
                         transfer_time_ms=transfer_time_ms,
                         source_cluster_type=self._cluster_type,
                         source_batch_stage_id=self._source_batch_stage_id,
+                        kv_connector=kv_connector,
                     )
                 )
         return transfer_events

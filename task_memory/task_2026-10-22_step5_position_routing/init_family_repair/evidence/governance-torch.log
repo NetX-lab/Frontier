@@ -1,0 +1,8 @@
+....................................................                     [100%]
+=============================== warnings summary ===============================
+tests/unit/test_profiling_governance_minimal_red.py::test_linear_wrapper_result_carries_plan_typed_operator_contracts
+  /data/ycfeng/envs/distillm-py310/lib/python3.10/site-packages/torch/nn/modules/transformer.py:20: UserWarning: Failed to initialize NumPy: _ARRAY_API not found (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:84.)
+    device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+52 passed, 1 warning in 14.44s

@@ -1,0 +1,249 @@
+diff --git a/tests/integration/step5_pd/r2_canonical.py b/tests/integration/step5_pd/r2_canonical.py
+index 27c342f..18c57c7 100644
+--- a/tests/integration/step5_pd/r2_canonical.py
++++ b/tests/integration/step5_pd/r2_canonical.py
+@@ -65,8 +65,12 @@ def validate_definition(run: dict) -> None:
+         Path(__file__).with_name("canonical_run_h200.json").read_text()), "h800_32")
+     if run["engine"] != frozen["engine"] or run["resources"] != frozen["resources"]:
+         raise ValueError("Canonical G3 capture must preserve the frozen P0 engine and resources")
+-    if "role_num_gpu_blocks_override" in run or "canonical_replay" in run:
+-        raise ValueError("R2 diagnostic waves must not reuse short-run block limits or clean replay")
++    if ("role_num_gpu_blocks_override" in run
++            and (run["role_num_gpu_blocks_override"] != {"decode": 32000}
++                 or type(run["role_num_gpu_blocks_override"]["decode"]) is not int)):
++        raise ValueError("Canonical diagnostics only accept the D28 decode-only32000 block control")
++    if "canonical_replay" in run:
++        raise ValueError("R2 diagnostic waves must not reuse clean replay")
+     waves = {wave["name"]: wave for wave in run["waves"]}
+     if len(waves) != len(run["waves"]):
+         raise ValueError("Duplicate canonical R2 wave")
+diff --git a/tests/integration/step5_pd/verify_r2_stage.py b/tests/integration/step5_pd/verify_r2_stage.py
+index 6bd5c2e..987d2eb 100644
+--- a/tests/integration/step5_pd/verify_r2_stage.py
++++ b/tests/integration/step5_pd/verify_r2_stage.py
+@@ -20,7 +20,10 @@ def verify(stage: Path) -> dict:
+     canonical = "canonical_g3" in definition
+     if canonical:
+         assert config.get("canonical_g3") == definition["canonical_g3"]
+-        assert "role_num_gpu_blocks_override" not in config
++        assert config.get("role_num_gpu_blocks_override") == definition.get("role_num_gpu_blocks_override")
++        if "role_num_gpu_blocks_override" in config:
++            assert config["role_num_gpu_blocks_override"] == {"decode": 32000}
++            assert type(config["role_num_gpu_blocks_override"]["decode"]) is int
+         assert (config["charged_group"], config["gpu_type"]) == ("codesign", "H800")
+         workload = stage / "canonical_workload"
+         for name, key in (("manifest.json", "manifest_sha256"), ("SHA256SUMS", "sums_sha256")):
+@@ -98,15 +101,17 @@ def verify(stage: Path) -> dict:
+     assert [(plan["role"], plan["lane"]) for plan in plans] == [("prefill", 0), ("prefill", 1), ("decode", 0), ("decode", 1)]
+     for plan in plans:
+         command = plan["server_command"]
+-        if canonical:
++        expected = config.get("role_num_gpu_blocks_override", {}).get(plan["role"])
++        if expected is None:
+             assert "--num-gpu-blocks-override" not in command
++        else:
++            assert command.count("--num-gpu-blocks-override") == 1
++            assert command[command.index("--num-gpu-blocks-override") + 1] == str(expected)
++        if canonical:
+             if plan["lane"] == 0:
+                 assert command[command.index("--api-server-count") + 1] == "1"
+             else:
+                 assert "--api-server-count" not in command
+-        else:
+-            expected = str(config["role_num_gpu_blocks_override"][plan["role"]])
+-            assert command[command.index("--num-gpu-blocks-override") + 1] == expected
+         env = json.loads(plan["server_env_set"]["STEP5_PD_STATE_OBSERVATION"])
+         assert env["role"] == plan["role"] and env["output_dir"] == "/worker-local-scratch/pd_state"
+         assert plan["server_env_set"]["PYTHONPATH"].startswith(str(stage / "r2_bootstrap"))
+diff --git a/tests/unit/test_step5_canonical_g3.py b/tests/unit/test_step5_canonical_g3.py
+index b61d4d8..7ec59c3 100644
+--- a/tests/unit/test_step5_canonical_g3.py
++++ b/tests/unit/test_step5_canonical_g3.py
+@@ -12,7 +12,7 @@ from tests.integration.step5_pd import build_stage, canonical_replay, r2_canonic
+ from tests.unit.test_step5_native_pd import stage_inputs
+ 
+ 
+-def stage_capture(tmp_path):
++def stage_capture(tmp_path, role_overrides=None):
+     inputs = stage_inputs(tmp_path)
+     source = tmp_path / "native"
+     for module in r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES + r2_stage.CANONICAL_SCHEMA_MODULES:
+@@ -20,6 +20,8 @@ def stage_capture(tmp_path):
+         path.parent.mkdir(parents=True, exist_ok=True)
+         path.write_text(f'"""{module}"""\n')
+     run = r2_canonical.definition(source)
++    if role_overrides is not None:
++        run["role_num_gpu_blocks_override"] = role_overrides
+     run["probe_helpers"] = inputs["definition"]["probe_helpers"]
+     model_path = inputs["model_dir"] / "config.json"
+     model = json.loads(model_path.read_text())
+@@ -36,6 +38,66 @@ def stage_capture(tmp_path):
+     return run, config, stage
+ 
+ 
++def test_d28_decode_only_control_preserves_golden_prefill_and_base_engine(tmp_path):
++    (tmp_path / "baseline").mkdir()
++    (tmp_path / "d28").mkdir()
++    baseline_run, baseline, baseline_stage = stage_capture(tmp_path / "baseline")
++    run, config, stage = stage_capture(tmp_path / "d28", {"decode": 32000})
++    assert verify_r2_stage.verify(stage)["status"] == "PASS_OFFLINE_STAGE"
++    assert config["engine"] == baseline["engine"]
++    assert run["resources"] == baseline_run["resources"]
++    assert run["waves"] == baseline_run["waves"]
++    assert config["role_num_gpu_blocks_override"] == {"decode": 32000}
++    assert "role_num_gpu_blocks_override" not in baseline
++    golden = json.loads((baseline_stage / "preflight.json").read_text())
++    plans = json.loads((stage / "preflight.json").read_text())
++    for original, plan in zip(golden, plans):
++        command = plan["server_command"][:]
++        if plan["role"] == "decode":
++            index = command.index("--num-gpu-blocks-override")
++            assert command[index + 1] == "32000"
++            del command[index:index + 2]
++        else:
++            assert "--num-gpu-blocks-override" not in command
++        assert [value.replace(config["model_dir"], baseline["model_dir"])
++                for value in command] == original["server_command"]
++        assert (plan["role"], plan["lane"], plan["headless"], plan["urls"]) == (
++            original["role"], original["lane"], original["headless"], original["urls"])
++    assert config["pd_state_observation"]["local_reference_client_request_ids"] == (
++        baseline["pd_state_observation"]["local_reference_client_request_ids"])
++
++
++@pytest.mark.parametrize("overrides", [{"prefill": 32000}, {"decode": 31999},
++    {"prefill": 32000, "decode": 32000}, {"decode": True}, {"decode": 32000.0}, {}, None])
++def test_d28_definition_rejects_every_unapproved_pool_control(overrides):
++    run = r2_canonical.definition(Path("native"))
++    run["role_num_gpu_blocks_override"] = overrides
++    with pytest.raises(ValueError, match="D28 decode-only"):
++        r2_canonical.validate_definition(run)
++
++
++@pytest.mark.parametrize("fault", ["prefill_flag", "missing_decode_flag", "wrong_count", "definition_map"])
++def test_d28_offline_verifier_rejects_role_or_definition_drift(tmp_path, fault):
++    _, config, stage = stage_capture(tmp_path, {"decode": 32000})
++    plans = json.loads((stage / "preflight.json").read_text())
++    if fault == "prefill_flag":
++        plans[0]["server_command"] += ["--num-gpu-blocks-override", "32000"]
++    elif fault == "missing_decode_flag":
++        command = plans[2]["server_command"]
++        index = command.index("--num-gpu-blocks-override")
++        del command[index:index + 2]
++    elif fault == "wrong_count":
++        command = plans[3]["server_command"]
++        command[command.index("--num-gpu-blocks-override") + 1] = "31999"
++    else:
++        config["role_num_gpu_blocks_override"] = {"decode": 31999}
++    (stage / "preflight.json").write_text(json.dumps(plans))
++    config["tool_hashes"]["preflight.json"] = build_stage.sha256(stage / "preflight.json")
++    (stage / "config.json").write_text(json.dumps(config))
++    with pytest.raises(AssertionError):
++        verify_r2_stage.verify(stage)
++
++
+ def test_actual_canonical_capture_stage_preserves_native_case_and_original_prompts(tmp_path):
+     run, config, stage = stage_capture(tmp_path)
+     receipt = verify_r2_stage.verify(stage)
+diff --git a/tests/unit/test_step5_native_pressure_observation.py b/tests/unit/test_step5_native_pressure_observation.py
+new file mode 100644
+index 0000000..a111a27
+--- /dev/null
++++ b/tests/unit/test_step5_native_pressure_observation.py
+@@ -0,0 +1,97 @@
++"""Exercise the existing pregrant observation at the locked native allocator seam."""
++
++import ast
++from enum import Enum
++import hashlib
++import os
++from pathlib import Path
++from types import SimpleNamespace as NS
++import weakref
++
++import pytest
++
++from tests.unit.test_step5_native_pd_r2_observation import configuration, events, r2
++
++
++@pytest.mark.parametrize("status,reserved,scheduled,full_fit,demand", [
++    ("RUNNING", 0, True, False, 4),
++    ("WAITING", 0, True, False, 2),
++    ("RUNNING", 2, True, False, 2),
++    ("WAITING", 0, False, False, 4),
++    ("WAITING", 2, True, True, 4),
++])
++def test_actual_allocate_slots_failure_retains_pregrant_demand(
++        tmp_path, status, reserved, scheduled, full_fit, demand):
++    source = os.environ.get("STEP5_NATIVE_SOURCE_ROOT")
++    if not source:
++        pytest.skip("Requires the locked native source root")
++    path = Path(source) / "vllm/v1/core/kv_cache_manager.py"
++    assert hashlib.sha256(path.read_bytes()).hexdigest() == (
++        "595b9fef9a1f5fcf67fb4a6cd4af817c24d411a2d4f8d2cf3bd22cb954703bff")
++    tree = ast.parse(path.read_text())
++    cls = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "KVCacheManager")
++    method = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == "allocate_slots")
++
++    class Status(Enum):
++        RUNNING = 1
++        WAITING = 2
++        PREEMPTED = 3
++
++    namespace = {"RequestStatus": Status}
++    module = ast.Module(body=[ast.ImportFrom(module="__future__", names=[
++        ast.alias(name="annotations")], level=0), method], type_ignores=[])
++    exec(compile(ast.fix_missing_locations(module), str(path), "exec"), namespace)
++    calls = []
++
++    class Coordinator:
++        def remove_skipped_blocks(self, request_id, processed_tokens, num_prompt_tokens):
++            calls.append(("retire", processed_tokens))
++            manager.ids, manager.free_count = [0, 0, 0, 4], 3
++
++        def get_num_blocks_to_allocate(self, request_id, num_tokens, new_computed_blocks,
++                num_encoder_tokens, total_computed_tokens, num_local_computed_tokens,
++                num_tokens_main_model, apply_admission_cap=False, prefill_end=0):
++            calls.append(("estimate", apply_admission_cap, manager.free_count))
++            return demand
++
++        def allocate_new_blocks(self, *args):
++            pytest.fail("A native None must never enter grant")
++
++    class Manager:
++        allocate_slots = namespace["allocate_slots"]
++
++        def get_block_ids(self, request_id):
++            return [self.ids[:]]
++
++    manager = Manager()
++    manager.ids, manager.free_count = [1, 2, 3, 4], 0
++    manager.coordinator = Coordinator()
++    manager.max_model_len, manager.watermark_blocks = 7168, 2
++    manager.empty_kv_cache_blocks = NS(blocks=((),))
++    manager.block_pool = NS(get_num_free_blocks=lambda: manager.free_count)
++    # Weak references are the same caller relationship used by scheduler_ready.
++    class Scheduler:
++        pass
++    scheduler = Scheduler()
++    scheduler.kv_cache_manager = manager
++    observer = r2.Observation(configuration(tmp_path, resident_identity={}))
++    observer.manager_schedulers[manager.coordinator] = weakref.ref(scheduler)
++    r2.wrap(Coordinator, "get_num_blocks_to_allocate", observer, after=observer.allocation_demand)
++    r2.wrap(Manager, "allocate_slots", observer, before=observer.allocation_before,
++            after=observer.allocated, allocation_scope=True)
++    request = NS(request_id="case", num_computed_tokens=6400, num_in_flight_tokens=1,
++        num_prompt_tokens=6144, num_tokens=6401, status=Status[status])
++    assert manager.allocate_slots(request, 1, reserved_blocks=reserved,
++        has_scheduled_reqs=scheduled, full_sequence_must_fit=full_fit) is None
++    row = events(observer)[-1]
++    assert row["event"] == "pressure" and row["cause"] == "native_allocate_slots_returned_none"
++    assert row["before"]["pool_free_blocks"] == 0
++    assert row["pool_free_blocks_after"] == (0 if full_fit else 3)
++    estimate = row["before"]["native_demands"]
++    assert estimate == [dict(native_blocks_to_allocate=demand,
++        pool_free_blocks=0 if full_fit else 3, apply_admission_cap=full_fit,
++        reserved_blocks=reserved, has_scheduled_reqs=scheduled,
++        request_status=status, native_watermark_blocks=2)]
++    assert calls == ([('estimate', True, 0)] if full_fit else [
++        ('retire', 6399), ('estimate', False, 3)])
++    assert observer.local.allocation is None and not observer.disabled

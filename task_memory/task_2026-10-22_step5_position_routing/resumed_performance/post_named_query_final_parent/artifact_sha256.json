@@ -1,0 +1,66 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FINAL-PARENT-AUDIT",
+  "algorithm": "sha256",
+  "files": {
+    "binding_verification.json": {
+      "bytes": 757419,
+      "sha256": "d8bac4724ad2ee6b359e69beab165815d2fea0fac429eb5630830c98a1b21311"
+    },
+    "check_progress_2026-10-24_final_parent.md": {
+      "bytes": 3499,
+      "sha256": "e64593de93b37725c8ef8c1c3d44ac63e4a7af6029d92c777118b2bdf2bfed66"
+    },
+    "comparison.json": {
+      "bytes": 3793,
+      "sha256": "680c535ee73b14fffb1ed7e0d622b547ad6e8ac341502f9e70fce2510e51a447"
+    },
+    "diagnostic_outside_recorded_namespace.json": {
+      "bytes": 2777,
+      "sha256": "51d79dc0a926ac2a89ce5fec64f18470ef7123b5adf01f2708799919913b4ee0"
+    },
+    "parent_acceptance.json": {
+      "bytes": 26191,
+      "sha256": "74735eb00f1aa190472b8927ed312c11cf18921b3b05639d7f8a972f0450753b"
+    },
+    "plan.md": {
+      "bytes": 1641,
+      "sha256": "ad11353ed108fcbaf47adb2aea92e4c3feeffffa1d6fc80062155dd471f1bf4a"
+    },
+    "postrun_receipt.json": {
+      "bytes": 2778,
+      "sha256": "db19519102c2f6217d22900e553b9f0e74379b983a9982c7d0fbce7de5fca767"
+    },
+    "progress.md": {
+      "bytes": 3506,
+      "sha256": "2988e74e311e951924a7693227b3d3f464183dde666721c3328e4f62fa526676"
+    },
+    "receipt_namespace_command.json": {
+      "bytes": 4871,
+      "sha256": "be5e5333dd855c82f62f9bea9bb279a603547be40b3bd8f0746b2007816adfb6"
+    },
+    "receipt_verification.json": {
+      "bytes": 369498,
+      "sha256": "a8bfcb48114e4dc91536cd165628cd0031723532c63c6de72583f7875b1b1e77"
+    },
+    "requirements.md": {
+      "bytes": 2660,
+      "sha256": "e2d1ccac7323e7eb10f8c6a2ae5c4c1ee91b7067d6ddb3fa0fef913078b71c2f"
+    },
+    "scope_guard_recomputed.json": {
+      "bytes": 4788,
+      "sha256": "1a3c5f7cd3a3e9a76f1503012a794e92758a83fcf94ef705b04fbe4cc875d78d"
+    },
+    "summary.md": {
+      "bytes": 2275,
+      "sha256": "21a62a11b281456eb40c522742bd7b20a9cd7aac2976f6826f50e7742bcb5977"
+    },
+    "test_report_2026-10-24_final_parent_audit.md": {
+      "bytes": 10693,
+      "sha256": "81288d02e32312726f63b864c0be6103ed0672ed98dbc3a2150635bf78f1fe00"
+    },
+    "verify_final_parent.py": {
+      "bytes": 23032,
+      "sha256": "928ff8b655955e913b0aabfd57760a53bd24cfc2f97979d2d7f32f27e6946d9a"
+    }
+  }
+}

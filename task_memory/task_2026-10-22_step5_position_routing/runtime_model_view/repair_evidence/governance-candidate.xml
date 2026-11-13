@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="15" time="1.924" timestamp="2026-10-24T13:16:59.839203+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_real_linear_producer_csv_round_trip_reaches_manager_loader" time="0.042"><failure message="ModuleNotFoundError: No module named 'torch'">tmp_path = PosixPath('/data/ycfeng/tmp/d29_named_model_query01/governance-candidate/test_real_linear_producer_csv_0')
+
+    def test_real_linear_producer_csv_round_trip_reaches_manager_loader(tmp_path) -&gt; None:
+        """A plan-built producer row survives CSV serialization and typed admission."""
+    
+        from frontier.profiling.common.model_config import ModelConfig
+        from frontier.profiling.linear_op import main as linear_op_main
+&gt;       from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+
+tests/unit/test_profiling_governance_minimal_red.py:733: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    import copy
+    import os
+    from collections.abc import Mapping
+    
+&gt;   import torch
+E   ModuleNotFoundError: No module named 'torch'
+
+frontier/profiling/linear_op/linear_op_wrapper.py:5: ModuleNotFoundError</failure></testcase><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_linear_loader_uses_selected_dense_typed_width" time="0.010" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_moe_loader_uses_selected_routed_width_and_ep" time="0.008" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_gating_linear]" time="0.009" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_gating_routing_topk]" time="0.110" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_moe_loader_keeps_ep_agnostic_typed_rows[moe_shuffling]" time="0.035" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_typed_loader_requires_operator_scope" time="0.005" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_linear_loader_allows_unscoped_typed_rows_for_attention_paths" time="0.005" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_unscoped_typed_loader_rejects_malformed_metadata" time="0.004" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_keeps_precision_and_measurement_buckets_isolated" time="0.005" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_cache_hash_uses_selected_semantic_contract" time="0.003" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_cache_marker_is_written_and_validated" time="0.050" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_typed_registry_is_canonical_and_requires_context_for_ambiguity" time="0.003" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_projection_selects_cluster_contract_and_rejects_unresolved_variants" time="0.003" /><testcase classname="tests.unit.test_profiling_governance_minimal_red" name="test_manager_keeps_eager_and_kernel_only_typed_registries_separate" time="0.002" /></testsuite></testsuites>

@@ -1,0 +1,22 @@
+{
+  "raw_baseline": {
+    "counts": {
+      "skipped": 178,
+      "error": 31,
+      "pass": 7617,
+      "failure": 267
+    },
+    "unique_ids": 8093
+  },
+  "latest_baseline_with_overlay": {
+    "counts": {
+      "skipped": 179,
+      "error": 31,
+      "pass": 7647,
+      "failure": 267
+    },
+    "unique_ids": 8124
+  },
+  "overlay_ids": 65,
+  "failure_error_sets_match_locked": true
+}

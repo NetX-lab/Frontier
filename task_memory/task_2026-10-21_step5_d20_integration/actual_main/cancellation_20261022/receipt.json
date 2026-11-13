@@ -1,0 +1,41 @@
+{
+  "task_id": "D20-LEGACY-CANCELLATION-AUDIT",
+  "observed_at_utc": "2026-10-21T20:43:20.214049+00:00",
+  "cancelled_agent": "ses_ea1aa93d6ffeCP9B6Fa1DHGcYM",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/step5-d20-integration",
+  "worktree_head": "acc3a88d336a656fdde62c5a72160c7f6dd19317",
+  "snapshot_scope": "Current saved source at audit time, not reconstructed process-start provenance.",
+  "offline": {
+    "exit_code": 0,
+    "wall_s": 21040.243169610854,
+    "request_shape": [
+      6144,
+      1024
+    ],
+    "first_tail_tokens": 16,
+    "cached_prefix_tokens": 6128,
+    "useful_decode_forwards": 1024,
+    "ready_release_end_equal": true,
+    "finite_positive_metrics": true,
+    "acceptance": "Historical isolated CPU fixture completion only; superseded metadata-free binding is not D23 native semantics.",
+    "native_admitted": false
+  },
+  "online": {
+    "execution_receipt_exists": false,
+    "validation_exists": false,
+    "last_observed_child_pid": 849385,
+    "last_observed_parent_pid": 94827,
+    "observed_state": "Running after agent cancellation; no process control performed."
+  },
+  "source_file_hashes": {
+    "tests/integration/run_step5_measured_main.py": "7309568d330817465ffeb7fe38c04510cd3f0f588c7f595b2e35ba162ce76940",
+    "tests/integration/step5_measured_compute_fixture.py": "93166cacf892dd0b8f07294d71b5e1e25fcc592a83e6ebf0978081eceb9d7a0d",
+    "tests/integration/test_step5_measured_main.py": "c694de164f7046c0bb5e17dcb244033cbec45e040b1c63863d890e4b672aa844"
+  },
+  "artifact_hashes": {
+    "offline_validation.json": "6e628013560d689c641b4eb782f2ede0a0cf6f9b162f543d2d54719efd0034c6",
+    "offline_execution.json": "abe8b69399168ad03883a95be352a77551a9a6081110c0695a3224c6b9df0ea1",
+    "saved_integration_changes.diff": "c249066ee6d19ba2a1908f0075864e448551c42fd8cd9381affa7e989991544e"
+  },
+  "next_action": "Finish truthful MRv2 D23 CLI using saved fixture02 in step5-mrv2-main. Preserve legacy artifacts and report any eventual legacy online result as historical only."
+}

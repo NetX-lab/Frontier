@@ -1,0 +1,60 @@
+{
+  "modification_history": [{"date": "2026-10-22", "change": "Recorded verified source, focused tests and diagnostic limits."}],
+  "task_id": "D23-G3-HTTP-CAPTURE",
+  "session_id": "ses_ea0b1e701ffeeFbuzgz37Yp3Un",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/step5-http-capture",
+  "branch": "feat/step5-http-capture",
+  "base_commit": "7fa73f91606841b069b5bd7cdb6ae410a93be8c8",
+  "implementation_commit": "8725fafe6187698faad7642229a9bac2f71f92e6",
+  "status": "DIAGNOSIS_CAPABLE_OBSERVABILITY_ONLY",
+  "files": {
+    "tests/comparison/calibration/pd_proxy.py": {"sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce", "lines": 418},
+    "tests/unit/test_step5_http_capture.py": {"sha256": "ec91a84d3cdaa8b4a06afbfc29389877f0fdf70cd37568e77892d62c2e8043c0", "lines": 270}
+  },
+  "changed_files": [
+    "tests/comparison/calibration/pd_proxy.py",
+    "tests/unit/test_step5_http_capture.py",
+    "task_memory/task_2026-10-22_step5_http_capture/requirements.md",
+    "task_memory/task_2026-10-22_step5_http_capture/plan.md",
+    "task_memory/task_2026-10-22_step5_http_capture/progress.md",
+    "task_memory/task_2026-10-22_step5_http_capture/checkpoint.md",
+    "task_memory/task_2026-10-22_step5_http_capture/review.md",
+    "task_memory/task_2026-10-22_step5_http_capture/test_report_2026-10-22_step5_http_capture.md",
+    "task_memory/task_2026-10-22_step5_http_capture/summary.md",
+    "task_memory/task_2026-10-22_step5_http_capture/receipt.json",
+    "task_memory/task_2026-10-22_step5_http_capture/evidence/final02.log",
+    "task_memory/task_2026-10-22_step5_http_capture/evidence/final02_metrics.json",
+    "task_memory/task_2026-10-22_step5_http_capture/evidence/red.log",
+    "task_memory/task_2026-10-22_step5_http_capture/evidence/paired_proxy_results.json",
+    "task_memory/task_2026-10-22_step5_http_capture/evidence/actual_reused_eof.json"
+  ],
+  "evidence_sha256": {
+    "actual_reused_eof.json": "7887ec3397a3223515cc3f3127370fc172e9f69652500fc907cb8bb349b540ce",
+    "final02.log": "105f8307801fb23d21f268a4edc6996b939f4fda731e7bdef4d5ff9ce533a5f0",
+    "final02_metrics.json": "5389cdc34e33aa6949d6ad182bf8f04b5de2c04166d5672cfd19802b6a35e059",
+    "paired_proxy_results.json": "4ece96fdc29580ecfb80250b9498d2dbef60b372240859766b600a807e3d1462",
+    "red.log": "975ffd7c4dfd9cd94ad14b6d9f95dae4f2978590b3c4d14e9b9c2c62be640e9a"
+  },
+  "original_proxy_sha256": "b5662156371e44b888ce7afef2ef83b7698b4b4cf54fccc44b670a001aa9cb8f",
+  "validation": {
+    "focused": {"status": "PASS", "passed": 196, "new": 17, "existing": 179, "pytest_wall_s": 77.89, "wrapper_wall_s": 78.53259207773954, "peak_child_rss_kib": 535428},
+    "original_eof": {"status": "PASS", "business_http_status": 502, "error": "ServerDisconnectedError: Server disconnected", "prefill_posts": 1, "decode_posts": 1},
+    "new_eof": {"status": "PASS", "business_http_status": 502, "phase": "decode", "boundary": "response_headers", "connection": "fresh", "symbolic_frames": 6, "prefill_posts": 1, "decode_posts": 1},
+    "healthy": {"status": "PASS", "business_http_status": 200, "prefill_posts": 1, "decode_posts": 1},
+    "reused_eof": {"status": "PASS", "business_http_status": 502, "connection": "reused"},
+    "soft_capture": "PASS",
+    "strict_added_capture_redaction": "PASS",
+    "other_adapter_receipt_exclusion": "PASS",
+    "diff_check": "PASS",
+    "native_cause": "UNVERIFIED",
+    "deployment_aiohttp_capability": "UNVERIFIED",
+    "socket_identity": "UNAVAILABLE_PUBLIC_TRACE"
+  },
+  "preserved_environment_errors": ["ModuleNotFoundError: No module named 'plotly'", "ModuleNotFoundError: No module named 'tests'", "env: '/usr/bin/time': No such file or directory"],
+  "unchanged": ["pool_policy", "timeout", "retry_behavior", "HTTP_body_headers", "arrivals", "return_status", "timing_subtraction", "sealed_packages", "prior_reports"],
+  "cloud_gpu_platform_actions": false,
+  "independent_connection_decision": false,
+  "evidence_root": "task_memory/task_2026-10-22_step5_http_capture/evidence",
+  "test_report": "task_memory/task_2026-10-22_step5_http_capture/test_report_2026-10-22_step5_http_capture.md",
+  "raw_logs": "/data/ycfeng/tmp/d23_step5_http_capture01"
+}

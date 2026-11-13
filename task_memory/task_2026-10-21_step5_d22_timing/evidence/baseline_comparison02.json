@@ -1,0 +1,105 @@
+{
+  "baseline_cases": 851,
+  "current_cases": 873,
+  "missing_baseline_ids": [],
+  "changed_baseline_verdicts": [],
+  "added_ids": [
+    [
+      "tests.unit.test_step5_attention_judgment",
+      "test_boundary_event_diagnostics_cannot_reject_independent_reference"
+    ],
+    [
+      "tests.unit.test_step5_attention_judgment",
+      "test_independent_reference_protocol_cannot_be_mislabelled_or_shortened[boundary_single_replay_role-agreement_reference]"
+    ],
+    [
+      "tests.unit.test_step5_attention_judgment",
+      "test_independent_reference_protocol_cannot_be_mislabelled_or_shortened[boundary_single_replay_times_ms-[0.9]]"
+    ],
+    [
+      "tests.unit.test_step5_attention_judgment",
+      "test_independent_reference_protocol_cannot_be_mislabelled_or_shortened[layer_reference_times_ms-[0.3, 0.6]]"
+    ],
+    [
+      "tests.unit.test_step5_attention_judgment",
+      "test_independent_reference_protocol_cannot_be_mislabelled_or_shortened[layer_reference_timing_basis-boundary_single_replays]"
+    ],
+    [
+      "tests.unit.test_step5_attention_judgment",
+      "test_independent_reference_protocol_cannot_be_mislabelled_or_shortened[reference_window_durations_ms-[0.49, 1.2]]"
+    ],
+    [
+      "tests.unit.test_step5_attention_judgment",
+      "test_independent_reference_protocol_cannot_be_mislabelled_or_shortened[reference_window_replays-[1, 2]]"
+    ],
+    [
+      "tests.unit.test_step5_attention_profiling",
+      "test_independent_layer_reference_is_not_labelled_as_per_iteration_work"
+    ],
+    [
+      "tests.unit.test_step5_attention_profiling",
+      "test_main_does_not_retry_failed_quality"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_independent_outer_windows_ignore_internal_boundary_event_overhead"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[first_reference--0.01]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[first_reference--inf]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[first_reference-0.0]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[first_reference-inf]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[first_reference-nan]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[last_reference--0.01]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[last_reference--inf]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[last_reference-0.0]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[last_reference-inf]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_invalid_single_or_window_duration_is_rejected[last_reference-nan]"
+    ],
+    [
+      "tests.unit.test_step5_attention_timing",
+      "test_short_reference_increases_both_cohorts_counts_without_reusing_candidate_samples"
+    ],
+    [
+      "tests.unit.test_step5_fixed_probe",
+      "test_preemptible_launcher_materializes_h200_resources_without_platform_imports"
+    ]
+  ],
+  "all_current_pass": true,
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "executable": "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+  "command": [
+    "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "-B",
+    "-c",
+    "import sys,types,pathlib; p=types.ModuleType('tests'); p.__path__=[str(pathlib.Path.cwd()/'tests')]; sys.modules['tests']=p; import pytest; raise SystemExit(pytest.main(['tests/unit/test_step5_attention_profiling.py', 'tests/unit/test_step5_attention_timing.py', 'tests/unit/test_step5_attention_replay.py', 'tests/unit/test_step5_device_activity.py', 'tests/unit/test_step5_moe_profiling.py', 'tests/unit/test_gdn_profiler_cpu_increment7.py', 'tests/unit/test_gdn_profile_samples.py', 'tests/unit/test_dsa_attention_profiling.py', 'tests/unit/test_step5_linear_op_ownership.py', 'tests/unit/test_step5_linear_op_activation.py', 'tests/unit/test_step5_linear_op_job.py', 'tests/unit/test_linear_op_profiling_output_metadata.py', 'tests/unit/test_glm_linear_op_profiling.py', 'tests/unit/test_native_profiling_model_type_policy.py', 'tests/unit/test_ffn_memory_operator_families.py', 'tests/unit/test_moe_share_expert_operator_families.py', 'tests/unit/test_profiling_plan_target_embedded_mtp.py', 'tests/unit/test_profiling_governance_minimal_red.py', 'tests/unit/test_step5_attention_judgment.py', 'tests/unit/test_step5_fixed_probe.py', 'tests/unit/test_step5_boundary_probe.py', '-q', '-p', 'no:cacheprovider', '--junitxml=/data/ycfeng/tmp/d22_timing_20261021/affected02.xml']))"
+  ]
+}

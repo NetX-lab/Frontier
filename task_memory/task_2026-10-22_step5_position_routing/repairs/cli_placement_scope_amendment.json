@@ -1,0 +1,18 @@
+{
+  "decision_id": "D29-CLI-PLACEMENT-REPAIR",
+  "authority": "D29-REPAIR-PATH-AUTHORITY",
+  "apply_after": "final_scope_reconciliation.json",
+  "effective_unique_paths": 111,
+  "owner": "core_source",
+  "owner_gross_ceiling": 4404,
+  "repair_delta_ceiling": 65,
+  "repair_paths": [
+    "tests/integration/run_step5_measured_main.py",
+    "tests/integration/test_step5_measured_main.py"
+  ],
+  "path_ceiling_adjustments": [
+    {"path":"tests/unit/test_moe_routing_runtime.py","before":110,"delta":-40,"after":70},
+    {"path":"tests/integration/test_step5_measured_main.py","before":243,"delta":40,"after":283}
+  ],
+  "reason": "Actual position CLI omitted the existing explicit global TP,DP placement input. Correct only that position-fixture command branch and test the real config/Cluster/backend chain. No default, role override, backend gate or numerical change."
+}

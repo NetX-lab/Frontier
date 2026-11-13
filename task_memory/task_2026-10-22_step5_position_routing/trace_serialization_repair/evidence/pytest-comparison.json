@@ -1,0 +1,35 @@
+{
+  "cases": 99,
+  "passed": 98,
+  "failure_set": [
+    "tests.unit.test_mla_core_native_op_tracing::test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper"
+  ],
+  "exact_status_match": true,
+  "disk_payloads": [
+    {
+      "relative_path": "test_schedule_publishes_root_o0/op_traces.jsonl",
+      "events": 2,
+      "bytes": 2810,
+      "sha256": "173e6767559108f44eccb95db1818ed51cf62100a0f26a308cc7f62f85d6baac"
+    },
+    {
+      "relative_path": "test_schedule_publishes_root_o1/op_traces.jsonl",
+      "events": 2,
+      "bytes": 2758,
+      "sha256": "efe266d0fb56402d5f54ad2ac318722508e6b7588160f09370644260ea8dd321"
+    },
+    {
+      "relative_path": "test_schedule_publishes_root_o2/op_traces.jsonl",
+      "events": 2,
+      "bytes": 2806,
+      "sha256": "bfe406afa6233c3b1e0ead6dfd0da91d31a99ab9e14a1a4c5a7effc35bd4be60"
+    },
+    {
+      "relative_path": "test_schedule_publishes_root_o3/op_traces.jsonl",
+      "events": 2,
+      "bytes": 2754,
+      "sha256": "7ce880e65586dff889f9e9bfd6fa5ae9316feec71344141abee0df5bab7cbc48"
+    }
+  ],
+  "header_limit": "Actual pytest headers contain different wall-clock timestamps; compare all event bytes after the header."
+}

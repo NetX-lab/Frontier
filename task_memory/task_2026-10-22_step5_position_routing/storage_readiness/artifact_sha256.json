@@ -1,0 +1,7 @@
+{
+  "cleanup_receipt.json": "95e597c18bac017a0dfd00357447570cc4d25fd12a730b46f2789cf383040aa5",
+  "cloud_control.json": "c0b1ac310aa80168b53c09f04db068d5eab70636c626cdbeaa4b4a7a23651cce",
+  "evidence.json": "c7b2cd453cd88e15b36bc1c8b1dfb94e3d07ac6c40d0f83513da7626ddfba25d",
+  "evidence/cloud_write_green.log": "17a4d6a47bf2861a061987c072404d1987e61b8bd3c231e0b35e53d61b41f6de",
+  "evidence/cloud_write_red.log": "e6d8fff7ad5edf547c80a5077b3b95e1413c834e244ef06066bf80aced7ac7b9"
+}

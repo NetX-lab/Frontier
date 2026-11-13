@@ -1,0 +1,45 @@
+--- a/frontier/metrics/trace_store.py
++++ b/frontier/metrics/trace_store.py
+@@ -6,6 +6,7 @@
+ """
+ 
+ import json
++from json.encoder import c_encode_basestring_ascii, c_make_encoder
+ import os
+ import time
+ from dataclasses import dataclass, fields
+@@ -41,6 +42,14 @@
+     meta: Optional[Dict[str, Any]] = None
+ 
+ 
++class EscapedStrings(dict):
++    """String value -> its stdlib JSON ASCII escape, filled on first use in one flush."""
++
++    def __missing__(self, value):
++        encoded = self[value] = c_encode_basestring_ascii(value)
++        return encoded
++
++
+ class TraceStore:
+     """
+     Centralized store for op-level traces.
+@@ -110,6 +119,8 @@
+             events_to_write = self._buffer
+             self._buffer = []
+ 
++        escaped = EscapedStrings()
++        default = json.JSONEncoder().default
+         try:
+             with open(self._filepath, "a") as f:
+                 for event in events_to_write:
+@@ -118,7 +129,9 @@
+                         for field in fields(event)
+                         if getattr(event, field.name) is not None
+                     }
+-                    f.write(json.dumps(row) + "\n")
++                    # json.dumps defaults; only the string escaper reuses this flush's results.
++                    encode = c_make_encoder({}, default, escaped.__getitem__, None, ": ", ", ", False, False, True)
++                    f.write("".join(encode(row, 0)) + "\n")
+         except Exception as e:
+             logger.error(f"Failed to flush trace events: {e}")
+             with self._buffer_lock:

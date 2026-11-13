@@ -1,0 +1,30 @@
+{
+  "uid": 0,
+  "gid": 0,
+  "source_uid": 10250,
+  "source_gid": 10250,
+  "status": "PASS_FIXED_IMAGE_COPIED_GIT_AND_REAL_SOURCE_BINDINGS_ONLY",
+  "new_pricing_calls": 0,
+  "new_shape_calls": 0,
+  "new_platform_operations": 0,
+  "asset_hashes": {
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git": "06c1cfb4848572479bd3bbf678c224432d262732049957884dd9be2457185ad7",
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker": "672995b50f25e01b216a981ac1f08eebee28b0713b4bb6c53aecfedad0bff6d4"
+  },
+  "git": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git",
+  "git_version": "git version 2.34.1",
+  "safe_directories": [
+    "/data/ycfeng/Frontier/.worktrees/step5-preview",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/cc_backend/backends/collective-sim"
+  ],
+  "safe_directory_origins": [
+    "file:/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker\t/data/ycfeng/Frontier/.worktrees/step5-preview",
+    "file:/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker\t/data/ycfeng/Frontier/.worktrees/step5-preview/frontier/cc_backend/backends/collective-sim"
+  ],
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "c52eca18ff4f1a80819395f7cd36eab80e428133",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  }
+}

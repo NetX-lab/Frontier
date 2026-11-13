@@ -1,0 +1,564 @@
+{
+  "source_commit": "bc8ae27dc61849b86c4599ebfef48dc05f9b43f2",
+  "scope": "Final integrated source execution; original strict comparison remains FAIL with dirty-tree provenance",
+  "comparison_file": "/data/ycfeng/tmp/step5_d20_final_fidelity_20261021/comparison.json",
+  "case_count": 77,
+  "raw_identical_non_schema_artifact_pairs": 297,
+  "new_registered_operations": [
+    "step5_attention_prepare",
+    "step5_gate_projection",
+    "step5_headwise_gate",
+    "step5_indexer_prepare",
+    "step5_indexer_weights",
+    "step5_output_projection",
+    "step5_qkv_projection",
+    "step5_sparse_attention",
+    "step5_swa_attention"
+  ],
+  "predictor_cache_findings": [],
+  "provenance_findings": [
+    "/data/ycfeng/tmp/step5_d20_final_fidelity_20261021/candidate: measured against a modified working tree at bc8ae27dc618, which is not a commit-specific result"
+  ],
+  "recorded_dirty_paths": "M docs/general/step5-preview.md\n M task_memory/task_2026-10-15_step5_preview_h800/plan.md\n M task_memory/task_2026-10-15_step5_preview_h800/progress.md\n M task_memory/task_2026-10-15_step5_preview_h800/tickets/08-native-pd-state-qualification.md\n M task_memory/task_2026-10-15_step5_preview_h800/tickets/10-full-path-compute-profiles.md\n M task_memory/task_2026-10-15_step5_preview_h800/tickets/22-predictor-bundle-cost-replay.md\n?? .cortexkit/\n?? .pi/",
+  "cases": [
+    {
+      "case_id": "coloc_dense_offline_attn_dp2",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_cuda_graph_piecewise",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_default",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_dummy_time_quarter",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_long_prefill",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_many_requests",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_no_chunked_prefill",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_pp2",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_pp4",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_sarathi",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_sglang",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_small",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_tp1",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_offline_two_replicas",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_online_qps0p5",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_online_qps2p0",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_dense_online_qps8p0",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_cuda_graph_none",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_default",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_ep1",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_ep4",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_long_prefill",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_many_requests",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_moe_tp1",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_random",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_skewed",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_zipf",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_offline_topk4",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_online_qps0p5",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_online_qps2p0",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_moe_online_qps8p0",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_mtp_offline_pp2",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_prefix_cache_offline",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_prefix_cache_online",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_spec_dec_offline",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_spec_dec_offline_ntokens4",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_spec_dec_online",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_thinking_offline",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "coloc_thinking_online",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "dp_dense_offline_lanes2_replicas2",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "dp_dense_online_lanes2",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "dp_dense_online_lanes2_replicas2",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "dp_dense_online_lanes4",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "dp_moe_coloc_online_lanes2",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "dp_moe_pdd_online_lanes2",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "dp_moe_pdd_online_lanes2_trained",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_dense_offline_cuda_graph",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_dense_offline_default",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_dense_online_default",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_moe_offline_cuda_graph",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_moe_offline_default",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_moe_offline_ep2",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_moe_offline_ep2_many",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_moe_online_cuda_graph",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_moe_online_default",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdaf_moe_online_ep2",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_offline_astra_sim_analytical",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_offline_default",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_offline_no_chunked_prefill",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_offline_tp2",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_offline_two_decode_replicas",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_offline_two_prefill_replicas",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_online_qps2",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_dense_online_qps8",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_moe_offline_default",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_moe_offline_ep1",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_moe_offline_routing_skewed",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_moe_online_qps2",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_prefix_cache_offline",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_spec_dec_offline",
+      "raw_identical_non_schema_artifacts": 5,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "pdd_thinking_offline",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "trained_coloc_dense_h800",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "trained_coloc_dense_h800_cuda_graph",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "trained_coloc_moe_phi_h800",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "trained_coloc_moe_qwen3_h800",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "trained_dense_csv_smoke",
+      "raw_identical_non_schema_artifacts": 3,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    },
+    {
+      "case_id": "trained_moe_csv_smoke",
+      "raw_identical_non_schema_artifacts": 4,
+      "all31_original_metadata_records_preserved": true,
+      "added_step_records": 9,
+      "config_equal_except_new_null_nixl_input": true
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/canonical_unit/execution.json",
+    "sha256": "07537fa168bc47880897c2c6870d23f1a032c2f1e6b0e9071f7d84bcd1051930",
+    "bytes": 7212
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit_final06_final_comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/canonical_unit/comparison.json",
+    "sha256": "30451fa98211a682fe9f2fb537f2162402376b964dbf8d9623a1f848aab6385e",
+    "bytes": 78938
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit_final06_final_legacy_comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/canonical_unit/legacy_comparison.json",
+    "sha256": "5486d8b7d79693020271e4aee610885ec468667e04063100b0e428d563be67f1",
+    "bytes": 167897
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/source_final_receipt.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/source_final_receipt.json",
+    "sha256": "ac752f1ee2c82c3b93ae7146d6b45ed132132983856ee7fca476aae13de81577",
+    "bytes": 6701
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/final_verification.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/final_verification.json",
+    "sha256": "2b63673099f062ebe13f5fa26f69539e56bd044f269169c3bcf652e723d47ad8",
+    "bytes": 9690
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/comparison_inputs_before.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-key-regressions/task_memory/task_2026-10-22_step5_position_routing/post_key_regressions/evidence/comparison_inputs_before.json",
+    "sha256": "c1c6872348c7aa2ddbfd4972fbc2f9d1d3a1ff259def52fb29a30a0e7eaa353f",
+    "bytes": 1042
+  }
+]

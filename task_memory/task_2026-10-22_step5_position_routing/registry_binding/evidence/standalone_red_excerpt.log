@@ -1,0 +1,18 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_actual_dual_binder_retains_fp32_gates_for_layers_3_and_88 ________
+
+bound = (<frontier.execution_time_predictor.shared_prediction_model_manager.ExecutionTimePredictionModelManager object at 0x7f...tor_family_id='moe', operator_family_ids=('moe',), tensor_parallel_sizes=(1,), selected_padded_ffn_width=1536), ...}}])
+
+    def test_actual_dual_binder_retains_fp32_gates_for_layers_3_and_88(bound):
+        manager, replica, frame, _, _ = bound
+        gates = [model for key, model in manager._contract_precision_registry("kernel_only")["FP32"].items()
+                 if key[0] == "moe_gating_linear"]
+>       assert len(gates) == 2, "both fitted native FP32 gate bindings must survive registration"
+E       AssertionError: both fitted native FP32 gate bindings must survive registration
+E       assert 1 == 2
+E        +  where 1 = len([RandomForestRegressor(max_depth=3, n_estimators=2, random_state=0)])
+
+tests/unit/test_prediction_measurement_bindings.py:45: AssertionError
+FAILED tests/unit/test_prediction_measurement_bindings.py::test_actual_dual_binder_retains_fp32_gates_for_layers_3_and_88
+1 failed in 9.50s

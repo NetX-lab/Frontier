@@ -28,7 +28,7 @@ def _launch_stall(forward_launch_ms, spans=None):
 
 def test_prefill_final_timing_preserves_component_and_pipeline_units():
     execution_time = SimpleNamespace(
-        pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=0.0,
+        final_residual_time=0.0, pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=0.0,
         forward_launch_stall_time=_launch_stall(0.0),
     )
     timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.0, 0.0, 0.0)
@@ -44,7 +44,7 @@ def test_prefill_final_timing_preserves_component_and_pipeline_units():
 def test_prefill_final_timing_charges_launch_left_exposed_by_the_simulated_span():
     spans = []
     execution_time = SimpleNamespace(
-        pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=0.0,
+        final_residual_time=0.0, pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=0.0,
         forward_launch_stall_time=_launch_stall(1500.0, spans),
     )
     # The layer events simulated 1.0 s of device work and the pipeline send 4 ms.
@@ -59,7 +59,7 @@ def test_prefill_final_timing_charges_launch_left_exposed_by_the_simulated_span(
 def test_prefill_final_timing_launches_from_the_dp_sync_not_the_stage_start():
     spans = []
     execution_time = SimpleNamespace(
-        pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=0.0,
+        final_residual_time=0.0, pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=0.0,
         forward_launch_stall_time=_launch_stall(1500.0, spans),
     )
     # The stage started at 0.5 s; its DP peer reached the same stage at 1.0 s.
@@ -72,7 +72,7 @@ def test_prefill_final_timing_launches_from_the_dp_sync_not_the_stage_start():
 
 def test_prefill_final_timing_rejects_negative_cpu_overhead():
     execution_time = SimpleNamespace(
-        pipeline_time=4.0, total_time=7.0, model_time=8.0,
+        final_residual_time=0.0, pipeline_time=4.0, total_time=7.0, model_time=8.0,
         forward_launch_stall_time=_launch_stall(0.0),
     )
     with pytest.raises(ValueError, match="CPU overhead"):
@@ -81,7 +81,7 @@ def test_prefill_final_timing_rejects_negative_cpu_overhead():
 
 def test_decode_final_timing_matches_existing_decomposition():
     execution_time = SimpleNamespace(
-        pipeline_time=4.0,
+        final_residual_time=0.0, pipeline_time=4.0,
         total_time=10.0,
         model_time=8.0,
         forward_preparation_time=0.0,
@@ -101,7 +101,7 @@ def test_decode_final_timing_matches_existing_decomposition():
 def test_decode_final_timing_charges_launch_left_exposed_by_the_simulated_span():
     spans = []
     execution_time = SimpleNamespace(
-        pipeline_time=0.0,
+        final_residual_time=0.0, pipeline_time=0.0,
         total_time=10.0,
         model_time=8.0,
         forward_preparation_time=0.0,
@@ -119,12 +119,12 @@ def test_final_timing_leaves_out_the_preparation_that_ran_before_the_first_layer
     # vLLM prepares a forward's inputs before its DP all-reduce, so the stage
     # tail after the last layer holds the rest of the CPU overhead only.
     prefill = SimpleNamespace(
-        pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=500.0,
+        final_residual_time=0.0, pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=500.0,
         forward_launch_stall_time=_launch_stall(0.0),
     )
     assert prepare_prefill_final_timing(prefill, [3.0, 5.0], 1.0, 0.0, 0.5).cpu_overhead == pytest.approx(1.5)
     decode = SimpleNamespace(
-        pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=500.0,
+        final_residual_time=0.0, pipeline_time=4.0, total_time=10.0, model_time=8.0, forward_preparation_time=500.0,
         decode_draft_proposer_time=0.0, mtp_terminal_overshoot_time=0.0,
         forward_launch_stall_time=_launch_stall(0.0),
     )

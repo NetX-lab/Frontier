@@ -1,0 +1,33 @@
+{
+  "artifacts_rehashed": 451,
+  "cache_filename_count": 519,
+  "cache_inventory_changed": false,
+  "case_failures": [],
+  "case_records": 77,
+  "current_package_versions": {
+    "ddsketch": "3.0.1",
+    "fasteners": "0.20",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "plotly": "7.1.0",
+    "python": "3.10.6",
+    "scipy": "1.15.3",
+    "sklearn": "1.7.2"
+  },
+  "definition_mismatches": [],
+  "evidence_errors": [],
+  "full_clean_capture": true,
+  "harness_revision": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+  "label_path": "/data/ycfeng/tmp/step5_d23_perf_fidelity_20261022/candidate",
+  "manifest_dirty_paths": "",
+  "manifest_sha256": "95ff242692a16b9dc2e1ba49f097ab5df739b93bf77c89e44ee915fe327eae19",
+  "missing_cases": [],
+  "package_versions_match": true,
+  "provenance_findings": [],
+  "record_provenance_errors": [],
+  "results_sha256": "b5b12103c3d6e174a8140b83c93486a5337b8e7da8f9be678373adfeeb88c9a6",
+  "source_dirty": false,
+  "source_revision": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+  "unexpected_cases": [],
+  "unique_case_records": 77
+}

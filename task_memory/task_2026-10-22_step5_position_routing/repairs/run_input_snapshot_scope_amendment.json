@@ -1,0 +1,55 @@
+{
+  "decision_id": "D29-RUN-INPUT-SNAPSHOT",
+  "authority": "D29-REPAIR-PATH-AUTHORITY and YC run-fixed input decision 2026-10-24",
+  "apply_after": "collective_artifact_bytes_scope_amendment.json",
+  "effective_unique_paths": 114,
+  "owner_gross_ceilings": {"core_source": 4404, "pricing": 3956, "native": 1582},
+  "repair_delta_ceiling": 340,
+  "source_delta_ceiling": 120,
+  "test_delta_ceiling": 220,
+  "step_base": "2f2d9339d5bce600fbb0a3f78aebbcf6f71be696",
+  "repair_paths": [
+    "frontier/cc_backend/collective_profile.py",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py",
+    "frontier/cc_backend/base_cc_backend.py",
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "tests/unit/test_collective_sim_cc_backend.py",
+    "tests/unit/test_moe_routing_runtime.py",
+    "tests/unit/test_prediction_measurement_bindings.py",
+    "tests/unit/test_step5_measured_ffn.py"
+  ],
+  "path_step_ceilings": {
+    "frontier/cc_backend/collective_profile.py": 24,
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": 12,
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": 8,
+    "frontier/execution_time_predictor/moe_routing_workload.py": 30,
+    "frontier/cc_backend/base_cc_backend.py": 10,
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": 36,
+    "tests/unit/test_collective_sim_cc_backend.py": 100,
+    "tests/unit/test_moe_routing_runtime.py": 100,
+    "tests/unit/test_prediction_measurement_bindings.py": 14,
+    "tests/unit/test_step5_measured_ffn.py": 6
+  },
+  "new_paths": [
+    {"path": "frontier/cc_backend/collective_profile.py", "owner": "core_source", "ceiling": 24},
+    {"path": "frontier/execution_time_predictor/shared_prediction_model_manager.py", "owner": "core_source", "ceiling": 12}
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "frontier/execution_time_predictor/moe_routing_workload.py", "before": 323, "delta": -100, "after": 223},
+    {"path": "tests/unit/test_moe_routing_runtime.py", "before": 78, "delta": 50, "after": 128},
+    {"path": "tests/unit/test_prediction_measurement_bindings.py", "before": 299, "delta": 12, "after": 311},
+    {"path": "tests/unit/test_step5_measured_ffn.py", "before": 108, "delta": 2, "after": 110},
+    {"path": "frontier/cc_backend/base_cc_backend.py", "before": 8, "delta": 8, "after": 16},
+    {"path": "frontier/cc_backend/backends/collective_sim_cc_backend.py", "before": 91, "delta": 8, "after": 99},
+    {"path": "tests/unit/test_collective_sim_cc_backend.py", "before": 235, "delta": 8, "after": 243},
+    {"path": "tests/unit/test_comm_operator_families.py", "before": 70, "delta": -8, "after": 62},
+    {"path": "tests/unit/test_dsv4_precision_metadata.py", "before": 10, "delta": -8, "after": 2},
+    {"path": "tests/unit/test_step5_contract_reuse.py", "before": 5, "delta": -4, "after": 1},
+    {"path": "tests/integration/step5_comm/step5_position_model_run.json", "before": 72, "delta": -4, "after": 68}
+  ],
+  "reason": "One shared input owner must keep CORE/backend and P/D on the same communication input even when the file changes between role constructions. The existing per-Simulator prediction manager owns the input collection. A small stdlib-only collective_profile module owns file layout, successful UTF8/JSON read publication and immutable byte reuse, avoiding a lower-level backend dependency on the model manager and keeping file I/O out of immutable collective-plan types. Both new paths are CORE input-lifecycle plumbing; PRICING retains its existing backend/interface/test ownership. Transfer100 CORE allowance lines and24 PRICING allowance lines internally; no donor source edits.",
+  "acceptance": "See run_input_snapshot/design.md. Real constructor binding precedes role use; one successful file read per configured input per run, consistent CORE/backend/P-D bytes, new-run reload in the same process, unchanged standalone backend call shape, and uncached failed reads/UTF8/JSON. Adapt hot-update tests to new-run checks while retaining source/estimator/row/identity/point/qualification/context/buffer/count/numerical rejection. Preserve complete208-event costs, actual-layer proofs, plan keys, JSONL and ledger bytes. Derive gross/net and retained consumption from Git. Combined independent review covers byte intermediate plus snapshot successor.",
+  "limits": "Ten source/test paths only. No global cache, mode flag, refresh interface, model/pkl/bundle identity change, numerical or whole-proof cache, native numerical cache-key change, output reduction, longer CLI timeout, GPU action or donor code edit. Allocation is not an instruction to consume every line. Scope corrections require primary reconciliation before exceeding a path/owner cap; do not compress code to meet an estimate. Source9942/global10000 remain unchanged. Full freeze/regressions/workflow/native gates remain pending."
+}

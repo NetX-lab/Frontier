@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "source_revisions": [
+    "b65609b5e1afb329f9fd51c87493da4c2c08b910"
+  ],
+  "cases": 77,
+  "artifacts_checked": 451,
+  "results_file": "/data/ycfeng/tmp/step5_d20_fidelity_20261021/baseline/results.jsonl",
+  "results_sha256": "c47592655826785298a118948ec58f761bfb420aaa5d8385d12215df8496cb4d",
+  "failures": [],
+  "scope": "Baseline execution and retained artifact integrity only; candidate comparison pending.",
+  "corrects": "baseline_integrity.json incorrectly resolved artifact_dir relative to shell cwd; records are relative to the baseline directory."
+}

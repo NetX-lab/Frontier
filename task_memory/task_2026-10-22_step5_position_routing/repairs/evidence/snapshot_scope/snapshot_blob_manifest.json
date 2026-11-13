@@ -1,0 +1,2156 @@
+{
+  "source_commit": "e200bb780d3b20ec6f5ff0a067ed8b9ddd505662",
+  "source_tree": "8c66dff99cfe53d7396b258d405ce176a6ef2006",
+  "paths": [
+    {
+      "path": "frontier/attention/step5.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "877d6ca0b6388962bc2163da46e7445fbdc91c11",
+        "sha256": "4b6e1bf78c83b87fdd54b17a06047dda079678a6a683a8fb25feda14229968d5",
+        "bytes": 51037
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "106d422b2c35d47e986e31aa52cac25b292f8cdd",
+        "sha256": "8ffc77e597d3d653c5049465d33b682add1794ed0dc0cadeaa82471307d8b9a3",
+        "bytes": 51184
+      }
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/htsim_runner.py",
+      "kind": "submodule_pinned",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "241a3ce60fbe7cfd8e39f7baa831b7005dea97ee",
+        "sha256": "fe3ca969ca60af48d946ce30227073745cfb4e16569b3bfa63557515b0968763",
+        "bytes": 125130
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e4561cb7c1aa2e1f5cf6ddf84c6259584018214d",
+        "sha256": "21428ad892eb37ef230292dc15b9b06f167d5d4399bc9065e1459ccc0f420c50",
+        "bytes": 128040
+      }
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/intra_server_model.py",
+      "kind": "submodule_pinned",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "aa1031cb9cd99b586cc15ae8632d541aad661380",
+        "sha256": "6d3ddd44d10aa1d93462b6000fb2d8a0d88348baf1a78823651ee06837349691",
+        "bytes": 8571
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "28349d775534a5f59392b123153a8b88b83b4a3c",
+        "sha256": "17464ce7c03b2dec097fc3f54ca7124d98b841751ce4966ae385a73318f41c60",
+        "bytes": 12943
+      }
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py",
+      "kind": "submodule_pinned",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "78a262c58b7912f197b457d2bd23cfde094e05c5",
+        "sha256": "ee58b3f936fd0ecb295f932f028576356c15eace843f1bb335a34bb0d708bf03",
+        "bytes": 4251
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "bd1f7ad07836a16c7de2e28aa83622f738bb8d2c",
+        "sha256": "dfb280042222b3825367bdd3c2061c5000bba382b5eef3d48e3c695122191627",
+        "bytes": 6080
+      }
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py",
+      "kind": "submodule_pinned",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "241768082a624dc10a1bb045608730d4ebbb3927",
+        "sha256": "c299f22468445451326ce83accf1c575278478fe40055a5bbce35477d923b1ff",
+        "bytes": 15695
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "89d0ca5405e16151becca0634eb189ac2a993e71",
+        "sha256": "a034b9d9821778dc86f5dad04e0abd520dc122f22704528ea40aa2f5246aeb90",
+        "bytes": 19502
+      }
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py",
+      "kind": "submodule_pinned",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a0a759625fc771417dfb83196f8c1ce72ef3c624",
+        "sha256": "d1003d369f4559cb0724f7383f2c3897d776a794d24905dbeaa93c9f4a9b5f49",
+        "bytes": 6510
+      }
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "cc9b33b1a3f897ed09db66ef677414d3d70fe803",
+        "sha256": "6425b87c8f1cf34719b9b31f8dc269f87a04d35e29c9942b5ed9753d65d8dd3f",
+        "bytes": 31611
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7284d21c2b559bf9ee6c796030446239b8c7dd07",
+        "sha256": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+        "bytes": 38039
+      }
+    },
+    {
+      "path": "frontier/cc_backend/base_cc_backend.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "03fc73921756f4a07de31c74d7e53d54effd642e",
+        "sha256": "f06e5a28dc54d29c97e9bc5fe11b528bd47e68711a3ada62b17177035e1a9528",
+        "bytes": 14128
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "5134fc67f15006222c81d6c2b01e6068f44d0098",
+        "sha256": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+        "bytes": 14824
+      }
+    },
+    {
+      "path": "frontier/cc_backend/collective_plan.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "57b53fa6d428aa67b987396b97859e1e697f8872",
+        "sha256": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d",
+        "bytes": 6999
+      }
+    },
+    {
+      "path": "frontier/cc_backend/collective_profile.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7b620ed247b4f6837815a1010c5666b361213850",
+        "sha256": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+        "bytes": 629
+      }
+    },
+    {
+      "path": "frontier/config/quantization_manager.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "53d23b7b5fb71fbc35259182b99aece34c83e993",
+        "sha256": "4c89d3d04943bd82b64a748ad88c422904ffda77141f632f24f86421d2508c42",
+        "bytes": 50019
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1e55a3d65ffd367c8da53acfce8ff90aa7769ffd",
+        "sha256": "44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83",
+        "bytes": 51105
+      }
+    },
+    {
+      "path": "frontier/config/replica_config.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ac7d954dc8cb2322b4fb2d3267b203546c8e9e7c",
+        "sha256": "57c6bafe482a6d81e2b25c2cb3bf9b7505bf16e251f4d28327e10ff9dc7adef8",
+        "bytes": 10297
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7c3b7e0767d1c01746a3d2edbbb8a866d92cca68",
+        "sha256": "988e027b0ffd55f99b3cce1c111390550b8c2d1587c1392098a9408a59746005",
+        "bytes": 9982
+      }
+    },
+    {
+      "path": "frontier/entities/execution_time.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f7cbb19bf0efd9e97b7e30a4fe9ba6e366247510",
+        "sha256": "14591e91f19cb40ab1e3401013b5220d9c56e2e17a409196faa2b3811a63bc67",
+        "bytes": 76184
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "459d473b4a512033478fc6f259f105743c610f9d",
+        "sha256": "fcd2e592c0eb165b6398db368ecd5e6ab812d5d00f7fb53fad7035bb5f4bc64c",
+        "bytes": 78196
+      }
+    },
+    {
+      "path": "frontier/entities/time_components.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "02e7b4006ba76b6ec0e5a6cf49310f86daaad292",
+        "sha256": "f356f99138803d2be3323df6525091dddaa6b7b75faf1d9ac56121cdaf5c4a0b",
+        "bytes": 31451
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "8d6272f0c02b539a539a8a92c4ad50c98eb79d8b",
+        "sha256": "b19f7158159d034a5e9dc090811a3026815053c8eb6615a688a72f4be9d897f2",
+        "bytes": 32317
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/layer_contract_resolution.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "8306f092d540449bd58c2d58681258b73612bf9c",
+        "sha256": "c1314cdaf9f513b2b95df1e3ff131ea7f420c1649e2b6c74d221c84ef625817b",
+        "bytes": 20699
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ee3024e3bbbc08ce3c33bcaf5e057701378ff7a4",
+        "sha256": "d28e1f88e35fc3b1da3347ac1385dc2f697ebaa9c77a8a5adf46cfbd3cddeeec",
+        "bytes": 21438
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_dataset_training.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "55a9269ffae543ea99b3c29968bc45665fcf92f4",
+        "sha256": "d7c36a6a17a8c91f8ea7941c6ae2f3ee06a6555407d5bf4185d928ea6c30df7f",
+        "bytes": 21529
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "bee6fec904b37de6440728c20704d31615bc2352",
+        "sha256": "1dc55426707a507c626cb993ce9195bf8e21bdb581cb6bc4115b7a1acddc3968",
+        "bytes": 33200
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_operator_times.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ff8f10f7bafc1c1862294fb1ed6d70b4d0397fcf",
+        "sha256": "29fe08aec43d773a4d87bb7b82c1966793714d5f0a19c89f962cb4817a06c9c1",
+        "bytes": 29387
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "715cfe2b91d173bd4c1a0eedfd42c3c71ac2378e",
+        "sha256": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+        "bytes": 35532
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b68e9b9f43e48d3b172240a00b0eed9e43078a53",
+        "sha256": "28892aafa6bbaa4b724bf1706479d536a3551851321d6962f5db48ef553af2f4",
+        "bytes": 28543
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "cdda686a5f1e0103d751d9da829af233e7b72ea3",
+        "sha256": "d1561f20e0a0f045af8ddeabe88bd36b017cc554e9fcc44dd2d6ba4c0adb3d46",
+        "bytes": 40974
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/prediction_family_trainers.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "5bf393c0bc910aa6cfcb0b1285637c6c29e2eb1f",
+        "sha256": "6f62f7c9663184637521bcc2c8c024dd9d2cf30ffca038c9f706ba3af1d703b7",
+        "bytes": 88537
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "6410c0bc8217ce1ab6f1f20f879d6989831c0268",
+        "sha256": "49a9d4f29f22c66327464a419dc87a172904a1aa82aeab662a0aaf3cd7f0ca6d",
+        "bytes": 93144
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/prediction_model_registry.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ddfdc826e8a809c28482aebe3428edc4a0eaf601",
+        "sha256": "a3c8e5d5b04a442a753ba60ac593378654ccf04ab9acac0a9790069d396ede5e",
+        "bytes": 55073
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "03eed35fb6b8b7724d89a3b46dbd0f4077b0f249",
+        "sha256": "6689aa89aabc2c10521a62488295adb68e6e0d0d17c576cafb777003b2cfcc54",
+        "bytes": 59447
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "33375c2fc344d599d12b2402ded631ace8c7bdd9",
+        "sha256": "aec93dc07a71ff1e3ba2b6be343360371047b5c09c9bcacce97408f06890b9c6",
+        "bytes": 43194
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c20ada65d50ca60db4f77bdeb8ceb98cef4834ea",
+        "sha256": "5554c39e3c36ede165c2c3b18493ac6b92e8027ec80e4673a3267df338af8488",
+        "bytes": 44173
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ae045d7b111c2b0439dd27262bfc93664370cc94",
+        "sha256": "d18bde6f67c28b14353b2da4ea8cf9deaa3927a23b727f62607007e9b16a7198",
+        "bytes": 34834
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "09060f91bb39f6c1319afa3f32810febc1f5da67",
+        "sha256": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+        "bytes": 35080
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f3e992767911f7d2cf2ca830688a6c4330bceefa",
+        "sha256": "cb4fa6260037f69c21b615c551a159f6a900e96998341075d2c8130b879ddf1c",
+        "bytes": 138769
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1029fbe1edbd05517cf1edf0621a68cd8099b6b5",
+        "sha256": "3328a84b2a810b9a90b1fd5e908573d978e90957849330d3c7eeb597940c4e3c",
+        "bytes": 139366
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9985ed1656ea557f62ebc4504426fa05bc3e228b",
+        "sha256": "2f188d46cd0ff12047853abf895ba0c68a4832ef25ebab28b41888f33748caee",
+        "bytes": 372200
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "dc1d179d4ea27674d38fc35aa872201c21b9e80c",
+        "sha256": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+        "bytes": 372643
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "28fe372ff149cdcff286747b3b2d103d1cdb40fe",
+        "sha256": "f0b939b4192921ffe51b4daf0d95dbdf26906b70e3bbbf32c60be6d9094f8ede",
+        "bytes": 84552
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "15717acb2b1422ae1dfdfae7105279ec5d02795a",
+        "sha256": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+        "bytes": 91864
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/step5.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "79fdf76e891be8c31e3750954b12ddc2c41e956c",
+        "sha256": "7f23354e5ea21e36049e6cb21a610552bade7b223e1fa2949852d4e25cb00a1f",
+        "bytes": 35268
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7364a4041313a4c94e248d41f91bcd7cdc3cc076",
+        "sha256": "55caffd1aa8be5cda4c7cc1e035df6850f27cfd594d8cc531b021875d1f6f720",
+        "bytes": 37986
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/step5_cost.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "386cf55731a0e0c31aea8ab4034bf500f3c29c98",
+        "sha256": "b0378f5a60eefcdbbfa93f2f61c7b1442e969e3e9fb80fa11aee6b4cb1b5c5a1",
+        "bytes": 14771
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "155289786872f448113bab8fceccf77130db9b3f",
+        "sha256": "ed49e6bb7e44aa7e66d5fcc9e70cee391d6c9f55dd0439da13fcfe4336ed3fa4",
+        "bytes": 16905
+      }
+    },
+    {
+      "path": "frontier/metrics/constants.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e6bad468d0d35c88529c70870f8ad30139d8b6b5",
+        "sha256": "6fe30c32561ed2ee8f5c1424bf064d578a14da9e11a5d56593d4560d9b495eb1",
+        "bytes": 20559
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c26de891487a236cf5faa71de3375dca01718769",
+        "sha256": "a75eedb3fd4e052728b91497fcf9ec5360a2cbe4e99b8854e9f93d3d205e84fa",
+        "bytes": 20695
+      }
+    },
+    {
+      "path": "frontier/metrics/ep_wave_metrics.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "8278533c8f6462005b3ccf6402ab34b869038815",
+        "sha256": "70c7b6625452e960ed58aeba6713c651d6522650c0aae805c29ac4063b562218",
+        "bytes": 6154
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7290697febb2280a3c28f1446d1bdde12b1e731b",
+        "sha256": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+        "bytes": 7847
+      }
+    },
+    {
+      "path": "frontier/metrics/op_trace_utils.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e2794342b8dcef357bca5d73689f1b90f0a0813d",
+        "sha256": "d48804306f4e57ae24eee3a34a8cf34ac1b2ae28a755205cbea02ad54d42d78b",
+        "bytes": 46007
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9f4a2e1ff5ac64851eae5e9df0632ed8b42224c1",
+        "sha256": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+        "bytes": 49465
+      }
+    },
+    {
+      "path": "frontier/metrics/trace_store.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "99558d7e148c3a8d5e60dc19374e62cf51e49ad2",
+        "sha256": "f66f9df95422ad734707e723a38a516143e90fe80274c80dd169babf9a375939",
+        "bytes": 3909
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "45fa2983cfcceecd0d6e7e744c2e22c82c50758a",
+        "sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+        "bytes": 3929
+      }
+    },
+    {
+      "path": "frontier/moe_ep_workload.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "78e87e031900657f33ab46028f824622959f3fc9",
+        "sha256": "a0f42a232eaa73e19c1dee633479fabefb7ea234c54f6aa56a56d893a9eaa28b",
+        "bytes": 34564
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "55aae4e6f932e909834247f3d5a5ff17e5c9b742",
+        "sha256": "88d6c320b8bdf79f4b7c6146eb2de24419275d5c6823b487e646b3602e01e456",
+        "bytes": 36506
+      }
+    },
+    {
+      "path": "frontier/moe_load_imbalance.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7d37912902b6edc376a29f0a74f516e74bfc4a6d",
+        "sha256": "af0e69fdb1c698fbe296bb01c10d52896b0b183e26eab7bf4e6f38004a20860b",
+        "bytes": 7632
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7279ace06f8e8138239555dd480912acd12f1ef1",
+        "sha256": "40e0d788e405fccff07cc8fc066605eea0d742b79adcf120cb0822ab86b8e720",
+        "bytes": 10074
+      }
+    },
+    {
+      "path": "frontier/moe_routing_policy.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "876a75685d0f74158d6f04ff48a3bade6da907e2",
+        "sha256": "bbfab0881ab66a8c5f8d23ce865722cfc06bfafe47fd099ec394ba98639855d4",
+        "bytes": 9804
+      }
+    },
+    {
+      "path": "frontier/moe_routing_runtime.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "70b14630d2b12abb90d5cc2ced7928ff02c28afa",
+        "sha256": "e85d94dc25abeaba5461bc7dda1c0222ff010264a94adc7418d22555ca92978c",
+        "bytes": 2501
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c744ed7d4973f63fefc552b09517f0924b24d5a6",
+        "sha256": "19ea0229da6f9770d069947b429d16af3afa16b8cf13c2ef6f856d92e66df60a",
+        "bytes": 7993
+      }
+    },
+    {
+      "path": "frontier/operators/families.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "fed753364739cdc1c01a00c45bbc882e575db743",
+        "sha256": "ea458ee43b1419170019c4359f57f06d440c5c6af6619cc12f1d4ffa3386aa4d",
+        "bytes": 34622
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "fe43d63b08dcc7705ea32350e97561986947278a",
+        "sha256": "0a033fae32beab5908b1a9ddd28be29d2007a7734c0bc10b93de7de0271c2864",
+        "bytes": 36460
+      }
+    },
+    {
+      "path": "frontier/operators/spec.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1cca23ece66efa0cb7cc33a03d789c0b55f0a942",
+        "sha256": "3ad986630cd7609ab066e1f6000ffb5dd3655ed5b9c1082339d4a94912ec6251",
+        "bytes": 14114
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "3ff45cbc6fc4eee6d699eeafefa82b0c8e8990f4",
+        "sha256": "5eda0432ea0e2ee5560c747b903760271217e586e41be1d44f3db3fc02c68d0f",
+        "bytes": 14758
+      }
+    },
+    {
+      "path": "frontier/profiling/collectives/step5_dispatch_probe.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "156496453f4d4b4d3790334ba84d8b97711e24cd",
+        "sha256": "4d5460c14c54ec8bacf42b0395303c39b5a719217a0f721e3ec1b89c7da14805",
+        "bytes": 26548
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c633f43d8e212a43c9f669baab4486aed274e3c3",
+        "sha256": "63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff",
+        "bytes": 42635
+      }
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_collective_benchmark.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c21f2b0ffcdfb1d9ceb8693f455e0002335ab1d0",
+        "sha256": "f7caf557c01983d63d85e06026576ee9b665109aa6799f70b77c4a83e5d1daa9",
+        "bytes": 31313
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "3bda73222ee14a39b93693fb1d6e27de6f4f80fb",
+        "sha256": "9c3fd1db580bc4f3738e2f1c0a1f8ca1a5ed01afc6a4536c616775be3868372b",
+        "bytes": 46571
+      }
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_forward_collectives.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "921fca967db6304712a7bd9e9c09ba5ea4120c42",
+        "sha256": "5261a14c2b04c89561658d5b5c8cf1099ea977593541149be96f89e39a8f952e",
+        "bytes": 23931
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "3aa8619b1731b2a84de0862ca624cc11860dbaf4",
+        "sha256": "6a68c0c93c2984b42eaaba53b1087ada16e5e8cee67102eeb99ffa0aa105265e",
+        "bytes": 24842
+      }
+    },
+    {
+      "path": "frontier/profiling/common/layers/layernorm.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "5defc2fdfe65028104687c01a10f6e1c1f1ffd0a",
+        "sha256": "eb57c07f5e7aad6a788be929087923d6916655f27d67cb642e3f1c468fbeacf9",
+        "bytes": 6625
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "044ca3031d73a02acb780112a561a05e85a61046",
+        "sha256": "4c45cd31570fb68b3aee37a4110b7683d57805b5e473060ccd292381079f7ec9",
+        "bytes": 7036
+      }
+    },
+    {
+      "path": "frontier/profiling/common/runtime_identity.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "5eae103eaf0d6fbdab77ef19bf6db77fbfada514",
+        "sha256": "142609da12648816ec5cdc90f16289804bc745284c2abe5086aba3b688b7a629",
+        "bytes": 7702
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9dc9ad3845867f0f7f7b51736d7f0169e2fb2456",
+        "sha256": "1edc3dbbb9b2c5a664a814ae61550d510dd894dc00ba642b7b964eea568e7e28",
+        "bytes": 15145
+      }
+    },
+    {
+      "path": "frontier/profiling/common/step5_job.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "06d7630ed8840687e344ada08bb2a75c36771fb0",
+        "sha256": "cc3728cac88ac6295a00dbb280a82a454c9c534c17ddb17bb5476254c565d0ad",
+        "bytes": 4240
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "de6d60dec5c41a69df5f59deeec66f58deae25ec",
+        "sha256": "265fd295e804b8fa64059233dbdb0b292d6e915763d98ebe4518df25f814cd6a",
+        "bytes": 8501
+      }
+    },
+    {
+      "path": "frontier/profiling/linear_op/main.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b6c4b90c6d1542d32b790369a7fd83c7cbca4769",
+        "sha256": "e5a3128e58e0259ee8d7d03d39a1abfc19ba1f51ae45f80b41693d76ea89afe0",
+        "bytes": 39226
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ae9680cc214deda04d3c596b79c1519903a4e79d",
+        "sha256": "347ceb0a630a7c227da8949d28c1df4813bfb95e894f3956b7a6f47bb29eff42",
+        "bytes": 41229
+      }
+    },
+    {
+      "path": "frontier/profiling/moe/fp8_block_experts.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1774e60ba62763d7c8eee91518297012d765587f",
+        "sha256": "82fd5763b69e5b216a937334de68c11287e2bdeb0711350e74837663820e1a25",
+        "bytes": 14100
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "aa7923f81cfa7475df4b68e615c45ebd33b5d679",
+        "sha256": "dad933115a43ac8dc17270192d35ebcc5120721565e5bffcb56c18d51c624db2",
+        "bytes": 21862
+      }
+    },
+    {
+      "path": "frontier/profiling/moe/inputs.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "4398259fcc50912af439d570fe0fbc1855515e31",
+        "sha256": "baff3d0596da96e1a92ff96f1fd12d90a7519cd82626fb378e9179c723ba6477",
+        "bytes": 5610
+      }
+    },
+    {
+      "path": "frontier/profiling/moe/load_distribution.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f30e03d3597bbcffc63a1bed437c86c062645f78",
+        "sha256": "0cc28ad6d408c3cdb557b7f1bb56d8de80b33285d40940f28d2ac1475c159ee2",
+        "bytes": 10673
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "eb41971f582eca414eb53b6681982b8c5a5bdb24",
+        "sha256": "e3f9d844621606dd533d43d36d901af13741b12e394362519c46dde02b3850e7",
+        "bytes": 10727
+      }
+    },
+    {
+      "path": "frontier/profiling/moe/main.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b04b631de20d4d28eba35f196e8195f40c1c78ea",
+        "sha256": "f55fed810c85abdabd9614571db843ecb7afcc11c907401741c305d728cf81c2",
+        "bytes": 45507
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b3858de37877aa2a0d4bf6290c44aaeaa58e2200",
+        "sha256": "0e6b21a938f58de89b74a228ef99b2e33e5e2b396d77a5e7d64ba86b2a12f77f",
+        "bytes": 51469
+      }
+    },
+    {
+      "path": "frontier/profiling/moe/moe_impl.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1a7f631c739068d9ad56d8d2c8995e47920abf8c",
+        "sha256": "d59e01919bc8e5ce3e0974752e1de76bc9beee5b39a209c1663873d326bcf24e",
+        "bytes": 25239
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9afca08e73ab4191da51863deb0bba0541be7239",
+        "sha256": "a6e7559ff07cfedfd9f32b4424a9573596eeeb6746853b48801323f4120eb7af",
+        "bytes": 29184
+      }
+    },
+    {
+      "path": "frontier/profiling/moe/moe_vllm_kernel.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "fa6b2953acf60ca4b7b23f43f3879b2d9b4195ad",
+        "sha256": "c2dd374fb46a545d373c073db3d27329b55a480305a50f211b91213dc476ff99",
+        "bytes": 42722
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "8c0bb5719d883945220426581f7aa38e4fb8e48f",
+        "sha256": "25e24bcfc7c606aa2b3dab145fead71610fa8e4e12421c4ae41a8f357c476de6",
+        "bytes": 43538
+      }
+    },
+    {
+      "path": "frontier/profiling/moe/moe_wrapper.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e2d473ba560fc37396e27386080f31894a691839",
+        "sha256": "737b0c88c4020e54b0b2f4172106f10a94c67b91aa5416a678c5cf649eedd44d",
+        "bytes": 36293
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1f2b9cb2111aa140a38eee43176cf59804ce80d9",
+        "sha256": "1de9b3397b4a464daedddc8cae41f7bdf048544a2297bb7c61329deee6f8ad6b",
+        "bytes": 46112
+      }
+    },
+    {
+      "path": "frontier/profiling/step5/job.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "46090b52fcb9008d9ce7e643ffe7cc47cf035ef7",
+        "sha256": "1659e1cd0d1abf4d7df7f10fd1e1654c5cd60c65cfb378578f8deedb107f76a5",
+        "bytes": 16673
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "be6d7a6403b165603a2b496288fba0bc3726e483",
+        "sha256": "ae75bbbc8a67f49b773b2e67eea986a4a056727e5c2054757f9581620b5bbd21",
+        "bytes": 19002
+      }
+    },
+    {
+      "path": "frontier/profiling/step5/vllm_wrapper.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a944f4c19c229b574f818c49db431c0d3bd20f75",
+        "sha256": "33b1d95c2a8ca0135f44bc6141822d47ba8b5b733bc009ec59de13ff84c714f7",
+        "bytes": 39458
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c485bd6925c812c1e9b696470cb5b17c8114cf8d",
+        "sha256": "4d1f5b552c2ef15c8521061f0a8a89cb693f80d17cf4995eea798cd16dae634b",
+        "bytes": 40543
+      }
+    },
+    {
+      "path": "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9375ddfb3672dae227d9348738ae352f8b5ae45d",
+        "sha256": "6db9075773f8f5ab0cdea42ab94c7e6d77dfced36d3862fad8928edb3b982e63",
+        "bytes": 71856
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "d1a63d96d67a70cdd705cadbbc48ffdb2d9071e9",
+        "sha256": "c2be4ddc139432d4d308d778cef4a40d780d84f0fb003447c079600cc7b9d46a",
+        "bytes": 72472
+      }
+    },
+    {
+      "path": "frontier/scheduler/utils/batch_builders.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "536294753e773933774b997aa0debd270d8581d7",
+        "sha256": "44ece5fa1de772346751d466434fd64139e6a5a0c0761622893fb5e93a26d17c",
+        "bytes": 3982
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "994d0e58cb6ea903a0fb194c5c2b46a313c3dd21",
+        "sha256": "a4b3ed454655d97e4927a5b4a3d4454725d97136cfa0a7e68afbe44fda11947d",
+        "bytes": 4282
+      }
+    },
+    {
+      "path": "frontier/scheduler/utils/ep_trace.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "24267de2205db3d613f22015f12628ca9d85fdb2",
+        "sha256": "2f2ac147c886ed2f265d7c73b28865fc7e033006b199ff280ec5386869141817",
+        "bytes": 22742
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b4cccfd0dce01b3c116e4995dd9a86500a936f8c",
+        "sha256": "8902840ae9ff17e6a4a5cc6b1778a02f0ccc06a0d70609f1a89fec103c982c6a",
+        "bytes": 23332
+      }
+    },
+    {
+      "path": "frontier/scheduler/utils/ep_wave.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c7ec14b14e3b87746b62e092936b88d2f7739a10",
+        "sha256": "7a957b67ae63b97365e792ff57d552cb3d314b4d9b2159b5b46044a625588a7d",
+        "bytes": 5491
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "11bd91aaab0786291cd8efc58f9f580854890148",
+        "sha256": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+        "bytes": 5734
+      }
+    },
+    {
+      "path": "frontier/scheduler/utils/expert_parallel.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "cd4e9d54af5f1366a4f86b230ba851d5fb701c55",
+        "sha256": "30899db143a193502e99e024bbfa10d4e927d364d7fe5f51c9ee40acd1849155",
+        "bytes": 36016
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "84cc6b2f69fbc9abcf8d5f6564d94ec023d6d0c2",
+        "sha256": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+        "bytes": 36452
+      }
+    },
+    {
+      "path": "frontier/scheduler/utils/layer_workload.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "d592c30591db4771c72e2208a935df0559e186e9",
+        "sha256": "3fc12a32b10406d8ef86c78109e99cbee86f3a5c857dc1baa7bdf04c2c75e19a",
+        "bytes": 3314
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "472671a7505b9c9ec3fead1fa22a88e750acca96",
+        "sha256": "5a69935bc5c66a612ca0dfed242dff72a029b867a50b91b9a9293b3d8520d494",
+        "bytes": 4299
+      }
+    },
+    {
+      "path": "tests/comparison/calibration/pd_proxy.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "bb41cc4d6d44196fee1ba46cba6f6e566347d58a",
+        "sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce",
+        "bytes": 20921
+      },
+      "snapshot": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "d7b75f085f48f7a73fec0081e63712ccfaec1ce5",
+        "sha256": "c0c9929251e7843b3bf709a9b9e1870462042516b43b077d1a954436856fecec",
+        "bytes": 20922
+      }
+    },
+    {
+      "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "9ac7e6586e4930858beef7869f32fd0a097442e7",
+        "sha256": "f491f231f50652dacf05f6ac00d94bee64ea5b4fb649f24bd5e039a586b4115a",
+        "bytes": 45965
+      },
+      "snapshot": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "27912f2e15ef26e4902aa01825253316fa55ee4a",
+        "sha256": "6e4d573cbfefbbe46aeb00454b1c658ba5a33579e22f353184342f2b91cb89a3",
+        "bytes": 47294
+      }
+    },
+    {
+      "path": "tests/integration/run_step5_measured_main.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "71c773b2333b099d95e04f428e20eacb0d4da76e",
+        "sha256": "637549298cf157cb69a911a9076ecce717e47c5e10236f37648c560c4fa78cab",
+        "bytes": 16265
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "054060b9c9ea249c193772e428efe4c92b2694c3",
+        "sha256": "4684fef43da74883b3289448dc8309ba21617705450a0ff733fdebf0ff1e8f72",
+        "bytes": 20323
+      }
+    },
+    {
+      "path": "tests/integration/step5_comm/analyze_result.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f3685cbc3f0437ef74fea80a7ef733d39d355614",
+        "sha256": "b86611de6482c67bf759b4690f777467c7200ce534cb629ace92e5e17ba2d127",
+        "bytes": 42652
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "205016e377c98f153cc5692aef803ce8846a7fd7",
+        "sha256": "136528801a47df4c07677d45f09537fe4f63b03441d4bcd5ee347dd46ddb205d",
+        "bytes": 42685
+      }
+    },
+    {
+      "path": "tests/integration/step5_comm/export_costs.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f3327f229348061e8fbaf410b34c481fce2316b8",
+        "sha256": "48f07fe25dafd7acab6d4553b0ac64cd5b7b8ee9ea32e2bce089e4c015afef9d",
+        "bytes": 15804
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ed6d6e6c9164bd55048f13a0f3cdf4c09c21fc19",
+        "sha256": "d8a0d88395becf2e41fde8be1918477b5749cedddb0c47215d89cf4f48b168f8",
+        "bytes": 37011
+      }
+    },
+    {
+      "path": "tests/integration/step5_comm/prepare.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f40c119fe0dbff305050bbbcaddcacc8fd542920",
+        "sha256": "88cce091e9f809a111f2901a2681beed9f2dc97fb83d703b7405594a3c818abd",
+        "bytes": 6929
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "75d90b70e77d71cc9a346a533f2854cf253929eb",
+        "sha256": "a55a4b0bfe5a5776e10dc6495cb46c4f04f7f5d28b0538e246559830268f17ab",
+        "bytes": 11623
+      }
+    },
+    {
+      "path": "tests/integration/step5_comm/step5_position_model_run.json",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "08e071faf34815e4ac0253afa8ab5424c20e0a4a",
+        "sha256": "36bbd3305794dd8bb3b212a76088cd422e8b5c52e1c43d34bb11e0edf5368a19",
+        "bytes": 7621
+      }
+    },
+    {
+      "path": "tests/integration/step5_comm/validate_result.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1115f13ff4a62e8b6f394d018d8682a405356998",
+        "sha256": "50b22ce8d5d4d148c012570bc41af2a2e3945dcbcc185d39a91211b07c030b1b",
+        "bytes": 7768
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e5eb2eac507058c49754548296fb659974411e7b",
+        "sha256": "ee35b29fc3f01234284a1e92f4b90c8ae8902dfffcd396f170c46dcf00d04378",
+        "bytes": 15107
+      }
+    },
+    {
+      "path": "tests/integration/step5_comm/worker.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "29f8c17615f1a9dca2b70fd81c743745fdae63cc",
+        "sha256": "4437b26b33a433578f235de632bba3684a3d879b06861641156fbfdcd30a1c87",
+        "bytes": 15447
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ae0f2283386a7b8d8d7b6494f36485dce8726344",
+        "sha256": "f091cb8c41f5755c0660c0469533ab29dba7130cf899c4f95ff012ccd1624f87",
+        "bytes": 17400
+      }
+    },
+    {
+      "path": "tests/integration/step5_environment/test_position_cyclic_graph.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7cb2125ac6894e26decf5bf9134840bfc498d571",
+        "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+        "bytes": 17409
+      }
+    },
+    {
+      "path": "tests/integration/step5_measured_compute_fixture.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "3d47ad95c7b98f4191d84fb96f75606de5f6b49f",
+        "sha256": "8e17b11a5ea7deef440cc98e145955c920476f952af3805320c814d7d47b18dc",
+        "bytes": 16754
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "eb706b500c16db8004ee9f69335eb955d2109894",
+        "sha256": "87752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b",
+        "bytes": 28699
+      }
+    },
+    {
+      "path": "tests/integration/step5_native_image/Dockerfile.position_cyclic",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "4feed97a037452bc9d710b9c76633bc4e927f71f",
+        "sha256": "9478ba83d7a5d1d067bf68cad96a042cb851583e7507a85c22d0a81350ecfb07",
+        "bytes": 1329
+      }
+    },
+    {
+      "path": "tests/integration/step5_native_image/build_image.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "198b35376fc14170727cdc35dca2d277f793f2c1",
+        "sha256": "7669c8adfc90840a8aaba3ba82d1d60994f95984177d8a0adf247e08c75c41f3",
+        "bytes": 3762
+      }
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_canonical.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "18c57c7a757beda4cd05ca867f4a1edad917945d",
+        "sha256": "57ea3982fccff6c10c2e9577f5c341dc5bcd79bc37550cd74cf0458585a25f80",
+        "bytes": 8689
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e8172d8cbca9fddfbc614b884a62d36fb00923df",
+        "sha256": "996600da51eef9301a65a41f9ede9eeda06d2b752f3755e74da8e798d4a9f197",
+        "bytes": 9327
+      }
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_replay.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "98bf0dffbca35c0272a34c247494b5c12d0ef551",
+        "sha256": "35e346e2cf2e657cadf4feb8a74d4822ba18584ec67c4ea31f93bb075580885b",
+        "bytes": 5308
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "2734a9adbf0e86c292d8631967c754de1348ad3b",
+        "sha256": "13cfe070bd8d74a70897e32707feb1007d3ffbf8a4a1042e8b228d2571b412e9",
+        "bytes": 5618
+      }
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_runtime.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "3b5af5b211a103b17252f75c414057ebbf459eb5",
+        "sha256": "b71bc59620648ea2d575d1c32906b3da7b682ba2353efd56a0614f1c2900326a",
+        "bytes": 9071
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "497972efa067480f15d391ce45e90a3f39fbd48a",
+        "sha256": "c186286b0595273e97aabd8945c35694bafe41a6d9bc26dc13c923781908c1b6",
+        "bytes": 18434
+      }
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_stage.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "88d2c058b61f05c91d2a18f0d0b9f0639795cf6e",
+        "sha256": "5d56da3e3d2fc74193e1871c24c1ee5ce483fd4cb6a1e12614c4d3ee36eb2f61",
+        "bytes": 6006
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "d51c35a9cfea52e93f50e68b7549c28a314e8b84",
+        "sha256": "6d03e77fcca2264c47c4f3b44216ab938bc3ddeceb1a14998d1630776811618c",
+        "bytes": 6507
+      }
+    },
+    {
+      "path": "tests/integration/step5_pd/verify_r2_stage.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "987d2ebb3a703356e9073921a3b570f41324f119",
+        "sha256": "1fe1eff3d061afd3643e7055d952d4735c81179657092b8ee2f3a9261ddb3095",
+        "bytes": 9594
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f4718b180cf553485be2762071b502e01fd93fd1",
+        "sha256": "6e4ab29fdca0b6c41cb989dc5b20571cc18bc994d725c7eac3d10bd2f2f9ee04",
+        "bytes": 10788
+      }
+    },
+    {
+      "path": "tests/integration/step5_profiling/run_on_worker.sh",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "2b5f4637a2e9d55cc2e921b6c0ecd59cf4b3af98",
+        "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
+        "bytes": 2732
+      },
+      "snapshot": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "400160f692f5d0ae156783d9407ddbc88566ab9d",
+        "sha256": "c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746",
+        "bytes": 3519
+      }
+    },
+    {
+      "path": "tests/integration/step5_profiling/submit_profiling_job.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "faa958f56f68ffa0ff47c93dab3261e13783d418",
+        "sha256": "f924fafdc1d03166cf3549332c2dd9a1d5989a320ea9da9dd3b92538b743a2de",
+        "bytes": 3352
+      },
+      "snapshot": {
+        "mode": "100755",
+        "type": "blob",
+        "oid": "d7bf2318e68418ecc1051047e2776d26b7ac8e64",
+        "sha256": "472f96e1435c03230b1fb78181e24be8f9704afe3cf901b57e2453d0238d388e",
+        "bytes": 3407
+      }
+    },
+    {
+      "path": "tests/integration/step5_profiling/verify_fixed_probe.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "2fcf62e7f37c972863280b45598a4e9a99c2615d",
+        "sha256": "5ee99c94ea6dc0d489befa21dbd14b5f41e8774f60cf720d820c070ac5098dc1",
+        "bytes": 6308
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c0fb0a05980d1ec51202d5e8adb8a3007a75fdd4",
+        "sha256": "e745cb4ef09de4fb04af1d9b8f884fe4fec07355c1acac3a98b54831fe357c28",
+        "bytes": 9452
+      }
+    },
+    {
+      "path": "tests/integration/test_step5_measured_main.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "02587ea69ea15253bf038f6ff9eb2a4f150d5da3",
+        "sha256": "a3d383dcc1cca55ced3e59d8712694bd48e139e080e97c76b06e4c8feb35ed66",
+        "bytes": 16573
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "00a6ec26cf048905810d70c68d618891e4650a1c",
+        "sha256": "ed51839f29ae156939d9bdbfcaf5661fcb70a3ef70c873262efea5faf2e5d16e",
+        "bytes": 36590
+      }
+    },
+    {
+      "path": "tests/unit/test_collective_benchmark_helpers.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "4b0b3a536afd262e4c39cba3fe7b231064e32494",
+        "sha256": "15f24ffc2fccd3b5524e6b8be42f2af007eb1b2873a6861de8f434c9cd9b0776",
+        "bytes": 29210
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ae2cd5537253945f26c9d66ac331b86d81680e4c",
+        "sha256": "149e66e9d64742f506c895c7e8e740a1169da8884d0bd9cc6c730cc46e4eb1e5",
+        "bytes": 38368
+      }
+    },
+    {
+      "path": "tests/unit/test_collective_sim_cc_backend.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "476c36452e0ceceb5d84110a5c4566300f7b137f",
+        "sha256": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+        "bytes": 16308
+      }
+    },
+    {
+      "path": "tests/unit/test_comm_operator_families.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "24b169c66c152884be5536bd6e30fe2d547e0858",
+        "sha256": "5dd3a30ca4458ec15ade84ddeb1f40a1a211e0196508f6a062453397c7c8049f",
+        "bytes": 43966
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "76938fae2dde296c7878995c4b2f75497677ab9f",
+        "sha256": "c0865c2dd05dae3fa6e7b499fc4c3292e67c8836b14df98df7a5fa534a3abfcc",
+        "bytes": 48405
+      }
+    },
+    {
+      "path": "tests/unit/test_dsv4_precision_metadata.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b557de60ad0c2a07178e8747cf49f5d8b5f5acda",
+        "sha256": "d63d026ddac196017c2627a911da7fe72b69f25007eb65947f75a145fbd979ca",
+        "bytes": 17853
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "6d5d3c0461094625a2bf4dd7ddf8e2dd38c4647b",
+        "sha256": "db633678f53a945f4fc50bf946ad3e73fd4b3eb1e4e205cd3481a7ba7c3d8a69",
+        "bytes": 18059
+      }
+    },
+    {
+      "path": "tests/unit/test_ep_wave_trace_context.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "1820ad91be4293e6e0f082220f1c9cc0c254b230",
+        "sha256": "b7a5333f2b915472b8785fad9f0b07fddc424d721188309626b44949e83d7606",
+        "bytes": 5179
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a25d3c050b94a85f151760d49e3d274fa756da1b",
+        "sha256": "8416e9abc7562b42cca1c132acb249d3ebe9ebdce7dde19a992cae00a55533ca",
+        "bytes": 9100
+      }
+    },
+    {
+      "path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "5b27d47c80ebcc77c9b6af795b129fdde99188c5",
+        "sha256": "91c2042659d28c9974da1dff343a7a8c2397773f10296729919268b2bae14a0a",
+        "bytes": 9514
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "ee0c16d55d3ebacdf9a9abe79abe33b0201a518f",
+        "sha256": "16d274ec513fbddbdfadb5b29a071b1af66cf16d8d8fdedb1e641f5c09dfd548",
+        "bytes": 25865
+      }
+    },
+    {
+      "path": "tests/unit/test_moe_position_routing.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "4d5f4df0ae4721bfb31cc9a80a35038a1de0a0a6",
+        "sha256": "a1733cf4e65bd71fef7895eff478aab640b70b842e62d9c0df862efd4c1eb24d",
+        "bytes": 10791
+      }
+    },
+    {
+      "path": "tests/unit/test_moe_profiling_output_metadata.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "54a04d96b1a18c6a017ca3ff79fda52ff8e5ec73",
+        "sha256": "22da413b97e25f3207764b7a47d3a9ae70dd26c16a4651120523e9bce20cb61d",
+        "bytes": 2786
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "bae54872acf6e3e44236b67fcb8209b1c10f0066",
+        "sha256": "4389c509836fc2b34922971797c6cca9d6b2319e1bd6b1f24ad0ac82350047cc",
+        "bytes": 11469
+      }
+    },
+    {
+      "path": "tests/unit/test_moe_routing_conservation.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "03deae857e356c488442509122362f895afa4f2a",
+        "sha256": "ad7516a498487c7531912b8a9b8c2658a26667ad9d5726a5968afbd573b6613f",
+        "bytes": 11983
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "db0a2fe8d8b39487af122bd77a8f496b6c12bc5e",
+        "sha256": "7c0adb56d745b2e8e4c909d61e4bd887854203a44ac59118a464ff2b484d662e",
+        "bytes": 17340
+      }
+    },
+    {
+      "path": "tests/unit/test_moe_routing_runtime.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "64ca203ee4afd81167024e6d75b2b1074c8057da",
+        "sha256": "8c85c36fa0b55993593ef478ab4ba423c20729dcd6df42edbc857b51d55bc3dd",
+        "bytes": 943
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "41347327443580d97abb651ab6088daae2c00e1a",
+        "sha256": "e52190ec893dfc431ac96b37b9cdb7de92649ecd21bb7adb9fb273b67f739262",
+        "bytes": 9237
+      }
+    },
+    {
+      "path": "tests/unit/test_moe_share_expert_operator_families.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "5f368b9f003ca3655eea917912ffce6f72a5fe21",
+        "sha256": "3f7e9e3b6a1c34b913d5083514090b4a383ff55e65fef757952462ede9f9282e",
+        "bytes": 29247
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "dd8ce95659a2fa2e3db20a842a41cd0d8fc7cd61",
+        "sha256": "763bcd2d496433c7c62e0be45204ef1f795db956e96bdb7394a46d7d51ec6347",
+        "bytes": 29552
+      }
+    },
+    {
+      "path": "tests/unit/test_op_trace_utils.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a0403cbd4e13b5a54fb7acdb92b22d6f919902ad",
+        "sha256": "65315b83b950eb3a62a1dec92197471ac3afbf40874b0da6d62885ee83fb4db6",
+        "bytes": 20851
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "96e6009fec2dc21f58766e8cdea0563b8f79beb1",
+        "sha256": "fe692197fdb344d3076f4ba5b600dbc1bbb1504439eda1a5e26da51d502a470a",
+        "bytes": 24450
+      }
+    },
+    {
+      "path": "tests/unit/test_prediction_measurement_bindings.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "df64b3d6a86715e909f552c9e91479e66384494f",
+        "sha256": "18c1c2b6741441db5f2f98dcd3fecf92d43d22fa8659988a94102b2a47bd3f27",
+        "bytes": 19405
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_attention_profiling.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "e43a3d3880f9973c82ea7fe2509d08429365c7b3",
+        "sha256": "f4bbbb850e6c466329024b75e82c205fb366fbaf07bc29d9f151b2d248d9681e",
+        "bytes": 32851
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b4f8f2d378acdf671c8de6abe361f532f0c40855",
+        "sha256": "fd10cd1196fcc834b8971e93a7e5599bdff41ac62921d2679c64413768c01bca",
+        "bytes": 33837
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_canonical_g3.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c0fcea44b3cfb9f8898992bbeb3e337adb015b47",
+        "sha256": "94471f3cb394e3708c057322de61fca2995d880d3e56c820dfcad7c3f0cc40a9",
+        "bytes": 20386
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a261f02d084a04fe9def2fd9f701e7892cc40752",
+        "sha256": "56a826e9d15047b632c0dad6a9e2aff71264979f3eac84bb93c8016ec8020ebe",
+        "bytes": 27384
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_comm_cost_export.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "b44b89c20aa12c0aaf2344281a2ab601775077d5",
+        "sha256": "7ef0005f556350ad467b789d0e636aa14a95e2732cf4000558e5e21cdaf603a5",
+        "bytes": 16695
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "7e1be3c2b96beff9bfa783d9c1c6e932151f09da",
+        "sha256": "d73028b0ac37f7205c2adf321b9d9123d46510b89ac386e77866f383e19d5022",
+        "bytes": 39714
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_comm_package.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "63f0e0ccd94f7040760b06780f7bf6ae766d4e41",
+        "sha256": "f55e99bc638c30074123a2f3545deb513ebd65518d7948f5d52c423422ccdd1f",
+        "bytes": 7523
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a6d8b4c6f87245afa0f45b951311f9953773555f",
+        "sha256": "8e3b0876b21b1a5b499565fe55db2d5681457ef5388d26b0eca163ebf6cb5ecf",
+        "bytes": 13600
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_comm_transport.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "69318e94baed8d02a860f0412e1812a17d63272f",
+        "sha256": "8ab7dee744c282ec1b013a6b1742f42fb4f4a8d4b8a74a430f912b5569b8f354",
+        "bytes": 8409
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "9102f5bcd17bb616078255019c1c67baafa11e3a",
+        "sha256": "3f4d5c7e1e7813497dddc412cf6015495aa8052919cfcf1fc2f146cccc699669",
+        "bytes": 23065
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_contract_reuse.py",
+      "kind": "superproject",
+      "changed": false,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a91949542a3cddd7f4b4a93c6465f1a5d6ae2e16",
+        "sha256": "23e9eb561ed64c5ae0554715657b61b57022406c84da6e6304379f49e711d9f6",
+        "bytes": 10521
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a91949542a3cddd7f4b4a93c6465f1a5d6ae2e16",
+        "sha256": "23e9eb561ed64c5ae0554715657b61b57022406c84da6e6304379f49e711d9f6",
+        "bytes": 10521
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_dispatch_probe.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "106abe2624513bec3c990f759b486826094f63a4",
+        "sha256": "db389bcf29baeb5534246303e0dc2aeb53016704a53c2f48fc7176590a8a1f7a",
+        "bytes": 35570
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "a7b539afe4ba36a1740b24a97ae957bfbc961d1e",
+        "sha256": "739a9663e3df3fdf87c69446b67c3b7d9e6caca131c860d325b2c0a82aac4790",
+        "bytes": 61347
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_fixed_probe.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "f21f8380f262d7706ad4dbdc9e000e3adbe9d4c7",
+        "sha256": "95ac3975a1674c90cfd295ee557e3025841c0b434fef3c7e0efc39211557007a",
+        "bytes": 11301
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "19b02648220fe5c5c30e14975b67110add001dcd",
+        "sha256": "a759e3c20f45603f500ca0ff662ab489bea894abfd1085bcb001582ea345e54b",
+        "bytes": 21126
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_measured_ffn.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "bfd9bd6e62bc21d85481e2f36d221b14106bfc68",
+        "sha256": "5f0603d56d4346091b42a83ece29579d66cbc86005a465d527eca25e9f707962",
+        "bytes": 11932
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "66247cfc7492c58575528daa3afecfc56d81884b",
+        "sha256": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+        "bytes": 20827
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_moe_pricing.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "2213df1fc9fee0bb1c43b978672853b48c5221bc",
+        "sha256": "c3fdef435d4bd0077638d9f220adc702e3f23b46a622257e44e76a457e5179df",
+        "bytes": 19386
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_moe_profiling.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "cf6ffa178fc085f6085e7fd7c27fc503f43e043b",
+        "sha256": "81f733b5e55e615cc9cdf6d2b7c27e8b418070434b037ac3518b5213fb9ef6d7",
+        "bytes": 11920
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "328616c2f5d24a5b470014c3541633dab20b9640",
+        "sha256": "b0ec0f272b20220bc59da09eef695ee3dab6da83397955e2ab6cde9b449c75ea",
+        "bytes": 34668
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_native_image.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "841a0a07a67cdece859d0976b12ffebb742ec04d",
+        "sha256": "3cbd937692c3485b75b5c4520ba9a3561faf224447701dc24f20b74e4447f820",
+        "bytes": 1605
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "298f35be92d2a395cc0934883d9a3e70d9dab440",
+        "sha256": "747bbaeeb746726d084141b09b962a09c24cacd7033fd38ed7087db5b8684308",
+        "bytes": 63566
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "44a4dd28b8b52c695d09ea4618b9750a63741c79",
+        "sha256": "2555b0d0ada684c44f0e2fa0352eff9802b6ed341a568ce4f36f9b17a4cabcfb",
+        "bytes": 73983
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_native_position_cyclic.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": null,
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "fef3a95ee647b3a933bc021fd130ff8a728b222b",
+        "sha256": "5afb5cfd80bc9ad848ba1027ded6021cbe840f6e82965cda4f6f7c927d43fafd",
+        "bytes": 18300
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_native_reference.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "3ffbd67726c1fd83893210858eab05161f473eb9",
+        "sha256": "770242e90b0ea591df532d9689c142bb150c7e2d74ce04a24c73d270e662942c",
+        "bytes": 25971
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "4a9685f95a26fe4514c7773cab2b703156895ebc",
+        "sha256": "488f6de86f7ca0ed2fa5c9c1ef522979ea145771c775de2867e71736c1aaba14",
+        "bytes": 26022
+      }
+    },
+    {
+      "path": "tests/unit/test_step5_request_free_profiling.py",
+      "kind": "superproject",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "61cfb12315d35d51078d2f2d7707d2a69bc49756",
+        "sha256": "95e549570e0773bf363db3ca06aa3386d9aef1964b14d4ef0d490258acd478b9",
+        "bytes": 14462
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "123e31caaef1bcdbefa5e8258b212d904fcdf4e0",
+        "sha256": "5a1dc4399346aadc4494672201abba28b41c214d7388d132b216429eb12420a4",
+        "bytes": 15981
+      }
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim",
+      "kind": "gitlink",
+      "changed": true,
+      "baseline": {
+        "mode": "160000",
+        "type": "commit",
+        "oid": "d28fe917370c2d55230c3ea226e5660785b44aca"
+      },
+      "snapshot": {
+        "mode": "160000",
+        "type": "commit",
+        "oid": "3dac53c544e546574cb6e8078cd14053d0916113"
+      },
+      "actual": {
+        "added": 1,
+        "deleted": 1,
+        "gross": 2,
+        "net": 0
+      }
+    },
+    {
+      "path": "docs/general/module-size-exceptions.md",
+      "kind": "module_size_note",
+      "changed": true,
+      "baseline": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "418d5546e7ae645ee52c819b598c38cb37b99c0b",
+        "sha256": "b9070e25a0b6f1a0c0bfc620f2a4ba26e3549b785d5ca492a0845fe75ae4ea63",
+        "bytes": 15668
+      },
+      "snapshot": {
+        "mode": "100644",
+        "type": "blob",
+        "oid": "c080d1317cbdf6dd43f76c2a1cd8152f516c2140",
+        "sha256": "b9897e3be8f2f04048dcb3769c5d277ef46f5938582bcdf496259b56718429e5",
+        "bytes": 21534
+      },
+      "actual": {
+        "added": 12,
+        "deleted": 0,
+        "gross": 12,
+        "net": 12
+      }
+    }
+  ],
+  "fixed_native_source_pins": [
+    {
+      "path": "vllm/forward_context.py",
+      "base_path": "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/forward_context.py",
+      "derived_path": "/data/ycfeng/tmp/d29_published_sources01/source/vllm/forward_context.py",
+      "base_sha256": "24a1b39218b88539e387b696dcced722d14a24d9f01932a44feb93dd4986b85d",
+      "derived_sha256": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
+      "rebuilt_sha256": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
+      "applied_in_memory_without_fuzz": true
+    },
+    {
+      "path": "vllm/models/step5/nvidia/model.py",
+      "base_path": "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/models/step5/nvidia/model.py",
+      "derived_path": "/data/ycfeng/tmp/d29_published_sources01/source/vllm/models/step5/nvidia/model.py",
+      "base_sha256": "6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0",
+      "derived_sha256": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
+      "rebuilt_sha256": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
+      "applied_in_memory_without_fuzz": true
+    },
+    {
+      "path": "vllm/model_executor/layers/fused_moe/router/router_factory.py",
+      "base_path": "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+      "derived_path": "/data/ycfeng/tmp/d29_published_sources01/source/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+      "base_sha256": "794abb7c210758911d349ca6fbd82690f0ef48ba4f8a7ec2ff0f87ca3ad50224",
+      "derived_sha256": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+      "rebuilt_sha256": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+      "applied_in_memory_without_fuzz": true
+    },
+    {
+      "path": "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+      "base_path": "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+      "derived_path": "/data/ycfeng/tmp/d29_published_sources01/source/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+      "base_sha256": "24662a8cbd10365ae349000184bcc0ad063eff72dead1b3cf5b6f40fe0cc3e47",
+      "derived_sha256": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725",
+      "rebuilt_sha256": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725",
+      "applied_in_memory_without_fuzz": true
+    }
+  ],
+  "fixed_non_source_evidence": [
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json",
+      "blob": "a250fc5c80524ce774ac2d8580258fee2b008b17",
+      "sha256": "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec",
+      "bytes": 1593
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/native_installed_sources.json",
+      "blob": "4d2294f906e9db5e4c7900579a1836ff2f03be22",
+      "sha256": "b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09",
+      "bytes": 340881
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/publication_receipt.json",
+      "blob": "b2077c97886cbedce2c1f4727b24c3a438e211da",
+      "sha256": "efda9dbaaeacb2899cc99b3ac9e9fea03a5c28d2b084efc2cd232b0bbd38430f",
+      "bytes": 2653
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/installed_export_receipt.json",
+      "blob": "92270250d36690994e636c59d59d4818367015b2",
+      "sha256": "ddcf8119dbccb5028c81df4e148d1caa90399e8ebef2515b5b89eef61276abee",
+      "bytes": 2796
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/registry_index.json",
+      "blob": "d27ae2d07d48fc32d2ccb51fbc40da8a61b5f2af",
+      "sha256": "10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d",
+      "bytes": 856
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/registry_manifests.json",
+      "blob": "b805a378badd2da699b7a048278e0116da50c35a",
+      "sha256": "d7fa350cad415532798560d63ae94f79d346abd89fa014f47d869d238d986b79",
+      "bytes": 23649
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/patch_identity.md",
+      "blob": "1d5d494a995af22980b6856320ad2339e72e0e5c",
+      "sha256": "8ad004e5cf3f20cf98761a60170915968ed2f7c936ff10f0e93b98d838bbe92d",
+      "bytes": 1479
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_d29_native_balanced/native_source.patch",
+      "blob": "49aa9c24c6a540f2d4b1d195ffc1e4955f54d226",
+      "sha256": "66608153204012927e8ef678378d95ca1ef93dab9e2f504a82a5318b9828bbab",
+      "bytes": 8340
+    }
+  ],
+  "future_guard_command": [
+    "git",
+    "diff",
+    "--name-only",
+    "--no-renames",
+    "e200bb780d3b20ec6f5ff0a067ed8b9ddd505662",
+    "<final-key-commit>",
+    "--",
+    ".",
+    ":!task_memory/**"
+  ],
+  "expected_future_changed_paths": [
+    "frontier/cc_backend/collective_plan.py",
+    "tests/unit/test_step5_moe_pricing.py"
+  ],
+  "residual": "Recount only those two paths after exact Git name-set validation; all other blob/gitlink/evidence bindings must remain fixed."
+}

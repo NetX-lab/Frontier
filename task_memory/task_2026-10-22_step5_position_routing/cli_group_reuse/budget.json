@@ -1,0 +1,62 @@
+{
+  "task_id": "D29-MODEL-GROUP-REUSE",
+  "baseline": "e41abc073500d61f224eda4fca1123e74e40544d",
+  "code_commit": "3763e5b87a845eac186cfd481f0b56cffb2dd045",
+  "paths": {
+    "frontier/execution_time_predictor/moe_routing_workload.py": {
+      "step": {
+        "added": 10,
+        "deleted": 3,
+        "gross": 13
+      },
+      "retained": {
+        "added": 137,
+        "deleted": 6,
+        "gross": 143
+      },
+      "ceiling": 175,
+      "sha256": "d6c69e4fe4d95cf9ee0b331e844b721e9e9a73494547b414f12287388ec4b0cd"
+    },
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": {
+      "step": {
+        "added": 1,
+        "deleted": 3,
+        "gross": 4
+      },
+      "retained": {
+        "added": 94,
+        "deleted": 17,
+        "gross": 111
+      },
+      "ceiling": 128,
+      "sha256": "4b2bea957a37a92705f2da081b39e95c5176376aa9c54c5649b12bb598ea8d54"
+    },
+    "tests/unit/test_prediction_measurement_bindings.py": {
+      "step": {
+        "added": 54,
+        "deleted": 0,
+        "gross": 54
+      },
+      "retained": {
+        "added": 254,
+        "deleted": 0,
+        "gross": 254
+      },
+      "ceiling": 260,
+      "sha256": "671821d3a51edaefc9ef3cc348c3cfb513d533b5efc995a6100adbf703c22d4f"
+    }
+  },
+  "source_delta": 17,
+  "source_ceiling": 45,
+  "test_delta": 54,
+  "test_ceiling": 60,
+  "step_gross": 71,
+  "step_ceiling": 105,
+  "core_retained_gross": 3932,
+  "core_ceiling": 4404,
+  "global_retained_gross": 9175,
+  "global_ceiling": 10000,
+  "earlier_retained_receipt": "../final_parent/handoff_source_receipt.json",
+  "retained_delta": 59,
+  "status": "PASS"
+}

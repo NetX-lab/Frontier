@@ -1,0 +1,25 @@
+{
+  "decision_id": "D29-COLLECTIVE-ARTIFACT-PARSE",
+  "authority": "D29-REPAIR-PATH-AUTHORITY",
+  "apply_after": "init_validation_scope_amendment.json",
+  "effective_unique_paths": 111,
+  "owner": "pricing",
+  "owner_gross_ceiling": 3956,
+  "repair_delta_ceiling": 50,
+  "source_delta_ceiling": 15,
+  "test_delta_ceiling": 35,
+  "repair_paths": [
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "tests/unit/test_collective_sim_cc_backend.py"
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "frontier/cc_backend/backends/collective_sim_cc_backend.py", "before": 78, "delta": 15, "after": 93},
+    {"path": "tests/unit/test_collective_sim_cc_backend.py", "before": 198, "delta": 35, "after": 233},
+    {"path": "tests/unit/test_step5_contract_reuse.py", "before": 40, "delta": -35, "after": 5},
+    {"path": "frontier/profiling/collectives/vllm_forward_collectives.py", "before": 34, "delta": -9, "after": 25},
+    {"path": "frontier/metrics/constants.py", "before": 8, "delta": -5, "after": 3},
+    {"path": "frontier/entities/execution_time.py", "before": 51, "delta": -1, "after": 50}
+  ],
+  "reason": "The real pricing control attributes20 repeated large-artifact decodes to1.094s across5 identical point calls. First measure exact-text parsed-result reuse; keep reading the current file and every live qualification/count/context check. This preserves existing same-instance rewrite visibility without a filesystem-timestamp assumption.",
+  "limits": "One backend-local latest-text/parsed-result pair only. No stat-keyed or global cache, hash, flag, artifact copy into the cost cache, numerical/cache-key change, shared API or CORE caller edit. Read/parse errors propagate. Production repair depends on a faithful single-variable control proving unchanged complete costs/proofs/keys and removed redundant decodes. Old step caps remain historical; this is a new separate50-line step."
+}

@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "byte_identical_to_bc8ae27": {
+    "frontier/profiling/step5/timing.py": true,
+    "frontier/profiling/step5/replay.py": true,
+    "frontier/profiling/step5/scopes.py": true
+  },
+  "unchanged_source_names": [],
+  "notes": "No predictor/admission/linear/MoE source edits; only existing Step producer and focused preflight/judge/default-input compatibility changed."
+}

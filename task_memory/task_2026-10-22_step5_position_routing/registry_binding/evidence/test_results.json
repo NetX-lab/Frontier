@@ -1,0 +1,41 @@
+{
+  "green": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "213",
+    "time": "171.157",
+    "timestamp": "2026-10-23T09:08:46.725927+08:00",
+    "hostname": "kun-workspace-vgen2",
+    "source_xml": "/data/ycfeng/tmp/d29_registry_final02.xml",
+    "source_log": "/data/ycfeng/tmp/d29_registry_final02.log",
+    "test_classes": [
+      "tests.unit.test_moe_grouped_gemm_padded_features",
+      "tests.unit.test_prediction_measurement_bindings",
+      "tests.unit.test_predictor_cache_atomicity",
+      "tests.unit.test_shared_prediction_model_manager_mixed_layer_moe",
+      "tests.unit.test_step5_contract_reuse",
+      "tests.unit.test_step5_measured_ffn",
+      "tests.unit.test_step5_measured_ffn_replay",
+      "tests.unit.test_step5_measured_manager",
+      "tests.unit.test_step5_measured_public_predictor",
+      "tests.unit.test_step5_measured_training",
+      "tests.unit.test_step5_model_bundle",
+      "tests.unit.test_step5_model_identity_reuse"
+    ]
+  },
+  "red": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "1",
+    "skipped": "0",
+    "tests": "1",
+    "time": "9.506",
+    "timestamp": "2026-10-23T09:13:28.733350+08:00",
+    "hostname": "kun-workspace-vgen2",
+    "source_xml": "/data/ycfeng/tmp/d29_registry_standalone_red03.xml",
+    "source_log": "/data/ycfeng/tmp/d29_registry_standalone_red03.log",
+    "expected_failure": "AssertionError: both fitted native FP32 gate bindings must survive registration\nassert 1 == 2\n +  where 1 = len([RandomForestRegressor(max_depth=3, n_estimators=2, random_state=0)])"
+  }
+}

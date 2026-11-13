@@ -1,0 +1,36 @@
+{
+  "source_commit": "e41abc073500d61f224eda4fca1123e74e40544d",
+  "scope": "Parent verification of archived suite outputs; no test rerun",
+  "suites": {
+    "supplement101": {
+      "passed": 101,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 8.598,
+      "xml": "task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/supplement101/results.xml",
+      "sha256": "035a6ed22e5d308462c5eb8066205fa6abd749c0f7f37013908984fbc485bbd3"
+    },
+    "metadata196": {
+      "passed": 196,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 8.208,
+      "xml": "task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/results.xml",
+      "sha256": "252bfabf51ce4e8e4b8ba68abb8540be9ba771c4a362c370b79bf2bd0f61f0cb"
+    },
+    "catalogue53": {
+      "passed": 53,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.581,
+      "xml": "task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/catalogue53/results.xml",
+      "sha256": "793e37daadc8b6d774cd6f54a4e850ad686b4adeeb687b0e3c131b997f34013f"
+    }
+  },
+  "full_cli": "IN_PROGRESS",
+  "strict77": "IN_PROGRESS",
+  "full_unit": "IN_PROGRESS"
+}

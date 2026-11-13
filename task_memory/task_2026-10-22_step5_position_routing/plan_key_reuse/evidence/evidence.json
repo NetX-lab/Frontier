@@ -1,0 +1,212 @@
+{
+  "task_id": "D29-PLAN-KEY-REUSE",
+  "session_id": "ses_e963098ecffebqCOtdysKGY6Xe",
+  "status": "PASS",
+  "source_commit": "c4e06a6159ee3b1e63c50abaa346066ae8b6da31",
+  "base": "087db1bfcb3dbc2377d4032f650b29c48fb104fd",
+  "d29_origin": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+  "step_counts": {
+    "frontier/cc_backend/collective_plan.py": {
+      "added": 4,
+      "removed": 1,
+      "gross": 5,
+      "retained_growth": 3
+    },
+    "tests/unit/test_step5_moe_pricing.py": {
+      "added": 11,
+      "removed": 0,
+      "gross": 11,
+      "retained_growth": 11
+    }
+  },
+  "cumulative_path_counts": {
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": {
+      "added": 93,
+      "removed": 0,
+      "gross": 93,
+      "retained_growth": 93
+    },
+    "frontier/cc_backend/base_cc_backend.py": {
+      "added": 14,
+      "removed": 0,
+      "gross": 14,
+      "retained_growth": 14
+    },
+    "frontier/cc_backend/collective_plan.py": {
+      "added": 139,
+      "removed": 0,
+      "gross": 139,
+      "retained_growth": 139
+    },
+    "tests/unit/test_collective_sim_cc_backend.py": {
+      "added": 236,
+      "removed": 0,
+      "gross": 236,
+      "retained_growth": 236
+    },
+    "tests/unit/test_step5_moe_pricing.py": {
+      "added": 311,
+      "removed": 0,
+      "gross": 311,
+      "retained_growth": 311
+    }
+  },
+  "step_gross": 16,
+  "retained_growth": 14,
+  "owner_ceiling_unchanged": 3956,
+  "donors_unchanged": true,
+  "global_union_accounting": "Parent-owned; not rerun in this two-path slice.",
+  "source_sha256": {
+    "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+    "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21"
+  },
+  "environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+    "user": "brainpp",
+    "blas_threads": 1,
+    "memory": "MemoryMax=30G"
+  },
+  "verification": {
+    "task_id": "D29-PLAN-KEY-REUSE",
+    "status": "PASS",
+    "tests": {
+      "red": {
+        "cases": 1,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 0
+      },
+      "green": {
+        "cases": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 1
+      },
+      "affected": {
+        "cases": 125,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 124
+      },
+      "baseline-tests": {
+        "cases": 125,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 124
+      }
+    },
+    "byte_comparisons": {
+      "pricing_payload.json": {
+        "equal": true,
+        "bytes": 647510,
+        "sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+      },
+      "accepted-output/{arm}/ledger.json": {
+        "equal": true,
+        "bytes": 2309545,
+        "sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf"
+      },
+      "accepted-output/{arm}/iteration-0/op_traces.jsonl": {
+        "equal": true,
+        "bytes": 2889764,
+        "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+      }
+    },
+    "source_hashes_unchanged": true,
+    "warm_pricing_medians_s": {
+      "baseline": 0.16100693587213755,
+      "candidate": 0.11974244238808751
+    },
+    "emission_medians_s": {
+      "baseline": 0.05160121200606227,
+      "candidate": 0.038155626971274614
+    },
+    "actual_key_encodings": {
+      "baseline": {
+        "cold": 200,
+        "warm": 576,
+        "profile": 192,
+        "emission_profile": 64
+      },
+      "candidate": {
+        "cold": 8,
+        "warm": 0,
+        "profile": 0,
+        "emission_profile": 0
+      }
+    }
+  },
+  "commands": [
+    {
+      "label": "red",
+      "cwd": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+      "command": "timeout 240s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache FRONTIER_TMP_ROOT=/data/ycfeng/tmp/d29_plan_key_reuse/01 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q tests/unit/test_step5_moe_pricing.py::test_lossless_plan_order_identity_and_count_separation -o cache_dir=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache/pytest-red --basetemp=/data/ycfeng/tmp/d29_plan_key_reuse/01/pytest-red --junitxml=/data/ycfeng/tmp/d29_plan_key_reuse/01/red.xml > /data/ycfeng/tmp/d29_plan_key_reuse/01/red.log 2>&1",
+      "exit": 1
+    },
+    {
+      "label": "green",
+      "cwd": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+      "command": "timeout 240s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache FRONTIER_TMP_ROOT=/data/ycfeng/tmp/d29_plan_key_reuse/01 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q tests/unit/test_step5_moe_pricing.py::test_lossless_plan_order_identity_and_count_separation -o cache_dir=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache/pytest-green --basetemp=/data/ycfeng/tmp/d29_plan_key_reuse/01/pytest-green --junitxml=/data/ycfeng/tmp/d29_plan_key_reuse/01/green.xml > /data/ycfeng/tmp/d29_plan_key_reuse/01/green.log 2>&1",
+      "exit": 0
+    },
+    {
+      "label": "affected",
+      "cwd": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+      "command": "timeout 240s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache FRONTIER_TMP_ROOT=/data/ycfeng/tmp/d29_plan_key_reuse/01 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -ra tests/unit/test_step5_moe_pricing.py tests/unit/test_collective_sim_cc_backend.py tests/unit/test_step5_contract_reuse.py -o cache_dir=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache/pytest-affected --basetemp=/data/ycfeng/tmp/d29_plan_key_reuse/01/pytest-affected --junitxml=/data/ycfeng/tmp/d29_plan_key_reuse/01/affected.xml > /data/ycfeng/tmp/d29_plan_key_reuse/01/affected.log 2>&1",
+      "exit": 0
+    },
+    {
+      "label": "baseline-tests",
+      "cwd": "/data/ycfeng/Frontier/.worktrees/step5-d29-input-snapshot",
+      "command": "timeout 240s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache FRONTIER_TMP_ROOT=/data/ycfeng/tmp/d29_plan_key_reuse/01 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest -q -ra tests/unit/test_step5_moe_pricing.py tests/unit/test_collective_sim_cc_backend.py tests/unit/test_step5_contract_reuse.py -o cache_dir=/data/ycfeng/tmp/d29_plan_key_reuse/01/cache/pytest-baseline --basetemp=/data/ycfeng/tmp/d29_plan_key_reuse/01/pytest-baseline --junitxml=/data/ycfeng/tmp/d29_plan_key_reuse/01/baseline-tests.xml > /data/ycfeng/tmp/d29_plan_key_reuse/01/baseline-tests.log 2>&1",
+      "exit": 0
+    },
+    {
+      "label": "preflight",
+      "cwd": "/data/ycfeng/tmp/d29_plan_key_reuse/wave01",
+      "exit": 0,
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_plan_key_reuse/wave01/preflight.py > /data/ycfeng/tmp/d29_plan_key_reuse/wave01/preflight.log 2>&1"
+    },
+    {
+      "label": "baseline-wave",
+      "cwd": "/data/ycfeng/tmp/d29_plan_key_reuse/wave01",
+      "exit": 0,
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache MPLCONFIGDIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache/mpl NUMBA_CACHE_DIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache/numba /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_plan_key_reuse/wave01/run.py baseline > /data/ycfeng/tmp/d29_plan_key_reuse/wave01/baseline.log 2>&1"
+    },
+    {
+      "label": "candidate-wave",
+      "cwd": "/data/ycfeng/tmp/d29_plan_key_reuse/wave01",
+      "exit": 0,
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache MPLCONFIGDIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache/mpl NUMBA_CACHE_DIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache/numba /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_plan_key_reuse/wave01/run.py candidate > /data/ycfeng/tmp/d29_plan_key_reuse/wave01/candidate.log 2>&1"
+    },
+    {
+      "label": "verify.py",
+      "cwd": "/data/ycfeng/tmp/d29_plan_key_reuse/wave01",
+      "exit": 0,
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_plan_key_reuse/wave01/verify.py"
+    },
+    {
+      "label": "package.py",
+      "cwd": "/data/ycfeng/tmp/d29_plan_key_reuse/wave01",
+      "exit": 0,
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_plan_key_reuse/wave01/package.py"
+    },
+    {
+      "label": "manifest.py",
+      "cwd": "/data/ycfeng/tmp/d29_plan_key_reuse/wave01",
+      "exit": 0,
+      "command": "timeout 60s sudo -n systemd-run --scope -p MemoryMax=30G runuser -u brainpp -- env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache XDG_CACHE_HOME=/data/ycfeng/tmp/d29_plan_key_reuse/wave01/cache /data/ycfeng/envs/frontier-py310/bin/python -B /data/ycfeng/tmp/d29_plan_key_reuse/wave01/manifest.py"
+    }
+  ],
+  "local_submodule": {
+    "pin": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "preparation": "git clone --shared --no-checkout from protected snapshot local repository, then git checkout --detach at existing pin; no network or pin change."
+  },
+  "limitations": "Cached manager/predictor helper with explicit real input owner and real P/D backends; not full Simulator/CLI/native qualification. One torch-dependent test skipped in both arms. No numerical/proof cache or diagnostic key/byte adapter. Parent reviews, integration, union accounting and full workflow remain pending."
+}

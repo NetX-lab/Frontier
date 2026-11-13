@@ -1,0 +1,37 @@
+{
+  "status": "PASS_SCOPED_COMPLETED_REFERENCE_COPIES_REMOVED",
+  "collected_utc": "2026-10-24T20:25:38.824656+00:00",
+  "removed": [
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static02/frontier_ep_wave_lane_ledger.jsonl",
+      "bytes": 2309646,
+      "sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a",
+      "reason": "Completed generated retained-reference parity control; exact source inputs and selected receipts preserved."
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static02/op_traces.jsonl",
+      "bytes": 2891279,
+      "sha256": "d7086698d33ad6e456206da70ead34134f3fd6faf67dd6c6e66af10aef2a148a",
+      "reason": "Completed generated retained-reference parity control; exact source inputs and selected receipts preserved."
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static03/frontier_ep_wave_lane_ledger.jsonl",
+      "bytes": 2309646,
+      "sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a",
+      "reason": "Completed generated retained-reference parity control; exact source inputs and selected receipts preserved."
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_execution_preparation_20261025/static03/op_traces.jsonl",
+      "bytes": 2891279,
+      "sha256": "d7086698d33ad6e456206da70ead34134f3fd6faf67dd6c6e66af10aef2a148a",
+      "reason": "Completed generated retained-reference parity control; exact source inputs and selected receipts preserved."
+    }
+  ],
+  "bytes": 10401850,
+  "cloud_operations": 0,
+  "retained_references": [
+    "/data/ycfeng/tmp/d29_named_model_query01/candidate/pricing_payload.json",
+    "/data/ycfeng/tmp/d29_named_model_query01/candidate/accepted-output/candidate/ledger.json",
+    "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-candidate02/op_traces.jsonl"
+  ]
+}

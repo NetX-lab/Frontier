@@ -1,0 +1,1483 @@
+{
+ "task_id": "D29-KEY-SCOPE-DELTA",
+ "audit_kind": "FINAL_TWO_PATH_DELTA_FROM_AUDITED_SNAPSHOT",
+ "status": "PASS_TWO_PATH_DELTA_ONLY",
+ "created_utc": "2026-10-23T20:36:49Z",
+ "records_worktree": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-scope-audit",
+ "records_head_at_execution": "d267db2d7d337dc237c85ea63f16cfa0290eb42d",
+ "primary_head_at_execution": "e4b949f1b6b60503c5d5f9bd0221210059b35db4",
+ "candidate_worktree": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+ "candidate_head": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+ "candidate_two_path_worktree_status": "",
+ "candidate_source_commit": "c4e06a6159ee3b1e63c50abaa346066ae8b6da31",
+ "candidate_source_tree": "6e16a43d59ccfa012e50d00eb06383aa811b5b16",
+ "candidate_records_commit": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+ "snapshot_commit": "e200bb780d3b20ec6f5ff0a067ed8b9ddd505662",
+ "snapshot_tree": "8c66dff99cfe53d7396b258d405ce176a6ef2006",
+ "step_base_commit": "087db1bfcb3dbc2377d4032f650b29c48fb104fd",
+ "step_base_tree": "d7f5c365f11696e1a9dd8af034e81bc382f77952",
+ "source_snapshot_commit": "db581ff6ad43e1ce57361ed00fc4be0256e85a45",
+ "source_snapshot_merge": "64c83ac4786cd76d2cd248e1149ce2adf4c4fa7f",
+ "original_source_base": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+ "accepted_snapshot_audit": {
+  "records_commit": "d267db2d7d337dc237c85ea63f16cfa0290eb42d",
+  "merged_commit": "ae55a5f573962528a20bd850ca65c7e50747614d",
+  "parent_acceptance_commit": "1a365ebc8f27090e48f9223de80807fc68fe13b0",
+  "baseline_receipt_sha256": "d39ab6ee4401368685dcb60ad6259814a488ac38c2e0642d5c3d66597b203f9e",
+  "baseline_manifest_sha256": "807fe446a7ec87c94b5b6e9f0b128ea6ffc41d7e90f11f80c03abfdf3ed6a4e0"
+ },
+ "diff_guard": {
+  "expected_non_task_memory_name_status": [
+   "M\tfrontier/cc_backend/collective_plan.py",
+   "M\ttests/unit/test_step5_moe_pricing.py"
+  ],
+  "actual_non_task_memory_name_status": [
+   "M\tfrontier/cc_backend/collective_plan.py",
+   "M\ttests/unit/test_step5_moe_pricing.py"
+  ],
+  "non_task_memory_count": 2,
+  "task_memory_paths_from_snapshot": [
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/evidence/artifact_facts.json",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/evidence/profile_callers.txt",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/evidence/retained_results.json",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/evidence/source_refs.md",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/plan.md",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/progress.md",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/report.md",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/requirements.md",
+   "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/summary.md",
+   "task_memory/task_2026-10-22_step5_position_routing/progress.md"
+  ],
+  "records_commit_non_task_memory_changes": [],
+  "candidate_source_to_records_name_changes": 37,
+  "pass": true
+ },
+ "paths": [
+  {
+   "path": "frontier/cc_backend/collective_plan.py",
+   "owner": "pricing",
+   "kind": "superproject",
+   "mode": "100644",
+   "cap_before_key": 136,
+   "cap_after_key": 140,
+   "actual_total_lines": 139,
+   "actual_total_bytes": 7144,
+   "path_headroom": 1,
+   "step_added": 4,
+   "step_deleted": 1,
+   "step_gross": 5,
+   "step_net": 3,
+   "vs_1aee0af": {
+    "added": 139,
+    "deleted": 0,
+    "gross": 139,
+    "net": 139
+   },
+   "snapshot_oid": "57b53fa6d428aa67b987396b97859e1e697f8872",
+   "step_base_oid": "57b53fa6d428aa67b987396b97859e1e697f8872",
+   "snapshot_source_oid": "57b53fa6d428aa67b987396b97859e1e697f8872",
+   "original_source_oid": null,
+   "original_source_present": false,
+   "candidate_oid": "d4246ea93869a4b41746085436d3e95c3ec32ba5",
+   "candidate_sha256": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+   "changed": true
+  },
+  {
+   "path": "tests/unit/test_step5_moe_pricing.py",
+   "owner": "pricing",
+   "kind": "superproject",
+   "mode": "100644",
+   "cap_before_key": 300,
+   "cap_after_key": 311,
+   "actual_total_lines": 311,
+   "actual_total_bytes": 19907,
+   "path_headroom": 0,
+   "step_added": 11,
+   "step_deleted": 0,
+   "step_gross": 11,
+   "step_net": 11,
+   "vs_1aee0af": {
+    "added": 311,
+    "deleted": 0,
+    "gross": 311,
+    "net": 311
+   },
+   "snapshot_oid": "2213df1fc9fee0bb1c43b978672853b48c5221bc",
+   "step_base_oid": "2213df1fc9fee0bb1c43b978672853b48c5221bc",
+   "snapshot_source_oid": "2213df1fc9fee0bb1c43b978672853b48c5221bc",
+   "original_source_oid": null,
+   "original_source_present": false,
+   "candidate_oid": "036bb10dab716cec7df2f4d9492d26e8e4ac96b5",
+   "candidate_sha256": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+   "changed": true
+  }
+ ],
+ "step_checks": {
+  "paths_allocated": 2,
+  "paths_changed": 2,
+  "source_gross": 5,
+  "source_net": 3,
+  "test_gross": 11,
+  "test_net": 11,
+  "step_gross": 16,
+  "step_net_retained": 14,
+  "step_gross_ceiling": 17,
+  "source_gross_ceiling": 6,
+  "test_gross_ceiling": 11,
+  "retained_growth_ceiling": 15,
+  "gross_within": true,
+  "source_within": true,
+  "test_within": true,
+  "retained_within": true,
+  "per_path_within": true
+ },
+ "owner_transition": {
+  "core_source": {
+   "allocated_paths": 49,
+   "cap_before_key": 4404,
+   "cap_after_key": 4404,
+   "actual_before_key": 4173,
+   "actual_after_key": 4173,
+   "headroom": 231,
+   "cap_unchanged": true
+  },
+  "pricing": {
+   "allocated_paths": 46,
+   "cap_before_key": 3956,
+   "cap_after_key": 3956,
+   "actual_before_key": 3940,
+   "actual_after_key": 3954,
+   "headroom": 2,
+   "cap_unchanged": true
+  },
+  "native": {
+   "allocated_paths": 19,
+   "cap_before_key": 1582,
+   "cap_after_key": 1582,
+   "actual_before_key": 1350,
+   "actual_after_key": 1350,
+   "headroom": 232,
+   "cap_unchanged": true
+  }
+ },
+ "overlay_transitions": [
+  {
+   "amendment": "task_memory/task_2026-10-22_step5_position_routing/repairs/plan_key_reuse_scope_amendment.json",
+   "decision_id": "D29-PLAN-KEY-REUSE",
+   "apply_after": "run_input_snapshot_scope_amendment.json",
+   "authority": "D29-REPAIR-PATH-AUTHORITY within existing owner/global caps",
+   "effective_unique_paths": 114,
+   "repair_paths": [
+    "frontier/cc_backend/collective_plan.py",
+    "tests/unit/test_step5_moe_pricing.py"
+   ],
+   "path_ceiling_adjustments": [
+    {
+     "path": "frontier/cc_backend/collective_plan.py",
+     "owner": "pricing",
+     "before": 136,
+     "delta": 4,
+     "after": 140,
+     "tsv_before": 136,
+     "tsv_after": 140,
+     "actual": 139,
+     "after_minus_actual": 1
+    },
+    {
+     "path": "tests/unit/test_step5_moe_pricing.py",
+     "owner": "pricing",
+     "before": 300,
+     "delta": 11,
+     "after": 311,
+     "tsv_before": 300,
+     "tsv_after": 311,
+     "actual": 311,
+     "after_minus_actual": 0
+    },
+    {
+     "path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+     "owner": "pricing",
+     "before": 99,
+     "delta": -6,
+     "after": 93,
+     "tsv_before": 99,
+     "tsv_after": 93,
+     "actual": 93,
+     "after_minus_actual": 0
+    },
+    {
+     "path": "frontier/cc_backend/base_cc_backend.py",
+     "owner": "pricing",
+     "before": 16,
+     "delta": -2,
+     "after": 14,
+     "tsv_before": 16,
+     "tsv_after": 14,
+     "actual": 14,
+     "after_minus_actual": 0
+    },
+    {
+     "path": "tests/unit/test_collective_sim_cc_backend.py",
+     "owner": "pricing",
+     "before": 243,
+     "delta": -7,
+     "after": 236,
+     "tsv_before": 243,
+     "tsv_after": 236,
+     "actual": 236,
+     "after_minus_actual": 0
+    }
+   ],
+   "cap_delta_sum": 0,
+   "zero_sum": true,
+   "owner_ceilings": {
+    "core_source": 4404,
+    "pricing": 3956,
+    "native": 1582
+   },
+   "retained_growth_ceiling": 15,
+   "violations": []
+  }
+ ],
+ "carried_baseline_overlays": {
+  "count": 15,
+  "replayed_here": false,
+  "note": "The accepted snapshot audit replayed all 15 overlays; this delta audit only applies the plan-key overlay on top of it."
+ },
+ "allocated_vs_changed": {
+  "allocated_paths": 114,
+  "changed_paths": 113,
+  "unchanged_allocated": [
+   {
+    "path": "tests/unit/test_step5_contract_reuse.py",
+    "owner": "pricing",
+    "cap": 1,
+    "actual": 0
+   }
+  ]
+ },
+ "path_ledger": {
+  "rows": 114,
+  "note": "Two rows recomputed from Git blobs; the other 112 rows are carried unchanged from the accepted snapshot ledger and were re-bound byte-for-byte above.",
+  "entries": [
+   {
+    "path": "frontier/attention/step5.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 3,
+    "actual": 3,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/backends/collective-sim/htsim_runner.py",
+    "owner": "pricing",
+    "kind": "submodule_pinned",
+    "cap": 54,
+    "actual": 54,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/intra_server_model.py",
+    "owner": "pricing",
+    "kind": "submodule_pinned",
+    "cap": 77,
+    "actual": 77,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py",
+    "owner": "pricing",
+    "kind": "submodule_pinned",
+    "cap": 30,
+    "actual": 30,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py",
+    "owner": "pricing",
+    "kind": "submodule_pinned",
+    "cap": 53,
+    "actual": 53,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py",
+    "owner": "pricing",
+    "kind": "submodule_pinned",
+    "cap": 119,
+    "actual": 119,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 93,
+    "actual": 93,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/base_cc_backend.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 14,
+    "actual": 14,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/cc_backend/collective_plan.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 140,
+    "actual": 139,
+    "basis": "recomputed"
+   },
+   {
+    "path": "frontier/cc_backend/collective_profile.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 24,
+    "actual": 20,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/config/quantization_manager.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 19,
+    "actual": 19,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/config/replica_config.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 16,
+    "actual": 16,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/entities/execution_time.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 50,
+    "actual": 50,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/entities/time_components.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 14,
+    "actual": 14,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/layer_contract_resolution.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 15,
+    "actual": 11,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/moe_dataset_training.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 164,
+    "actual": 162,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/moe_operator_times.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 79,
+    "actual": 79,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 223,
+    "actual": 195,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/prediction_family_trainers.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 88,
+    "actual": 80,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/prediction_model_registry.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 120,
+    "actual": 96,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 17,
+    "actual": 13,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 12,
+    "actual": 6,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 38,
+    "actual": 32,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 6,
+    "actual": 6,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 128,
+    "actual": 113,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/step5.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 51,
+    "actual": 34,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/execution_time_predictor/step5_cost.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 39,
+    "actual": 39,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/metrics/constants.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 3,
+    "actual": 3,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/metrics/ep_wave_metrics.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 22,
+    "actual": 22,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/metrics/op_trace_utils.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 45,
+    "actual": 45,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/metrics/trace_store.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 20,
+    "actual": 14,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/moe_ep_workload.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 48,
+    "actual": 48,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/moe_load_imbalance.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 56,
+    "actual": 51,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/moe_routing_policy.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 212,
+    "actual": 207,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/moe_routing_runtime.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 105,
+    "actual": 103,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/operators/families.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 42,
+    "actual": 42,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/operators/spec.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 20,
+    "actual": 20,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/collectives/step5_dispatch_probe.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 235,
+    "actual": 235,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/collectives/vllm_collective_benchmark.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 316,
+    "actual": 316,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/collectives/vllm_forward_collectives.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 25,
+    "actual": 25,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/common/layers/layernorm.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 12,
+    "actual": 12,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/common/runtime_identity.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 133,
+    "actual": 133,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/common/step5_job.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 67,
+    "actual": 67,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/linear_op/main.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 29,
+    "actual": 29,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/moe/fp8_block_experts.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 106,
+    "actual": 106,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/moe/inputs.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 123,
+    "actual": 123,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/moe/load_distribution.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 1,
+    "actual": 1,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/moe/main.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 116,
+    "actual": 116,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/moe/moe_impl.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 56,
+    "actual": 56,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/moe/moe_vllm_kernel.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 12,
+    "actual": 12,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/moe/moe_wrapper.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 169,
+    "actual": 169,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/step5/job.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 49,
+    "actual": 49,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/profiling/step5/vllm_wrapper.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 15,
+    "actual": 15,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 11,
+    "actual": 11,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/scheduler/utils/batch_builders.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 4,
+    "actual": 4,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/scheduler/utils/ep_trace.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 28,
+    "actual": 11,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/scheduler/utils/ep_wave.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 22,
+    "actual": 5,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/scheduler/utils/expert_parallel.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 6,
+    "actual": 6,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "frontier/scheduler/utils/layer_workload.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 22,
+    "actual": 22,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "native-image/vllm/forward_context.py",
+    "owner": "native",
+    "kind": "native_image_patch",
+    "cap": 35,
+    "actual": 15,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+    "owner": "native",
+    "kind": "native_image_patch",
+    "cap": 15,
+    "actual": 3,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+    "owner": "native",
+    "kind": "native_image_patch",
+    "cap": 70,
+    "actual": 70,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "native-image/vllm/models/step5/nvidia/model.py",
+    "owner": "native",
+    "kind": "native_image_patch",
+    "cap": 30,
+    "actual": 11,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/comparison/calibration/pd_proxy.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 8,
+    "actual": 4,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 70,
+    "actual": 24,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/run_step5_measured_main.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 47,
+    "actual": 47,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_comm/analyze_result.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 2,
+    "actual": 2,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_comm/export_costs.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 297,
+    "actual": 297,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_comm/prepare.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 70,
+    "actual": 70,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_comm/step5_position_model_run.json",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 68,
+    "actual": 68,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_comm/validate_result.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 93,
+    "actual": 93,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_comm/worker.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 38,
+    "actual": 38,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_environment/test_position_cyclic_graph.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 306,
+    "actual": 306,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_measured_compute_fixture.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 148,
+    "actual": 148,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_native_image/Dockerfile.position_cyclic",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 28,
+    "actual": 19,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_native_image/build_image.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 86,
+    "actual": 69,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_pd/r2_canonical.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 20,
+    "actual": 16,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_pd/r2_replay.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 35,
+    "actual": 12,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_pd/r2_runtime.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 149,
+    "actual": 149,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_pd/r2_stage.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 30,
+    "actual": 12,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_pd/verify_r2_stage.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 50,
+    "actual": 19,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_profiling/run_on_worker.sh",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 26,
+    "actual": 21,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_profiling/submit_profiling_job.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 9,
+    "actual": 3,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/step5_profiling/verify_fixed_probe.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 45,
+    "actual": 41,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/integration/test_step5_measured_main.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 260,
+    "actual": 260,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_collective_benchmark_helpers.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 152,
+    "actual": 152,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_collective_sim_cc_backend.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 236,
+    "actual": 236,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_comm_operator_families.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 62,
+    "actual": 62,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_dsv4_precision_metadata.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 2,
+    "actual": 2,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_ep_wave_trace_context.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 49,
+    "actual": 49,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 237,
+    "actual": 231,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_moe_position_routing.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 160,
+    "actual": 159,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_moe_profiling_output_metadata.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 125,
+    "actual": 125,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_moe_routing_conservation.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 63,
+    "actual": 63,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_moe_routing_runtime.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 128,
+    "actual": 117,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_moe_share_expert_operator_families.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 14,
+    "actual": 14,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_op_trace_utils.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 47,
+    "actual": 47,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_prediction_measurement_bindings.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 311,
+    "actual": 299,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_attention_profiling.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 15,
+    "actual": 15,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_canonical_g3.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 155,
+    "actual": 129,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_comm_cost_export.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 271,
+    "actual": 271,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_comm_package.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 84,
+    "actual": 84,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_comm_transport.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 204,
+    "actual": 204,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_contract_reuse.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 1,
+    "actual": 0,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_dispatch_probe.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 329,
+    "actual": 329,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_fixed_probe.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 155,
+    "actual": 150,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_measured_ffn.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 110,
+    "actual": 105,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_moe_pricing.py",
+    "owner": "pricing",
+    "kind": "superproject",
+    "cap": 311,
+    "actual": 311,
+    "basis": "recomputed"
+   },
+   {
+    "path": "tests/unit/test_step5_moe_profiling.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 350,
+    "actual": 344,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_native_image.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 24,
+    "actual": 24,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 152,
+    "actual": 152,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_native_position_cyclic.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 313,
+    "actual": 313,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_native_reference.py",
+    "owner": "native",
+    "kind": "superproject",
+    "cap": 6,
+    "actual": 3,
+    "basis": "carried_accepted_baseline"
+   },
+   {
+    "path": "tests/unit/test_step5_request_free_profiling.py",
+    "owner": "core_source",
+    "kind": "superproject",
+    "cap": 25,
+    "actual": 25,
+    "basis": "carried_accepted_baseline"
+   }
+  ]
+ },
+ "totals": {
+  "owner_actual": {
+   "core_source": 4173,
+   "pricing": 3954,
+   "native": 1350
+  },
+  "owner_caps": {
+   "core_source": 4404,
+   "pricing": 3956,
+   "native": 1582
+  },
+  "owner_paths": {
+   "core_source": 49,
+   "pricing": 46,
+   "native": 19
+  },
+  "source_actual_before_key": 9463,
+  "source_actual_after_key": 9477,
+  "source_cap": 9942,
+  "module_size_note_actual": 12,
+  "gitlink_actual": 2,
+  "global_actual_before_key": 9477,
+  "global_actual_after_key": 9491,
+  "global_cap": 10000,
+  "pricing_actual_expected": 3954,
+  "pricing_actual_matches_expected": true,
+  "source_matches_expected": true,
+  "global_matches_expected": true,
+  "caps_unchanged": true
+ },
+ "non_source_bindings": {
+  "module_size_note": {
+   "path": "docs/general/module-size-exceptions.md",
+   "snapshot_oid": "c080d1317cbdf6dd43f76c2a1cd8152f516c2140",
+   "candidate_oid": "c080d1317cbdf6dd43f76c2a1cd8152f516c2140",
+   "candidate_sha256": "b9897e3be8f2f04048dcb3769c5d277ef46f5938582bcdf496259b56718429e5",
+   "numstat_vs_1aee0af": {
+    "added": 12,
+    "deleted": 0,
+    "gross": 12,
+    "net": 12
+   },
+   "match": true
+  },
+  "submodule": {
+   "path": "frontier/cc_backend/backends/collective-sim",
+   "original_pin": "d28fe917370c2d55230c3ea226e5660785b44aca",
+   "snapshot_and_candidate_pin": "3dac53c544e546574cb6e8078cd14053d0916113",
+   "candidate_gitlink": {
+    "mode": "160000",
+    "type": "commit",
+    "oid": "3dac53c544e546574cb6e8078cd14053d0916113"
+   },
+   "numstat_vs_1aee0af": {
+    "added": 1,
+    "deleted": 1,
+    "gross": 2,
+    "net": 0
+   },
+   "diff_vs_original": [
+    {
+     "path": "htsim_runner.py",
+     "added": 52,
+     "deleted": 2
+    },
+    {
+     "path": "python/collective_sim_core/intra_server_model.py",
+     "added": 77,
+     "deleted": 0
+    },
+    {
+     "path": "python/collective_sim_core/predictor.py",
+     "added": 30,
+     "deleted": 0
+    },
+    {
+     "path": "python/collective_sim_core/schema.py",
+     "added": 53,
+     "deleted": 0
+    },
+    {
+     "path": "tests/test_grouped_plan_input.py",
+     "added": 119,
+     "deleted": 0
+    }
+   ],
+   "totals": {
+    "files": 5,
+    "added": 331,
+    "deleted": 2,
+    "gross": 333,
+    "net": 329,
+    "matches_accepted_333": true
+   },
+   "blobs": [
+    {
+     "path": "frontier/cc_backend/backends/collective-sim/htsim_runner.py",
+     "snapshot_oid": "e4561cb7c1aa2e1f5cf6ddf84c6259584018214d",
+     "candidate_oid": "e4561cb7c1aa2e1f5cf6ddf84c6259584018214d",
+     "candidate_sha256": "21428ad892eb37ef230292dc15b9b06f167d5d4399bc9065e1459ccc0f420c50",
+     "bytes": 128040,
+     "match": true
+    },
+    {
+     "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/intra_server_model.py",
+     "snapshot_oid": "28349d775534a5f59392b123153a8b88b83b4a3c",
+     "candidate_oid": "28349d775534a5f59392b123153a8b88b83b4a3c",
+     "candidate_sha256": "17464ce7c03b2dec097fc3f54ca7124d98b841751ce4966ae385a73318f41c60",
+     "bytes": 12943,
+     "match": true
+    },
+    {
+     "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py",
+     "snapshot_oid": "bd1f7ad07836a16c7de2e28aa83622f738bb8d2c",
+     "candidate_oid": "bd1f7ad07836a16c7de2e28aa83622f738bb8d2c",
+     "candidate_sha256": "dfb280042222b3825367bdd3c2061c5000bba382b5eef3d48e3c695122191627",
+     "bytes": 6080,
+     "match": true
+    },
+    {
+     "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py",
+     "snapshot_oid": "89d0ca5405e16151becca0634eb189ac2a993e71",
+     "candidate_oid": "89d0ca5405e16151becca0634eb189ac2a993e71",
+     "candidate_sha256": "a034b9d9821778dc86f5dad04e0abd520dc122f22704528ea40aa2f5246aeb90",
+     "bytes": 19502,
+     "match": true
+    },
+    {
+     "path": "frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py",
+     "snapshot_oid": "a0a759625fc771417dfb83196f8c1ce72ef3c624",
+     "candidate_oid": "a0a759625fc771417dfb83196f8c1ce72ef3c624",
+     "candidate_sha256": "d1003d369f4559cb0724f7383f2c3897d776a794d24905dbeaa93c9f4a9b5f49",
+     "bytes": 6510,
+     "match": true
+    }
+   ],
+   "all_blobs_match": true
+  },
+  "native_image_patch": {
+   "files": 4,
+   "added": 98,
+   "deleted": 1,
+   "gross": 99,
+   "numstat": [
+    {
+     "path": "vllm/forward_context.py",
+     "added": 15,
+     "deleted": 0
+    },
+    {
+     "path": "vllm/models/step5/nvidia/model.py",
+     "added": 10,
+     "deleted": 1
+    },
+    {
+     "path": "vllm/model_executor/layers/fused_moe/router/router_factory.py",
+     "added": 3,
+     "deleted": 0
+    },
+    {
+     "path": "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+     "added": 70,
+     "deleted": 0
+    }
+   ],
+   "pins": [
+    {
+     "path": "vllm/forward_context.py",
+     "base_sha256": "24a1b39218b88539e387b696dcced722d14a24d9f01932a44feb93dd4986b85d",
+     "derived_sha256": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
+     "snapshot_derived_sha256": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
+     "bytes": 15921,
+     "base_match": true,
+     "derived_match": true
+    },
+    {
+     "path": "vllm/models/step5/nvidia/model.py",
+     "base_sha256": "6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0",
+     "derived_sha256": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
+     "snapshot_derived_sha256": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
+     "bytes": 95400,
+     "base_match": true,
+     "derived_match": true
+    },
+    {
+     "path": "vllm/model_executor/layers/fused_moe/router/router_factory.py",
+     "base_sha256": "794abb7c210758911d349ca6fbd82690f0ef48ba4f8a7ec2ff0f87ca3ad50224",
+     "derived_sha256": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+     "snapshot_derived_sha256": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+     "bytes": 10540,
+     "base_match": true,
+     "derived_match": true
+    },
+    {
+     "path": "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+     "base_sha256": "24662a8cbd10365ae349000184bcc0ad063eff72dead1b3cf5b6f40fe0cc3e47",
+     "derived_sha256": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725",
+     "snapshot_derived_sha256": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725",
+     "bytes": 15133,
+     "base_match": true,
+     "derived_match": true
+    }
+   ],
+   "matches_accepted_99": true
+  },
+  "fixed_image_evidence": {
+   "checked": 8,
+   "rows": [
+    {
+     "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json",
+     "snapshot_blob": "a250fc5c80524ce774ac2d8580258fee2b008b17",
+     "snapshot_sha256": "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec",
+     "candidate_oid": "a250fc5c80524ce774ac2d8580258fee2b008b17",
+     "match": true
+    },
+    {
+     "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/native_installed_sources.json",
+     "snapshot_blob": "4d2294f906e9db5e4c7900579a1836ff2f03be22",
+     "snapshot_sha256": "b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09",
+     "candidate_oid": "4d2294f906e9db5e4c7900579a1836ff2f03be22",
+     "match": true
+    },
+    {
+     "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/publication_receipt.json",
+     "snapshot_blob": "b2077c97886cbedce2c1f4727b24c3a438e211da",
+     "snapshot_sha256": "efda9dbaaeacb2899cc99b3ac9e9fea03a5c28d2b084efc2cd232b0bbd38430f",
+     "candidate_oid": "b2077c97886cbedce2c1f4727b24c3a438e211da",
+     "match": true
+    },
+    {
+     "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/installed_export_receipt.json",
+     "snapshot_blob": "92270250d36690994e636c59d59d4818367015b2",
+     "snapshot_sha256": "ddcf8119dbccb5028c81df4e148d1caa90399e8ebef2515b5b89eef61276abee",
+     "candidate_oid": "92270250d36690994e636c59d59d4818367015b2",
+     "match": true
+    },
+    {
+     "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/registry_index.json",
+     "snapshot_blob": "d27ae2d07d48fc32d2ccb51fbc40da8a61b5f2af",
+     "snapshot_sha256": "10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d",
+     "candidate_oid": "d27ae2d07d48fc32d2ccb51fbc40da8a61b5f2af",
+     "match": true
+    },
+    {
+     "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/registry_manifests.json",
+     "snapshot_blob": "b805a378badd2da699b7a048278e0116da50c35a",
+     "snapshot_sha256": "d7fa350cad415532798560d63ae94f79d346abd89fa014f47d869d238d986b79",
+     "candidate_oid": "b805a378badd2da699b7a048278e0116da50c35a",
+     "match": true
+    },
+    {
+     "path": "task_memory/task_2026-10-22_step5_position_routing/image_publication/patch_identity.md",
+     "snapshot_blob": "1d5d494a995af22980b6856320ad2339e72e0e5c",
+     "snapshot_sha256": "8ad004e5cf3f20cf98761a60170915968ed2f7c936ff10f0e93b98d838bbe92d",
+     "candidate_oid": "1d5d494a995af22980b6856320ad2339e72e0e5c",
+     "match": true
+    },
+    {
+     "path": "task_memory/task_2026-10-22_step5_d29_native_balanced/native_source.patch",
+     "snapshot_blob": "49aa9c24c6a540f2d4b1d195ffc1e4955f54d226",
+     "snapshot_sha256": "66608153204012927e8ef678378d95ca1ef93dab9e2f504a82a5318b9828bbab",
+     "candidate_oid": "49aa9c24c6a540f2d4b1d195ffc1e4955f54d226",
+     "match": true
+    }
+   ],
+   "all_match": true
+  }
+ },
+ "binding_guard": {
+  "binding_count_total": 124,
+  "binding_count_non_key": 122,
+  "digest_algorithm": "sha256 of sorted 'path oid' lines; native files keyed as native:<path> with derived sha256",
+  "baseline_all_binding_digest": "8a24f28e4b27adb6d2fccd77aadf79e3993f3e05492e89a636dca9c77c964c0b",
+  "candidate_all_binding_digest": "b869dadda64d7a61360f75af8ac24d64a9d7d1dcc75d524ce0082304553ef50e",
+  "baseline_non_key_binding_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+  "candidate_non_key_binding_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+  "non_key_digest_match": true,
+  "key_delta_digest": "67208a7d9b9c996f371f0158b31baec47332f841dbf57c5c824083237cd2f387",
+  "non_key_mismatches": [],
+  "future_guard": "Recompute the 122 non-key bindings at the final union head and require digest == candidate_non_key_binding_digest; the only allowed differences are the two key paths captured in key_delta_digest."
+ },
+ "verification_commands": [
+  "git diff --no-renames --name-status e200bb78 c4e06a61 -- . ':(exclude)task_memory'",
+  "git diff --no-renames --name-status c4e06a61 d1e2fb8c -- . ':(exclude)task_memory'",
+  "git diff --no-renames --numstat 087db1bf c4e06a61 -- <two paths>",
+  "git cat-file blob <rev>:<path> | sha256sum, with newline count for totals",
+  "git ls-tree <rev> -- <path> for every manifest binding",
+  "git -C <submodule> diff --numstat d28fe917 3dac53c",
+  "git diff --no-index --numstat <native base> <native derived> for four pins",
+  "sha256 of the eight fixed image evidence blobs and the eight native base/derived files"
+ ],
+ "violations": [],
+ "limits": [
+  "Read-only Git metadata, small receipt/JSON/TSV reads, and scoped file hashes only.",
+  "No tests, imports, code execution, probes, model/CSV/trace reads, Docker, network, GPU, package rebuild, or native rebuild.",
+  "Candidate, primary source, tests, peers, and the source worktree were not modified or checked out.",
+  "This is the final two-path snapshot delta, not the final 114-path union acceptance or full-workflow acceptance.",
+  "Behavioral correctness of the cache-key implementation is not re-proven here; dual reviews and primary runtime checks remain.",
+  "Cumulative checkpoint accounting for earlier authorized work is carried from the accepted baseline, not recomputed."
+ ],
+ "residual_checks": [
+  "Final union head must reproduce candidate_non_key_binding_digest for the 122 non-key bindings.",
+  "Final union must keep source<=9942, global<=10000, pricing<=3956, core<=4404, native<=1582.",
+  "The two key paths must remain at 139/140 and 311/311 lines with no further edits unless separately allocated.",
+  "Full workflow and runtime acceptance remain outside this audit."
+ ]
+}

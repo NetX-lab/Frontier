@@ -1,0 +1,32 @@
+{
+  "decision_id": "D29-REGISTRY-109-10000",
+  "status": "ROOT_ALLOCATED_IN_SCOPE_CORRECTNESS_REPAIR",
+  "authority": "Existing D29 complete implementation approval and YC standing permission for similar small correctness scope adjustments; no new GPU or unrelated feature authority",
+  "base_scope": "../scope.json",
+  "base_approved_commit": "318ca264d5b2b42fc56eeaec9778182931a3af2a",
+  "base_unique_paths": 107,
+  "effective_unique_paths": 109,
+  "source_test_config_gross_ceiling": 9942,
+  "total_gross_ceiling": 10000,
+  "owner_quotas": {"native": 1582, "core_source": 4404, "pricing": 3956},
+  "new_paths": [
+    {"path": "frontier/execution_time_predictor/prediction_model_registry.py", "owner": "core_source", "ceiling": 120},
+    {"path": "tests/unit/test_prediction_measurement_bindings.py", "owner": "core_source", "ceiling": 180}
+  ],
+  "existing_path_ceiling_adjustments": [
+    {"path": "frontier/profiling/moe/moe_impl.py", "before": 172, "delta": -110, "after": 62, "observed_gross": 53},
+    {"path": "frontier/profiling/moe/moe_wrapper.py", "before": 284, "delta": -90, "after": 194, "observed_gross": 168},
+    {"path": "frontier/execution_time_predictor/prediction_family_trainers.py", "before": 158, "delta": -50, "after": 108, "observed_gross": 80},
+    {"path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", "before": 188, "delta": -50, "after": 138, "observed_gross": 98}
+  ],
+  "registry_repair_changed_paths": [
+    "frontier/execution_time_predictor/prediction_model_registry.py",
+    "tests/unit/test_prediction_measurement_bindings.py",
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py"
+  ],
+  "repair_gross_ceiling": 360,
+  "existing_caller_delta_ceiling": 60,
+  "baseline_core_source": "d96b32797ce5298097caa31e9948aa34985018db",
+  "notes": "Apply adjustments to grouped path allowances from the preserved approved ledger. New300 is exactly offset by existing300, leaving CORE total4404 and global ceiling unchanged. Existing caller changes must fit their resulting path caps. Original scope.json rows remain the historical approval ledger; this is the effective overlay. No prediction_model_identity or shared manager path is allocated."
+}

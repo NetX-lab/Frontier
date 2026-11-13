@@ -1,0 +1,458 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-REGRESSIONS",
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "source_tree": "8c6db078e852d3b885a6f14bdf5e8007d9ecddb7",
+  "submodule_revision": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "verdict": "PASS_REQUIRED_REGRESSION_GATES",
+  "raw_unit_is_all_green": false,
+  "suites_are_separate_not_summed": true,
+  "strict_receipt": {
+    "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023_final05/final05_receipt.json",
+    "sha256": "3e7bee2a061b194ed68f6e6f8247e04cc27d461bec5f2a973fc7d9b11f77fd5e",
+    "bytes": 4060
+  },
+  "unit_comparison": {
+    "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/unit_final05_comparison.json",
+    "sha256": "55a787e63413241c4f285698f990ab3043d67545453ce11d987209efa6e53f58",
+    "bytes": 165854
+  },
+  "source_final_receipt": {
+    "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/source_final_receipt.json",
+    "sha256": "06529cd455bcaa6a1890733a699d178ec0337dd9167ab44cdb43fb56a0bacb3d",
+    "bytes": 585
+  },
+  "suites": [
+    {
+      "suite": "strict77",
+      "execution_receipt": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/strict77/execution.json",
+        "sha256": "018d09c0106fc305832a366891254e7a47bf6b5e16153f72fed83b4504922ad5",
+        "bytes": 11015
+      },
+      "raw_exits": [
+        0,
+        0
+      ],
+      "duration_seconds": [
+        463.003962081857,
+        2.805594138801098
+      ],
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023_final05/run.log",
+          "sha256": "1a938b296701bd04a2f4a978b08878f647f21297076545b1fd59da52091a8993",
+          "bytes": 5005
+        },
+        {
+          "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023_final05/compare.log",
+          "sha256": "6a3cf3d4349147f9763129a0f780d2b4f169e2ec4c4401287abf2d83c07c420f",
+          "bytes": 562
+        }
+      ]
+    },
+    {
+      "suite": "unit",
+      "execution_receipt": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/unit/execution.json",
+        "sha256": "0951980c423fbb71b922db470638cc0828033d87950958a310773f4dc5c00572",
+        "bytes": 6346
+      },
+      "raw_exits": [
+        1
+      ],
+      "duration_seconds": [
+        1206.8047210020013
+      ],
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_unit_parent05.log",
+          "sha256": "c5a4f5d7c5114d24b8cfe06ccbbc3b86676e97d38b1b5da535b0065d7961037c",
+          "bytes": 4614532
+        }
+      ],
+      "raw_counts": {
+        "skipped": 281,
+        "error": 32,
+        "pass": 8018,
+        "failure": 279
+      },
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_unit_parent05.xml",
+        "sha256": "cb64bf1bfbba142b5ad7b3fbad90343d1f9134e6a627c35af5017bfc3654a4d8",
+        "bytes": 2109680
+      },
+      "junit_attributes": [
+        {
+          "name": "pytest",
+          "errors": "32",
+          "failures": "279",
+          "skipped": "281",
+          "tests": "8610",
+          "time": "1203.307",
+          "timestamp": "2026-10-23T18:25:10.266898+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "suite": "supplement101",
+      "execution_receipt": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/supplement101/execution.json",
+        "sha256": "c818aeee73c72426de065e70ed1765148879df3bb60e9f393e9ce66940325d5e",
+        "bytes": 6694
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        10.428209059871733
+      ],
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/supplement101/results.log",
+          "sha256": "9b6a11a000f5db1c3217046fac3587e2ba28991c6073e46dd4e83398d488d23b",
+          "bytes": 180
+        }
+      ],
+      "raw_counts": {
+        "pass": 101
+      },
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/supplement101/results.xml",
+        "sha256": "c737103625561322677d4f0a2348ac00027ac79dff52650aa2e24f7bcaff092d",
+        "bytes": 15812
+      },
+      "junit_attributes": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "101",
+          "time": "9.085",
+          "timestamp": "2026-10-23T18:25:10.732626+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "suite": "metadata196",
+      "execution_receipt": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/execution.json",
+        "sha256": "8f9b32d79f220b7bef74257af782d35bf41ba84f6b5f9f30011bba84045b80ca",
+        "bytes": 6818
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        6.901800875086337
+      ],
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/results.log",
+          "sha256": "95dbd6d506508f08f025c1f9867e786825ff259a630422a6cd3564d461396dbf",
+          "bytes": 260
+        }
+      ],
+      "raw_counts": {
+        "pass": 197
+      },
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/results.xml",
+        "sha256": "9dbb37c26673bac22f0f4cae049e241e3683580fc2d46e3b33332171ed566671",
+        "bytes": 31230
+      },
+      "junit_attributes": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "197",
+          "time": "6.346",
+          "timestamp": "2026-10-23T18:25:11.004529+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "suite": "catalogue53",
+      "execution_receipt": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/catalogue53/execution.json",
+        "sha256": "17b3333b2f16d3fe40c91cb70e7b0b656b5011976ff21cf950f1a6f81ff2eece",
+        "bytes": 6572
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        3.794286817777902
+      ],
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/catalogue53/results.log",
+          "sha256": "ff8946efcbc271c05d3784a9aa51449ba7d893d83dc2758a7d126ce1580528ab",
+          "bytes": 99
+        }
+      ],
+      "raw_counts": {
+        "pass": 53
+      },
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/catalogue53/results.xml",
+        "sha256": "f49ad274e3f712156ab320407dea1fd02da7fe5b9682d0bf1736347c84e39f5c",
+        "bytes": 8993
+      },
+      "junit_attributes": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "53",
+          "time": "3.258",
+          "timestamp": "2026-10-23T18:25:11.200392+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    },
+    {
+      "suite": "governance52",
+      "execution_receipt": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/governance52/execution.json",
+        "sha256": "6022f1c87d157c1f81c5ed535b1051e240f03477a9542a1f1f8b1be15bda8f15",
+        "bytes": 6610
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        22.552480859681964
+      ],
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/governance52/results.log",
+          "sha256": "ba290f43eec42c28ee0f759b68b9a70a8e21e727d6e05604525132f2104200b8",
+          "bytes": 805
+        }
+      ],
+      "raw_counts": {
+        "pass": 52
+      },
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/governance52/results.xml",
+        "sha256": "4e27ecd06d3fbbcb391c8b1c38fac203de9593cca4a40ca8d1694ccceaf36461",
+        "bytes": 8367
+      },
+      "junit_attributes": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "52",
+          "time": "18.688",
+          "timestamp": "2026-10-23T18:45:43.690459+08:00",
+          "hostname": "kun-workspace-vgen2"
+        }
+      ]
+    }
+  ],
+  "seven_path_affected_coverage": [
+    {
+      "changed_path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "modules": [
+        {
+          "module": "tests/unit/test_collective_sim_cc_backend.py",
+          "fresh_unit_counts": {
+            "pass": 46
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        }
+      ]
+    },
+    {
+      "changed_path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "modules": [
+        {
+          "module": "tests/unit/test_prediction_measurement_bindings.py",
+          "fresh_unit_counts": {
+            "pass": 11
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_prediction_measurement_bindings::test_fixed_predictor_groups_reused_by_queries_and_binding_selection",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        },
+        {
+          "module": "tests/unit/test_moe_position_routing.py",
+          "fresh_unit_counts": {
+            "pass": 6,
+            "skipped": 1
+          },
+          "missing_prior_ids": [],
+          "new_cases": [],
+          "status_changes": []
+        }
+      ]
+    },
+    {
+      "changed_path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+      "modules": [
+        {
+          "module": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+          "fresh_unit_counts": {
+            "pass": 21
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_moe_grouped_gemm_padded_features::test_moe_loader_derives_family_once_without_skipping_unselected_rows",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        },
+        {
+          "module": "tests/unit/test_moe_routing_runtime.py",
+          "fresh_unit_counts": {
+            "pass": 8
+          },
+          "missing_prior_ids": [],
+          "new_cases": [],
+          "status_changes": []
+        },
+        {
+          "module": "tests/unit/test_profiling_governance_minimal_red.py",
+          "fresh_unit_counts": {
+            "pass": 47,
+            "failure": 5
+          },
+          "missing_prior_ids": [],
+          "new_cases": [],
+          "status_changes": []
+        }
+      ]
+    },
+    {
+      "changed_path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "modules": [
+        {
+          "module": "tests/unit/test_prediction_measurement_bindings.py",
+          "fresh_unit_counts": {
+            "pass": 11
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_prediction_measurement_bindings::test_fixed_predictor_groups_reused_by_queries_and_binding_selection",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        },
+        {
+          "module": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+          "fresh_unit_counts": {
+            "pass": 21
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_moe_grouped_gemm_padded_features::test_moe_loader_derives_family_once_without_skipping_unselected_rows",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        }
+      ]
+    },
+    {
+      "changed_path": "tests/unit/test_collective_sim_cc_backend.py",
+      "modules": [
+        {
+          "module": "tests/unit/test_collective_sim_cc_backend.py",
+          "fresh_unit_counts": {
+            "pass": 46
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        }
+      ]
+    },
+    {
+      "changed_path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+      "modules": [
+        {
+          "module": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+          "fresh_unit_counts": {
+            "pass": 21
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_moe_grouped_gemm_padded_features::test_moe_loader_derives_family_once_without_skipping_unselected_rows",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        }
+      ]
+    },
+    {
+      "changed_path": "tests/unit/test_prediction_measurement_bindings.py",
+      "modules": [
+        {
+          "module": "tests/unit/test_prediction_measurement_bindings.py",
+          "fresh_unit_counts": {
+            "pass": 11
+          },
+          "missing_prior_ids": [],
+          "new_cases": [
+            {
+              "id": "tests.unit.test_prediction_measurement_bindings::test_fixed_predictor_groups_reused_by_queries_and_binding_selection",
+              "status": "pass"
+            }
+          ],
+          "status_changes": []
+        }
+      ]
+    }
+  ],
+  "duplicate_affected_union_run": false,
+  "completed": [
+    "source_preflight",
+    "strict77",
+    "full_unit_raw_and_exact_comparison",
+    "supplement101",
+    "metadata_selection",
+    "catalogue53",
+    "affected_coverage",
+    "source_postflight"
+  ],
+  "failed_required_gates": [],
+  "unfinished_required_gates": [],
+  "limits": [
+    "Historical raw full-unit failures/errors/skips remain.",
+    "Primary main08 and native/GPU/G3/E2E acceptance are separate.",
+    "No commits, source edits, full CLI, dependency installations or further agents."
+  ]
+}

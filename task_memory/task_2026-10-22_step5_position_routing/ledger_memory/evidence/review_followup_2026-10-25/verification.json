@@ -1,0 +1,15 @@
+{
+  "change": "Rename only two test-local symbol references",
+  "python": "3.10.6",
+  "tests": {
+    "pass": 39,
+    "skipped": 3
+  },
+  "retained_statuses": 42,
+  "baseline": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/caller_followup_2026-10-25/raw/integration/junit.xml",
+  "baseline_sha256": "44e856fa05b6103d238f7b21503d6e8ebed0e9f2c6a3ea21da90a936b59486ee",
+  "candidate_sha256": "7bc57a52435c72dbc4af2c2406f1ebbf22be7041df9ed94f311818d49de6f5ce",
+  "step_numstat": "26\t7\tfrontier/metrics/metrics_store.py\n12\t3\ttests/integration/run_step5_measured_main.py\n61\t1\ttests/integration/test_step5_measured_main.py\n11\t3\ttests/performance/step5_actual06_iteration.py\n",
+  "scope_predicates_unchanged": true,
+  "new_pricing_or_shape_invocations": 0
+}

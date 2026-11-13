@@ -1,0 +1,451 @@
+{
+  "task_id": "D29-SNAPSHOT-COPY-FINISH",
+  "target_source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "owner_start": "886608ea574dd2107d0b30771d63d8057d23cac6",
+  "production_revision_reported_by_primary": "2e8d6168fd72d13955216d59320c9f68b306eca5",
+  "recovery_receipt": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/receipt.json",
+  "recovered_session": "ses_e92340744ffe58Yx5C7xx4qApF",
+  "recovered_tools": {
+    "completed": 47,
+    "permission_rejections": 3,
+    "controls_used": 0
+  },
+  "source_bindings": [
+    {
+      "path": "frontier/cc_backend/collective_plan.py",
+      "baseline_blob": "d4246ea93869a4b41746085436d3e95c3ec32ba5",
+      "target_blob": "d4246ea93869a4b41746085436d3e95c3ec32ba5",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "d4246ea93869a4b41746085436d3e95c3ec32ba5",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/entities/__init__.py",
+      "baseline_blob": "a6bbbacc7b1991e45a1ad87510d0c65e9365a5fd",
+      "target_blob": "a6bbbacc7b1991e45a1ad87510d0c65e9365a5fd",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "a6bbbacc7b1991e45a1ad87510d0c65e9365a5fd",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/entities/base_entity.py",
+      "baseline_blob": "0c6ed76bab43c1e151c2c8a05514a72061f2702a",
+      "target_blob": "0c6ed76bab43c1e151c2c8a05514a72061f2702a",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "0c6ed76bab43c1e151c2c8a05514a72061f2702a",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/entities/execution_time.py",
+      "baseline_blob": "459d473b4a512033478fc6f259f105743c610f9d",
+      "target_blob": "459d473b4a512033478fc6f259f105743c610f9d",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "459d473b4a512033478fc6f259f105743c610f9d",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/entities/time_components.py",
+      "baseline_blob": "8d6272f0c02b539a539a8a92c4ad50c98eb79d8b",
+      "target_blob": "8d6272f0c02b539a539a8a92c4ad50c98eb79d8b",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "8d6272f0c02b539a539a8a92c4ad50c98eb79d8b",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_operator_times.py",
+      "baseline_blob": "715cfe2b91d173bd4c1a0eedfd42c3c71ac2378e",
+      "target_blob": "715cfe2b91d173bd4c1a0eedfd42c3c71ac2378e",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "715cfe2b91d173bd4c1a0eedfd42c3c71ac2378e",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "baseline_blob": "1e7bc66d37fb3a0c0780f65d81b43ed83c5b2df9",
+      "target_blob": "1e7bc66d37fb3a0c0780f65d81b43ed83c5b2df9",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "1e7bc66d37fb3a0c0780f65d81b43ed83c5b2df9",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "baseline_blob": "15717acb2b1422ae1dfdfae7105279ec5d02795a",
+      "target_blob": "15717acb2b1422ae1dfdfae7105279ec5d02795a",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "15717acb2b1422ae1dfdfae7105279ec5d02795a",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/step5_cost.py",
+      "baseline_blob": "155289786872f448113bab8fceccf77130db9b3f",
+      "target_blob": "155289786872f448113bab8fceccf77130db9b3f",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "155289786872f448113bab8fceccf77130db9b3f",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/metrics/ep_wave_metrics.py",
+      "baseline_blob": "7290697febb2280a3c28f1446d1bdde12b1e731b",
+      "target_blob": "7290697febb2280a3c28f1446d1bdde12b1e731b",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "7290697febb2280a3c28f1446d1bdde12b1e731b",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/metrics/op_trace_utils.py",
+      "baseline_blob": "9f4a2e1ff5ac64851eae5e9df0632ed8b42224c1",
+      "target_blob": "9f4a2e1ff5ac64851eae5e9df0632ed8b42224c1",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "9f4a2e1ff5ac64851eae5e9df0632ed8b42224c1",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/moe_routing_policy.py",
+      "baseline_blob": "876a75685d0f74158d6f04ff48a3bade6da907e2",
+      "target_blob": "876a75685d0f74158d6f04ff48a3bade6da907e2",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "876a75685d0f74158d6f04ff48a3bade6da907e2",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/moe_routing_runtime.py",
+      "baseline_blob": "c744ed7d4973f63fefc552b09517f0924b24d5a6",
+      "target_blob": "c744ed7d4973f63fefc552b09517f0924b24d5a6",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "c744ed7d4973f63fefc552b09517f0924b24d5a6",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/operators/families.py",
+      "baseline_blob": "fe43d63b08dcc7705ea32350e97561986947278a",
+      "target_blob": "fe43d63b08dcc7705ea32350e97561986947278a",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "fe43d63b08dcc7705ea32350e97561986947278a",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/profiling/common/runtime_identity.py",
+      "baseline_blob": "9dc9ad3845867f0f7f7b51736d7f0169e2fb2456",
+      "target_blob": "9dc9ad3845867f0f7f7b51736d7f0169e2fb2456",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "9dc9ad3845867f0f7f7b51736d7f0169e2fb2456",
+      "production_matches_target": true
+    },
+    {
+      "path": "frontier/types/__init__.py",
+      "baseline_blob": "9438b3333b5077472bafa8a24d95a01b57380ddc",
+      "target_blob": "9438b3333b5077472bafa8a24d95a01b57380ddc",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "9438b3333b5077472bafa8a24d95a01b57380ddc",
+      "production_matches_target": true
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/report.md",
+      "baseline_blob": "c15ef80c4a7c741f88c8cea55c873d991423fe25",
+      "target_blob": "c15ef80c4a7c741f88c8cea55c873d991423fe25",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "c15ef80c4a7c741f88c8cea55c873d991423fe25",
+      "production_matches_target": true
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/emission_immutable_work/report.md",
+      "baseline_blob": "02c5ec56535b7aa087a197d1269ba13b0b3f7703",
+      "target_blob": "02c5ec56535b7aa087a197d1269ba13b0b3f7703",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "02c5ec56535b7aa087a197d1269ba13b0b3f7703",
+      "production_matches_target": true
+    },
+    {
+      "path": "tests/unit/test_comm_operator_families.py",
+      "baseline_blob": "76938fae2dde296c7878995c4b2f75497677ab9f",
+      "target_blob": "76938fae2dde296c7878995c4b2f75497677ab9f",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "76938fae2dde296c7878995c4b2f75497677ab9f",
+      "production_matches_target": true
+    },
+    {
+      "path": "tests/unit/test_ep_wave_trace_context.py",
+      "baseline_blob": "a25d3c050b94a85f151760d49e3d274fa756da1b",
+      "target_blob": "a25d3c050b94a85f151760d49e3d274fa756da1b",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "a25d3c050b94a85f151760d49e3d274fa756da1b",
+      "production_matches_target": true
+    },
+    {
+      "path": "tests/unit/test_execution_time_op_times.py",
+      "baseline_blob": "1b04fdf827f859f6b4685fb33c835da4202dddcb",
+      "target_blob": "1b04fdf827f859f6b4685fb33c835da4202dddcb",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "1b04fdf827f859f6b4685fb33c835da4202dddcb",
+      "production_matches_target": true
+    },
+    {
+      "path": "tests/unit/test_measured_attention_root_metrics.py",
+      "baseline_blob": "6529a3f12a4454bc224a53d44c13042fcad8acb1",
+      "target_blob": "6529a3f12a4454bc224a53d44c13042fcad8acb1",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "6529a3f12a4454bc224a53d44c13042fcad8acb1",
+      "production_matches_target": true
+    },
+    {
+      "path": "tests/unit/test_op_trace_utils.py",
+      "baseline_blob": "96e6009fec2dc21f58766e8cdea0563b8f79beb1",
+      "target_blob": "96e6009fec2dc21f58766e8cdea0563b8f79beb1",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "96e6009fec2dc21f58766e8cdea0563b8f79beb1",
+      "production_matches_target": true
+    },
+    {
+      "path": "tests/unit/test_step5_measured_ffn.py",
+      "baseline_blob": "66247cfc7492c58575528daa3afecfc56d81884b",
+      "target_blob": "66247cfc7492c58575528daa3afecfc56d81884b",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "66247cfc7492c58575528daa3afecfc56d81884b",
+      "production_matches_target": true
+    },
+    {
+      "path": "tests/unit/test_step5_moe_pricing.py",
+      "baseline_blob": "036bb10dab716cec7df2f4d9492d26e8e4ac96b5",
+      "target_blob": "036bb10dab716cec7df2f4d9492d26e8e4ac96b5",
+      "unchanged": true,
+      "target_disk_matches_commit": true,
+      "production_blob": "036bb10dab716cec7df2f4d9492d26e8e4ac96b5",
+      "production_matches_target": true
+    }
+  ],
+  "other_changed_code": [
+    "frontier/metrics/metrics_store.py",
+    "tests/integration/run_step5_measured_main.py",
+    "tests/integration/test_step5_measured_main.py",
+    "tests/performance/step5_actual06_iteration.py"
+  ],
+  "control_allowance": {
+    "ceiling": 1,
+    "used": 0,
+    "remaining_original_allowance": 1,
+    "launch_attempts": 0,
+    "currently_authorized_additional_launches": 0,
+    "candidate_pickle_invocations": 0,
+    "benchmark_invocations": 0,
+    "reason_not_run": "Final explicit user instruction: No additional control."
+  },
+  "binding_method": "Git blob identity at pinned commits plus exact current disk-byte comparison; no pricing/data read",
+  "historical_profile": {
+    "source": "7540414341d5b81a86b18b9562d1506c0ba74285",
+    "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/detached_emission_ownership/evidence/profile_callers.txt",
+    "moe_getter_calls_per_wave": 16,
+    "communication_getter_calls_per_wave": 16,
+    "profiled_moe_cumulative_s": 0.015,
+    "profiled_communication_cumulative_s": 0.019,
+    "current_performance_measured": false
+  },
+  "modification_history": [
+    {
+      "date": "2026-10-24",
+      "change": "Retain recovered evidence, bind the main revision, and close the candidate by static contract rejection without a control."
+    }
+  ],
+  "primary_unit_supervisor_reported": 73779,
+  "ledger_admission_reported_by_primary": "unadmitted",
+  "binding_count": 25,
+  "binding_verification": {
+    "observed": true,
+    "candidate_head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+    "main_head": "2e8d6168fd72d13955216d59320c9f68b306eca5",
+    "baseline": "886608ea574dd2107d0b30771d63d8057d23cac6",
+    "all_three_blob_ids_equal": true,
+    "all_current_target_disk_bytes_equal": true,
+    "source_control_execution": false
+  },
+  "environment_metadata": {
+    "python_executable": "/usr/bin/python3",
+    "python_version": "3.10.6",
+    "inspection_bytecode_disabled": true,
+    "conda_used": false,
+    "systemd_version": "249 (249.11-0ubuntu3.6)",
+    "timeout_version": "GNU coreutils 8.32",
+    "control_threads_configured": false,
+    "control_memory_limit_exercised": false,
+    "control_timing_results": null
+  },
+  "local_semantics_sources": [
+    {
+      "path": "/usr/lib/python3.10/copy.py",
+      "sha256": "27dcfc53a4b9d4fbc3d90c74e549eb6eca9301524d6d2fbff9a6589cf51b6fd5",
+      "lines": [
+        128,
+        178
+      ],
+      "relevant_dispatch": "__deepcopy__ is called at lines 151-153, before the __reduce_ex__(4) path at lines 159-161."
+    },
+    {
+      "path": "/usr/lib/python3.10/pickle.py",
+      "sha256": "f29792b7bad19b9b7a6096aae01e9a6a0a3ec28029576af74efc530ee331c412",
+      "lines": [
+        535,
+        603,
+        1777,
+        1790
+      ],
+      "relevant_dispatch": "Reference pickler uses reduction at lines 575-582; module exposes _pickle at lines 1777-1787. No __deepcopy__ dispatch is present. The C path is not executed or independently source-inspected."
+    }
+  ],
+  "primary_documents": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314/task_memory/task_2026-10-22_step5_position_routing/requirements.md",
+      "lines": 516,
+      "sha256": "1fc4254f534eb0fdb3f94048710c18bc2c07d15212ed5e9e0fa87c11043fcdc5"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314/task_memory/task_2026-10-22_step5_position_routing/plan.md",
+      "lines": 324,
+      "sha256": "44f3ed594c809288f3ddf4eb95103637e3c3fd4bc271f058c0ae35c1d4e0fbdd"
+    }
+  ],
+  "inspection_commands": [
+    [
+      "/usr/bin/python3",
+      "--version"
+    ],
+    [
+      "/usr/bin/systemd-run",
+      "--version"
+    ],
+    [
+      "/usr/bin/timeout",
+      "--version"
+    ],
+    [
+      "rg",
+      "-n",
+      "__deepcopy__|__reduce_ex__|__reduce__|from _pickle import|class _Pickler",
+      "/usr/lib/python3.10/pickle.py",
+      "/usr/lib/python3.10/copy.py"
+    ],
+    [
+      "rg",
+      "-n",
+      "-A",
+      "10",
+      "-B",
+      "5",
+      "physical_frame|operator_times=moe_operator_times|self\\._moe_or_mlp_time =",
+      "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314/frontier/entities/execution_time.py"
+    ],
+    [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "rev-parse",
+      "2e8d6168^{commit}"
+    ]
+  ],
+  "binding_command_templates": [
+    [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "rev-parse",
+      "886608ea574dd2107d0b30771d63d8057d23cac6:{path}"
+    ],
+    [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "rev-parse",
+      "1461573de388b72450189bc0c1b88b4ac32491f0:{path}"
+    ],
+    [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "rev-parse",
+      "2e8d6168fd72d13955216d59320c9f68b306eca5:{path}"
+    ],
+    [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "show",
+      "1461573de388b72450189bc0c1b88b4ac32491f0:{path}"
+    ]
+  ],
+  "binding_template_expansion": "Each {path} is an exact source_bindings[].path. The last command output was compared byte-for-byte with that path in the target checkout.",
+  "disposition": "NO_ALLOC",
+  "verdict_basis": "Static supported-contract rejection; no runtime comparison or timing was performed.",
+  "supported_seam": {
+    "constructor": "frontier/entities/execution_time.py:203",
+    "component_getter": "frontier/entities/execution_time.py:732",
+    "operator_getter": "frontier/entities/execution_time.py:758",
+    "accepted_object_domain": "frontier/entities/time_components.py:394",
+    "validation": "frontier/entities/time_components.py:396-414"
+  },
+  "counterexamples": [
+    {
+      "name": "custom_deepcopy_result",
+      "kind": "static_inference_not_executed",
+      "supported_input": "An importable frame object whose __deepcopy__ returns the same class with generation incremented.",
+      "constructor_state": "generation 0 input becomes generation 1 through the existing constructor deepcopy.",
+      "getter_result_inferred": "generation 2",
+      "pickle_roundtrip_result_inferred": "generation 1; ordinary reduction serializes state without invoking __deepcopy__.",
+      "preservation": false
+    },
+    {
+      "name": "custom_deepcopy_exception",
+      "kind": "static_inference_not_executed",
+      "supported_input": "The same frame object, configured to raise ValueError(\"Frame snapshot rejected\") after the constructor copy.",
+      "constructor_state": "generation 1 is accepted and stored.",
+      "getter_result_inferred": "ValueError(\"Frame snapshot rejected\")",
+      "pickle_roundtrip_result_inferred": "successful reconstruction of generation 1; the copy hook is not invoked.",
+      "preservation": false
+    }
+  ],
+  "contribution": {
+    "current_measurement_performed": false,
+    "current_candidate_speedup": null,
+    "newly_implemented_savings_s": 0,
+    "zero_basis": "Inferred delivery contribution: the rejected candidate is not implemented or allocated.",
+    "historical_getter_attribution_only": true,
+    "historical_profiled_total_getter_cumulative_s": 0.034,
+    "historical_total_is_current_wall_time_bound": false,
+    "prior_loader_json_key_savings_added": false
+  },
+  "verification_limits": [
+    "No contract control, pickle roundtrip, benchmark, or fresh performance profile was executed.",
+    "Ordinary mutable graph, alias, and exhaustive getter parity of pickle are not established.",
+    "The optimized C implementation is neither invoked nor independently source-inspected; the rejection is inferred from the standard serialization/reduction contract and its local reference implementation.",
+    "Historical profiler timings are old-source attribution, not current wall-time savings.",
+    "Primary strict/full-unit/auditor results and ledger admission are outside this record owner."
+  ]
+}

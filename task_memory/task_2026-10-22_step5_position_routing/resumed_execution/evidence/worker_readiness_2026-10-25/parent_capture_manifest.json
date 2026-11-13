@@ -1,0 +1,28 @@
+{
+  "status": "PASS_EXACT_PARENT_COMMAND_CAPTURE",
+  "collected_utc": "2026-10-24T21:21:53.893025+00:00",
+  "artifacts": [
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_parent_20261025_01/execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/parent_execution.json",
+      "bytes": 1263,
+      "sha256": "a5d5fdd465fd99061fcbc841b4396fd16c39fd485d4e330345f4aea471526300"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_parent_20261025_01/stdout",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/parent.stdout",
+      "bytes": 198,
+      "sha256": "20db498c17a604e53068e7b0461e811983a9221c490987a6c373b2cf720d4a6c"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_worker_readiness_parent_20261025_01/stderr",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/worker_readiness_2026-10-25/parent.stderr",
+      "bytes": 67,
+      "sha256": "481f0e5500d751e86ac1977156e33682ccb539b4364beddf030aa9aa9367c543"
+    }
+  ],
+  "selected_files": 3,
+  "selected_bytes": 1528,
+  "secret_scan": "PASS_SELECTED_PARENT_CAPTURE_ONLY",
+  "new_runtime_or_platform_calls": 0
+}

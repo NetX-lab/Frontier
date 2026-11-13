@@ -1,0 +1,211 @@
+Running scope as unit: run-rdeef77b722bf4b68850ce6905b253e63.scope
+........................................................................ [ 72%]
+F..........................                                              [100%]
+=================================== FAILURES ===================================
+_ test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd4e7f3da80>
+
+    def test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper(
+        monkeypatch,
+    ) -> None:
+        execution_time = _build_execution_time(
+            num_layers=1,
+            dense_kernel_times=(0.2, 0.4, 0.3),
+        )
+        mapper_calls: list[tuple[str, int | None, bool]] = []
+    
+        def _fake_get_attention_trace_op_times(
+            mapped_execution_time,
+            family,
+            *,
+            per_layer_count=None,
+            skip_zero=True,
+        ):
+            assert mapped_execution_time is execution_time
+            if family is not DENSE_ATTENTION_FAMILY:
+                mapper_calls.append((family.family_id, per_layer_count, skip_zero))
+                return tuple((operator, 0.0) for operator in family.e2e_trace_ops())
+            mapper_calls.append((family.family_id, per_layer_count, skip_zero))
+            return (
+                (
+                    _fake_dense_attention_operator(
+                        "role_cache",
+                        AttentionOperatorRole.CACHE_WRITE,
+                    ),
+                    9.2,
+                ),
+                (
+                    _fake_dense_attention_operator(
+                        "role_prefill",
+                        AttentionOperatorRole.PREFILL_KERNEL,
+                    ),
+                    9.4,
+                ),
+                (
+                    _fake_dense_attention_operator(
+                        "role_decode",
+                        AttentionOperatorRole.DECODE_KERNEL,
+                    ),
+                    9.3,
+                ),
+            )
+    
+        monkeypatch.setattr(
+            "frontier.metrics.metrics_store.get_attention_trace_op_times",
+            _fake_get_attention_trace_op_times,
+        )
+    
+>       ledger = _build_metrics_store()._build_frontier_stage_batch_component_ledger(execution_time)
+
+tests/unit/test_mla_core_native_op_tracing.py:619: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <frontier.metrics.metrics_store.MetricsStore object at 0x7fd4e7f7c2e0>
+execution_time = <frontier.entities.execution_time.ExecutionTime object at 0x7fd4e7f7c280>
+
+    def _build_frontier_stage_batch_component_ledger(
+        self,
+        execution_time: ExecutionTime,
+    ) -> dict[str, float]:
+        if (isinstance(execution_time, StageExecutionTime)
+                and set(execution_time.attention_family_ids) == {"deepseek_v4_attention"}
+                or getattr(execution_time, "attention_family_id", None) == "deepseek_v4_attention"):
+            from frontier.execution_time_predictor.deepseek_v4 import component_ledger
+    
+            return {name: _round_ledger_ms(value) for name, value in component_ledger(execution_time).items()}
+        owner = (execution_time.stage_execution_time
+                 if isinstance(execution_time, StageExecutionTime) else execution_time)
+        stage_components = {
+            name: _round_ledger_ms(getattr(owner, name))
+            for name in (
+                "pipeline_parallel_communication_time", "schedule_time", "sampler_e2e_time",
+                "prepare_inputs_e2e_time", "pp_producer_send_path_runtime_time",
+                "pp_receiver_head_runtime_time", "pp_prefill_consumer_active_runtime_time",
+                "pp_stage_boundary_residual_runtime_time", "process_model_outputs_time",
+                "ray_comm_time", "decode_draft_proposer_time", "mtp_terminal_overshoot_time",
+            )
+        }
+        attributes = canonical_operator_execution_time_attrs()
+        for name, value in owner.op_times.items():
+            if attributes.get(name) in StageExecutionTime.stage_owned_fields:
+                stage_components[name] = _round_ledger_ms(value)
+        if isinstance(execution_time, StageExecutionTime):
+            owner_only_names = execution_time.stage_owned_fields | {
+                name for name, attribute in attributes.items()
+                if attribute in execution_time.stage_owned_fields
+            }
+            component_ledger: dict[str, float] = dict(stage_components)
+            for layer in execution_time.layer_execution_times:
+                layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
+                for name, value in layer_ledger.items():
+                    if name in owner_only_names:
+                        continue
+                    component_ledger[name] = component_ledger.get(name, 0.0) + float(value)
+    
+            return {
+                name: _round_ledger_ms(value)
+                for name, value in component_ledger.items()
+            }
+    
+        dense_attention_times = _dense_attention_op_times_by_role(
+            execution_time,
+            skip_zero=False,
+        )
+        mla_attention_times = dict(_iter_mla_attention_op_times(execution_time))
+        component_ledger = {
+            **stage_components,
+            "attention_prefill_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.PREFILL_KERNEL]
+            ),
+            "attention_decode_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.DECODE_KERNEL]
+            ),
+            "attention_pre_proj_time": _round_ledger_ms(execution_time.attention_pre_proj_time),
+            "attention_post_proj_time": _round_ledger_ms(
+                execution_time.attention_post_proj_time
+            ),
+            "attention_kv_cache_save_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.CACHE_WRITE]
+            ),
+            "attention_rope_execution_time": _round_ledger_ms(
+                execution_time.attention_rope_execution_time
+            ),
+            "attn_mla_kv_cache_save_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_kv_cache_save"]
+            ),
+            "attn_mla_prefill_kv_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill_kv_up_proj"]
+            ),
+            "attn_mla_prefill_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill"]
+            ),
+            "attn_mla_decode_q_latent_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode_q_latent_proj"]
+            ),
+            "attn_mla_decode_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode"]
+            ),
+            "attn_mla_v_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_v_up_proj"]
+            ),
+            "attn_norm_time": _round_ledger_ms(execution_time.attn_norm_time),
+            "mlp_layer_up_proj_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_up_proj_execution_time
+            ),
+            "mlp_layer_act_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_act_execution_time
+            ),
+            "mlp_layer_down_proj_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_down_proj_execution_time
+            ),
+            "mlp_norm_time": _round_ledger_ms(execution_time.mlp_norm_time),
+            "attention_all_reduce_time": _round_ledger_ms(execution_time.attention_all_reduce_time),
+            "mlp_all_reduce_time": _round_ledger_ms(execution_time.mlp_all_reduce_time),
+            "moe_tensor_parallel_allgather_time": _round_ledger_ms(
+                execution_time.moe_tensor_parallel_allgather_time
+            ),
+            "share_expert_tensor_parallel_allreduce_time": _round_ledger_ms(
+                execution_time.share_expert_tensor_parallel_allreduce_time
+            ),
+            "dp_input_allreduce_time": _round_ledger_ms(execution_time.dp_input_allreduce_time),
+            "dp_output_allreduce_time": _round_ledger_ms(execution_time.dp_output_allreduce_time),
+            "expert_parallel_communication_time": _round_ledger_ms(
+                execution_time.expert_parallel_communication_time
+            ),
+            "moe_gating_linear_time": _round_ledger_ms(execution_time.moe_gating_linear_time),
+            "moe_gating_routing_topk_time": _round_ledger_ms(
+                execution_time.moe_gating_routing_topk_time
+            ),
+            "moe_shuffling_time": _round_ledger_ms(execution_time.moe_shuffling_time),
+            "moe_grouped_gemm_time": _round_ledger_ms(execution_time.moe_grouped_gemm_time),
+            "share_expert_up_proj_time": _round_ledger_ms(
+                execution_time.share_expert_up_proj_time
+            ),
+            "share_expert_act_time": _round_ledger_ms(execution_time.share_expert_act_time),
+            "share_expert_down_proj_time": _round_ledger_ms(
+                execution_time.share_expert_down_proj_time
+            ),
+            "add_attn_residual_time": _round_ledger_ms(
+                execution_time.add_attn_residual_time
+            ),
+            "add_ffn_residual_time": _round_ledger_ms(execution_time.add_ffn_residual_time),
+        }
+        for op_name, duration_ms in _iter_ffn_merge_times(execution_time):
+            component_ledger[op_name] = _round_ledger_ms(duration_ms)
+        if execution_time.attention_family_id is not None:
+            family = get_attention_family(execution_time.attention_family_id)
+            component_public_names = {
+                "attention_layer_pre_proj_execution_time": "attention_pre_proj_time",
+                "attention_layer_post_proj_execution_time": "attention_post_proj_time",
+            }
+>           for operator, duration_ms in get_attention_trace_op_times(
+                execution_time, family, skip_zero=False,
+                allow_structural=family.structural_execution_enabled,
+            ):
+E           TypeError: test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper.<locals>._fake_get_attention_trace_op_times() got an unexpected keyword argument 'allow_structural'
+
+frontier/metrics/metrics_store.py:4482: TypeError
+=========================== short test summary info ============================
+FAILED tests/unit/test_mla_core_native_op_tracing.py::test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper
+1 failed, 98 passed in 9.39s

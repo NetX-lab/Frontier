@@ -1,0 +1,38 @@
+{
+  "retained_artifact": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/candidate/iteration-0/op_traces.jsonl",
+  "retained_body_bytes": 2889764,
+  "retained_body_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+  "rows": 209,
+  "collective_events": 64,
+  "count_receipt_json": {
+    "events": 64,
+    "distinct": 8,
+    "lengths": {
+      "13359": 30,
+      "13728": 15,
+      "13373": 15,
+      "13365": 2,
+      "13734": 1,
+      "13379": 1
+    }
+  },
+  "plan_key": {
+    "distinct_on_costs": 8
+  },
+  "context_json": {
+    "events": 64,
+    "distinct": 1,
+    "lengths": {
+      "2141": 64
+    }
+  },
+  "buffer_json": {
+    "events": 64,
+    "distinct": 2,
+    "lengths": {
+      "1468": 60,
+      "1470": 4
+    }
+  },
+  "note": "Counted from the accepted real 208-event artifact; no emission run in this assignment."
+}

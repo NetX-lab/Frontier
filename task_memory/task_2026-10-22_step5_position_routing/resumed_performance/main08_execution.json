@@ -1,0 +1,35 @@
+{
+  "status": "FAIL_BOTH_MODES_TIMED_OUT",
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "output_root": "/data/ycfeng/tmp/d29-parent-position-main08",
+  "wrapper_exit": 1,
+  "per_mode_timeout_s": 2400,
+  "offline": {
+    "returncode": null,
+    "timed_out": true,
+    "wall_s": 2400.175252007786,
+    "validation": "FAIL",
+    "recorded_emitted_decode_tokens": 4,
+    "last_scheduled_decode_iteration": 4,
+    "operator_trace_bytes": 1447809841
+  },
+  "online": {
+    "returncode": null,
+    "timed_out": true,
+    "wall_s": 2400.1521314419806,
+    "validation": "FAIL",
+    "recorded_emitted_decode_tokens": 4,
+    "last_scheduled_decode_iteration": 4,
+    "operator_trace_bytes": 1517626194,
+    "execution_sha256": "91a4aa4ce8bfd0c6d8534604e17857821be073e4476df790c3cf5ae54bd6c659",
+    "validation_sha256": "364cdbbeaba538270117e54dbf2cf801c04d5e21b536636abb38cdbb01f44d26",
+    "scheduler_sha256": "b95cce06c1f30749788af431f45b58549c7119f887f6d1ef0d9196109a420924"
+  },
+  "runner_sha256": "4684fef43da74883b3289448dc8309ba21617705450a0ff733fdebf0ff1e8f72",
+  "fixture_sha256": "87752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b",
+  "launch_inputs": "All9 SHA256 values matched main07 at launch; see source_freeze.json",
+  "post_run_source_and_submodule_clean": true,
+  "workload": "One request per mode,6144 input/1024 output tokens; synthetic CPU compute profiles and3.5ms READ cost; CPU overhead skipped",
+  "limitations": "Workflow test only,not formal128-request native evaluation or numerical qualification. Trace sizes and decode progress identify the observation boundary,not the cause of the timeout",
+  "next_action": "D29-MAIN08-RESIDUAL-REPRO: establish a new seconds-scale real execution-path loop before allocating another repair or full CLI run"
+}

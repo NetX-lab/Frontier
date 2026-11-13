@@ -61,6 +61,10 @@ class _ModelConfigWithoutLayerPredicate:
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return ModelArchitectureProfile.generic()
 
+    def get_layer_attention_spec(self, layer_id: int):
+        # Every model config resolves its layer attention family.
+        return cache_model().get_layer_attention_spec(layer_id)
+
 
 class _MonolithicPredictor(CacheFixturePredictor):
     def _get_estimator(self):

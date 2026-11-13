@@ -25,6 +25,9 @@ Multi-GPU modes:
 
 from __future__ import annotations
 
+from dataclasses import replace
+import itertools
+import json
 import os
 import sys
 import argparse
@@ -56,11 +59,14 @@ except ImportError:
     RAY_AVAILABLE = False
     ray = None
 
+from frontier.attention.families import STEP5_ATTENTION_FAMILY
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.accelerator import (
     get_available_gpu_ids,
     set_process_visible_device,
 )
+from frontier.profiling.common.runtime_identity import step5_measurement_columns
 from frontier.profiling.utils import (
     EXPORTABLE_PROFILE_METHOD_CHOICES,
     ProfileMethod,
@@ -72,6 +78,10 @@ from frontier.profiling.utils import (
     require_profiling_dependencies,
 )
 from frontier.profiling.moe.moe_input import resolve_moe_expert_parallel_sizes
+from frontier.profiling.moe.routed_layer_groups import (
+    RoutedLayerGroup,
+    resolve_routed_layer_groups,
+)
 
 MoEWrapper = None
 
@@ -157,13 +167,10 @@ def _worker_profile_task(
         gating_runtime_context=wrapper_args.get(
             "gating_runtime_context", DEFAULT_MOE_GATING_RUNTIME_CONTEXT
         ),
+        routed_layer_group=wrapper_args["routed_layer_group"],
     )
 
-    result = wrapper.profile(
-        num_tokens=profile_args["num_tokens"],
-        load_distribution=profile_args["load_distribution"],
-        seed=profile_args["seed"],
-    )
+    result = wrapper.profile(**profile_args)
 
     return result
 
@@ -333,10 +340,22 @@ def parse_args():
         "--routing_runtime_path",
         type=str,
         default="standard_fused_topk",
-        choices=["standard_fused_topk", "uniform_topk"],
+        choices=["standard_fused_topk", "uniform_topk", "position_cyclic"],
         help=(
             "Routing runtime path to profile for moe_gating_routing_topk. "
             "Use uniform_topk for runtime-equivalent uniform-routing profiling."
+        ),
+    )
+    parser.add_argument("--routing_input_file", type=Path,
+                        help="Explicit source/census routing inputs for position_cyclic profiling")
+    parser.add_argument(
+        "--profiled_ep_rank",
+        default="first",
+        choices=["first", "last_routed"],
+        help=(
+            "EP rank whose local experts are measured: rank 0, or the rank of the "
+            "highest routed expert. With balanced routing, last_routed measures the "
+            "partly filled rank of a step whose tokens do not reach every rank."
         ),
     )
     parser.add_argument(
@@ -349,7 +368,28 @@ def parse_args():
             "prefill_hot enables a prefill-only hot-context prefix before timing."
         ),
     )
+    parser.add_argument(
+        "--source_revision",
+        default=None,
+        help="Frontier source revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--model_config_revision",
+        default=None,
+        help="Upstream model config revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--dry_run",
+        action="store_true",
+        help="Print the profiling grid as JSON and exit without torch or GPUs.",
+    )
     args = parser.parse_args()
+    if (args.source_revision is None) != (args.model_config_revision is None):
+        parser.error("--source_revision and --model_config_revision must be given together")
+    if (args.routing_runtime_path == "position_cyclic") != (args.routing_input_file is not None):
+        parser.error("position_cyclic requires --routing_input_file; other routing paths cannot consume it")
+    if args.routing_input_file is not None and args.profiled_ep_rank != "first":
+        parser.error("position_cyclic cells name their EP rank; --profiled_ep_rank applies to generated routing")
     args.profile_method = normalize_profile_method(args.profile_method)
 
     return args, args.enable_load_imbalance
@@ -494,7 +534,21 @@ def _moe_required_target_columns() -> tuple[str, ...]:
 MOE_REQUIRED_TARGET_COLUMNS = _moe_required_target_columns()
 
 
-def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str) -> None:
+def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str, operator_facts=None, expected_cells=None) -> None:
+    if operator_facts is not None:
+        from frontier.moe_routing_runtime import filter_moe_operator_rows
+        if not operator_facts or not expected_cells:
+            raise ValueError("Position MoE output requires selected bindings and the expected cell inventory")
+        for facts in operator_facts.values():
+            filter_moe_operator_rows(df, operator_facts=facts, requested_runtime_path="position_cyclic", source_name=model)
+        keys = ["moe_input_id", "moe_layer_ids", "moe_frame_scope", "moe_source_lane_id", "moe_ep_rank"]
+        actual = [tuple(None if pd.isna(value) else value for value in row)
+                  for row in df[keys].itertuples(index=False, name=None)]
+        if len(actual) != len(set(actual)) or set(actual) != set(expected_cells):
+            raise ValueError("MoE output has missing, duplicate or unexpected physical cells")
+        return
+    if "routing_runtime_path" in df and df["routing_runtime_path"].eq("position_cyclic").any():
+        raise ValueError("Position MoE output requires selected bindings before legacy target validation")
     required_target_columns = _moe_required_target_columns()
     missing_columns = [col for col in required_target_columns if col not in df.columns]
     if missing_columns:
@@ -551,17 +605,33 @@ def _get_moe_cases_per_parallel_point(args: argparse.Namespace) -> int:
     return len(args.load_distributions) * args.num_samples_per_distribution
 
 
+def _routed_layer_groups_to_profile(
+    model_config: ModelConfig,
+) -> Tuple[Optional[RoutedLayerGroup], ...]:
+    """Return the routed layer groups measured separately.
+
+    ``None`` stands for the single model-wide setting of a model without groups.
+    """
+    return resolve_routed_layer_groups(model_config) or (None,)
+
+
 def _count_moe_configurations(
     *,
     num_tokens_count: int,
     tensor_parallel_count: int,
     expert_parallel_count: int,
+    routed_layer_group_count: int,
     cases_per_parallel_point: int,
+    routing_inputs=None,
+    expert_parallel_sizes=(),
 ) -> int:
+    if routing_inputs is not None:
+        return routed_layer_group_count * sum(len(_position_profile_cases(routing_inputs, size)) for size in expert_parallel_sizes)
     return (
         num_tokens_count
         * tensor_parallel_count
         * expert_parallel_count
+        * routed_layer_group_count
         * cases_per_parallel_point
     )
 
@@ -602,12 +672,21 @@ def _build_moe_confirmation_sections(
     for model in args.models:
         model_config = model_configs[model]
         ep_sizes = resolved_ep_sizes_by_model[model]
+        layer_groups = _routed_layer_groups_to_profile(model_config)
         model_configurations = _count_moe_configurations(
             num_tokens_count=num_tokens_count,
             tensor_parallel_count=len(args.num_tensor_parallel_workers),
             expert_parallel_count=len(ep_sizes),
+            routed_layer_group_count=len(layer_groups),
             cases_per_parallel_point=cases_per_parallel_point,
+            routing_inputs=_routing_inputs_for_model(args, model_config),
+            expert_parallel_sizes=ep_sizes,
         )
+        layer_group_text = ""
+        if layer_groups != (None,):
+            layer_group_text = (
+                f"routed layer groups={[group.layer_range for group in layer_groups]}; "
+            )
         total_configurations += model_configurations
         _, model_precision = _resolve_precision_for_model(
             model_config,
@@ -618,7 +697,7 @@ def _build_moe_confirmation_sections(
             (
                 model,
                 f"{model_config.num_experts} experts; EP={ep_sizes}; "
-                f"precision={model_precision}; "
+                f"precision={model_precision}; {layer_group_text}"
                 f"{model_configurations:,} configurations",
             )
         )
@@ -690,6 +769,8 @@ def profile_model(
         model_config.num_experts,
         args.expert_parallel_sizes,
     )
+    routing_inputs = _routing_inputs_for_model(args, model_config)
+    routed_layer_groups = _routed_layer_groups_to_profile(model_config)
 
     all_results = []
     measurement_type = profile_method_to_measurement_type(args.profile_method).value
@@ -733,6 +814,7 @@ def profile_model(
                     num_tokens_count=len(num_tokens_to_profile),
                     tensor_parallel_count=1,
                     expert_parallel_count=len(expert_parallel_sizes),
+                    routed_layer_group_count=len(routed_layer_groups),
                     cases_per_parallel_point=cases_per_parallel_point,
                 )
             )
@@ -744,7 +826,9 @@ def profile_model(
             result["measurement_type"] = measurement_type
             all_results.append(result)
 
-        for expert_parallel_size in expert_parallel_sizes:
+        for expert_parallel_size, routed_layer_group in itertools.product(
+            expert_parallel_sizes, routed_layer_groups
+        ):
             # Validate EP size
             if model_config.num_experts % expert_parallel_size != 0:
                 raise ValueError(
@@ -753,7 +837,9 @@ def profile_model(
                 )
 
             # Generate test cases based on load imbalance settings
-            if args.enable_load_imbalance:
+            if routing_inputs is not None:
+                test_cases = _position_profile_cases(routing_inputs, expert_parallel_size)
+            elif args.enable_load_imbalance:
                 test_cases = []
                 for num_tokens in num_tokens_to_profile:
                     for load_dist in args.load_distributions:
@@ -762,10 +848,12 @@ def profile_model(
                                 "num_tokens": num_tokens,
                                 "load_distribution": load_dist,
                                 "seed": seed,
+                                "profiled_ep_rank": args.profiled_ep_rank,
                             })
             else:
                 test_cases = [
-                    {"num_tokens": num_tokens, "load_distribution": "uniform", "seed": None}
+                    {"num_tokens": num_tokens, "load_distribution": "uniform", "seed": None,
+                     "profiled_ep_rank": args.profiled_ep_rank}
                     for num_tokens in num_tokens_to_profile
                 ]
 
@@ -779,6 +867,7 @@ def profile_model(
                 "use_fp8": resolved_use_fp8,
                 "per_channel_quant": args.per_channel_quant,
                 "block_shape": resolved_block_shape,
+                "routed_layer_group": routed_layer_group,
             }
             if hasattr(args, "routing_runtime_path"):
                 wrapper_args["routing_runtime_path"] = args.routing_runtime_path
@@ -808,16 +897,18 @@ def profile_model(
                         ray_wrapper_init_args.append(args.routing_runtime_path)
                     if hasattr(args, "gating_runtime_context"):
                         ray_wrapper_init_args.append(args.gating_runtime_context)
+                    # Ray appends positional init args, so the group goes by keyword.
                     model_wrappers.append(
-                        moe_wrapper_actor.remote(*ray_wrapper_init_args)
+                        moe_wrapper_actor.remote(
+                            *ray_wrapper_init_args,
+                            routed_layer_group=routed_layer_group,
+                        )
                     )
 
                 for test_case in test_cases:
                     worker_id = len(ray_promises) % args.num_gpus
                     promise = model_wrappers[worker_id].profile.remote(
-                        num_tokens=test_case["num_tokens"],
-                        load_distribution=test_case["load_distribution"],
-                        seed=test_case["seed"],
+                        **test_case,
                     )
                     ray_promises.append(promise)
 
@@ -874,6 +965,7 @@ def profile_model(
                     "use_fp8": resolved_use_fp8,
                     "per_channel_quant": args.per_channel_quant,
                     "block_shape": resolved_block_shape,
+                    "routed_layer_group": routed_layer_group,
                 }
                 if hasattr(args, "routing_runtime_path"):
                     wrapper_kwargs["routing_runtime_path"] = args.routing_runtime_path
@@ -885,11 +977,7 @@ def profile_model(
                 wrapper = moe_wrapper_class(**wrapper_kwargs)
 
                 for test_case in test_cases:
-                    result = wrapper.profile(
-                        num_tokens=test_case["num_tokens"],
-                        load_distribution=test_case["load_distribution"],
-                        seed=test_case["seed"],
-                    )
+                    result = wrapper.profile(**test_case)
                     _collect_result(result)
                     pbar.update(1)
 
@@ -915,8 +1003,142 @@ def profile_model(
         else:
             df[key] = df[key].fillna(value)
 
-    _validate_canonical_moe_result_df(df, model=model)
+    if routing_inputs is not None:
+        from types import SimpleNamespace
+        from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
+        df = _attach_moe_output_metadata(df, precision_str=ModelConfig._dtype_to_str(model_config.dtype),
+            model_arch=_resolve_model_arch_for_metadata(model_config), model_architecture_profile=model_config.get_model_architecture_profile().profile_id,
+            quant_signature=_resolve_quant_signature_for_metadata(model_config), measurement_type=measurement_type)
+        replica = SimpleNamespace(model_config=model_config, moe_tensor_parallel_size=1, moe_expert_parallel_size=16)
+        bindings = position_moe_operator_facts(df, replica)
+        expected = {(case["routing_cell"]["routing_input"]["moe_input_id"], group.layer_range,
+                     case["routing_cell"]["moe_frame_scope"], case["routing_cell"]["source_lane_id"], case["routing_cell"]["ep_id"])
+                    for group in routed_layer_groups for case in _position_profile_cases(routing_inputs,16)}
+        for facts in bindings:
+            _validate_canonical_moe_result_df(df, model=model, operator_facts=facts, expected_cells=expected)
+    else:
+        _validate_canonical_moe_result_df(df, model=model)
     return df
+
+
+MOE_SCHEMA_VERSION = "moe.v1"
+
+
+def _position_profile_cases(inputs, ep_size):
+    from frontier.moe_routing_policy import source_lane_index_for_ep
+    from frontier.profiling.moe.inputs import MoERoutingProfileCell
+    cases = []
+    for item in inputs:
+        cells = [MoERoutingProfileCell(item, "source_local", frame.source_lane_id) for frame in item.source_frames]
+        cells += [MoERoutingProfileCell(item, "dp_gathered", source_lane_index_for_ep(ep_id,
+            attention_tp_size=ep_size // len(item.source_frames), source_lane_count=len(item.source_frames),
+            participant_ep_ids=tuple(range(ep_size))), ep_id) for ep_id in range(ep_size)]
+        cases.extend({"routing_cell": cell.to_json()} for cell in cells)
+    return cases
+
+
+def _routing_inputs_for_model(args, model_config):
+    """Validate the same explicit input before either planning or native execution."""
+    if getattr(args, "routing_runtime_path", "standard_fused_topk") != "position_cyclic":
+        return None
+    from frontier.profiling.moe.inputs import read_routing_profile_inputs
+    if (model_config.get_model_architecture_profile().profile_id != "step5"
+            or args.num_tensor_parallel_workers != [1] or args.expert_parallel_sizes != [16]):
+        raise ValueError("position profiling requires Step/MoE-TP1/EP16 source geometry")
+    inputs = read_routing_profile_inputs(args.routing_input_file)
+    if any(len(item.source_frames) != 2 for item in inputs):
+        raise ValueError("position profiling requires both explicit DP2 source frames")
+    return inputs
+
+
+def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict[str, Any]:
+    cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
+    models = {}
+    for model in args.models:
+        model_config = ModelConfig.from_model_name(model)
+        if not model_config.is_moe:
+            raise ValueError(f"Model {model} is not a MoE model (is_moe=False)")
+        use_fp8, block_shape = _resolve_fp8_settings(
+            model_config, args.use_fp8, args.block_shape, model
+        )
+        expert_parallel_sizes = resolve_moe_expert_parallel_sizes(
+            model_config.num_experts, args.expert_parallel_sizes
+        )
+        routed_layer_groups = _routed_layer_groups_to_profile(model_config)
+        routing_inputs = _routing_inputs_for_model(args, model_config)
+        models[model] = {
+            "num_experts": model_config.num_experts,
+            "num_experts_per_tok": model_config.num_experts_per_tok,
+            "hidden_dim": model_config.embedding_dim,
+            "use_fp8": use_fp8,
+            "block_shape": block_shape,
+            "local_experts_by_expert_parallel_size": {
+                str(size): model_config.num_experts // size for size in expert_parallel_sizes
+            },
+            "tensor_parallel_sizes": list(args.num_tensor_parallel_workers),
+            "routed_layer_groups": [
+                group.row_metadata()
+                for group in routed_layer_groups
+                if group is not None
+            ],
+            "profiled_steps": _count_moe_configurations(
+                num_tokens_count=len(num_tokens_to_profile),
+                tensor_parallel_count=len(args.num_tensor_parallel_workers),
+                expert_parallel_count=len(expert_parallel_sizes),
+                routed_layer_group_count=len(routed_layer_groups),
+                cases_per_parallel_point=cases_per_parallel_point,
+                routing_inputs=routing_inputs, expert_parallel_sizes=expert_parallel_sizes,
+            ),
+        }
+        if routing_inputs is not None:
+            from dataclasses import asdict
+            models[model]["routing_inputs"] = [asdict(item) for item in routing_inputs]
+    return {
+        "profile_method": args.profile_method,
+        "load_distributions": (
+            list(args.load_distributions) if args.enable_load_imbalance else ["uniform"]
+        ),
+        "cases_per_parallel_point": cases_per_parallel_point,
+        "num_tokens": list(num_tokens_to_profile),
+        "profiled_ep_rank": args.profiled_ep_rank,
+        "models": models,
+    }
+
+
+def _attach_runtime_identity(
+    df: pd.DataFrame, args: argparse.Namespace, model: str, quant_signature: str
+) -> pd.DataFrame:
+    from frontier.profiling.common.runtime_identity import (
+        attach_identity_columns,
+        canonical_json,
+        measure_runtime_identity,
+        verify_step5_profile_runtime,
+    )
+
+    identity = measure_runtime_identity(
+        model_name=model,
+        source_revision=args.source_revision,
+        model_config_revision=args.model_config_revision,
+        schema_version=MOE_SCHEMA_VERSION,
+        quant_signature=quant_signature,
+        parallel_groups={"engine_tensor_parallel": 1},
+        graph_mode="eager",
+        native_facts=verify_step5_profile_runtime(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"]) if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") else None,
+    )
+    if identity.native_facts is not None:
+        if "native_facts" not in df or df["native_facts"].isna().any():
+            raise ValueError("Bound MoE rows must carry actual per-result native_facts")
+        for value in df["native_facts"]:
+            facts = json.loads(value) if isinstance(value, str) else value
+            if facts["shared"] != identity.native_facts["shared"]:
+                raise ValueError("MoE producer native facts differ from shared source identity")
+        records = []
+        for row in df.to_dict("records"):
+            facts = json.loads(row["native_facts"]) if isinstance(row["native_facts"], str) else row["native_facts"]
+            row["native_facts"] = canonical_json(facts)
+            records.extend(attach_identity_columns([row], replace(identity, native_facts=facts)))
+        return pd.DataFrame(records)
+    return pd.DataFrame(attach_identity_columns(df.to_dict("records"), identity))
 
 
 def _get_available_gpus(num_gpus: int) -> List[int]:
@@ -926,6 +1148,14 @@ def _get_available_gpus(num_gpus: int) -> List[int]:
 
 def main():
     args, use_vllm_kernel_default = parse_args()
+    if args.dry_run:
+        num_tokens_to_profile = get_num_tokens_to_profile(
+            args.max_tokens,
+            extra_num_tokens=args.extra_num_tokens,
+            num_tokens_list=args.num_tokens_list,
+        )
+        print(json.dumps(_dry_run(args, num_tokens_to_profile), indent=2))
+        return
     require_profiling_dependencies("moe", ("torch", "vllm", "triton"))
     ray_initialized_by_main = False
 
@@ -1026,7 +1256,12 @@ def main():
                 num_tokens_count=len(num_tokens_to_profile),
                 tensor_parallel_count=len(args.num_tensor_parallel_workers),
                 expert_parallel_count=len(resolved_ep_sizes_by_model[model]),
+                routed_layer_group_count=len(
+                    _routed_layer_groups_to_profile(model_configs[model])
+                ),
                 cases_per_parallel_point=cases_per_parallel_point,
+                routing_inputs=_routing_inputs_for_model(args, model_configs[model]),
+                expert_parallel_sizes=resolved_ep_sizes_by_model[model],
             )
             for model in args.models
         )
@@ -1067,6 +1302,16 @@ def main():
                     args.profile_method
                 ).value,
             )
+            if resolve_runtime_attention_family(model_config).family_id == STEP5_ATTENTION_FAMILY.family_id:
+                native_facts = None
+                if "native_facts" in result_df:
+                    value = result_df["native_facts"].iloc[0]
+                    native_facts = json.loads(value) if isinstance(value, str) else value
+                result_df = result_df.assign(**step5_measurement_columns(native_facts))
+            if args.source_revision is not None:
+                result_df = _attach_runtime_identity(
+                    result_df, args, model, quant_signature
+                )
             result_df.to_csv(output_file, index=False)
             print(f"✓ Saved MoE profiling data to: {output_file}")
     finally:

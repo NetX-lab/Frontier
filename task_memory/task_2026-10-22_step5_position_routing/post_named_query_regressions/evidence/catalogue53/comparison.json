@@ -1,0 +1,46 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS",
+  "suite": "catalogue53",
+  "actual_counts": {
+    "pass": 53
+  },
+  "candidate_xml": {
+    "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/catalogue53/results.xml",
+    "sha256": "56d26f9844c7e34ea482653f5426cefbc69364e5609c820b3e50efd1a73059ec",
+    "bytes": 8993
+  },
+  "baselines": [
+    {
+      "baseline": "46fe",
+      "xml": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/results.xml",
+        "sha256": "4ecdb970a691edbe6f490c323598dbcbc4d653af1c34a33640a8ae52ed09cb2b",
+        "bytes": 8993
+      },
+      "transitions": {
+        "missing": [],
+        "new_ids": [],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "retained_status_changes": []
+    },
+    {
+      "baseline": "79",
+      "xml": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/catalogue53/results.xml",
+        "sha256": "f49ad274e3f712156ab320407dea1fd02da7fe5b9682d0bf1736347c84e39f5c",
+        "bytes": 8993
+      },
+      "transitions": {
+        "missing": [],
+        "new_ids": [],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "retained_status_changes": []
+    }
+  ],
+  "raw_exit": 0,
+  "verdict": "PASS"
+}

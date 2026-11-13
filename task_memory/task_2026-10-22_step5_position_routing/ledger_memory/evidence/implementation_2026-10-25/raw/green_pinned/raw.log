@@ -1,0 +1,421 @@
+Running scope as unit: run-r67953faf16ce47ab93c101fbd7630419.scope
+.........s.s......................s................sss.......FFFF....... [100%]
+=================================== FAILURES ===================================
+_ test_position_command_prices_exact_plan_through_real_cluster[offline-PREFILL] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_pinned/pytest/test_position_command_prices_e0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4aae66a5f0>
+role = 'PREFILL', mode = 'offline'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+        config = SimulationConfig.create_from_cli_args()
+        cluster_config = config.get_clusters()[ClusterType[role]]
+        cluster_config.replica_config.cluster_num_replicas = int(cluster_config.num_replicas)
+>       backend = Cluster(cluster_config,config.metrics_config,config.request_generator_config).cc_backend
+
+tests/integration/test_step5_measured_main.py:377: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/entities/cluster.py:85: in cc_backend
+    self._cc_backend = self._initialize_cc_backend()
+frontier/entities/cluster.py:160: in _initialize_cc_backend
+    return CCBackendFactory.create(
+frontier/cc_backend/cc_backend_factory.py:121: in create
+    return backend_class(
+frontier/cc_backend/backends/collective_sim_cc_backend.py:78: in __init__
+    self._repo_root = self._resolve_collective_sim_repo_root()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <frontier.cc_backend.backends.collective_sim_cc_backend.CollectiveSimCCBackend object at 0x7f4aae7b74c0>
+
+    def _resolve_collective_sim_repo_root(self) -> Path:
+        """Resolve collective-sim repo root for both main workspaces and git worktrees."""
+        direct_repo_root = Path(__file__).resolve().parent / "collective-sim"
+        if (direct_repo_root / "python").exists():
+            return direct_repo_root
+    
+        current = Path(__file__).resolve()
+        for ancestor in current.parents:
+            candidate = ancestor / "frontier" / "cc_backend" / "backends" / "collective-sim"
+            if (candidate / "python").exists():
+                return candidate
+    
+>       raise FileNotFoundError(
+            "Unable to locate collective-sim repository root. "
+            f"Checked direct path {direct_repo_root} and ancestor-derived "
+            "frontier/cc_backend/backends/collective-sim paths."
+        )
+E       FileNotFoundError: Unable to locate collective-sim repository root. Checked direct path /data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/frontier/cc_backend/backends/collective-sim and ancestor-derived frontier/cc_backend/backends/collective-sim paths.
+
+frontier/cc_backend/backends/collective_sim_cc_backend.py:99: FileNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:58:11 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+_ test_position_command_prices_exact_plan_through_real_cluster[offline-DECODE] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_pinned/pytest/test_position_command_prices_e1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4aae601b70>
+role = 'DECODE', mode = 'offline'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+        config = SimulationConfig.create_from_cli_args()
+        cluster_config = config.get_clusters()[ClusterType[role]]
+        cluster_config.replica_config.cluster_num_replicas = int(cluster_config.num_replicas)
+>       backend = Cluster(cluster_config,config.metrics_config,config.request_generator_config).cc_backend
+
+tests/integration/test_step5_measured_main.py:377: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/entities/cluster.py:85: in cc_backend
+    self._cc_backend = self._initialize_cc_backend()
+frontier/entities/cluster.py:160: in _initialize_cc_backend
+    return CCBackendFactory.create(
+frontier/cc_backend/cc_backend_factory.py:121: in create
+    return backend_class(
+frontier/cc_backend/backends/collective_sim_cc_backend.py:78: in __init__
+    self._repo_root = self._resolve_collective_sim_repo_root()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <frontier.cc_backend.backends.collective_sim_cc_backend.CollectiveSimCCBackend object at 0x7f4aadc57280>
+
+    def _resolve_collective_sim_repo_root(self) -> Path:
+        """Resolve collective-sim repo root for both main workspaces and git worktrees."""
+        direct_repo_root = Path(__file__).resolve().parent / "collective-sim"
+        if (direct_repo_root / "python").exists():
+            return direct_repo_root
+    
+        current = Path(__file__).resolve()
+        for ancestor in current.parents:
+            candidate = ancestor / "frontier" / "cc_backend" / "backends" / "collective-sim"
+            if (candidate / "python").exists():
+                return candidate
+    
+>       raise FileNotFoundError(
+            "Unable to locate collective-sim repository root. "
+            f"Checked direct path {direct_repo_root} and ancestor-derived "
+            "frontier/cc_backend/backends/collective-sim paths."
+        )
+E       FileNotFoundError: Unable to locate collective-sim repository root. Checked direct path /data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/frontier/cc_backend/backends/collective-sim and ancestor-derived frontier/cc_backend/backends/collective-sim paths.
+
+frontier/cc_backend/backends/collective_sim_cc_backend.py:99: FileNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:58:11 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+_ test_position_command_prices_exact_plan_through_real_cluster[online-PREFILL] _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_pinned/pytest/test_position_command_prices_e2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4aae50a110>
+role = 'PREFILL', mode = 'online'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+        config = SimulationConfig.create_from_cli_args()
+        cluster_config = config.get_clusters()[ClusterType[role]]
+        cluster_config.replica_config.cluster_num_replicas = int(cluster_config.num_replicas)
+>       backend = Cluster(cluster_config,config.metrics_config,config.request_generator_config).cc_backend
+
+tests/integration/test_step5_measured_main.py:377: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/entities/cluster.py:85: in cc_backend
+    self._cc_backend = self._initialize_cc_backend()
+frontier/entities/cluster.py:160: in _initialize_cc_backend
+    return CCBackendFactory.create(
+frontier/cc_backend/cc_backend_factory.py:121: in create
+    return backend_class(
+frontier/cc_backend/backends/collective_sim_cc_backend.py:78: in __init__
+    self._repo_root = self._resolve_collective_sim_repo_root()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <frontier.cc_backend.backends.collective_sim_cc_backend.CollectiveSimCCBackend object at 0x7f4aae669510>
+
+    def _resolve_collective_sim_repo_root(self) -> Path:
+        """Resolve collective-sim repo root for both main workspaces and git worktrees."""
+        direct_repo_root = Path(__file__).resolve().parent / "collective-sim"
+        if (direct_repo_root / "python").exists():
+            return direct_repo_root
+    
+        current = Path(__file__).resolve()
+        for ancestor in current.parents:
+            candidate = ancestor / "frontier" / "cc_backend" / "backends" / "collective-sim"
+            if (candidate / "python").exists():
+                return candidate
+    
+>       raise FileNotFoundError(
+            "Unable to locate collective-sim repository root. "
+            f"Checked direct path {direct_repo_root} and ancestor-derived "
+            "frontier/cc_backend/backends/collective-sim paths."
+        )
+E       FileNotFoundError: Unable to locate collective-sim repository root. Checked direct path /data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/frontier/cc_backend/backends/collective-sim and ancestor-derived frontier/cc_backend/backends/collective-sim paths.
+
+frontier/cc_backend/backends/collective_sim_cc_backend.py:99: FileNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:58:12 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+_ test_position_command_prices_exact_plan_through_real_cluster[online-DECODE] __
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_green_pinned/pytest/test_position_command_prices_e3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4aae6c30a0>
+role = 'DECODE', mode = 'online'
+
+    @pytest.mark.parametrize("role", ["PREFILL", "DECODE"])
+    @pytest.mark.parametrize("mode", ["offline", "online"])
+    def test_position_command_prices_exact_plan_through_real_cluster(tmp_path, monkeypatch, role, mode):
+        import sys
+        import pandas as pd
+        from frontier.config import SimulationConfig, global_vars
+        from frontier.entities import Cluster
+        from frontier.types import ClusterType
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from tests.integration.step5_measured_compute_fixture import position_collective_costs
+        for name, value in vars(global_vars).copy().items():
+            if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
+        tensor = dict(name="activation",dtype="bfloat16",element_size=2,columns=4096,row_stride=4096)
+        native = dict(native_facts=dict(shared=dict(evidence_kind="cpu_fixture")),
+            collective_tensors=dict(dispatch=[tensor],output=[{**tensor,"name":"output"}]))
+        table = tmp_path/"compute.csv"
+        pd.DataFrame([dict(moe_frame_scope="dp_gathered",graph_mode="none",native_context=json.dumps(native),
+            routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])))]).to_csv(table,index=False)
+        path = position_collective_costs(tmp_path,table,device="h800")
+        fixture = dict(decode_cuda_graph_mode="full_and_piecewise",cudagraph_capture_sizes=CAPTURE_SIZES,
+            max_model_len=7168,cache_dir=str(tmp_path/"cache"),predictor_config={},
+            routing_distribution_type="position_cyclic",collective_plan_input_file=str(path))
+        monkeypatch.setattr(sys,"argv",command(mode,tmp_path,fixture,tmp_path/"read.json")[3:])
+        config = SimulationConfig.create_from_cli_args()
+        cluster_config = config.get_clusters()[ClusterType[role]]
+        cluster_config.replica_config.cluster_num_replicas = int(cluster_config.num_replicas)
+>       backend = Cluster(cluster_config,config.metrics_config,config.request_generator_config).cc_backend
+
+tests/integration/test_step5_measured_main.py:377: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/entities/cluster.py:85: in cc_backend
+    self._cc_backend = self._initialize_cc_backend()
+frontier/entities/cluster.py:160: in _initialize_cc_backend
+    return CCBackendFactory.create(
+frontier/cc_backend/cc_backend_factory.py:121: in create
+    return backend_class(
+frontier/cc_backend/backends/collective_sim_cc_backend.py:78: in __init__
+    self._repo_root = self._resolve_collective_sim_repo_root()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <frontier.cc_backend.backends.collective_sim_cc_backend.CollectiveSimCCBackend object at 0x7f4aadee06a0>
+
+    def _resolve_collective_sim_repo_root(self) -> Path:
+        """Resolve collective-sim repo root for both main workspaces and git worktrees."""
+        direct_repo_root = Path(__file__).resolve().parent / "collective-sim"
+        if (direct_repo_root / "python").exists():
+            return direct_repo_root
+    
+        current = Path(__file__).resolve()
+        for ancestor in current.parents:
+            candidate = ancestor / "frontier" / "cc_backend" / "backends" / "collective-sim"
+            if (candidate / "python").exists():
+                return candidate
+    
+>       raise FileNotFoundError(
+            "Unable to locate collective-sim repository root. "
+            f"Checked direct path {direct_repo_root} and ancestor-derived "
+            "frontier/cc_backend/backends/collective-sim paths."
+        )
+E       FileNotFoundError: Unable to locate collective-sim repository root. Checked direct path /data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/frontier/cc_backend/backends/collective-sim and ancestor-derived frontier/cc_backend/backends/collective-sim paths.
+
+frontier/cc_backend/backends/collective_sim_cc_backend.py:99: FileNotFoundError
+----------------------------- Captured stdout call -----------------------------
+WARNING 23:58:12 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+------------------------------ Captured log call -------------------------------
+WARNING  frontier.config.cluster_config:cluster_config.py:1565 Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+=========================== short test summary info ============================
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[offline-PREFILL]
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[offline-DECODE]
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[online-PREFILL]
+FAILED tests/integration/test_step5_measured_main.py::test_position_command_prices_exact_plan_through_real_cluster[online-DECODE]
+4 failed, 62 passed, 6 skipped in 56.11s

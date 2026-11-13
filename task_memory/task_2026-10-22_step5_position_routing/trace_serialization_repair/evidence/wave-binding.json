@@ -1,0 +1,38 @@
+{
+  "original_script": "/data/ycfeng/tmp/d29_main08_residual_repro/wave_loop.py",
+  "original_script_sha256": "06fff29b0b6b6df435153786266b81a212cc414484ac2f08753c58784d86e332",
+  "sample_path": "/data/ycfeng/tmp/d29_main08_residual_repro/parent-layer60-source.json",
+  "sample_sha256": "23486bceac94e23e6bab2dc8c851300ed353bc71000e1ba6aa2e28b393655694",
+  "bindings": [
+    {
+      "label": "baseline",
+      "source": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06",
+      "revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+      "trace_store_sha256": "f66f9df95422ad734707e723a38a516143e90fe80274c80dd169babf9a375939",
+      "script": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-baseline.py",
+      "script_sha256": "3c03bb6f58c86d6c7525e43eaba7230fd18317f1a335e376febe5c39c1b3ec0d",
+      "transformations": [
+        "explicit source path and revision",
+        "layer60 retained sample",
+        "remove diagnostic option and JSON/read interception",
+        "observational imported TraceStore path/hash assertions",
+        "source-bound result scope, unconditional measurement exit0"
+      ]
+    },
+    {
+      "label": "candidate",
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization",
+      "revision": "767da5437609301a6183dbfdcfd87b2402a32007",
+      "trace_store_sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+      "script": "/data/ycfeng/tmp/d29_trace_serialization_repair/wave-candidate.py",
+      "script_sha256": "874399aa073336429a488d806ed9575f71c16914f94b50e86d0dde394f3e098e",
+      "transformations": [
+        "explicit source path and revision",
+        "layer60 retained sample",
+        "remove diagnostic option and JSON/read interception",
+        "observational imported TraceStore path/hash assertions",
+        "source-bound result scope, unconditional measurement exit0"
+      ]
+    }
+  ]
+}

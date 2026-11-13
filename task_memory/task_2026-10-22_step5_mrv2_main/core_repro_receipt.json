@@ -1,0 +1,26 @@
+{
+  "offline": {
+    "first_log_clock": "05:03:30",
+    "first_scheduler_wall_epoch": 1792617608.199217,
+    "last_scheduler_wall_epoch": 1792617639.2953072,
+    "observed_scheduler_window_s": 31.096090078353882,
+    "classification": "DES began and reached P-stage completion; not timeout or failed fit. Total wall time also includes loader/cache/setup."
+  },
+  "online": {
+    "first_log_clock": "05:03:30",
+    "first_scheduler_wall_epoch": 1792617608.0145354,
+    "last_scheduler_wall_epoch": 1792617639.2002404,
+    "observed_scheduler_window_s": 31.185704946517944,
+    "classification": "DES began and reached P-stage completion; not timeout or failed fit. Total wall time also includes loader/cache/setup."
+  },
+  "minimal_repro": {
+    "path": "/data/ycfeng/tmp/d23_main_ledger_repro.log",
+    "bytes": 2491,
+    "sha256": "21c3e69783e49cd1146db763b20d639662902baf2a198d839aa9639901708db8",
+    "expected_errors": {
+      "layer_ledger": "KeyError: 'step5_layer_e2e'",
+      "stage_ledger": "KeyError: 'step5_layer_e2e'",
+      "trace_projection": "ValueError: Unexpected attention timing for inclusive family step5_attention: ['step5_layer_e2e']"
+    }
+  }
+}

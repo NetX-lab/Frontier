@@ -1,0 +1,35 @@
+{
+ "task_id": "D29-KEY-SCOPE-DELTA",
+ "snapshot_commit": "e200bb780d3b20ec6f5ff0a067ed8b9ddd505662",
+ "candidate_source_commit": "c4e06a6159ee3b1e63c50abaa346066ae8b6da31",
+ "candidate_head": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+ "expected_non_task_memory_name_status": [
+  "M\tfrontier/cc_backend/collective_plan.py",
+  "M\ttests/unit/test_step5_moe_pricing.py"
+ ],
+ "key_paths": [
+  {
+   "path": "frontier/cc_backend/collective_plan.py",
+   "snapshot_oid": "57b53fa6d428aa67b987396b97859e1e697f8872",
+   "candidate_oid": "d4246ea93869a4b41746085436d3e95c3ec32ba5",
+   "candidate_sha256": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+   "actual_total_lines": 139,
+   "cap_after_key": 140
+  },
+  {
+   "path": "tests/unit/test_step5_moe_pricing.py",
+   "snapshot_oid": "2213df1fc9fee0bb1c43b978672853b48c5221bc",
+   "candidate_oid": "036bb10dab716cec7df2f4d9492d26e8e4ac96b5",
+   "candidate_sha256": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+   "actual_total_lines": 311,
+   "cap_after_key": 311
+  }
+ ],
+ "baseline_non_key_binding_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+ "candidate_non_key_binding_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+ "key_delta_digest": "67208a7d9b9c996f371f0158b31baec47332f841dbf57c5c824083237cd2f387",
+ "guard_commands": [
+  "git diff --no-renames --name-status e200bb78 <final-head> -- . ':(exclude)task_memory'",
+  "D29_GUARD_ONLY=1 D29_CANDIDATE=<final-head> D29_CANDIDATE_RECORDS=<final-records> python3 repairs/evidence/plan_key_scope/recompute_plan_key_delta.py"
+ ]
+}

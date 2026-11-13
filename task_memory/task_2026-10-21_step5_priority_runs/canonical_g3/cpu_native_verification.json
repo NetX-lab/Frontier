@@ -1,0 +1,27 @@
+{
+ "command": [
+  "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "-m",
+  "pytest",
+  "tests/unit/test_step5_canonical_g3.py",
+  "tests/unit/test_step5_native_pd_r2_stage.py",
+  "tests/unit/test_step5_native_pd_r2_observation.py",
+  "tests/unit/test_step5_native_pd_r2_verdict.py",
+  "tests/unit/test_step5_native_pd.py",
+  "tests/unit/test_native_pd_worker.py",
+  "tests/unit/test_calibration_pd_harness.py",
+  "/data/ycfeng/Frontier/.worktrees/step5-r2-correction/tests/unit/test_step5_native_pd_r2_trace_replay.py",
+  "--import-mode=importlib",
+  "-q",
+  "--tb=short",
+  "-p",
+  "no:cacheprovider",
+  "--basetemp=/data/ycfeng/tmp/d21_g3_cpu_native_final"
+ ],
+ "returncode": 0,
+ "wall_seconds": 28.34514021500945,
+ "max_child_rss_kib": 779000,
+ "wall_budget_seconds": 120,
+ "max_child_rss_budget_kib": 2097152,
+ "resource_budget_pass": true
+}

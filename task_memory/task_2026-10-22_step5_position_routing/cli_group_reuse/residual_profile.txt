@@ -1,0 +1,45 @@
+Fri Oct 23 17:25:47 2026    /data/ycfeng/tmp/d29_group_reuse_profile01/runtime.pstats
+
+         3516854 function calls (3480123 primitive calls) in 1.935 seconds
+
+   Ordered by: cumulative time
+   List reduced from 531 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        2    0.003    0.001    2.000    1.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:228(_predict_step5_position_execution)
+        2    0.011    0.006    1.417    0.708 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/execution_time_predictor/moe_routing_workload.py:136(_step5_position_queries)
+       12    0.000    0.000    1.210    0.101 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/execution_time_predictor/moe_routing_workload.py:127(_step5_routed_layer_group)
+        1    0.000    0.000    1.210    1.210 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/profiling/moe/routed_layer_groups.py:115(resolve_routed_layer_groups)
+        1    0.001    0.001    1.210    1.210 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/profiling/moe/routed_layer_groups.py:59(_step5_routed_layer_groups)
+       88    0.000    0.000    1.208    0.014 /data/ycfeng/tmp/d29_group_reuse_runtime_loop.py:106(observed_description)
+       88    0.005    0.000    1.208    0.014 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/attention/step5.py:538(describe_step5_layer)
+      528    0.020    0.000    0.605    0.001 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/attention/step5.py:564(module_precision)
+     1654    0.002    0.000    0.601    0.000 /usr/lib/python3.10/json/__init__.py:299(loads)
+     1654    0.003    0.000    0.599    0.000 /usr/lib/python3.10/json/decoder.py:332(decode)
+     1654    0.594    0.000    0.594    0.000 /usr/lib/python3.10/json/decoder.py:343(raw_decode)
+      528    0.041    0.000    0.585    0.001 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/config/model_config.py:152(resolve_module_precision)
+        2    0.009    0.004    0.568    0.284 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/execution_time_predictor/moe_operator_times.py:72(_predict_step5_position_operator_times)
+        8    0.008    0.001    0.548    0.068 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/cc_backend/backends/collective_sim_cc_backend.py:801(predict_collective_plan)
+      264    0.063    0.000    0.431    0.002 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/attention/step5.py:149(validate_step5_config)
+       88    0.009    0.000    0.357    0.004 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/operators/binding.py:338(build_operator_manifest)
+     3786    0.084    0.000    0.310    0.000 {built-in method builtins.any}
+       88    0.000    0.000    0.289    0.003 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:785(validate_structural_requirements)
+      176    0.000    0.000    0.289    0.002 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:419(validate)
+      528    0.168    0.000    0.272    0.001 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/config/model_config.py:174(<setcomp>)
+    24376    0.093    0.000    0.208    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/attention/step5.py:307(resolve_step5_attention_geometry)
+   742896    0.148    0.000    0.194    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/config/model_config.py:166(<genexpr>)
+       88    0.000    0.000    0.145    0.002 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:1141(predicate)
+       88    0.000    0.000    0.144    0.002 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/attention/model_binding.py:261(resolve_runtime_attention_family)
+       88    0.000    0.000    0.144    0.002 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:1219(_valid_step5_text_configuration)
+       88    0.000    0.000    0.143    0.002 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/attention/model_binding.py:179(_bind_homogeneous_attention_family)
+   742901    0.104    0.000    0.104    0.000 {method 'replace' of 'str' objects}
+      560    0.012    0.000    0.102    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:1038(_resolve_moe_layer_ids)
+       10    0.000    0.000    0.098    0.010 /usr/lib/python3.10/pathlib.py:1129(read_text)
+       10    0.057    0.006    0.097    0.010 {method 'read' of '_io.TextIOWrapper' objects}
+      195    0.003    0.000    0.078    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:840(resolve_layer_contract)
+      264    0.031    0.000    0.074    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:74(parse_moe_layer_ids)
+      377    0.001    0.000    0.070    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:1023(_is_mixed_model)
+   125224    0.058    0.000    0.068    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/attention/step5.py:124(_number)
+    49840    0.015    0.000    0.063    0.000 /data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse/frontier/model_architectures.py:1063(<genexpr>)
+
+

@@ -1,0 +1,56 @@
+{
+  "task_id": "D29-LEDGER-FINAL-FROZEN-REGRESSIONS",
+  "baseline_source": "376983d2ecc441d1e0a8cb8b943e65a2dcb217b5",
+  "baseline_counts": {
+    "skipped": 281,
+    "error": 32,
+    "pass": 8028,
+    "failure": 279
+  },
+  "candidate_counts": {
+    "skipped": 281,
+    "error": 32,
+    "pass": 8028,
+    "failure": 279
+  },
+  "missing": [],
+  "new_ids": [],
+  "changed_states": {},
+  "raw_candidate_exit": 1,
+  "source_dirty_before_commit": false,
+  "files": {
+    "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-unit/results.xml": {
+      "bytes": 2119416,
+      "sha256": "bb1703a9cb5ca0d28f4fbdb732b391c8f9d38717330e375d48e6e098fe8df344"
+    },
+    "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/unit/results.xml": {
+      "bytes": 2119223,
+      "sha256": "968d068ff4635fa291473cd5a3b48d462066e2aadf38b9aca7576dfec95bee9c"
+    }
+  },
+  "status": "PASS_ALL_RETAINED_UNIT_IDS_AND_STATES",
+  "script_sha256": "9dfc87e46c242ff64ab7705eb7b8fb87712c06823699ee91b51b6acfb8aade38",
+  "limits": "Final1461573d source is clean, frozen and unchanged before/after; raw pytest exit1 and all existingFAIL/ERROR/SKIP are unmodified. Prior79 approved metadata-ID absence remains unwaived; no new alias/exemption.",
+  "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "versions_identical": true,
+  "retained_ids": 8620,
+  "failure_error_skip_sets_identical": true,
+  "native_binary_projection": false,
+  "original_comparator": {
+    "path": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/compare_unit.py",
+    "sha256": "306d71b396cea3b17eef61e68d8d3aa747a8ccb1c4879e3025872de2a140e98b"
+  },
+  "adaptations": {
+    "BASELINE = Path('/data/ycfeng/tmp/d29_unit_parent07.xml')": "BASELINE = Path('/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-unit/results.xml')",
+    "CANDIDATE = ROOT/'precommit-unit/results.xml'": "CANDIDATE = ROOT/'unit/results.xml'",
+    "64371d6394026aedb9fa8d9c409a9263bfc2f23d72a063886581b61827b8b5b3": "bb1703a9cb5ca0d28f4fbdb732b391c8f9d38717330e375d48e6e098fe8df344",
+    "task_id='D29-NATIVE-KEY-BYTES'": "task_id='D29-LEDGER-FINAL-FROZEN-REGRESSIONS'",
+    "baseline_source='dbe19f531ff68d9edafc480418e8927c40eb1c60'": "baseline_source='376983d2ecc441d1e0a8cb8b943e65a2dcb217b5'",
+    "source_dirty_before_commit=True": "source_dirty_before_commit=False",
+    "Precommit source is SHA-bound but dirty;": "Final1461573d source is clean, frozen and unchanged before/after;"
+  },
+  "execution": {
+    "path": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/unit/execution.json",
+    "sha256": "645c6b86f236658fe3bad580936a80442954cb1129cbb198c1ee1b8592c788df"
+  }
+}

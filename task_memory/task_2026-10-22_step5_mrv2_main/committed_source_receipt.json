@@ -1,0 +1,14 @@
+{
+  "implementation_commit": "e54f9457aed7e31336cb6cb553aec016a737ae2a",
+  "tested_core": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+  "hashes": {
+    "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+    "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+  },
+  "unchanged_from_actual04": true,
+  "changed_files_since_tested_core": [
+    "tests/integration/run_step5_measured_main.py",
+    "tests/integration/step5_measured_compute_fixture.py",
+    "tests/integration/test_step5_measured_main.py"
+  ]
+}

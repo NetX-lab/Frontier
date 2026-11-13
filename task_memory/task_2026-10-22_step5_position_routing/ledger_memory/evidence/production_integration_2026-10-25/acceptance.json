@@ -1,0 +1,136 @@
+{
+  "status": "ACCEPTED_PRODUCTION_SOURCE_ONLY",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "tested_candidate": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "branch": "feat/step5-preview",
+  "merge_parents": [
+    "094ecce3ac654e0f425eddaf48079bf105ae58ba",
+    "1461573de388b72450189bc0c1b88b4ac32491f0"
+  ],
+  "non_task_tree_equal_to_tested_candidate": true,
+  "production_bindings_equal_to_frozen": 126,
+  "paths_recomputed": 116,
+  "predecessor_rows_recomputed": 114,
+  "overlays": 18,
+  "owner_actual": {
+    "pricing": 3955,
+    "core_source": 4377,
+    "native": 1350
+  },
+  "source_actual": 9682,
+  "global_actual": 9696,
+  "step": {
+    "gross": 124,
+    "net": 96,
+    "cap": 135,
+    "paths": {
+      "frontier/metrics/metrics_store.py": {
+        "added": 26,
+        "deleted": 7,
+        "gross": 33,
+        "net": 19
+      },
+      "tests/integration/run_step5_measured_main.py": {
+        "added": 12,
+        "deleted": 3,
+        "gross": 15,
+        "net": 9
+      },
+      "tests/integration/test_step5_measured_main.py": {
+        "added": 61,
+        "deleted": 1,
+        "gross": 62,
+        "net": 60
+      },
+      "tests/performance/step5_actual06_iteration.py": {
+        "added": 11,
+        "deleted": 3,
+        "gross": 14,
+        "net": 8
+      }
+    },
+    "cumulative_increment": 116
+  },
+  "artifacts": [
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/commit.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/commit.json",
+      "bytes": 298,
+      "sha256": "0072d73e83c9c39e51843e6d4242818ac1edaf652b66db84b673c64e158a1785"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/commit.log",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/commit.log",
+      "bytes": 94,
+      "sha256": "c44de35a24000fc20f895ee4e982237df4412fef1074f1a2e3924ac0b1f1e145"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/initial.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/initial.json",
+      "bytes": 358,
+      "sha256": "a9a46d7bf4d961e3e0e368d6f879a563ab567acf639bdbea330ef5245f4f11b2"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/initial.log",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/initial.log",
+      "bytes": 1182,
+      "sha256": "713daf14e7fb34e42d73409cf2fd2f375e56d1dc23d5fcc8fe41c354b9069a83"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard/adaptation.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/parent_guard/adaptation.json",
+      "bytes": 657,
+      "sha256": "05ca699ec695b27e4e8b2a85314d97c511624248a426e580c3d17880b1029f7f"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard/audit.py",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/parent_guard/audit.py",
+      "bytes": 15492,
+      "sha256": "8044468da664fccef96b2423d4232b32ff8ab1a0be8c85fa369d8196bba3d636"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard/execution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/parent_guard/execution.json",
+      "bytes": 897,
+      "sha256": "08fb95662271b3b2654bfc39c7a226ad3b3f17dcd41dfec4cc68a0f68331ca1b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard/paths.tsv",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/parent_guard/paths.tsv",
+      "bytes": 9258,
+      "sha256": "0513d330e25b0ba72be1a11d53d650cea89431d842e108ba73a759f8c2745743"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard/raw.log",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/parent_guard/raw.log",
+      "bytes": 1320,
+      "sha256": "04fa0fedaa1a6adb3aa5d3f4e3db7c0ac3c5b5c66d95144aefd7288c601d7bc6"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard/receipt.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/parent_guard/receipt.json",
+      "bytes": 432603,
+      "sha256": "2af1bf3adb4ff29850047e272a3ed115fe81dfa9c7d5dd7e5be77e6d9d98493b"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/resolution.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/production_integration_2026-10-25/resolution.json",
+      "bytes": 3895,
+      "sha256": "cf98fa691243dbdb36aa372532303a7b5b3e57c35d101336238d5d75b2a41bd9"
+    }
+  ],
+  "collected_utc": "2026-10-24T19:08:06.209835+00:00",
+  "remaining": [
+    "copy/init finite diagnosis closure",
+    "same-source same-environment pricing+emission+flush",
+    "worker environment/lifecycle/append throughput/full-workload memory",
+    "complete6144/1024 offline/online<=2400s per main subprocess",
+    "final T2/source/package/native/G3/E2E"
+  ],
+  "limitations": [
+    "Raw unit279FAIL/32ERROR/281SKIP and historical old-ID presenceFAIL remain unchanged.",
+    "No new regression,required-shape,pricing-wave,fullCLI,GPU,cloud or published-image runtime query.",
+    "Unrelated untracked .cortexkit/.pi preserved and fully recorded; only tracked source/index cleanliness required there.",
+    "Configured30GiB is not a measured cgroup RSS peak."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "task_id": "D29-NATIVE-BALANCED",
+  "status": "PASS_READ_ONLY_PRESERVATION",
+  "interpreter": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "manifest": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage_manifest.json",
+  "manifest_sha256": "cdaad24ecded6da6f2eea90ed4ef4a582432db2fd75c56c29aafb22f2f56a57d",
+  "sealed_manifest_entries_checked": 57,
+  "native_pins_checked": 50,
+  "capture03_not_balanced": true,
+  "no_attempt_or_submitted_marker": true,
+  "job_created": false,
+  "source_image_package_unchanged": true,
+  "compiled_probe_files": 3
+}

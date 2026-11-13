@@ -1,0 +1,91 @@
+{
+  "task_id": "D29-REGISTRY-VIEW-REPAIR",
+  "paths": [
+    {
+      "path": "frontier/execution_time_predictor/prediction_model_registry.py",
+      "cap": 120,
+      "sha256": "6689aa89aabc2c10521a62488295adb68e6e0d0d17c576cafb777003b2cfcc54",
+      "path_budget": {
+        "added": 85,
+        "deleted": 11,
+        "gross": 96
+      },
+      "whole_repair": {
+        "added": 85,
+        "deleted": 11,
+        "gross": 96
+      },
+      "view_repair": {
+        "added": 3,
+        "deleted": 0,
+        "gross": 3
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "cap": 118,
+      "sha256": "f744977e8f56f3b7f0dc8d3f54a4c3a400340bfa317306961b213a99e37c49b8",
+      "path_budget": {
+        "added": 96,
+        "deleted": 17,
+        "gross": 113
+      },
+      "whole_repair": {
+        "added": 17,
+        "deleted": 2,
+        "gross": 19
+      },
+      "view_repair": {
+        "added": 0,
+        "deleted": 0,
+        "gross": 0
+      }
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "cap": 145,
+      "sha256": "57feef9fcdc1fd068908cbcd26235a934038a23382c5a89e8b0827333874fdd6",
+      "path_budget": {
+        "added": 130,
+        "deleted": 6,
+        "gross": 136
+      },
+      "whole_repair": {
+        "added": 14,
+        "deleted": 2,
+        "gross": 16
+      },
+      "view_repair": {
+        "added": 0,
+        "deleted": 0,
+        "gross": 0
+      }
+    },
+    {
+      "path": "tests/unit/test_prediction_measurement_bindings.py",
+      "cap": 200,
+      "sha256": "207ca127e0918f4ae5c1508684a3e5fcede1cd9500c67268da795bf2efbc68c5",
+      "path_budget": {
+        "added": 200,
+        "deleted": 0,
+        "gross": 200
+      },
+      "whole_repair": {
+        "added": 200,
+        "deleted": 0,
+        "gross": 200
+      },
+      "view_repair": {
+        "added": 26,
+        "deleted": 0,
+        "gross": 26
+      }
+    }
+  ],
+  "whole_repair_gross": 331,
+  "whole_repair_cap": 360,
+  "view_repair_gross": 29,
+  "view_repair_cap": 58,
+  "caller_gross": 35,
+  "caller_cap": 60
+}

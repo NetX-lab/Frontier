@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
+from frontier.config import ClusterConfig, MetricsConfig, ReplicaConfig, SimulationConfig
 from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.metrics.constants import OperationMetrics
 from frontier.metrics.metrics_store import MetricsStore
@@ -26,6 +29,7 @@ def _layer(
     family_id: str,
     op_times: dict[str, float],
     pipeline_parallel_communication_time: float = 0.0,
+    mlp_up_proj_time: float = 0.0,
     **residual_times: float,
 ) -> ExecutionTime:
     return ExecutionTime(
@@ -50,7 +54,7 @@ def _layer(
         process_model_outputs_time=0.0,
         ray_comm_time=0.0,
         is_moe=False,
-        mlp_layer_up_proj_execution_time=0.0,
+        mlp_layer_up_proj_execution_time=mlp_up_proj_time,
         mlp_layer_down_proj_execution_time=0.0,
         mlp_layer_act_execution_time=0.0,
         global_layer_id=layer_id,
@@ -279,7 +283,10 @@ def test_residual_traces_preserve_owner_and_physical_layer_metadata(
         cursor += duration * 1e-3
 
 
-def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> None:
+@pytest.mark.parametrize("include_zero_cost_layer", [False, True])
+def test_stage_op_level_traces_include_gdn_metadata_without_duplication(
+    include_zero_cost_layer: bool,
+) -> None:
     dense = _layer(
         0,
         "dense_attention",
@@ -294,8 +301,23 @@ def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> Non
             "gdn_core_decode": 17.0,
             "gdn_output_projection": 19.0,
         },
+        mlp_up_proj_time=3.0,
     )
-    stage = StageExecutionTime((dense, gdn), stage_execution_time=dense)
+    layers = [dense, gdn]
+    if include_zero_cost_layer:
+        layers.insert(
+            1,
+            _layer(
+                2,
+                "gated_delta_net",
+                {name: 0.0 for name in (
+                    "gdn_input_projections", "gdn_core_prefill",
+                    "gdn_core_decode", "gdn_output_projection",
+                )},
+                add_ffn_residual_time=5.0,
+            ),
+        )
+    stage = StageExecutionTime(tuple(layers), stage_execution_time=dense)
     store, _per_batch = _store()
     del store._emit_op_level_traces
     store._config.enable_op_level_tracing = True
@@ -369,6 +391,18 @@ def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> Non
     assert {event.meta["attention_family_id"] for event in gdn_events} == {
         "gated_delta_net"
     }
+    mlp_events = [event for event in events if event.name == "mlp_up_proj"]
+    assert len(mlp_events) == 1
+    assert mlp_events[0].duration_ms == 3.0
+    assert mlp_events[0].meta["global_layer_ids"] == [1]
+    assert not any(event.name == "mlp_down_proj" for event in events)
+    if include_zero_cost_layer:
+        residual_events = [event for event in events if event.name == "add_ffn_residual"]
+        assert len(residual_events) == 1
+        assert residual_events[0].meta["global_layer_ids"] == [2]
+        assert residual_events[0].ts_start == pytest.approx(
+            mlp_events[0].ts_start + mlp_events[0].duration_ms * 1e-3
+        )
 
 
 def test_stage_component_ledger_preserves_family_names_and_owner_once() -> None:
@@ -412,3 +446,89 @@ def test_stage_component_ledger_preserves_family_names_and_owner_once() -> None:
     assert ledger["attention_prefill_execution_time"] == 3.0
     assert ledger["pipeline_parallel_communication_time"] == 23.0
     assert sum(ledger.values()) == stage.total_time * 1e3
+
+
+@pytest.mark.parametrize(("model_name", "tp", "ep", "expected"), [
+    # TP8/DP2/EP16 is sequence-parallel MoE: each rank keeps a full shared
+    # expert, adding 75 * 37,748,736 * 7 / 8 coefficients and
+    # 75 * (37,748,736 + 9,216) * 7 / 8 bytes to the TP-sharded totals.
+    ("zai-org/GLM-5.3", 8, 16, {
+        "total_parameters": 49_000_424_448 + 2_477_260_800,
+        "total_memory_bytes": 49_676_295_552 + 2_477_865_600,
+        "memory_accounting": "source-defined weight storage estimate; native allocation unverified",
+        "breakdown": {
+            "attention_parameters": 2_906_267_904,
+            "attention_memory_bytes": 3_214_089_984,
+            "ffn_parameters": 45_855_296_256 + 2_477_260_800,
+            "ffn_memory_bytes": 45_984_484_992 + 2_477_865_600,
+            "other_parameters": 238_860_288,
+            "other_memory_bytes": 477_720_576,
+        },
+    }),
+    ("stepfun-ai/Step-5-Preview", 8, 16, {
+        "total_parameters": 38_981_827_872,
+        "total_memory_bytes": 43_585_517_952,
+        "memory_accounting": "source-defined weight storage estimate; native allocation unverified",
+        "breakdown": {
+            "attention_parameters": 1_450_480_832,
+            "attention_memory_bytes": 2_901_036_736,
+            "ffn_parameters": 36_960_237_824,
+            "ffn_memory_bytes": 38_887_965_696,
+            "other_parameters": 571_109_216,
+            "other_memory_bytes": 1_796_515_520,
+        },
+    }),
+    ("qwen3-next-80b-a3b-instruct-reduced-l2", 1, 1, {
+        "total_parameters": 3_261_071_360,
+        "total_memory_bytes": 6_522_142_720,
+        "breakdown": {
+            "attention_parameters": 37_748_736,
+            "attention_memory_bytes": 75_497_472,
+            "ffn_parameters": 3_223_322_624,
+            "ffn_memory_bytes": 6_446_645_248,
+        },
+    }),
+])
+def test_system_memory_export_preserves_source_and_legacy_numeric_metadata(
+    model_name: str, tp: int, ep: int, expected: dict, tmp_path: Path,
+) -> None:
+    """CPU report regression; these estimates do not qualify native allocation."""
+
+    replica = ReplicaConfig(
+        model_name=model_name, device="h800", attn_tensor_parallel_size=tp,
+        attn_dp=ep // tp, moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=ep, num_pipeline_stages=1,
+    )
+    cluster = ClusterConfig(replica_config=replica)
+    config = SimulationConfig(
+        cluster_config=cluster,
+        metrics_config=MetricsConfig(
+            output_dir=str(tmp_path), write_metrics=True, store_plots=False,
+        ),
+    )
+    store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster})
+    store._write_system_metrics()
+    report = json.loads(
+        (Path(config.metrics_config.output_dir) / "system_metrics.json").read_text()
+    )
+    memory = report["model_weight_memory"]["MONOLITHIC"]
+    expected_breakdown = {
+        **expected["breakdown"],
+        "attention_memory_gb": expected["breakdown"]["attention_memory_bytes"] / 1024**3,
+        "ffn_memory_gb": expected["breakdown"]["ffn_memory_bytes"] / 1024**3,
+    }
+    expected_memory = {
+        **expected,
+        "breakdown": expected_breakdown,
+        "total_memory_gb": expected["total_memory_bytes"] / 1024**3,
+        "memory_utilization_percent": expected["total_memory_bytes"] / 1024**3 / 80 * 100,
+        "device_info": {
+            "device_type": "H800", "total_device_memory_gb": 80.0,
+            "num_replicas": 1, "expert_parallel_size": ep,
+            "moe_tensor_parallel_size": 1,
+        },
+    }
+    assert memory == expected_memory
+    assert report["memory_utilization_percent"]["MONOLITHIC"] == (
+        expected_memory["memory_utilization_percent"]
+    )

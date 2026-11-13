@@ -1,0 +1,50 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS",
+  "suite": "metadata196",
+  "actual_counts": {
+    "pass": 197
+  },
+  "candidate_xml": {
+    "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/metadata196/results.xml",
+    "sha256": "69ce0103e28663ba975ba420c53e554983529802906e2c034ad724ffd42df80c",
+    "bytes": 31247
+  },
+  "baselines": [
+    {
+      "baseline": "46fe",
+      "xml": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/results.xml",
+        "sha256": "beee87e21f1dd0b45e4116af7b6794208abec0d4b718b03ff88a243eb55a26ca",
+        "bytes": 31247
+      },
+      "transitions": {
+        "missing": [],
+        "new_ids": [],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "retained_status_changes": []
+    },
+    {
+      "baseline": "79",
+      "xml": {
+        "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/results.xml",
+        "sha256": "9dbb37c26673bac22f0f4cae049e241e3683580fc2d46e3b33332171ed566671",
+        "bytes": 31230
+      },
+      "transitions": {
+        "missing": [
+          "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text"
+        ],
+        "new_ids": [
+          "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published"
+        ],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "retained_status_changes": []
+    }
+  ],
+  "raw_exit": 0,
+  "no79presence_waiver": true
+}

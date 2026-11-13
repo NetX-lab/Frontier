@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "scope": "CPU typed grouped-GEMM lookup with injected observed factor state; not a native measurement or warning-registration test",
+  "python": "3.10.6",
+  "source": "8e1d0a1c14ead5e90dfa7ad686017ad8ae1ee04e",
+  "fixture_hashes": {
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/linear_op.csv": "cda9d3227353dfead47044060a09b802cebd0271f922be8d91574b91057e96b2",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/moe.csv": "b54148482a0de444eeca2ff14c1782ec4152563fa4628531a466a205f328ff6d"
+  },
+  "baseline": {
+    "3": {
+      "duration_ms": 122.9,
+      "kernel_count": 7.0,
+      "precision": "FP8",
+      "exact_lookup": true,
+      "evidence_kind": "cpu_fixture",
+      "measurement_type": "KERNEL_ONLY"
+    },
+    "88": {
+      "duration_ms": 184.35,
+      "kernel_count": 7.0,
+      "precision": "BF16",
+      "exact_lookup": true,
+      "evidence_kind": "cpu_fixture",
+      "measurement_type": "KERNEL_ONLY"
+    }
+  },
+  "after_factors": {
+    "3": {
+      "duration_ms": 122.9,
+      "kernel_count": 7.0,
+      "precision": "FP8",
+      "exact_lookup": true,
+      "evidence_kind": "cpu_fixture",
+      "measurement_type": "KERNEL_ONLY"
+    },
+    "88": {
+      "duration_ms": 184.35,
+      "kernel_count": 7.0,
+      "precision": "BF16",
+      "exact_lookup": true,
+      "evidence_kind": "cpu_fixture",
+      "measurement_type": "KERNEL_ONLY"
+    }
+  },
+  "approximation_factors": {
+    "attn_pre_proj": 0.5,
+    "attn_post_proj": 0.5,
+    "moe_grouped_gemm": 0.5
+  },
+  "speedup_factors": {
+    "attn_pre_proj": 2.0,
+    "attn_post_proj": 2.0,
+    "moe_grouped_gemm": 2.0
+  },
+  "legacy_control_10ms": 5.0
+}

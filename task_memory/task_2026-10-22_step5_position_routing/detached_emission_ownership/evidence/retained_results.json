@@ -1,0 +1,108 @@
+{
+  "baseline": {
+    "median_emission_ms": 49.601,
+    "events": 208,
+    "body_bytes": 2889655,
+    "body_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+    "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+    "ledger_bytes": 2309545,
+    "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "wrong_plan_key_negatives": 64,
+    "late_json_error_prefix_bytes": 3902,
+    "getter_and_pending_snapshot_isolated": true,
+    "fresh_trace_ledger_mappings_independent": true,
+    "counters": {
+      "asdict": 208,
+      "deepcopy": 21472,
+      "to_dict": 192,
+      "cache_key": 64,
+      "compute_op_trace_meta": 208
+    },
+    "source_revision": "7540414341d5b81a86b18b9562d1506c0ba74285"
+  },
+  "h1": {
+    "median_emission_ms": 46.844,
+    "events": 208,
+    "body_bytes": 2889655,
+    "body_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+    "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+    "ledger_bytes": 2309545,
+    "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "wrong_plan_key_negatives": 64,
+    "late_json_error_prefix_bytes": 3902,
+    "getter_and_pending_snapshot_isolated": true,
+    "fresh_trace_ledger_mappings_independent": true,
+    "counters": {
+      "asdict": 208,
+      "deepcopy": 13408,
+      "to_dict": 192,
+      "cache_key": 64,
+      "compute_op_trace_meta": 208
+    },
+    "source_revision": "7540414341d5b81a86b18b9562d1506c0ba74285"
+  },
+  "h2": {
+    "median_emission_ms": 39.956,
+    "events": 208,
+    "body_bytes": 2889655,
+    "body_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+    "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+    "ledger_bytes": 2309545,
+    "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "wrong_plan_key_negatives": 64,
+    "late_json_error_prefix_bytes": 3902,
+    "getter_and_pending_snapshot_isolated": true,
+    "fresh_trace_ledger_mappings_independent": true,
+    "counters": {
+      "asdict": 144,
+      "deepcopy": 19632,
+      "to_dict": 128,
+      "cache_key": 0,
+      "compute_op_trace_meta": 208
+    },
+    "source_revision": "7540414341d5b81a86b18b9562d1506c0ba74285"
+  },
+  "h3": {
+    "median_emission_ms": 40.493,
+    "events": 208,
+    "body_bytes": 2889655,
+    "body_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+    "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+    "ledger_bytes": 2309545,
+    "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "wrong_plan_key_negatives": 64,
+    "late_json_error_prefix_bytes": 3902,
+    "getter_and_pending_snapshot_isolated": true,
+    "fresh_trace_ledger_mappings_independent": true,
+    "counters": {
+      "asdict": 16,
+      "deepcopy": 15568,
+      "to_dict": 0,
+      "cache_key": 64,
+      "compute_op_trace_meta": 208
+    },
+    "source_revision": "7540414341d5b81a86b18b9562d1506c0ba74285"
+  },
+  "combined": {
+    "median_emission_ms": 31.08,
+    "events": 208,
+    "body_bytes": 2889655,
+    "body_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+    "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+    "ledger_bytes": 2309545,
+    "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+    "wrong_plan_key_negatives": 64,
+    "late_json_error_prefix_bytes": 3902,
+    "getter_and_pending_snapshot_isolated": true,
+    "fresh_trace_ledger_mappings_independent": true,
+    "counters": {
+      "asdict": 16,
+      "deepcopy": 15696,
+      "to_dict": 0,
+      "cache_key": 0,
+      "compute_op_trace_meta": 208
+    },
+    "source_revision": "7540414341d5b81a86b18b9562d1506c0ba74285"
+  },
+  "_note": "Read-only summary of the retained D29-EMISSION-IMMUTABLE-WORK results. `combined` was rejected because a constructor-accepted bytearray receipt aliases the source; `h2` is the diagnostic the assigned key candidate is being implemented from. No result in this assignment re-ran these probes."
+}

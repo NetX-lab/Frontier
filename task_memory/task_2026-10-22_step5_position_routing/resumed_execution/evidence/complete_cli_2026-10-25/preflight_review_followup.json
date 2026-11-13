@@ -1,0 +1,104 @@
+{
+  "status": "PASS_COMPLETE_CLI_STATIC_DRY_RUN_AND_ORIGINAL_SDK_ONLY",
+  "collected_utc": "2026-10-25T04:26:33.166672+00:00",
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "0eded7cf380d68da9c647c775af0b89b16c2d478",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  },
+  "plan_sha256": "4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e",
+  "script_sha256": {
+    "complete_cli_worker.py": "634c2878a00a4464a9db9ef797911df1599a351f018e12a088e554accd8b12c3",
+    "launch_complete_cli.py": "d039d636d7a51ec50c32490345bb81a8e8ad869a6537e79dab3fe3ee79425e17",
+    "run_complete_cli.sh": "93a9084d9fbec1aefe2c68b2318d4ba6fe3941941e919171f2d0a8eb48cb7a4a"
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "syntax": "PASS_TWO_PYTHON_AND_BASH_N",
+  "dry_run": {
+    "status": "DRY_RUN_NO_PLATFORM_OR_WORKLOAD_CALLS",
+    "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_worker.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_plan.json",
+    "full_cli_command": [
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview/tests/integration/run_step5_measured_main.py",
+      "--fixture-manifest",
+      "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json",
+      "--output-root",
+      "/mnt/codesign-exp/ycfeng/frontier_d29/main09_current_source",
+      "--mode",
+      "all"
+    ],
+    "resource": {
+      "cpu": 4,
+      "gpu": 0,
+      "mem_gb": 64,
+      "replica": 1,
+      "positive_tags": [
+        "H800"
+      ],
+      "custom_resources": [],
+      "extra_requirements": [],
+      "preemptible": false,
+      "command": "{COMMAND}",
+      "task_specs": {
+        "default": {
+          "is_critical": true
+        }
+      }
+    },
+    "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+    "nfs_source": "/data/ycfeng",
+    "mounts": [
+      "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "outer_timeout_s": null,
+    "plan_sha256": "4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e"
+  },
+  "sdk": {
+    "resource_cpu": 4,
+    "resource_gpu": 0,
+    "resource_memory_mi": 64000,
+    "replicas": 1,
+    "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+    "nfs_annotation": "100.96.128.195:/data/ycfeng:/data/ycfeng",
+    "mounts": [
+      "juicefs+s3://oss.i.shaipower.com/tenant:/mnt/shared-storage/tenant",
+      "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "command": [
+      "bash",
+      "-lc",
+      "cd /data/ycfeng && exec /data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_worker.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_plan.json"
+    ],
+    "private_machine": "group"
+  },
+  "local_memory_reader_only": {
+    "observed_utc": "2026-10-25T04:26:33.166342+00:00",
+    "controller": {
+      "memory.usage_in_bytes": "306520064",
+      "memory.max_usage_in_bytes": "308375552",
+      "memory.limit_in_bytes": "32212254720",
+      "memory.failcnt": "0",
+      "memory.oom_control": "oom_kill_disable 0\nunder_oom 0\noom_kill 0",
+      "memory.current": {
+        "unavailable": "FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/unified/system.slice/run-r94695a9fdeb143c792f3e98022edd2fe.scope/memory.current'"
+      },
+      "memory.peak": {
+        "unavailable": "FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/unified/system.slice/run-r94695a9fdeb143c792f3e98022edd2fe.scope/memory.peak'"
+      },
+      "memory.max": {
+        "unavailable": "FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/unified/system.slice/run-r94695a9fdeb143c792f3e98022edd2fe.scope/memory.max'"
+      },
+      "memory.events": {
+        "unavailable": "FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/unified/system.slice/run-r94695a9fdeb143c792f3e98022edd2fe.scope/memory.events'"
+      }
+    },
+    "main_children": []
+  },
+  "new_platform_calls": 0,
+  "new_workload_calls": 0,
+  "ordinary_joint_calls": 0,
+  "required_shape_calls": 0,
+  "wall_s": 3.872275813948363
+}

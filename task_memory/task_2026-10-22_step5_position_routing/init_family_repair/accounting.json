@@ -1,0 +1,38 @@
+{
+  "task_id": "D29-INIT-FAMILY-RESOLUTION",
+  "baseline": "24f970cbd6cae059467f68e0e1cf771b07aeecfe",
+  "retained_baseline": "1aee0af11cd58691e64603b99eca0ac459a5b350",
+  "paths": {
+    "frontier/execution_time_predictor/profiling_dataframe_loaders.py": {
+      "delta_gross": 4,
+      "delta_cap": 6,
+      "retained_gross": 13,
+      "retained_cap": 17,
+      "ast": "PASS",
+      "sha256": "5554c39e3c36ede165c2c3b18493ac6b92e8027ec80e4673a3267df338af8488"
+    },
+    "tests/unit/test_moe_grouped_gemm_padded_features.py": {
+      "delta_gross": 34,
+      "delta_cap": 39,
+      "retained_gross": 231,
+      "retained_cap": 237,
+      "ast": "PASS",
+      "sha256": "16d274ec513fbddbdfadb5b29a071b1af66cf16d8d8fdedb1e641f5c09dfd548"
+    }
+  },
+  "delta_total": 38,
+  "delta_cap": 45,
+  "whitespace": "PASS",
+  "root_gitlink": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "effective_paths": 111,
+  "scope_change": false,
+  "recorded_root_core_used": 3873,
+  "core_with_this_delta": 3911,
+  "core_with_this_delta_and_reserved_model_group105": 4016,
+  "core_cap": 4404,
+  "recorded_root_global_used": 9116,
+  "global_with_all_reserved_repairs": 9309,
+  "global_cap": 10000,
+  "aggregate_method": "Conservative addition to recorded root delivery totals; no new whole-tree/native accounting or peer changes.",
+  "code_commit": "ee7e66ee439054978897c91fa32598fc13804883"
+}

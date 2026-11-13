@@ -1,0 +1,33 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "baseline_wave.json": {
+      "bytes": 26029,
+      "sha256": "8c532615f55953c8e3b97372da98c0294708c8db0de90b3e9fbf40de123390a0"
+    },
+    "registry_wave.json": {
+      "bytes": 29384,
+      "sha256": "7bb53605a2e558047bd1b3cee88d7fa33a4163e6ec1c58c3dc6964a2c2439025"
+    },
+    "point_wave.json": {
+      "bytes": 29398,
+      "sha256": "c0a5fd31660b68dd3f32193eb4d6386006a8fb23808cb71a8534236bfd96e3ad"
+    },
+    "combined_wave.json": {
+      "bytes": 29733,
+      "sha256": "50c1bd2d269df39de24dc8ed10c7153a8908cdc87115edf4a67dfdf717ff1087"
+    },
+    "paired_timing.json": {
+      "bytes": 132519,
+      "sha256": "cf13f0de92d95d99ed8f626586074333d7d7b232efd312db4d22bdb1d23dc08b"
+    },
+    "candidate_source.diff": {
+      "bytes": 4583,
+      "sha256": "583566b07d74b60efdfd18b04e5d6ee0cc0a0493752c1633608032c0ebfa0839"
+    },
+    "verification.json": {
+      "bytes": 16885,
+      "sha256": "e40bf524e1fa459e8df57a12d4816eb5cf82be21bcc0deb50e5a9c8fa7dd79b9"
+    }
+  }
+}

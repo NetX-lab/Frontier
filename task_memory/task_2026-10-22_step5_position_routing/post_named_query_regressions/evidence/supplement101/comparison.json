@@ -1,0 +1,26 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS",
+  "suite": "supplement101",
+  "actual_counts": {
+    "pass": 101
+  },
+  "prior46fe_xml": {
+    "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/results.xml",
+    "sha256": "06dcbe7fca4eaa88c6201e314d278c3ef1074f01bd01bbab58198f4859014c59",
+    "bytes": 15812
+  },
+  "candidate_xml": {
+    "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/supplement101/results.xml",
+    "sha256": "1463ac9747cc4af431d881c917c60748c5032688c023a5e7273e396becced384",
+    "bytes": 15812
+  },
+  "transitions": {
+    "missing": [],
+    "new_ids": [],
+    "pass_to_skip": [],
+    "pass_to_failure_or_error": []
+  },
+  "status_changes": [],
+  "raw_exit": 0,
+  "verdict": "PASS"
+}

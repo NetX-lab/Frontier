@@ -1,0 +1,59 @@
+{
+  "tag": "hub.stepfun-inc.com/vllm-openai/vllm-openai:step5-position-cyclic-20261023-666081532040-01",
+  "index_digest": "sha256:10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d",
+  "platform": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+    "size": 9217,
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "final_image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "local_source_inventory": "/data/ycfeng/tmp/d29_derived_local_sources01.json",
+  "index_command": [
+    "/data/ycfeng/tmp/d29_buildx_20261023_01/extracted/usr/libexec/docker/cli-plugins/docker-buildx",
+    "imagetools",
+    "inspect",
+    "--raw",
+    "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d"
+  ],
+  "registry_index_sha256": "10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d",
+  "platform_manifest_sha256": "f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "published": true,
+  "source_count": 2907,
+  "serving_pin_count": 53,
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--pull=never",
+    "--network=none",
+    "--memory=4g",
+    "--cpus=2",
+    "--workdir",
+    "/",
+    "--entrypoint",
+    "python3",
+    "-i",
+    "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+    "-B",
+    "-",
+    "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+    "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "/usr/local/lib/python3.12/dist-packages/vllm",
+    "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec"
+  ],
+  "payload_sha256": "d1add201d2d01fb0da518aeeaab81352a9fbfd456e6d146346c1bb03d5e2f864",
+  "started_utc": "2026-10-22T20:34:41.682812+00:00",
+  "finished_utc": "2026-10-22T20:34:43.967597+00:00",
+  "exit_code": 0,
+  "source_receipt_sha256": "b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09",
+  "serving_pins_sha256": "22631c8a194b5f4e91442f82234b8d0ae7a5615eebf6013e9879a012576682a4",
+  "derivation_manifest_sha256": "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec",
+  "stderr": "",
+  "native_source_commit": "68275078de024b87cb3fba15f70a46e9db8e619f",
+  "integrated_commit": "9495cfb306cfa9406ed04820e141c44897cb6ed2",
+  "runtime_qualified": false
+}

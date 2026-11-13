@@ -1,0 +1,48 @@
+{
+  "task_id": "D29-POST-NAMED-QUERY-FROZEN-REGRESSIONS",
+  "suite": "governance52",
+  "actual_counts": {
+    "pass": 52
+  },
+  "raw_exit": 0,
+  "candidate_xml": {
+    "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/governance52/results.xml",
+    "sha256": "c146cb4b6fbe92dc974d16d63b6a98978d20bc13882ceacb6696532aa69592e4",
+    "bytes": 8367
+  },
+  "baselines": [
+    {
+      "baseline": "46fe",
+      "xml": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/results.xml",
+        "sha256": "1fb0fb13d185781ef44b01a959e8535efa8b46073029a61237661968923f5044",
+        "bytes": 8366
+      },
+      "transitions": {
+        "missing": [],
+        "new_ids": [],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "status_changes": []
+    },
+    {
+      "baseline": "accepted52parent",
+      "xml": {
+        "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+        "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1",
+        "bytes": 8366
+      },
+      "transitions": {
+        "missing": [],
+        "new_ids": [],
+        "pass_to_skip": [],
+        "pass_to_failure_or_error": []
+      },
+      "status_changes": []
+    }
+  ],
+  "existing_py312_extras": true,
+  "no_install_or_binary_projection": true,
+  "verdict": "PASS"
+}

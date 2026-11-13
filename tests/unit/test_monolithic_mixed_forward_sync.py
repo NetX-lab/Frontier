@@ -21,6 +21,9 @@ from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
 from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
 from frontier.events.prefill_sync_event import PrefillSyncEvent
 from frontier.events.replica_schedule_event import ReplicaScheduleEvent
+from frontier.execution_time_predictor.base_execution_time_predictor import (
+    BaseExecutionTimePredictor,
+)
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
@@ -99,6 +102,10 @@ class _ExecutionTime:
 
 class _LanePredictor:
     _num_layers_per_pipeline_stage = STAGE_LAYERS
+    _kv_block_zeroing_host_time = None
+    get_kv_block_zeroing_host_time_ms = (
+        BaseExecutionTimePredictor.get_kv_block_zeroing_host_time_ms
+    )
 
     def __init__(self) -> None:
         # (layer_id, the token count of the batch the call was made for).

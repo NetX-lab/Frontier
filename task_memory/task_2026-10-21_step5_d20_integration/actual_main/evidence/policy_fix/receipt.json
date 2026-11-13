@@ -1,0 +1,74 @@
+{
+  "task_id": "D20-ACTUAL-MAIN",
+  "base_commit": "371a9926455e389c2b3be37be1ddef3ce9dd99e1",
+  "parsed_configs": {
+    "offline": {
+      "path": "/data/ycfeng/tmp/d20_actual_main_h80032_03/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/config.json",
+      "size": 373388,
+      "sha256": "cb613a8cf9843e845af3b12d089b35c66a60e20bdbcd4861c5cd9b959a4ecddf"
+    },
+    "online": {
+      "path": "/data/ycfeng/tmp/d20_actual_main_h80032_04/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/config.json",
+      "size": 373383,
+      "sha256": "ae6d02399a40be625985229db8b03ba48b41b864468f6e4a490f5db85c23bb12"
+    }
+  },
+  "files": {
+    "d20_actual_main_affected03.log": {
+      "size": 181,
+      "sha256": "d1df8ee92e790c4af90bf745c07f52f180543f5ba28c9c1921c8d4e5c5d930ed"
+    },
+    "d20_actual_main_cli_regression03.log": {
+      "size": 109,
+      "sha256": "1d9cd831cee0c6c62b08b20a9e1164d52d5579c918c2c0321da8f06cff43a52f"
+    },
+    "d20_actual_main_graph_policy_green01.log": {
+      "size": 99,
+      "sha256": "3171f87ef6582038bbf10e884c124109b5c49359152b1805f115ae27e446031e"
+    },
+    "d20_actual_main_graph_policy_red01.log": {
+      "size": 11453,
+      "sha256": "fe5cc1b69b6c320397092b73402cf323d9d9e66f0eaa24bcafef265e6a626ae9"
+    },
+    "offline/command.bash": {
+      "size": 5237,
+      "sha256": "6cf0011f4e3a3ca351a57652f1a4831c913b644d7da0b9660d2736a613924afb"
+    },
+    "offline/command.json": {
+      "size": 5985,
+      "sha256": "606f982d7d758fc8a171dd08ec19541b97eed49c33ec0581dab3019f2862ae72"
+    },
+    "offline/execution.json": {
+      "size": 52,
+      "sha256": "fc324893414cda3f85e76f2e88a6b6066840bc95aed221fee5b2a3bf038bbeb2"
+    },
+    "offline/requests.csv": {
+      "size": 62,
+      "sha256": "25390e5da60239c0d8a550c33150a182c856940f1c30aa502f0c8b58387cd2fa"
+    },
+    "offline/run.log": {
+      "size": 22743,
+      "sha256": "3d89dfdf0b10f345132cca22334841264cbcddf00544baed6ad8ce896bcdd6f8"
+    },
+    "online/command.bash": {
+      "size": 5232,
+      "sha256": "70278c07779c3910a08063f7f1208c113e8833309a24e722ddd0093987d356d3"
+    },
+    "online/command.json": {
+      "size": 5980,
+      "sha256": "55b6715a13815f52a487a0209ed184b9757b63ed9050f3746ade822a09e9e422"
+    },
+    "online/execution.json": {
+      "size": 54,
+      "sha256": "53a61a42aa3004913e3d92a4ffeaaa2cfb5cd2363c900279b4168dc13fccef16"
+    },
+    "online/requests.csv": {
+      "size": 63,
+      "sha256": "8b3058871fdb5040052801f1839f420435dec2c812fde5492b23e7bacbab526a"
+    },
+    "online/run.log": {
+      "size": 7768,
+      "sha256": "d44811117c50c08ed4b262059a4d461385e827c05f80230ac3ab362b9bcea4e8"
+    }
+  }
+}

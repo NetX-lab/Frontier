@@ -1,0 +1,54 @@
+[
+  {
+    "task": "init",
+    "worktree": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+    "head": "886608ea574dd2107d0b30771d63d8057d23cac6",
+    "status": "",
+    "owned_records_path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish/task_memory/task_2026-10-22_step5_position_routing/init_preparation_reuse",
+    "owned_records_exist": false,
+    "failed_tools": [
+      {
+        "tool": "shell",
+        "error": {
+          "type": "permission.rejected",
+          "message": "Permission denied: external_directory"
+        },
+        "content": null
+      }
+    ]
+  },
+  {
+    "task": "copy",
+    "worktree": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+    "head": "886608ea574dd2107d0b30771d63d8057d23cac6",
+    "status": "",
+    "owned_records_path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy",
+    "owned_records_exist": false,
+    "failed_tools": [
+      {
+        "tool": "read",
+        "error": {
+          "type": "permission.rejected",
+          "message": "Permission denied: external_directory"
+        },
+        "content": null
+      },
+      {
+        "tool": "grep",
+        "error": {
+          "type": "permission.rejected",
+          "message": "Permission denied: external_directory"
+        },
+        "content": null
+      },
+      {
+        "tool": "read",
+        "error": {
+          "type": "permission.rejected",
+          "message": "Permission denied: external_directory"
+        },
+        "content": null
+      }
+    ]
+  }
+]

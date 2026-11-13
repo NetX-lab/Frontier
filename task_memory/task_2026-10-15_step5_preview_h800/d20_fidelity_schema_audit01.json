@@ -1,0 +1,684 @@
+{
+  "scope": "initial candidate371a992; final changed source requires affected verification",
+  "raw_comparison": "77 config/metadata schema mismatches retained",
+  "comparison_file": "/data/ycfeng/tmp/step5_d20_fidelity_20261021/comparison.json",
+  "comparison_method": "Original comparator normalizes volatile fields. Its CSV row counts include header; DictReader counts exclude it.",
+  "cases": [
+    {
+      "case_id": "trained_dense_csv_smoke",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "trained_moe_csv_smoke",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "trained_coloc_dense_h800",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "trained_coloc_dense_h800_cuda_graph",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "trained_coloc_moe_phi_h800",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "trained_coloc_moe_qwen3_h800",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_small",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_default",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_long_prefill",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_no_chunked_prefill",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_pp2",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_pp4",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_tp1",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_two_replicas",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_many_requests",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_attn_dp2",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_cuda_graph_piecewise",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_sarathi",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_sglang",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_offline_dummy_time_quarter",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_default",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_ep1",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_moe_tp1",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_random",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_skewed",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_routing_zipf",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_topk4",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_long_prefill",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_many_requests",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_cuda_graph_none",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_offline_ep4",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_online_qps0p5",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_online_qps0p5",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_online_qps2p0",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_online_qps2p0",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_dense_online_qps8p0",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_moe_online_qps8p0",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_thinking_offline",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_thinking_online",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_spec_dec_offline",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_spec_dec_online",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_prefix_cache_offline",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_prefix_cache_online",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_spec_dec_offline_ntokens4",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "coloc_mtp_offline_pp2",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_offline_default",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_offline_two_prefill_replicas",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_offline_two_decode_replicas",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_offline_tp2",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_offline_no_chunked_prefill",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_moe_offline_default",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_moe_offline_ep1",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_moe_offline_routing_skewed",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_thinking_offline",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_spec_dec_offline",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_prefix_cache_offline",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_online_qps2",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_moe_online_qps2",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_online_qps8",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdd_dense_offline_astra_sim_analytical",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_dense_offline_default",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_moe_offline_default",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_moe_offline_ep2",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_moe_offline_ep2_many",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_dense_offline_cuda_graph",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_moe_offline_cuda_graph",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_dense_online_default",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_moe_online_default",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_moe_online_ep2",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "pdaf_moe_online_cuda_graph",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "dp_dense_online_lanes2",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "dp_dense_online_lanes4",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "dp_dense_offline_lanes2_replicas2",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "dp_dense_online_lanes2_replicas2",
+      "comparator_identical_non_schema_artifacts": 3,
+      "raw_identical_non_schema_artifacts": 3,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "dp_moe_coloc_online_lanes2",
+      "comparator_identical_non_schema_artifacts": 4,
+      "raw_identical_non_schema_artifacts": 4,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "dp_moe_pdd_online_lanes2",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    },
+    {
+      "case_id": "dp_moe_pdd_online_lanes2_trained",
+      "comparator_identical_non_schema_artifacts": 5,
+      "raw_identical_non_schema_artifacts": 5,
+      "old31_metadata_rows_preserved": true,
+      "added_metadata_rows": 9,
+      "new_config_input": null
+    }
+  ],
+  "added_metadata_example": [
+    {
+      "operation": "step5_attention_prepare",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_gate_projection",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_headwise_gate",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_indexer_prepare",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_indexer_weights",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_output_projection",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_qkv_projection",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_sparse_attention",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    },
+    {
+      "operation": "step5_swa_attention",
+      "precision": "BF16",
+      "data_source": "profiling",
+      "approximation_factor": ""
+    }
+  ],
+  "cases_verified": 77,
+  "comparator_identical_non_schema_artifact_pairs": 297,
+  "raw_identical_non_schema_artifact_pairs": 297,
+  "predictor_cache_findings": []
+}

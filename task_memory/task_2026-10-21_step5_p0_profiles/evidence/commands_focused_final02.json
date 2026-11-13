@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "-B",
+    "-c",
+    "import sys,types,pathlib; p=types.ModuleType('tests'); p.__path__=[str(pathlib.Path.cwd()/'tests')]; sys.modules['tests']=p; import pytest; raise SystemExit(pytest.main(['tests/unit/test_step5_request_free_profiling.py', 'tests/unit/test_step5_attention_profiling.py', 'tests/unit/test_step5_device_activity.py', 'tests/unit/test_step5_fixed_probe.py', 'tests/unit/test_step5_attention_replay.py', 'tests/unit/test_step5_attention_judgment.py', 'tests/unit/test_step5_attention_timing.py', 'tests/unit/test_step5_boundary_probe.py', '-q', '-p', 'no:cacheprovider', '--junitxml=/data/ycfeng/tmp/step5_p0_profiles_20261021/focused_final02.xml']))"
+  ],
+  "files": [
+    "test_step5_request_free_profiling",
+    "test_step5_attention_profiling",
+    "test_step5_device_activity",
+    "test_step5_fixed_probe",
+    "test_step5_attention_replay",
+    "test_step5_attention_judgment",
+    "test_step5_attention_timing",
+    "test_step5_boundary_probe"
+  ]
+}

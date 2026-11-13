@@ -1,0 +1,221 @@
+diff --git a/frontier/profiling/collectives/step5_dispatch_probe.py b/frontier/profiling/collectives/step5_dispatch_probe.py
+index 595359ed..c633f43d 100644
+--- a/frontier/profiling/collectives/step5_dispatch_probe.py
++++ b/frontier/profiling/collectives/step5_dispatch_probe.py
+@@ -405,6 +405,7 @@ class DispatchObserver:
+             args["w1"],args["w2"],args["activation"],args["global_num_experts"])
+         context=native.prepared_context(gathered[0],args["a1q_scale"],topk_ids=args["topk_ids"],
+             expert_map=args["expert_map"],source_tensors=(source[0],source[3] if len(source) == 4 else None))
++        self.compute_diagnostics=native.point_diagnostics
+         if context["experts_class"] != type(self.expert_operands[0][0]).__name__:
+             raise ValueError("Observed expert implementation differs from inspected point")
+         def tensor(name,value):
+@@ -680,6 +681,7 @@ def run_probe(args, plan):
+                         result["comparison"]["status"]=result["routing_comparison"]["status"]
+                     with diagnostic_scope(observer.errors,"observed_compute_context"):
+                         result["compute_context"]=observer.compute_context(layer,config.model_config.hf_text_config)
++                        result["compute_diagnostics"]=observer.compute_diagnostics
+                 if observer.errors or len(errors) > error_start:
+                     result["comparison"]["status"] = "unverified"
+                 emit({"event": "layer_verdict", "layer_id": case["layer_id"], **result["comparison"]})
+diff --git a/frontier/profiling/moe/fp8_block_experts.py b/frontier/profiling/moe/fp8_block_experts.py
+index d677eae2..aa7923f8 100644
+--- a/frontier/profiling/moe/fp8_block_experts.py
++++ b/frontier/profiling/moe/fp8_block_experts.py
+@@ -21,7 +21,7 @@ from __future__ import annotations
+ 
+ import math
+ import os
+-from dataclasses import dataclass
++from dataclasses import dataclass, field
+ from types import SimpleNamespace
+ from typing import Any, Dict, Optional, Sequence, Tuple
+ 
+@@ -95,6 +95,7 @@ class NativeRoutedExperts:
+     activation: Any
+     global_num_experts: int
+     provenance: Optional[dict] = None
++    point_diagnostics: Optional[dict] = field(default=None,init=False,compare=False)
+ 
+     def prepare_source(self, hidden_states):
+         """Actual naive source quantization seam; caller times only a reached scope."""
+@@ -120,7 +121,7 @@ class NativeRoutedExperts:
+         if source_tensors is not None:
+             context.update(source_activation_layout=tensor_layout(source_tensors[0]),
+                            source_scale_layout=tensor_layout(source_tensors[1]))
+-        callables = []
++        callables = [] if selector is None else [selector]
+         if topk_ids is not None:
+             callables += [selected.apply, selected.workspace_shapes,selected.finalize_weight_and_reduce_impl]
+             M, topk, local = topk_ids.shape[0], topk_ids.shape[1], self.w13.shape[0]
+@@ -159,7 +160,11 @@ class NativeRoutedExperts:
+         if bound:
+             callables.append(selected.apply)
+             from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+-            context["native_facts"] = verify_step5_profile_runtime(bound,callables=callables)
++            object.__setattr__(self,"point_diagnostics",None)
++            facts=verify_step5_profile_runtime(bound,callables=callables)
++            object.__setattr__(self,"point_diagnostics",facts)
++            reached={fact["path"] for fact in facts["callables"].values()}
++            context["native_facts"]={**facts,"imports":{name:fact for name,fact in facts["imports"].items() if fact["path"] in reached}}
+         return context
+ 
+     def apply_prepared(self, hidden_states, scales, topk_weights, topk_ids, expert_map, *, in_dtype):
+diff --git a/tests/unit/test_collective_sim_cc_backend.py b/tests/unit/test_collective_sim_cc_backend.py
+index 0f4af8d7..ed936a52 100644
+--- a/tests/unit/test_collective_sim_cc_backend.py
++++ b/tests/unit/test_collective_sim_cc_backend.py
+@@ -102,6 +102,16 @@ def test_importer_groups_frozen_policy_but_keeps_complete_count_and_cache_identi
+     assert json.loads(result.count_receipt_json)["context"] == context
+ 
+ 
++def cpu_writer_source():
++    """Default to this checkout; explicitly sealed references support phased integration."""
++    import os,hashlib
++    reference=os.environ.get("FRONTIER_TEST_CPU_WRITER_FILE")
++    source=Path(reference) if reference else Path(__file__).resolve().parents[2]/"tests/integration/step5_measured_compute_fixture.py"
++    if reference and hashlib.sha256(source.read_bytes()).hexdigest() != os.environ.get("FRONTIER_TEST_CPU_WRITER_SHA256"):
++        raise ValueError("External CPU writer requires its exact immutable SHA256")
++    return source
++
++
+ def cpu_writer_payload(tmp_path,monkeypatch):
+     """Execute CORE's retained actual writer without importing or editing its tree."""
+     import ast,pandas as pd
+@@ -112,7 +122,7 @@ def cpu_writer_payload(tmp_path,monkeypatch):
+     table=tmp_path/"compute.csv"
+     pd.DataFrame([dict(moe_frame_scope="dp_gathered",routing_input=json.dumps(dict(source_frames=[dict(physical_rows=16),dict(physical_rows=1)])),
+         native_context=json.dumps(native),graph_mode="none")]).to_csv(table,index=False)
+-    source=Path("/data/ycfeng/Frontier/.worktrees/verify-step5-core-delivery-01/tests/integration/step5_measured_compute_fixture.py")
++    source=cpu_writer_source()
+     fn=next(n for n in ast.parse(source.read_text()).body if isinstance(n,ast.FunctionDef) and n.name == "position_collective_costs")
+     ns=dict(pd=pd,json=json);exec(compile(ast.Module(body=[fn],type_ignores=[]),str(source),"exec"),ns)
+     writer_path=ns[fn.name](tmp_path,table,device="h800");artifact=json.loads(writer_path.read_text());path.write_text(json.dumps(artifact))
+@@ -170,3 +180,19 @@ def test_native_import_ignores_injected_full_cost(tmp_path,monkeypatch):
+         per_rank_events=[["cpu_schema_only"]*35 for _ in range(16)],cost={"duration_ms":999.})
+     path.write_text(json.dumps(artifact));cost=backend.predict_collective_plan(plan)
+     assert cost.duration_ms == pytest.approx(1.75*16*8192/200e9*1000+.014)
++
++
++@pytest.mark.parametrize("mode",["local","missing_hash","wrong_hash","missing_file","exact"])
++def test_cpu_writer_reference_is_explicit_and_sealed(tmp_path,monkeypatch,mode):
++    import hashlib
++    monkeypatch.delenv("FRONTIER_TEST_CPU_WRITER_FILE",raising=False)
++    monkeypatch.delenv("FRONTIER_TEST_CPU_WRITER_SHA256",raising=False)
++    if mode == "local":
++        assert cpu_writer_source() == Path(__file__).resolve().parents[2]/"tests/integration/step5_measured_compute_fixture.py"
++        return
++    source=tmp_path/"writer.py";source.write_text("# CPU reference identity fixture\n")
++    monkeypatch.setenv("FRONTIER_TEST_CPU_WRITER_FILE",str(source if mode != "missing_file" else tmp_path/"absent.py"))
++    if mode != "missing_hash": monkeypatch.setenv("FRONTIER_TEST_CPU_WRITER_SHA256",hashlib.sha256(source.read_bytes()).hexdigest() if mode != "wrong_hash" else "wrong")
++    if mode == "exact": assert cpu_writer_source() == source
++    else:
++        with pytest.raises((ValueError,FileNotFoundError)): cpu_writer_source()
+diff --git a/tests/unit/test_step5_dispatch_probe.py b/tests/unit/test_step5_dispatch_probe.py
+index 2a36c420..a7b539af 100644
+--- a/tests/unit/test_step5_dispatch_probe.py
++++ b/tests/unit/test_step5_dispatch_probe.py
+@@ -12,6 +12,7 @@ from pathlib import Path
+ from types import SimpleNamespace
+ 
+ import pytest
++from tests.unit.test_step5_fixed_probe import installed_profile_receipt
+ 
+ from frontier.profiling.collectives import step5_dispatch_probe as probe
+ 
+@@ -1006,7 +1007,7 @@ def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(
+     fused._prepare_expert_assignment=lambda *a,**kw:(None,None,torch.tensor(32))
+     for m in (module,deep,fused): monkeypatch.setitem(sys.modules,m.__name__,m)
+     seen=[];monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+-    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda path,**kw:seen.append(kw["callables"]) or dict(shared="cpu_fixture"))
++    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda path,**kw:seen.append(kw["callables"]) or dict(shared="cpu_fixture",imports={},callables={}))
+     a=torch.ones(17,4,dtype=torch.bfloat16);ids=torch.zeros(17,8,dtype=torch.int32);weights=torch.zeros(17,8)
+     expert=TritonExperts();method=SimpleNamespace(moe_kernel=SimpleNamespace(fused_experts=expert),unquantized_backend=SimpleNamespace(value="TRITON"))
+     layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method)))
+@@ -1021,7 +1022,7 @@ def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(
+     assert context["native_padding"] == dict(scheme="triton_expert_assignment",alignment=16,num_tokens_post_padded=32,
+         ignore_invalid_experts=False,config=dict(BLOCK_SIZE_M=16))
+     assert context["source_activation_layout"]["shape"] == [16,4] and context["activation_layout"]["shape"] == [17,4]
+-    assert context["native_facts"] == dict(shared="cpu_fixture") and expert.apply in seen[0]
++    assert context["native_facts"] == dict(shared="cpu_fixture",imports={},callables={}) and expert.apply in seen[0]
+     from dataclasses import asdict
+     from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+     from tests.unit.test_step5_comm_cost_export import EXPORT
+@@ -1042,3 +1043,59 @@ def test_native_point_writer_uses_existing_prepared_context_and_source_verifier(
+     assert EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[layer])]),{inp.moe_input_id:inp}) == []
+     observer.routing_calls[0]["result"]=(weights[:16],ids[:16])
+     with pytest.raises(ValueError,match="router outputs"): observer.compute_context(SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=method))),SimpleNamespace(model_type="step5"))
++
++
++@pytest.mark.parametrize("fault",[None,"callable","source","layout","ambient"])
++def test_two_native_point_producers_join_with_different_valid_imports(installed_profile_receipt,monkeypatch,tmp_path,fault):
++    torch=pytest.importorskip("torch")
++    import importlib.util
++    from dataclasses import asdict
++    from frontier.profiling.moe.fp8_block_experts import NativeRoutedExperts
++    from frontier.profiling.common.runtime_identity import file_sha256,canonical_json
++    from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
++    from tests.unit.test_step5_comm_cost_export import EXPORT
++    path,modules,manifest=installed_profile_receipt;root=Path(manifest["native_binding"]["installed_package"])
++    texts={"experts.triton_moe":"class TritonExperts:\n def apply(self,hidden_states,**kwargs): return hidden_states\n def workspace_shapes(self,*a): return ((136,4),(136,4),(17,4))\n def finalize_weight_and_reduce_impl(self): return self\n",
++        "experts.deep_gemm_moe":"class DeepGemmExperts: pass\n",
++        "fused_moe":"import torch\ndef try_get_optimal_moe_config(*a): return {'BLOCK_SIZE_M':16}\ndef _prepare_expert_assignment(*a,**kw): return None,None,torch.tensor(32)\n"}
++    receipt_path=path.parent/manifest["native_binding"]["native_source_receipt"];receipt=json.loads(receipt_path.read_text())
++    for suffix,text in texts.items():
++        name="vllm.model_executor.layers.fused_moe."+suffix;p=root/Path(*name.split(".")[1:]).with_suffix(".py")
++        p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text);receipt["sources"]["vllm/"+p.relative_to(root).as_posix()]=file_sha256(p)
++        spec=importlib.util.spec_from_file_location(name,p);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);monkeypatch.setitem(sys.modules,name,module)
++    receipt_path.write_text(json.dumps(receipt));manifest["sha256"][receipt_path.name]=file_sha256(receipt_path);path.write_text(json.dumps(manifest))
++    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",str(path))
++    expert=sys.modules["vllm.model_executor.layers.fused_moe.experts.triton_moe"].TritonExperts()
++    expert.quant_config=SimpleNamespace(quant_dtype=None,use_int8_w8a16=False,use_int4_w4a16=False,config_name=lambda dtype:"cpu_fixture")
++    for k,v in dict(expects_unquantized_inputs=False,a2_scale=None,block_shape=None,_lora_context=None,per_act_token_quant=False,quantization_emulation=False,quant_dtype=None).items(): setattr(expert,k,v)
++    kernel=SimpleNamespace(fused_experts=expert);a=torch.ones(17,4096,dtype=torch.bfloat16);weights=torch.zeros(17,8);ids=torch.zeros(17,8,dtype=torch.int32)
++    w1=torch.empty(22,8,4);w2=torch.empty(22,4,4);original={"constructor":"retained"}
++    native=NativeRoutedExperts("TRITON","TritonExperts",None,kernel,w1,w2,"swiglustep",352,original)
++    extra="vllm.model_executor.layers.fused_moe.oracle.unquantized";module=modules[extra];monkeypatch.delitem(sys.modules,extra)
++    profile=native.prepared_context(a,None,topk_ids=ids,source_tensors=(a[:16],None));first=native.point_diagnostics
++    monkeypatch.setitem(sys.modules,extra,module)
++    if fault == "callable":
++        ns={"__name__":type(expert).__module__};exec(compile("def apply(self,*a,**kw): pass",str(tmp_path/"foreign.py"),"exec"),ns);expert.apply=ns["apply"].__get__(expert)
++    elif fault in ("source","ambient"): Path((sys.modules[type(expert).__module__] if fault == "source" else module).__file__).write_text("# changed native bytes\n")
++    observer=probe.DispatchObserver(lambda e:None);source=[a[:16],weights[:16],ids[:16]]
++    observer.collective_operands=[dict(op="all_gatherv",inputs=source,outputs=[a,weights,ids]),dict(op="reduce_scatterv_into_output",outputs=[a[:16]])]
++    observer.routing_calls=[dict(result=(source[1],source[2]))]
++    observer.expert_operands=[(expert,dict(hidden_states=a,topk_weights=weights,topk_ids=ids,a1q_scale=None,w1=w1,w2=w2,activation="swiglustep",global_num_experts=352,expert_map=None))]
++    layer=SimpleNamespace(experts=SimpleNamespace(routed_experts=SimpleNamespace(quant_method=SimpleNamespace(moe_kernel=kernel,unquantized_backend=SimpleNamespace(value="TRITON")))))
++    if fault in ("callable","source","ambient"):
++        with pytest.raises((ValueError,FileNotFoundError)): observer.compute_context(layer,SimpleNamespace(model_type="step5"))
++        return
++    point=observer.compute_context(layer,SimpleNamespace(model_type="step5"))
++    profile.update(model_architecture_profile="step5",routing_runtime_path="position_cyclic",collective_tensors=point["collective_tensors"])
++    if fault == "layout": profile["activation_layout"]["stride"]=[1,17]
++    assert (canonical_json(profile) == canonical_json(point)) == (fault is None)
++    assert first != observer.compute_diagnostics and extra not in first["imports"] and extra in observer.compute_diagnostics["imports"]
++    assert native.provenance is original and set(first["callables"]) == set(point["native_facts"]["callables"])
++    inp=MoERoutingProfileInput("same_point",(MoESourceFrame(0,(16,),(0,),16,"standalone_legacy"),MoESourceFrame(1,(1,),(0,),1,"standalone_legacy")),17)
++    schemas=[probe.tensor_schema(t) for t in source];policy=dict(branches=["cpu_fixture"],runtime={})
++    call=dict(op="all_gatherv",group_ranks=[0,8],execution_policy=policy,inputs=schemas,completed=True)
++    record=dict(op="all_gatherv",call="moe_dispatch_all_gatherv_bf16",participating_ranks=[0],group_ranks=[[0,8]],tokens_per_dp_rank=[16,1],
++        dtypes=[t["dtype"] for t in schemas],columns=[t["shape"][1] for t in schemas],native_context=dict(shared=point["native_facts"]["shared"],execution_policy={"0":policy}))
++    report=dict(layer_id=88,moe_input_id=inp.moe_input_id,source_frame=json.loads(json.dumps(asdict(inp.source_frames[0]))),compute_context=point,comparison=dict(status="match"),routing_comparison=dict(status="match"),collectives=[call])
++    linked=EXPORT.observed_collective_points(record,dict(parallelism=dict(tp=8),ranks=[dict(rank=0,layers=[report])]),{inp.moe_input_id:inp})
++    assert len(linked) == 1 and (canonical_json(linked[0]["compute_context"]) == canonical_json(profile)) == (fault is None)
+diff --git a/tests/unit/test_step5_moe_pricing.py b/tests/unit/test_step5_moe_pricing.py
+index e11bb299..2213df1f 100644
+--- a/tests/unit/test_step5_moe_pricing.py
++++ b/tests/unit/test_step5_moe_pricing.py
+@@ -215,11 +215,11 @@ def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded(
+     seen=[]
+     with patch.dict(os.environ,{"FRONTIER_STEP5_PROFILE_MANIFEST":"cpu_fixture"}), patch(
+         "frontier.profiling.common.runtime_identity.verify_step5_profile_runtime",
+-        side_effect=lambda path,**kw:seen.append((path,kw["callables"])) or {"evidence_kind":"cpu_fixture"}):
++        side_effect=lambda path,**kw:seen.append((path,kw["callables"])) or {"evidence_kind":"cpu_fixture","imports":{},"callables":{}}):
+         selected=impl.fused_experts.experts
+         selected.apply=lambda:None
+         assert native.prepared_context(activation,scales)["native_facts"]["evidence_kind"] == "cpu_fixture"
+-    assert seen == [("cpu_fixture",[selected.apply])]
++    assert seen == [("cpu_fixture",[impl.fused_experts._select_experts_impl,selected.apply])]
+ 
+ 
+ @pytest.mark.parametrize("ep_id",[0,8,15])

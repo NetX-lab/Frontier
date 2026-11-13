@@ -1,0 +1,29 @@
+{
+  "status": "PASS_COMPLETED_DUPLICATE_ONLY_CLEANUP",
+  "removed_files": [
+    {
+      "path": "/data/ycfeng/tmp/d29_ledger_stream_followup_checkout_clone/raw.log",
+      "retained": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/caller_followup_2026-10-25/raw/checkout_clone/raw.log",
+      "sha256": "9af1005b38679feb302c7acb9ead73b3e69a2092c0e829208d7b8e6f2d3e4179"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_ledger_stream_followup_checkout_clone/exit.txt",
+      "retained": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/caller_followup_2026-10-25/raw/checkout_clone/exit.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_ledger_stream_followup_checkout_pin/raw.log",
+      "retained": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/caller_followup_2026-10-25/raw/checkout_pin/raw.log",
+      "sha256": "55f8e433d39323800f4d3ca5d70a22953a31b8a6994e9697d4bd511c55698f1c"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_ledger_stream_followup_checkout_pin/exit.txt",
+      "retained": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/caller_followup_2026-10-25/raw/checkout_pin/exit.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    }
+  ],
+  "removed_empty_directories": 2,
+  "pinned_checkout_preserved": true,
+  "caller_states_and_outputs_preserved": true,
+  "other_session_paths_touched": false
+}

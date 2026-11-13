@@ -1,0 +1,87 @@
+{
+  "task_id": "D29-TRACE-SERIALIZATION-REPAIR",
+  "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization",
+  "head": "767da5437609301a6183dbfdcfd87b2402a32007",
+  "baseline_revision": "767da5437609301a6183dbfdcfd87b2402a32007",
+  "imported_source": "/data/ycfeng/Frontier/.worktrees/step5-d29-trace-serialization/frontier/metrics/trace_store.py",
+  "baseline_sha256": "f66f9df95422ad734707e723a38a516143e90fe80274c80dd169babf9a375939",
+  "current_sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+  "script_sha256": "66619c1b8da61c572e7397fa7c2661fc83f238a8001716ade40bed9c7288c2b8",
+  "captured": {
+    "events": 598,
+    "payload_bytes": 8353308,
+    "payload_sha256": "3ea6239cea9295e5d532722200c78238c9e01ecb58b32383fe8c8aaa20b7e004",
+    "whole_jsonl_equal_including_fixed_header": true,
+    "wall_s": {
+      "baseline": [
+        0.37898094300180674,
+        0.3731283559463918,
+        0.37584544671699405,
+        0.37368806917220354,
+        0.4698299141600728,
+        0.37258898513391614,
+        0.37353152967989445
+      ],
+      "candidate": [
+        0.0668341601267457,
+        0.0660695880651474,
+        0.06469453498721123,
+        0.0653777401894331,
+        0.07568182982504368,
+        0.06712100096046925,
+        0.06517797382548451
+      ]
+    },
+    "median_s": {
+      "baseline": 0.37368806917220354,
+      "candidate": 0.0660695880651474
+    },
+    "measurement": "unprofiled actual source log_event/flush, alternating order, seven iterations",
+    "trace_read_bytes": 8353308,
+    "input_path": "/data/ycfeng/tmp/d29-parent-position-main08/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/op_traces.jsonl"
+  },
+  "ep_producer": {
+    "events": 7,
+    "payload_bytes": 21051,
+    "payload_sha256": "3eff3f2657e05c40e271477e86eda3f3357867f6c9d5ba87de494f39c4597844",
+    "byte_equal": true,
+    "hazards": [],
+    "ledger_sha256": "54dc3b295b312cc032f078514f8bce603293d4dd11d929434a06e064ea55455e",
+    "original_script": "/data/ycfeng/tmp/d29_trace_serialization_seam/ep_wave_producer_probe.py",
+    "original_script_sha256": "2649c8e64f90e64c217a39c670619535f248c76eeff637e462af8dcc3d6d15c0",
+    "transformations": [
+      "SOURCE literal -> current worktree",
+      "omit top-level main() only; execute build_step5_wave()"
+    ]
+  },
+  "contracts": {
+    "bytes_equal": true,
+    "declared_order": true,
+    "top_level_none_only": true,
+    "dynamic_attributes_excluded": true,
+    "to_dict_removed": true,
+    "baseline_failures": {
+      "oserror_identity": true,
+      "restored_order": true,
+      "typeerror_propagates_and_restores": true
+    },
+    "candidate_failures": {
+      "oserror_identity": true,
+      "restored_order": true,
+      "typeerror_propagates_and_restores": true
+    }
+  },
+  "ast_budget": {
+    "exact_allowed_ast_delta": true,
+    "unchanged_error_handlers": true,
+    "unchanged_base_event": true,
+    "numstat": "7\t7\tfrontier/metrics/trace_store.py",
+    "added": 7,
+    "deleted": 7,
+    "gross": 14,
+    "old_lines": 132,
+    "new_lines": 132,
+    "whitespace_check": "PASS"
+  },
+  "limits": "Bounded 8 MiB actual tail plus reconstructed CPU producer; no full CLI/native/GPU/final-union regressions."
+}

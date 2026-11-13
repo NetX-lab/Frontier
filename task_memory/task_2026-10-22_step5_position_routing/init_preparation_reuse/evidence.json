@@ -1,0 +1,259 @@
+{
+  "modification_history": [
+    {
+      "date_local": "2026-10-25",
+      "change": "Bounded D29-INIT-PREPARATION-FINISH closure."
+    }
+  ],
+  "task_id": "D29-INIT-PREPARATION-FINISH",
+  "verdict": "ALLOC",
+  "meaning": "Recommend the existing allocation process for reuse within one selected-group training call; no allocation or repair performed.",
+  "observed_at_local": "2026-10-25T03:09:52.794175+08:00",
+  "observed_at_utc": "2026-10-24T19:09:52.794245+00:00",
+  "records_branch": "d29-init-preparation-finish",
+  "records_baseline": "886608ea574dd2107d0b30771d63d8057d23cac6",
+  "candidate_source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "primary_document_snapshot": "2207331e17a07c7da2186c32f7b37cc6ba2f3890",
+  "primary_head_changed_during_record_preparation": "2e8d6168 -> 2ca5e571; guard stopped before any write; production code was then verified against the fixed2e8 commit explicitly.",
+  "code_roots": {
+    "candidate": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+    "records_baseline": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+    "primary_observed_bytes": "/data/ycfeng/Frontier/.worktrees/step5-preview"
+  },
+  "code_bindings": [
+    {
+      "path": "frontier/execution_time_predictor/moe_dataset_training.py",
+      "sha256": "1dc55426707a507c626cb993ce9195bf8e21bdb581cb6bc4115b7a1acddc3968",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/prediction_family_trainers.py",
+      "sha256": "49a9d4f29f22c66327464a419dc87a172904a1aa82aeab662a0aaf3cd7f0ca6d",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/layer_contract_resolution.py",
+      "sha256": "d28e1f88e35fc3b1da3347ac1385dc2f697ebaa9c77a8a5adf46cfbd3cddeeec",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+      "sha256": "5554c39e3c36ede165c2c3b18493ac6b92e8027ec80e4673a3267df338af8488",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+      "sha256": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "sha256": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "sha256": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/prediction_model_registry.py",
+      "sha256": "f1eaedb9a1d27c7f9d7505a6961f8000ff195248d0ac73305d083ea51cd4ddb0",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/execution_time_predictor/cache_io.py",
+      "sha256": "64aef45ee74cfd4f5d1b3919fb2fccf374c5af8ad6aecf12fcb219933af8644a",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/moe_routing_runtime.py",
+      "sha256": "19ea0229da6f9770d069947b429d16af3afa16b8cf13c2ef6f856d92e66df60a",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "frontier/config/quantization_manager.py",
+      "sha256": "44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "tests/unit/test_step5_measured_ffn.py",
+      "sha256": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    },
+    {
+      "path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+      "sha256": "16d274ec513fbddbdfadb5b29a071b1af66cf16d8d8fdedb1e641f5c09dfd548",
+      "equal_candidate_baseline_production_commit_and_primary_bytes": true
+    }
+  ],
+  "committed_886_to_146_diff_for_bound_files": [],
+  "authority_and_retained_evidence": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/requirements.md",
+      "bytes": 35994,
+      "sha256": "c0ea64dd61d477f56c192deb40624fcae3f35e46fef5341162361962bb0a577c",
+      "git_root": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "git_commit": "2207331e17a07c7da2186c32f7b37cc6ba2f3890",
+      "git_path": "task_memory/task_2026-10-22_step5_position_routing/requirements.md"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/plan.md",
+      "bytes": 31103,
+      "sha256": "00d37dd3e9eb2668da940fb1b45cd1139bfca339fba4cd9af49aa0a89aceb82f",
+      "git_root": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "git_commit": "2207331e17a07c7da2186c32f7b37cc6ba2f3890",
+      "git_path": "task_memory/task_2026-10-22_step5_position_routing/plan.md"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/receipt.json",
+      "bytes": 4862,
+      "sha256": "6a436668524557aaed95121bcd54afe4b054d4b1d07bbb96352554e4516850c4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_tool_census.json",
+      "bytes": 19546,
+      "sha256": "fe8eba7d7665773dd230f6ac03400f3adb2e727794f78b4c4de51b5cf4db76ff"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_messages.json.gz",
+      "bytes": 72598,
+      "sha256": "b159ebb129916a14f758ab898347f0e0696b4ff695f5d5ab03117998bbe72439"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_text.json",
+      "bytes": 106,
+      "sha256": "9cf743a9f9f9f7ff3079929d6855039fe87dc54f703e1831f5d47cda7297f11c"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/init_older.json",
+      "bytes": 51,
+      "sha256": "8aeb7676a045d011090ecda3199f8901db80316c272f23bea0087b0543518284"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/read_receipt.json",
+      "bytes": 271,
+      "sha256": "b04da86158269649ff4b7a8d0fff60482cef3438c6e196fc4fc98a16bd8318f5"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_early_init_repro/moefilter02/result.json",
+      "bytes": 2954,
+      "sha256": "a7716edf8bb04436bd15c38fe388db5ebffbfa7bed3ef0cd94854816cb374428"
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_init_cache_reconciliation/moereads01/result.json",
+      "bytes": 2096,
+      "sha256": "1e1681a6b4fc1dcf1041f0e79a61aedc326be4460903b9653cdfdcfa55252bc1"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/early_init_repro/report.md",
+      "bytes": 28276,
+      "sha256": "ddc8607278e4f76ee99b85bce09e809e63a632aa4bc915c1380e96e0bfd20f66"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/init_validation_scope/report.md",
+      "bytes": 13620,
+      "sha256": "332cf8acfc16ba85406a7eb2227387303622e81745e5b7cb4d98fe2d63745b03"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/init_family_repair/summary.md",
+      "bytes": 3251,
+      "sha256": "1bb60c5b528d3bd73f0a55e6eb292b51545691af517e62d6d1e695262e4d229b"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/cli_group_reuse/summary.md",
+      "bytes": 3947,
+      "sha256": "d0246a26bfd666915fe4dc9d71e2962c42852d805eb073f41bfe64359636b7d5"
+    }
+  ],
+  "recovered_history": {
+    "session": "ses_e92338e41ffe081mlmDNjpmxP5",
+    "completed_tools": 33,
+    "permission_rejections": 1,
+    "new_technical_controls": 0,
+    "owned_record_writes_before_recovery": 0,
+    "terminal_error": "Agent not found: \"analyzer\""
+  },
+  "consumed_controls": {
+    "new_total": 0,
+    "recovered_total": 0,
+    "benchmark": 0,
+    "initialization": 0,
+    "csv_model_trace_reads": 0,
+    "pricing_wave_shape_full_cli": 0,
+    "gpu_platform_network_cloud": 0,
+    "delegations": 0,
+    "source_allocation": 0
+  },
+  "required_shape_allowance": {
+    "used": 6,
+    "ceiling": 6,
+    "added_by_this_diagnosis": 0
+  },
+  "historical_receipts": {
+    "source_commit": "e41abc073500d61f224eda4fca1123e74e40544d",
+    "slice_rows": 3000,
+    "moe_reads_per_family": 11,
+    "groups": 2,
+    "operators_per_group": [
+      3,
+      4
+    ],
+    "read_slice_s": 0.8040309073403478,
+    "facts_slice_s": 0.585296253208071,
+    "seven_filters_slice_s": 3.8127847984433174,
+    "retained_row_count": 37044,
+    "seven_filters_scaled_s": 47.08026669117808
+  },
+  "inferred_contribution": {
+    "qualification": "UNQUALIFIED_CURRENT_STARTUP",
+    "basis": "Historical measured multiplicity and rounded unit rates; current source retains the same call structure.",
+    "moe_reads_per_family_before": 11,
+    "moe_reads_per_family_if_implemented": 6,
+    "typed_maps_per_family_before": 7,
+    "typed_maps_per_family_if_implemented": 2,
+    "historical_read_unit_s": 9.232,
+    "historical_post_loader_map_unit_s": 3.426,
+    "measurement_families": 2,
+    "modeled_removed_work_s": 126.58,
+    "accepted_loader_savings_recounted_s": 0,
+    "physical_admission_savings_counted_s": 0,
+    "facts_metadata_fit_or_cache_savings_counted_s": 0,
+    "proven_current_startup_savings_s": null,
+    "current_whole_startup_or_peak_rss_measured": false
+  },
+  "prospective_paths_not_an_allocation": {
+    "production": [
+      "frontier/execution_time_predictor/prediction_family_trainers.py",
+      "frontier/execution_time_predictor/profiling_dataframe_loaders.py"
+    ],
+    "existing_tests": [
+      "tests/unit/test_step5_measured_ffn.py",
+      "tests/unit/test_moe_grouped_gemm_padded_features.py"
+    ],
+    "production_path_count": 2,
+    "existing_test_path_count": 2,
+    "allocated_lines": 0,
+    "line_estimate": null,
+    "reason": "No patch exists; a gross-line proposal and owner-cap transfer belong to the existing allocation process."
+  },
+  "verification": {
+    "python": "Python 3.10.6",
+    "application_imports": 0,
+    "new_test_invocations": 0,
+    "equal_code_bindings": 13,
+    "retained_bindings": 14,
+    "owned_records_check": "PASS",
+    "markdown_history_tables": 5,
+    "owned_record_files": 6,
+    "non_owned_changes": 0,
+    "source_and_receipt_check": "PASS; exact command executed before the interruption",
+    "checked_at_utc": "2026-10-24T19:11:47.713940+00:00",
+    "publication": "Records-only commit; hooks disabled for this invocation to prevent unassigned runtime controls; final SHA/status returned externally."
+  },
+  "production_baseline_code_commit": "2e8d6168fd72d13955216d59320c9f68b306eca5",
+  "accepted_production_merge_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "primary_records_commit": "2207331e17a07c7da2186c32f7b37cc6ba2f3890",
+  "latest_primary_status_source": "User continuation: ledger146 admitted at production2ca5e571, records2207331e; snapshot owner NO_ALLOC,0/1,b061f884. No primary tests or source inspection restarted.",
+  "accepted_production_code_commit": "2e8d6168fd72d13955216d59320c9f68b306eca5"
+}

@@ -1,0 +1,410 @@
+{
+  "status": "PASS_TWO_REPRODUCED_DEFECTS_AND_THREE_REPAIRED_SCENARIOS",
+  "collected_utc": "2026-10-25T04:26:29.621670+00:00",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "original_sdk_source_sha256": "bb691868e93b85748af02e5255204f3706ec56382457beb9612e66189574f647",
+  "new_platform_calls": 0,
+  "new_workload_calls": 0,
+  "ordinary_joint_calls": 0,
+  "required_shape_calls": 0,
+  "results": [
+    {
+      "case": "initial_no_worker",
+      "launcher_sha256": "cf445af8bd1cdf9561ab5bf3835c3d9c74820e00171eb43622629a98126fb661",
+      "creation_identity_at_wait": [
+        null
+      ],
+      "fake_api_calls": [],
+      "caught": "RuntimeError: Complete CPU-fixture CLI did not pass; inspect the retained exact receipts",
+      "receipt": {
+        "status": "FAIL",
+        "started_utc": "2026-10-25T04:26:29.371579+00:00",
+        "launcher_pid": 2920401,
+        "source": {
+          "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+          "records_head": "FAULT_TEST_ONLY",
+          "source_paths": 25,
+          "fixture_metadata_paths": 262
+        },
+        "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_worker.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_plan.json",
+        "resource": {
+          "cpu": 4,
+          "gpu": 0,
+          "mem_gb": 64,
+          "replica": 1,
+          "positive_tags": [
+            "H800"
+          ],
+          "custom_resources": [],
+          "extra_requirements": [],
+          "preemptible": false,
+          "command": "{COMMAND}",
+          "task_specs": {
+            "default": {
+              "is_critical": true
+            }
+          }
+        },
+        "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+        "nfs_server": "100.96.128.195",
+        "nfs_source": "/data/ycfeng",
+        "nfs_target": "/data/ycfeng",
+        "plan_sha256": "FAULT_PLAN_ONLY",
+        "charged_group": "codesign",
+        "business_status": "UNAVAILABLE",
+        "error": "RuntimeError: INITIAL_WAIT_FAILURE",
+        "finished_utc": "2026-10-25T04:26:29.372663+00:00",
+        "launcher_wall_s": 0.0006173979490995407
+      },
+      "failure_logs": {
+        "launcher.failure.log": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/launch_complete_cli_initial.py\", line 60, in main\n    workers = spawn_tasks(config, command=command, charged_group=plan[\"charged_group\"],\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/review_fault_injection.py\", line 78, in fake_spawn\n    raise RuntimeError('INITIAL_WAIT_FAILURE')\nRuntimeError: INITIAL_WAIT_FAILURE\n"
+      },
+      "observed": "RED_REPRODUCED_MISSING_PRE_WORKER_TERMINAL_EVIDENCE"
+    },
+    {
+      "case": "initial_query_overwrite",
+      "launcher_sha256": "cf445af8bd1cdf9561ab5bf3835c3d9c74820e00171eb43622629a98126fb661",
+      "creation_identity_at_wait": [
+        null
+      ],
+      "fake_api_calls": [
+        [
+          "get",
+          "exp-1025-fault-only-000001"
+        ]
+      ],
+      "caught": "ValueError: FOLLOWUP_QUERY_FAILURE",
+      "receipt": {
+        "status": "FAIL",
+        "started_utc": "2026-10-25T04:26:29.380389+00:00",
+        "launcher_pid": 2920401,
+        "source": {
+          "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+          "records_head": "FAULT_TEST_ONLY",
+          "source_paths": 25,
+          "fixture_metadata_paths": 262
+        },
+        "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_worker.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_plan.json",
+        "resource": {
+          "cpu": 4,
+          "gpu": 0,
+          "mem_gb": 64,
+          "replica": 1,
+          "positive_tags": [
+            "H800"
+          ],
+          "custom_resources": [],
+          "extra_requirements": [],
+          "preemptible": false,
+          "command": "{COMMAND}",
+          "task_specs": {
+            "default": {
+              "is_critical": true
+            }
+          }
+        },
+        "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+        "nfs_server": "100.96.128.195",
+        "nfs_source": "/data/ycfeng",
+        "nfs_target": "/data/ycfeng",
+        "plan_sha256": "FAULT_PLAN_ONLY",
+        "charged_group": "codesign",
+        "job_name": "exp-1025-fault-only-000001",
+        "error": "ValueError: FOLLOWUP_QUERY_FAILURE",
+        "finished_utc": "2026-10-25T04:26:29.382574+00:00",
+        "launcher_wall_s": 0.0017933808267116547
+      },
+      "failure_logs": {
+        "launcher.failure.log": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/launch_complete_cli_initial.py\", line 72, in main\n    job = client.api.get_namespaced_custom_object(group=client.group, version=client.version,\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/review_fault_injection.py\", line 54, in get_namespaced_custom_object\n    raise ValueError('FOLLOWUP_QUERY_FAILURE')\nValueError: FOLLOWUP_QUERY_FAILURE\n"
+      },
+      "observed": "RED_REPRODUCED_INITIAL_TRACEBACK_OVERWRITE"
+    },
+    {
+      "case": "final_no_worker",
+      "launcher_sha256": "d039d636d7a51ec50c32490345bb81a8e8ad869a6537e79dab3fe3ee79425e17",
+      "creation_identity_at_wait": [
+        "exp-1025-fault-only-000001"
+      ],
+      "fake_api_calls": [
+        [
+          "get",
+          "exp-1025-fault-only-000001"
+        ],
+        [
+          "list",
+          "rjob-name=exp-1025-fault-only-000001"
+        ]
+      ],
+      "caught": "RuntimeError: Complete CPU-fixture CLI did not pass; inspect the retained exact receipts",
+      "receipt": {
+        "status": "FAIL",
+        "started_utc": "2026-10-25T04:26:29.575975+00:00",
+        "launcher_pid": 2920401,
+        "source": {
+          "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+          "records_head": "FAULT_TEST_ONLY",
+          "source_paths": 25,
+          "fixture_metadata_paths": 262
+        },
+        "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_worker.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_plan.json",
+        "resource": {
+          "cpu": 4,
+          "gpu": 0,
+          "mem_gb": 64,
+          "replica": 1,
+          "positive_tags": [
+            "H800"
+          ],
+          "custom_resources": [],
+          "extra_requirements": [],
+          "preemptible": false,
+          "command": "{COMMAND}",
+          "task_specs": {
+            "default": {
+              "is_critical": true
+            }
+          }
+        },
+        "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+        "nfs_server": "100.96.128.195",
+        "nfs_source": "/data/ycfeng",
+        "nfs_target": "/data/ycfeng",
+        "plan_sha256": "FAULT_PLAN_ONLY",
+        "charged_group": "codesign",
+        "job_name": "exp-1025-fault-only-000001",
+        "created_job_record": "Job Create: frontier-d29-main09-current-source-20261025-01(exp-1025-fault-only-000001)",
+        "launch_error": "RuntimeError: INITIAL_WAIT_FAILURE",
+        "creator": "i-fengyicheng",
+        "platform_status": {
+          "phase": "Failed"
+        },
+        "platform_labels": {
+          "quotagroup.brainpp.cn/quotagroup": "codesign",
+          "quotagroup.brainpp.cn/preemptible": "no"
+        },
+        "actual_nfs_mounts": {
+          "default": "100.96.128.195:/data/ycfeng:/data/ycfeng"
+        },
+        "actual_images": {
+          "default": [
+            "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee"
+          ]
+        },
+        "actual_resources": {
+          "default": [
+            {
+              "requests": {
+                "cpu": "4",
+                "memory": "64000Mi",
+                "nvidia.com/gpu": "0"
+              },
+              "limits": {
+                "cpu": "4",
+                "memory": "64000Mi",
+                "nvidia.com/gpu": "0"
+              }
+            }
+          ]
+        },
+        "replica_name": "exp-1025-fault-only-000001-replica",
+        "replica_status": {
+          "phase": "Failed",
+          "nodeName": "fault-worker-only",
+          "containerStatuses": [
+            {
+              "imageID": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+              "restartCount": 0,
+              "state": {
+                "terminated": {
+                  "exitCode": 1,
+                  "reason": "Error"
+                }
+              }
+            }
+          ]
+        },
+        "business_status": "UNAVAILABLE",
+        "error": "RuntimeError: INITIAL_WAIT_FAILURE",
+        "finished_utc": "2026-10-25T04:26:29.594259+00:00",
+        "launcher_wall_s": 0.01784333074465394
+      },
+      "failure_logs": {
+        "launcher.failure.log": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/launch_complete_cli.py\", line 73, in main\n    workers = spawn_tasks(config, command=command, charged_group=plan[\"charged_group\"],\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/review_fault_injection.py\", line 78, in fake_spawn\n    raise RuntimeError('INITIAL_WAIT_FAILURE')\nRuntimeError: INITIAL_WAIT_FAILURE\n"
+      },
+      "observed": "GREEN"
+    },
+    {
+      "case": "final_query_failure",
+      "launcher_sha256": "d039d636d7a51ec50c32490345bb81a8e8ad869a6537e79dab3fe3ee79425e17",
+      "creation_identity_at_wait": [
+        "exp-1025-fault-only-000001"
+      ],
+      "fake_api_calls": [
+        [
+          "get",
+          "exp-1025-fault-only-000001"
+        ]
+      ],
+      "caught": "ValueError: FOLLOWUP_QUERY_FAILURE",
+      "receipt": {
+        "status": "FAIL",
+        "started_utc": "2026-10-25T04:26:29.600130+00:00",
+        "launcher_pid": 2920401,
+        "source": {
+          "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+          "records_head": "FAULT_TEST_ONLY",
+          "source_paths": 25,
+          "fixture_metadata_paths": 262
+        },
+        "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_worker.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_plan.json",
+        "resource": {
+          "cpu": 4,
+          "gpu": 0,
+          "mem_gb": 64,
+          "replica": 1,
+          "positive_tags": [
+            "H800"
+          ],
+          "custom_resources": [],
+          "extra_requirements": [],
+          "preemptible": false,
+          "command": "{COMMAND}",
+          "task_specs": {
+            "default": {
+              "is_critical": true
+            }
+          }
+        },
+        "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+        "nfs_server": "100.96.128.195",
+        "nfs_source": "/data/ycfeng",
+        "nfs_target": "/data/ycfeng",
+        "plan_sha256": "FAULT_PLAN_ONLY",
+        "charged_group": "codesign",
+        "job_name": "exp-1025-fault-only-000001",
+        "created_job_record": "Job Create: frontier-d29-main09-current-source-20261025-01(exp-1025-fault-only-000001)",
+        "launch_error": "RuntimeError: INITIAL_WAIT_FAILURE",
+        "error": "ValueError: FOLLOWUP_QUERY_FAILURE",
+        "finished_utc": "2026-10-25T04:26:29.606771+00:00",
+        "launcher_wall_s": 0.006215491332113743
+      },
+      "failure_logs": {
+        "launcher.failure.log": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/launch_complete_cli.py\", line 73, in main\n    workers = spawn_tasks(config, command=command, charged_group=plan[\"charged_group\"],\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/review_fault_injection.py\", line 78, in fake_spawn\n    raise RuntimeError('INITIAL_WAIT_FAILURE')\nRuntimeError: INITIAL_WAIT_FAILURE\n",
+        "launcher.followup.failure.log": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/launch_complete_cli.py\", line 86, in main\n    job = client.api.get_namespaced_custom_object(group=client.group, version=client.version,\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/review_fault_injection.py\", line 54, in get_namespaced_custom_object\n    raise ValueError('FOLLOWUP_QUERY_FAILURE')\nValueError: FOLLOWUP_QUERY_FAILURE\n"
+      },
+      "observed": "GREEN"
+    },
+    {
+      "case": "final_success",
+      "launcher_sha256": "d039d636d7a51ec50c32490345bb81a8e8ad869a6537e79dab3fe3ee79425e17",
+      "creation_identity_at_wait": [
+        "exp-1025-fault-only-000001"
+      ],
+      "fake_api_calls": [
+        [
+          "get",
+          "exp-1025-fault-only-000001"
+        ],
+        [
+          "list",
+          "rjob-name=exp-1025-fault-only-000001"
+        ]
+      ],
+      "caught": null,
+      "receipt": {
+        "status": "PASS_COMPLETE_CPU_FIXTURE_PLATFORM_AND_BUSINESS",
+        "started_utc": "2026-10-25T04:26:29.612742+00:00",
+        "launcher_pid": 2920401,
+        "source": {
+          "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+          "records_head": "FAULT_TEST_ONLY",
+          "source_paths": 25,
+          "fixture_metadata_paths": 262
+        },
+        "command": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python -B /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_worker.py --plan /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/complete_cli_2026-10-25/complete_cli_plan.json",
+        "resource": {
+          "cpu": 4,
+          "gpu": 0,
+          "mem_gb": 64,
+          "replica": 1,
+          "positive_tags": [
+            "H800"
+          ],
+          "custom_resources": [],
+          "extra_requirements": [],
+          "preemptible": false,
+          "command": "{COMMAND}",
+          "task_specs": {
+            "default": {
+              "is_critical": true
+            }
+          }
+        },
+        "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+        "nfs_server": "100.96.128.195",
+        "nfs_source": "/data/ycfeng",
+        "nfs_target": "/data/ycfeng",
+        "plan_sha256": "FAULT_PLAN_ONLY",
+        "charged_group": "codesign",
+        "job_name": "exp-1025-fault-only-000001",
+        "created_job_record": "Job Create: frontier-d29-main09-current-source-20261025-01(exp-1025-fault-only-000001)",
+        "final_poll": "succeeded",
+        "creator": "i-fengyicheng",
+        "platform_status": {
+          "phase": "Succeeded"
+        },
+        "platform_labels": {
+          "quotagroup.brainpp.cn/quotagroup": "codesign",
+          "quotagroup.brainpp.cn/preemptible": "no"
+        },
+        "actual_nfs_mounts": {
+          "default": "100.96.128.195:/data/ycfeng:/data/ycfeng"
+        },
+        "actual_images": {
+          "default": [
+            "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee"
+          ]
+        },
+        "actual_resources": {
+          "default": [
+            {
+              "requests": {
+                "cpu": "4",
+                "memory": "64000Mi",
+                "nvidia.com/gpu": "0"
+              },
+              "limits": {
+                "cpu": "4",
+                "memory": "64000Mi",
+                "nvidia.com/gpu": "0"
+              }
+            }
+          ]
+        },
+        "replica_name": "exp-1025-fault-only-000001-replica",
+        "replica_status": {
+          "phase": "Succeeded",
+          "nodeName": "fault-worker-only",
+          "containerStatuses": [
+            {
+              "imageID": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+              "restartCount": 0,
+              "state": {
+                "terminated": {
+                  "exitCode": 0,
+                  "reason": "Completed"
+                }
+              }
+            }
+          ]
+        },
+        "business_status": "PASS_COMPLETE_CPU_FIXTURE_CLI",
+        "finished_utc": "2026-10-25T04:26:29.620129+00:00",
+        "launcher_wall_s": 0.0070052240043878555
+      },
+      "failure_logs": {},
+      "observed": "GREEN"
+    }
+  ],
+  "wall_s": 0.2679100460372865
+}

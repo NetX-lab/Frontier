@@ -1,0 +1,35 @@
+{
+  "task_id": "D29-REQUIRED-WAVE-SHAPES",
+  "frozen_manifest": "/data/ycfeng/tmp/d29_runtime_json_reuse01/registry/freeze.json",
+  "frozen_manifest_sha256": "267ac0ce0953a0f38201972995acd42d8b9452384fc81f503a7640d360de4bff",
+  "fixture_wiring": "/data/ycfeng/tmp/d29_runtime_json_reuse01/registry/fixture_wiring.py",
+  "fixture_wiring_sha256": "bffe25039ecb0aae94b5eab905aff0c4cecb150eabbfcf4912aa6d5f9e7b95f1",
+  "request_prefill_tokens": 6144,
+  "request_decode_tokens": 1024,
+  "cases": {
+    "prefill6128": {
+      "role": "PREFILL",
+      "replica_id": 0,
+      "logical_start": 0,
+      "logical_queries": 6128,
+      "request_is_decoding": false,
+      "layers": [60]
+    },
+    "first_decode16": {
+      "role": "DECODE",
+      "replica_id": 1,
+      "logical_start": 6128,
+      "logical_queries": 16,
+      "request_is_decoding": false,
+      "layers": [60]
+    },
+    "bf16": {
+      "role": "DECODE",
+      "replica_id": 1,
+      "logical_start": 6147,
+      "logical_queries": 1,
+      "request_is_decoding": true,
+      "layers": [88, 89, 90]
+    }
+  }
+}

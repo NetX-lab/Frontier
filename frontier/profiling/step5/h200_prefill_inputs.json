@@ -1,0 +1,8 @@
+[
+  {"global_layer_id": 0, "query_lens": [6128], "context_lens": [0], "phase": "prefill", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [6144], "context_lens": [0], "phase": "prefill", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1], "context_lens": [0], "phase": "decode", "block_table_columns": 448, "dummy_descriptor": {"num_tokens": 1, "num_reqs": 1, "graph_mode": "none", "max_query_len": null, "evidence": "MRv2 gpu/dp_utils.py:155-210; gpu/model_runner.py execute_dummy_batch InputBatch", "uniform_token_count": null}},
+  {"global_layer_id": 3, "query_lens": [6128], "context_lens": [0], "phase": "prefill", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [6144], "context_lens": [0], "phase": "prefill", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [1], "context_lens": [0], "phase": "decode", "block_table_columns": 448, "dummy_descriptor": {"num_tokens": 1, "num_reqs": 1, "graph_mode": "none", "max_query_len": null, "evidence": "MRv2 gpu/dp_utils.py:155-210; gpu/model_runner.py execute_dummy_batch InputBatch", "uniform_token_count": null}}
+]

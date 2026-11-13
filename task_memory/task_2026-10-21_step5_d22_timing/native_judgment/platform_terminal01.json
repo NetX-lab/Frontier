@@ -1,0 +1,86 @@
+{
+  "name": "exp-1021-201658-886733",
+  "status": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-21T12:26:14Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "replicas": [
+    {
+      "name": "exp-1021-201658-886733-cfcd2084",
+      "status": {
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-21T12:18:23Z",
+            "reason": "PodCompleted"
+          },
+          {
+            "type": "Ready",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-21T12:26:13Z",
+            "reason": "PodCompleted"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-21T12:26:13Z",
+            "reason": "PodCompleted"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-21T12:18:23Z"
+          }
+        ],
+        "hostIP": "10.204.2.19",
+        "podIP": "10.204.2.19",
+        "podIPs": [
+          {
+            "ip": "10.204.2.19"
+          }
+        ],
+        "startTime": "2026-10-21T12:18:23Z",
+        "containerStatuses": [
+          {
+            "name": "default",
+            "state": {
+              "terminated": {
+                "exitCode": 0,
+                "reason": "Completed",
+                "startedAt": "2026-10-21T12:24:03Z",
+                "finishedAt": "2026-10-21T12:26:11Z",
+                "containerID": "containerd://bb9a8b8b53df4a0e13e5cced06ea9e3f5eda95f71580aaf6e73fd9ae85bf88a3"
+              }
+            },
+            "lastState": {},
+            "ready": false,
+            "restartCount": 0,
+            "image": "sha256:24071eef514dbf7af19df2a74018b0ab4c3bb869a6f47ad940c391ef1ed649f6",
+            "imageID": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+            "containerID": "containerd://bb9a8b8b53df4a0e13e5cced06ea9e3f5eda95f71580aaf6e73fd9ae85bf88a3",
+            "started": false
+          }
+        ],
+        "qosClass": "Guaranteed",
+        "phase": "Succeeded",
+        "nodeName": "gpu-h200-0316.lgcm.sh.istep.fun",
+        "finishTimestamp": "2026-10-21T12:26:14Z"
+      },
+      "host": null
+    }
+  ]
+}

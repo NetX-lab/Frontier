@@ -1,0 +1,101 @@
+{
+  "status": "PASS_FINAL_PREPARATION_METADATA_AND_REVIEW_ONLY",
+  "collected_utc": "2026-10-24T21:01:15.044877+00:00",
+  "records_head_before_preparation_commit": "c52eca18ff4f1a80819395f7cd36eab80e428133",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "production_source_equal_to_frozen146": true,
+  "worktrees": [
+    {
+      "name": "step5-preview",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "head": "c52eca18ff4f1a80819395f7cd36eab80e428133",
+      "status": " M task_memory/task_2026-10-22_step5_position_routing/handoff_prompt.md\n M task_memory/task_2026-10-22_step5_position_routing/plan.md\n M task_memory/task_2026-10-22_step5_position_routing/progress.md\n M task_memory/task_2026-10-22_step5_position_routing/requirements.md\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/check_progress_2026-10-25_execution_preparation.md\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_bindings.json\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_setup.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_timing.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/launch_worker.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/verify_preparation.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_entry.py\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_plan.json\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/execution_plan_2026-10-25.md\n M task_memory/task_2026-10-22_step5_position_routing/resumed_execution/test_report_2026-10-25_execution_preparation.md\n M task_memory/task_2026-10-22_step5_position_routing/summary.md\n?? .cortexkit/\n?? .pi/\n",
+      "ancestor_of_current_records_head": true,
+      "disposition": "CURRENT_EXECUTION_TASK_ONLY_EDITS"
+    },
+    {
+      "name": "step5-d29-ledger-stream",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "status": "",
+      "ancestor_of_current_records_head": true,
+      "disposition": "INTEGRATED_RETAINED_CLEAN"
+    },
+    {
+      "name": "d29-ledger-final-1f6b4314",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "status": "",
+      "ancestor_of_current_records_head": true,
+      "disposition": "INTEGRATED_RETAINED_CLEAN"
+    },
+    {
+      "name": "d29-snapshot-copy-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+      "status": "",
+      "ancestor_of_current_records_head": true,
+      "disposition": "INTEGRATED_RETAINED_CLEAN"
+    },
+    {
+      "name": "d29-init-preparation-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+      "status": "",
+      "ancestor_of_current_records_head": true,
+      "disposition": "INTEGRATED_RETAINED_CLEAN"
+    }
+  ],
+  "review_fixed_point": "c52eca18ff4f1a80819395f7cd36eab80e428133",
+  "reviews": {
+    "Standards": {
+      "reviewer": "01a16f98-2468-7c30-8040-3f29d40a8fdb",
+      "documented_findings": [],
+      "baseline_smells": [],
+      "original_documented_findings_resolved": 3,
+      "original_optional_observation_resolved": 1
+    },
+    "Spec": {
+      "reviewer": "01a16f98-608b-79b2-99b1-23d3b1e223f1",
+      "findings": []
+    }
+  },
+  "checks": {
+    "worker_git_preflight04": {
+      "exit_code": 0,
+      "wall_s": 1.5679292026907206,
+      "receipt_sha256": "61a0b95ad8989107dd28c102260e283eee3bceb992edf28668dc7944a40aed1e"
+    },
+    "preparation_static06": {
+      "exit_code": 0,
+      "wall_s": 3.099603861104697,
+      "receipt_sha256": "4877e72dcc25e81a69db6f1c4fbcc35df0f949938caae7469afca58b6e91c4d9"
+    }
+  },
+  "script_hashes": {
+    "worker_entry.py": "d3aef9e846507617c9c364885bc687ddbdb721b8c3b9449dd6dc807145c30dbc",
+    "joint_timing.py": "ed1836a6fc3cd4c2dbcba62db2a7c65fa4718c0ea1b3c35d7b24df4001a7c2d1",
+    "launch_worker.py": "25eb00bdb57170fc9ed8cd4c7098cda68a68fa97e3bc008e3a5848de80b6ec35",
+    "verify_worker_spec.py": "50da3599f76444cbb21c2a18322664f0b12473e79fc161b26911eb6b5fcd24b3",
+    "worker_append.py": "4e479de4d3d2eec607d48f5a240f6f547197ca9a76e717433308a893d988a97c",
+    "joint_wave.py": "a0ecf89a64cdee2513a85caffaf0d77b06835c7c9eb73b3b94447c180ac2d549",
+    "joint_setup.py": "a83464c153ae0c92ba097cf5ac52a943fcc8304142f45d985e7de6697811dfdf",
+    "verify_preparation.py": "0f3286ca625a85f6d91a4d4b4c6b9468f0b14dc00114da00530c2a50eba3d698",
+    "run_worker.sh": "1d41bb75bf775da667ea641f7f3556af954d9a8243891dce789c79c5a40bbdfb"
+  },
+  "worker_plan_sha256": "c9c4a120058068e1a5505ebbfe23d018e3e6578bf3a2cec313c23f80100f8ca0",
+  "git_assets": {
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/git": "06c1cfb4848572479bd3bbf678c224432d262732049957884dd9be2457185ad7",
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker": "672995b50f25e01b216a981ac1f08eebee28b0713b4bb6c53aecfedad0bff6d4"
+  },
+  "budget": "Retained admitted production: CORE4377/4404,PRICING3955/3956,native1350/1582,source9682/9942,global9696/10000,116paths/126bindings; no new source edit/allocation or independent recomputation in this preparation",
+  "new_pricing_calls": 0,
+  "new_shape_calls": 0,
+  "new_full_cli_calls": 0,
+  "new_platform_operations": 0,
+  "required_shape_allowance_used": 6,
+  "required_shape_allowance_total": 6,
+  "worker_next": "One already-authorized zero-GPU readiness worker after this task-only commit; no auto retry",
+  "joint_next": "Pending explicit finite two-call approval",
+  "full_workload_rss_verified": false
+}

@@ -1,0 +1,26 @@
+{
+  "task_id": "D29-LEDGER-FINAL-FROZEN-REGRESSIONS",
+  "suite": "governance52",
+  "source": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "baseline_source": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "status": "PASS_IDENTICAL_IDS_STATUSES_AND_ENVIRONMENT",
+  "counts": {
+    "pass": 52
+  },
+  "retained_ids": 52,
+  "missing": [],
+  "added": [],
+  "changed": [],
+  "raw_exit": 0,
+  "versions_identical": true,
+  "baseline": {
+    "path": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/governance52/results.xml",
+    "sha256": "c146cb4b6fbe92dc974d16d63b6a98978d20bc13882ceacb6696532aa69592e4",
+    "bytes": 8367
+  },
+  "candidate": {
+    "path": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/governance52/results.xml",
+    "sha256": "f1d3033a18c23b9f689c044d1dc231b6a5a70e19b41fa1b2c6497c95b947c037",
+    "bytes": 8366
+  }
+}

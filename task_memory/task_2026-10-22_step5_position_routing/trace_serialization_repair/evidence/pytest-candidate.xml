@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="99" time="9.388" timestamp="2026-10-23T20:36:40.196283+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_measured_root_component_ledger_charges_only_the_physical_root[False]" time="0.003" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_measured_root_component_ledger_charges_only_the_physical_root[True]" time="0.003" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_measured_root_mixed_stage_keeps_stage_owner_and_gap_once" time="0.005" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_stage_owner_ignores_non_authoritative_layer_payload[missing_proof]" time="0.005" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_stage_owner_ignores_non_authoritative_layer_payload[invalid_proof]" time="0.005" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_stage_owner_ignores_non_authoritative_layer_payload[overlap]" time="0.056" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_stage_authoritative_root_still_requires_proof" time="0.002" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_schedule_publishes_root_operation_and_actual_trace_proof[KERNEL_ONLY-False]" time="1.146" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_schedule_publishes_root_operation_and_actual_trace_proof[KERNEL_ONLY-True]" time="1.098" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_schedule_publishes_root_operation_and_actual_trace_proof[CUDA_EVENT-False]" time="1.111" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_schedule_publishes_root_operation_and_actual_trace_proof[CUDA_EVENT-True]" time="1.110" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[missing_cost]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[duration]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[count]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[zero_count]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[mixed]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[other_family]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[model_projection]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_rejects_malformed_or_overlapping_physical_scopes[legacy_child]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_keeps_per_layer_duration_without_changing_proof" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_projection_uses_registered_role_not_operator_name" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_unregistered_root_scope_is_rejected_before_metrics" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_legacy_inclusive_scalar_scopes_keep_projection_and_rejection[None]" time="0.002" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_legacy_inclusive_scalar_scopes_keep_projection_and_rejection[missing]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_legacy_inclusive_scalar_scopes_keep_projection_and_rejection[extra]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_legacy_inclusive_scalar_scopes_keep_projection_and_rejection[legacy_child]" time="0.001" /><testcase classname="tests.unit.test_measured_attention_root_metrics" name="test_root_operation_registry_does_not_add_empty_legacy_dense_tables" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_accepts_boundary_workload_inputs" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_preserves_default_workload_and_capacity" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_admits_only_evidenced_dp8_scope" time="0.008" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_rejects_invalid_workload_inputs[prefill_tokens-0]" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_rejects_invalid_workload_inputs[chunk_size--1]" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_rejects_invalid_workload_inputs[decode_tokens-True]" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_rejects_invalid_workload_inputs[num_blocks-0]" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_rejects_invalid_workload_inputs[num_blocks--1]" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_driver_rejects_invalid_workload_inputs[num_blocks-True]" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_structural_boundary_validator_rejects_missing_store_and_wrong_write_rows" time="0.010" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_actual_dummy_constructor_preserves_integer_only_precision" time="0.008" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_physical_scopes_conserve_attention_and_five_ep_phases" time="0.004" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_source_and_destination_timing_use_distinct_physical_rows" time="0.006" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_full_43_layer_stage_preserves_every_canonical_physical_scope" time="0.279" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_registered_legacy_scope_cannot_silently_enter_v4_phase_projection" time="0.001" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_explicit_idle_forward_has_its_own_no_metadata_operator_scope[0]" time="0.001" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_explicit_idle_forward_has_its_own_no_metadata_operator_scope[2]" time="0.001" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_explicit_idle_forward_has_its_own_no_metadata_operator_scope[3]" time="0.001" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_explicit_idle_forward_has_its_own_no_metadata_operator_scope[42]" time="0.001" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_idle_branch_never_substitutes_for_real_batch_metadata" time="0.001" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_idle_geometry_has_no_request_rows_or_lm_head" time="0.005" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_real_stage_trace_preserves_physical_scope_and_source_metadata[False]" time="0.061" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_real_stage_trace_preserves_physical_scope_and_source_metadata[True]" time="0.060" /><testcase classname="tests.unit.test_dsv4_structural_execution" name="test_ep_expansion_quota_uses_real_source_ids_before_virtual_destinations" time="0.004" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_scheduled_batches_keep_new_zeroing_ids_without_replay" time="0.011" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_real_allocation_has_one_before_forward_scope_per_worker[0]" time="0.043" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_real_allocation_has_one_before_forward_scope_per_worker[7]" time="0.044" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_compression_page_growth_is_new_work_but_retention_is_not" time="0.009" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_multiple_requests_share_one_group_ordered_assignment_stream" time="0.004" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_priority_rollback_keeps_the_assignment_of_a_preempted_request" time="0.015" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_failed_waiting_admission_adds_no_work_before_later_reuse" time="0.008" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_request_free_dp_peer_does_not_inherit_cache_zero_work" time="0.005" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_repeated_assignment_ids_do_not_inflate_unique_reservation_extent" time="0.000" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_real_stage_trace_places_cache_zero_before_embedding[False]" time="0.069" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_real_stage_trace_places_cache_zero_before_embedding[True]" time="0.162" /><testcase classname="tests.unit.test_dsv4_cache_zero_execution" name="test_legacy_model_metrics_do_not_gain_empty_cache_zero_tables" time="0.005" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_mla_operator_names_are_registered_for_metrics_and_profiling" time="0.001" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_execution_time_carries_and_aggregates_mla_attention_ops" time="0.001" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_metrics_store_emits_aggregated_mla_attention_ops" time="0.003" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_metrics_store_emits_per_layer_mla_attention_ops" time="0.004" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_operation_metrics_record_mla_attention_ops" time="0.002" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_operation_metrics_dense_attention_uses_shared_mapper" time="0.001" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_frontier_stage_batch_component_ledger_records_mla_attention_ops" time="0.001" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_frontier_stage_batch_ledger_uses_structured_mla_operator_times" time="0.004" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_op_level_tracing_generates_metadata_for_structured_mla_ops" time="0.003" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper" time="0.001"><failure message="TypeError: test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper.&lt;locals&gt;._fake_get_attention_trace_op_times() got an unexpected keyword argument 'allow_structural'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fd4e7f3da80&gt;
+
+    def test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper(
+        monkeypatch,
+    ) -&gt; None:
+        execution_time = _build_execution_time(
+            num_layers=1,
+            dense_kernel_times=(0.2, 0.4, 0.3),
+        )
+        mapper_calls: list[tuple[str, int | None, bool]] = []
+    
+        def _fake_get_attention_trace_op_times(
+            mapped_execution_time,
+            family,
+            *,
+            per_layer_count=None,
+            skip_zero=True,
+        ):
+            assert mapped_execution_time is execution_time
+            if family is not DENSE_ATTENTION_FAMILY:
+                mapper_calls.append((family.family_id, per_layer_count, skip_zero))
+                return tuple((operator, 0.0) for operator in family.e2e_trace_ops())
+            mapper_calls.append((family.family_id, per_layer_count, skip_zero))
+            return (
+                (
+                    _fake_dense_attention_operator(
+                        "role_cache",
+                        AttentionOperatorRole.CACHE_WRITE,
+                    ),
+                    9.2,
+                ),
+                (
+                    _fake_dense_attention_operator(
+                        "role_prefill",
+                        AttentionOperatorRole.PREFILL_KERNEL,
+                    ),
+                    9.4,
+                ),
+                (
+                    _fake_dense_attention_operator(
+                        "role_decode",
+                        AttentionOperatorRole.DECODE_KERNEL,
+                    ),
+                    9.3,
+                ),
+            )
+    
+        monkeypatch.setattr(
+            "frontier.metrics.metrics_store.get_attention_trace_op_times",
+            _fake_get_attention_trace_op_times,
+        )
+    
+&gt;       ledger = _build_metrics_store()._build_frontier_stage_batch_component_ledger(execution_time)
+
+tests/unit/test_mla_core_native_op_tracing.py:619: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;frontier.metrics.metrics_store.MetricsStore object at 0x7fd4e7f7c2e0&gt;
+execution_time = &lt;frontier.entities.execution_time.ExecutionTime object at 0x7fd4e7f7c280&gt;
+
+    def _build_frontier_stage_batch_component_ledger(
+        self,
+        execution_time: ExecutionTime,
+    ) -&gt; dict[str, float]:
+        if (isinstance(execution_time, StageExecutionTime)
+                and set(execution_time.attention_family_ids) == {"deepseek_v4_attention"}
+                or getattr(execution_time, "attention_family_id", None) == "deepseek_v4_attention"):
+            from frontier.execution_time_predictor.deepseek_v4 import component_ledger
+    
+            return {name: _round_ledger_ms(value) for name, value in component_ledger(execution_time).items()}
+        owner = (execution_time.stage_execution_time
+                 if isinstance(execution_time, StageExecutionTime) else execution_time)
+        stage_components = {
+            name: _round_ledger_ms(getattr(owner, name))
+            for name in (
+                "pipeline_parallel_communication_time", "schedule_time", "sampler_e2e_time",
+                "prepare_inputs_e2e_time", "pp_producer_send_path_runtime_time",
+                "pp_receiver_head_runtime_time", "pp_prefill_consumer_active_runtime_time",
+                "pp_stage_boundary_residual_runtime_time", "process_model_outputs_time",
+                "ray_comm_time", "decode_draft_proposer_time", "mtp_terminal_overshoot_time",
+            )
+        }
+        attributes = canonical_operator_execution_time_attrs()
+        for name, value in owner.op_times.items():
+            if attributes.get(name) in StageExecutionTime.stage_owned_fields:
+                stage_components[name] = _round_ledger_ms(value)
+        if isinstance(execution_time, StageExecutionTime):
+            owner_only_names = execution_time.stage_owned_fields | {
+                name for name, attribute in attributes.items()
+                if attribute in execution_time.stage_owned_fields
+            }
+            component_ledger: dict[str, float] = dict(stage_components)
+            for layer in execution_time.layer_execution_times:
+                layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
+                for name, value in layer_ledger.items():
+                    if name in owner_only_names:
+                        continue
+                    component_ledger[name] = component_ledger.get(name, 0.0) + float(value)
+    
+            return {
+                name: _round_ledger_ms(value)
+                for name, value in component_ledger.items()
+            }
+    
+        dense_attention_times = _dense_attention_op_times_by_role(
+            execution_time,
+            skip_zero=False,
+        )
+        mla_attention_times = dict(_iter_mla_attention_op_times(execution_time))
+        component_ledger = {
+            **stage_components,
+            "attention_prefill_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.PREFILL_KERNEL]
+            ),
+            "attention_decode_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.DECODE_KERNEL]
+            ),
+            "attention_pre_proj_time": _round_ledger_ms(execution_time.attention_pre_proj_time),
+            "attention_post_proj_time": _round_ledger_ms(
+                execution_time.attention_post_proj_time
+            ),
+            "attention_kv_cache_save_execution_time": _round_ledger_ms(
+                dense_attention_times[AttentionOperatorRole.CACHE_WRITE]
+            ),
+            "attention_rope_execution_time": _round_ledger_ms(
+                execution_time.attention_rope_execution_time
+            ),
+            "attn_mla_kv_cache_save_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_kv_cache_save"]
+            ),
+            "attn_mla_prefill_kv_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill_kv_up_proj"]
+            ),
+            "attn_mla_prefill_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill"]
+            ),
+            "attn_mla_decode_q_latent_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode_q_latent_proj"]
+            ),
+            "attn_mla_decode_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode"]
+            ),
+            "attn_mla_v_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_v_up_proj"]
+            ),
+            "attn_norm_time": _round_ledger_ms(execution_time.attn_norm_time),
+            "mlp_layer_up_proj_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_up_proj_execution_time
+            ),
+            "mlp_layer_act_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_act_execution_time
+            ),
+            "mlp_layer_down_proj_execution_time": _round_ledger_ms(
+                execution_time.mlp_layer_down_proj_execution_time
+            ),
+            "mlp_norm_time": _round_ledger_ms(execution_time.mlp_norm_time),
+            "attention_all_reduce_time": _round_ledger_ms(execution_time.attention_all_reduce_time),
+            "mlp_all_reduce_time": _round_ledger_ms(execution_time.mlp_all_reduce_time),
+            "moe_tensor_parallel_allgather_time": _round_ledger_ms(
+                execution_time.moe_tensor_parallel_allgather_time
+            ),
+            "share_expert_tensor_parallel_allreduce_time": _round_ledger_ms(
+                execution_time.share_expert_tensor_parallel_allreduce_time
+            ),
+            "dp_input_allreduce_time": _round_ledger_ms(execution_time.dp_input_allreduce_time),
+            "dp_output_allreduce_time": _round_ledger_ms(execution_time.dp_output_allreduce_time),
+            "expert_parallel_communication_time": _round_ledger_ms(
+                execution_time.expert_parallel_communication_time
+            ),
+            "moe_gating_linear_time": _round_ledger_ms(execution_time.moe_gating_linear_time),
+            "moe_gating_routing_topk_time": _round_ledger_ms(
+                execution_time.moe_gating_routing_topk_time
+            ),
+            "moe_shuffling_time": _round_ledger_ms(execution_time.moe_shuffling_time),
+            "moe_grouped_gemm_time": _round_ledger_ms(execution_time.moe_grouped_gemm_time),
+            "share_expert_up_proj_time": _round_ledger_ms(
+                execution_time.share_expert_up_proj_time
+            ),
+            "share_expert_act_time": _round_ledger_ms(execution_time.share_expert_act_time),
+            "share_expert_down_proj_time": _round_ledger_ms(
+                execution_time.share_expert_down_proj_time
+            ),
+            "add_attn_residual_time": _round_ledger_ms(
+                execution_time.add_attn_residual_time
+            ),
+            "add_ffn_residual_time": _round_ledger_ms(execution_time.add_ffn_residual_time),
+        }
+        for op_name, duration_ms in _iter_ffn_merge_times(execution_time):
+            component_ledger[op_name] = _round_ledger_ms(duration_ms)
+        if execution_time.attention_family_id is not None:
+            family = get_attention_family(execution_time.attention_family_id)
+            component_public_names = {
+                "attention_layer_pre_proj_execution_time": "attention_pre_proj_time",
+                "attention_layer_post_proj_execution_time": "attention_post_proj_time",
+            }
+&gt;           for operator, duration_ms in get_attention_trace_op_times(
+                execution_time, family, skip_zero=False,
+                allow_structural=family.structural_execution_enabled,
+            ):
+E           TypeError: test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mapper.&lt;locals&gt;._fake_get_attention_trace_op_times() got an unexpected keyword argument 'allow_structural'
+
+frontier/metrics/metrics_store.py:4482: TypeError</failure></testcase><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_dense_attention_trace_does_not_emit_mla_ops_without_mla_timings" time="0.001" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_metrics_store_dense_attention_trace_uses_shared_mapper" time="0.003" /><testcase classname="tests.unit.test_mla_core_native_op_tracing" name="test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[False-False-False-False]" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[False-False-True-False]" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[False-False-False-True]" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[False-True-True-True]" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[True-False-False-False]" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[True-False-True-False]" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[True-False-False-True]" time="0.002" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_ep_context_is_built_only_once_per_traced_positive_phase[True-True-True-True]" time="0.003" /><testcase classname="tests.unit.test_ep_wave_trace_context" name="test_step5_real_wave_metrics_trace_and_ledger_share_physical_proofs" time="0.126" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_stage_operation_metrics_emit_each_layer_once_with_its_attention_family" time="0.002" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_stage_trace_helper_keeps_dense_and_gdn_names_on_their_layers" time="0.001" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_residual_traces_preserve_owner_and_physical_layer_metadata[proposer-scalar]" time="0.006" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_residual_traces_preserve_owner_and_physical_layer_metadata[proposer-stage]" time="0.006" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_residual_traces_preserve_owner_and_physical_layer_metadata[terminal-scalar]" time="0.006" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_residual_traces_preserve_owner_and_physical_layer_metadata[terminal-stage]" time="0.006" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_residual_traces_preserve_owner_and_physical_layer_metadata[both-scalar]" time="0.006" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_residual_traces_preserve_owner_and_physical_layer_metadata[both-stage]" time="0.006" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_stage_op_level_traces_include_gdn_metadata_without_duplication[False]" time="0.002" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_stage_op_level_traces_include_gdn_metadata_without_duplication[True]" time="0.003" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_stage_component_ledger_preserves_family_names_and_owner_once" time="0.002" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_system_memory_export_preserves_source_and_legacy_numeric_metadata[zai-org/GLM-5.3-8-16-expected0]" time="0.292" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_system_memory_export_preserves_source_and_legacy_numeric_metadata[stepfun-ai/Step-5-Preview-8-16-expected1]" time="0.600" /><testcase classname="tests.unit.test_metrics_stage_execution_time" name="test_system_memory_export_preserves_source_and_legacy_numeric_metadata[qwen3-next-80b-a3b-instruct-reduced-l2-1-1-expected2]" time="0.007" /></testsuite></testsuites>

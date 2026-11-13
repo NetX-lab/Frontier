@@ -33,6 +33,57 @@ MOE_LOAD_IMBALANCE_FEATURES = (
 MOE_GROUPED_GEMM_PADDED_FEATURES = ("total_routed_tokens", "num_tokens_post_padded")
 
 
+@dataclass(frozen=True)
+class MoEGroupedGEMMSchema:
+    features: tuple[str, ...]
+    experts_class: str | None
+    uses_block_size_m_ranges: bool
+
+
+_GROUPED_GEMM_SCHEMAS = {schema.features: schema for schema in (
+    MoEGroupedGEMMSchema(MOE_GROUPED_GEMM_PADDED_FEATURES, None, True),
+)}
+
+
+def moe_grouped_gemm_schema(features, *, native_context=None):
+    """Recognize exact ordered schemas; native physical facts never use legacy ranges."""
+    schema = _GROUPED_GEMM_SCHEMAS.get(tuple(features))
+    if native_context is not None:
+        from frontier.execution_time_predictor.step5_cost import STEP5_NATIVE_EXPERT_SCHEMAS
+        schemas = {names: MoEGroupedGEMMSchema(names, experts, False)
+                   for experts, names in STEP5_NATIVE_EXPERT_SCHEMAS.items()}
+        schema = schemas.get(tuple(features))
+    if native_context is not None and (schema is None or schema.experts_class is None
+            or schema.experts_class != native_context["experts_class"]
+            or native_context["physical_scope"] != "native_experts_inclusive"):
+        raise ValueError("MoE feature schema conflicts with the actual selected native expert")
+    return schema
+
+
+def moe_native_binding_context(context):
+    """Keep selector/source identity in models; per-point layouts stay in coverage rows."""
+    binding = {name: value for name, value in context.items() if name not in {
+        "activation_layout", "scale_layout", "source_activation_layout", "source_scale_layout",
+        "native_padding", "workspace_shapes", "native_facts", "collective_tensors"}}
+    layouts = {}
+    for name in ("activation_layout", "scale_layout", "source_activation_layout", "source_scale_layout"):
+        if name in context:
+            layout = context[name]
+            layouts[name] = None if layout is None else dict(columns=layout["shape"][1:],
+                dtype=layout["dtype"], element_size=layout["element_size"])
+    if layouts:
+        binding["tensor_layouts"] = layouts
+    return binding
+
+
+def moe_physical_row_receipts(frame):
+    """Retain producer inputs/layouts separately from invariant estimator identity."""
+    columns = [name for name in ("routing_input", "native_context", "moe_source_lane_id",
+        "moe_ep_rank", "moe_frame_scope", "num_tokens", "total_routed_tokens") if name in frame]
+    rows = frame[columns].drop_duplicates().astype(object)
+    return tuple(rows.where(rows.notna(), None).to_dict("records"))
+
+
 def num_tokens_post_padded(expert_token_counts: Sequence[int], block_size_m: int) -> int:
     """Routed tokens after padding each expert's tokens to a multiple of BLOCK_SIZE_M."""
     return sum(-(-int(count) // block_size_m) * block_size_m for count in expert_token_counts)

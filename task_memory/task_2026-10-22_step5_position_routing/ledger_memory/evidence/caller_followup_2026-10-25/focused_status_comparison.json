@@ -1,0 +1,81 @@
+{
+  "status": "PASS_FOCUSED_ID_PARITY_NOT_FULL_REGRESSION_ADMISSION",
+  "baseline_case_count": 93,
+  "current_case_count": 102,
+  "missing_old_ids": [],
+  "changed_old_baseline_statuses": [],
+  "all_six_old_skips_retained": true,
+  "new_cases": [
+    {
+      "id": "tests.integration.test_step5_measured_main::test_real_ep_lane_ledger_releases_rows_and_preserves_bytes",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[missing-FileNotFoundError-frontier_ep_wave_lane_ledger]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[empty-AssertionError-Missing actual position source census]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[malformed-JSONDecodeError-Expecting]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[source-AssertionError-Missing actual position source census]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[null-TypeError-not iterable]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[null_source-TypeError-not subscriptable]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[proof-AssertionError-Missing exact positive compute pair]",
+      "status": "PASS",
+      "message": null
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_completed_position_ep_ledger_stream_failures[precedence-AssertionError-Missing exact positive compute pair]",
+      "status": "PASS",
+      "message": null
+    }
+  ],
+  "repaired_checkout_statuses": [
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[offline-PREFILL]",
+      "before": "FAIL",
+      "after": "PASS"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[offline-DECODE]",
+      "before": "FAIL",
+      "after": "PASS"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[online-PREFILL]",
+      "before": "FAIL",
+      "after": "PASS"
+    },
+    {
+      "id": "tests.integration.test_step5_measured_main::test_position_command_prices_exact_plan_through_real_cluster[online-DECODE]",
+      "before": "FAIL",
+      "after": "PASS"
+    }
+  ],
+  "current_pass": 96,
+  "current_skip": 6,
+  "current_fail": 0,
+  "current_error": 0
+}

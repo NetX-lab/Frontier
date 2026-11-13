@@ -1,0 +1,21 @@
+{
+  "status": "EVIDENCE_AUDIT_PASS_COMPARISON_STILL_RED",
+  "sides": [
+    {
+      "root": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate",
+      "revision": "713e6a81708e87b86cf91fd89f3b1f954bdcbead",
+      "cases": 77,
+      "artifact_hashes_verified": 451,
+      "cache_files": 519,
+      "provenance_and_capture": "PASS"
+    },
+    {
+      "root": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023/candidate",
+      "revision": "9974acdb88f5c47166fee28dec564b7cc782ca1a",
+      "cases": 77,
+      "artifact_hashes_verified": 451,
+      "cache_files": 519,
+      "provenance_and_capture": "PASS"
+    }
+  ]
+}

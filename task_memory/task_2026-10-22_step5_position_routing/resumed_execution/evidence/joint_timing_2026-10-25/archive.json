@@ -1,0 +1,154 @@
+{
+  "task_id": "D29-CURRENT-JOINT-TIMING-ARCHIVE",
+  "status": "PASS_EXACT_COMPLETED_EXECUTION_ARCHIVE",
+  "collected_utc": "2026-10-25T04:02:59.119276+00:00",
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "6a15009e1684d12501f99487e301d66cea1d96df",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  },
+  "pricing_calls_used_and_ceiling": [
+    2,
+    2
+  ],
+  "required_shape_used_and_ceiling": [
+    6,
+    6
+  ],
+  "new_runtime_or_platform_calls": 0,
+  "source_budget_audit_repeated": false,
+  "full_output_revalidated_by_execution": true,
+  "archive": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/joint_timing_2026-10-25",
+  "files": [
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_20261025_01/execution.json",
+      "archive": "business_execution.json",
+      "bytes": 33592,
+      "sha256": "b0bc29d22a7ec1f3e7b6d55440a899bb30c3f9ece7fbbc23abcf91aa881da71a",
+      "compression": "none"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_capture_20261025_01/execution.json",
+      "archive": "command_execution.json",
+      "bytes": 1969,
+      "sha256": "b480dee052af9a42243528588b2e9f15bdf01df91305ed098d4fa51f5322b632",
+      "compression": "none"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_capture_20261025_01/stdout",
+      "archive": "command.stdout",
+      "bytes": 1867,
+      "sha256": "e4cd61429e49fae0bbd088485187b826102bc87b92dbe971a8d75d87067e8c19",
+      "compression": "none"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_capture_20261025_01/stderr",
+      "archive": "command.stderr",
+      "bytes": 67,
+      "sha256": "3659e44cd1bedfc21cbc3e7de1a326dd07790feb69e733fda35e8ce1ffce225c",
+      "compression": "none"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_archive_joint_20261025_01.py",
+      "archive": "archive_joint.py",
+      "bytes": 6127,
+      "sha256": "cf5a050c151f2ec3750af9d71164986383977fd376a8ace48bd9ba54baba118c",
+      "compression": "none"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_20261025_01/cold/pricing_payload.json",
+      "archive": "outputs/cold/pricing_payload.json.gz",
+      "bytes": 647510,
+      "sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "compression": "gzip; exact full original bytes verified after decompression",
+      "archive_bytes": 14763,
+      "archive_sha256": "c454263bd3815faadadd1e9e1f05f550eeb33a542fd66c4d0ee59d6ed967686c"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_20261025_01/cold/frontier_ep_wave_lane_ledger.jsonl",
+      "archive": "outputs/cold/frontier_ep_wave_lane_ledger.jsonl.gz",
+      "bytes": 2309529,
+      "sha256": "2cbb18d5465d028a59b4b5e402830681c928596e766fa6f10e50ed179bc4f063",
+      "compression": "gzip; exact full original bytes verified after decompression",
+      "archive_bytes": 154013,
+      "archive_sha256": "411ae02972ff8ba152de6602aaeb9b989e616b6e44551b346b162b4a513f56a1"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_20261025_01/cold/op_traces.jsonl",
+      "archive": "outputs/cold/op_traces.jsonl.gz",
+      "bytes": 2889856,
+      "sha256": "54eac652d9aefbbb75bb33e36837a9ae69ba7445edc717aa0a55466764c05a4f",
+      "compression": "gzip; exact full original bytes verified after decompression",
+      "archive_bytes": 230500,
+      "archive_sha256": "b2b2986ed6babed4e91f0dae5f6d43c9cae1954d1f868ac52d57234c60e4f655"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_20261025_01/warm/pricing_payload.json",
+      "archive": "outputs/warm/pricing_payload.json.gz",
+      "bytes": 647510,
+      "sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+      "compression": "gzip; exact full original bytes verified after decompression",
+      "archive_bytes": 14763,
+      "archive_sha256": "c454263bd3815faadadd1e9e1f05f550eeb33a542fd66c4d0ee59d6ed967686c"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_20261025_01/warm/frontier_ep_wave_lane_ledger.jsonl",
+      "archive": "outputs/warm/frontier_ep_wave_lane_ledger.jsonl.gz",
+      "bytes": 2309646,
+      "sha256": "629ae4d6332986b3158add2a914f57dc074aa9d90b709e4a13de15bc1ad0608a",
+      "compression": "gzip; exact full original bytes verified after decompression",
+      "archive_bytes": 154019,
+      "archive_sha256": "b5a3da16f32f532fd8ff6c0cc150f2be39920dc3300a8c64cf67fdc2b85e93f4"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_current_joint_20261025_01/warm/op_traces.jsonl",
+      "archive": "outputs/warm/op_traces.jsonl.gz",
+      "bytes": 2891377,
+      "sha256": "62f233ca391e2d5fe2cbcbbcef86a9099018e545cbb358229e7a9f08ea67a96b",
+      "compression": "gzip; exact full original bytes verified after decompression",
+      "archive_bytes": 230603,
+      "archive_sha256": "bba3017a1418050143adb5f9fc40816e1983f59a8b6d6d0e1e2871de52ab1588"
+    }
+  ],
+  "worktrees": [
+    {
+      "name": "step5-preview",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+      "head": "6a15009e1684d12501f99487e301d66cea1d96df",
+      "status": "?? .cortexkit/\n?? .pi/",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "step5-d29-ledger-stream",
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-ledger-final-1f6b4314",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+      "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-snapshot-copy-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "head": "b061f88458ef9b64c164d551038643eb9ca77fd5",
+      "status": "",
+      "ancestor_of_primary": true
+    },
+    {
+      "name": "d29-init-preparation-finish",
+      "path": "/data/ycfeng/Frontier/.worktrees/d29-init-preparation-finish",
+      "head": "6335f581e0129ddb273836f058f4e84fcbb35c22",
+      "status": "",
+      "ancestor_of_primary": true
+    }
+  ],
+  "wall_s": 1.00578768318519,
+  "compressed_full_output_original_bytes": 11695428,
+  "compressed_full_output_archive_bytes": 798661
+}

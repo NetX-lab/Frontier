@@ -504,6 +504,7 @@ def log_conservation_trace(
     per_ep_routed_tokens: Dict[int, int],
     trace_identity: Dict[str, Any],
     format_identity: Callable[[Dict[str, Any]], str],
+    live_routing_token_count: int | None = None,
 ) -> None:
     """Validate and emit EP routing token conservation."""
 
@@ -518,9 +519,12 @@ def log_conservation_trace(
     ):
         if type(value) is not int or value < minimum:
             raise ValueError(f"EP conservation {name} is invalid: {value!r}")
-    if routing_token_count * router_topk != total_routed_assignments:
+    live_rows = routing_token_count if live_routing_token_count is None else live_routing_token_count
+    if type(live_rows) is not int or not 0 <= live_rows <= routing_token_count:
+        raise ValueError("EP conservation live rows must fit physical routing rows")
+    if live_rows * router_topk != total_routed_assignments:
         raise ValueError(
-            "EP conservation total must equal routing_token_count * router_topk"
+            "EP conservation total must equal live routing rows * router_topk"
         )
     if not isinstance(per_ep_routed_tokens, dict) or not per_ep_routed_tokens:
         raise ValueError("EP conservation requires a non-empty per-EP map")
@@ -532,6 +536,9 @@ def log_conservation_trace(
     if sum(normalized.values()) != total_routed_assignments:
         raise ValueError("EP conservation per-EP total does not match routed assignments")
     cluster_name = getattr(cluster_type, "name", str(cluster_type))
+    if live_routing_token_count is not None:
+        logger.info("[EP-POSITION-SOURCE][%s] batch_id=%d, layer_id=%d, physical_rows=%d, live_rows=%d, padding_rows=%d",
+                    cluster_name, batch_id, layer_id, routing_token_count, live_rows, routing_token_count - live_rows)
     logger.info(
         "[EP-CONSERVATION][%s] batch_id=%d, layer_id=%d, "
         "routing_token_count=%d, router_topk=%d, total_routed_assignments=%d, "

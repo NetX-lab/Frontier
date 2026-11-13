@@ -1,0 +1,3 @@
+{"@caller":"gitlab.basemind.com/basemind/brainpp/projects/kubebrain/cmd/worker-init/app/options.(*Options).Run","@file":"projects/kubebrain/cmd/worker-init/app/options/options.go:80","@level":"info","@msg":"SSHD not enabled","@timestamp":"2026-10-24T21:05:58.200Z"}
+2026/10/24 21:05:58 [DEBUG] packaging-url , packaging-dir /workdir/src/rjob, Starting packaging server
+{"status": "PASS_WORKER_IMPORT_AND_SERIALIZED_APPEND_ONLY", "worker_hostname": "gpu-h800-0326.host.platform.shaipower.com", "pricing_calls": 0, "full_cli_calls": 0, "append_bytes_per_s": 329643453.387636}

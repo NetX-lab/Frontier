@@ -1,0 +1,58 @@
+{
+  "baseline_artifacts_rehashed": 451,
+  "baseline_cache_filename_count": 519,
+  "baseline_case_count": 77,
+  "baseline_checkout": "/data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3",
+  "baseline_clean_full_run": true,
+  "baseline_driver_checkout": "/data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3",
+  "baseline_harness_revision": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+  "baseline_label": "/data/ycfeng/tmp/step5_d23_perf_fidelity_20261022/candidate",
+  "baseline_manifest_sha256": "95ff242692a16b9dc2e1ba49f097ab5df739b93bf77c89e44ee915fe327eae19",
+  "baseline_provenance_findings": [],
+  "baseline_results_sha256": "b5b12103c3d6e174a8140b83c93486a5337b8e7da8f9be678373adfeeb88c9a6",
+  "baseline_revision": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+  "candidate_checkout": "/data/ycfeng/Frontier/.worktrees/fidelity-candidate-fa5bae2",
+  "candidate_revision": "fa5bae2980366da1d075125d6c26248a737fc419",
+  "candidate_source_dirty_before_run": false,
+  "cases_sha256": "eaf31417d56e4fb8f6223c2972471df51912eb7649c806ff8b0d458b6af94aef",
+  "comparator_sha256": "2b955cc309425cbd9e6365e9f146911498c116a43da43d618ef30f6cda0fcb7d",
+  "environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/fidelity-candidate-fa5bae2",
+    "TMPDIR": "/data/ycfeng/tmp"
+  },
+  "group_counts": {
+    "colocation_features": 8,
+    "colocation_offline_dense": 14,
+    "colocation_offline_moe": 11,
+    "colocation_online": 6,
+    "dp_placement": 7,
+    "pd_af_disaggregation": 10,
+    "pd_disaggregation": 15,
+    "trained_predictor": 6
+  },
+  "identical_matrix_definition_count": 77,
+  "identical_tracked_paths": [
+    "tests/e2e/refactor_fidelity",
+    "examples",
+    "data"
+  ],
+  "package_versions": {
+    "ddsketch": "3.0.1",
+    "fasteners": "0.20",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "plotly": "7.1.0",
+    "python": "3.10.6",
+    "scipy": "1.15.3",
+    "sklearn": "1.7.2"
+  },
+  "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+  "previous_proof_path": "/data/ycfeng/tmp/step5_d23_perf_fidelity_20261022/comparison.json",
+  "previous_proof_sha256": "5753dc5399065bed197e879047caae448f55c51de7a9b180c7cb53e020d29488",
+  "python_bin": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "runner_sha256": "88dc98089dd775d8e582998d36def8729818fcebd6e2ced31927564aab1121b7",
+  "task_id": "D26-D27-D28-MERGED-FIDELITY"
+}

@@ -1,0 +1,35 @@
+{
+  "phase": "fixture coverage diagnostic only, not actual-main acceptance",
+  "source": "c9e9388f",
+  "physical_source": "NONE local useful6144 + metadata-bearing dummy1 = aggregate6145 from ep_wave_inputs.py:70-90",
+  "results": [
+    {
+      "cache": "/data/ycfeng/tmp/d23_main_fixture02/cache/moe_gating_linear_7cc57b5a.pkl",
+      "measurement": "CUDA_EVENT",
+      "features": {
+        "num_tokens": 6145
+      },
+      "bounds": {
+        "num_tokens": [
+          1.0,
+          6144.0
+        ]
+      },
+      "result": "ValueError: On-demand prediction feature 'num_tokens' for probe is above declared maximum 6144.0: 6145.0"
+    },
+    {
+      "cache": "/data/ycfeng/tmp/d23_main_fixture02/cache/moe_gating_linear_b8852fc2.pkl",
+      "measurement": "KERNEL_ONLY",
+      "features": {
+        "num_tokens": 6145
+      },
+      "bounds": {
+        "num_tokens": [
+          1.0,
+          6144.0
+        ]
+      },
+      "result": "ValueError: On-demand prediction feature 'num_tokens' for probe is above declared maximum 6144.0: 6145.0"
+    }
+  ]
+}

@@ -148,7 +148,7 @@ def test_dsa_frozen_fails_fast_in_dummy_mode(monkeypatch: pytest.MonkeyPatch) ->
         "_log_architecture_attention_shape",
         lambda batch: None,
     )
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
+    with pytest.raises(ValueError, match="full/shared index bindings"):
         predictor.predict_attention_layer_time(
             batch=_build_batch(num_prefill_tokens=1, num_decode_tokens=0),
             layer_id=0,

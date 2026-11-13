@@ -1,0 +1,129 @@
+{
+  "all_values_order_proofs_and_keys_match": true,
+  "case": "first_decode16",
+  "event_count": 208,
+  "fixture_metadata_unchanged": true,
+  "input": {
+    "layers": [
+      60
+    ],
+    "logical_queries": 16,
+    "logical_start": 6128,
+    "replica_id": 1,
+    "request_is_decoding": false,
+    "role": "DECODE"
+  },
+  "ledger_lane_count": 16,
+  "ledger_sha256": "836c3162dc35395469686668e6b960276013bff31ee4da5dda185b17fffb7d20",
+  "limits": "One invocation; external60s/30GiB; profiler time is not a speedup benchmark; not native/fullCLI.",
+  "production_functions": {
+    "MoeRoutingWorkload._step5_position_queries": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/execution_time_predictor/moe_routing_workload.py",
+    "SklearnMoEExecutionTimePredictor._predict_step5_ffn_operator": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "get_ep_phase_times_ms": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/scheduler/utils/expert_parallel.py",
+    "predict_ep_wave_phase_times": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/scheduler/utils/expert_parallel.py",
+    "record_ep_wave": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08/frontier/metrics/ep_wave_metrics.py"
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "rlimit_as": [
+    32212254720,
+    32212254720
+  ],
+  "source": {
+    "hashes": {
+      "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+      "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+      "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+      "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+      "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+      "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+      "frontier/execution_time_predictor/moe_routing_workload.py": "0c8525f01124d43e5c21d5ec5a037a8719339e5e4301b3f44958cc90618899b4",
+      "frontier/execution_time_predictor/prediction_model_registry.py": "f1eaedb9a1d27c7f9d7505a6961f8000ff195248d0ac73305d083ea51cd4ddb0",
+      "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+      "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+      "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+      "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+      "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+      "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+      "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+      "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+      "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+      "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+      "tests/unit/test_moe_routing_runtime.py": "5a4a5d8bbafa5dce3dbe9b0374e7ada80091fe20102cb55b1e3fa6d44a0e2dac",
+      "tests/unit/test_prediction_measurement_bindings.py": "ed8a6a164ffa36fd7ee5d32161e859d457623f317291e91f26864b4a7513d295",
+      "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+      "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+      "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21"
+    },
+    "head": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+    "root": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+    "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+  },
+  "source_hashes_unchanged": true,
+  "status": "PASS_CPU_FIXTURE_PRODUCTION_SHAPE",
+  "task_id": "D29-REQUIRED-WAVE-SHAPES",
+  "waves": [
+    {
+      "layer": 60,
+      "live_calls": {
+        "_get_on_demand_prediction": 288,
+        "_predict_step5_ffn_operator": 144,
+        "_step5_position_queries": 16,
+        "predict_collective_plan": 64
+      },
+      "operator_names": [
+        "moe_gating_linear",
+        "moe_gating_routing_topk",
+        "moe_grouped_gemm",
+        "moe_input_quantize",
+        "moe_tensor_parallel_allreduce",
+        "post_attention_layernorm",
+        "share_expert_act",
+        "share_expert_down_proj",
+        "share_expert_tensor_parallel_allreduce",
+        "share_expert_up_proj",
+        "step5_ffn_merge",
+        "step5_moe_combine",
+        "step5_moe_dispatch"
+      ],
+      "operators_per_wave": 208,
+      "profiled_pricing_s": 1.7954085511155427,
+      "routing_source": {
+        "gathered_physical_rows": 32,
+        "policy_id": "position_cyclic",
+        "source_lanes": [
+          {
+            "forward_group_id": 4,
+            "gating_runtime_context": "standalone_legacy",
+            "graph_mode": "PIECEWISE",
+            "intervals": [
+              {
+                "length": 16,
+                "start": 6128
+              }
+            ],
+            "lane_id": 0,
+            "live_rows": 16,
+            "physical_rows": 16,
+            "source_batch_id": 1,
+            "source_global_id": 0
+          },
+          {
+            "forward_group_id": 4,
+            "gating_runtime_context": "standalone_legacy",
+            "graph_mode": "PIECEWISE",
+            "intervals": [],
+            "lane_id": 1,
+            "live_rows": 0,
+            "physical_rows": 16,
+            "source_batch_id": 2,
+            "source_global_id": 1
+          }
+        ]
+      }
+    }
+  ],
+  "whole_jsonl": {
+    "bytes": 2897050,
+    "sha256": "b6669453ff5817d361fd17cb4e90d2ef391801eebb4077de271f2fdc0da8a11e"
+  }
+}

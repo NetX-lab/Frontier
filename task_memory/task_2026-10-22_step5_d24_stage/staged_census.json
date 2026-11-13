@@ -1,0 +1,16 @@
+{
+  "task_id": "D24-NATIVE-STAGE",
+  "status": "PASS_STAGED_STARTUP_CENSUS_2_CASES",
+  "observer_origin": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_observation.py",
+  "runtime_origin": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_runtime.py",
+  "runtime_sha256": "b71bc59620648ea2d575d1c32906b3da7b682ba2353efd56a0614f1c2900326a",
+  "reused_test": "tests/unit/test_step5_native_forward_census.py:test_startup_worker_execute_is_excluded_without_losing_later_serving",
+  "asserted": [
+    "startup callback excluded without label filtering",
+    "native compilation error propagates",
+    "later scheduled and idle-DP serving remain observed",
+    "each original native callable runs once"
+  ],
+  "native_host_method": "locked StepTimingCollector.record_batch body executed on CPU fixture",
+  "native_hardware_executed": false
+}

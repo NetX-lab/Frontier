@@ -1,0 +1,49 @@
+{
+  "source_commit": "bfbc87ad6b99d5be357b3fd8b680c8baefc459c4",
+  "runs": [
+    {
+      "name": "d29_core_closure_parent01",
+      "cases": 440,
+      "passed": 431,
+      "failed": 5,
+      "errors": 0,
+      "skipped": 4
+    },
+    {
+      "name": "d29_core_profiling_parent01",
+      "cases": 24,
+      "passed": 24,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "d29_core_producer_parent01",
+      "cases": 250,
+      "passed": 235,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 15
+    },
+    {
+      "name": "d29_core_wrapper_parent01",
+      "cases": 3,
+      "passed": 3,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "unique_cases": 717,
+  "unique_passed": 693,
+  "unique_failed": 5,
+  "unique_skipped": 19,
+  "failed_ids": [
+    "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers",
+    "tests.unit.test_moe_grouped_gemm_padded_features::test_independent_selected_actual_fit_cache_binds_native_context",
+    "tests.unit.test_moe_grouped_gemm_padded_features::test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill",
+    "tests.unit.test_moe_routing_runtime::test_position_runtime_binds_retained_source_and_full_plan_policy[None]",
+    "tests.unit.test_moe_routing_runtime::test_position_runtime_binds_retained_source_and_full_plan_policy[foreign1]"
+  ],
+  "full_regression_accepted": false
+}

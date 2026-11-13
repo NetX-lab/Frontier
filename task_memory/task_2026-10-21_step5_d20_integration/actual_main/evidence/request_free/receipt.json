@@ -1,0 +1,24 @@
+{
+  "task_id": "D20-ACTUAL-MAIN",
+  "evidence_kind": "cpu_fixture",
+  "native_admitted": false,
+  "versions": {
+    "python": "3.10.6",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scipy": "1.15.3",
+    "sklearn": "1.7.2",
+    "pytest": "9.1.1"
+  },
+  "locked_exported_source": {
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/models/step5/nvidia/model.py": "6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/models/step5/nvidia/sparse_attention.py": "9a6bc59a1f7892f89a6fc731b29a77e4886ffa279cb8c3409ff1fd7dcce4f76d",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/model_executor/layers/attention/attention.py": "8b4a068636aa427f3185463afbfcff1d1bd82bad80a3356b80f800701af85a92"
+  },
+  "retained": {
+    "d20_request_free_red01.log": "590733a8eddbe20e93c735bd55938b83314b0d6c2332a6bc10236b9eefdc1305",
+    "d20_request_free_green03.log": "f9bd6281033b1a4d3dc93dc8fddd850a24da9ba1b08f93f71dd44de5a316f4bc",
+    "d20_request_free_affected01.log": "7d591bc6a32d6d7a84f5e36d6b7430b58fb99799402054289fb6f1e2c7f084d5",
+    "d20_request_free_cli_regression04.log": "480c6e0071e6c6866a12dcbbd7c51eedbcdbb7ee6e5c0a97a809fc8727e062f2"
+  }
+}

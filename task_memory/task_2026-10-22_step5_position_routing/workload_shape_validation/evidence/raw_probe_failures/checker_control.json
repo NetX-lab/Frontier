@@ -1,0 +1,33 @@
+{
+  "status": "PASS_CHECKER_ONLY_CONTROL",
+  "checks": [
+    {
+      "name": "unselected_zero_slots_skip_and_selected_positives_remain",
+      "status": "PASS",
+      "raised": false
+    },
+    {
+      "name": "selected_zero_compute_still_fails",
+      "status": "PASS",
+      "raised": true
+    },
+    {
+      "name": "selected_zero_collective_still_fails",
+      "status": "PASS",
+      "raised": true
+    },
+    {
+      "name": "negative_selected_duration_still_fails",
+      "status": "PASS",
+      "raised": true
+    },
+    {
+      "name": "nan_selected_duration_still_fails",
+      "status": "PASS",
+      "raised": true
+    }
+  ],
+  "driver_sha256": "e099270ef4c8bfdf36336d4c4d494d8ddecdafbc57003efabb07762f416a1d9e",
+  "production_path_invocations": 0,
+  "limits": "AST-extracted checker logic only; no source import, model/CSV/fixture read, numerical call, timing substitution or shape rerun."
+}

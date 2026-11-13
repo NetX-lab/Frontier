@@ -1,0 +1,43 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-SOURCE",
+  "source_commit": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "source_tree": "8c6db078e852d3b885a6f14bdf5e8007d9ecddb7",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06",
+  "submodule_commit": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "source_and_submodule_clean_at_freeze": true,
+  "reviews_closed_before_freeze": true,
+  "all_seven_changed_files_match_reviewed_owner_commits": true,
+  "owner_code_commits": ["3763e5b87a845eac186cfd481f0b56cffb2dd045", "ee7e66ee439054978897c91fa32598fc13804883", "51e1f7205d07b269db2291c5f8076431a86d29e5"],
+  "group_coverage_record_correction": "37c7832ee5ee2e9588ba6fed411a9e9894949ab8",
+  "component_acceptance_archive": "5498bdd4b27ab034b5e2648944f71efcaa82fee4",
+  "audit_receipt": "../repairs/evidence/performance_scope/d29_final_budget_audit_receipt06.json",
+  "audit_sha256": "01bec0586352ec7c5e47a533195dc294c142b900cc12bda3af3bc5e682d6b460",
+  "source_gross": 9240,
+  "global_gross": 9254,
+  "global_ceiling": 10000,
+  "path_owner_violations": 0,
+  "integrated_point": {
+    "result": "/data/ycfeng/tmp/d29_performance_integrated_parent01/result.json",
+    "result_file_sha256": "a9acebdd46a5056068dcceb0ca79c1c588e868132cabf5551945c2e70e78d9d8",
+    "diagnostic_group_reuse": false,
+    "diagnostic_artifact_reuse": false,
+    "calls": 5,
+    "layer_descriptions": 88,
+    "artifact_reads": 20,
+    "artifact_decodes": 1,
+    "full_payload_sha256": "c2aa250d2103db50140e3f19c3579e9221dcfaf6251df1b44ed5f580982c5582",
+    "equal_to_pre_fix_full_payload": true,
+    "retained_pair_bytes": 18617675
+  },
+  "main08": {
+    "state": "FAIL_BOTH_MODES_TIMED_OUT",
+    "completion_receipt": "main08_execution.json",
+    "output_root": "/data/ycfeng/tmp/d29-parent-position-main08",
+    "shell_id": "sh_1684dfb4e001YDXmBG29Tpwtul",
+    "per_mode_timeout_s": 2400,
+    "launch_input_hashes_sha256": "b094262a4199ea2a369538bec772674a093622b3ad779aedbb0027da64dedd8f",
+    "all_nine_match_main07": true,
+    "path_normalization": "Only synthetic_read_cost.json relocated output path;hash unchanged"
+  },
+  "full_workflow_native_g3_e2e_accepted": false
+}

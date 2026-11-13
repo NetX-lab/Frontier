@@ -1,0 +1,22 @@
+[
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/source_final_receipt.json",
+    "sha256": "15c9e8497cf069e63827f53d6853d18a82a689eb063d965a49cfd1846695d26e",
+    "bytes": 778
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/source_files_during.json",
+    "sha256": "b6a3ab9f2c2265e0d0a9fd188e7dee0d612b93c9e0536318666b44aa151c52d1",
+    "bytes": 659218
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scenario_preflight.json",
+    "sha256": "0bd25a76382a4e9cb72f19425fd971555c156c971ccff1210c0ed3d468f594da",
+    "bytes": 993
+  },
+  {
+    "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/baseline_unit_id_check.json",
+    "sha256": "cafa9510d257c58c4ed35cad4f6edf6be08969a2cb55e4503003cc3c452caa7a",
+    "bytes": 389
+  }
+]

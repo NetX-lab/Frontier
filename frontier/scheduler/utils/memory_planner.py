@@ -1,6 +1,12 @@
 from typing import Optional
 
-from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.memory import (
+    AttentionKVCacheCapacity,
+    AttentionKVCacheSelection,
+    get_attention_kv_cache_capacity,
+    get_attention_runtime_kv_layout,
+)
+from frontier.attention.families import get_attention_family
 from frontier.config import ReplicaConfig
 from frontier.errors import FrontierMemoryOOMError
 from frontier.entities.replica import Replica
@@ -120,6 +126,40 @@ class MemoryPlanner:
     def _get_parameter_memory_per_device(self) -> int:
         return self._param_counter.get_parameter_memory_per_device_bytes()
 
+    def _get_component_kv_cache_capacity(
+        self, block_size: int
+    ) -> AttentionKVCacheCapacity | None:
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return None
+        model_config = self._replica_config.model_config
+        family_ids = {
+            spec.family_id for spec in model_config.get_layer_attention_specs()
+        }
+        if len(family_ids) != 1:
+            if any(
+                get_attention_family(family_id).kv_cache_capacity_resolver is not None
+                for family_id in family_ids
+            ):
+                raise NotImplementedError(
+                    "Mixed attention families with component cache capacity are unsupported"
+                )
+            # Hybrid GDN models retain their existing per-layer accounting.
+            return None
+        family = get_attention_family(next(iter(family_ids)))
+        if family.kv_cache_capacity_resolver is None:
+            return None
+        if self._replica_config.num_pipeline_stages != 1:
+            raise NotImplementedError(
+                "Component KV-cache capacity requires num_pipeline_stages=1; "
+                "per-stage resident capacity is not represented."
+            )
+        return get_attention_kv_cache_capacity(
+            family, model_config, block_size=block_size,
+            selection=AttentionKVCacheSelection.from_replica(
+                self._replica_config, block_size=block_size,
+            ),
+        )
+
     def get_parameter_memory_per_device_bytes(self) -> int:
         """Return parameter memory per device in bytes."""
         return self._get_parameter_memory_per_device()
@@ -128,6 +168,19 @@ class MemoryPlanner:
         # DECODE_FFN does not allocate KV cache blocks.
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
+
+        family_ids = {
+            spec.family_id
+            for spec in self._replica_config.model_config.get_layer_attention_specs()
+        }
+        if any(
+            get_attention_family(family_id).kv_cache_capacity_resolver is not None
+            for family_id in family_ids
+        ):
+            raise NotImplementedError(
+                "The legacy per-request memory estimator has no cache block size "
+                "for component capacity; use get_num_blocks(block_size=...)."
+            )
 
         full_attention_layers = self._get_num_full_attention_layers_per_device()
         dense_kv_bytes = (
@@ -190,15 +243,47 @@ class MemoryPlanner:
         vLLM computes:
           requested_memory = total_memory * gpu_memory_utilization
           available_kv_cache_memory = requested_memory - non_kv_cache_memory
-          num_blocks = floor(available_kv_cache_memory / page_size / num_layers)
+          num_blocks = floor(available_kv_cache_memory / common_block_bytes)
+
+        Additive component layouts sum owner pages in one common logical block.
+        Grouped layouts use their maximum packed group stride after reserving
+        fixed bytes for the configured request-slot bound. Their returned
+        count includes declared reserved slab IDs. Homogeneous layouts retain
+        page_size * num_layers.
 
         Frontier approximates non_kv_cache_memory with parameter memory
         plus an optional calibrated overhead term.
         """
-        page_size = self._get_kv_cache_memory_per_layer_per_block(block_size)
-        num_full_attention_layers = self._get_num_full_attention_layers_per_device()
+        capacity = self._get_component_kv_cache_capacity(block_size)
+        if capacity is None:
+            page_size = self._get_kv_cache_memory_per_layer_per_block(block_size)
+            num_full_attention_layers = self._get_num_full_attention_layers_per_device()
+            common_block_bytes = page_size * num_full_attention_layers
+            cache_details = {"page_size_bytes": int(page_size)}
+        else:
+            common_block_bytes = capacity.physical_block_size_bytes
+            size_key = (
+                "physical_block_size_bytes"
+                if capacity.is_grouped else "resident_bytes_per_common_block"
+            )
+            cache_details = {
+                size_key: common_block_bytes,
+                "num_cache_components": len(capacity.components),
+                "num_cache_component_owners": sum(
+                    len(component.owner_layer_ids)
+                    for component in capacity.components
+                ),
+            }
+            if capacity.is_grouped:
+                cache_details["reserved_blocks"] = capacity.reserved_blocks
+        fixed_cache_bytes = 0
+        if capacity is not None and capacity.fixed_bytes_per_request_slot:
+            if self._max_num_seqs is None:
+                raise ValueError("MemoryPlanner requires max_num_seqs for fixed cache scratch")
+            fixed_cache_bytes = capacity.fixed_bytes_per_request_slot * self._max_num_seqs
+            cache_details["fixed_cache_reservation_bytes"] = fixed_cache_bytes
         gdn_state_reservation_bytes = self._get_gdn_state_reservation_bytes()
-        if page_size == 0 and gdn_state_reservation_bytes == 0:
+        if common_block_bytes == 0 and gdn_state_reservation_bytes == 0:
             return 0
 
         requested_memory = self._get_requested_memory_bytes(gpu_memory_utilization)
@@ -227,6 +312,7 @@ class MemoryPlanner:
             - parameter_memory_per_device
             - overhead_bytes
             - gdn_state_reservation_bytes
+            - fixed_cache_bytes
         )
         if available_kv_cache_memory <= 0:
             self._raise_memory_oom(
@@ -239,30 +325,35 @@ class MemoryPlanner:
                     "gdn_state_reservation_bytes": gdn_state_reservation_bytes,
                     "available_kv_cache_memory_bytes": available_kv_cache_memory,
                     "block_size": int(block_size),
-                    "page_size_bytes": int(page_size),
+                    **cache_details,
                     "num_layers": int(self._replica.num_layers),
                 },
             )
 
-        if page_size == 0 or num_full_attention_layers == 0:
+        if common_block_bytes == 0:
             return 0
 
-        num_blocks = int(
-            available_kv_cache_memory // page_size // num_full_attention_layers
-        )
+        num_blocks = int(available_kv_cache_memory // common_block_bytes)
         num_blocks = max(num_blocks, 0)
 
-        if num_blocks <= 0:
+        if num_blocks <= (capacity.reserved_blocks if capacity is not None else 0):
             self._raise_memory_oom(
                 reason="insufficient_kv_cache_budget",
-                message="Not enough KV cache budget to allocate even one block.",
+                message=(
+                    "Not enough KV cache budget to allocate a block after pool reservations."
+                    if capacity is not None and capacity.is_grouped
+                    else "Not enough KV cache budget to allocate even one block."
+                ),
                 details={
                     "requested_memory_bytes": requested_memory,
                     "parameter_memory_per_device_bytes": parameter_memory_per_device,
                     "available_kv_cache_memory_bytes": available_kv_cache_memory,
                     "non_kv_cache_overhead_bytes": overhead_bytes,
-                    "page_size_bytes": int(page_size),
-                    "num_full_attention_layers": num_full_attention_layers,
+                    **cache_details,
+                    **(
+                        {"num_full_attention_layers": num_full_attention_layers}
+                        if capacity is None else {}
+                    ),
                     "num_gdn_layers": self._get_num_gdn_layers_per_device(),
                     "gdn_state_reservation_bytes": gdn_state_reservation_bytes,
                 },

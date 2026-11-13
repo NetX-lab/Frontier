@@ -1,0 +1,52 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "-p",
+    "MemoryMax=30G",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "NUMEXPR_NUM_THREADS=1",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "TMPDIR=/data/ycfeng/tmp",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/verify_preparation.py",
+    "/data/ycfeng/tmp/d29_execution_preparation_20261025/static06"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "started_utc": "2026-10-24T20:55:53.751124+00:00",
+  "hypothesis_before_execution": "Git assets and worker-entry environment setup are the only changes since static05; existing exact binding, syntax, full reference parity, all10 corruption rejection predicates and no-operation worker dry run must still pass.",
+  "script_sha256": "0f3286ca625a85f6d91a4d4b4c6b9468f0b14dc00114da00530c2a50eba3d698",
+  "worker_plan_sha256": "c9c4a120058068e1a5505ebbfe23d018e3e6578bf3a2cec313c23f80100f8ca0",
+  "scope": "Affected static checks only, no model setup/pricing/runtime probe/shape/platform",
+  "new_pricing_calls": 0,
+  "new_shape_calls": 0,
+  "new_platform_operations": 0,
+  "configured_memory_bytes": 32212254720,
+  "measured_full_workload_rss": false,
+  "finished_utc": "2026-10-24T20:55:56.851042+00:00",
+  "exit_code": 0,
+  "wall_s": 3.099603861104697,
+  "status": "PASS_PREPARATION_AND_VALIDATOR_CONTROLS_ONLY",
+  "shell_syntax": {
+    "command": [
+      "bash",
+      "-n",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/run_worker.sh"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

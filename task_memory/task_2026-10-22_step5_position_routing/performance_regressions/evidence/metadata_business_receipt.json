@@ -1,0 +1,81 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-REGRESSIONS",
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "cases": [
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/basetemp/test_precision_csv_requires_ac0/op_precision_metadata.csv",
+      "sha256": "ecc18c4726a8933b1f6c45a91a8f0fc9c2e66f351ea9b91c1361370a192eb7d6",
+      "prepare_rows": [],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP16",
+          "data_source": "profiling",
+          "approximation_factor": ""
+        }
+      ],
+      "same_as_e41_bytes": true,
+      "legacy_baseline_equal": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/basetemp/test_precision_csv_requires_ac1/op_precision_metadata.csv",
+      "sha256": "ba1395602b8f4cf203517152e5d231709e36281ae69faca90d488c226d0f8f20",
+      "prepare_rows": [
+        {
+          "operation": "moe_input_quantize",
+          "precision": "FP8",
+          "data_source": "profiling",
+          "approximation_factor": ""
+        }
+      ],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP8",
+          "data_source": "approximation",
+          "approximation_factor": "0.5"
+        }
+      ],
+      "same_as_e41_bytes": true,
+      "legacy_baseline_equal": null
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/basetemp/test_precision_csv_requires_ac2/op_precision_metadata.csv",
+      "sha256": "ecc18c4726a8933b1f6c45a91a8f0fc9c2e66f351ea9b91c1361370a192eb7d6",
+      "prepare_rows": [],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP16",
+          "data_source": "profiling",
+          "approximation_factor": ""
+        }
+      ],
+      "same_as_e41_bytes": true,
+      "legacy_baseline_equal": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/metadata196/basetemp/test_precision_csv_requires_ac3/op_precision_metadata.csv",
+      "sha256": "5677278d6d0903af2a447a8060613b4988bd8d0f82d983b675578b312afbe922",
+      "prepare_rows": [
+        {
+          "operation": "moe_input_quantize",
+          "precision": "BF16",
+          "data_source": "approximation",
+          "approximation_factor": "2.0"
+        }
+      ],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP8",
+          "data_source": "approximation",
+          "approximation_factor": "0.5"
+        }
+      ],
+      "same_as_e41_bytes": true,
+      "legacy_baseline_equal": null
+    }
+  ],
+  "verdict": "PASS"
+}

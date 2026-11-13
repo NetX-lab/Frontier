@@ -1,0 +1,10 @@
+{
+  "collected_utc": "2026-10-24T20:50:52.556892+00:00",
+  "git_config_path": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/gitconfig_d29_worker",
+  "git_config_sha256": "672995b50f25e01b216a981ac1f08eebee28b0713b4bb6c53aecfedad0bff6d4",
+  "git_config_contents": "[safe]\n\tdirectory = /data/ycfeng/Frontier/.worktrees/step5-preview\n\tdirectory = /data/ycfeng/Frontier/.worktrees/step5-preview/frontier/cc_backend/backends/collective-sim\n",
+  "worker_entry_sha256": "d3aef9e846507617c9c364885bc687ddbdb721b8c3b9449dd6dc807145c30dbc",
+  "basis": "Observed image root UID0 versus repository UID10250, exact dubious-ownership errors on both owned repositories, and ignored GIT_CONFIG_COUNT safe-directory entries. Use a task-only global-scope configuration file instead.",
+  "new_pricing_calls": 0,
+  "new_platform_operations": 0
+}

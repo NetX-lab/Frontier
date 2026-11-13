@@ -1,0 +1,38 @@
+{
+  "task_id": "D29-CLI-TIMEOUT-REPRO",
+  "source_commit": "e41abc073500d61f224eda4fca1123e74e40544d",
+  "submodule_commit": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "phase": "DIAGNOSIS_ONLY_COMPLETE",
+  "scratch": "/data/ycfeng/tmp/d29_cli_timeout_repro",
+  "loop_script": "/data/ycfeng/tmp/d29_cli_timeout_repro/runtime_loop.py",
+  "loop_script_sha256": "bba92e780743cea23b5c92b852e56c7cabe9867e8c4016b970fc9f599344852e",
+  "red": {
+    "result": "/data/ycfeng/tmp/d29_cli_timeout_repro/execution-final01/result.json",
+    "exit_code": 1,
+    "wall_s": [3.453060280997306, 3.376363863237202],
+    "layer_descriptions": 1056
+  },
+  "single_variable_control": {
+    "result": "/data/ycfeng/tmp/d29_cli_timeout_repro/execution-groups-final01/result.json",
+    "exit_code": 0,
+    "variable": "Reuse actual resolved routed-group tuple for the identical model object, scratch process only",
+    "wall_s": [0.4041568008251488, 0.3511730800382793],
+    "layer_descriptions": 0
+  },
+  "equal_cost_proof_plan_payload_sha256": "d2c141f088b52063edb539094fe3e0967f35e53303d70ebe2e8fbdbe4c86c952",
+  "profile": {
+    "path": "/data/ycfeng/tmp/d29_cli_timeout_repro/execution01/profile.txt",
+    "pricing_calls": 2,
+    "pricing_cumulative_s": 15.239,
+    "group_resolutions": 12,
+    "group_resolution_cumulative_s": 14.438,
+    "layer_descriptions": 1056
+  },
+  "parent_receipt": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_parent/main07_timeout_receipt.json",
+  "observed_progress": "Seven PREFILL-only scheduler records per mode; simulation time0.0/0.25; no final request/system or stage/lane/transfer metrics",
+  "production_test_edits": 0,
+  "new_full_cli_runs": 0,
+  "implementation_authorized": false,
+  "workflow_acceptance": false,
+  "limits": "One actual P6128+idle1 point, layer3/EP0; verified paired-cache setup excluded from timing; actual inherited production pricing and real Cluster/backend, not complete Simulator initialization or a full2400s acceptance run"
+}

@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 import re
 from collections import OrderedDict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Callable, Iterable, Literal, cast
 
-from frontier.operators.spec import TensorParallelMode
+from frontier.operators.spec import ProjectionOwnership, TensorParallelMode
 from frontier.types import ClusterType
 
 
@@ -22,6 +22,13 @@ class AttentionLinearOpImplementation(Enum):
     GENERIC = "generic"
     STEP2_MINI = "step2_mini"
     STEP3_TEXT = "step3_text"
+
+
+class LinearNormImplementation(Enum):
+    """Normalization kernel family selected only by the linear-op producer."""
+
+    GENERIC = "generic"
+    STEP5 = "step5"
 
 
 class ExpertParallelCollective(Enum):
@@ -313,12 +320,14 @@ def _shared_layer_contract_active(profile: "ModelArchitectureProfile", config: A
     return bool(supports()) if callable(supports) else profile.supports_share_expert(config)
 
 
-def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
+def _default_layer_contracts(
+    tensor_parallel_mode: TensorParallelMode = TensorParallelMode.FFN_TP,
+) -> tuple[LayerContractSpec, ...]:
     return (
         LayerContractSpec(
             LayerKind.DENSE,
             LayerDimensionSource.DENSE,
-            TensorParallelMode.FFN_TP,
+            tensor_parallel_mode,
             operator_family_ids=("ffn",),
             activation_predicate=_dense_layer_contract_active,
         ),
@@ -333,7 +342,7 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
         LayerContractSpec(
             LayerKind.SHARED,
             LayerDimensionSource.SHARED,
-            TensorParallelMode.FFN_TP,
+            tensor_parallel_mode,
             operator_family_ids=("share_expert",),
             base_layer_kinds=(LayerKind.ROUTED,),
             activation_predicate=_shared_layer_contract_active,
@@ -348,10 +357,18 @@ class AttentionLinearOpProfile:
     sharded_impl: AttentionLinearOpImplementation
     sharded_ops: tuple[str, ...]
     replicated_ops: tuple[str, ...] = ()
+    profiling_enabled: bool = True
+    disabled_reason: str = ""
 
     def __post_init__(self) -> None:
-        if not self.sharded_ops:
-            raise ValueError("linear attention profile must declare sharded_ops")
+        if type(self.profiling_enabled) is not bool:
+            raise ValueError("linear attention profiling_enabled must be bool")
+        if not self.profiling_enabled and not self.disabled_reason:
+            raise ValueError("disabled linear attention profiling requires a reason")
+        if not self.sharded_ops and self.replicated_ops:
+            raise ValueError(
+                "linear attention replicated_ops require nonempty sharded_ops"
+            )
         if len(set(self.sharded_ops)) != len(self.sharded_ops):
             raise ValueError(
                 f"linear attention sharded_ops contains duplicates: {self.sharded_ops}"
@@ -361,6 +378,10 @@ class AttentionLinearOpProfile:
                 "linear attention replicated_ops contains duplicates: "
                 f"{self.replicated_ops}"
             )
+
+    def require_enabled_for_profiling(self) -> None:
+        if not self.profiling_enabled:
+            raise NotImplementedError(self.disabled_reason)
 
     def has_replicated_pre_projection(self, enabled_ops: set[str] | None) -> bool:
         """Return whether a replicated-only attention pre-projection path is needed."""
@@ -422,6 +443,7 @@ class ModelArchitectureProfile:
     share_expert_tensor_parallel_allreduce_op: str | None = None
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
+    replicate_shared_expert_in_sequence_parallel: bool = False
     experimental: bool = False
     runtime_limitations: tuple[str, ...] = ()
     structural_requirements: tuple[StructuralRequirement, ...] = ()
@@ -431,12 +453,25 @@ class ModelArchitectureProfile:
     )
     gemma_rms_norm_model_types: tuple[str, ...] = ()
     mxfp4_moe_model_types: tuple[str, ...] = ()
+    linear_norm_impl: LinearNormImplementation = LinearNormImplementation.GENERIC
+    ffn_activation_resolver: Callable[[Any, bool], tuple[str, float | None]] | None = field(
+        default=None, repr=False, compare=False,
+    )
 
     def __post_init__(self) -> None:
         if not self.profile_id:
             raise ValueError("model architecture profile_id must be non-empty")
         if not self.display_name:
             raise ValueError("model architecture display_name must be non-empty")
+        if not self.attention_linear_ops.sharded_ops:
+            requirement = _requires_attention_projection_ownership()
+            if not any(
+                item.name == requirement.name for item in self.structural_requirements
+            ):
+                object.__setattr__(
+                    self, "structural_requirements",
+                    (*self.structural_requirements, requirement),
+                )
         if self.attention_shape_log_kind is not None and not self.attention_shape_log_kind:
             raise ValueError(
                 "model architecture attention_shape_log_kind must be non-empty "
@@ -645,6 +680,108 @@ class ModelArchitectureProfile:
             match=match or _matches_qwen3_5_moe,
         )
 
+    @classmethod
+    def step5(cls) -> "ModelArchitectureProfile":
+        """Step text backbone; native timing and serving qualification stay explicit."""
+        return cls(
+            profile_id="step5",
+            display_name="Step-5 text sparse GQA",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                # Native attention profiling owns every Step projection scope.
+                sharded_ops=(),
+            ),
+            linear_norm_impl=LinearNormImplementation.STEP5,
+            ffn_activation_resolver=_resolve_step5_ffn_activation,
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            experimental=True,
+            runtime_limitations=(
+                "Step attention timing and complete request execution remain unqualified",
+                "PD summary/tail transfer and graph replay remain unqualified",
+                "MTP and multimodal execution are unsupported",
+            ),
+            structural_requirements=(StructuralRequirement(
+                name="step5_text_configuration",
+                predicate=_valid_step5_text_configuration,
+                message=lambda _profile, _config: "Step text configuration is incomplete or unsupported",
+            ),),
+            match=lambda config: _normalized_attr(config, "model_type") == "step5",
+            layer_contracts=tuple(
+                replace(contract, operator_family_ids=("share_expert", "step5_ffn"))
+                if contract.layer_kind is LayerKind.SHARED else contract
+                for contract in _default_layer_contracts(TensorParallelMode.ATTENTION_TP)
+            ),
+        )
+
+    @classmethod
+    def glm_moe_dsa(cls) -> "ModelArchitectureProfile":
+        """GLM sparse-MLA backbone identity; DSA execution stays guarded."""
+
+        return cls(
+            profile_id="glm_moe_dsa",
+            display_name="GLM MoE DSA",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("attn_pre_proj", "attn_rope", "attn_post_proj"),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            # vLLM v0.28 builds DeepseekV2MoE shared experts with disable_tp
+            # under sequence-parallel MoE (EP, TP>1, DP>1).
+            replicate_shared_expert_in_sequence_parallel=True,
+            experimental=True,
+            runtime_limitations=(
+                "DSA measured timing and native parameter-storage qualification are unsupported",
+                "shared FFN timing keeps the TP-sharded shape; sequence-parallel "
+                "token sharding and collectives are not modeled",
+            ),
+            match=lambda config: (
+                _normalized_attr(config, "model_type") == "glm_moe_dsa"
+            ),
+            layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
+        )
+
+    @classmethod
+    def deepseek_v4(cls) -> "ModelArchitectureProfile":
+        """Original V4 backbone identity with unsupported execution explicit."""
+
+        return cls(
+            profile_id="deepseek_v4",
+            display_name="DeepSeek-V4",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("attn_pre_proj", "attn_rope", "attn_post_proj"),
+                profiling_enabled=False,
+                disabled_reason=(
+                    "DeepSeek-V4 generic linear profiling cannot represent fused scopes, "
+                    "grouped output projection, mHC, and mixed-precision routed experts"
+                ),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            replicate_shared_expert_in_sequence_parallel=True,
+            experimental=True,
+            runtime_limitations=(
+                "compressed attention, mHC and mixed precision are unsupported",
+                "shared FFN sequence-parallel token/collective execution is unsupported",
+            ),
+            match=lambda config: (
+                _normalized_attr(config, "model_type") == "deepseek_v4"
+            ),
+            # The non-sequence-parallel projection contract is metadata only.
+            # Native SP replicates shared weights; execution remains disabled.
+            layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
+        )
+
+    def resolve_ffn_activation(
+        self, config: Any, *, share_expert: bool,
+    ) -> tuple[str, float | None]:
+        """Return the linear producer's activation and optional SwiGLU clamp."""
+        if self.ffn_activation_resolver is None:
+            return "silu", None
+        return self.ffn_activation_resolver(config, share_expert)
+
     def validate_structural_requirements(self, config: Any) -> None:
         """Validate profile-owned structural requirements against a config."""
 
@@ -709,6 +846,8 @@ class ModelArchitectureProfile:
         operator_name: str | None = None,
         attention_tp_size: int | None = None,
         attn_tp_size: int | None = None,
+        attention_dp_size: int | None = None,
+        num_pipeline_stages: int | None = None,
         moe_tp_size: int | None = None,
         ffn_tp_size: int | None = None,
         tensor_parallel_size: int | None = None,
@@ -722,6 +861,8 @@ class ModelArchitectureProfile:
         for name, value in (
             ("attention_tp_size", attention_tp_size),
             ("attn_tp_size", attn_tp_size),
+            ("attention_dp_size", attention_dp_size),
+            ("num_pipeline_stages", num_pipeline_stages),
             ("moe_tp_size", moe_tp_size),
             ("ffn_tp_size", ffn_tp_size),
             ("tensor_parallel_size", tensor_parallel_size),
@@ -813,20 +954,30 @@ class ModelArchitectureProfile:
                 f"{spec.layer_kind.value} layer contract is inactive for profile {self.profile_id!r}"
             )
         width = spec.resolve_width(config, mixed_model=mixed_model)
-        if spec.tensor_parallel_mode is TensorParallelMode.REPLICATED:
+        tp_mode = spec.tensor_parallel_mode
+        if (
+            self.replicate_shared_expert_in_sequence_parallel
+            and selected_kind is LayerKind.SHARED
+            and num_pipeline_stages == 1
+            and attention_tp_size is not None and attention_tp_size > 1
+            and attention_dp_size is not None and attention_dp_size > 1
+            and expert_parallel_size is not None and expert_parallel_size > 1
+        ):
+            tp_mode = TensorParallelMode.REPLICATED
+        if tp_mode is TensorParallelMode.REPLICATED:
             selected_tp = 1
-        elif spec.tensor_parallel_mode is TensorParallelMode.ATTENTION_TP:
+        elif tp_mode is TensorParallelMode.ATTENTION_TP:
             selected_tp = attention_tp_size
-        elif spec.tensor_parallel_mode is TensorParallelMode.MOE_TP:
+        elif tp_mode is TensorParallelMode.MOE_TP:
             selected_tp = moe_tp_size
-        elif spec.tensor_parallel_mode is TensorParallelMode.FFN_TP:
+        elif tp_mode is TensorParallelMode.FFN_TP:
             selected_tp = ffn_tp_size if ffn_tp_size is not None else attention_tp_size
         else:
-            raise ValueError(f"Unsupported tensor parallel mode: {spec.tensor_parallel_mode!r}")
+            raise ValueError(f"Unsupported tensor parallel mode: {tp_mode!r}")
         if tensor_parallel_size is not None and selected_tp is not None and tensor_parallel_size != selected_tp:
             raise ValueError("tensor_parallel_size conflicts with the selected domain TP")
         selected_tp = tensor_parallel_size if tensor_parallel_size is not None else selected_tp
-        if selected_tp is not None and spec.tensor_parallel_mode is not TensorParallelMode.REPLICATED:
+        if selected_tp is not None and tp_mode is not TensorParallelMode.REPLICATED:
             if width % selected_tp != 0:
                 raise ValueError(
                     f"{selected_kind.value} width {width} must be divisible by TP={selected_tp}"
@@ -857,7 +1008,7 @@ class ModelArchitectureProfile:
             layer_kind=selected_kind,
             dimension_source=spec.dimension_source,
             effective_ffn_width=width,
-            tensor_parallel_mode=spec.tensor_parallel_mode,
+            tensor_parallel_mode=tp_mode,
             expert_parallel_mode=spec.expert_parallel_mode,
             tensor_parallel_size=selected_tp,
             expert_parallel_size=expert_parallel_size,
@@ -986,6 +1137,27 @@ def _moe_share_expert_requirements() -> tuple[StructuralRequirement, ...]:
     )
 
 
+def _requires_attention_projection_ownership() -> StructuralRequirement:
+    def predicate(config: Any) -> bool:
+        from frontier.attention.model_binding import resolve_runtime_attention_family
+
+        projections = resolve_runtime_attention_family(config).projection_ops()
+        return bool(projections) and all(
+            operator.projection_ownership
+            is ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE
+            for operator in projections
+        )
+
+    return StructuralRequirement(
+        name="attention_projection_ownership",
+        predicate=predicate,
+        message=lambda profile, _config: (
+            f"Profile {profile.profile_id} with no linear attention operators requires "
+            "all attention projections inside the attention physical scope"
+        ),
+    )
+
+
 def _requires_attention_family(expected_family_id: str) -> StructuralRequirement:
     def predicate(config: Any) -> bool:
         from frontier.attention.model_binding import bind_attention_family
@@ -1042,6 +1214,34 @@ def _requires_step3_mfa_attention_contract() -> StructuralRequirement:
         predicate=predicate,
         message=message,
     )
+
+
+def _valid_step5_text_configuration(config: Any) -> bool:
+    from frontier.attention.step5 import validate_step5_config
+
+    validate_step5_config(config)
+    return True
+
+
+def _resolve_step5_ffn_activation(config: Any, share_expert: bool) -> tuple[str, float | None]:
+    from frontier.attention.step5 import describe_step5_layer
+
+    routed_layers = set(config.get_moe_layer_ids())
+    layer_ids = tuple(
+        layer_id for layer_id in range(config.num_layers)
+        if (layer_id in routed_layers) == share_expert
+    )
+    if not layer_ids:
+        raise ValueError("Step FFN activation requires layers in the selected dense/shared partition")
+    metadata = describe_step5_layer(
+        config, layer_ids[0], attention_tp_size=1, moe_tp_size=1, expert_parallel_size=1,
+    )
+    limits = {float(config.swiglu_limits_shared[layer_id]) for layer_id in layer_ids}
+    if len(limits) != 1:
+        raise ValueError("Cannot profile heterogeneous Step dense/shared SwiGLU limits in one row")
+    if metadata.dense_swiglu_limit == 0:
+        return "silu", None
+    return "swiglustep", metadata.dense_swiglu_limit
 
 
 def _normalized_attr(config: Any, attr_name: str) -> str:
@@ -1214,8 +1414,11 @@ class ModelArchitectureRegistry:
 MODEL_ARCHITECTURE_REGISTRY = ModelArchitectureRegistry()
 for _profile in (
     ModelArchitectureProfile.step3_text(),
+    ModelArchitectureProfile.step5(),
     ModelArchitectureProfile.step2_mini(),
     ModelArchitectureProfile.qwen3_5_moe(),
+    ModelArchitectureProfile.glm_moe_dsa(),
+    ModelArchitectureProfile.deepseek_v4(),
     ModelArchitectureProfile.generic(),
 ):
     MODEL_ARCHITECTURE_REGISTRY.register(_profile)

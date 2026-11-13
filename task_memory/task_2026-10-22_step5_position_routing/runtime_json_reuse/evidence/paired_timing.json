@@ -1,0 +1,5884 @@
+{
+  "task_id": "D29-RUNTIME-JSON-REUSE",
+  "source": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-08",
+  "source_revision": "dbe19f531ff68d9edafc480418e8927c40eb1c60",
+  "original_driver_sha256": "b69629fd3ecc754120badc5d9ba540e4add7d1ee1b1d8ab05878ab97e3866a9d",
+  "source_bindings": 23,
+  "pricing_payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+  "gc_enabled_before_and_after": true,
+  "gc_threshold": [
+    700,
+    10,
+    10
+  ],
+  "installations": {
+    "registry": {
+      "applied": true,
+      "variant": "registry",
+      "source_files_unchanged": true,
+      "installed": [
+        {
+          "path": "/data/ycfeng/tmp/d29_runtime_json_reuse01/patches/frontier/execution_time_predictor/prediction_model_registry.py",
+          "sha256": "f877633cd1397aa834e373f020d046c94939633fbf8971067e38611d5c374830",
+          "methods": [
+            "_get_family_model"
+          ]
+        }
+      ]
+    },
+    "point": {
+      "applied": true,
+      "variant": "point",
+      "source_files_unchanged": true,
+      "installed": [
+        {
+          "path": "/data/ycfeng/tmp/d29_runtime_json_reuse01/patches/frontier/execution_time_predictor/moe_routing_workload.py",
+          "sha256": "ae4b7d20c6e7f0db17bbce569b8432cfd335bddec6c7fb0404f8f93522266b04",
+          "methods": [
+            "_step5_plan_candidates",
+            "_step5_position_queries"
+          ]
+        }
+      ]
+    },
+    "combined": {
+      "applied": true,
+      "variant": "combined",
+      "source_files_unchanged": true,
+      "installed": [
+        {
+          "path": "/data/ycfeng/tmp/d29_runtime_json_reuse01/patches/frontier/execution_time_predictor/prediction_model_registry.py",
+          "sha256": "f877633cd1397aa834e373f020d046c94939633fbf8971067e38611d5c374830",
+          "methods": [
+            "_get_family_model"
+          ]
+        },
+        {
+          "path": "/data/ycfeng/tmp/d29_runtime_json_reuse01/patches/frontier/execution_time_predictor/moe_routing_workload.py",
+          "sha256": "ae4b7d20c6e7f0db17bbce569b8432cfd335bddec6c7fb0404f8f93522266b04",
+          "methods": [
+            "_step5_plan_candidates",
+            "_step5_position_queries"
+          ]
+        }
+      ]
+    }
+  },
+  "samples": [
+    {
+      "variant": "baseline",
+      "wall_s": 0.08978855283930898,
+      "cpu_s": 0.0897758090000007,
+      "gc_events": [
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 3.1381845474243164e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.2026862502098083e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.378193989396095e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.3999869376420975e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 5.4989010095596313e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 6.834091618657112e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.8082321882247925e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 1,
+          "seconds": 0.0004536132328212261,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.3091364204883575e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.6827830374240875e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.821689799427986e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 5.62877394258976e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 7.171323522925377e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.9552880227565765e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.0207989513874054e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.53251414000988e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 5.769403651356697e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 4.583410918712616e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 0,
+          "generation": 0,
+          "seconds": 5.818391218781471e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0013491511344909668
+    },
+    {
+      "variant": "registry",
+      "wall_s": 0.0877216150984168,
+      "cpu_s": 0.08771591300000026,
+      "gc_events": [
+        {
+          "sample": 1,
+          "generation": 1,
+          "seconds": 0.0004964228719472885,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 7.642386481165886e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 6.952183321118355e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 6.88810832798481e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 6.312830373644829e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 5.498295649886131e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.4537242501974106e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.536611959338188e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.8646703362464905e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.867278039455414e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 5.0308648496866226e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.9449969083070755e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 1,
+          "seconds": 0.0005252626724541187,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.9652066081762314e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.976382479071617e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 1,
+          "generation": 0,
+          "seconds": 4.793517291545868e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0017889561131596565
+    },
+    {
+      "variant": "point",
+      "wall_s": 0.085731599945575,
+      "cpu_s": 0.0857259379999995,
+      "gc_events": [
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 0.00010105734691023827,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 6.939517334103584e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 6.961170583963394e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 7.078005000948906e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 6.148917600512505e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 5.649402737617493e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 4.9862079322338104e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 4.995940253138542e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 1,
+          "seconds": 0.0006189621053636074,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 4.9884896725416183e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 4.972284659743309e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 4.904577508568764e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 4.9484893679618835e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 5.0513073801994324e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 5.0854869186878204e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 2,
+          "generation": 0,
+          "seconds": 5.0473958253860474e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0014975913800299168
+    },
+    {
+      "variant": "combined",
+      "wall_s": 0.18450580537319183,
+      "cpu_s": 0.1844995850000002,
+      "gc_events": [
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 9.307311847805977e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 7.405923679471016e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 7.137097418308258e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 7.33458437025547e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 1,
+          "seconds": 0.0006334618665277958,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 2,
+          "seconds": 0.09787048818543553,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 4.2096711695194244e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 4.609208554029465e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 4.6582892537117004e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 5.27738593518734e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 6.352318450808525e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 7.246201857924461e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 5.133729428052902e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 3.986014053225517e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 4.531675949692726e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 4.7585926949977875e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 0,
+          "seconds": 4.7915149480104446e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 3,
+          "generation": 1,
+          "seconds": 0.0005463850684463978,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.09991773031651974
+    },
+    {
+      "variant": "combined",
+      "wall_s": 0.08447667397558689,
+      "cpu_s": 0.08447076900000017,
+      "gc_events": [
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.245620220899582e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.7878362238407135e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.8732850700616837e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.815729334950447e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 5.719158798456192e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 7.021520286798477e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 8.071819320321083e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 5.0669070333242416e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.019681364297867e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.727765917778015e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.8174988478422165e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 1,
+          "seconds": 0.00048010097816586494,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 5.0984323024749756e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 5.7865865528583527e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 7.472606375813484e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 6.7870132625103e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.9836933612823486e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 4,
+          "generation": 0,
+          "seconds": 4.021124914288521e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.00140326377004385
+    },
+    {
+      "variant": "point",
+      "wall_s": 0.08634292986243963,
+      "cpu_s": 0.08633679800000049,
+      "gc_events": [
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 0.00010246085003018379,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 7.872702553868294e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 7.35078938305378e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 7.272185757756233e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 8.387584239244461e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 1,
+          "seconds": 0.0006104572676122189,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 4.448927938938141e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 4.6242959797382355e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 4.919571802020073e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 4.8808753490448e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 5.0199683755636215e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 5.02290204167366e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 4.972890019416809e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 5.037523806095123e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 5.155801773071289e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 5,
+          "generation": 0,
+          "seconds": 5.0004106014966965e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0015125824138522148
+    },
+    {
+      "variant": "registry",
+      "wall_s": 0.08720840513706207,
+      "cpu_s": 0.0872024360000001,
+      "gc_events": [
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 0.00010827835649251938,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 1,
+          "seconds": 0.0005810591392219067,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 7.166992872953415e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 7.081683725118637e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 6.436696276068687e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 5.669938400387764e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 6.627757102251053e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 4.6712812036275864e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 4.963809624314308e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 4.8558227717876434e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 5.1462091505527496e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 5.018012598156929e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 5.101179704070091e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 1,
+          "seconds": 0.000540655106306076,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 5.086185410618782e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 6,
+          "generation": 0,
+          "seconds": 5.2480027079582214e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0019607283174991608
+    },
+    {
+      "variant": "baseline",
+      "wall_s": 0.08989358088001609,
+      "cpu_s": 0.08988809299999989,
+      "gc_events": [
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 0.00011263508349657059,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.879501208662987e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.381103932857513e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 9.364774450659752e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.16070644557476e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.12880864739418e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.380964234471321e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.041078060865402e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.12759792804718e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 1,
+          "seconds": 0.000628362875431776,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 6.988085806369781e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.29006715118885e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.352791726589203e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.095932960510254e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 7.320893928408623e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 7,
+          "generation": 0,
+          "seconds": 6.933696568012238e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.001775457989424467
+    },
+    {
+      "variant": "registry",
+      "wall_s": 0.08851811895146966,
+      "cpu_s": 0.08851197699999958,
+      "gc_events": [
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 8.817808702588081e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.52168707549572e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.164711132645607e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.515586912631989e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.823482155799866e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 1,
+          "seconds": 0.000832676887512207,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.660826668143272e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.550278678536415e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.619895040988922e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.732817903161049e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.793400436639786e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 8.029676973819733e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 8.129887282848358e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.695518434047699e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 8.00183042883873e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 8,
+          "generation": 0,
+          "seconds": 7.519731298089027e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0019984482787549496
+    },
+    {
+      "variant": "combined",
+      "wall_s": 0.08941661519929767,
+      "cpu_s": 0.08941091300000004,
+      "gc_events": [
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 9.593414142727852e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 1,
+          "seconds": 0.0007115770131349564,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.350603118538857e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 9.479466825723648e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.518287748098373e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.461290806531906e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.225433364510536e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.169274613261223e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.455656304955482e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.051881402730942e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 0.00012211129069328308,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 8.099665865302086e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.973797619342804e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 1,
+          "seconds": 0.0008066981099545956,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.938221096992493e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 9,
+          "generation": 0,
+          "seconds": 7.859896868467331e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0026621553115546703
+    },
+    {
+      "variant": "baseline",
+      "wall_s": 0.10596421686932445,
+      "cpu_s": 0.105958416,
+      "gc_events": [
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 8.759601041674614e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.484108209609985e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.234327495098114e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.394189015030861e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.587112486362457e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.196702063083649e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 9.769760072231293e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.762014865875244e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 0.00010797381401062012,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 1,
+          "seconds": 0.0008661020547151566,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 8.11619684100151e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.903808727860451e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 7.986510172486305e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 8.529797196388245e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 0.00011381320655345917,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 10,
+          "generation": 0,
+          "seconds": 0.00011143507435917854,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0021565654315054417
+    },
+    {
+      "variant": "point",
+      "wall_s": 0.1931333071552217,
+      "cpu_s": 0.1931267209999996,
+      "gc_events": [
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 9.757094085216522e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 8.178409188985825e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 7.681408897042274e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 7.91042111814022e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 7.946789264678955e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 1,
+          "seconds": 0.0008081682026386261,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 2,
+          "seconds": 0.10042384406551719,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 4.368927329778671e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 4.7511886805295944e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 4.8078130930662155e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 5.2965711802244186e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 6.575323641300201e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 8.151307702064514e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 5.2391085773706436e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 4.234490916132927e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 5.0865113735198975e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 11,
+          "generation": 0,
+          "seconds": 5.558738484978676e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.10218745330348611
+    },
+    {
+      "variant": "point",
+      "wall_s": 0.08726512780413032,
+      "cpu_s": 0.08725913499999916,
+      "gc_events": [
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 7.532071322202682e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 1,
+          "seconds": 0.0006754067726433277,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.165301263332367e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.380809307098389e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 6.158091127872467e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 7.629673928022385e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 6.907572969794273e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.085160955786705e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 4.087202250957489e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.027884617447853e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.25331124663353e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.1252078264951706e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.646701902151108e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 1,
+          "seconds": 0.0005682650953531265,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 7.393211126327515e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 7.178774103522301e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 5.039060488343239e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 12,
+          "generation": 0,
+          "seconds": 3.9692968130111694e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0021694651804864407
+    },
+    {
+      "variant": "baseline",
+      "wall_s": 0.09071996668353677,
+      "cpu_s": 0.09071443100000032,
+      "gc_events": [
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 0.000105998944491148,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 7.83577561378479e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 7.475120946764946e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 7.520103827118874e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 6.398512050509453e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 5.787098780274391e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 4.458799958229065e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 1,
+          "seconds": 0.0007582269608974457,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 5.003530532121658e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 5.070585757493973e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 5.160178989171982e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 5.3954776376485825e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 5.600741133093834e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 5.941977724432945e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 6.0521066188812256e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 13,
+          "generation": 0,
+          "seconds": 6.0585327446460724e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0017018113285303116
+    },
+    {
+      "variant": "combined",
+      "wall_s": 0.08620903315022588,
+      "cpu_s": 0.08620414299999979,
+      "gc_events": [
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 0.00012840516865253448,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 7.751397788524628e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 7.715076208114624e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 1,
+          "seconds": 0.0008595772087574005,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 6.807874888181686e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 5.8718957006931305e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 4.463689401745796e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 4.691770300269127e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 5.087582394480705e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 5.007907748222351e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 5.215918645262718e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 5.306396633386612e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 5.451636388897896e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 5.6345947086811066e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 0,
+          "seconds": 6.031990051269531e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 14,
+          "generation": 1,
+          "seconds": 0.0006446102634072304,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0023829699493944645
+    },
+    {
+      "variant": "registry",
+      "wall_s": 0.10422714333981276,
+      "cpu_s": 0.10422016299999992,
+      "gc_events": [
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 0.00012117112055420876,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 8.300971239805222e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 7.875123992562294e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 7.424503564834595e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 7.388414815068245e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 8.333474397659302e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 7.916288450360298e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 9.946012869477272e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 7.623201236128807e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 7.611000910401344e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 7.799174636602402e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 1,
+          "seconds": 0.0007573775947093964,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 0.00011000689119100571,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 0.00011528097093105316,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 0.0001039230264723301,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 15,
+          "generation": 0,
+          "seconds": 0.0001265951432287693,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.002136536408215761
+    },
+    {
+      "variant": "baseline",
+      "wall_s": 0.14348889887332916,
+      "cpu_s": 0.14348069399999996,
+      "gc_events": [
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00013382220640778542,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00013969885185360909,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00011180620640516281,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00012331129983067513,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00011846795678138733,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00011582020670175552,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00011281296610832214,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 1,
+          "seconds": 0.0015190327540040016,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00011560693383216858,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00011512916535139084,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 0.00010989001020789146,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 7.845181971788406e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 7.885508239269257e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 8.133798837661743e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 7.782597094774246e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 16,
+          "generation": 0,
+          "seconds": 8.522393181920052e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.003117093350738287
+    },
+    {
+      "variant": "point",
+      "wall_s": 0.09020567405968904,
+      "cpu_s": 0.09019080800000001,
+      "gc_events": [
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 0.00010022101923823357,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.331192657351494e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.05840827524662e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 1,
+          "seconds": 0.0008862349204719067,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.278200402855873e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 7.99698755145073e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.219433948397636e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.681230247020721e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.238106966018677e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.399179205298424e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.220179006457329e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.382508531212807e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.331425487995148e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.491799235343933e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 0,
+          "seconds": 8.642859756946564e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 17,
+          "generation": 1,
+          "seconds": 0.0010476578027009964,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.003116828855127096
+    },
+    {
+      "variant": "registry",
+      "wall_s": 0.09048276161774993,
+      "cpu_s": 0.09047740100000023,
+      "gc_events": [
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 9.597185999155045e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 7.894588634371758e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 7.722992449998856e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 9.031035006046295e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.26660543680191e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.675083518028259e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.275499567389488e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.242111653089523e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.5385050624609e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.391868323087692e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.34059901535511e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 1,
+          "seconds": 0.000996801070868969,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.32737423479557e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.359970524907112e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.333427831530571e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 18,
+          "generation": 0,
+          "seconds": 8.832523599267006e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.00226509477943182
+    },
+    {
+      "variant": "combined",
+      "wall_s": 0.2153527899645269,
+      "cpu_s": 0.2153466400000008,
+      "gc_events": [
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 0.00011191610246896744,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 8.45068134367466e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 8.159596472978592e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 8.351961150765419e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 8.839135989546776e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 8.614594116806984e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 8.672289550304413e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 1,
+          "seconds": 0.0011013657785952091,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 2,
+          "seconds": 0.12440850865095854,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 4.834216088056564e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 5.1734037697315216e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 5.226721987128258e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 5.389004945755005e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 6.530387327075005e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 8.100969716906548e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 5.258386954665184e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 19,
+          "generation": 0,
+          "seconds": 4.148995503783226e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.1265792939811945
+    },
+    {
+      "variant": "combined",
+      "wall_s": 0.08727887319400907,
+      "cpu_s": 0.0872717990000007,
+      "gc_events": [
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 6.609130650758743e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 5.405209958553314e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 5.4960139095783234e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 1,
+          "seconds": 0.0008350899443030357,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 6.698118522763252e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 7.560010999441147e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 7.121497765183449e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 5.307421088218689e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 4.0531158447265625e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 4.984671249985695e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 5.405908450484276e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 5.539692938327789e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 5.5833254009485245e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 6.785383448004723e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 7.710419595241547e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 1,
+          "seconds": 0.0007378966547548771,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 5.001388490200043e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 20,
+          "generation": 0,
+          "seconds": 4.1871797293424606e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.002507471479475498
+    },
+    {
+      "variant": "registry",
+      "wall_s": 0.0900307628326118,
+      "cpu_s": 0.09002516900000046,
+      "gc_events": [
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 0.00011067884042859077,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 8.175894618034363e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 7.722107693552971e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 7.37127847969532e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 6.997399032115936e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.805632099509239e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 4.6502333134412766e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 4.8599205911159515e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.087023600935936e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 1,
+          "seconds": 0.000982543919235468,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.315011367201805e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.656713619828224e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.7131052017211914e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.855970084667206e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.287211388349533e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 21,
+          "generation": 0,
+          "seconds": 5.344301462173462e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0019316407851874828
+    },
+    {
+      "variant": "point",
+      "wall_s": 0.08691949909552932,
+      "cpu_s": 0.08691402300000028,
+      "gc_events": [
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 0.00011850893497467041,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 7.558288052678108e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 7.599499076604843e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 7.273117080330849e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 7.642991840839386e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 1,
+          "seconds": 0.0007280423305928707,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 4.476308822631836e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 4.653492942452431e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 4.9921683967113495e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 5.226675420999527e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 5.160924047231674e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 5.052564665675163e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 5.2211806178092957e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 5.365302786231041e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 5.4745934903621674e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 22,
+          "generation": 0,
+          "seconds": 5.7787634432315826e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0016613099724054337
+    },
+    {
+      "variant": "baseline",
+      "wall_s": 0.09124347800388932,
+      "cpu_s": 0.09123754999999978,
+      "gc_events": [
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 0.0001228582113981247,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 1,
+          "seconds": 0.0007281340658664703,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.508136332035065e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.987115532159805e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.420172914862633e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.58729875087738e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.499009370803833e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.58250243961811e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.632607594132423e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.4814073741436e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.76718370616436e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.821200415492058e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.537985220551491e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 1,
+          "seconds": 0.0007501291111111641,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.701991125941277e-05,
+          "collected": 0,
+          "uncollectable": 0
+        },
+        {
+          "sample": 23,
+          "generation": 0,
+          "seconds": 7.406389340758324e-05,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "gc_s": 0.0025904513895511627
+    }
+  ],
+  "gc_events": [
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 3.1381845474243164e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.2026862502098083e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.378193989396095e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.3999869376420975e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 5.4989010095596313e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 6.834091618657112e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.8082321882247925e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 1,
+      "seconds": 0.0004536132328212261,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.3091364204883575e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.6827830374240875e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.821689799427986e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 5.62877394258976e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 7.171323522925377e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.9552880227565765e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.0207989513874054e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.53251414000988e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 5.769403651356697e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 4.583410918712616e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 0,
+      "generation": 0,
+      "seconds": 5.818391218781471e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 1,
+      "seconds": 0.0004964228719472885,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 7.642386481165886e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 6.952183321118355e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 6.88810832798481e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 6.312830373644829e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 5.498295649886131e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.4537242501974106e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.536611959338188e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.8646703362464905e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.867278039455414e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 5.0308648496866226e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.9449969083070755e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 1,
+      "seconds": 0.0005252626724541187,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.9652066081762314e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.976382479071617e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 1,
+      "generation": 0,
+      "seconds": 4.793517291545868e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 0.00010105734691023827,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 6.939517334103584e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 6.961170583963394e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 7.078005000948906e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 6.148917600512505e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 5.649402737617493e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 4.9862079322338104e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 4.995940253138542e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 1,
+      "seconds": 0.0006189621053636074,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 4.9884896725416183e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 4.972284659743309e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 4.904577508568764e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 4.9484893679618835e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 5.0513073801994324e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 5.0854869186878204e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 2,
+      "generation": 0,
+      "seconds": 5.0473958253860474e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 9.307311847805977e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 7.405923679471016e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 7.137097418308258e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 7.33458437025547e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 1,
+      "seconds": 0.0006334618665277958,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 2,
+      "seconds": 0.09787048818543553,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 4.2096711695194244e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 4.609208554029465e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 4.6582892537117004e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 5.27738593518734e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 6.352318450808525e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 7.246201857924461e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 5.133729428052902e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 3.986014053225517e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 4.531675949692726e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 4.7585926949977875e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 0,
+      "seconds": 4.7915149480104446e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 3,
+      "generation": 1,
+      "seconds": 0.0005463850684463978,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.245620220899582e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.7878362238407135e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.8732850700616837e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.815729334950447e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 5.719158798456192e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 7.021520286798477e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 8.071819320321083e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 5.0669070333242416e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.019681364297867e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.727765917778015e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.8174988478422165e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 1,
+      "seconds": 0.00048010097816586494,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 5.0984323024749756e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 5.7865865528583527e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 7.472606375813484e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 6.7870132625103e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.9836933612823486e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 4,
+      "generation": 0,
+      "seconds": 4.021124914288521e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 0.00010246085003018379,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 7.872702553868294e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 7.35078938305378e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 7.272185757756233e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 8.387584239244461e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 1,
+      "seconds": 0.0006104572676122189,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 4.448927938938141e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 4.6242959797382355e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 4.919571802020073e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 4.8808753490448e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 5.0199683755636215e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 5.02290204167366e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 4.972890019416809e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 5.037523806095123e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 5.155801773071289e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 5,
+      "generation": 0,
+      "seconds": 5.0004106014966965e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 0.00010827835649251938,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 1,
+      "seconds": 0.0005810591392219067,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 7.166992872953415e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 7.081683725118637e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 6.436696276068687e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 5.669938400387764e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 6.627757102251053e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 4.6712812036275864e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 4.963809624314308e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 4.8558227717876434e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 5.1462091505527496e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 5.018012598156929e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 5.101179704070091e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 1,
+      "seconds": 0.000540655106306076,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 5.086185410618782e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 6,
+      "generation": 0,
+      "seconds": 5.2480027079582214e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 0.00011263508349657059,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.879501208662987e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.381103932857513e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 9.364774450659752e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.16070644557476e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.12880864739418e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.380964234471321e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.041078060865402e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.12759792804718e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 1,
+      "seconds": 0.000628362875431776,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 6.988085806369781e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.29006715118885e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.352791726589203e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.095932960510254e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 7.320893928408623e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 7,
+      "generation": 0,
+      "seconds": 6.933696568012238e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 8.817808702588081e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.52168707549572e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.164711132645607e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.515586912631989e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.823482155799866e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 1,
+      "seconds": 0.000832676887512207,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.660826668143272e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.550278678536415e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.619895040988922e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.732817903161049e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.793400436639786e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 8.029676973819733e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 8.129887282848358e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.695518434047699e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 8.00183042883873e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 8,
+      "generation": 0,
+      "seconds": 7.519731298089027e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 9.593414142727852e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 1,
+      "seconds": 0.0007115770131349564,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.350603118538857e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 9.479466825723648e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.518287748098373e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.461290806531906e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.225433364510536e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.169274613261223e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.455656304955482e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.051881402730942e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 0.00012211129069328308,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 8.099665865302086e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.973797619342804e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 1,
+      "seconds": 0.0008066981099545956,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.938221096992493e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 9,
+      "generation": 0,
+      "seconds": 7.859896868467331e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 8.759601041674614e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.484108209609985e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.234327495098114e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.394189015030861e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.587112486362457e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.196702063083649e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 9.769760072231293e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.762014865875244e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 0.00010797381401062012,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 1,
+      "seconds": 0.0008661020547151566,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 8.11619684100151e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.903808727860451e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 7.986510172486305e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 8.529797196388245e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 0.00011381320655345917,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 10,
+      "generation": 0,
+      "seconds": 0.00011143507435917854,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 9.757094085216522e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 8.178409188985825e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 7.681408897042274e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 7.91042111814022e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 7.946789264678955e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 1,
+      "seconds": 0.0008081682026386261,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 2,
+      "seconds": 0.10042384406551719,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 4.368927329778671e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 4.7511886805295944e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 4.8078130930662155e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 5.2965711802244186e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 6.575323641300201e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 8.151307702064514e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 5.2391085773706436e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 4.234490916132927e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 5.0865113735198975e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 11,
+      "generation": 0,
+      "seconds": 5.558738484978676e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 7.532071322202682e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 1,
+      "seconds": 0.0006754067726433277,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.165301263332367e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.380809307098389e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 6.158091127872467e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 7.629673928022385e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 6.907572969794273e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.085160955786705e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 4.087202250957489e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.027884617447853e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.25331124663353e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.1252078264951706e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.646701902151108e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 1,
+      "seconds": 0.0005682650953531265,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 7.393211126327515e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 7.178774103522301e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 5.039060488343239e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 12,
+      "generation": 0,
+      "seconds": 3.9692968130111694e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 0.000105998944491148,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 7.83577561378479e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 7.475120946764946e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 7.520103827118874e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 6.398512050509453e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 5.787098780274391e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 4.458799958229065e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 1,
+      "seconds": 0.0007582269608974457,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 5.003530532121658e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 5.070585757493973e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 5.160178989171982e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 5.3954776376485825e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 5.600741133093834e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 5.941977724432945e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 6.0521066188812256e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 13,
+      "generation": 0,
+      "seconds": 6.0585327446460724e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 0.00012840516865253448,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 7.751397788524628e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 7.715076208114624e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 1,
+      "seconds": 0.0008595772087574005,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 6.807874888181686e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 5.8718957006931305e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 4.463689401745796e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 4.691770300269127e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 5.087582394480705e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 5.007907748222351e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 5.215918645262718e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 5.306396633386612e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 5.451636388897896e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 5.6345947086811066e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 0,
+      "seconds": 6.031990051269531e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 14,
+      "generation": 1,
+      "seconds": 0.0006446102634072304,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 0.00012117112055420876,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 8.300971239805222e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 7.875123992562294e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 7.424503564834595e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 7.388414815068245e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 8.333474397659302e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 7.916288450360298e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 9.946012869477272e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 7.623201236128807e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 7.611000910401344e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 7.799174636602402e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 1,
+      "seconds": 0.0007573775947093964,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 0.00011000689119100571,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 0.00011528097093105316,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 0.0001039230264723301,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 15,
+      "generation": 0,
+      "seconds": 0.0001265951432287693,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00013382220640778542,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00013969885185360909,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00011180620640516281,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00012331129983067513,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00011846795678138733,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00011582020670175552,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00011281296610832214,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 1,
+      "seconds": 0.0015190327540040016,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00011560693383216858,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00011512916535139084,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 0.00010989001020789146,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 7.845181971788406e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 7.885508239269257e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 8.133798837661743e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 7.782597094774246e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 16,
+      "generation": 0,
+      "seconds": 8.522393181920052e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 0.00010022101923823357,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.331192657351494e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.05840827524662e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 1,
+      "seconds": 0.0008862349204719067,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.278200402855873e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 7.99698755145073e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.219433948397636e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.681230247020721e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.238106966018677e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.399179205298424e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.220179006457329e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.382508531212807e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.331425487995148e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.491799235343933e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 0,
+      "seconds": 8.642859756946564e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 17,
+      "generation": 1,
+      "seconds": 0.0010476578027009964,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 9.597185999155045e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 7.894588634371758e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 7.722992449998856e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 9.031035006046295e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.26660543680191e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.675083518028259e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.275499567389488e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.242111653089523e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.5385050624609e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.391868323087692e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.34059901535511e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 1,
+      "seconds": 0.000996801070868969,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.32737423479557e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.359970524907112e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.333427831530571e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 18,
+      "generation": 0,
+      "seconds": 8.832523599267006e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 0.00011191610246896744,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 8.45068134367466e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 8.159596472978592e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 8.351961150765419e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 8.839135989546776e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 8.614594116806984e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 8.672289550304413e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 1,
+      "seconds": 0.0011013657785952091,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 2,
+      "seconds": 0.12440850865095854,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 4.834216088056564e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 5.1734037697315216e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 5.226721987128258e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 5.389004945755005e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 6.530387327075005e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 8.100969716906548e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 5.258386954665184e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 19,
+      "generation": 0,
+      "seconds": 4.148995503783226e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 6.609130650758743e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 5.405209958553314e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 5.4960139095783234e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 1,
+      "seconds": 0.0008350899443030357,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 6.698118522763252e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 7.560010999441147e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 7.121497765183449e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 5.307421088218689e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 4.0531158447265625e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 4.984671249985695e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 5.405908450484276e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 5.539692938327789e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 5.5833254009485245e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 6.785383448004723e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 7.710419595241547e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 1,
+      "seconds": 0.0007378966547548771,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 5.001388490200043e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 20,
+      "generation": 0,
+      "seconds": 4.1871797293424606e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 0.00011067884042859077,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 8.175894618034363e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 7.722107693552971e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 7.37127847969532e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 6.997399032115936e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.805632099509239e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 4.6502333134412766e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 4.8599205911159515e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.087023600935936e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 1,
+      "seconds": 0.000982543919235468,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.315011367201805e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.656713619828224e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.7131052017211914e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.855970084667206e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.287211388349533e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 21,
+      "generation": 0,
+      "seconds": 5.344301462173462e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 0.00011850893497467041,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 7.558288052678108e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 7.599499076604843e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 7.273117080330849e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 7.642991840839386e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 1,
+      "seconds": 0.0007280423305928707,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 4.476308822631836e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 4.653492942452431e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 4.9921683967113495e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 5.226675420999527e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 5.160924047231674e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 5.052564665675163e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 5.2211806178092957e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 5.365302786231041e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 5.4745934903621674e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 22,
+      "generation": 0,
+      "seconds": 5.7787634432315826e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 0.0001228582113981247,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 1,
+      "seconds": 0.0007281340658664703,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.508136332035065e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.987115532159805e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.420172914862633e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.58729875087738e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.499009370803833e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.58250243961811e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.632607594132423e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.4814073741436e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.76718370616436e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.821200415492058e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.537985220551491e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 1,
+      "seconds": 0.0007501291111111641,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.701991125941277e-05,
+      "collected": 0,
+      "uncollectable": 0
+    },
+    {
+      "sample": 23,
+      "generation": 0,
+      "seconds": 7.406389340758324e-05,
+      "collected": 0,
+      "uncollectable": 0
+    }
+  ],
+  "summary": {
+    "baseline": {
+      "wall_s": {
+        "median": 0.09098172234371305,
+        "mean": 0.10184978235823412
+      },
+      "cpu_s": {
+        "median": 0.09097599050000005,
+        "mean": 0.10184249883333345
+      },
+      "gc_s": {
+        "median": 0.0019660117104649544,
+        "mean": 0.0021150884373734393
+      }
+    },
+    "registry": {
+      "wall_s": {
+        "median": 0.08927444089204073,
+        "mean": 0.09136480116285384
+      },
+      "cpu_s": {
+        "median": 0.08926857300000002,
+        "mean": 0.09135884316666676
+      },
+      "gc_s": {
+        "median": 0.001979588298127055,
+        "mean": 0.002013567447041472
+      }
+    },
+    "point": {
+      "wall_s": {
+        "median": 0.08709231344982982,
+        "mean": 0.1049330229870975
+      },
+      "cpu_s": {
+        "median": 0.08708657899999972,
+        "mean": 0.10492557049999984
+      },
+      "gc_s": {
+        "median": 0.0019153875764459372,
+        "mean": 0.018690871850897867
+      }
+    },
+    "combined": {
+      "wall_s": {
+        "median": 0.08834774419665337,
+        "mean": 0.12453996514280637
+      },
+      "cpu_s": {
+        "median": 0.08834135600000037,
+        "mean": 0.12453397483333362
+      },
+      "gc_s": {
+        "median": 0.0025848133955150843,
+        "mean": 0.03924214746803045
+      }
+    }
+  },
+  "limits": [
+    "Timing only; protected output suite not rerun.",
+    "GC remains enabled; no samples excluded or GC time subtracted.",
+    "Pricing and GC placement do not establish whole-wave/CLI speedup."
+  ]
+}

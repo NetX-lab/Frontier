@@ -1,0 +1,317 @@
+{
+  "task_id": "D29-EMISSION-IMMUTABLE-WORK",
+  "label": "h1",
+  "source_revision": "7540414341d5b81a86b18b9562d1506c0ba74285",
+  "source_hashes": {
+    "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+    "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+    "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": "d18bde6f67c28b14353b2da4ea8cf9deaa3927a23b727f62607007e9b16a7198",
+    "frontier/cc_backend/collective_plan.py": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d",
+    "frontier/entities/execution_time.py": "fcd2e592c0eb165b6398db368ecd5e6ab812d5d00f7fb53fad7035bb5f4bc64c",
+    "frontier/entities/time_components.py": "b19f7158159d034a5e9dc090811a3026815053c8eb6615a688a72f4be9d897f2",
+    "frontier/moe_routing_policy.py": "bbfab0881ab66a8c5f8d23ce865722cfc06bfafe47fd099ec394ba98639855d4"
+  },
+  "script_sha256": "8c3297ec19b2f238d28bc8a81f970ae8ef4d73f6b4442e96594eeb46c48aad39",
+  "setup_sha256": "b6c869b2b01bd118b02aaf0a9755ee6b87e25a7f00c9667cbd52d50a2cca2b80",
+  "unchanged_probe_body_sha256": "1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555",
+  "getter_counts": {
+    "attention_time_component": 0,
+    "attention_operator_times": 0,
+    "moe_or_mlp_time_component": 16,
+    "mlp_operator_times": 0,
+    "moe_operator_times": 0,
+    "communication_time_component": 16,
+    "communication_operator_times": 0
+  },
+  "getter_and_plan_profiles": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py",
+      "line": 86,
+      "symbol": "to_dict",
+      "calls": 192,
+      "self_s": 0.000715592,
+      "cumulative_s": 0.050409634
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/cc_backend/collective_plan.py",
+      "line": 91,
+      "symbol": "cache_key",
+      "calls": 64,
+      "self_s": 0.00044884600000000003,
+      "cumulative_s": 0.02613642
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/entities/execution_time.py",
+      "line": 731,
+      "symbol": "moe_or_mlp_time_component",
+      "calls": 16,
+      "self_s": 4.3523e-05,
+      "cumulative_s": 0.012968198
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields/frontier/entities/execution_time.py",
+      "line": 778,
+      "symbol": "communication_time_component",
+      "calls": 16,
+      "self_s": 2.5133e-05,
+      "cumulative_s": 0.007048019000000001
+    }
+  ],
+  "traversed_dataclass_occurrences": {
+    "frontier.entities.time_components.MoETime": 16,
+    "frontier.entities.time_components.MoEOperatorTimes": 16,
+    "frontier.moe_routing_policy.WaveRoutingSource": 16,
+    "frontier.moe_routing_policy.SourceLaneRouting": 32,
+    "frontier.moe_routing_policy.TokenInterval": 16,
+    "frontier.entities.time_components.CommunicationTime": 16,
+    "frontier.entities.time_components.CommunicationOperatorTimes": 16,
+    "frontier.cc_backend.collective_plan.CollectivePlan": 64,
+    "frontier.cc_backend.collective_plan.CollectiveTensor": 112,
+    "frontier.cc_backend.collective_plan.CollectivePlanCost": 64
+  },
+  "traversed_dataclass_field_types": {
+    "frontier.entities.time_components.MoETime": {
+      "moe_grouped_gemm_time": [
+        "float"
+      ],
+      "moe_gating_linear_time": [
+        "float"
+      ],
+      "moe_gating_routing_topk_time": [
+        "float"
+      ],
+      "moe_shuffling_time": [
+        "float"
+      ],
+      "moe_input_quantize_time": [
+        "float"
+      ],
+      "mlp_norm_time": [
+        "float"
+      ],
+      "share_expert_up_proj_time": [
+        "float"
+      ],
+      "share_expert_down_proj_time": [
+        "float"
+      ],
+      "share_expert_act_time": [
+        "float"
+      ],
+      "step5_ffn_merge_time": [
+        "float"
+      ],
+      "operator_times": [
+        "MoEOperatorTimes"
+      ]
+    },
+    "frontier.entities.time_components.MoEOperatorTimes": {
+      "op_times": [
+        "dict"
+      ],
+      "physical_frame": [
+        "dict"
+      ]
+    },
+    "frontier.moe_routing_policy.WaveRoutingSource": {
+      "policy_id": [
+        "str"
+      ],
+      "source_lanes": [
+        "tuple"
+      ],
+      "gathered_physical_rows": [
+        "int"
+      ]
+    },
+    "frontier.moe_routing_policy.SourceLaneRouting": {
+      "lane_id": [
+        "int"
+      ],
+      "source_batch_id": [
+        "int"
+      ],
+      "source_global_id": [
+        "int"
+      ],
+      "forward_group_id": [
+        "int"
+      ],
+      "graph_mode": [
+        "str"
+      ],
+      "gating_runtime_context": [
+        "str"
+      ],
+      "physical_rows": [
+        "int"
+      ],
+      "live_rows": [
+        "int"
+      ],
+      "intervals": [
+        "tuple"
+      ]
+    },
+    "frontier.moe_routing_policy.TokenInterval": {
+      "start": [
+        "int"
+      ],
+      "length": [
+        "int"
+      ]
+    },
+    "frontier.entities.time_components.CommunicationTime": {
+      "attn_tensor_parallel_allreduce_time": [
+        "float"
+      ],
+      "moe_tensor_parallel_allreduce_time": [
+        "float"
+      ],
+      "embedding_allreduce_time": [
+        "float"
+      ],
+      "tensor_parallel_allreduce_time": [
+        "float"
+      ],
+      "tensor_parallel_allgather_time": [
+        "float"
+      ],
+      "share_expert_tensor_parallel_allreduce_time": [
+        "float"
+      ],
+      "dp_input_allreduce_time": [
+        "float"
+      ],
+      "dp_output_allreduce_time": [
+        "float"
+      ],
+      "pipeline_parallel_send_recv_time": [
+        "float"
+      ],
+      "expert_parallel_allgather_time": [
+        "float"
+      ],
+      "expert_parallel_alltoall_time": [
+        "float"
+      ],
+      "operator_times": [
+        "CommunicationOperatorTimes"
+      ],
+      "step5_moe_dispatch_time": [
+        "float"
+      ],
+      "step5_moe_combine_time": [
+        "float"
+      ]
+    },
+    "frontier.entities.time_components.CommunicationOperatorTimes": {
+      "op_times": [
+        "dict"
+      ],
+      "plans": [
+        "dict"
+      ],
+      "costs": [
+        "dict"
+      ]
+    },
+    "frontier.cc_backend.collective_plan.CollectivePlan": {
+      "phase": [
+        "str"
+      ],
+      "sizes": [
+        "tuple"
+      ],
+      "tensors": [
+        "tuple"
+      ],
+      "groups": [
+        "tuple"
+      ],
+      "graph_mode": [
+        "str"
+      ],
+      "context_json": [
+        "str"
+      ],
+      "buffer_json": [
+        "str"
+      ]
+    },
+    "frontier.cc_backend.collective_plan.CollectiveTensor": {
+      "name": [
+        "str"
+      ],
+      "dtype": [
+        "str"
+      ],
+      "element_size": [
+        "int"
+      ],
+      "columns": [
+        "int"
+      ],
+      "row_stride": [
+        "int"
+      ]
+    },
+    "frontier.cc_backend.collective_plan.CollectivePlanCost": {
+      "duration_ms": [
+        "float"
+      ],
+      "network_ms": [
+        "float"
+      ],
+      "local_rank_ms": [
+        "tuple"
+      ],
+      "remainder_ms": [
+        "float"
+      ],
+      "kernel_counts": [
+        "tuple"
+      ],
+      "count_receipt_json": [
+        "str"
+      ],
+      "plan_key": [
+        "str"
+      ],
+      "model_identity": [
+        "str"
+      ]
+    }
+  },
+  "frozen_values_with_nonimmutable_contents": [],
+  "untimed_recursive_deepcopy_types": {
+    "frontier.entities.time_components.MoETime": 16,
+    "builtins.type": 64,
+    "builtins.dict": 528,
+    "builtins.float": 864,
+    "builtins.str": 5952,
+    "frontier.entities.time_components.MoEOperatorTimes": 16,
+    "frontier.moe_routing_policy.WaveRoutingSource": 16,
+    "builtins.int": 5472,
+    "builtins.bool": 160,
+    "builtins.list": 160,
+    "frontier.entities.time_components.CommunicationTime": 16,
+    "frontier.entities.time_components.CommunicationOperatorTimes": 16,
+    "frontier.cc_backend.collective_plan.CollectivePlan": 64,
+    "frontier.cc_backend.collective_plan.CollectivePlanCost": 64
+  },
+  "prepared_source_plan_object_count": 64,
+  "extra_ownership_checks": {
+    "original_same_lane_native_context_alias_retained": true,
+    "different_lane_native_context_maps_independent": true,
+    "different_communication_event_tensor_context_buffer_dicts_independent": true
+  },
+  "protocol_negatives": {
+    "mutable_receipt_not_shared": true,
+    "frozen_child_with_mutable_extra_not_shared": true
+  },
+  "key_replacement_check": {},
+  "trace_store_and_encoder_unchanged": true
+}

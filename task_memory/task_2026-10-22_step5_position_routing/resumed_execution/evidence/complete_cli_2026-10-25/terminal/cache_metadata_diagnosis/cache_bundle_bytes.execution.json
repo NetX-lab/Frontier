@@ -1,0 +1,21 @@
+{
+  "command": [
+    "timeout",
+    "60s",
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/d29_main09_cache_bundle_bytes_20261025.py"
+  ],
+  "returncode": 0,
+  "wall_s": 0.13366480730473995,
+  "finished_utc": "2026-10-25T06:05:59.080867+00:00",
+  "configured_MemoryMax": "30G",
+  "scope": "Read only fourteen exact current cache paths with root access; no ownership/permission change, model load, pricing, workload or platform call."
+}

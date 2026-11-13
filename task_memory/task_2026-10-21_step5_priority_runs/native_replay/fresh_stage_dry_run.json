@@ -1,0 +1,40 @@
+{
+ "resource_constructor_arguments": {
+  "cpu": 32,
+  "gpu": 8,
+  "mem_gb": 128,
+  "replica": 4,
+  "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+  "positive_tags": [
+   "H800"
+  ],
+  "extra_requirements": [],
+  "mounts": [
+   "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+  ],
+  "preemptible": false,
+  "envs": {
+   "PYTHONDONTWRITEBYTECODE": "1",
+   "HF_HUB_OFFLINE": "1",
+   "TRANSFORMERS_OFFLINE": "1",
+   "HF_DATASETS_OFFLINE": "1",
+   "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+   "DISTRIBUTED_JOB": "true"
+  },
+  "task_anti_affinities": [
+   "hard/default"
+  ],
+  "command": "{COMMAND}",
+  "task_specs": {
+   "default": {
+    "is_critical": true
+   }
+  }
+ },
+ "spawn_arguments": {
+  "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/config.json'",
+  "charged_group": "codesign",
+  "use_image": true,
+  "code_mount_point": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03"
+ }
+}

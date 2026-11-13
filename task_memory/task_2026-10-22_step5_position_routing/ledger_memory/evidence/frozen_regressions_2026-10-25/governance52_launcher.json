@@ -1,0 +1,14 @@
+{
+  "suite": "governance52",
+  "argv": [
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/run_suite.py",
+    "governance52"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314",
+  "start_utc": "2026-10-24T18:27:21.070582+00:00",
+  "end_utc": "2026-10-24T18:27:50.375127+00:00",
+  "returncode": 0,
+  "duration_s": 29.304551344830543
+}

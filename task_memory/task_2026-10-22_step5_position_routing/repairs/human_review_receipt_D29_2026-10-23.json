@@ -1,0 +1,21 @@
+{
+  "case_id": "D29-step5-position-cyclic",
+  "decision_id": "D29-SCOPE-107-10000",
+  "requesting_user": "YC",
+  "reviewer_identity": "YC",
+  "answer": "批准完整方案 (Recommended)",
+  "requirements": "task_memory/task_2026-10-22_step5_position_routing/requirements.md",
+  "analysis_artifact": "task_memory/task_2026-10-22_step5_position_routing/pricing_design.md",
+  "analysis_sha256": "d5f180e6ecf6d53fe4c390ab14a46f8cffdb58168d79bc03c16786833e701723",
+  "analysis_timestamp_utc": "2026-10-22T12:01:23.350533+00:00",
+  "receipt_created_utc": "2026-10-22T17:49:02.601514+00:00",
+  "user_local_date": "2026-10-23",
+  "approved_scope_commit": "318ca264d5b2b42fc56eeaec9778182931a3af2a",
+  "approved_scope_sha256": "12b6f02b1df18f03d8b7a4c004f8d9c62af5946bc28a322bc4f0d661e62a2652",
+  "source_test_config_paths": 107,
+  "conservative_gross_lines": 9942,
+  "additional_tracked_paths": ["docs/general/module-size-exceptions.md", "frontier/cc_backend/backends/collective-sim (gitlink)"],
+  "total_gross_ceiling": 10000,
+  "status": "APPROVED",
+  "additional_collection_run_authority": "REQUIRES_READINESS_DECISION"
+}

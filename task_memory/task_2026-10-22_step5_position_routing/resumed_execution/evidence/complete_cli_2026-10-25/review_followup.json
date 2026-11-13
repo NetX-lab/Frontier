@@ -1,0 +1,39 @@
+{
+  "collected_utc": "2026-10-25T04:34:14.195210+00:00",
+  "fixed_point": "0dca7f83ea62f18fef3f6c400db27ccc45260d39",
+  "candidate": "8e3d5088ed82855b16aebdc868032a5624cc71c6",
+  "diff_command": "git diff 0dca7f83ea62f18fef3f6c400db27ccc45260d39...8e3d5088ed82855b16aebdc868032a5624cc71c6",
+  "standards": {
+    "reviewer": "Tesla",
+    "agent": "01a17149-b68d-7422-a9e3-28209ce1ea2f",
+    "status": "NO_FINDINGS",
+    "closed_initial_findings": [
+      "P2"
+    ],
+    "new_findings": [],
+    "report": "P2已关闭；独立Standards follow-up：No findings。初始launch_error/launcher.failure.log与后续error/launcher.followup.failure.log分别保留；同步sink仅匹配原SDK模块/submit/Job Create并在finally移除。SDK source SHA、plan与既有fault/static/dry-run证据一致。原spawn_tasks/wait/SDK未替换，未发现新增documented breach或需单列heuristic smell。"
+  },
+  "spec": {
+    "reviewer": "Poincare",
+    "agent": "01a17149-b789-7cf3-9310-0cdf739db657",
+    "status": "NO_FINDINGS",
+    "closed_initial_findings": [
+      "P1",
+      "P2"
+    ],
+    "new_findings": [],
+    "report": "P1/P2均CLOSED；新增发现No findings。原SDK提交后、wait前的Job Create经同步sink当场保存job_name/receipt，异常后不依赖worker_started.json，仍采failed job/replica并核对返回identity。两阶段traceback/error分别保留。已有2原缺陷复现、3修复fake场景GREEN及SDK hash绑定核对通过。完整6144/1024、2400s/main、cap外validation、资源和调用额度不变。"
+  },
+  "review_scope": "Independent read-only follow-up, reusing each initial axis context. No tests, client, platform or workload operations by reviewers.",
+  "final_plan_sha256": "4e7df1aa584a8ed52ba1712b8ff729367c35b0895025be68222dfe4b7266567e",
+  "initial_counts": {
+    "standards": 1,
+    "spec": 2
+  },
+  "final_counts": {
+    "standards": 0,
+    "spec": 0
+  },
+  "new_platform_calls": 0,
+  "new_workload_calls": 0
+}

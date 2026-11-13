@@ -83,7 +83,7 @@ def test_default_quantization_registry_derives_dense_attention_ops_from_family(
 
 
 def test_default_quantization_registry_derives_all_enabled_attention_family_ops() -> None:
-    from frontier.attention.families import iter_attention_families
+    from frontier.attention.families import iter_execution_enabled_families
 
     QuantizationManager.reset()
     try:
@@ -91,8 +91,7 @@ def test_default_quantization_registry_derives_all_enabled_attention_family_ops(
         compute_ops = set(manager.get_supported_operations()["compute_operations"])
         expected_attention_ops = {
             operator.name
-            for family in iter_attention_families()
-            if not family.dsa_frozen
+            for family in iter_execution_enabled_families()
             for operator in family.profiling_ops()
         }
 

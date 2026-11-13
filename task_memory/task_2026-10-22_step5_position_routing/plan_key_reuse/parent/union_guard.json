@@ -1,0 +1,37 @@
+{
+ "guard_only": true,
+ "status": "PASS_TWO_PATH_DELTA_ONLY",
+ "violations": [],
+ "non_key_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+ "expected_non_key_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+ "totals": {
+  "owner_actual": {
+   "core_source": 4173,
+   "pricing": 3954,
+   "native": 1350
+  },
+  "owner_caps": {
+   "core_source": 4404,
+   "pricing": 3956,
+   "native": 1582
+  },
+  "owner_paths": {
+   "core_source": 49,
+   "pricing": 46,
+   "native": 19
+  },
+  "source_actual_before_key": 9463,
+  "source_actual_after_key": 9477,
+  "source_cap": 9942,
+  "module_size_note_actual": 12,
+  "gitlink_actual": 2,
+  "global_actual_before_key": 9477,
+  "global_actual_after_key": 9491,
+  "global_cap": 10000,
+  "pricing_actual_expected": 3954,
+  "pricing_actual_matches_expected": true,
+  "source_matches_expected": true,
+  "global_matches_expected": true,
+  "caps_unchanged": true
+ }
+}

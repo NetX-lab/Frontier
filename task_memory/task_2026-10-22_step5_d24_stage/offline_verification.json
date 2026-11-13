@@ -1,0 +1,44 @@
+{
+  "observed_utc": "2026-10-22T02:07:31.712588+00:00",
+  "status": "PASS_OFFLINE_STAGE",
+  "native_qualification": "NOT_RUN",
+  "submissions_or_controls": 0,
+  "stage": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage",
+  "source_commit": "ebd5baf61757d48ff4ca6287903a01e6828c25f4",
+  "config_sha256": "6b5186548c791dccf9f2dd11203c48fbeb5d92f63dfa6aec44e89bb835b56680",
+  "tool_files": 50,
+  "installed_native_source_pins": 50,
+  "observation_source_pins": 12,
+  "schema_source_pins": 14,
+  "frozen_environment_files": {
+    "role_state_observation.py": "5fa8c349c05e3ca2d75e5c369e6fad6d7f2b4b34e1f2f90ec78902f11c38510d",
+    "role_capacity_observation.py": "d7a99b5bab66d10f1ae9aaae7a2e9698a8cc55b44142ee295e0f22691f127899"
+  },
+  "resources": {
+    "charged_group": "codesign",
+    "gpu_type": "H800",
+    "replica": 4,
+    "gpu": 8,
+    "timeout_seconds": 5400
+  },
+  "requests": 163,
+  "waves": 14,
+  "concurrent_requests": 8,
+  "content_requests": 8,
+  "native_readiness_only_requests": 155,
+  "diagnostic_only": true,
+  "clean_timing_eligible": false,
+  "canonical_g3": {
+    "workload": "data/processed_traces/canonical_fixed_6144_1024_req128_qps1",
+    "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+    "sums_sha256": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+    "independent_reference": "EXISTING_D_FULL_LOCAL_PREFILL_NO_KV_TRANSFER_PARAMS",
+    "pending_read_abort": "REQUIRE_OBSERVED_NATIVE_IN_FLIGHT_READ_ABORT_NOT_DEADLINE_ALONE",
+    "pressure": "UNVERIFIED_WITHOUT_OBSERVED_NATIVE_ALLOCATION_PRESSURE",
+    "idle_timeout_s": 120,
+    "idle_poll_s": 1,
+    "dp_size": 2
+  },
+  "g3_qualified": false,
+  "package_sealing": "OFFLINE_VERIFIED_NATIVE_OBSERVATIONS_NOT_RUN"
+}

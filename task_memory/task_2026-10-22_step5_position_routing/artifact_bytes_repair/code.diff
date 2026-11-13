@@ -1,0 +1,94 @@
+diff --git a/frontier/cc_backend/backends/collective_sim_cc_backend.py b/frontier/cc_backend/backends/collective_sim_cc_backend.py
+index e118f698..ce51ba30 100644
+--- a/frontier/cc_backend/backends/collective_sim_cc_backend.py
++++ b/frontier/cc_backend/backends/collective_sim_cc_backend.py
+@@ -70,7 +70,7 @@ class CollectiveSimCCBackend(BaseCCBackend):
+         self._prediction_cache_hits = 0
+         self._prediction_cache_instance_hits = 0
+         self._prediction_cache_misses = 0
+-        self._collective_artifact_text = None
++        self._collective_artifact_bytes = None
+         self._collective_artifact = None
+ 
+         self._repo_root = self._resolve_collective_sim_repo_root()
+@@ -810,10 +810,10 @@ class CollectiveSimCCBackend(BaseCCBackend):
+         if dims != {"TP":8, "CP":1, "DP":2, "EP":1} or self._placement_order != ("TP","DP"):
+             raise ValueError("Step plans require explicitly configured TP8/DP2 placement")
+         path = Path(self._config.profiling_data_dir) / self._device_type / "collective_local.json"
+-        text = path.read_text()
+-        if text != self._collective_artifact_text:
+-            artifact = json.loads(text)
+-            self._collective_artifact_text, self._collective_artifact = text, artifact
++        raw = path.read_bytes()
++        if raw != self._collective_artifact_bytes:
++            artifact = json.loads(raw.decode())
++            self._collective_artifact_bytes, self._collective_artifact = raw, artifact
+         artifact = self._collective_artifact
+         context=json.loads(plan.context_json)
+         if artifact.get("evidence_kind") == "cpu_fixture" or context.get("shared",{}).get("evidence_kind") == "cpu_fixture":
+diff --git a/frontier/execution_time_predictor/moe_routing_workload.py b/frontier/execution_time_predictor/moe_routing_workload.py
+index ad870fc1..feecd9d3 100644
+--- a/frontier/execution_time_predictor/moe_routing_workload.py
++++ b/frontier/execution_time_predictor/moe_routing_workload.py
+@@ -152,17 +152,17 @@ class MoeRoutingWorkload:
+         self._step5_physical_points = retained
+         return points
+ 
+-    def _step5_collective_points(self, text):
+-        """Prepare structural receipts only; every query supplies current file text."""
++    def _step5_collective_points(self, raw):
++        """Prepare structural receipts only; every query supplies current file bytes."""
+         from frontier.profiling.common.runtime_identity import canonical_json
+         retained = getattr(self, "_step5_collective_receipts", None)
+-        if retained is None or retained[0] != text:
+-            artifact, shapes = json.loads(text), {}
++        if retained is None or retained[0] != raw:
++            artifact, shapes = json.loads(raw.decode()), {}
+             for key in artifact["counts"]:
+                 value = json.loads(key)
+                 shape = (value["phase"], tuple(value["sizes"]), value["graph_mode"], canonical_json(value["tensors"]))
+                 shapes.setdefault(shape, []).append((key, value))
+-            retained = (text, artifact, shapes, {}, {})
++            retained = (raw, artifact, shapes, {}, {})
+         else:
+             retained = (*retained[:3], retained[3].copy(), retained[4].copy())
+         return retained
+@@ -210,8 +210,8 @@ class MoeRoutingWorkload:
+         from frontier.operators.families import get_moe_profiling_operators
+         queries = {op.name:dict(num_tokens=local.physical_rows,live_routing_token_count=local.live_rows)
+                    if op.ep_agnostic else features for op in get_moe_profiling_operators(context)}
+-        text = (Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text()
+-        retained = self._step5_collective_points(text)
++        raw = (Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_bytes()
++        retained = self._step5_collective_points(raw)
+         plans = {}
+         phases = {"step5_moe_dispatch":"dispatch","step5_moe_combine":"combine",
+             "moe_tensor_parallel_allreduce":"routed_tp"}
+diff --git a/tests/unit/test_collective_sim_cc_backend.py b/tests/unit/test_collective_sim_cc_backend.py
+index 91f6f941..6c7a30ec 100644
+--- a/tests/unit/test_collective_sim_cc_backend.py
++++ b/tests/unit/test_collective_sim_cc_backend.py
+@@ -197,18 +197,20 @@ def test_cpu_writer_reference_is_explicit_and_sealed(tmp_path,monkeypatch,mode):
+     else:
+         with pytest.raises((ValueError,FileNotFoundError)): cpu_writer_source()
+ 
+-def test_collective_artifact_reuses_only_identical_current_text(tmp_path,monkeypatch):
++def test_collective_artifact_reuses_only_identical_current_bytes(tmp_path,monkeypatch):
+     import os,frontier.cc_backend.backends.collective_sim_cc_backend as module
+     backend,artifact,path=cpu_writer_payload(tmp_path,monkeypatch)
+     key=next(iter(artifact["counts"]));v=json.loads(key)
+     plan=CollectivePlan(v["phase"],v["sizes"],tuple(CollectiveTensor(**t) for t in v["tensors"]),v["groups"],v["graph_mode"],v["context_json"],v["buffer_json"])
+     text=path.read_text();stat=path.stat();reads=[];decodes=[];failure=[]
+     class ArtifactText(str): pass
++    class ArtifactBytes(bytes):
++        def decode(self): return ArtifactText(super().decode())
+     class CurrentPath(type(path)):
+-        def read_text(self):
++        def read_bytes(self):
+             reads.append(self)
+             if failure: raise failure[0]
+-            return ArtifactText(super().read_text())
++            return ArtifactBytes(super().read_bytes())
+     class Decoder:
+         def __getattr__(self,name): return getattr(json,name)
+         def loads(self,value):

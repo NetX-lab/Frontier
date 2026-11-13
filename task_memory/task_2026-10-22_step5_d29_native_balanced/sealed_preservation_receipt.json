@@ -1,0 +1,18 @@
+[
+  {
+    "name": "capture01",
+    "status": "NOT_PRESENT_NO_WRITES"
+  },
+  {
+    "name": "capture02",
+    "status": "PASS_MANIFEST_BYTES",
+    "count": 56,
+    "manifest_sha256": "822f715925d23c8dabd015baaea6d025cfd4f1868a194e03d5caf19525affba3"
+  },
+  {
+    "name": "capture03",
+    "status": "PASS_MANIFEST_BYTES",
+    "count": 57,
+    "manifest_sha256": "cdaad24ecded6da6f2eea90ed4ef4a582432db2fd75c56c29aafb22f2f56a57d"
+  }
+]

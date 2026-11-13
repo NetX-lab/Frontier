@@ -570,3 +570,21 @@ class AstraSimAnalyticalCCBackendConfig(BaseCCBackendConfig):
     def get_name() -> str:
         """Return the backend name for this configuration."""
         return "astra_sim_analytical"
+
+
+@dataclass
+class MeasuredCCBackendConfig(BaseCCBackendConfig):
+    """Device-time collective curves, with no extrapolation or analytical fallback."""
+
+    summary_csv_path: str = field(
+        default="{profiling_data_dir}/{NETWORK_DEVICE}/summary.csv",
+        metadata={"help": "Path template to measured collective summary rows."},
+    )
+
+    @staticmethod
+    def get_type() -> CCBackendType:
+        return CCBackendType.MEASURED
+
+    @staticmethod
+    def get_name() -> str:
+        return "measured"

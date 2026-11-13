@@ -1,0 +1,118 @@
+{
+  "gate": 0.3,
+  "rows": [
+    {
+      "metric": "ttft_ms.mean",
+      "frontier": 863.8795671256609,
+      "native": 912.2389631253706,
+      "abs_error": -48.359395999709704,
+      "rel_error": -0.053011763314766015,
+      "status": "PASS"
+    },
+    {
+      "metric": "ttft_ms.p50",
+      "frontier": 868.7284138425646,
+      "native": 918.3456761141618,
+      "abs_error": -49.61726227159727,
+      "rel_error": -0.05402896051250011,
+      "status": "PASS"
+    },
+    {
+      "metric": "ttft_ms.p90",
+      "frontier": 892.858129881617,
+      "native": 949.9693140387535,
+      "abs_error": -57.11118415713656,
+      "rel_error": -0.06011897785869612,
+      "status": "PASS"
+    },
+    {
+      "metric": "ttft_ms.p95",
+      "frontier": 895.7982657059347,
+      "native": 957.3821422333518,
+      "abs_error": -61.58387652741715,
+      "rel_error": -0.0643252822574653,
+      "status": "PASS"
+    },
+    {
+      "metric": "tpot_ms.mean",
+      "frontier": 45.90676290496631,
+      "native": 53.30255372590031,
+      "abs_error": -7.395790820934003,
+      "rel_error": -0.13875115363075569,
+      "status": "PASS"
+    },
+    {
+      "metric": "tpot_ms.p50",
+      "frontier": 46.67492319233506,
+      "native": 54.81520103750117,
+      "abs_error": -8.14027784516611,
+      "rel_error": -0.148504022444377,
+      "status": "PASS"
+    },
+    {
+      "metric": "tpot_ms.p90",
+      "frontier": 46.81477303119591,
+      "native": 55.232691543668984,
+      "abs_error": -8.417918512473072,
+      "rel_error": -0.1524082617957801,
+      "status": "PASS"
+    },
+    {
+      "metric": "tpot_ms.p95",
+      "frontier": 46.848351562238406,
+      "native": 55.26150235497784,
+      "abs_error": -8.413150792739437,
+      "rel_error": -0.15224252751394113,
+      "status": "PASS"
+    },
+    {
+      "metric": "e2e_ms.mean",
+      "frontier": 47826.49801890619,
+      "native": 55440.751424721384,
+      "abs_error": -7614.253405815194,
+      "rel_error": -0.1373403716606184,
+      "status": "PASS"
+    },
+    {
+      "metric": "e2e_ms.p50",
+      "frontier": 48611.10531798117,
+      "native": 56990.02518039197,
+      "abs_error": -8378.919862410796,
+      "rel_error": -0.14702432286858602,
+      "status": "PASS"
+    },
+    {
+      "metric": "e2e_ms.p90",
+      "frontier": 48777.44227981583,
+      "native": 57432.65109695494,
+      "abs_error": -8655.208817139115,
+      "rel_error": -0.1507018856317084,
+      "status": "PASS"
+    },
+    {
+      "metric": "e2e_ms.p95",
+      "frontier": 48801.10628126654,
+      "native": 57455.46641231825,
+      "abs_error": -8654.360131051712,
+      "rel_error": -0.15062727137127976,
+      "status": "PASS"
+    },
+    {
+      "metric": "total_thpt_tokens_s",
+      "frontier": 5372.094686195315,
+      "native": 5219.819137649231,
+      "abs_error": 152.27554854608388,
+      "rel_error": 0.029172571794252214,
+      "status": "PASS"
+    },
+    {
+      "metric": "output_thpt_tokens_s",
+      "frontier": 767.4420980279021,
+      "native": 745.6884482356045,
+      "abs_error": 21.753649792297665,
+      "rel_error": 0.02917257179425217,
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

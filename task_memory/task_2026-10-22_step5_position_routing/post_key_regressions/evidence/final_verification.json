@@ -1,0 +1,267 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "session_id": "ses_e98925887ffecetw6nTB6nD8f0",
+  "source_revision": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+  "source_tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+  "submodule_revision": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "execution_status": "COMPLETED_WITH_DECLARED_TEST_ID_REPLACEMENT",
+  "all_required_raw_predicates_passed": false,
+  "raw_exact_status_gate": "FAIL_RETAINED_ID_LOSS_OR_STATUS_CHANGE",
+  "failed_raw_predicates": [
+    "retained79_ID_presence",
+    "parser_parent128_ID_presence"
+  ],
+  "one_unique_planned_missing_id": [
+    "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text"
+  ],
+  "primary_admission_not_claimed": true,
+  "no_new_code_failure_with_explicit_environment_supplements": true,
+  "all_failure_error_skip_ids_equal79": true,
+  "all_retained_present_statuses_equal79": true,
+  "new_source_cases": [
+    {
+      "id": "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published",
+      "status": "pass"
+    },
+    {
+      "id": "tests.unit.test_moe_routing_runtime::test_collective_input_binds_both_role_constructors_and_refreshes_next_run",
+      "status": "pass"
+    },
+    {
+      "id": "tests.unit.test_prediction_measurement_bindings::test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries",
+      "status": "pass"
+    }
+  ],
+  "all_new_source_cases_pass": true,
+  "governance_reconciliation": [
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_carries_plan_typed_operator_contracts",
+      "raw_exception": "ModuleNotFoundError: No module named 'torch'",
+      "covered_same_id_pass": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_linear_wrapper_result_omits_unmeasured_typed_operator_contracts",
+      "raw_exception": "ModuleNotFoundError: No module named 'torch'",
+      "covered_same_id_pass": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_initializes_runtime_with_routed_width",
+      "raw_exception": "ModuleNotFoundError: No module named 'torch'",
+      "covered_same_id_pass": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_moe_wrapper_typed_result_round_trips_through_manager",
+      "raw_exception": "ModuleNotFoundError: No module named 'torch'",
+      "covered_same_id_pass": true
+    },
+    {
+      "id": "tests.unit.test_profiling_governance_minimal_red::test_real_linear_producer_csv_round_trip_reaches_manager_loader",
+      "raw_exception": "ModuleNotFoundError: No module named 'torch'",
+      "covered_same_id_pass": true
+    }
+  ],
+  "suites_are_separate_not_summed": true,
+  "suites": [
+    {
+      "suite": "unit",
+      "counts": {
+        "skipped": 281,
+        "error": 32,
+        "pass": 8020,
+        "failure": 279
+      },
+      "raw_exits": [
+        1
+      ],
+      "duration_seconds": [
+        1124.4680571192876
+      ],
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_unit_parent06_baseline_environment.xml",
+        "bytes": 2115049,
+        "sha256": "9d5ab2bcd0d5e969c4281b24f7f6b0fcde84a86ea344fbeef1b3173d93511df7"
+      },
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_unit_parent06_baseline_environment.log",
+          "bytes": 4619690,
+          "sha256": "43b2234911b52d1057ffda7154ed662e2bfab7d9dd79bb23e6fe2239fdda8a38"
+        }
+      ],
+      "execution": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit/execution.json",
+        "bytes": 7212,
+        "sha256": "07537fa168bc47880897c2c6870d23f1a032c2f1e6b0e9071f7d84bcd1051930"
+      }
+    },
+    {
+      "suite": "supplement101",
+      "counts": {
+        "pass": 101
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        11.478874184656888
+      ],
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/results.xml",
+        "bytes": 15812,
+        "sha256": "06dcbe7fca4eaa88c6201e314d278c3ef1074f01bd01bbab58198f4859014c59"
+      },
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/results.log",
+          "bytes": 180,
+          "sha256": "0b18ea7d3ccae2eabd9ab1c661c1114f11d5e30d78380071ad0462fa0a2141a5"
+        }
+      ],
+      "execution": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/supplement101/execution.json",
+        "bytes": 33399,
+        "sha256": "6eab78d40fe677df619da35efaafb1300cab31be64463605b0cefaddaf77b8b2"
+      }
+    },
+    {
+      "suite": "metadata196",
+      "counts": {
+        "pass": 197
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        8.479929741937667
+      ],
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/results.xml",
+        "bytes": 31247,
+        "sha256": "beee87e21f1dd0b45e4116af7b6794208abec0d4b718b03ff88a243eb55a26ca"
+      },
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/results.log",
+          "bytes": 260,
+          "sha256": "e79b1a01dde865acb9491b8b0b3b99f2d5a8cabbefaac9143f39f58f779fa91c"
+        }
+      ],
+      "execution": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/metadata196/execution.json",
+        "bytes": 33398,
+        "sha256": "340154db12d3fc515b3731f48f120faa8eaba62d70f598a1c63f663f141403b1"
+      }
+    },
+    {
+      "suite": "catalogue53",
+      "counts": {
+        "pass": 53
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        3.3680482851341367
+      ],
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/results.xml",
+        "bytes": 8993,
+        "sha256": "4ecdb970a691edbe6f490c323598dbcbc4d653af1c34a33640a8ae52ed09cb2b"
+      },
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/results.log",
+          "bytes": 99,
+          "sha256": "ed8b4d424948e6943586192b03a04f9cfb343f230e8411a24911cd279386b572"
+        }
+      ],
+      "execution": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/catalogue53/execution.json",
+        "bytes": 33153,
+        "sha256": "1172f067da266098e39c38089ceb61b9c3281249318f5a57c94c9a0d1a5a1b0a"
+      }
+    },
+    {
+      "suite": "governance52",
+      "counts": {
+        "pass": 52
+      },
+      "raw_exits": [
+        0
+      ],
+      "duration_seconds": [
+        21.539635474793613
+      ],
+      "junit": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/results.xml",
+        "bytes": 8366,
+        "sha256": "1fb0fb13d185781ef44b01a959e8535efa8b46073029a61237661968923f5044"
+      },
+      "logs": [
+        {
+          "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/results.log",
+          "bytes": 805,
+          "sha256": "09b7b3ad4a33d234942bd9bfc9bc86f588f8ecd97cddf7ddff4208b9a9356ed0"
+        }
+      ],
+      "execution": {
+        "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/execution.json",
+        "bytes": 7547,
+        "sha256": "41a9f514eb32fe224dfb5329e32d3defc8e51f0a34c9eee76a41e63b51771ade"
+      }
+    }
+  ],
+  "strict77": {
+    "counts": {
+      "identical": 77,
+      "different": 0
+    },
+    "raw_exits": [
+      0,
+      0,
+      0
+    ],
+    "receipt": {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261024_final06/final06_receipt.json",
+      "bytes": 4058,
+      "sha256": "d223ffaf54a3e9ea9227697ca64add8f0518d3c9086b73c1197bd7ecec148551"
+    },
+    "comparison_sha256": "22064464739130d4a5675394559353ea716cc93d5eb966c9b6f431b13074bb28"
+  },
+  "source_guard": {
+    "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/source_final_receipt.json",
+    "bytes": 6701,
+    "sha256": "ac752f1ee2c82c3b93ae7146d6b45ed132132983856ee7fca476aae13de81577"
+  },
+  "canonical_comparison": {
+    "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit_final06_final_comparison.json",
+    "bytes": 78938,
+    "sha256": "30451fa98211a682fe9f2fb537f2162402376b964dbf8d9623a1f848aab6385e"
+  },
+  "canonical_legacy_comparison": {
+    "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/unit_final06_final_legacy_comparison.json",
+    "bytes": 167897,
+    "sha256": "5486d8b7d79693020271e4aee610885ec468667e04063100b0e428d563be67f1"
+  },
+  "first_environment_run_preserved_not_canonical": {
+    "path": "/data/ycfeng/tmp/d29_unit_parent06.xml",
+    "bytes": 2106848,
+    "sha256": "c2ab63565762aca0346615900d4fec7e2a99f50d95bf534d4814f1ca00c71def"
+  },
+  "completed": [
+    "source_preflight",
+    "strict77_and_audit",
+    "required_short_suites",
+    "existing_governance_supplement",
+    "canonical_full_unit_exact_comparison",
+    "source_input_after_guards",
+    "raw_ID_delta_diagnosis"
+  ],
+  "unfinished_verification": [],
+  "limits": [
+    "Raw full-unit historical failures/errors remain;not all-green.",
+    "One approved hot-update test was replaced by the passing run-fixed test;raw ID predicate still fails and is not waived.",
+    "First binary-availability expansion is preserved as an environment observation,not canonical or a qualification.",
+    "No source/test/config/helper/peer edits,baseline reruns,dependency installs,network,Docker,GPU,full actual CLI,T2/seal/platform or native qualification."
+  ]
+}

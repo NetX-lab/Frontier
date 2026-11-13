@@ -1,0 +1,17 @@
+{
+  "decision_id": "D29-NAMED-MODEL-QUERY",
+  "change_marker": "D29-NAMED-MODEL-QUERY",
+  "case": "D29 actual-main position_cyclic runtime",
+  "requesting_user": "YC",
+  "reviewer_identity": "YC",
+  "recorded_at_utc": "2026-10-24T05:00:13+00:00",
+  "analysis_commit": "de2d818fc49613e5b7fc5c41b4e49691b2a36bd6",
+  "analysis_commit_at_utc": "2026-10-23T22:57:57+00:00",
+  "analysis_artifact": "../runtime_model_view/evidence/verification.json",
+  "analysis_sha256": "31d72236ba3dc5067189b55e4291876bce8e46be8e82b525b4c1c5d9887d4a12",
+  "requirements": "../requirements.md#original-request--decision-d29-named-model-query",
+  "answer_verbatim": "批准，类似请求无需申请权限，皆授权",
+  "approved_scope": "Named-model GEMM query and stated unrelated-model error difference;100gross(source20/tests80) within CORE/global limits. Analogous in-scope performance changes preauthorized.",
+  "allocation": "named_model_query_scope_amendment.json",
+  "status": "APPROVED"
+}

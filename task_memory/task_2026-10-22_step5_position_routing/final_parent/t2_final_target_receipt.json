@@ -1,0 +1,39 @@
+{
+  "status": "PASS_STATIC_BINDING_PENDING_STAGING",
+  "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+  "source_tree": "a5cb27c3e26943f0dfa638301b3564fb2427d56d",
+  "records_commit": "2c0f9bd79e67b2fa15d6f68c0726accffab52813",
+  "target": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04",
+  "bound_files_verified": 26,
+  "checksum_entries_verified": 63,
+  "index_sha256": "1e36d25e3fe8c41a4f2e7e04f2df7d352fd9b474d5aa34c3bda6bc92de5c97ca",
+  "script_sources": {
+    "tests/integration/step5_environment/test_position_cyclic_graph.py": {
+      "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "root_acceptance": "Root frozen integrated source; byte-identical to accepted662 T2, CPU-only evidence, no GPU qualification"
+    },
+    "frontier/profiling/collectives/step5_dispatch_probe.py": {
+      "sha256": "63baf64781a533a72e31b0e622fd99524b3d40acd4149a8552c6b1808266b2ff",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "root_acceptance": "Root frozen integrated full file; constructor AST equal to662, full helper changed, no GPU qualification"
+    },
+    "tests/integration/step5_profiling/run_on_worker.sh": {
+      "sha256": "c7ee4de334cd06c777282fd20979c435588456ca734c5188bfe774aa884a8746",
+      "source_commit": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "root_acceptance": "Full actual recipe file bound; only existing driver-compatibility branch used in proposal, wrapper not invoked"
+    }
+  },
+  "engine_limits": {
+    "max_model_len": 7168,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 128
+  },
+  "changed_record_paths": 11,
+  "code_changes": 0,
+  "production_p2_sha256": "44bbad5b04ae40d407024f39db0b6dd3dde540cd097e8c63b1c3c32f339eea83",
+  "updated_records_staged": false,
+  "gpu_qualified": false,
+  "launch_authorized": false,
+  "log": "/data/ycfeng/tmp/d29_t2_final_parent02.log"
+}

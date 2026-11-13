@@ -1,0 +1,19 @@
+{
+  "source": "e41abc073500d61f224eda4fca1123e74e40544d",
+  "strict77": 77,
+  "raw_unit": {
+    "skipped": 281,
+    "error": 32,
+    "pass": 8015,
+    "failure": 279
+  },
+  "baseline_failures": 267,
+  "baseline_errors": 31,
+  "environment_additional_failures": 12,
+  "environment_additional_collection_errors": 1,
+  "status": "NO_NEW_CODE_FAILURES_WITH_EXPLICIT_ENVIRONMENT_SUPPLEMENT",
+  "verification": "Reparsed raw candidate/baseline/supplement XML and verified receipt hashes; no suite rerun",
+  "strict_receipt_sha256": "dbd86793d32a071a4e3a32d7557163f8426353cbcaf14ce41645e3841601569d",
+  "unit_receipt_sha256": "c329c5614e8565953c493fbfb1ba13cb58d8da783ea539c98c5075d779d560f5",
+  "parent_checker_correction": "Initial auxiliary check treated numeric baseline/candidate counts as ID arrays; corrected to independently derive sets from raw XML. All checks above then passed."
+}

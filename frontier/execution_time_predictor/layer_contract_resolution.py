@@ -387,9 +387,20 @@ class LayerContractResolution:
         model_names: List[str],
         cluster_type: ClusterType,
         layer_contract: Optional[ResolvedLayerContract] = None,
+        *, operator_facts=None,
     ) -> None:
         """Validate op-level MoE profiling key coverage before model training."""
         df = pd.read_csv(file_path)
+        if operator_facts is not None:
+            if not operator_facts:
+                raise ValueError("MoE preflight requires nonempty selected operator_facts")
+            from frontier.moe_routing_runtime import filter_moe_operator_rows
+            for facts in operator_facts.values():
+                filter_moe_operator_rows(df, operator_facts=facts,
+                    requested_runtime_path=facts["native_context"]["routing_runtime_path"], source_name=file_path)
+            return
+        if getattr(replica_config, "moe_routing_distribution_type", "balanced") == "position_cyclic":
+            raise ValueError("Position MoE preflight requires selected operator_facts before legacy helpers")
         required_columns = [
             "num_experts",
             "router_topk",

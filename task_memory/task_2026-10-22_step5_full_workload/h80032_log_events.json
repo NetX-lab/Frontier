@@ -1,0 +1,290 @@
+[
+  {
+    "path": "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/server.log",
+    "shutdown": [
+      {
+        "line": 2153,
+        "text": "INFO:     Shutting down"
+      }
+    ],
+    "errors": [
+      {
+        "line": 2142,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899] AsyncLLM output_handler failed."
+      },
+      {
+        "line": 2143,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899] Traceback (most recent call last):"
+      },
+      {
+        "line": 2144,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/async_llm.py\", line 842, in output_handler"
+      },
+      {
+        "line": 2145,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899]     outputs = await engine_core.get_output_async()"
+      },
+      {
+        "line": 2146,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899]               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "line": 2147,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core_client.py\", line 1235, in get_output_async"
+      },
+      {
+        "line": 2148,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899]     raise self._format_exception(outputs) from None"
+      },
+      {
+        "line": 2149,
+        "text": "(APIServer pid=770) ERROR 10-21 19:09:49 [async_llm.py:899] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause."
+      }
+    ],
+    "jit": [
+      {
+        "line": 523,
+        "text": "(Worker_DP0_TP0_EP0 pid=1999) WARNING 10-21 18:57:32 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _paged_scores_sm90. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 524,
+        "text": "(Worker_DP0_TP0_EP0 pid=1999) WARNING 10-21 18:57:32 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _count_expert_num_tokens. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 525,
+        "text": "(Worker_DP0_TP0_EP0 pid=1999) WARNING 10-21 18:57:33 [jit_monitor.py:140] Triton kernel JIT compilation during inference: fused_moe_kernel. This causes a latency spike; consider extending warmup to cover this shape/config."
+      }
+    ]
+  },
+  {
+    "path": "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/server.log",
+    "shutdown": [
+      {
+        "line": 552,
+        "text": "(MainProcess pid=5125) INFO 10-21 19:09:51 [serve.py:266] Shutting down."
+      }
+    ],
+    "errors": [
+      {
+        "line": 325,
+        "text": "[rank11]:[W1021 19:09:49.091815623 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:55784, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 337,
+        "text": "[rank9]:[W1021 19:09:49.091811415 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:41536, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 349,
+        "text": "[rank8]:[W1021 19:09:49.091814968 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=79, addr=[gpu-h800-0201.host.platform.shaipower.com]:41534, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 361,
+        "text": "[rank10]:[W1021 19:09:49.091817749 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:53208, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 377,
+        "text": "[rank15]:[W1021 19:09:49.196307810 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:33668, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 390,
+        "text": "[rank12]:[W1021 19:09:49.218280274 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:55792, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 403,
+        "text": "[rank13]:[W1021 19:09:49.220363363 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:56866, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 416,
+        "text": "[rank14]:[W1021 19:09:49.288209920 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:33654, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 429,
+        "text": "[rank11]:[W1021 19:09:50.096371459 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:55784, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Broken pipe"
+      },
+      {
+        "line": 443,
+        "text": "[rank8]:[W1021 19:09:50.096321306 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=79, addr=[gpu-h800-0201.host.platform.shaipower.com]:41534, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Broken pipe"
+      },
+      {
+        "line": 457,
+        "text": "[rank9]:[W1021 19:09:50.096320687 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:41536, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Broken pipe"
+      },
+      {
+        "line": 474,
+        "text": "[rank10]:[W1021 19:09:50.096320908 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:53208, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Broken pipe"
+      },
+      {
+        "line": 489,
+        "text": "[rank15]:[W1021 19:09:50.199204390 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:33668, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Broken pipe"
+      },
+      {
+        "line": 504,
+        "text": "[rank12]:[W1021 19:09:50.220806189 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:55792, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Broken pipe"
+      },
+      {
+        "line": 519,
+        "text": "[rank13]:[W1021 19:09:50.222741613 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0201.host.platform.shaipower.com]:56866, remote=[gpu-h800-0024.host.platform.shaipower.com]:33653): Broken pipe"
+      }
+    ],
+    "jit": [
+      {
+        "line": 318,
+        "text": "(Worker_DP1_TP0_EP8 pid=5483) WARNING 10-21 18:57:30 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _count_expert_num_tokens. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 319,
+        "text": "(Worker_DP1_TP0_EP8 pid=5483) WARNING 10-21 18:57:33 [jit_monitor.py:140] Triton kernel JIT compilation during inference: fused_moe_kernel. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 324,
+        "text": "(Worker_DP1_TP0_EP8 pid=5483) WARNING 10-21 18:57:36 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _paged_scores_sm90. This causes a latency spike; consider extending warmup to cover this shape/config."
+      }
+    ]
+  },
+  {
+    "path": "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/server.log",
+    "shutdown": [
+      {
+        "line": 4130,
+        "text": "INFO:     Shutting down"
+      }
+    ],
+    "errors": [
+      {
+        "line": 4119,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899] AsyncLLM output_handler failed."
+      },
+      {
+        "line": 4120,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899] Traceback (most recent call last):"
+      },
+      {
+        "line": 4121,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/async_llm.py\", line 842, in output_handler"
+      },
+      {
+        "line": 4122,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899]     outputs = await engine_core.get_output_async()"
+      },
+      {
+        "line": 4123,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899]               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "line": 4124,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899]   File \"/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core_client.py\", line 1235, in get_output_async"
+      },
+      {
+        "line": 4125,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899]     raise self._format_exception(outputs) from None"
+      },
+      {
+        "line": 4126,
+        "text": "(APIServer pid=5133) ERROR 10-21 19:09:56 [async_llm.py:899] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause."
+      }
+    ],
+    "jit": [
+      {
+        "line": 540,
+        "text": "(Worker_DP0_TP0_EP0 pid=5533) WARNING 10-21 18:57:35 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _paged_scores_sm90. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 541,
+        "text": "(Worker_DP0_TP0_EP0 pid=5533) WARNING 10-21 18:57:36 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _gumbel_sample_kernel. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 1064,
+        "text": "(Worker_DP0_TP0_EP0 pid=5533) WARNING 10-21 18:59:23 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _direct_scores. This causes a latency spike; consider extending warmup to cover this shape/config."
+      }
+    ]
+  },
+  {
+    "path": "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0471.host.platform.shaipower.com/server.log",
+    "shutdown": [
+      {
+        "line": 599,
+        "text": "(MainProcess pid=4914) INFO 10-21 19:09:58 [serve.py:266] Shutting down."
+      }
+    ],
+    "errors": [
+      {
+        "line": 357,
+        "text": "[rank12]:[W1021 19:09:57.327750757 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:55486, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 369,
+        "text": "[rank9]:[W1021 19:09:57.327727184 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:55850, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 383,
+        "text": "[rank11]:[W1021 19:09:57.327686947 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:32900, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 396,
+        "text": "[rank14]:[W1021 19:09:57.327686915 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:43308, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 409,
+        "text": "[rank15]:[W1021 19:09:57.327682287 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:45948, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 421,
+        "text": "[rank8]:[W1021 19:09:57.327682271 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=79, addr=[gpu-h800-0471.host.platform.shaipower.com]:60952, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 435,
+        "text": "[rank10]:[W1021 19:09:57.327651884 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:32892, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 448,
+        "text": "[rank13]:[W1021 19:09:57.394046309 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:58896, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?"
+      },
+      {
+        "line": 461,
+        "text": "[rank11]:[W1021 19:09:58.332055728 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:32900, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      },
+      {
+        "line": 475,
+        "text": "[rank12]:[W1021 19:09:58.331823632 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:55486, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      },
+      {
+        "line": 489,
+        "text": "[rank15]:[W1021 19:09:58.332350352 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:45948, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      },
+      {
+        "line": 506,
+        "text": "[rank9]:[W1021 19:09:58.331836680 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:55850, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      },
+      {
+        "line": 520,
+        "text": "[rank14]:[W1021 19:09:58.332230909 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:43308, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      },
+      {
+        "line": 536,
+        "text": "[rank10]:[W1021 19:09:58.332887066 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:32892, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      },
+      {
+        "line": 551,
+        "text": "[rank8]:[W1021 19:09:58.332386360 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=79, addr=[gpu-h800-0471.host.platform.shaipower.com]:60952, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      },
+      {
+        "line": 566,
+        "text": "[rank13]:[W1021 19:09:58.396885135 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=99, addr=[gpu-h800-0471.host.platform.shaipower.com]:58896, remote=[gpu-h800-0398.host.platform.shaipower.com]:38139): Broken pipe"
+      }
+    ],
+    "jit": [
+      {
+        "line": 338,
+        "text": "(Worker_DP1_TP0_EP8 pid=5699) WARNING 10-21 18:57:38 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _paged_scores_sm90. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 339,
+        "text": "(Worker_DP1_TP0_EP8 pid=5699) WARNING 10-21 18:57:39 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _gumbel_sample_kernel. This causes a latency spike; consider extending warmup to cover this shape/config."
+      },
+      {
+        "line": 356,
+        "text": "(Worker_DP1_TP0_EP8 pid=5699) WARNING 10-21 18:59:22 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _direct_scores. This causes a latency spike; consider extending warmup to cover this shape/config."
+      }
+    ]
+  }
+]

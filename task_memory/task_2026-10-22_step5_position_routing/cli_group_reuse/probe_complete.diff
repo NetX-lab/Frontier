@@ -1,0 +1,44 @@
+--- /data/ycfeng/tmp/d29_cli_timeout_repro/runtime_loop.py	2026-10-23 16:50:13.992247103 +0800
++++ /data/ycfeng/tmp/d29_group_reuse_runtime_loop.py	2026-10-23 17:26:27.852894273 +0800
+@@ -19,8 +19,8 @@
+ parser.add_argument('--no-profile',action='store_true')
+ parser.add_argument('--execution',action='store_true')
+ args=parser.parse_args();args.output.mkdir(exist_ok=False)
+-source=Path('/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05')
+-assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()=='e41abc073500d61f224eda4fca1123e74e40544d'
++source=Path('/data/ycfeng/Frontier/.worktrees/step5-d29-group-reuse')
++assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()=='3763e5b87a845eac186cfd481f0b56cffb2dd045'
+ sys.path.insert(0,str(source))
+ from frontier.config import SimulationConfig
+ from frontier.types import ClusterType,MeasurementType
+@@ -108,8 +108,9 @@
+     description_calls+=1
+     return original_description(*a,**kw)
+ attention_step5.describe_step5_layer=observed_description
+-prof=cProfile.Profile();times=[];truth=[]
++prof=cProfile.Profile();times=[];truth=[];iteration_descriptions=[]
+ for _ in range(args.iterations):
++    descriptions_before=description_calls
+     start=time.perf_counter()
+     if not args.no_profile:prof.enable()
+     if args.execution:
+@@ -121,6 +122,7 @@
+         assert context==json.loads(selected['native_context'])
+         payload=[context,queries,{k:p.cache_key() for k,p in plans.items()}]
+     prof.disable();times.append(time.perf_counter()-start)
++    iteration_descriptions.append(description_calls-descriptions_before)
+     truth.append(hashlib.sha256(json.dumps(payload,sort_keys=True).encode()).hexdigest())
+ assert len(set(truth))==1
+ attention_step5.describe_step5_layer=original_description
+@@ -132,9 +134,9 @@
+ json_calls=sum(v[1] for (path,line,name),v in stats.items() if path.endswith('/json/__init__.py') and name=='loads')
+ group_calls=sum(v[1] for (path,line,name),v in stats.items() if path.endswith('/profiling/moe/routed_layer_groups.py') and name=='resolve_routed_layer_groups')
+ layer_calls=sum(v[1] for (path,line,name),v in stats.items() if path.endswith('/attention/step5.py') and name=='describe_step5_layer')
+-result=dict(task_id='D29-CLI-TIMEOUT-REPRO',source_commit='e41abc073500d61f224eda4fca1123e74e40544d',bundle_path=str(bundle_path),loaded=loaded,
++result=dict(task_id='D29-CLI-TIMEOUT-REPRO',source_commit='3763e5b87a845eac186cfd481f0b56cffb2dd045',bundle_path=str(bundle_path),loaded=loaded,
+     actual_source=actual,layer=3,ep_id=0,iterations=args.iterations,wall_s=times,json_load_calls=json_calls,result_sha256=truth[0],group_resolutions=group_calls,layer_descriptions=description_calls,profile_layer_descriptions=layer_calls,
+-    reuse_groups=args.reuse_groups,profiled=not args.no_profile,execution=args.execution,
++    reuse_groups=args.reuse_groups,profiled=not args.no_profile,execution=args.execution,iteration_layer_descriptions=iteration_descriptions,
+     verdict=('RED' if description_calls>88 else 'GREEN'),red_condition='More than one all-layer description pass across repeated identical actual source/point queries; call-count diagnostic, not 2400s acceptance',
+     peak_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+     limits='One actual prefill lane at layer3, same source/models/plans; verified paired-cache setup excluded from timing; test construction seam skips Simulator initialization, but production query/pricing/Cluster/backend calls are unchanged; no whole-workflow admission',

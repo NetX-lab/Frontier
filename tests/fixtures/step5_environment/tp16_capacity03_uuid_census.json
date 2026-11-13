@@ -1,0 +1,739 @@
+{
+  "scope": "Actual capacity03 metadata fields consumed by all_rank_census; not G2 acceptance",
+  "generation": "capacity_20261018_03",
+  "job": "exp-1018-160003-695910",
+  "source_files": [
+    {
+      "path": "/data/ycfeng/tmp/step5_native_launch_preparation_20261018_03/tp16_cloud_read_01/node_0/all_rank_snapshots.json",
+      "sha256": "e3c2d87e095c5a51dae7d6db16d6e44d4c127fda7393ee673a93425693fad1d3",
+      "bytes": 208524
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_native_launch_preparation_20261018_03/tp16_shared_read_01/node_0_inventory.json",
+      "sha256": "4abdb7039646f006fb934aa4296ed25d571952ccb923226ec4f832236c4eea23",
+      "bytes": 1105
+    },
+    {
+      "path": "/data/ycfeng/tmp/step5_native_launch_preparation_20261018_03/tp16_shared_read_01/node_1_inventory.json",
+      "sha256": "ca0da2f03ef596fb659231c4f670bfb6cc7a9df152b7df93eba876ad3590d3de",
+      "bytes": 1104
+    }
+  ],
+  "selected_worker_fields": [
+    "rank",
+    "local_rank",
+    "pid",
+    "start_time",
+    "parent_pid",
+    "parent_start_time",
+    "generation",
+    "node_rank",
+    "boot_id",
+    "pid_namespace",
+    "observer_sha256",
+    "gpu_uuid",
+    "completed_stages",
+    "parallel_config",
+    "configuration",
+    "status",
+    "module_classes",
+    "routed_experts",
+    "resource_evidence_errors"
+  ],
+  "selected_node_fields": [
+    "generation",
+    "node_rank",
+    "boot_id",
+    "pid_namespace",
+    "observer_sha256",
+    "pid",
+    "gpu_uuids"
+  ],
+  "physical_visibility_order": [
+    [
+      0,
+      1,
+      3,
+      2,
+      4,
+      5,
+      7,
+      6
+    ],
+    [
+      2,
+      3,
+      1,
+      0,
+      6,
+      7,
+      5,
+      4
+    ]
+  ],
+  "nodes": [
+    {
+      "generation": "capacity_20261018_03",
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "observer_sha256": "a4a32a34ed0112719c81c27a938c2daefdd3dc56df100ccdfbbfc7cae615cd4f",
+      "pid": 768,
+      "gpu_uuids": [
+        "GPU-7a617d01-5c0d-eab5-7f7d-03ad4c50af5e",
+        "GPU-c1e089c0-ac5e-519c-9f76-ebad9d548630",
+        "GPU-6e323f7f-5a8a-adc3-3e7d-2bca8010bd7a",
+        "GPU-6ec39948-1885-0d38-09f1-c9f950aa7a2b",
+        "GPU-4158c58d-56cd-a3c4-68e4-f15b2f458d95",
+        "GPU-8c6f75dd-2658-363c-4c70-852f9cf79b4a",
+        "GPU-45e3506b-fdf2-3c76-be20-b66a74e30361",
+        "GPU-c586541b-c8a3-c4bb-9528-862815894ec8"
+      ],
+      "worker_parallel_config": {
+        "tensor_parallel_size": 16,
+        "data_parallel_size": 1,
+        "pipeline_parallel_size": 1,
+        "enable_expert_parallel": false,
+        "nnodes": 2,
+        "node_rank": 0
+      }
+    },
+    {
+      "generation": "capacity_20261018_03",
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "observer_sha256": "a4a32a34ed0112719c81c27a938c2daefdd3dc56df100ccdfbbfc7cae615cd4f",
+      "pid": 809,
+      "gpu_uuids": [
+        "GPU-249d42dd-7cdb-61b0-3e96-b1d56371934b",
+        "GPU-3149af11-8557-8d23-d678-78cb827a3493",
+        "GPU-17e5b10e-70b7-6c48-72af-5a7916d8de61",
+        "GPU-e96699aa-c7e3-1ab3-70f3-855156029b3d",
+        "GPU-3fb19852-5470-8b25-e403-69b0804bc83b",
+        "GPU-7592934b-52ff-5d42-352d-e31d340efe7c",
+        "GPU-3f8e1f7a-d151-e1ce-e1ff-6ec8012e4782",
+        "GPU-3bc058f6-20d4-a9c5-81a0-63c7198f2318"
+      ],
+      "worker_parallel_config": {
+        "tensor_parallel_size": 16,
+        "data_parallel_size": 1,
+        "pipeline_parallel_size": 1,
+        "enable_expert_parallel": false,
+        "nnodes": 2,
+        "node_rank": 1
+      }
+    }
+  ],
+  "workers": [
+    {
+      "rank": 0,
+      "local_rank": 0,
+      "pid": 1693,
+      "start_time": 1398915399,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "7a617d01-5c0d-eab5-7f7d-03ad4c50af5e"
+    },
+    {
+      "rank": 1,
+      "local_rank": 1,
+      "pid": 1830,
+      "start_time": 1398916111,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "c1e089c0-ac5e-519c-9f76-ebad9d548630"
+    },
+    {
+      "rank": 2,
+      "local_rank": 2,
+      "pid": 1932,
+      "start_time": 1398916831,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "6ec39948-1885-0d38-09f1-c9f950aa7a2b"
+    },
+    {
+      "rank": 3,
+      "local_rank": 3,
+      "pid": 2023,
+      "start_time": 1398917530,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "6e323f7f-5a8a-adc3-3e7d-2bca8010bd7a"
+    },
+    {
+      "rank": 4,
+      "local_rank": 4,
+      "pid": 2130,
+      "start_time": 1398918242,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "4158c58d-56cd-a3c4-68e4-f15b2f458d95"
+    },
+    {
+      "rank": 5,
+      "local_rank": 5,
+      "pid": 2219,
+      "start_time": 1398918940,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "8c6f75dd-2658-363c-4c70-852f9cf79b4a"
+    },
+    {
+      "rank": 6,
+      "local_rank": 6,
+      "pid": 2328,
+      "start_time": 1398919635,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "c586541b-c8a3-c4bb-9528-862815894ec8"
+    },
+    {
+      "rank": 7,
+      "local_rank": 7,
+      "pid": 2417,
+      "start_time": 1398920335,
+      "parent_pid": 1507,
+      "parent_start_time": 1398914568,
+      "node_rank": 0,
+      "boot_id": "94093ef9-3e88-4101-b185-db6a482dcdf8",
+      "pid_namespace": "pid:[4026547998]",
+      "gpu_uuid": "45e3506b-fdf2-3c76-be20-b66a74e30361"
+    },
+    {
+      "rank": 8,
+      "local_rank": 0,
+      "pid": 1545,
+      "start_time": 213889406,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "17e5b10e-70b7-6c48-72af-5a7916d8de61"
+    },
+    {
+      "rank": 9,
+      "local_rank": 1,
+      "pid": 1588,
+      "start_time": 213889717,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "e96699aa-c7e3-1ab3-70f3-855156029b3d"
+    },
+    {
+      "rank": 10,
+      "local_rank": 2,
+      "pid": 1617,
+      "start_time": 213890035,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "3149af11-8557-8d23-d678-78cb827a3493"
+    },
+    {
+      "rank": 11,
+      "local_rank": 3,
+      "pid": 1679,
+      "start_time": 213890377,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "249d42dd-7cdb-61b0-3e96-b1d56371934b"
+    },
+    {
+      "rank": 12,
+      "local_rank": 4,
+      "pid": 1743,
+      "start_time": 213890702,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "3f8e1f7a-d151-e1ce-e1ff-6ec8012e4782"
+    },
+    {
+      "rank": 13,
+      "local_rank": 5,
+      "pid": 1789,
+      "start_time": 213891034,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "3bc058f6-20d4-a9c5-81a0-63c7198f2318"
+    },
+    {
+      "rank": 14,
+      "local_rank": 6,
+      "pid": 1868,
+      "start_time": 213891380,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "7592934b-52ff-5d42-352d-e31d340efe7c"
+    },
+    {
+      "rank": 15,
+      "local_rank": 7,
+      "pid": 1943,
+      "start_time": 213891716,
+      "parent_pid": 1135,
+      "parent_start_time": 213887189,
+      "node_rank": 1,
+      "boot_id": "f0f1ef6b-a3ef-4a89-bc30-4a1addae6b5c",
+      "pid_namespace": "pid:[4026547685]",
+      "gpu_uuid": "3fb19852-5470-8b25-e403-69b0804bc83b"
+    }
+  ],
+  "common_worker_fields": {
+    "generation": "capacity_20261018_03",
+    "observer_sha256": "a4a32a34ed0112719c81c27a938c2daefdd3dc56df100ccdfbbfc7cae615cd4f",
+    "completed_stages": [
+      "init_device",
+      "load_model",
+      "determine_available_memory",
+      "initialize_from_config",
+      "compile_or_warm_up_model"
+    ],
+    "configuration": {
+      "model_dtype": "torch.bfloat16",
+      "gpu_memory_utilization": 0.92,
+      "speculative": false,
+      "prefix_caching": false
+    },
+    "status": "metadata_only_not_G2",
+    "module_classes": {
+      "vllm.models.step5.nvidia.vl.Step5ForConditionalGeneration": 1,
+      "vllm.model_executor.models.step_vl.PerceptionEncoder": 1,
+      "vllm.model_executor.layers.conv.Conv2dLayer": 3,
+      "torch.nn.modules.normalization.LayerNorm": 95,
+      "torch.nn.modules.linear.Identity": 1,
+      "vllm.model_executor.models.step_vl.PerceptionEncoderVisionTransformer": 1,
+      "torch.nn.modules.container.ModuleList": 2,
+      "vllm.model_executor.models.step_vl.PerceptionEncoderVisionBlock": 47,
+      "vllm.model_executor.models.step_vl.PerceptionEncoderVisionAttention": 47,
+      "vllm.model_executor.layers.linear.QKVParallelLinear": 116,
+      "vllm.model_executor.layers.linear.RowParallelLinear": 278,
+      "vllm.model_executor.layers.attention.mm_encoder_attention.MMEncoderAttention": 47,
+      "vllm.model_executor.models.step_vl.PerceptionEncoderRope2D": 47,
+      "vllm.model_executor.models.step_vl.PerceptionEncoderLayerScale": 94,
+      "vllm.model_executor.models.step_vl.PerceptionEncoderMLP": 47,
+      "vllm.model_executor.layers.linear.ColumnParallelLinear": 117,
+      "vllm.model_executor.layers.activation.QuickGELU": 1,
+      "vllm.models.step5.nvidia.model.Step5ForCausalLM": 1,
+      "vllm.models.step5.nvidia.model.Step5Model": 1,
+      "vllm.model_executor.layers.vocab_parallel_embedding.VocabParallelEmbedding": 1,
+      "vllm.models.step5.nvidia.model.Step5DecoderLayer": 92,
+      "vllm.models.step5.nvidia.model.Step5Attention": 92,
+      "vllm.model_executor.layers.rotary_embedding.base.RotaryEmbedding": 1,
+      "vllm.model_executor.layers.rotary_embedding.common.ApplyRotaryEmb": 3,
+      "vllm.models.step5.nvidia.layernorm.Step5RMSNorm": 392,
+      "vllm.model_executor.layers.attention.attention.Attention": 92,
+      "vllm.models.step5.nvidia.model.Step5MLP": 92,
+      "vllm.model_executor.layers.linear.MergedColumnParallelLinear": 92,
+      "vllm.model_executor.layers.activation.SwigluStepAndMul": 92,
+      "vllm.models.step5.nvidia.model.Step5FusedQKVIndexerLinear": 23,
+      "vllm.model_executor.layers.rotary_embedding.llama3_rope.Llama3RotaryEmbedding": 2,
+      "vllm.models.step5.nvidia.model.Step5SparseIndexerIndexTPLinear": 23,
+      "vllm.models.step5.nvidia.layernorm.Step5IndexerLayerNorm": 23,
+      "vllm.models.step5.nvidia.sparse_summary_cache.Step5SparseSummaryCacheLayer": 23,
+      "vllm.models.step5.nvidia.model.Step5MoE": 88,
+      "vllm.model_executor.layers.fused_moe.router.gate_linear.GateLinear": 88,
+      "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner": 88,
+      "vllm.model_executor.layers.fused_moe.routed_experts.RoutedExperts": 88,
+      "vllm.model_executor.layers.fused_moe.unquantized_fused_moe_method.UnquantizedFusedMoEMethod": 3,
+      "vllm.model_executor.layers.vocab_parallel_embedding.ParallelLMHead": 1,
+      "vllm.model_executor.layers.logits_processor.LogitsProcessor": 1
+    },
+    "routed_experts": [
+      {
+        "name": "language_model.model.layers.3.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.4.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.5.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.6.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.7.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.8.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.9.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.10.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.11.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.12.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.13.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.14.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.15.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.16.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.17.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.18.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.19.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.20.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.21.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.22.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.23.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.24.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.25.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.26.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.27.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.28.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.29.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.30.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.31.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.32.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.33.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.34.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.35.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.36.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.37.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.38.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.39.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.40.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.41.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.42.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.43.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.44.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.45.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.46.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.47.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.48.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.49.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.50.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.51.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.52.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.53.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.54.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.55.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.56.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.57.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.58.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.59.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.60.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.61.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.62.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.63.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.64.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.65.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.66.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.67.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.68.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.69.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.70.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.71.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.72.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.73.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.74.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.75.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.76.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.77.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.78.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.79.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.80.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.81.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.82.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.83.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.84.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.85.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.86.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.87.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.88.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.89.moe",
+        "count": 352
+      },
+      {
+        "name": "language_model.model.layers.90.moe",
+        "count": 352
+      }
+    ],
+    "resource_evidence_errors": []
+  },
+  "storage": "Reconstruct each actual row from common_worker_fields, its node worker_parallel_config and its worker-specific fields; raw producer UUIDs are unchanged."
+}

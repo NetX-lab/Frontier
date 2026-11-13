@@ -1,0 +1,17 @@
+{
+  "decision_id": "D29-IMMUTABLE-COST-FIELDS",
+  "authority": "D29-REPAIR-PATH-AUTHORITY",
+  "apply_after": "prepared_point_scope_amendment.json",
+  "effective_unique_paths": 112,
+  "owner": "pricing",
+  "owner_gross_ceiling": 3956,
+  "repair_delta_ceiling": 8,
+  "source_delta_ceiling": 8,
+  "test_delta_ceiling": 0,
+  "repair_paths": ["frontier/metrics/op_trace_utils.py", "frontier/metrics/ep_wave_metrics.py"],
+  "path_ceiling_adjustments": [],
+  "per_path_step_caps": {"frontier/metrics/op_trace_utils.py": 4, "frontier/metrics/ep_wave_metrics.py": 4},
+  "reason": "Supported CollectivePlanCost producers supply scalar/string and numeric tuple fields. The actual208-event control removes128 recursive conversions, preserving fresh trace/ledger mappings, complete bytes and pending snapshots. Owner median61.059ms becomes54.063ms. The8 step-gross lines replace existing D29-added lines: root Git comparison against1aee0af confirms retained45/45 and22/22, zero additional owner/global consumption. No allowance transfer is needed.",
+  "acceptance": "Replace only two cost asdict conversions with fresh declared-field dictionaries. Retain plan/key/evidence/count checks, independent mutable trace/ledger mappings and source snapshots. Verify full208-event byte/proof/ledger equality, snapshot and wrong-plan-key negatives, existing test status comparison, independent Standards/Spec review and Git-derived step/retained accounting.",
+  "limits": "Two existing PRICING paths only,<=8 gross. Caps45/22,112 paths and all owner/source/global ceilings stay. No borrowed source containers, joined writes, duplicated plan-key encoder, new API/helper/cache, numeric/proof omission or weaker gate. Other residual source changes remain unallocated. Local conversion does not establish full CLI acceptance."
+}

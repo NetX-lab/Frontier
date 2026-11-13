@@ -1,0 +1,52 @@
+{
+  "baseline_verified_revision": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+  "candidate_verified_revision": "fa5bae2980366da1d075125d6c26248a737fc419",
+  "changed_runtime_and_test_paths": [
+    "M\tfrontier/attention/families.py",
+    "M\tfrontier/attention/memory.py",
+    "M\tfrontier/attention/ops.py",
+    "M\tfrontier/attention/step5_memory.py",
+    "M\tfrontier/entities/request.py",
+    "M\tfrontier/events/cluster_batch_end_event.py",
+    "M\tfrontier/execution_time_predictor/prediction_model_registry.py",
+    "M\tfrontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+    "M\tfrontier/execution_time_predictor/step5_cost.py",
+    "M\tfrontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py",
+    "M\tfrontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py",
+    "M\tfrontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py",
+    "M\ttests/integration/run_step5_measured_main.py",
+    "M\ttests/integration/step5_measured_compute_fixture.py",
+    "M\ttests/integration/step5_pd/r2_canonical.py",
+    "M\ttests/integration/step5_pd/verify_r2_stage.py",
+    "M\ttests/integration/test_step5_measured_main.py",
+    "M\ttests/unit/test_step5_canonical_g3.py",
+    "M\ttests/unit/test_step5_measured_pd.py",
+    "A\ttests/unit/test_step5_model_identity_reuse.py",
+    "A\ttests/unit/test_step5_native_pressure_observation.py",
+    "A\ttests/unit/test_step5_prefill_target.py",
+    "M\ttests/unit/test_step5_structural_pd.py"
+  ],
+  "in_scope_source_edits": false,
+  "preserved_parent_untracked_paths": [
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/.cortexkit/",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/.pi/"
+  ],
+  "request_reference_files": [
+    {
+      "bytes": 62494,
+      "path": "/data/ycfeng/Frontier/AGENTS.md",
+      "sha256": "82354337fec8131194f31ad8f09d298d2ef6e3ad48282b0b4bd46e87b5a57249"
+    },
+    {
+      "bytes": 173255,
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/requirements.md",
+      "sha256": "e31601db59a129e76d89477878a00d06e23d6fd3f4f47c752895e3e4d6cfeadd"
+    },
+    {
+      "bytes": 148127,
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/plan.md",
+      "sha256": "30e985cc80670b49eeb5e9a316fd7889493fe50f27a05941b0cdba41e075b46d"
+    }
+  ],
+  "task_id": "D26-D27-D28-MERGED-FIDELITY"
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/source_final_receipt.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/source_final_receipt.json",
+    "sha256": "06529cd455bcaa6a1890733a699d178ec0337dd9167ab44cdb43fb56a0bacb3d",
+    "bytes": 585
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/final_acceptance.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/final_acceptance.json",
+    "sha256": "66251ecab160c71fa8aa73dcb2493ebac586b331b9be3b00ae37ad78549a9704",
+    "bytes": 14131
+  }
+]

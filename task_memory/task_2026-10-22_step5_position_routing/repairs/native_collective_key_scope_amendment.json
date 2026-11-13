@@ -1,0 +1,21 @@
+{
+  "decision_id": "D29-NATIVE-KEY-BYTES",
+  "authority": "YC standing D29-NAMED-MODEL-QUERY authorization: 批准，类似请求无需申请权限，皆授权; same owner/global limits",
+  "apply_after": "named_model_query_scope_amendment.json",
+  "effective_unique_paths": 114,
+  "owner_gross_ceilings": {"core_source": 4404, "pricing": 3956, "native": 1582},
+  "step_base": "18cc3e9e1008d796a08f3b5637c9b10311979735",
+  "repair_delta_ceiling": 3,
+  "source_delta_ceiling": 2,
+  "test_delta_ceiling": 1,
+  "retained_growth_ceiling": 1,
+  "repair_paths": ["frontier/cc_backend/backends/collective_sim_cc_backend.py", "tests/unit/test_collective_sim_cc_backend.py"],
+  "path_step_ceilings": {"frontier/cc_backend/backends/collective_sim_cc_backend.py": 2, "tests/unit/test_collective_sim_cc_backend.py": 1},
+  "path_ceiling_adjustments": [
+    {"path": "frontier/cc_backend/collective_plan.py", "before": 140, "delta": -1, "after": 139},
+    {"path": "tests/unit/test_collective_sim_cc_backend.py", "before": 236, "delta": 1, "after": 237}
+  ],
+  "reason": "The native branch re-encodes the complete private profiling artifact per prediction although its bytes are already validated and run-fixed and the LRU is backend-instance-local. Use those existing bytes as the artifact key component. The donor has actual139/cap140; its code remains unchanged. Source replacement retains cumulative93; the sole test addition projects PRICING3955/source9566/global9580, not yet measured.",
+  "acceptance": "Old implementation RED and committed candidate GREEN through the existing native-schema test; unchanged qualification/scenario/model/context/count/evidence checks before lookup; full schema cost/cache/error parity, unchanged CPU208-event costs/proofs/keys/order/JSONL/ledger/snapshots/64 negatives/3902-byte failure body, required regression/audit/review before integration. Record raw-byte formatting identity and cache lifetime explicitly.",
+  "limits": "Only the native artifact key expression and one existing test assertion. No donor code edit, new cache/API/helper/flag, numerical/proof cache, reduced admission/output, input/table change, GPU/platform work or native qualification claim. Keep source9942/global10000,6144/1024 and2400s. Key-only fixture evidence is not a native whole-wave measurement."
+}

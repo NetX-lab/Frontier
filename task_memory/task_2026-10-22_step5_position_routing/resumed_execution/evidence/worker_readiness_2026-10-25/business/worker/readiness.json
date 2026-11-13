@@ -1,0 +1,57 @@
+{
+  "task_id": "D29-WORKER-READINESS",
+  "status": "PASS_WORKER_IMPORT_AND_SERIALIZED_APPEND_ONLY",
+  "started_utc": "2026-10-24T21:05:58.351851+00:00",
+  "worker_hostname": "gpu-h800-0326.host.platform.shaipower.com",
+  "source_root": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "pricing_calls": 0,
+  "required_shape_calls": 0,
+  "full_cli_calls": 0,
+  "gpu_request": 0,
+  "full_workload_memory_verified": false,
+  "source": {
+    "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+    "records_head": "dfe603edab128d2a4aacb1b7b64d898993d4ae09",
+    "source_paths": 25,
+    "fixture_metadata_paths": 262
+  },
+  "mounts": [
+    "23753 23666 0:1069 / /mnt/codesign-exp rw,nosuid,nodev,relatime master:4327 - fuse.juicefs JuiceFS:codesign-exp rw,user_id=0,group_id=0,default_permissions,allow_other,max_read=1048576",
+    "23754 23666 0:986 / /data/ycfeng rw,relatime - nfs4 100.96.128.195:/data/ycfeng rw,vers=4.2,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=100.99.109.1,local_lock=none,addr=100.96.128.195"
+  ],
+  "nvidia_smi": {
+    "available": false,
+    "qualification": "NOT_APPLICABLE_ZERO_GPU_REQUEST"
+  },
+  "runtime": {
+    "returncode": 0,
+    "timed_out": false,
+    "command": [
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_probe.py",
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+    "wall_s": 2.7717022635042667,
+    "configured_address_space_bytes": 32212254720
+  },
+  "append": {
+    "returncode": 0,
+    "timed_out": false,
+    "command": [
+      "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+      "-B",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_append.py",
+      "--plan",
+      "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/worker_plan.json",
+      "--receipt",
+      "/data/ycfeng/tmp/d29_worker_readiness_20261025_01/worker/append.json"
+    ],
+    "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+    "wall_s": 4.974754341877997,
+    "configured_address_space_bytes": 32212254720
+  },
+  "append_bytes_per_s": 329643453.387636,
+  "finished_utc": "2026-10-24T21:06:06.655543+00:00"
+}

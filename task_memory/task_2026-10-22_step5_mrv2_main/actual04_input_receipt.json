@@ -1,0 +1,64 @@
+{
+  "offline": {
+    "environment": {
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+      "task_id": "D23-ACTUAL-MAIN",
+      "limitations": [
+        "Synthetic CPU compute profiles and 3.5 ms READ cost; no native admission or accuracy claim.",
+        "One request per mode, not formal 128 requests, 16 warmups, or three repetitions.",
+        "CPU overhead is explicitly skipped; collective_sim uses the built-in H800 topology."
+      ],
+      "source": {
+        "commit": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+        "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+        "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+      }
+    },
+    "input_hashes": {
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json": "417492f6223f83bc702b815cd8a4280323afb60600fd68fe9b9636cc0077fffd",
+      "/data/ycfeng/tmp/d23_main_actual04_offline/synthetic_read_cost.json": "3975d5ec0bf247d0c961bd74af47bd9411de6db59abe37a6251f8e0575d101fa",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/linear_op.csv": "ef87242b51dc5fba77bd99cae925dfd8ef9b939ca1b143c3c7bfabbf5065a96a",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/moe.csv": "ba4ea21068e75267d202112076d0270d3f1d5722463008f26818f1cba7a772c9",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/linear_op.csv": "cda9d3227353dfead47044060a09b802cebd0271f922be8d91574b91057e96b2",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/moe.csv": "b54148482a0de444eeca2ff14c1782ec4152563fa4628531a466a205f328ff6d",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv": "27baaf5c63315a41e5a78096aa318d50c4c134cae5c338abd8a940cae61b7179",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_kernel_only.csv": "b00a44e2e62efde9313f3e38f04d9d320558d78d15dbae13be747926c7c7dd81",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_kernel_gap.csv": "8a7d7ed0fe08428b52ccb350324fe6ddbd5c7181e5545844a931549060752555"
+    },
+    "timeout_s": 2400,
+    "status": "running_not_accepted"
+  },
+  "online": {
+    "environment": {
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+      "task_id": "D23-ACTUAL-MAIN",
+      "limitations": [
+        "Synthetic CPU compute profiles and 3.5 ms READ cost; no native admission or accuracy claim.",
+        "One request per mode, not formal 128 requests, 16 warmups, or three repetitions.",
+        "CPU overhead is explicitly skipped; collective_sim uses the built-in H800 topology."
+      ],
+      "source": {
+        "commit": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+        "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+        "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+      }
+    },
+    "input_hashes": {
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json": "417492f6223f83bc702b815cd8a4280323afb60600fd68fe9b9636cc0077fffd",
+      "/data/ycfeng/tmp/d23_main_actual04_online/synthetic_read_cost.json": "3975d5ec0bf247d0c961bd74af47bd9411de6db59abe37a6251f8e0575d101fa",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/linear_op.csv": "ef87242b51dc5fba77bd99cae925dfd8ef9b939ca1b143c3c7bfabbf5065a96a",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/moe.csv": "ba4ea21068e75267d202112076d0270d3f1d5722463008f26818f1cba7a772c9",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/linear_op.csv": "cda9d3227353dfead47044060a09b802cebd0271f922be8d91574b91057e96b2",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/moe.csv": "b54148482a0de444eeca2ff14c1782ec4152563fa4628531a466a205f328ff6d",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv": "27baaf5c63315a41e5a78096aa318d50c4c134cae5c338abd8a940cae61b7179",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_kernel_only.csv": "b00a44e2e62efde9313f3e38f04d9d320558d78d15dbae13be747926c7c7dd81",
+      "/data/ycfeng/tmp/d23_main_fixture02/fixture_kernel_gap.csv": "8a7d7ed0fe08428b52ccb350324fe6ddbd5c7181e5545844a931549060752555"
+    },
+    "timeout_s": 2400,
+    "status": "running_not_accepted"
+  }
+}

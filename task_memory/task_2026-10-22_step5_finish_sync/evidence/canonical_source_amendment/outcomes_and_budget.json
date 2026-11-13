@@ -1,0 +1,81 @@
+{
+  "verdict": "PASS_LATEST_AFFECTED_OUTCOMES",
+  "method": "Retain complete713e6a8 unit capture and replace only the65 outcomes in the amended unit module; this is not a second full-suite run. Production/fidelity inputs unchanged.",
+  "baseline": "b8be287",
+  "full_candidate": "713e6a8",
+  "baseline_xml": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+  "full_candidate_xml": "/data/ycfeng/tmp/d30_unit_candidate01.xml",
+  "affected_xml": "/data/ycfeng/tmp/d30_canonical_count_green01.xml",
+  "fullenv_xml": "/data/ycfeng/tmp/d30_canonical_fullenv01.xml",
+  "latest_outcomes": {
+    "pass": 7647,
+    "failure": 267,
+    "error": 31,
+    "skipped": 179
+  },
+  "delta": {
+    "failure": {
+      "added": [],
+      "removed": [],
+      "retained": 267
+    },
+    "error": {
+      "added": [],
+      "removed": [],
+      "retained": 31
+    }
+  },
+  "fullenv_passed": 65,
+  "source_test_paths": 8,
+  "gross_lines": 603,
+  "rows": [
+    {
+      "path": "frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py",
+      "added": 17,
+      "deleted": 7,
+      "module_lines": 1811
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_observation.py",
+      "added": 39,
+      "deleted": 0,
+      "module_lines": 1258
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_verdict.py",
+      "added": 6,
+      "deleted": 1,
+      "module_lines": 1478
+    },
+    {
+      "path": "tests/unit/test_step5_canonical_g3.py",
+      "added": 2,
+      "deleted": 1,
+      "module_lines": 366
+    },
+    {
+      "path": "tests/unit/test_step5_finish_sync.py",
+      "added": 305,
+      "deleted": 0,
+      "module_lines": 305
+    },
+    {
+      "path": "tests/unit/test_step5_measured_pd.py",
+      "added": 42,
+      "deleted": 47,
+      "module_lines": 416
+    },
+    {
+      "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+      "added": 2,
+      "deleted": 1,
+      "module_lines": 1364
+    },
+    {
+      "path": "tests/unit/test_step5_pd_placement.py",
+      "added": 117,
+      "deleted": 16,
+      "module_lines": 306
+    }
+  ]
+}

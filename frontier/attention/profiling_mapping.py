@@ -5,6 +5,7 @@ from functools import cache
 
 from frontier.attention.families import (
     LATENT_MLA_ATTENTION_FAMILY,
+    STEP5_ATTENTION_FAMILY,
     get_attention_family,
     iter_execution_enabled_families,
 )
@@ -18,6 +19,26 @@ from frontier.types import MeasurementType
 
 
 _TIME_STAT_SUFFIXES = ("min", "max", "mean", "median", "std", "count")
+
+STEP5_NUMERIC_COLUMNS = {
+    "global_layer_id": 0, "num_tensor_parallel_workers": 1,
+    "n_q_head": 1, "n_kv_head": 1, "head_size": 1,
+    "local_q_heads": 1, "local_kv_heads": 1, "kv_replication": 1,
+    "local_provider_groups": 0, "provider_replication": 0,
+    "local_index_q_heads": 0, "local_index_k_heads": 0, "index_k_replication": 0,
+    "proxy_dim": 0, "region_block_size": 1, "topk_regions": 1,
+    "sliding_window": 1, "rope_theta": 0, "rotary_dim": 1, "block_size": 1,
+    "batch_size": 1, "batch_num_tokens": 1,
+    "batch_num_prefill_tokens": 0, "batch_num_decode_tokens": 0,
+    "valid_tokens": 1, "padded_tokens": 0, "max_model_len": 1,
+    "block_table_columns": 0, "score_regions": 0, "has_attention_metadata": 0,
+}
+STEP5_FEATURE_COLUMNS = (
+    *STEP5_NUMERIC_COLUMNS,
+    "attention_variant_code", "phase_code", "graph_mode_code", "native_workload_code",
+    "min_query_len", "max_query_len", "query_len_cv",
+    "min_context_len", "max_context_len", "mean_context_len", "max_sequence_len",
+)
 
 
 @dataclass(frozen=True)
@@ -63,7 +84,8 @@ def get_attention_profiling_feature_schema(
     normalized_measurement_type = _normalize_measurement_type(measurement_type)
     required_columns = family.required_profiling_feature_columns
     predictor_feature_columns = (
-        get_imported_mla_predictor_feature_columns()
+        STEP5_FEATURE_COLUMNS if family.family_id == STEP5_ATTENTION_FAMILY.family_id
+        else get_imported_mla_predictor_feature_columns()
         if family.memory_layout is AttentionMemoryLayout.LATENT_MLA
         else None
     )
@@ -263,7 +285,9 @@ def get_enabled_predictor_feature_columns(
     family: AttentionFamilySpec,
 ) -> dict[str, tuple[str, ...]]:
     family.require_enabled_for_execution()
-    if family.memory_layout is AttentionMemoryLayout.DENSE_KV:
+    if family.family_id == STEP5_ATTENTION_FAMILY.family_id:
+        feature_columns = {operator.name: STEP5_FEATURE_COLUMNS for operator in family.predictor_ops()}
+    elif family.memory_layout is AttentionMemoryLayout.DENSE_KV:
         feature_columns_by_role = {
             AttentionOperatorRole.CACHE_WRITE: ("num_tokens",),
             AttentionOperatorRole.PREFILL_KERNEL: (
@@ -309,7 +333,9 @@ def get_enabled_shared_predictor_feature_columns(
     family: AttentionFamilySpec,
 ) -> dict[str, tuple[str, ...]]:
     family.require_enabled_for_execution()
-    if family.memory_layout is AttentionMemoryLayout.DENSE_KV:
+    if family.family_id == STEP5_ATTENTION_FAMILY.family_id:
+        feature_columns = {operator.name: STEP5_FEATURE_COLUMNS for operator in family.predictor_ops()}
+    elif family.memory_layout is AttentionMemoryLayout.DENSE_KV:
         feature_columns_by_role = {
             AttentionOperatorRole.CACHE_WRITE: (
                 "total_tokens",

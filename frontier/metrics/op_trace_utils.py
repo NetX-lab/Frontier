@@ -6,12 +6,17 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
 )
-from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.memory import (
+    get_attention_kv_cache_capacity,
+    get_attention_runtime_kv_layout,
+)
 from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.config import get_quantization_manager
+from frontier.config import global_vars
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_size,
@@ -38,6 +43,13 @@ class OpTraceContext:
     effective_tokens_transfer: int
     effective_tokens_rounded: int
     tokens_are_post_routing: bool
+    global_layer_id: int | None = None
+    attention_operator_names: tuple[str, ...] = ()
+    layer_metadata: Any = None
+    pre_routing_tokens: int | None = None
+    step5_moe_frame: Any = None
+    collective_plans: Any = None
+    collective_costs: Any = None
 
     @property
     def hidden_size(self) -> int:
@@ -271,8 +283,123 @@ def compute_op_trace_meta(
     op_type: str,
     ctx: OpTraceContext,
 ) -> Dict[str, Any]:
+    if op_type in ("COMPUTE", "COMM") and getattr(ctx.model_config, "model_type", None) == "step5":
+        from frontier.attention.step5 import describe_step5_layer, describe_step5_operator_tensors
+
+        if ctx.global_layer_id is None:
+            raise ValueError("Step trace metadata requires the actual global_layer_id")
+        metadata = ctx.layer_metadata or describe_step5_layer(
+            ctx.model_config, ctx.global_layer_id, attention_tp_size=ctx.attn_tp,
+            moe_tp_size=ctx.moe_tp, expert_parallel_size=ctx.moe_ep,
+        )
+        if metadata.attention_spec.global_layer_id != ctx.global_layer_id:
+            raise ValueError("Step trace metadata differs from the actual layer identity")
+        if ctx.collective_plans is not None and op_name in ctx.collective_plans:
+            from dataclasses import fields
+            plan=ctx.collective_plans[op_name];cost=ctx.collective_costs[op_name]
+            if cost.plan_key != plan.cache_key():
+                raise ValueError("Trace collective plan and cost identities disagree")
+            evidence=__import__("json").loads(cost.count_receipt_json)["evidence_kind"]
+            return dict(collective_plan=plan.to_dict(),collective_cost={field.name:getattr(cost,field.name) for field in fields(cost)},
+                numerical_source="cpu_fixture_composition_not_native" if evidence == "cpu_fixture" else "joint_htsim+measured_local+effective_remainder_no_overlap",
+                kernel_count=cost.kernel_counts[ctx.step5_moe_frame["ep_id"]],
+                algorithmic_stage_count=len(plan.stages),evidence_kind=evidence)
+        if ctx.step5_moe_frame is not None:
+            frame=ctx.step5_moe_frame;source=frame["routing_source"]
+            lane=source.source_lanes[frame["ep_id"]//ctx.attn_tp]
+            native=frame["native_context"]
+            tokens=source.gathered_physical_rows if op_name == "moe_grouped_gemm" else lane.physical_rows
+            result=describe_step5_operator_tensors(metadata,op_name,tokens=tokens,
+                routed_tokens=frame["live_local_assignments"],router_topk=ctx.router_topk)
+            result.update(source_physical_rows=lane.physical_rows,gathered_physical_rows=source.gathered_physical_rows,
+                live_source_rows=lane.live_rows,live_local_assignments=frame["live_local_assignments"],
+                native_context=native,source_lane_id=lane.lane_id)
+            if op_name in frame["operator_costs"]:
+                result["operator_cost"]=frame["operator_costs"][op_name]
+            if op_name == "moe_grouped_gemm":
+                result.update(covered_scopes=["native_permutation","gate_up_gemm","activation_intermediate_quantization",
+                    "down_gemm","native_unpermute_weight_finalization"],physical_scope="native_experts_inclusive",
+                    excluded_scopes=["source_prepare","dp_collectives","tp_reduction"])
+                result.pop("internal_tensor_shape",None);result.pop("internal_tensor_dtype",None)
+            if op_name in ("moe_grouped_gemm","moe_input_quantize"):
+                prefix="source_" if op_name == "moe_input_quantize" else ""
+                for name,key in ((("input" if op_name == "moe_grouped_gemm" else "output"),prefix+"activation_layout"),("scale",prefix+"scale_layout")):
+                    layout=native[key]
+                    if layout is not None:
+                        if layout["shape"][0] != tokens:
+                            raise ValueError("Native tensor layout differs from its physical operator scope")
+                        result["tensor_shape"][name]=layout["shape"]
+                        result["tensor_dtype"][name]=layout["dtype"]
+                        result["tensor_size_bytes"][name]=math.prod(layout["shape"])*layout["element_size"]
+                if op_name == "moe_grouped_gemm":
+                    result["tensor_dtype"]["output"] = "bfloat16"
+                    result["tensor_size_bytes"]["output"] = tokens * ctx.hidden_size * 2
+            return result
+        if op_type == "COMM":
+            if op_name in ("expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine"):
+                if metadata.ffn_merge is None:
+                    raise ValueError("Step expert-parallel exchange requires a routed MoE layer")
+                if type(ctx.pre_routing_tokens) is not int or ctx.pre_routing_tokens <= 0:
+                    raise ValueError("Step expert-parallel trace requires explicit pre-routing rows")
+                shape = [ctx.pre_routing_tokens, ctx.router_topk, ctx.hidden_size]
+                elements = shape[0] * shape[1] * shape[2]
+                precision = metadata.model_precision
+                return {
+                    "precision_op": map_trace_op_to_precision_op(op_name),
+                    "dtype": precision.name, "dtype_bytes": precision.bytes_per_element,
+                    "tensor_shape": {"data": shape}, "tensor_dtype": {"data": precision.name},
+                    "element_count": elements, "base_size_bytes": elements * 2,
+                    "data_size_bytes": int(elements * precision.bytes_per_element),
+                    "source_geometry": {"global_layer_id": ctx.global_layer_id},
+                    # The H800 FusedMoE all-to-all backend and any pre-dispatch
+                    # quantization are not qualified; this is the logical
+                    # model-precision row exchange.
+                    "evidence_kind": "structural_assumption",
+                }
+            if op_name not in (
+                "attn_tensor_parallel_allreduce", "mlp_tensor_parallel_allreduce",
+                "moe_tensor_parallel_allreduce",
+                "share_expert_tensor_parallel_allreduce",
+            ):
+                raise NotImplementedError(f"Step initial structural trace has no communication scope {op_name}")
+            precision = metadata.model_precision
+            if op_name == "moe_tensor_parallel_allreduce":
+                if metadata.ffn_merge is None:
+                    raise ValueError("Step routed reduction requires the layer's branch merge")
+                precision = metadata.ffn_merge.output_precision
+            elif op_name == "mlp_tensor_parallel_allreduce" and metadata.ffn_merge is not None:
+                raise ValueError("Step dense reduction requires a dense FFN layer")
+            elements = ctx.effective_tokens_compute * ctx.hidden_size
+            return {
+                "precision_op": map_trace_op_to_precision_op(op_name),
+                "dtype": precision.name, "dtype_bytes": precision.bytes_per_element,
+                "tensor_shape": {"data": [ctx.effective_tokens_compute, ctx.hidden_size]},
+                "tensor_dtype": {"data": precision.name}, "element_count": elements,
+                "base_size_bytes": elements * 2,
+                "data_size_bytes": int(elements * precision.bytes_per_element),
+                "source_geometry": {"global_layer_id": ctx.global_layer_id},
+                "evidence_kind": "source_structural_metadata",
+            }
+        tokens = ctx.effective_tokens_compute
+        if ctx.tokens_are_post_routing:
+            if type(ctx.pre_routing_tokens) is not int or ctx.pre_routing_tokens <= 0:
+                raise ValueError("Step routed trace requires explicit pre-routing physical rows")
+            tokens = ctx.pre_routing_tokens
+        return describe_step5_operator_tensors(
+            metadata, op_name, tokens=tokens,
+            routed_tokens=_get_routed_tokens(ctx.effective_tokens_compute, ctx),
+            router_topk=ctx.router_topk, attention_operator_names=ctx.attention_operator_names,
+        )
+    if (hasattr(ctx.model_config, "get_model_architecture_profile")
+            and ctx.model_config.get_model_architecture_profile().profile_id == "deepseek_v4"):
+        from frontier.execution_time_predictor.deepseek_v4 import operator_trace_metadata
+
+        return operator_trace_metadata(op_name, op_type, ctx)
     precision_op = map_trace_op_to_precision_op(op_name)
-    precision = _precision_for_op(op_name, ctx.cluster_type)
+    if op_name in ("attn_dsa_indexer", "attn_dsa_mla"):
+        precision = PrecisionType.from_torch_dtype(ctx.model_config.torch_dtype)
+    else:
+        precision = _precision_for_op(op_name, ctx.cluster_type)
     dtype_bytes = precision.bytes_per_element
 
     tokens = ctx.effective_tokens_rounded
@@ -376,6 +503,50 @@ def compute_op_trace_meta(
 
     tensor_shape: Dict[str, Any] = {}
     tensor_size_bytes: Dict[str, int] = {}
+    tensor_dtype: Dict[str, str] = {}
+    tensor_dtype_bytes: Dict[str, float] = {}
+    internal_tensor_shape: Dict[str, Any] = {}
+    internal_tensor_dtype: Dict[str, str] = {}
+
+    def _is_dsa_attention() -> bool:
+        index_topk = getattr(ctx.model_config, "index_topk", None)
+        return (
+            type(index_topk) is int
+            and index_topk > 0
+            and bind_attention_family(ctx.model_config).family.family_id
+            == DSA_ATTENTION_FAMILY.family_id
+        )
+
+    def _dsa_dimension(name: str) -> int:
+        value = getattr(ctx.model_config, name, None)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"DSA trace metadata requires positive int {name}")
+        return value
+
+    def _dsa_attention_dimensions() -> tuple[int, int, int, int, int, int]:
+        if not _is_dsa_attention():
+            raise ValueError("DSA trace metadata requires an index-attention binding")
+        _validate_divisible(ctx.num_q_heads, ctx.attn_tp, "num_q_heads")
+        q_lora_rank = _dsa_dimension("q_lora_rank")
+        kv_lora_rank = _dsa_dimension("kv_lora_rank")
+        rope_dim = _dsa_dimension("qk_rope_head_dim")
+        qk_dim = _dsa_dimension("qk_nope_head_dim") + rope_dim
+        v_dim = _dsa_dimension("v_head_dim")
+        return (
+            ctx.num_q_heads // ctx.attn_tp,
+            q_lora_rank,
+            kv_lora_rank,
+            rope_dim,
+            qk_dim,
+            v_dim,
+        )
+
+    def _set_dsa_activation_precision() -> None:
+        nonlocal precision, dtype_bytes
+        # These inclusive wrapper boundaries carry model activations. Their
+        # mixed-precision children are priced inside the measured parent scope.
+        precision = PrecisionType.from_torch_dtype(ctx.model_config.torch_dtype)
+        dtype_bytes = precision.bytes_per_element
 
     def _memory_family_tensor_shape(operator: OperatorSpec) -> Dict[str, Any]:
         if operator.role is OperatorRole.NORMALIZATION:
@@ -420,6 +591,63 @@ def compute_op_trace_meta(
             tensor_shape = _memory_family_tensor_shape(memory_operator)
         elif ffn_operator is not None:
             tensor_shape = _ffn_family_tensor_shape(ffn_operator)
+        elif op_name == "attn_dsa_indexer":
+            _, q_lora_rank, _, _, _, _ = _dsa_attention_dimensions()
+            index_heads = _dsa_dimension("index_n_heads")
+            index_dim = _dsa_dimension("index_head_dim")
+            tensor_shape = {
+                "hidden_states": [tokens, hidden_size],
+                "qr": [tokens, q_lora_rank],
+                "positions": [tokens],
+            }
+            tensor_dtype["positions"] = "INT64"
+            tensor_dtype_bytes["positions"] = 8
+            # Indexer uses replicated projections. These are internal shapes,
+            # not additional timed operators or the full shared-buffer extent.
+            internal_tensor_shape = {
+                "index_q_before_quant": [tokens, index_heads, index_dim],
+                "index_k_before_quant": [tokens, index_dim],
+                "selected_indices_active": [tokens, _dsa_dimension("index_topk")],
+            }
+            internal_tensor_dtype = {
+                "index_q_before_quant": precision.name,
+                "index_k_before_quant": precision.name,
+                "selected_indices_active": "INT32",
+            }
+        elif op_name == "attn_dsa_mla":
+            q_heads, _, kv_rank, rope_dim, qk_dim, v_dim = _dsa_attention_dimensions()
+            tensor_shape = {
+                "q": [tokens, q_heads, qk_dim],
+                "kv_c_normed": [tokens, kv_rank],
+                "k_pe": [tokens, 1, rope_dim],
+                "output": [tokens, q_heads * v_dim],
+            }
+        elif op_name == "attn_pre_proj" and _is_dsa_attention():
+            q_heads, q_rank, kv_rank, rope_dim, qk_dim, _ = _dsa_attention_dimensions()
+            _set_dsa_activation_precision()
+            tensor_shape = {
+                "input": [tokens, hidden_size],
+                "q_c": [tokens, q_rank],
+                "kv_c_normed": [tokens, kv_rank],
+                "q": [tokens, q_heads, qk_dim],
+                "k_pe": [tokens, 1, rope_dim],
+            }
+        elif op_name == "attn_rope" and _is_dsa_attention():
+            q_heads, _, _, rope_dim, _, _ = _dsa_attention_dimensions()
+            _set_dsa_activation_precision()
+            tensor_shape = {
+                "q": [tokens, q_heads, rope_dim],
+                "k": [tokens, 1, rope_dim],
+                "q_out": [tokens, q_heads, rope_dim],
+                "k_out": [tokens, 1, rope_dim],
+            }
+        elif op_name == "attn_post_proj" and _is_dsa_attention():
+            q_heads, _, _, _, _, v_dim = _dsa_attention_dimensions()
+            _set_dsa_activation_precision()
+            tensor_shape = {
+                "input": [tokens, q_heads * v_dim],
+                "output": [tokens, hidden_size],
+            }
         elif op_name == "attn_pre_proj":
             head_dim, q_heads_per_tp, kv_heads_per_tp, _ = _get_attention_meta()
             qkv_out_dim_per_tp = (q_heads_per_tp + 2 * kv_heads_per_tp) * head_dim
@@ -622,15 +850,25 @@ def compute_op_trace_meta(
 
         for key, shape in tensor_shape.items():
             elements = _elements_from_shape(shape)
-            tensor_size_bytes[key] = _bytes_for_elements(elements, dtype_bytes)
+            tensor_size_bytes[key] = _bytes_for_elements(
+                elements, tensor_dtype_bytes.get(key, dtype_bytes)
+            )
 
-        return {
+        result = {
             "precision_op": precision_op,
             "dtype": precision.name,
             "dtype_bytes": dtype_bytes,
             "tensor_shape": tensor_shape,
             "tensor_size_bytes": tensor_size_bytes,
         }
+        if tensor_dtype:
+            result["tensor_dtype"] = {
+                key: tensor_dtype.get(key, precision.name) for key in tensor_shape
+            }
+        if internal_tensor_shape:
+            result["internal_tensor_shape"] = internal_tensor_shape
+            result["internal_tensor_dtype"] = internal_tensor_dtype
+        return result
 
     if op_type == "COMM":
         if op_name in (
@@ -677,6 +915,7 @@ def build_kv_cache_transfer_meta(
     replica_config: Any,
     cluster_type: ClusterType,
     transfer_size_bytes: int,
+    transfer_payload: Any = None,
 ) -> Dict[str, Any]:
     model_config = replica_config.model_config
     num_layers = model_config.num_layers
@@ -684,7 +923,126 @@ def build_kv_cache_transfer_meta(
     # Family-aware runtime KV layout: dense keeps (num_kv_heads, get_head_dim(), kv_factor=2);
     # latent MLA collapses to (1, kv_lora_rank + qk_rope_head_dim, kv_factor=1). Mirrors the
     # analytical transfer predictor so capacity and transfer agree on the same MLA cache.
+    if (
+        transfer_payload is not None
+        and transfer_payload.family_id != DSA_ATTENTION_FAMILY.family_id
+    ):
+        return _structural_nixl_payload_meta(
+            batch, model_config, transfer_size_bytes, transfer_payload
+        )
     family = bind_attention_family(model_config).family
+    if global_vars.get_kv_connector() == "nixl" and family is DSA_ATTENTION_FAMILY:
+        block_size = 64
+        capacity = get_attention_kv_cache_capacity(
+            family,
+            model_config,
+            block_size=block_size,
+        )
+        if capacity.is_grouped:
+            raise ValueError("GLM structural NIXL tracing requires common cache blocks")
+        bytes_per_block = capacity.resident_bytes_per_common_block
+        if (
+            type(transfer_size_bytes) is not int
+            or transfer_size_bytes <= 0
+            or transfer_size_bytes % bytes_per_block
+        ):
+            raise ValueError(
+                "GLM structural NIXL transfer bytes must contain complete common blocks"
+            )
+        source_prompt_common_blocks = transfer_size_bytes // bytes_per_block
+        expected_prompt_blocks = sum(
+            (request.num_prefill_tokens + block_size - 1) // block_size
+            for request in batch.requests
+        )
+        if source_prompt_common_blocks != expected_prompt_blocks:
+            raise ValueError(
+                "GLM structural NIXL trace bytes do not match source prompt pages"
+            )
+
+        components = {component.component_id: component for component in capacity.components}
+        main = components["main_mla"]
+        indexer = components["indexer_k_and_scale"]
+        main_width = int(model_config.kv_lora_rank) + int(model_config.qk_rope_head_dim)
+        index_width = int(model_config.index_head_dim)
+        main_precision = PrecisionType.from_torch_dtype(model_config.torch_dtype)
+        tensor_shape = {
+            "main_mla": [
+                source_prompt_common_blocks,
+                len(main.owner_layer_ids),
+                block_size,
+                main_width,
+            ],
+            "indexer_k": [
+                source_prompt_common_blocks,
+                len(indexer.owner_layer_ids),
+                block_size,
+                index_width,
+            ],
+            "indexer_scale": [
+                source_prompt_common_blocks,
+                len(indexer.owner_layer_ids),
+                block_size,
+                index_width // 128,
+            ],
+        }
+        tensor_size_bytes = {
+            "main_mla": (
+                source_prompt_common_blocks
+                * len(main.owner_layer_ids)
+                * main.page_size_bytes
+            ),
+            "indexer_k": _elements_from_shape(tensor_shape["indexer_k"]),
+            "indexer_scale": (
+                _elements_from_shape(tensor_shape["indexer_scale"])
+                * int(PrecisionType.FP32.bytes_per_element)
+            ),
+        }
+        if sum(tensor_size_bytes.values()) != transfer_size_bytes:
+            raise ValueError("GLM structural NIXL component bytes do not conserve payload")
+
+        total_tokens = sum(req.num_prefill_tokens for req in batch.requests)
+        return {
+            "precision_op": "kv_cache_transfer",
+            "dtype": "MIXED",
+            "dtype_bytes": None,
+            "tensor_dtypes": {
+                "main_mla": main_precision.name,
+                "indexer_k": PrecisionType.FP8.name,
+                "indexer_scale": PrecisionType.FP32.name,
+            },
+            "tensor_shape": tensor_shape,
+            "tensor_size_bytes": tensor_size_bytes,
+            "transfer_size_bytes": transfer_size_bytes,
+            "total_tokens": total_tokens,
+            "num_layers": num_layers,
+            "num_heads": None,
+            "num_q_heads": num_q_heads,
+            "num_kv_heads": None,
+            "head_dim": None,
+            "payload_kind": "structural_whole_prompt_pages_per_worker_lane",
+            "byte_scope": "per_worker_lane_resident_pages",
+            "block_size": block_size,
+            "source_prompt_common_blocks": source_prompt_common_blocks,
+            "cache_components": [
+                {
+                    "component_id": component.component_id,
+                    "owner_layer_ids": list(component.owner_layer_ids),
+                    "page_size_bytes": component.page_size_bytes,
+                    "page_count": (
+                        source_prompt_common_blocks * len(component.owner_layer_ids)
+                    ),
+                    "resident_bytes": (
+                        source_prompt_common_blocks
+                        * len(component.owner_layer_ids)
+                        * component.page_size_bytes
+                    ),
+                }
+                for component in capacity.components
+            ],
+            "native_wire_bytes_known": False,
+        }
+    if global_vars.get_kv_connector() == "nixl":
+        raise ValueError("Structural NIXL tracing requires the resolved page payload")
     layout = get_attention_runtime_kv_layout(
         family,
         runtime_num_kv_heads_per_worker=model_config.get_runtime_num_kv_heads(),
@@ -717,6 +1075,54 @@ def build_kv_cache_transfer_meta(
         "num_q_heads": num_q_heads,
         "num_kv_heads": num_kv_heads,
         "head_dim": head_dim,
+    }
+
+
+def _structural_nixl_payload_meta(
+    batch: Any, model_config: Any, transfer_size_bytes: int, transfer_payload: Any,
+) -> Dict[str, Any]:
+    """Describe a family-resolved structural NIXL page payload per TP rank."""
+    if transfer_payload.transfer_bytes_per_rank != transfer_size_bytes:
+        raise ValueError("Structural NIXL trace bytes do not match the page payload")
+    components = transfer_payload.components
+    return {
+        "precision_op": "kv_cache_transfer",
+        "dtype": "MIXED",
+        "dtype_bytes": None,
+        "tensor_shape": {
+            component.component_id: [component.page_count, len(component.owner_layer_ids)]
+            for component in components
+        },
+        "tensor_size_bytes": {
+            component.component_id: component.bytes_per_rank for component in components
+        },
+        "transfer_size_bytes": transfer_size_bytes,
+        "total_tokens": sum(request.num_prefill_tokens for request in batch.requests),
+        "num_layers": model_config.num_layers,
+        "num_heads": None,
+        "num_q_heads": model_config.num_q_heads,
+        "num_kv_heads": None,
+        "head_dim": None,
+        "payload_kind": "structural_whole_prompt_pages_per_worker_lane",
+        "byte_scope": "per_tp_rank_pages",
+        "attention_family": transfer_payload.family_id,
+        "tensor_parallel_size": transfer_payload.tensor_parallel_size,
+        "transfer_bytes_per_lane": transfer_payload.transfer_bytes_per_lane,
+        "logical_unique_bytes": transfer_payload.logical_unique_bytes,
+        "target_reserved_blocks": transfer_payload.target_reserved_blocks,
+        "target_resident_bytes_per_rank": transfer_payload.target_resident_bytes_per_rank,
+        "cache_components": [
+            {
+                "component_id": component.component_id,
+                "owner_layer_ids": list(component.owner_layer_ids),
+                "page_size_bytes": component.page_size_bytes,
+                "page_count": component.page_count * len(component.owner_layer_ids),
+                "rank_replication": component.rank_replication,
+                "transfer_bytes_per_rank": component.bytes_per_rank,
+            }
+            for component in components
+        ],
+        "native_wire_bytes_known": False,
     }
 
 

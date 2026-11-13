@@ -1,0 +1,1362 @@
+{
+  "task_id": "D29-TRACE-SERIALIZATION-REPAIR",
+  "layer": 60,
+  "logical_position": 6147,
+  "captured_pairs": 208,
+  "replay_pairs": 208,
+  "mismatches": [],
+  "checked": [
+    {
+      "ep_id": 0,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 0,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 0,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 0,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 0,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 0,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 0,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 0,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 0,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 0,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 0,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 0,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 0,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 1,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 1,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 1,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 1,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 1,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 1,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 1,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 1,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 1,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 1,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 1,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 1,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 1,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 2,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 2,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 2,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 2,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 2,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 2,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 2,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 2,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 2,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 2,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 2,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 2,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 2,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 3,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 3,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 3,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 3,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 3,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 3,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 3,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 3,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 3,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 3,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 3,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 3,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 3,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 4,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 4,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 4,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 4,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 4,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 4,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 4,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 4,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 4,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 4,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 4,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 4,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 4,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 5,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 5,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 5,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 5,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 5,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 5,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 5,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 5,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 5,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 5,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 5,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 5,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 5,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 6,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 6,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 6,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 6,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 6,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 6,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 6,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 6,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 6,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 6,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 6,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 6,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 6,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 7,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 7,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 7,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 7,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 7,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 7,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 7,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 7,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 7,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 7,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 7,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 7,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 7,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 8,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 8,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 8,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 8,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 8,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 8,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 8,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 8,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 8,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 8,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 8,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 8,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 8,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 9,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 9,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 9,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 9,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 9,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 9,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 9,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 9,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 9,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 9,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 9,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 9,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 9,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 10,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 10,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 10,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 10,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 10,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 10,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 10,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 10,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 10,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 10,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 10,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 10,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 10,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 11,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "38f13530a44f259f512491a1c4a48d7ab3084e95f5b7ce1a5cd1be6b6a53de86"
+    },
+    {
+      "ep_id": 11,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "e03ca92b631b11351112c85ae7dd2da575a6058bef347424ae7d84a19d9a6b69"
+    },
+    {
+      "ep_id": 11,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "3525f577ba618917a69894182701ffe30ae617bef0d7e3d57c3956a66c87dfa2"
+    },
+    {
+      "ep_id": 11,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "126494d3b1cd1ed05c8b7336caff452f6aae26a9d9987d0a778040f7f6e9e2f8"
+    },
+    {
+      "ep_id": 11,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "8398ff84a79e6aa80a3c5edeea591d82b8012d49ce5135539360902e24ad6219"
+    },
+    {
+      "ep_id": 11,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d8b4242781ca96ee133969fa9a2adfb0a639831c5d2daa6d1d77437694a09312"
+    },
+    {
+      "ep_id": 11,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "a6c997f8b1c1f05ec6f54ead603ef60c044d22e590caa335bcd322be2d82f8df"
+    },
+    {
+      "ep_id": 11,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "7d8e9b149ed94119bf41e3a49539d3be22501c18243b8b373796aba4fe1dd74e"
+    },
+    {
+      "ep_id": 11,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "7268427e94fdd6c648778a6aa2d6ba7d618995017aff6a8baa1b79f048c6ff31"
+    },
+    {
+      "ep_id": 11,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "4d07e6c989d298e41e3215a0a827ae1bb4a3bb7536f0c4ea6ec8c00369843a52"
+    },
+    {
+      "ep_id": 11,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "76427abdbba2edd2c00903eb7c28935b6a933e2782e461037e80afac30d12b7f"
+    },
+    {
+      "ep_id": 11,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "cb1bc9029114d0964e093651a3359503a894d9381e7583f6d5c1c071b7f42020"
+    },
+    {
+      "ep_id": 11,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "3920b48c527ad2ba71d80fa80bda190d10f05d1ad0506d2c3071ab96506ac5a6"
+    },
+    {
+      "ep_id": 12,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 12,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 12,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 12,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 12,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 12,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 12,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 12,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 12,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 12,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 12,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 12,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 12,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 13,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 13,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 13,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 13,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 13,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 13,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 13,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 13,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 13,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 13,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 13,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 13,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 13,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 14,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 14,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 14,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 14,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 14,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 14,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 14,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 14,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 14,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 14,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 14,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 14,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 14,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    },
+    {
+      "ep_id": 15,
+      "name": "post_attention_layernorm",
+      "duration_ms": 0.01,
+      "proofs_sha256": "07d21db412ae7eca6eec48380388aff4b24b225fbcc7e125e8b169933de9fd5b"
+    },
+    {
+      "ep_id": 15,
+      "name": "share_expert_up_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "f776d845957552466365141d2579c29ffa55d3cec8c5c6326e57e28ac2be622c"
+    },
+    {
+      "ep_id": 15,
+      "name": "share_expert_act",
+      "duration_ms": 0.01,
+      "proofs_sha256": "5af24773e08c85269c7f513a3465f0f424aae90a4efd6962ee27047c974ee1f8"
+    },
+    {
+      "ep_id": 15,
+      "name": "share_expert_down_proj",
+      "duration_ms": 0.01,
+      "proofs_sha256": "553572b79f6a24458e4a078d118ac9265b16493530a4eafdaf3bc0deff8fe09b"
+    },
+    {
+      "ep_id": 15,
+      "name": "share_expert_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "075d2b7180e4fb5cbeca4bfb3d4f6b6510c3703849f4ffc3d57495a7973e4a15"
+    },
+    {
+      "ep_id": 15,
+      "name": "moe_gating_linear",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "bafe50ce1247aa740cc46a492b494f73c730bb3f828ed8d11401e068b6837db7"
+    },
+    {
+      "ep_id": 15,
+      "name": "moe_gating_routing_topk",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "dac6ba567e02faf22bff50eb978e7b6928b7360991afbbe4dc8fe15ae7d2e251"
+    },
+    {
+      "ep_id": 15,
+      "name": "moe_input_quantize",
+      "duration_ms": 0.0101,
+      "proofs_sha256": "d1fdeda645cb81edd73669cee5052c34a236cb782bd567f99de64814fa4d29ff"
+    },
+    {
+      "ep_id": 15,
+      "name": "step5_moe_dispatch",
+      "duration_ms": 0.03,
+      "proofs_sha256": "06a4d7d59cec7d0d8fbafa17397c0721fda826c2582c759ca89917802eae848d"
+    },
+    {
+      "ep_id": 15,
+      "name": "moe_grouped_gemm",
+      "duration_ms": 0.0102,
+      "proofs_sha256": "2576898c1231ab50514570479a0915911c0bf4a53122b736eb436f0a76878f3d"
+    },
+    {
+      "ep_id": 15,
+      "name": "step5_moe_combine",
+      "duration_ms": 0.03,
+      "proofs_sha256": "a38551a17f000a1a4f719611a96bfc940a6ecd460a1965caab79ef4c7e5e7c10"
+    },
+    {
+      "ep_id": 15,
+      "name": "moe_tensor_parallel_allreduce",
+      "duration_ms": 0.03,
+      "proofs_sha256": "ed5b78581e43a2edeac3269ca1e31c6c38ef9ddc829d1ed38203568c88cf6945"
+    },
+    {
+      "ep_id": 15,
+      "name": "step5_ffn_merge",
+      "duration_ms": 0.01,
+      "proofs_sha256": "32b868a46c8b834ad9d35c590409ee40c555e8e29ee34e876e4a1172dd4f9a50"
+    }
+  ],
+  "source_bound_complete_wave": true,
+  "repetitions": 5,
+  "events": 1040,
+  "payload_bytes": 14464252,
+  "payload_sha256": "b4d8f598fb428125be3e813032d33e482f1ecb8fc7afc3bd671858a6f35c6155",
+  "exact_baseline_event_bytes": true,
+  "full_pricing_payload_sha256": [
+    "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+    "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+  ],
+  "warm_median_s": {
+    "baseline": {
+      "pricing_s": 2.7735833839979023,
+      "emit_s": 0.0604458840098232,
+      "flush_s": 0.13100369949825108,
+      "wall_s": 2.965517100179568
+    },
+    "candidate": {
+      "pricing_s": 2.6779604943003505,
+      "emit_s": 0.06078956741839647,
+      "flush_s": 0.02399045485071838,
+      "wall_s": 2.762631094781682
+    }
+  },
+  "baseline_timings": [
+    {
+      "pricing_s": 3.3685736120678484,
+      "emit_s": 0.06381312618032098,
+      "flush_s": 0.1301478580571711,
+      "wall_s": 3.5625345963053405,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.7019770238548517,
+      "emit_s": 0.058994026854634285,
+      "flush_s": 0.1309734028764069,
+      "wall_s": 2.891944453585893,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.8066599280573428,
+      "emit_s": 0.06012455280870199,
+      "flush_s": 0.1328149251639843,
+      "wall_s": 2.999599406030029,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.7723315940238535,
+      "emit_s": 0.0611770860850811,
+      "flush_s": 0.13088913494721055,
+      "wall_s": 2.964397815056145,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.774835173971951,
+      "emit_s": 0.060767215210944414,
+      "flush_s": 0.13103399612009525,
+      "wall_s": 2.9666363853029907,
+      "events": 208
+    }
+  ],
+  "candidate_timings": [
+    {
+      "pricing_s": 3.2884351639077067,
+      "emit_s": 0.06342466082423925,
+      "flush_s": 0.023794302251189947,
+      "wall_s": 3.375654126983136,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.6362950708717108,
+      "emit_s": 0.059096493292599916,
+      "flush_s": 0.023953525815159082,
+      "wall_s": 2.7193450899794698,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.6619068598374724,
+      "emit_s": 0.060419386718422174,
+      "flush_s": 0.023734682239592075,
+      "wall_s": 2.7460609287954867,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.7872016597539186,
+      "emit_s": 0.06142040528357029,
+      "flush_s": 0.026817106641829014,
+      "wall_s": 2.875439171679318,
+      "events": 208
+    },
+    {
+      "pricing_s": 2.6940141287632287,
+      "emit_s": 0.06115974811837077,
+      "flush_s": 0.024027383886277676,
+      "wall_s": 2.779201260767877,
+      "events": 208
+    }
+  ],
+  "flush_reduction_percent": 81.68719284829155,
+  "wall_reduction_percent": 6.841505158935046,
+  "limits": "Unprofiled sequential baseline/candidate loops; warm medians omit first iteration. Pricing variation is not attributed to the trace repair. Only the flush improvement is causally assigned; no full-workflow speedup claim."
+}

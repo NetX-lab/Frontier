@@ -1,0 +1,228 @@
+{
+  "modification_history": [
+    {
+      "date": "2026-10-22",
+      "change": "Retained actual EOF/healthy records without request bodies."
+    }
+  ],
+  "results": [
+    {
+      "name": "original_eof",
+      "http_status": 502,
+      "error": "ServerDisconnectedError: Server disconnected",
+      "counts": {
+        "prefill": 1,
+        "decode": 1,
+        "client": 1
+      },
+      "elapsed_s": 0.004710357636213303,
+      "source": "/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01/stage/tests/comparison/calibration/pd_proxy.py",
+      "source_sha256": "b5662156371e44b888ce7afef2ef83b7698b4b4cf54fccc44b670a001aa9cb8f",
+      "http_capture": null,
+      "raw_log": "/data/ycfeng/tmp/d23_step5_http_capture01/original_eof.log"
+    },
+    {
+      "name": "new_eof",
+      "http_status": 502,
+      "error": "ServerDisconnectedError: Server disconnected",
+      "counts": {
+        "prefill": 1,
+        "decode": 1,
+        "client": 1
+      },
+      "elapsed_s": 0.004872092045843601,
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-http-capture/tests/comparison/calibration/pd_proxy.py",
+      "source_sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce",
+      "http_capture": {
+        "schema": "step_http_capture_v1",
+        "status": "RECORDED",
+        "clock": "proxy host time.monotonic",
+        "attempts": {
+          "prefill": {
+            "submit_monotonic": 3069362.466329381,
+            "connection": "fresh",
+            "socket_identity": "UNAVAILABLE_PUBLIC_TRACE",
+            "events": [
+              {
+                "event": "request_start",
+                "monotonic": 3069362.466396631
+              },
+              {
+                "event": "connection_create_start",
+                "monotonic": 3069362.466476282
+              },
+              {
+                "event": "connection_create_end",
+                "monotonic": 3069362.467029342
+              },
+              {
+                "event": "request_headers_sent",
+                "monotonic": 3069362.467062964
+              },
+              {
+                "event": "request_end",
+                "monotonic": 3069362.467884434
+              }
+            ],
+            "events_truncated": false,
+            "response_headers_monotonic": 3069362.4678927
+          },
+          "decode": {
+            "submit_monotonic": 3069362.468379083,
+            "connection": "fresh",
+            "socket_identity": "UNAVAILABLE_PUBLIC_TRACE",
+            "events": [
+              {
+                "event": "request_start",
+                "monotonic": 3069362.468430205
+              },
+              {
+                "event": "connection_create_start",
+                "monotonic": 3069362.468484231
+              },
+              {
+                "event": "connection_create_end",
+                "monotonic": 3069362.46885087
+              },
+              {
+                "event": "request_headers_sent",
+                "monotonic": 3069362.468877933
+              },
+              {
+                "event": "request_exception",
+                "monotonic": 3069362.46922852
+              }
+            ],
+            "events_truncated": false
+          }
+        },
+        "failure": {
+          "phase": "decode",
+          "boundary": "response_headers",
+          "monotonic": 3069362.469234083,
+          "exceptions": [
+            {
+              "type": "ServerDisconnectedError",
+              "message": "[REDACTED]",
+              "frames": [
+                {
+                  "module": "d23_locked_pd_proxy",
+                  "function": "completions",
+                  "line": 336
+                },
+                {
+                  "module": "aiohttp.client",
+                  "function": "__aenter__",
+                  "line": 1510
+                },
+                {
+                  "module": "aiohttp.client",
+                  "function": "_request",
+                  "line": 779
+                },
+                {
+                  "module": "aiohttp.client",
+                  "function": "_connect_and_send_request",
+                  "line": 757
+                },
+                {
+                  "module": "aiohttp.client_reqrep",
+                  "function": "start",
+                  "line": 539
+                },
+                {
+                  "module": "aiohttp.streams",
+                  "function": "read",
+                  "line": 703
+                }
+              ],
+              "frames_truncated": false,
+              "next": null
+            }
+          ],
+          "chain_truncated": false
+        }
+      },
+      "raw_log": "/data/ycfeng/tmp/d23_step5_http_capture01/new_eof.log"
+    },
+    {
+      "name": "new_healthy",
+      "http_status": 200,
+      "error": null,
+      "counts": {
+        "prefill": 1,
+        "decode": 1,
+        "client": 1
+      },
+      "elapsed_s": 0.0048804329708218575,
+      "source": "/data/ycfeng/Frontier/.worktrees/step5-http-capture/tests/comparison/calibration/pd_proxy.py",
+      "source_sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce",
+      "http_capture": {
+        "schema": "step_http_capture_v1",
+        "status": "RECORDED",
+        "clock": "proxy host time.monotonic",
+        "attempts": {
+          "prefill": {
+            "submit_monotonic": 3069362.476788627,
+            "connection": "fresh",
+            "socket_identity": "UNAVAILABLE_PUBLIC_TRACE",
+            "events": [
+              {
+                "event": "request_start",
+                "monotonic": 3069362.476857344
+              },
+              {
+                "event": "connection_create_start",
+                "monotonic": 3069362.476938788
+              },
+              {
+                "event": "connection_create_end",
+                "monotonic": 3069362.477492161
+              },
+              {
+                "event": "request_headers_sent",
+                "monotonic": 3069362.47752396
+              },
+              {
+                "event": "request_end",
+                "monotonic": 3069362.478455208
+              }
+            ],
+            "events_truncated": false,
+            "response_headers_monotonic": 3069362.478463441
+          },
+          "decode": {
+            "submit_monotonic": 3069362.478960551,
+            "connection": "fresh",
+            "socket_identity": "UNAVAILABLE_PUBLIC_TRACE",
+            "events": [
+              {
+                "event": "request_start",
+                "monotonic": 3069362.479011008
+              },
+              {
+                "event": "connection_create_start",
+                "monotonic": 3069362.479065567
+              },
+              {
+                "event": "connection_create_end",
+                "monotonic": 3069362.479418009
+              },
+              {
+                "event": "request_headers_sent",
+                "monotonic": 3069362.479444149
+              },
+              {
+                "event": "request_end",
+                "monotonic": 3069362.479829759
+              }
+            ],
+            "events_truncated": false,
+            "response_headers_monotonic": 3069362.479836592
+          }
+        }
+      },
+      "raw_log": "/data/ycfeng/tmp/d23_step5_http_capture01/new_healthy.log"
+    }
+  ]
+}

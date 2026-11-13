@@ -1,0 +1,25 @@
+{
+  "collected_utc": "2026-10-25T04:34:14.195427+00:00",
+  "records_head": "8e3d5088ed82855b16aebdc868032a5624cc71c6",
+  "submission_host": "kun-workspace-vgen2",
+  "nfs_server": "100.96.128.195",
+  "credential_state": "Existing personal files present, nonempty and private; values not inspected or retained.",
+  "cloud_path_check": {
+    "command": [
+      "ssh",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=10",
+      "shai-ycfeng",
+      "test \"$(id -un)\" = i-fengyicheng && if test -e /mnt/ws-jfs/ycfeng/frontier_d29/main09_current_source; then printf \"COMPLETE_CLI_OUTPUT_ALREADY_EXISTS\\n\"; exit 2; else printf \"COMPLETE_CLI_PERSONAL_OUTPUT_ABSENT\\n\"; fi"
+    ],
+    "exit_code": 0,
+    "observed_stdout": "COMPLETE_CLI_PERSONAL_OUTPUT_ABSENT\n",
+    "operation": "Personal-path read only; no quota or throughput claim."
+  },
+  "local_outputs": "Fresh worker output and restricted capture receipt/stdout/stderr paths absent.",
+  "worker_submitted": false,
+  "new_platform_calls": 0,
+  "new_workload_calls": 0
+}

@@ -1,0 +1,21 @@
+{
+  "task_id": "D29-E41-FINAL-REGRESSIONS",
+  "source_checks": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05",
+      "head": "e41abc073500d61f224eda4fca1123e74e40544d",
+      "status": ""
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-05/frontier/cc_backend/backends/collective-sim",
+      "head": "3dac53c544e546574cb6e8078cd14053d0916113",
+      "status": ""
+    }
+  ],
+  "source_files_rehashed": 2611,
+  "source_hash_differences": [],
+  "source_inventory_timing": "During-run inventory compared after all runs; source was read-only and clean before every launch.",
+  "prior_final03_status_differences": [],
+  "prior_final03_failure_ids_equal": true,
+  "prior_final03_error_ids_equal": true
+}

@@ -1,0 +1,121 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "session_id": "ses_e98925887ffecetw6nTB6nD8f0",
+  "reconciles_user_partial_status_with_received_unit_completion": true,
+  "existing_records_commit": "c6ccae825cc90cac43ebdfb5f9805e38fe625168",
+  "source": {
+    "head": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+    "tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+    "status": "",
+    "submodule_head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "submodule_status": ""
+  },
+  "source_files_rehashed": 2629,
+  "guarded_inputs_rechecked": 13,
+  "script_bindings_rechecked": 8,
+  "retained_file_hashes_checked": 2671,
+  "missing_retained_files": [],
+  "changed_retained_files": [],
+  "fresh_execution": false,
+  "background_polling": false,
+  "active_or_interrupted_run_required": false,
+  "measured_retained_xml_suites": [
+    {
+      "suite": "unit",
+      "measured_counts": {
+        "skipped": 281,
+        "error": 32,
+        "pass": 8020,
+        "failure": 279
+      },
+      "retained_raw_exits": [
+        1
+      ]
+    },
+    {
+      "suite": "supplement101",
+      "measured_counts": {
+        "pass": 101
+      },
+      "retained_raw_exits": [
+        0
+      ]
+    },
+    {
+      "suite": "metadata196",
+      "measured_counts": {
+        "pass": 197
+      },
+      "retained_raw_exits": [
+        0
+      ]
+    },
+    {
+      "suite": "catalogue53",
+      "measured_counts": {
+        "pass": 53
+      },
+      "retained_raw_exits": [
+        0
+      ]
+    },
+    {
+      "suite": "governance52",
+      "measured_counts": {
+        "pass": 52
+      },
+      "retained_raw_exits": [
+        0
+      ]
+    }
+  ],
+  "strict_retained": {
+    "identical": 77,
+    "different": 0,
+    "raw_exits": [
+      0,
+      0,
+      0
+    ],
+    "audit_receipt_verified": {
+      "path": "/data/ycfeng/tmp/d29_workflow_fidelity_20261024_final06/final06_receipt.json",
+      "bytes": 4058,
+      "sha256": "d223ffaf54a3e9ea9227697ca64add8f0518d3c9086b73c1197bd7ecec148551"
+    }
+  },
+  "failure_error_skip_deltas79": {
+    "failure": {
+      "added": [],
+      "removed": []
+    },
+    "error": {
+      "added": [],
+      "removed": []
+    },
+    "skipped": {
+      "added": [],
+      "removed": []
+    }
+  },
+  "retained_status_changes": [],
+  "case_loss": [
+    "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text"
+  ],
+  "new_ids_all_pass": [
+    "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_is_fixed_and_failed_initial_reads_are_not_published",
+    "tests.unit.test_moe_routing_runtime::test_collective_input_binds_both_role_constructors_and_refreshes_next_run",
+    "tests.unit.test_prediction_measurement_bindings::test_prepared_points_follow_actual_model_rows_identity_and_fresh_queries"
+  ],
+  "raw_exact_ID_gate_waived": false,
+  "source_fixture_hash_gate": "PASS",
+  "unfinished_verification": [],
+  "new_named_model_query_successor_in_scope": false,
+  "primary_HEAD_index_untouched": true,
+  "inspection_correction": {
+    "first_probe_exit": 1,
+    "first_probe_git_exit": 128,
+    "wrong_assumed_submodule_path": "frontier/simulator/rdma_simulator/third_party/SimAI",
+    "actual_gitmodules_path": "frontier/cc_backend/backends/collective-sim",
+    "cause": "Inspector path mistake;not a missing or interrupted regression run. No source/test/environment/gate changes."
+  }
+}

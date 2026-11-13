@@ -1,0 +1,20 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_performance_regressions_final05/strict77/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/strict77/execution.json",
+    "sha256": "018d09c0106fc305832a366891254e7a47bf6b5e16153f72fed83b4504922ad5",
+    "bytes": 11015
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023_final05/final05_receipt.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/strict77/final05_receipt.json",
+    "sha256": "3e7bee2a061b194ed68f6e6f8247e04cc27d461bec5f2a973fc7d9b11f77fd5e",
+    "bytes": 4060
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023_final05/comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/performance_regressions/evidence/strict77/comparison.json",
+    "sha256": "aae7a53b899703725805388a23e603a3b13b2d8bb89de860d320f0417873cf59",
+    "bytes": 3793
+  }
+]

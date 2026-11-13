@@ -1,0 +1,118 @@
+"""Untimed real-wave checks only; do not repeat emission benchmarks or alter source."""
+import ast
+from collections import Counter
+import copy
+import dataclasses
+import hashlib
+import json
+import os
+from pathlib import Path
+import sys
+from unittest.mock import patch
+
+assert sys.dont_write_bytecode and os.environ['PYTHONDONTWRITEBYTECODE'] == '1'
+SCRATCH = Path('/data/ycfeng/tmp/d29_emission_immutable_work')
+(SCRATCH / 'observations').mkdir(exist_ok=False)
+driver = SCRATCH / 'diagnose.py'
+tree = ast.parse(driver.read_text())
+prefix = []
+for node in tree.body:
+    if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name) and node.value.func.id == 'exec':
+        if 'body_path.read_bytes()' in ast.unparse(node):
+            break
+    if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == 'ROOT' for target in node.targets):
+        node.value = ast.parse("Path('/data/ycfeng/tmp/d29_emission_immutable_work/observations')", mode='eval').body
+    prefix.append(node)
+sys.argv = [str(driver), 'baseline']
+namespace = {'__name__': '__main__', '__file__': str(driver)}
+# Same setup and binding checks, with the scratch output root redirected; stop
+# before running the accepted 15-measurement body. No control patch is active.
+exec(compile(ast.fix_missing_locations(ast.Module(body=prefix, type_ignores=[])), str(driver), 'exec'), namespace)
+body_path = namespace['body_path']
+body = ast.parse(body_path.read_text())
+prefix = []
+for node in body.body:
+    if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == 'measurements' for target in node.targets):
+        break
+    prefix.append(node)
+exec(compile(ast.Module(body=prefix, type_ignores=[]), str(body_path), 'exec'), namespace)
+counts = Counter()
+code = copy.deepcopy.__code__
+
+
+def observer(frame, event, arg):
+    if event == 'call' and frame.f_code is code:
+        value = frame.f_locals['x']
+        counts[type(value).__module__ + '.' + type(value).__qualname__] += 1
+
+
+sys.setprofile(observer)
+try:
+    current, _ = namespace['emit'](namespace['output'] / 'untimed')
+finally:
+    sys.setprofile(None)
+plan = namespace['plan']
+events = current._buffer
+native = [event for event in events if 'native_context' in event.meta]
+same_lane_alias = native[0].meta['native_context'] is native[1].meta['native_context']
+other_lane = next(event for event in native if event.meta['ep_id'] != native[0].meta['ep_id'])
+assert native[0].meta['native_context'] is not other_lane.meta['native_context']
+comm = [event for event in events if 'collective_plan' in event.meta]
+assert comm[0].meta['collective_plan']['context'] is not comm[1].meta['collective_plan']['context']
+
+
+def pending():
+    return b''.join((json.dumps({field.name: getattr(event, field.name) for field in dataclasses.fields(event)
+                                if getattr(event, field.name) is not None}) + '\n').encode() for event in events)
+
+
+gold = namespace['reference']
+assert pending() == gold
+prior = comm[-1].meta['collective_cost']['kernel_counts']
+comm[-1].meta['collective_cost']['kernel_counts'] = (999,) * 16
+actual_output_negative_red = pending() != gold
+comm[-1].meta['collective_cost']['kernel_counts'] = prior
+assert actual_output_negative_red and pending() == gold
+
+# Type/order/tuple fidelity is separate from JSON byte fidelity. No control rerun.
+source_plan = next(iter(namespace['source_plan_objects'].values()))
+reference = source_plan.to_dict()
+converted = namespace['plan_fields'](source_plan)
+
+
+def typed_shape(value):
+    if isinstance(value, dict):
+        return ('dict', tuple((name, typed_shape(item)) for name, item in value.items()))
+    if isinstance(value, (list, tuple)):
+        return (type(value).__name__, tuple(typed_shape(item) for item in value))
+    return (type(value).__name__, value)
+
+
+assert typed_shape(reference) == typed_shape(converted)
+# Snapshot guards would go RED if a frozen object with mutable content were
+# indiscriminately returned by __deepcopy__, as opposed to the H1 tested protocol.
+bad = dataclasses.replace(source_plan, buffer_json=bytearray(source_plan.buffer_json, 'utf-8'))
+safe = copy.deepcopy(bad)
+assert safe.buffer_json is not bad.buffer_json
+before_mutation = bytes(bad.buffer_json)
+with patch.object(type(bad), '__deepcopy__', lambda self, memo: self, create=True):
+    unsafe = copy.deepcopy(bad)
+    unsafe.buffer_json[0] = ord('!')
+unsafe_alias_negative_red = bytes(bad.buffer_json) != before_mutation
+assert bytes(safe.buffer_json) == before_mutation
+assert unsafe_alias_negative_red
+
+result = {'task_id': 'D29-EMISSION-IMMUTABLE-WORK', 'kind': 'untimed original-wave observation; no new control',
+          'script_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+          'driver_sha256': hashlib.sha256(driver.read_bytes()).hexdigest(),
+          'original_recursive_deepcopy_counts': dict(counts), 'deepcopy_total': sum(counts.values()),
+          'same_lane_native_context_alias_already_in_baseline': same_lane_alias,
+          'different_lane_native_contexts_independent': True,
+          'different_communication_event_contexts_independent': True,
+          'actual_208_event_mutation_detected_red': actual_output_negative_red,
+          'unconditional_frozen_return_self_alias_detected_red': unsafe_alias_negative_red,
+          'fields_conversion_exact_recursive_types_order_values': True,
+          'original_prepare_plan_count_not_remeasured': True,
+          'source_component_plan_objects_before_emission': len(namespace['source_plan_objects'])}
+(SCRATCH / 'observations.json').write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps(result, indent=2))

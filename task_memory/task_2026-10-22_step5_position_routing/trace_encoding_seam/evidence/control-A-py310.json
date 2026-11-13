@@ -1,0 +1,73 @@
+{
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "source_trace_store_sha256": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+  "wave": {
+    "baseline_s": [
+      0.024893630761653185,
+      0.023323947098106146,
+      0.023244422860443592,
+      0.02364058280363679,
+      0.023468341678380966,
+      0.02353193610906601,
+      0.02329111099243164,
+      0.023528748657554388,
+      0.02342691831290722,
+      0.02345483098179102,
+      0.02346022706478834
+    ],
+    "reuse_s": [
+      0.01782484818249941,
+      0.018229648005217314,
+      0.017803687136620283,
+      0.01798224588856101,
+      0.017883003689348698,
+      0.018364946823567152,
+      0.01789238629862666,
+      0.018135455902665854,
+      0.018845366314053535,
+      0.018670061603188515,
+      0.018330186139792204
+    ],
+    "entries": 597,
+    "cache_bytes_excluding_shared_keys": 269273,
+    "median_baseline_ms": 23.46,
+    "median_reuse_ms": 18.135,
+    "min_baseline_ms": 23.244,
+    "min_reuse_ms": 17.804,
+    "median_delta_ms": -5.325,
+    "median_delta_pct": -22.7
+  },
+  "buffer": {
+    "baseline_s": [
+      0.5357211977243423,
+      0.5995596088469028,
+      0.5323623828589916
+    ],
+    "reuse_s": [
+      0.3774957419373095,
+      0.37531497003510594,
+      0.3745298315770924
+    ],
+    "entries": 597,
+    "cache_bytes_excluding_shared_keys": 269273,
+    "events": 5000,
+    "body_bytes": 69414347,
+    "body_sha256": "1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156",
+    "tracemalloc_peak_baseline_bytes": 382366,
+    "tracemalloc_peak_reuse_bytes": 620077,
+    "median_baseline_ms": 535.721,
+    "median_reuse_ms": 375.315,
+    "min_baseline_ms": 532.362,
+    "min_reuse_ms": 374.53,
+    "median_delta_ms": -160.406,
+    "median_delta_pct": -29.94,
+    "median_per_wave_baseline_ms": 22.286,
+    "median_per_wave_reuse_ms": 15.613
+  },
+  "peak_rss_kib_after_wave_and_each_buffer_pair": [
+    225932,
+    472924,
+    472924,
+    472924
+  ]
+}

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/compare_final_unit.py", line 21, in <module>
+    assert execution["versions"] == previous["versions"]
+KeyError: 'versions'

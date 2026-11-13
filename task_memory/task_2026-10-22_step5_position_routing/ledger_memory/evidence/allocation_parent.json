@@ -1,0 +1,25 @@
+{
+  "status": "PASS_135_GROSS_ZERO_SUM_ALLOCATION",
+  "effective_paths": 116,
+  "owner_totals": {
+    "core_source": {
+      "paths": 51,
+      "cap": 4404,
+      "actual": 4261
+    },
+    "pricing": {
+      "paths": 46,
+      "cap": 3956,
+      "actual": 3955
+    },
+    "native": {
+      "paths": 19,
+      "cap": 1582,
+      "actual": 1350
+    }
+  },
+  "accepted_source_usage": 9566,
+  "accepted_global_usage": 9580,
+  "source_allocation": 9942,
+  "production_changed": false
+}

@@ -1,0 +1,74 @@
+{
+  "status": "PASS_EXACT_DIAGNOSIS_ARCHIVE",
+  "collected_utc": "2026-10-24T19:22:39.698612+00:00",
+  "artifacts": [
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/diagnosis_integration/copy_parent.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/diagnosis_closeout_2026-10-25/copy_parent.json",
+      "bytes": 1405,
+      "sha256": "f7ac1160fc18c652481355eee7f2c38b126d1233d76ad9437b6fcc0285b1df10"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/diagnosis_integration/copy_merge.log",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/diagnosis_closeout_2026-10-25/copy_merge.log",
+      "bytes": 1287,
+      "sha256": "572cd3e71605744bf7205688604d01d6b9f2f86b9ded8995fc8c1e810fb7fe69"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/diagnosis_integration/resume_parent.py",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/diagnosis_closeout_2026-10-25/resume_parent.py",
+      "bytes": 4634,
+      "sha256": "1494a54924c3c114dc9be5a88ad000537554b768602c90aec13928b52dbf05d1"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/diagnosis_integration/init_parent_before.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/diagnosis_closeout_2026-10-25/init_parent_before.json",
+      "bytes": 2865,
+      "sha256": "04cacb84e59e9fa31489a51d601006a7eb4e3c4ece2abfb6d3f0417187948f91"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/diagnosis_integration/init_merge.json",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/diagnosis_closeout_2026-10-25/init_merge.json",
+      "bytes": 734,
+      "sha256": "da5da5429b347687b9d8ce98d97f41cbafd01c763712bcbaffcec5f4548a7d5c"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/diagnosis_integration/init_merge.log",
+      "archive": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/diagnosis_closeout_2026-10-25/init_merge.log",
+      "bytes": 1130,
+      "sha256": "b3eb7521c40b05df48ec434ff6857700ad715d7d0d09d1a01b204fd5bfbfcb4b"
+    }
+  ],
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "records_merge": "c6b3da155f920f264749e497f884722ee75d78f1",
+  "metadata_verification_argv": [
+    "timeout",
+    "60s",
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "GIT_OPTIONAL_LOCKS=0",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/diagnosis_integration/resume_parent.py"
+  ],
+  "metadata_verification_returncode": 0,
+  "limits": [
+    "No runtime control, suite, pricing wave, initialization, fullCLI or platform invocation",
+    "Source and accepted116-path/126-binding budget unchanged",
+    "Configured30GiB is not a measured RSS peak"
+  ]
+}

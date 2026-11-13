@@ -1,0 +1,86 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/supplement101/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/supplement101/execution.json",
+    "sha256": "2d6184a21b5777271e522ff054b6fc9099cfac8fb3a7e964d7f1721fde62087c",
+    "bytes": 6521
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/supplement101/results.xml",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/supplement101/results.xml",
+    "sha256": "035a6ed22e5d308462c5eb8066205fa6abd749c0f7f37013908984fbc485bbd3",
+    "bytes": 15812
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/supplement101/command1.log",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/supplement101/command1.log",
+    "sha256": "cb0dd565700c3d247d4717852bbf2cac2a3b32b98dcc58bf4daef084371ac822",
+    "bytes": 180
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/execution.json",
+    "sha256": "c7b4aabf047a9dbd7ebd8c39e7e7c3648149c227b1c4b1d9a7a38c6cdc8ecd04",
+    "bytes": 6648
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/results.xml",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/results.xml",
+    "sha256": "252bfabf51ce4e8e4b8ba68abb8540be9ba771c4a362c370b79bf2bd0f61f0cb",
+    "bytes": 31084
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/command1.log",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/command1.log",
+    "sha256": "630894fe860714920f99027ac117f3d3008dbb9dcf7a7e80805137b5317aa0f8",
+    "bytes": 260
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/catalogue53/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/catalogue53/execution.json",
+    "sha256": "db25fab38b5650c1ae49639e71cb64970ca01b18d7cf9ccdf04b12d3b3edba00",
+    "bytes": 6402
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/catalogue53/results.xml",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/catalogue53/results.xml",
+    "sha256": "793e37daadc8b6d774cd6f54a4e850ad686b4adeeb687b0e3c131b997f34013f",
+    "bytes": 8993
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/catalogue53/command1.log",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/catalogue53/command1.log",
+    "sha256": "882d414bd652309da83fa981fe9627c793169d4c8f08a250286074aa980661fa",
+    "bytes": 99
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/business_artifact_receipt.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/business_artifact_receipt.json",
+    "sha256": "d17f46b929473dc555e771f42c38bc6c5aa3e6333bc58647d9a1c574e4060b46",
+    "bytes": 2711
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac0/op_precision_metadata.csv",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/csv/test_precision_csv_requires_ac0/op_precision_metadata.csv",
+    "sha256": "ecc18c4726a8933b1f6c45a91a8f0fc9c2e66f351ea9b91c1361370a192eb7d6",
+    "bytes": 1395
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac1/op_precision_metadata.csv",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/csv/test_precision_csv_requires_ac1/op_precision_metadata.csv",
+    "sha256": "ba1395602b8f4cf203517152e5d231709e36281ae69faca90d488c226d0f8f20",
+    "bytes": 1431
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac2/op_precision_metadata.csv",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/csv/test_precision_csv_requires_ac2/op_precision_metadata.csv",
+    "sha256": "ecc18c4726a8933b1f6c45a91a8f0fc9c2e66f351ea9b91c1361370a192eb7d6",
+    "bytes": 1395
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac3/op_precision_metadata.csv",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/metadata196/csv/test_precision_csv_requires_ac3/op_precision_metadata.csv",
+    "sha256": "5677278d6d0903af2a447a8060613b4988bd8d0f82d983b675578b312afbe922",
+    "bytes": 1439
+  }
+]

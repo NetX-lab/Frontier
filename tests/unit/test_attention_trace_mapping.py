@@ -260,7 +260,7 @@ def test_structured_attention_legacy_coverage_uses_family_execution_time_attrs(
     monkeypatch.setattr(
         time_components,
         "iter_execution_enabled_families",
-        lambda: (custom_family,),
+        lambda **_: (custom_family,),
         raising=False,
     )
     attention_time = time_components.AttentionTime(

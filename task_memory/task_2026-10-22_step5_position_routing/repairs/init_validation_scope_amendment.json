@@ -1,0 +1,22 @@
+{
+  "decision_id": "D29-INIT-FAMILY-RESOLUTION",
+  "authority": "D29-REPAIR-PATH-AUTHORITY",
+  "apply_after": "model_group_reuse_scope_amendment.json",
+  "effective_unique_paths": 111,
+  "owner": "core_source",
+  "owner_gross_ceiling": 4404,
+  "repair_delta_ceiling": 45,
+  "source_delta_ceiling": 6,
+  "test_delta_ceiling": 39,
+  "repair_paths": [
+    "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+    "tests/unit/test_moe_grouped_gemm_padded_features.py"
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "tests/unit/test_moe_grouped_gemm_padded_features.py", "before": 210, "delta": 27, "after": 237},
+    {"path": "tests/unit/test_moe_routing_runtime.py", "before": 70, "delta": -17, "after": 53},
+    {"path": "frontier/execution_time_predictor/layer_contract_resolution.py", "before": 25, "delta": -10, "after": 15}
+  ],
+  "reason": "Compute the input-constant architecture family once per existing MoE loader call and pass the existing validator keyword. Parent3000-row comparison is2.837s versus0.275s with identical payload and one config validation. Every row and operator still receives its existing validation before filtering.",
+  "limits": "No cache, validator/binder API edit, new path, input change, skipped row, owner/global budget increase or whole-CLI performance claim. Loader remains at its existing17-line path ceiling. Model-group repair has separate ownership and allocation."
+}

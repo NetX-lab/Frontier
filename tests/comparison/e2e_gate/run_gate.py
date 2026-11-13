@@ -33,6 +33,7 @@ import pandas as pd
 from tests.comparison.e2e_gate import admission
 from tests.comparison.e2e_gate.gate import gate_reading
 from tests.comparison.e2e_gate.normalize import normalize_cell
+from tests.comparison.calibration.pd_replay import canonical_workload
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[2]
@@ -40,8 +41,8 @@ MATRIX = HERE / "cases" / "scenario_matrix.json"
 ARTIFACTS = HERE / "artifacts.json"
 
 
-def load_matrix() -> dict:
-    return json.loads(MATRIX.read_text())
+def load_matrix(path: Path = MATRIX) -> dict:
+    return json.loads(path.read_text())
 
 
 def find_cell(matrix: dict, cell_id: str) -> tuple[dict, dict]:
@@ -84,14 +85,15 @@ def command_cells(args) -> None:
 
 
 def command_gate(args) -> None:
-    cell, case = find_cell(load_matrix(), args.cell)
+    cell, case = find_cell(load_matrix(args.matrix), args.cell)
     reading = gate_reading(cell, case, args.rows)
     text = json.dumps(reading, indent=1, default=str) + "\n"
     if args.output:
         args.output.write_text(text)
     for row in reading.get("metrics", []):
-        print(f"{row['metric']:24s} vllm {row['vllm']:.4f} frontier {row['frontier']:.4f} "
-              f"rel {row['relative_error']:.4f} {row['status']}")
+        vllm, frontier, error = [f"{row[key]:.4f}" if row[key] is not None else "undefined"
+                                 for key in ("vllm", "frontier", "relative_error")]
+        print(f"{row['metric']:24s} vllm {vllm} frontier {frontier} rel {error} {row['status']}")
     modes = reading.get("dp_pp_modes")
     if modes:
         for mode, metrics in modes["modes"].items():
@@ -106,11 +108,21 @@ def command_gate(args) -> None:
 
 
 def command_normalize(args) -> None:
-    cell, case = find_cell(load_matrix(), args.cell)
+    cell, case = find_cell(load_matrix(args.matrix), args.cell)
     request_ids = json.loads(pinned(args.artifacts_root, cell["trace"]["request_ids"]).read_text())
     vllm_runs = {path.name: path for path in args.vllm_run_dir}
+    if cell["gate"] == "client" and len(vllm_runs) != len(args.vllm_run_dir):
+        raise ValueError("Duplicate native run basenames cannot identify independent sources")
     frontier_runs = dict(args.frontier_run)
-    normalize_cell(cell, case, request_ids, vllm_runs, frontier_runs, args.output_dir)
+    if len(frontier_runs) != len(args.frontier_run):
+        raise ValueError("Duplicate Frontier labels cannot identify independent sources")
+    if cell["gate"] == "client" and Path(cell["trace"]["workload"]["path"]).name != "manifest.json":
+        raise ValueError("Canonical workload must identify its frozen package manifest.json")
+    workload = (canonical_workload(pinned(args.artifacts_root, cell["trace"]["workload"]).parent)
+                if cell["gate"] == "client" else None)
+    run_check = (pinned(args.artifacts_root, cell["run_check"])
+                 if cell["gate"] == "client" and "run_check" in cell else None)
+    normalize_cell(cell, case, request_ids, vllm_runs, frontier_runs, args.output_dir, workload, run_check)
     print(f"wrote {args.output_dir}")
 
 
@@ -186,12 +198,14 @@ def main() -> None:
 
     gate = commands.add_parser("gate", help="gate a cell from normalized rows")
     gate.add_argument("--cell", required=True, help="<case_id>/<cell>")
+    gate.add_argument("--matrix", type=Path, default=MATRIX, help="case matrix (default: published matrix)")
     gate.add_argument("--rows", type=Path, required=True)
     gate.add_argument("--output", type=Path, help="write the reading as JSON")
     gate.set_defaults(run=command_gate)
 
     normalize = commands.add_parser("normalize", help="normalized rows from raw runs")
     normalize.add_argument("--cell", required=True)
+    normalize.add_argument("--matrix", type=Path, default=MATRIX)
     normalize.add_argument("--artifacts-root", type=Path, required=True)
     normalize.add_argument("--vllm-run-dir", type=Path, action="append", required=True,
                            help="ground-truth run directory; repeat for each run of the cell")
@@ -218,12 +232,12 @@ def main() -> None:
     cpu_table.add_argument("--output-dir", type=Path, required=True)
     cpu_table.set_defaults(run=command_cpu_table)
 
-    admit = commands.add_parser("admit", help="admission reading of a CPU-probe run")
+    admit = commands.add_parser("admit", help="CPU-probe or raw observer admission")
     admit.add_argument("--rule", choices=sorted(admission.RULES), required=True)
     admit.add_argument("--probe", type=Path, required=True)
     admit.add_argument("--reference", type=Path, action="append", required=True,
-                       help="clean run (client_e2e: one; send_span: the job's clean runs of the cell) "
-                            "or, for isolated_prefill, every CPU-probe run of the job, the probe included")
+                       help="CPU rules: clean runs or isolated_prefill probe cohort; "
+                            "observer_host: one expected.json")
     admit.set_defaults(run=command_admit)
 
     args = parser.parse_args()

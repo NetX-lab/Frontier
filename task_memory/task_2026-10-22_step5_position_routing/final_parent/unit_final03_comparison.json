@@ -1,0 +1,78 @@
+{
+  "failure": {
+    "baseline": 267,
+    "candidate": 279,
+    "new": [
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.10.2]",
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-0.28.0]",
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5]",
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[False-step5_position_cyclic]",
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.10.2]",
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-0.28.0]",
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5]",
+      "tests.unit.test_step5_canonical_g3::test_actual_http_capability_covers_derived_and_legacy[True-step5_position_cyclic]",
+      "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5]",
+      "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[False-step5_position_cyclic]",
+      "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5]",
+      "tests.unit.test_step5_canonical_g3::test_actual_r2_driver_propagates_selected_engine_to_all_clients[True-step5_position_cyclic]"
+    ],
+    "removed": []
+  },
+  "error": {
+    "baseline": 31,
+    "candidate": 32,
+    "new": [
+      "::tests.unit.test_step5_native_position_cyclic"
+    ],
+    "removed": []
+  },
+  "raw_status_counts": {
+    "skipped": 281,
+    "error": 32,
+    "pass": 8015,
+    "failure": 279
+  },
+  "environment_supplement": {
+    "source": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+    "xml": "/data/ycfeng/tmp/d29_final_environment_parent02.xml",
+    "tests": 101,
+    "covered_http_failures": 12,
+    "native_module_cases": 16
+  },
+  "status": "NO_NEW_CODE_FAILURES_WITH_EXPLICIT_ENVIRONMENT_SUPPLEMENT",
+  "source_revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+  "baseline_cases_missing": 0,
+  "baseline_pass_to_skip": 0,
+  "affected_suite_ids_pass_in_full_run": [
+    53,
+    196
+  ],
+  "raw_candidate_exit_code": 1,
+  "raw_suite": {
+    "name": "pytest",
+    "errors": "32",
+    "failures": "279",
+    "skipped": "281",
+    "tests": "8607",
+    "time": "1238.567",
+    "timestamp": "2026-10-23T12:14:11.763175+08:00",
+    "hostname": "kun-workspace-vgen2"
+  },
+  "evidence": {
+    "baseline": {
+      "path": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+      "sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d",
+      "bytes": 1978121
+    },
+    "candidate": {
+      "path": "/data/ycfeng/tmp/d29_unit_parent03.xml",
+      "sha256": "ac776858ca8706988f064f2d7fa8ad81d3c1acfa2694814a12862cec28682bee",
+      "bytes": 2109136
+    },
+    "environment_supplement": {
+      "path": "/data/ycfeng/tmp/d29_final_environment_parent02.xml",
+      "sha256": "2080f98a56b3361f286d263f8e091540cb67f6556b469377a3ed5e721b4c367f",
+      "bytes": 15813
+    }
+  }
+}

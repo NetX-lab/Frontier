@@ -1,0 +1,48 @@
+{
+  "task_id": "D23-P-CENSUS-PARENT",
+  "native_summary_path": "/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01/stage/evidence/replay/r2_replay_summary.json",
+  "native_delta": {
+    "prefill_compute": 6128,
+    "decode_compute": 16,
+    "decode_external": 6128,
+    "transfer_count": 8,
+    "transfer_bytes_sum": 1119096832.0,
+    "descriptor_sum": 158608.0,
+    "mean_bytes_per_read": 139887104.0,
+    "mean_descriptors_per_read": 19826.0
+  },
+  "cpu_components": [
+    {
+      "component_id": "swa_raw_kv",
+      "layers": 69,
+      "pages": 33,
+      "page_size_bytes": 12288,
+      "bytes_per_rank": 27979776
+    },
+    {
+      "component_id": "sparse_raw_kv",
+      "layers": 23,
+      "pages": 383,
+      "page_size_bytes": 12288,
+      "bytes_per_rank": 108244992
+    },
+    {
+      "component_id": "region_summary",
+      "layers": 23,
+      "pages": 383,
+      "page_size_bytes": 512,
+      "bytes_per_rank": 4510208
+    },
+    {
+      "component_id": "open_region_state",
+      "layers": 23,
+      "pages": 0,
+      "page_size_bytes": 2060,
+      "bytes_per_rank": 0
+    }
+  ],
+  "cpu_bytes_per_rank": 140734976,
+  "difference_bytes_per_rank": 847872.0,
+  "relative_difference": 0.006061116255577037,
+  "numerical_component_reconciliation": "Subtracting one SWA page for each of69 layers closes both byte and descriptor totals exactly. Native selection/null/boundary mechanism still requires proof before changing the shared page-count rule."
+}

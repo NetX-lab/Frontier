@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/d29_main09_binding_repro_20261025.py", line 8, in <module>
+    print(json.dumps(check_bindings(json.loads((preparation/'joint_bindings.json').read_bytes()),preparation)))
+  File "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_timing.py", line 62, in check_bindings
+    require([stat.st_size, stat.st_mtime_ns] == expected, f"Fixture metadata: {relative}")
+  File "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/joint_timing.py", line 26, in require
+    raise AssertionError(message)
+AssertionError: Fixture metadata: cache/moe_gating_routing_topk_c733e553.pkl

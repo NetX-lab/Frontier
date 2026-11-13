@@ -1,0 +1,70 @@
+{
+  "percentile": "nearest-rank, ceil(0.9*n)-1; n=8 => maximum",
+  "scope": "8 concurrent diagnostics; 16 warmups excluded; not formal128/QPS1",
+  "cases": [
+    {
+      "hardware": "H800",
+      "gpus": 32,
+      "requests": 8,
+      "p90": {
+        "ttft_s": 4.791508447378874,
+        "tpot_ms": 36.16368706690426,
+        "e2e_s": 40.567068388685584
+      },
+      "throughput_total_tokens_s": 1413.5134776064551,
+      "throughput_output_tokens_s": 201.93049680092216,
+      "window_s": 40.56841403245926,
+      "original_summary_status": "CLIENT_WORKLOAD_VERIFIED",
+      "source": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/evidence/replay/client_requests.jsonl",
+      "source_sha256": "a7fdc4108b1fe86ec7356beaf6069ab64c2486b97abc88ba7eec765ba6221382"
+    },
+    {
+      "hardware": "H800",
+      "gpus": 64,
+      "requests": 8,
+      "p90": {
+        "ttft_s": 9.093688629567623,
+        "tpot_ms": 43.68515691391301,
+        "e2e_s": 51.920700050890446
+      },
+      "throughput_total_tokens_s": 1104.4363915319104,
+      "throughput_output_tokens_s": 157.7766273617015,
+      "window_s": 51.921505339443684,
+      "original_summary_status": "CLIENT_WORKLOAD_VERIFIED",
+      "source": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification02/stage/evidence/replay/client_requests.jsonl",
+      "source_sha256": "f141d139f694eae15aba6d48c3af2395be0844adfcf255340569b07095a632dd"
+    },
+    {
+      "hardware": "H200",
+      "gpus": 32,
+      "requests": 8,
+      "p90": {
+        "ttft_s": 3.881986852735281,
+        "tpot_ms": 30.952360943498732,
+        "e2e_s": 34.25857650116086
+      },
+      "throughput_total_tokens_s": 1673.8032919203388,
+      "throughput_output_tokens_s": 239.11475598861983,
+      "window_s": 34.25970081239939,
+      "original_summary_status": "CLIENT_WORKLOAD_VERIFIED",
+      "source": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification02/stage/evidence/replay/client_requests.jsonl",
+      "source_sha256": "c2c9a16ddb5e884427484a3006e7b3e3089cd9e67ef890afcfc289d35647f22a"
+    },
+    {
+      "hardware": "H200",
+      "gpus": 64,
+      "requests": 8,
+      "p90": {
+        "ttft_s": 4.459317443019245,
+        "tpot_ms": 38.97173726295766,
+        "e2e_s": 42.59891472099116
+      },
+      "throughput_total_tokens_s": 1346.118639784805,
+      "throughput_output_tokens_s": 192.30266282640073,
+      "window_s": 42.59951411798829,
+      "original_summary_status": "REFERENCE_UNSTABLE",
+      "source": "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/replay/client_requests.jsonl",
+      "source_sha256": "7ad5bcd3631873979725eda58bc4aa062c4a9513898f0c37077a27c70617ecf4"
+    }
+  ]
+}

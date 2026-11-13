@@ -1,0 +1,165 @@
+{
+  "task_id": "D29-PLAN-KEY-PARENT",
+  "status": "ACCEPTED_COMPONENT_NOT_WORKFLOW",
+  "source_commit": "30fb6a309aa564777ed8f1f5e094118d65bd17d3",
+  "owner_source_commit": "c4e06a6159ee3b1e63c50abaa346066ae8b6da31",
+  "integrated_revision": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+  "integrated_tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+  "entire_non_record_tree_matches_verified_owner": true,
+  "reviews": {
+    "Standards": {
+      "task_id": "D29-PLAN-KEY-STANDARDS",
+      "session_id": "ses_e95d89f3affe7KKNlmjuvGg1J9",
+      "findings": 0
+    },
+    "Spec": {
+      "task_id": "D29-PLAN-KEY-SPEC",
+      "session_id": "ses_e95d89df9ffeTaYF2NvmcNHsYE",
+      "findings": 0
+    }
+  },
+  "parent_tests": {
+    "passed": 124,
+    "skipped": 1,
+    "failed": 0,
+    "errors": 0,
+    "same_test_ids_and_statuses_as_baseline": true,
+    "xml": "/data/ycfeng/tmp/d29_plan_key_parent01.xml",
+    "xml_sha256": "591300ab3c811744bec7354da99e848c5d33c536747695ea3a1dcab14ab5c979"
+  },
+  "byte_comparisons": {
+    "pricing_payload.json": {
+      "equal": true,
+      "bytes": 647510,
+      "sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    },
+    "accepted-output/{arm}/ledger.json": {
+      "equal": true,
+      "bytes": 2309545,
+      "sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf"
+    },
+    "accepted-output/{arm}/iteration-0/op_traces.jsonl": {
+      "equal": true,
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    }
+  },
+  "union": {
+    "guard_only": true,
+    "status": "PASS_TWO_PATH_DELTA_ONLY",
+    "violations": [],
+    "non_key_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+    "expected_non_key_digest": "fe524bcd1e36662489cb74c64c0bc4f071de3c107bebb65179a758bc4b2e81fe",
+    "totals": {
+      "owner_actual": {
+        "core_source": 4173,
+        "pricing": 3954,
+        "native": 1350
+      },
+      "owner_caps": {
+        "core_source": 4404,
+        "pricing": 3956,
+        "native": 1582
+      },
+      "owner_paths": {
+        "core_source": 49,
+        "pricing": 46,
+        "native": 19
+      },
+      "source_actual_before_key": 9463,
+      "source_actual_after_key": 9477,
+      "source_cap": 9942,
+      "module_size_note_actual": 12,
+      "gitlink_actual": 2,
+      "global_actual_before_key": 9477,
+      "global_actual_after_key": 9491,
+      "global_cap": 10000,
+      "pricing_actual_expected": 3954,
+      "pricing_actual_matches_expected": true,
+      "source_matches_expected": true,
+      "global_matches_expected": true,
+      "caps_unchanged": true
+    }
+  },
+  "union_basis": "Accepted 114-path snapshot audit + independent two-path delta + final integrated-head 122-binding guard; unchanged paths carried with exact blob binding.",
+  "artifact_files": {
+    "verification.json": {
+      "bytes": 2316,
+      "sha256": "135a093e974620be75254cbf063c22f740e717c505778e468168ca05b92dd8bd",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01_wave/parent_verification.json"
+    },
+    "union_guard.json": {
+      "bytes": 950,
+      "sha256": "a132d666823c7621f0cce23ab83155547906df756bae508c019626bb1d6ad9f7",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01_wave/parent_union.json"
+    },
+    "freeze.json": {
+      "bytes": 34697,
+      "sha256": "10111887280540596a20161b6ae970b1a0d04df46b71cbe989e2364520c97cb2",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01_wave/freeze.json"
+    },
+    "baseline_wave.json": {
+      "bytes": 23942,
+      "sha256": "e409c517f3c5bcdc9f3d88f48298e70676dda37193e2e06ccb20fd77d5dc582a",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01_wave/baseline/wave_result.json"
+    },
+    "candidate_wave.json": {
+      "bytes": 26774,
+      "sha256": "67d2cebfcaa4535095eca39345ecefecc6d8aeb618d912cf945b3dfbabfd5169",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01_wave/candidate/wave_result.json"
+    },
+    "pytest.xml": {
+      "bytes": 20112,
+      "sha256": "591300ab3c811744bec7354da99e848c5d33c536747695ea3a1dcab14ab5c979",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01.xml"
+    },
+    "pytest.log": {
+      "bytes": 444,
+      "sha256": "ae1e018180200bd3ae36a95ffa5b2acb222f2fa3e4d5cee015614597263aca13",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01.log"
+    },
+    "scripts/prepare.py": {
+      "bytes": 3187,
+      "sha256": "779780ed8bcc728406ab5aa6f967f76c5cccc919da9df86b09a57deb988ca5c8",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01_wave/prepare.py"
+    },
+    "scripts/verify_parent.py": {
+      "bytes": 1998,
+      "sha256": "378c4b85b30311123c12b99900236252d1bb83269598348d83a89e5043b184ee",
+      "original": "/data/ycfeng/tmp/d29_plan_key_parent01_wave/verify_parent.py"
+    },
+    "../../repairs/evidence/plan_key_scope/plan_key_delta_receipt.json": {
+      "bytes": 43834,
+      "sha256": "b483694024bb4e32aed051e494018e0005824656492b4801032f48351f9e1c07"
+    },
+    "../../repairs/evidence/plan_key_scope/changed_file_guard.json": {
+      "bytes": 1629,
+      "sha256": "77f0601e0164fc522f8fef0daebcc3a0fcd9fc91f1b4f2746d9ecd49880f4015"
+    },
+    "../../repairs/evidence/plan_key_scope/recompute_plan_key_delta.py": {
+      "bytes": 29824,
+      "sha256": "59ce90f25ee6443be63ddb948bff253acb9616f74d18cc53d33cdb210f779e82"
+    },
+    "../../repairs/evidence/plan_key_scope/report_2026-10-24_plan_key_scope_delta.md": {
+      "bytes": 11059,
+      "sha256": "4e6865da079bea1445affd3a1f715d19dfefa3cb54ca6d61786fc31f2f7cfe7d"
+    }
+  },
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "owner_timing_comparison_s": {
+    "pricing": [
+      0.16100693587213755,
+      0.11974244238808751
+    ],
+    "emission": [
+      0.05160121200606227,
+      0.038155626971274614
+    ]
+  },
+  "parent_timing_limit": "Baseline/candidate replay processes ran concurrently for parity; owner sequential timing remains the comparison evidence.",
+  "remaining": [
+    "fresh frozen strict77/full-unit/environment regressions",
+    "full 6144/1024 CLI under2400s each mode and output storage",
+    "T2 final staging/seal/platform/native/G3/E2E qualification"
+  ]
+}

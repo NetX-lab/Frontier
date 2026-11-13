@@ -34,6 +34,7 @@ from frontier.config import (
     StickyLORClusterSchedulerConfig,
     StickyRoundRobinClusterSchedulerConfig,
     SyntheticRequestGeneratorConfig,
+    TraceRequestGeneratorConfig,
     VllmLoadBalancingClusterSchedulerConfig,
     VllmV1SchedulerConfig,
 )
@@ -338,6 +339,7 @@ def _policy_scheduler(
     cluster_type: ClusterType = ClusterType.MONOLITHIC,
     replica_scheduler_config=None,
     cluster_scheduler_config=None,
+    request_generator_config=None,
 ):
     """Build a real cluster scheduler through the real constructor path."""
 
@@ -370,7 +372,7 @@ def _policy_scheduler(
         memory_margin_fraction=0.1,
         **moe_fields,
     )
-    generator_config = SyntheticRequestGeneratorConfig(
+    generator_config = request_generator_config or SyntheticRequestGeneratorConfig(
         num_requests=2,
         length_generator_config=FixedRequestLengthGeneratorConfig(
             prefill_tokens=8, decode_tokens=2
@@ -941,3 +943,287 @@ def test_every_policy_config_round_trips_through_copy_and_dict(config_type) -> N
     # The serialized identity is the selector token, which is what a config
     # artifact has to round-trip through.
     assert dataclass_to_dict(config)["name"] == str(config_type.get_type())
+
+
+def test_v028_low_pressure_counts_waiting_once() -> None:
+    config = VllmLoadBalancingClusterSchedulerConfig(policy_version="v0.28.0")
+    balancer = VllmDPLoadBalancer(2, policy_version=config.policy_version)
+    balancer.report(0.0, 0, 0, RequestLoad(1, 0, kv_cache_usage=0.5))
+    balancer.report(0.0, 1, 0, RequestLoad(0, 2, kv_cache_usage=1.0))
+
+    # Source oracle A: scores 1 and 2; legacy scores 4 and 2.
+    assert balancer.select(0.06, request_id=100) == 0
+    assert balancer.frontend_counts[0].kv_cache_usage == 0.5
+
+
+def test_load_metadata_keeps_the_legacy_count_sequence_and_equality() -> None:
+    load = RequestLoad(2, 1, kv_cache_usage=0.75)
+
+    assert list(load) == [2, 1]
+    assert tuple(load) == (2, 1)
+    assert load == RequestLoad(2, 1, kv_cache_usage=0.5)
+    assert load.kv_cache_usage == 0.75
+
+
+@pytest.mark.parametrize(("usage", "expected"), [(0.5, 0), (0.75, 1), (1.0, 1)])
+def test_v028_kv_pressure_penalizes_only_waiting_requests(usage, expected) -> None:
+    balancer = VllmDPLoadBalancer(2, policy_version="v0.28.0")
+    balancer.report(0.0, 0, 0, RequestLoad(2, 1, usage))
+    balancer.report(0.0, 1, 0, RequestLoad(0, 4, 1.0))
+
+    # Source oracle B: lane 0 scores 3, 6, or 9; lane 1 stays at 4.
+    assert balancer.select(0.06, request_id=100) == expected
+
+
+def test_v028_snapshot_replacement_retains_unfinished_request_ownership() -> None:
+    balancer = VllmDPLoadBalancer(2, policy_version="v0.28.0")
+    balancer.report(0.0, 1, 0, RequestLoad(0, 7))
+    assert balancer.select(0.06, request_id=100) == 0
+    assert balancer.select(0.06, request_id=101) == 0
+
+    # An empty delayed snapshot predates the two requests' engine arrival.
+    balancer.report(0.07, 1, 1, RequestLoad(0, 0))
+    assert [balancer.select(0.16, request_id=i) for i in (102, 103, 104)] == [1, 1, 0]
+    assert balancer.engine_inflight == [3, 2]
+    assert balancer.request_owners == {100: 0, 101: 0, 102: 1, 103: 1, 104: 0}
+
+
+def test_v028_ties_rotate_after_terminal_output_and_fresh_empty_snapshot() -> None:
+    balancer = VllmDPLoadBalancer(2, policy_version="v0.28.0")
+    choices = []
+    for request_id, time in enumerate((0.06, 5.1, 10.2)):
+        choices.append(balancer.select(time, request_id=request_id))
+        balancer.finish_requests([])
+        assert sum(balancer.engine_inflight) == 1
+        balancer.finish_requests([request_id, request_id, -1])
+        assert balancer.engine_inflight == [0, 0]
+        assert balancer.request_owners == {}
+
+    assert choices == [0, 1, 0]
+
+
+def test_v028_selection_requires_a_real_request_identity() -> None:
+    balancer = VllmDPLoadBalancer(2, policy_version="v0.28.0")
+    with pytest.raises(ValueError, match="request_id"):
+        balancer.select(0.0)
+
+
+def test_v028_kv_only_changes_do_not_refresh_or_replace_latched_pressure() -> None:
+    balancer = VllmDPLoadBalancer(2, policy_version="v0.28.0")
+    balancer.report(0.0, 0, 0, RequestLoad(1, 1, 0.5))
+    balancer.report(0.001, 1, 0, RequestLoad(0, 1, 0.75))
+    balancer.report(0.002, 0, 9, RequestLoad(1, 1, 1.0))
+    assert balancer.last_report_step == 0
+    assert balancer.engine_counts[0].kv_cache_usage == 0.5
+
+    balancer.report(0.003, 0, 1, RequestLoad(2, 1, 0.75))
+    balancer.select(0.06, request_id=100)
+    assert [load.kv_cache_usage for load in balancer.frontend_counts] == [0.5, 0.75]
+    balancer.select(0.16, request_id=101)
+    assert balancer.frontend_counts[0].kv_cache_usage == 0.75
+
+    deadline = balancer.next_publish_ms
+    balancer.report(0.17, 0, 10, RequestLoad(2, 1, 1.0))
+    assert balancer.engine_counts[0].kv_cache_usage == 0.75
+    assert balancer.next_publish_ms == deadline
+
+
+@pytest.mark.parametrize("used_blocks", [2, 3])
+@pytest.mark.parametrize("prefix_caching", [False, True])
+def test_load_accessor_reports_allocatable_capacity_usage(used_blocks, prefix_caching) -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch,
+            replica_scheduler_config=VllmV1SchedulerConfig(
+                num_blocks=4, block_size=16, batch_size_cap=4,
+                max_tokens_in_batch=64, enable_chunked_prefill=True,
+                enable_prefix_caching=prefix_caching,
+            ),
+            request_generator_config=TraceRequestGeneratorConfig(
+                trace_file="examples/fixtures/prefix_cache_shared_session_trace.csv"
+            ) if prefix_caching else None,
+        )
+        lane = scheduler.get_replica_scheduler(scheduler._serving_replica_id, 0)
+        lane.add_request(Request(
+            arrived_at=0.0, num_prefill_tokens=used_blocks * 16, num_decode_tokens=2,
+            session_id=1, block_hash_ids=list(range(used_blocks)),
+        ))
+        [batch] = lane.on_schedule(0.0)
+        assert batch.size == 1
+        assert lane.num_allocated_blocks == used_blocks
+        # Frontier's ordinary pool has four allocatable blocks. Native total
+        # five with one null block has the same 0.5 / 0.75 usage, not used/5.
+        assert lane.get_request_load().kv_cache_usage == used_blocks / 4
+
+
+def test_v028_config_binds_real_requests_and_releases_terminal_outputs() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch,
+            cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
+                policy_version="v0.28.0"
+            ),
+        )
+        request = _request(tokens=24)
+        scheduler.add_request(request)
+        [(replica_id, lane_id, assigned)] = scheduler.schedule_at(0.0)
+        assert assigned is request
+        balancer = scheduler._load_balancer
+        assert balancer.policy_version == "v0.28.0"
+        assert balancer.request_owners == {request.id: lane_id}
+        lane = scheduler.get_replica_scheduler(replica_id, lane_id)
+        lane.add_request(request)
+
+        completions = []
+        for step in range(3):
+            [batch] = lane.on_schedule(step * 0.1)
+            batch.on_schedule(step * 0.1, ClusterType.MONOLITHIC)
+            batch.on_batch_end(step * 0.1 + 0.01, ClusterType.MONOLITHIC)
+            lane.on_batch_end(batch)
+            scheduler.on_replica_batch_end(step * 0.1 + 0.01, replica_id, lane_id, batch)
+            completions.append(request.completed)
+            assert sum(balancer.engine_inflight) == (0 if request.completed else 1)
+
+        assert completions == [False, False, True]
+        assert balancer.request_owners == {}
+        scheduler.on_replica_batch_end(0.3, replica_id, lane_id, batch)
+        assert balancer.engine_inflight == [0, 0]
+
+
+@pytest.mark.parametrize("used_blocks", [2, 3])
+def test_grouped_load_usage_excludes_the_reserved_null_block(used_blocks) -> None:
+    from tests.unit.test_grouped_kv_cache_scheduler import _scheduler
+
+    lane = _scheduler(blocks=5, watermark=0)
+    pool = lane._kv_cache_manager.block_pool
+    allocated = pool.get_new_blocks(used_blocks)
+
+    assert pool.reserved_blocks == 1
+    assert all(block.block_id != 0 for block in allocated.blocks)
+    assert pool.get_num_free_blocks() == 4 - used_blocks
+    assert lane.get_request_load().kv_cache_usage == used_blocks / 4
+
+
+def test_v028_preemption_and_stale_drop_keep_request_ownership() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch,
+            cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
+                policy_version="v0.28.0"
+            ),
+        )
+        request = _request(tokens=24)
+        scheduler.add_request(request)
+        [(replica_id, lane_id, _)] = scheduler.schedule_at(0.0)
+        balancer = scheduler._load_balancer
+        lane = scheduler.get_replica_scheduler(replica_id, lane_id)
+        lane.add_request(request)
+        [stale_batch] = lane.on_schedule(0.0)
+        stale_batch.on_schedule(0.0, ClusterType.MONOLITHIC)
+        lane._preempt_request(request, [])
+
+        assert not request.completed
+        assert lane.get_request_load() == RequestLoad(1, 0)
+        lane.on_stale_batch_drop(stale_batch)
+        scheduler.on_replica_batch_end(0.01, replica_id, lane_id, stale_batch)
+        assert balancer.request_owners == {request.id: lane_id}
+        assert sum(balancer.engine_inflight) == 1
+
+
+def test_v028_request_ownership_survives_replayed_prefill_after_preemption() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch,
+            cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
+                policy_version="v0.28.0"
+            ),
+        )
+        request = _request(tokens=24)
+        scheduler.add_request(request)
+        [(replica_id, lane_id, _)] = scheduler.schedule_at(0.0)
+        balancer = scheduler._load_balancer
+        lane = scheduler.get_replica_scheduler(replica_id, lane_id)
+        lane.add_request(request)
+        [first] = lane.on_schedule(0.0)
+        first.on_schedule(0.0, ClusterType.MONOLITHIC)
+        first.on_batch_end(0.01, ClusterType.MONOLITHIC)
+        lane.on_batch_end(first)
+        scheduler.on_replica_batch_end(0.01, replica_id, lane_id, first)
+        assert request.num_processed_tokens == 16
+        lane._preempt_request(request, [])
+        assert lane.get_request_load() == RequestLoad(1, 0)
+        assert balancer.request_owners == {request.id: lane_id}
+
+        for step in range(1, 4):
+            [batch] = lane.on_schedule(step * 0.1)
+            batch.on_schedule(step * 0.1, ClusterType.MONOLITHIC)
+            batch.on_batch_end(step * 0.1 + 0.01, ClusterType.MONOLITHIC)
+            lane.on_batch_end(batch)
+            scheduler.on_replica_batch_end(step * 0.1 + 0.01, replica_id, lane_id, batch)
+            assert sum(balancer.engine_inflight) == (0 if request.completed else 1)
+
+        assert request.completed
+        assert balancer.request_owners == {}
+
+
+def test_v028_terminal_preempted_sample_releases_the_request_owner() -> None:
+    from frontier.entities import Batch
+    from tests.unit.test_request_preempted_step import _decode_request
+
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch,
+            cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
+                policy_version="v0.28.0"
+            ),
+        )
+        request = _decode_request(processed=8, prefill=8, decode=1)
+        scheduler.add_request(request)
+        [(replica_id, lane_id, _)] = scheduler.schedule_at(0.0)
+        batch = Batch(replica_id=replica_id, requests=[request], num_tokens=[1], is_moe=True)
+        request.on_preempted(recompute=True, scheduler_num_computed_tokens=8)
+        request.on_enter_waiting_queue(0.05, ClusterType.MONOLITHIC)
+        stopped = batch.apply_preempted_step_samples(0.1, ClusterType.MONOLITHIC)
+        batch.on_batch_end(0.1, ClusterType.MONOLITHIC)
+
+        assert stopped == [(0, request)]
+        assert batch.completed
+        assert request.completed
+        assert batch.completed_requests == []
+        scheduler.on_replica_batch_end(0.1, replica_id, lane_id, batch)
+        assert scheduler._load_balancer.request_owners == {}
+        assert scheduler._load_balancer.engine_inflight == [0, 0]
+
+
+def test_v028_policy_round_trips_through_generated_cli_copy_and_dict(monkeypatch) -> None:
+    from copy import deepcopy
+    from frontier.config.utils import dataclass_to_dict
+
+    flat_config = create_flat_dataclass(SimulationConfig)
+    monkeypatch.setattr(sys, "argv", [
+        "frontier.main", "--cluster_scheduler_config_type", "vllm_load_balancing",
+        "--vllm_load_balancing_cluster_scheduler_config_policy_version", "v0.28.0",
+    ])
+    selected = flat_config.create_from_cli_args().reconstruct_original_dataclass()
+    config = selected.cluster_config.cluster_scheduler_config
+    assert config.policy_version == "v0.28.0"
+    assert deepcopy(config) == config
+    assert dataclass_to_dict(config)["policy_version"] == "v0.28.0"
+    assert VllmLoadBalancingClusterSchedulerConfig().policy_version == "v0.10.2"
+
+
+def test_an_unknown_dp_policy_version_is_rejected() -> None:
+    with pytest.raises(ValueError, match="policy_version must be"):
+        VllmLoadBalancingClusterSchedulerConfig(policy_version="unknown")
+
+
+def test_default_zero_block_config_resolves_capacity_before_load_sampling() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch,
+            replica_scheduler_config=VllmV1SchedulerConfig(num_blocks=0),
+        )
+        lane = scheduler.get_replica_scheduler(scheduler._serving_replica_id, 0)
+        assert lane._config.num_blocks > 0
+        assert lane.get_request_load() == RequestLoad(0, 0)
+        assert lane.get_request_load().kv_cache_usage == 0.0

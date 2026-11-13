@@ -1,0 +1,1155 @@
+{
+  "task_id": "D29-NAMED-MODEL-QUERY",
+  "session_id": "ses_e93af1ff7ffe0YosowRNrc24Xa",
+  "sources": {
+    "baseline": {
+      "root": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+      "head": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+      "hashes": {
+        "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+        "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+        "frontier/execution_time_predictor/moe_routing_workload.py": "d1561f20e0a0f045af8ddeabe88bd36b017cc554e9fcc44dd2d6ba4c0adb3d46",
+        "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+        "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+        "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+        "tests/unit/test_moe_routing_runtime.py": "e52190ec893dfc431ac96b37b9cdb7de92649ecd21bb7adb9fb273b67f739262",
+        "tests/unit/test_prediction_measurement_bindings.py": "18c1c2b6741441db5f2f98dcd3fecf92d43d22fa8659988a94102b2a47bd3f27",
+        "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+        "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+        "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+        "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+        "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+        "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+        "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+        "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+        "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+        "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+        "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+        "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+        "frontier/execution_time_predictor/prediction_model_registry.py": "6689aa89aabc2c10521a62488295adb68e6e0d0d17c576cafb777003b2cfcc54"
+      },
+      "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+    },
+    "candidate": {
+      "root": "/data/ycfeng/Frontier/.worktrees/step5-d29-named-query",
+      "head": "1737ce9c4a761d2c57ee617f5f3a78d7bcfd9a58",
+      "hashes": {
+        "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+        "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+        "frontier/execution_time_predictor/moe_routing_workload.py": "0c8525f01124d43e5c21d5ec5a037a8719339e5e4301b3f44958cc90618899b4",
+        "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+        "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+        "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+        "tests/unit/test_moe_routing_runtime.py": "5a4a5d8bbafa5dce3dbe9b0374e7ada80091fe20102cb55b1e3fa6d44a0e2dac",
+        "tests/unit/test_prediction_measurement_bindings.py": "ed8a6a164ffa36fd7ee5d32161e859d457623f317291e91f26864b4a7513d295",
+        "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+        "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+        "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+        "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+        "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+        "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+        "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+        "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+        "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+        "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+        "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+        "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+        "frontier/execution_time_predictor/prediction_model_registry.py": "f1eaedb9a1d27c7f9d7505a6961f8000ff195248d0ac73305d083ea51cd4ddb0"
+      },
+      "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+    }
+  },
+  "original_setup": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/current_setup_baseline.py",
+  "setup_sha256": "c93b9d286342fc9b854ccb6692630542bf306a856ab4254cd84feddfaf7eb0d7",
+  "protected_body": "/data/ycfeng/tmp/d29_immutable_cost_fields_repair/probe_body.py",
+  "protected_body_sha256": "1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555",
+  "fixture": "/data/ycfeng/tmp/d29-parent-position-fixture03",
+  "fixture_metadata": {
+    "synthetic_read_cost.json": [
+      14253,
+      1792720643321462353
+    ],
+    "fixture_attention_kernel_only.csv": [
+      16432591,
+      1792720658185462572
+    ],
+    "fixture_attention_cuda_event.csv": [
+      5633879047,
+      1792720745769463852
+    ],
+    "fixture_kernel_gap.csv": [
+      86,
+      1792720854045465674
+    ],
+    "fixture_manifest.json": [
+      17555660,
+      1792722215877318868
+    ],
+    "fixture_compute_kernel_only/linear_op.csv": [
+      1357378,
+      1792720745997463862
+    ],
+    "fixture_compute_kernel_only/moe.csv": [
+      2114942423,
+      1792720786841464546
+    ],
+    "fixture_compute_cuda_event/linear_op.csv": [
+      1357354,
+      1792720786949464545
+    ],
+    "fixture_compute_cuda_event/moe.csv": [
+      2114905379,
+      1792720827185465248
+    ],
+    "fixture_collectives/h800/collective_local.json": [
+      8033853,
+      1792720854037465674
+    ],
+    "cache/e3a0c159_model_lock.file": [
+      0,
+      1792720854201465673
+    ],
+    "cache/moe_gating_routing_topk_c733e553.pkl": [
+      847010,
+      1792754251649056290
+    ],
+    "cache/input_layernorm_e3a0c159.pkl": [
+      111575,
+      1792720854221465673
+    ],
+    "cache/9cb95814_model_lock.file": [
+      0,
+      1792720854249465673
+    ],
+    "cache/mlp_up_proj_kernel_count_14c8728c.pkl": [
+      110913,
+      1792721499661357373
+    ],
+    "cache/input_layernorm_kernel_count_9cb95814.pkl": [
+      110586,
+      1792720854269465672
+    ],
+    "cache/eec667e9_model_lock.file": [
+      0,
+      1792720854317465672
+    ],
+    "cache/a800d7a6_model_lock.file": [
+      0,
+      1792721710029340867
+    ],
+    "cache/input_cast_eec667e9.pkl": [
+      111916,
+      1792720854337465672
+    ],
+    "cache/6ddf222e_model_lock.file": [
+      0,
+      1792720854393465672
+    ],
+    "cache/step5_ffn_merge_07bdbb60.pkl": [
+      111575,
+      1792721500169357319
+    ],
+    "cache/input_cast_kernel_count_6ddf222e.pkl": [
+      110927,
+      1792720854413465671
+    ],
+    "cache/f8a830ff_model_lock.file": [
+      0,
+      1792720854477465671
+    ],
+    "cache/moe_grouped_gemm_kernel_count_3968c6ea.pkl": [
+      114329,
+      1792721715109340553
+    ],
+    "cache/final_residual_f8a830ff.pkl": [
+      111976,
+      1792720854513465671
+    ],
+    "cache/11545685_model_lock.file": [
+      0,
+      1792720854537465671
+    ],
+    "cache/87990be5_model_lock.file": [
+      0,
+      1792721499877357350
+    ],
+    "cache/mlp_act_0db64275.pkl": [
+      111736,
+      1792721996093326270
+    ],
+    "cache/final_residual_kernel_count_11545685.pkl": [
+      110987,
+      1792720854553465672
+    ],
+    "cache/b5cab8e1_model_lock.file": [
+      0,
+      1792721140025405382
+    ],
+    "cache/moe_grouped_gemm_a800d7a6.pkl": [
+      3128441,
+      1792754289797196295
+    ],
+    "cache/step5_layer_e2e_b5cab8e1.pkl": [
+      71552314,
+      1792721160521401666
+    ],
+    "cache/6a1b9de5_model_lock.file": [
+      0,
+      1792721191569396327
+    ],
+    "cache/mlp_down_proj_3cc3c656.pkl": [
+      111770,
+      1792721499733357366
+    ],
+    "cache/step5_layer_e2e_kernel_count_6a1b9de5.pkl": [
+      71551759,
+      1792721212413392971
+    ],
+    "cache/852eb571_model_lock.file": [
+      0,
+      1792721311493378463
+    ],
+    "cache/3968c6ea_model_lock.file": [
+      0,
+      1792721715081340554
+    ],
+    "cache/moe_gating_linear_852eb571.pkl": [
+      850702,
+      1792754098972430161
+    ],
+    "cache/cf053735_model_lock.file": [
+      0,
+      1792721312029378401
+    ],
+    "cache/8aefe23e_model_lock.file": [
+      0,
+      1792721499761357362
+    ],
+    "cache/moe_gating_linear_kernel_count_cf053735.pkl": [
+      114329,
+      1792721312053378398
+    ],
+    "cache/c847d631_model_lock.file": [
+      0,
+      1792721366677371491
+    ],
+    "cache/step5_ffn_merge_kernel_count_91c31e85.pkl": [
+      110586,
+      1792721500213357315
+    ],
+    "cache/moe_gating_routing_topk_c847d631.pkl": [
+      850750,
+      1792754120356524967
+    ],
+    "cache/0bbccfa6_model_lock.file": [
+      0,
+      1792721367253371417
+    ],
+    "cache/mlp_up_proj_b51b1160.pkl": [
+      111758,
+      1792721499613357378
+    ],
+    "cache/step5_layer_e2e_816d519f.pkl": [
+      326497,
+      1792721717609340384
+    ],
+    "cache/moe_gating_routing_topk_kernel_count_0bbccfa6.pkl": [
+      114353,
+      1792721367277371415
+    ],
+    "cache/a6aff04c_model_lock.file": [
+      0,
+      1792721423525365013
+    ],
+    "cache/moe_gating_linear_kernel_count_8bb7f08c.pkl": [
+      113781,
+      1792721590453349464
+    ],
+    "cache/moe_input_quantize_a6aff04c.pkl": [
+      850526,
+      1792754141248615251
+    ],
+    "cache/b7345a7b_model_lock.file": [
+      0,
+      1792721424205364949
+    ],
+    "cache/mlp_down_proj_kernel_count_8aefe23e.pkl": [
+      110925,
+      1792721499781357360
+    ],
+    "cache/moe_input_quantize_kernel_count_b7345a7b.pkl": [
+      114241,
+      1792721424241364945
+    ],
+    "cache/82e252d5_model_lock.file": [
+      0,
+      1792721493713357911
+    ],
+    "cache/e422457b_model_lock.file": [
+      0,
+      1792721717821340368
+    ],
+    "cache/moe_grouped_gemm_82e252d5.pkl": [
+      3138397,
+      1792754180932780378
+    ],
+    "cache/46a6f9f8_model_lock.file": [
+      0,
+      1792721498513357471
+    ],
+    "cache/9a8e517c_model_lock.file": [
+      0,
+      1792721499817357357
+    ],
+    "cache/moe_grouped_gemm_kernel_count_46a6f9f8.pkl": [
+      114875,
+      1792721498541357469
+    ],
+    "cache/7343b56a_model_lock.file": [
+      0,
+      1792721498989357432
+    ],
+    "cache/moe_gating_linear_bd98f779.pkl": [
+      846962,
+      1792754230732977083
+    ],
+    "cache/share_expert_up_proj_7343b56a.pkl": [
+      111960,
+      1792721499009357430
+    ],
+    "cache/918f45d7_model_lock.file": [
+      0,
+      1792721499085357424
+    ],
+    "cache/mlp_act_9a8e517c.pkl": [
+      111734,
+      1792721499837357355
+    ],
+    "cache/63c6db54_model_lock.file": [
+      0,
+      1792721718229340339
+    ],
+    "cache/share_expert_up_proj_kernel_count_918f45d7.pkl": [
+      110971,
+      1792721499105357422
+    ],
+    "cache/52b2a70e_model_lock.file": [
+      0,
+      1792721499249357410
+    ],
+    "cache/8bb7f08c_model_lock.file": [
+      0,
+      1792721590429349465
+    ],
+    "cache/share_expert_down_proj_52b2a70e.pkl": [
+      111972,
+      1792721499269357409
+    ],
+    "cache/36ba1c47_model_lock.file": [
+      0,
+      1792721499317357404
+    ],
+    "cache/3cc3c656_model_lock.file": [
+      0,
+      1792721499713357367
+    ],
+    "cache/input_layernorm_63c6db54.pkl": [
+      111577,
+      1792721718249340338
+    ],
+    "cache/share_expert_down_proj_kernel_count_36ba1c47.pkl": [
+      110983,
+      1792721499337357403
+    ],
+    "cache/0e4e96cd_model_lock.file": [
+      0,
+      1792721499377357399
+    ],
+    "cache/816d519f_model_lock.file": [
+      0,
+      1792721717525340390
+    ],
+    "cache/share_expert_act_0e4e96cd.pkl": [
+      111936,
+      1792721499401357398
+    ],
+    "cache/c62722d8_model_lock.file": [
+      0,
+      1792721499425357396
+    ],
+    "cache/post_attention_layernorm_kernel_count_5b21b3b5.pkl": [
+      110640,
+      1792721500121357325
+    ],
+    "cache/share_expert_act_kernel_count_c62722d8.pkl": [
+      110947,
+      1792721499445357394
+    ],
+    "cache/b51b1160_model_lock.file": [
+      0,
+      1792721499593357380
+    ],
+    "cache/14c8728c_model_lock.file": [
+      0,
+      1792721499641357375
+    ],
+    "cache/c733e553_model_lock.file": [
+      0,
+      1792721643541345445
+    ],
+    "cache/mlp_act_kernel_count_87990be5.pkl": [
+      110889,
+      1792721499897357348
+    ],
+    "cache/9245c3f4_model_lock.file": [
+      0,
+      1792721500041357333
+    ],
+    "cache/49d511fe_model_lock.file": [
+      0,
+      1792721644089345402
+    ],
+    "cache/post_attention_layernorm_9245c3f4.pkl": [
+      111629,
+      1792721500061357331
+    ],
+    "cache/5b21b3b5_model_lock.file": [
+      0,
+      1792721500105357326
+    ],
+    "cache/07bdbb60_model_lock.file": [
+      0,
+      1792721500153357321
+    ],
+    "cache/91c31e85_model_lock.file": [
+      0,
+      1792721500193357317
+    ],
+    "cache/bd98f779_model_lock.file": [
+      0,
+      1792721589805349522
+    ],
+    "cache/3f807b99_model_lock.file": [
+      0,
+      1792721996341326259
+    ],
+    "cache/moe_gating_routing_topk_kernel_count_49d511fe.pkl": [
+      113805,
+      1792721644113345400
+    ],
+    "cache/post_attention_layernorm_3f807b99.pkl": [
+      111631,
+      1792721996357326258
+    ],
+    "cache/step5_layer_e2e_kernel_count_e422457b.pkl": [
+      326084,
+      1792721717905340363
+    ],
+    "cache/a418ffcb_model_lock.file": [
+      0,
+      1792721718317340333
+    ],
+    "cache/post_attention_layernorm_kernel_count_d61e2ff9.pkl": [
+      110642,
+      1792721996473326253
+    ],
+    "cache/input_layernorm_kernel_count_a418ffcb.pkl": [
+      110588,
+      1792721718337340332
+    ],
+    "cache/f18c8462_model_lock.file": [
+      0,
+      1792721718401340327
+    ],
+    "cache/moe_grouped_gemm_39ab238f.pkl": [
+      3128445,
+      1792754552242027057
+    ],
+    "cache/input_cast_f18c8462.pkl": [
+      111918,
+      1792721718425340325
+    ],
+    "cache/110d6464_model_lock.file": [
+      0,
+      1792721718445340324
+    ],
+    "cache/moe_gating_linear_kernel_count_75a20dc4.pkl": [
+      113783,
+      1792722078749323178
+    ],
+    "cache/input_cast_kernel_count_110d6464.pkl": [
+      110929,
+      1792721718469340322
+    ],
+    "cache/50f67749_model_lock.file": [
+      0,
+      1792721718513340319
+    ],
+    "cache/moe_grouped_gemm_kernel_count_823b8fa7.pkl": [
+      114331,
+      1792722203001319242
+    ],
+    "cache/final_residual_50f67749.pkl": [
+      111978,
+      1792721718541340317
+    ],
+    "cache/c191dd5b_model_lock.file": [
+      0,
+      1792721718569340315
+    ],
+    "cache/ae558bb5_model_lock.file": [
+      0,
+      1792721996629326247
+    ],
+    "cache/final_residual_kernel_count_c191dd5b.pkl": [
+      110989,
+      1792721718589340314
+    ],
+    "cache/f8b39552_model_lock.file": [
+      0,
+      1792721817369334539
+    ],
+    "cache/698025c3_prediction_lock.file": [
+      0,
+      1792730178128155994
+    ],
+    "cache/moe_gating_linear_f8b39552.pkl": [
+      850706,
+      1792754359421437800
+    ],
+    "cache/59a88452_model_lock.file": [
+      0,
+      1792721817933334512
+    ],
+    "cache/75a20dc4_model_lock.file": [
+      0,
+      1792722078725323179
+    ],
+    "cache/moe_gating_linear_kernel_count_59a88452.pkl": [
+      114331,
+      1792721817957334511
+    ],
+    "cache/d8381157_model_lock.file": [
+      0,
+      1792721870557331809
+    ],
+    "cache/moe_gating_routing_topk_kernel_count_80d6a5f7.pkl": [
+      113807,
+      1792722131809321410
+    ],
+    "cache/moe_gating_routing_topk_d8381157.pkl": [
+      850754,
+      1792754380709508205
+    ],
+    "cache/46129828_model_lock.file": [
+      0,
+      1792721871081331780
+    ],
+    "cache/mlp_act_kernel_count_85e5916e.pkl": [
+      110891,
+      1792721996185326266
+    ],
+    "cache/moe_gating_routing_topk_kernel_count_46129828.pkl": [
+      114355,
+      1792721871105331779
+    ],
+    "cache/b7b02acb_model_lock.file": [
+      0,
+      1792721923549329336
+    ],
+    "cache/08c09088_model_lock.file": [
+      0,
+      1792722131205321428
+    ],
+    "cache/moe_input_quantize_b7b02acb.pkl": [
+      850530,
+      1792754401853576637
+    ],
+    "cache/2898afef_model_lock.file": [
+      0,
+      1792721924109329312
+    ],
+    "cache/step5_ffn_merge_ae558bb5.pkl": [
+      111577,
+      1792721996649326246
+    ],
+    "cache/moe_input_quantize_kernel_count_2898afef.pkl": [
+      114243,
+      1792721924133329311
+    ],
+    "cache/1a5cf25d_model_lock.file": [
+      0,
+      1792721989977326506
+    ],
+    "cache/b3e27c22_prediction_lock.file": [
+      0,
+      1792730178380155965
+    ],
+    "cache/moe_grouped_gemm_1a5cf25d.pkl": [
+      3138401,
+      1792754441305700832
+    ],
+    "cache/64f3ed00_model_lock.file": [
+      0,
+      1792721994721326319
+    ],
+    "cache/c0bdc0f7_model_lock.file": [
+      0,
+      1792721996697326243
+    ],
+    "cache/moe_grouped_gemm_kernel_count_64f3ed00.pkl": [
+      114877,
+      1792721994749326318
+    ],
+    "cache/f478e972_model_lock.file": [
+      0,
+      1792721995261326300
+    ],
+    "cache/moe_gating_routing_topk_08c09088.pkl": [
+      847014,
+      1792754513209915841
+    ],
+    "cache/share_expert_up_proj_f478e972.pkl": [
+      111962,
+      1792721995281326299
+    ],
+    "cache/d47826f4_model_lock.file": [
+      0,
+      1792721995357326296
+    ],
+    "cache/step5_ffn_merge_kernel_count_c0bdc0f7.pkl": [
+      110588,
+      1792721996717326242
+    ],
+    "cache/share_expert_up_proj_kernel_count_d47826f4.pkl": [
+      110973,
+      1792721995377326295
+    ],
+    "cache/87c302b5_model_lock.file": [
+      0,
+      1792721995441326293
+    ],
+    "cache/80d6a5f7_model_lock.file": [
+      0,
+      1792722131785321411
+    ],
+    "cache/share_expert_down_proj_87c302b5.pkl": [
+      111974,
+      1792721995461326293
+    ],
+    "cache/04188e95_model_lock.file": [
+      0,
+      1792721995493326291
+    ],
+    "cache/d61e2ff9_model_lock.file": [
+      0,
+      1792721996453326254
+    ],
+    "cache/share_expert_down_proj_kernel_count_04188e95.pkl": [
+      110985,
+      1792721995513326291
+    ],
+    "cache/ce20445b_model_lock.file": [
+      0,
+      1792721995553326289
+    ],
+    "cache/5cac3ccc_prediction_lock.file": [
+      0,
+      1792730178500155950
+    ],
+    "cache/share_expert_act_ce20445b.pkl": [
+      111938,
+      1792721995573326288
+    ],
+    "cache/b6d99452_model_lock.file": [
+      0,
+      1792721995677326285
+    ],
+    "cache/5a1b39ba_model_lock.file": [
+      0,
+      1792722078149323201
+    ],
+    "cache/share_expert_act_kernel_count_b6d99452.pkl": [
+      110949,
+      1792721995701326284
+    ],
+    "cache/b0fcc5b7_model_lock.file": [
+      0,
+      1792721995873326278
+    ],
+    "cache/share_expert_act_5cac3ccc_predictions.pkl": [
+      327877,
+      1792730178536155946
+    ],
+    "cache/mlp_up_proj_b0fcc5b7.pkl": [
+      111760,
+      1792721995893326277
+    ],
+    "cache/de0c3107_model_lock.file": [
+      0,
+      1792721995929326276
+    ],
+    "cache/823b8fa7_model_lock.file": [
+      0,
+      1792722202973319243
+    ],
+    "cache/mlp_up_proj_kernel_count_de0c3107.pkl": [
+      110915,
+      1792721995945326275
+    ],
+    "cache/5680ec70_model_lock.file": [
+      0,
+      1792721995989326273
+    ],
+    "cache/share_expert_act_5cac3ccc_predictions.csv": [
+      129543,
+      1792730178616155937
+    ],
+    "cache/mlp_down_proj_5680ec70.pkl": [
+      111772,
+      1792721996009326273
+    ],
+    "cache/12642e60_model_lock.file": [
+      0,
+      1792721996033326272
+    ],
+    "cache/moe_gating_linear_5a1b39ba.pkl": [
+      846966,
+      1792754492345854864
+    ],
+    "cache/mlp_down_proj_kernel_count_12642e60.pkl": [
+      110927,
+      1792721996049326272
+    ],
+    "cache/0db64275_model_lock.file": [
+      0,
+      1792721996073326271
+    ],
+    "cache/85e5916e_model_lock.file": [
+      0,
+      1792721996165326267
+    ],
+    "cache/39ab238f_model_lock.file": [
+      0,
+      1792722198237319378
+    ],
+    "cache/bundle_6b81b9ba0c510f3d2ea76938f8508cf67b08c8cd1fc0e347a55e952a6e0e26e4.json.lock": [
+      0,
+      1792722212769318966
+    ],
+    "cache/8c746d07_prediction_lock.file": [
+      0,
+      1792730179556155828
+    ],
+    "cache/input_layernorm_033a98f7_predictions.pkl": [
+      327877,
+      1792730302624137705
+    ],
+    "cache/bundle_6b81b9ba0c510f3d2ea76938f8508cf67b08c8cd1fc0e347a55e952a6e0e26e4.json": [
+      4226500,
+      1792722212785318965
+    ],
+    "cache/bundle_fc2932827ad6ca181b6b8ea9512bdf56e91c12844b28e4746f832d39dbae332e.json.lock": [
+      0,
+      1792722213289318949
+    ],
+    "cache/0dad184a_prediction_lock.file": [
+      0,
+      1792730179716155809
+    ],
+    "cache/input_layernorm_033a98f7_predictions.csv": [
+      129543,
+      1792730302708137691
+    ],
+    "cache/bundle_fc2932827ad6ca181b6b8ea9512bdf56e91c12844b28e4746f832d39dbae332e.json": [
+      4226631,
+      1792722213309318949
+    ],
+    "cache/bundle_cba9ddf7b54f21d0455d4eade4dd4f65cb714abae1d2b20483c7673e1f0a066d.json.lock": [
+      0,
+      1792722213677318937
+    ],
+    "cache/input_layernorm_8c746d07_predictions.pkl": [
+      327877,
+      1792730179596155823
+    ],
+    "cache/8008198b_prediction_lock.file": [
+      0,
+      1792730302848137667
+    ],
+    "cache/bundle_cba9ddf7b54f21d0455d4eade4dd4f65cb714abae1d2b20483c7673e1f0a066d.json": [
+      4226630,
+      1792722213693318937
+    ],
+    "cache/bundle_6f507537bffb9cb542e687811f41033bc19c9ba08858282b1fc0c9e3a0498ebc.json.lock": [
+      0,
+      1792722215641318876
+    ],
+    "cache/input_layernorm_8c746d07_predictions.csv": [
+      129543,
+      1792730179716155809
+    ],
+    "cache/9546a813_prediction_lock.file": [
+      0,
+      1792730303016137638
+    ],
+    "cache/bundle_6f507537bffb9cb542e687811f41033bc19c9ba08858282b1fc0c9e3a0498ebc.json": [
+      4226499,
+      1792722215661318875
+    ],
+    "cache/bundle_594b60e71174496473a041cee333d8f20b5907ddc83b1d3805c07f62f0c7ac26.json.lock": [
+      0,
+      1792730175044156518
+    ],
+    "cache/post_attention_layernorm_0dad184a_predictions.csv": [
+      129543,
+      1792730179812155798
+    ],
+    "cache/bundle_594b60e71174496473a041cee333d8f20b5907ddc83b1d3805c07f62f0c7ac26.json": [
+      4226497,
+      1792730175060156515
+    ],
+    "cache/bundle_0d1f560050cac3803a37e544fa99e5ec8fbf062bbec57745c259327f6464dd50.json.lock": [
+      0,
+      1792730175460156442
+    ],
+    "cache/post_attention_layernorm_0dad184a_predictions.pkl": [
+      327877,
+      1792730179752155805
+    ],
+    "cache/bundle_0d1f560050cac3803a37e544fa99e5ec8fbf062bbec57745c259327f6464dd50.json": [
+      4226628,
+      1792730175476156439
+    ],
+    "cache/bundle_a59269cf9b62be5509ad671f0418e7580f4d12d1f0423b7a36d68693a235eb3c.json.lock": [
+      0,
+      1792730175908156360
+    ],
+    "cache/56f99a42_prediction_lock.file": [
+      0,
+      1792730302268137767
+    ],
+    "cache/869c3075_prediction_lock.file": [
+      0,
+      1792730302708137691
+    ],
+    "cache/bundle_a59269cf9b62be5509ad671f0418e7580f4d12d1f0423b7a36d68693a235eb3c.json": [
+      4226627,
+      1792730175924156358
+    ],
+    "cache/bundle_ff1d7d267ba8ff72f265517a840c69f2973d1c10e9f021021e08afbd7daec3ee.json.lock": [
+      0,
+      1792730177924156017
+    ],
+    "cache/share_expert_up_proj_56f99a42_predictions.csv": [
+      129543,
+      1792730302396137744
+    ],
+    "cache/bundle_ff1d7d267ba8ff72f265517a840c69f2973d1c10e9f021021e08afbd7daec3ee.json": [
+      4226496,
+      1792730177940156016
+    ],
+    "cache/ba0f5719_prediction_lock.file": [
+      0,
+      1792730302476137731
+    ],
+    "cache/share_expert_up_proj_698025c3_predictions.pkl": [
+      327877,
+      1792730178168155989
+    ],
+    "cache/share_expert_up_proj_698025c3_predictions.csv": [
+      129543,
+      1792730178380155965
+    ],
+    "cache/63a6fd1a_prediction_lock.file": [
+      0,
+      1792730302396137744
+    ],
+    "cache/share_expert_down_proj_b3e27c22_predictions.pkl": [
+      327877,
+      1792730178416155960
+    ],
+    "cache/share_expert_down_proj_b3e27c22_predictions.csv": [
+      129543,
+      1792730178500155950
+    ],
+    "cache/6ea64edb_prediction_lock.file": [
+      0,
+      1792730178616155937
+    ],
+    "cache/033a98f7_prediction_lock.file": [
+      0,
+      1792730302584137713
+    ],
+    "cache/input_layernorm_6ea64edb_predictions.pkl": [
+      327877,
+      1792730178656155932
+    ],
+    "cache/input_layernorm_6ea64edb_predictions.csv": [
+      129543,
+      1792730178852155910
+    ],
+    "cache/57b619e7_prediction_lock.file": [
+      0,
+      1792730178852155910
+    ],
+    "cache/share_expert_down_proj_63a6fd1a_predictions.csv": [
+      129543,
+      1792730302476137731
+    ],
+    "cache/post_attention_layernorm_57b619e7_predictions.pkl": [
+      327877,
+      1792730178892155905
+    ],
+    "cache/post_attention_layernorm_57b619e7_predictions.csv": [
+      129543,
+      1792730178980155895
+    ],
+    "cache/4f2e10fa_prediction_lock.file": [
+      0,
+      1792730178980155895
+    ],
+    "cache/share_expert_act_ba0f5719_predictions.pkl": [
+      327877,
+      1792730302512137725
+    ],
+    "cache/share_expert_up_proj_4f2e10fa_predictions.pkl": [
+      327877,
+      1792730179020155890
+    ],
+    "cache/share_expert_up_proj_4f2e10fa_predictions.csv": [
+      129543,
+      1792730179196155870
+    ],
+    "cache/eca50187_prediction_lock.file": [
+      0,
+      1792730179200155869
+    ],
+    "cache/share_expert_down_proj_63a6fd1a_predictions.pkl": [
+      327877,
+      1792730302436137737
+    ],
+    "cache/share_expert_down_proj_eca50187_predictions.pkl": [
+      327877,
+      1792730179236155865
+    ],
+    "cache/share_expert_down_proj_eca50187_predictions.csv": [
+      129543,
+      1792730179308155857
+    ],
+    "cache/9789d000_prediction_lock.file": [
+      0,
+      1792730179308155857
+    ],
+    "cache/share_expert_act_ba0f5719_predictions.csv": [
+      129543,
+      1792730302584137713
+    ],
+    "cache/share_expert_act_9789d000_predictions.pkl": [
+      327877,
+      1792730179348155852
+    ],
+    "cache/share_expert_act_9789d000_predictions.csv": [
+      129543,
+      1792730179556155828
+    ],
+    "cache/share_expert_up_proj_56f99a42_predictions.pkl": [
+      327877,
+      1792730302308137759
+    ],
+    "cache/post_attention_layernorm_869c3075_predictions.pkl": [
+      327877,
+      1792730302776137679
+    ],
+    "cache/post_attention_layernorm_869c3075_predictions.csv": [
+      129543,
+      1792730302848137667
+    ],
+    "cache/share_expert_up_proj_8008198b_predictions.pkl": [
+      327877,
+      1792730302888137660
+    ],
+    "cache/share_expert_up_proj_8008198b_predictions.csv": [
+      129543,
+      1792730303016137638
+    ],
+    "cache/share_expert_down_proj_9546a813_predictions.pkl": [
+      327877,
+      1792730303056137631
+    ],
+    "cache/share_expert_down_proj_9546a813_predictions.csv": [
+      129543,
+      1792730303140137617
+    ],
+    "cache/b5fe10a6_prediction_lock.file": [
+      0,
+      1792730303140137617
+    ],
+    "cache/share_expert_act_b5fe10a6_predictions.pkl": [
+      327877,
+      1792730303180137610
+    ],
+    "cache/share_expert_act_b5fe10a6_predictions.csv": [
+      129543,
+      1792730303220137603
+    ],
+    "cache/fb4b50ee_prediction_lock.file": [
+      0,
+      1792730303220137603
+    ],
+    "cache/input_layernorm_fb4b50ee_predictions.pkl": [
+      327877,
+      1792730303260137596
+    ],
+    "cache/input_layernorm_fb4b50ee_predictions.csv": [
+      129543,
+      1792730303300137589
+    ],
+    "cache/ba93a622_prediction_lock.file": [
+      0,
+      1792730303300137589
+    ],
+    "cache/post_attention_layernorm_ba93a622_predictions.pkl": [
+      327877,
+      1792730303336137583
+    ],
+    "cache/post_attention_layernorm_ba93a622_predictions.csv": [
+      129543,
+      1792730303372137577
+    ],
+    "cache/bundle_d8d10440c0aeffa2bbc9ab90231b0f6a104a940908f2eb594fec1647b5154336.json.lock": [
+      0,
+      1792737842604145317
+    ],
+    "cache/bundle_98ac9032b93847f366a766333d017bc7e35e2ee84af9d525d0f274fce3aee2c7.json.lock": [
+      0,
+      1792752173836045976
+    ],
+    "cache/bundle_d8d10440c0aeffa2bbc9ab90231b0f6a104a940908f2eb594fec1647b5154336.json": [
+      4226497,
+      1792737842620145315
+    ],
+    "cache/bundle_af5beba59d03213b39bc29cdec11e961b81ab1c57286707eedade1c6e671cacb.json.lock": [
+      0,
+      1792737843108145296
+    ],
+    "cache/bundle_af5beba59d03213b39bc29cdec11e961b81ab1c57286707eedade1c6e671cacb.json": [
+      4226628,
+      1792737843124145295
+    ],
+    "cache/bundle_12fb302f7408a6253c07ece58b04db6aadc06bceeea24b0ebadcaa2983f05673.json.lock": [
+      0,
+      1792737843916145261
+    ],
+    "cache/bundle_98ac9032b93847f366a766333d017bc7e35e2ee84af9d525d0f274fce3aee2c7.json": [
+      4226628,
+      1792752173852046005
+    ],
+    "cache/bundle_12fb302f7408a6253c07ece58b04db6aadc06bceeea24b0ebadcaa2983f05673.json": [
+      4226627,
+      1792737843932145260
+    ],
+    "cache/bundle_1b577dce6374ed077e5e5856aa4afa7ee6d6e56becc78b76035d7b9383013670.json.lock": [
+      0,
+      1792737846180145149
+    ],
+    "cache/bundle_523029a1454691512382f5f7fc9767416291c965320996d090f1a9365fd6d3ae.json.lock": [
+      0,
+      1792752174240046726
+    ],
+    "cache/bundle_1b577dce6374ed077e5e5856aa4afa7ee6d6e56becc78b76035d7b9383013670.json": [
+      4226496,
+      1792737846196145148
+    ],
+    "cache/bundle_3e46232621a39c1c5f598921435bd41da1a4c1915b424bc53f3eba09a5bb3e37.json.lock": [
+      0,
+      1792740403376004862
+    ],
+    "cache/bundle_523029a1454691512382f5f7fc9767416291c965320996d090f1a9365fd6d3ae.json": [
+      4226627,
+      1792752174256046757
+    ],
+    "cache/bundle_3e46232621a39c1c5f598921435bd41da1a4c1915b424bc53f3eba09a5bb3e37.json": [
+      4226497,
+      1792740403392004861
+    ],
+    "cache/bundle_48e35a87316d65738a017fab2fbe3e3c7c597b2d5f28a96a693eae6a5a679bd2.json.lock": [
+      0,
+      1792740403844004827
+    ],
+    "cache/bundle_bc74a00a7e2e8b13800572697afaf28c8e0877da05838bf1f23416942110cccf.json.lock": [
+      0,
+      1792752176296050479
+    ],
+    "cache/bundle_48e35a87316d65738a017fab2fbe3e3c7c597b2d5f28a96a693eae6a5a679bd2.json": [
+      4226628,
+      1792740403860004826
+    ],
+    "cache/bundle_3d960f88a3aecb8fd3e5b732f251bec594838d257e3c044d6e1aa93dfadc4934.json.lock": [
+      0,
+      1792740404208004800
+    ],
+    "cache/bundle_bc74a00a7e2e8b13800572697afaf28c8e0877da05838bf1f23416942110cccf.json": [
+      4226496,
+      1792752176312050508
+    ],
+    "cache/bundle_3d960f88a3aecb8fd3e5b732f251bec594838d257e3c044d6e1aa93dfadc4934.json": [
+      4226627,
+      1792740404224004798
+    ],
+    "cache/bundle_52781c910b47825903eaf0f3d95dff4a8f6ae21e1d1840fbfcf8745f8c2ded13.json.lock": [
+      0,
+      1792740406232004706
+    ],
+    "cache/bundle_52781c910b47825903eaf0f3d95dff4a8f6ae21e1d1840fbfcf8745f8c2ded13.json": [
+      4226496,
+      1792740406248004707
+    ],
+    "cache/bundle_07d0e8bd3c8d57035dfe7b4e53850c67f60da92d14241bbfd64580559350f7c7.json.lock": [
+      0,
+      1792752173432045224
+    ],
+    "cache/bundle_07d0e8bd3c8d57035dfe7b4e53850c67f60da92d14241bbfd64580559350f7c7.json": [
+      4226497,
+      1792752173448045254
+    ]
+  },
+  "collective_original": "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_collectives/h800/collective_local.json",
+  "collective_sha256": "447e697340d77c205e7457eb50c7b63c47ab103ba77c7f52e7c5fe844498ca90",
+  "constructor_evidence": {
+    "xml": "/data/ycfeng/tmp/d29_snapshot_green01.xml",
+    "sha256": "ed42396c56a9e559186d29d539fd18e15afb8dc72b92da98e3f001e4464e10b2",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "82",
+      "time": "154.228",
+      "timestamp": "2026-10-24T02:50:30.117500+08:00",
+      "hostname": "kun-workspace-vgen2"
+    },
+    "test": {
+      "classname": "tests.unit.test_moe_routing_runtime",
+      "name": "test_collective_input_binds_both_role_constructors_and_refreshes_next_run",
+      "time": "0.146"
+    }
+  },
+  "input_hashes": {
+    "/data/ycfeng/tmp/d29-parent-position-main08/offline/command.json": "4cb47eb98d3cfee78e087495dc84e79392a0471a5d79803078aeaa79bf15a9bf",
+    "/data/ycfeng/tmp/d29_main08_residual_repro/parent-layer60-source.json": "23486bceac94e23e6bab2dc8c851300ed353bc71000e1ba6aa2e28b393655694",
+    "/data/ycfeng/tmp/d29-parent-position-fixture03/fixture_kernel_gap.csv": "8a7d7ed0fe08428b52ccb350324fe6ddbd5c7181e5545844a931549060752555"
+  },
+  "limits": "No full-fixture content/training scan: retain fixture size/mtime and protected setup pickle SHA checks.",
+  "parent_verification": {
+    "task_id": "D29-PLAN-KEY-PARENT",
+    "owner_manifest_sha256": "3a6171e485d6cd2392da0911fef932ee156e1d30458f62a7a64c890f4e8dec00",
+    "owner_files_verified": 38,
+    "driver_and_wiring_unchanged": true,
+    "source_heads_refreshed_without_source_changes": true
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "command": [
+    "bash",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/run_worker.sh"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "started_utc": "2026-10-24T21:03:32.698151+00:00",
+  "records_head": "dfe603edab128d2a4aacb1b7b64d898993d4ae09",
+  "source_commit": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "worker_plan_sha256": "c9c4a120058068e1a5505ebbfe23d018e3e6578bf3a2cec313c23f80100f8ca0",
+  "resource": {
+    "cpu": 4,
+    "gpu": 0,
+    "mem_gb": 64,
+    "replica": 1,
+    "positive_tags": [
+      "H800"
+    ],
+    "custom_resources": [],
+    "extra_requirements": [],
+    "preemptible": false,
+    "command": "{COMMAND}",
+    "task_specs": {
+      "default": {
+        "is_critical": true
+      }
+    }
+  },
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "local_source": "/data/ycfeng",
+  "cloud_personal_root": "/mnt/codesign-exp/ycfeng",
+  "authorization": "D29 existing H800 task-resource authority and personal OSS test-storage/cleanup authority; exactly one prepared zero-GPU readiness worker",
+  "launcher_attempt": 1,
+  "job_limit": 1,
+  "automatic_retries": 0,
+  "launcher_timeout": "NONE; keep alive until original spawn_tasks reaches terminal",
+  "expected_business_status": "PASS_WORKER_IMPORT_AND_SERIALIZED_APPEND_ONLY",
+  "expected_platform_status": "succeeded",
+  "new_pricing_calls": 0,
+  "new_shape_calls": 0,
+  "new_full_cli_calls": 0,
+  "raw_logs_directory": "/data/ycfeng/tmp/d29_worker_readiness_launcher_20261025_01",
+  "status": "LAUNCHER_FINISHED",
+  "launcher_wrapper_pid": 249064,
+  "launcher_pid": 249084,
+  "finished_utc": "2026-10-24T21:06:12.324292+00:00",
+  "exit_code": 0,
+  "wall_s": 159.62591278599575
+}

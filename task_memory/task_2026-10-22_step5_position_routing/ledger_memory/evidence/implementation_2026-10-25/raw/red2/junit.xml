@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="3" tests="43" time="3.244" timestamp="2026-10-24T23:50:16.078665+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[None-None-False]" time="0.022"><failure message="AssertionError: EP ledger materialized&#10;assert 'frontier_ep_wave_lane_ledger.jsonl' != 'frontier_ep_wave_lane_ledger.jsonl'&#10; +  where 'frontier_ep_wave_lane_ledger.jsonl' = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida0/metrics/run/frontier_ep_wave_lane_ledger.jsonl').name">tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f515697b160&gt;
+quant = None, deferred = False, damage = None
+
+    @pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
+    @pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","zero_operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
+    def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, monkeypatch, quant, deferred, damage):
+        from tests.integration.run_step5_measured_main import validate
+        run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
+        source=lanes[1]["phases"]["pre_dispatch"]
+        if damage == "prepare" and (not quant or deferred): pytest.skip("No source prepare is reached by this binding")
+        if damage == "inapplicable" and quant and not deferred: pytest.skip("Source prepare is applicable to this binding")
+        if damage in ("gate","router","prepare"):
+            source["compute_proofs"].pop({"gate":"moe_gating_linear","router":"moe_gating_routing_topk","prepare":"moe_input_quantize"}[damage])
+        if damage == "all": source.pop("compute_proofs")
+        if damage in ("operator","zero_operator"):
+            source["operators_ms"].pop("moe_gating_linear") if damage=="operator" else source["operators_ms"].update(moe_gating_linear=0.);source["compute_proofs"].pop("moe_gating_linear")
+        if damage == "peer_only": lanes=lanes[:1]
+        if damage == "duration": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=float("nan")
+        if damage == "count": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=0
+        if damage == "norm": source["compute_proofs"].pop("post_attention_layernorm")
+        if damage == "inapplicable":
+            source["operators_ms"]["moe_input_quantize"]=1.;source["compute_proofs"]["moe_input_quantize"]=dict(exact_lookup=True,duration_ms=1.,kernel_count=3)
+        if damage == "mismatch": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=2.
+        if damage == "fractional": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=1.5
+        (run/"frontier_ep_wave_lane_ledger.jsonl").write_text("".join(json.dumps(row)+"\n" for row in lanes))
+        if damage:
+            with pytest.raises(AssertionError,match="compute|source"):
+                validate(tmp_path,"offline",document)
+        else:
+            from pathlib import Path
+            read_text = Path.read_text
+            def bounded_read(path, *args, **kwargs):
+                assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
+                return read_text(path, *args, **kwargs)
+            monkeypatch.setattr(Path, "read_text", bounded_read)
+&gt;           assert validate(tmp_path,"offline",document)["status"] == "PASS"
+
+tests/integration/test_step5_measured_main.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/run_step5_measured_main.py:227: in validate
+    lanes=[json.loads(line) for line in (run/"frontier_ep_wave_lane_ledger.jsonl").read_text().splitlines()]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida0/metrics/run/frontier_ep_wave_lane_ledger.jsonl')
+args = (), kwargs = {}
+
+    def bounded_read(path, *args, **kwargs):
+&gt;       assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
+E       AssertionError: EP ledger materialized
+E       assert 'frontier_ep_wave_lane_ledger.jsonl' != 'frontier_ep_wave_lane_ledger.jsonl'
+E        +  where 'frontier_ep_wave_lane_ledger.jsonl' = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida0/metrics/run/frontier_ep_wave_lane_ledger.jsonl').name
+
+tests/integration/test_step5_measured_main.py:84: AssertionError</failure></testcase><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[None-float8_e4m3fn-False]" time="0.020"><failure message="AssertionError: EP ledger materialized&#10;assert 'frontier_ep_wave_lane_ledger.jsonl' != 'frontier_ep_wave_lane_ledger.jsonl'&#10; +  where 'frontier_ep_wave_lane_ledger.jsonl' = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida1/metrics/run/frontier_ep_wave_lane_ledger.jsonl').name">tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f5156a87e20&gt;
+quant = 'float8_e4m3fn', deferred = False, damage = None
+
+    @pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
+    @pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","zero_operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
+    def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, monkeypatch, quant, deferred, damage):
+        from tests.integration.run_step5_measured_main import validate
+        run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
+        source=lanes[1]["phases"]["pre_dispatch"]
+        if damage == "prepare" and (not quant or deferred): pytest.skip("No source prepare is reached by this binding")
+        if damage == "inapplicable" and quant and not deferred: pytest.skip("Source prepare is applicable to this binding")
+        if damage in ("gate","router","prepare"):
+            source["compute_proofs"].pop({"gate":"moe_gating_linear","router":"moe_gating_routing_topk","prepare":"moe_input_quantize"}[damage])
+        if damage == "all": source.pop("compute_proofs")
+        if damage in ("operator","zero_operator"):
+            source["operators_ms"].pop("moe_gating_linear") if damage=="operator" else source["operators_ms"].update(moe_gating_linear=0.);source["compute_proofs"].pop("moe_gating_linear")
+        if damage == "peer_only": lanes=lanes[:1]
+        if damage == "duration": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=float("nan")
+        if damage == "count": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=0
+        if damage == "norm": source["compute_proofs"].pop("post_attention_layernorm")
+        if damage == "inapplicable":
+            source["operators_ms"]["moe_input_quantize"]=1.;source["compute_proofs"]["moe_input_quantize"]=dict(exact_lookup=True,duration_ms=1.,kernel_count=3)
+        if damage == "mismatch": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=2.
+        if damage == "fractional": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=1.5
+        (run/"frontier_ep_wave_lane_ledger.jsonl").write_text("".join(json.dumps(row)+"\n" for row in lanes))
+        if damage:
+            with pytest.raises(AssertionError,match="compute|source"):
+                validate(tmp_path,"offline",document)
+        else:
+            from pathlib import Path
+            read_text = Path.read_text
+            def bounded_read(path, *args, **kwargs):
+                assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
+                return read_text(path, *args, **kwargs)
+            monkeypatch.setattr(Path, "read_text", bounded_read)
+&gt;           assert validate(tmp_path,"offline",document)["status"] == "PASS"
+
+tests/integration/test_step5_measured_main.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/run_step5_measured_main.py:227: in validate
+    lanes=[json.loads(line) for line in (run/"frontier_ep_wave_lane_ledger.jsonl").read_text().splitlines()]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida1/metrics/run/frontier_ep_wave_lane_ledger.jsonl')
+args = (), kwargs = {}
+
+    def bounded_read(path, *args, **kwargs):
+&gt;       assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
+E       AssertionError: EP ledger materialized
+E       assert 'frontier_ep_wave_lane_ledger.jsonl' != 'frontier_ep_wave_lane_ledger.jsonl'
+E        +  where 'frontier_ep_wave_lane_ledger.jsonl' = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida1/metrics/run/frontier_ep_wave_lane_ledger.jsonl').name
+
+tests/integration/test_step5_measured_main.py:84: AssertionError</failure></testcase><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[None-float8_e4m3fn-True]" time="0.019"><failure message="AssertionError: EP ledger materialized&#10;assert 'frontier_ep_wave_lane_ledger.jsonl' != 'frontier_ep_wave_lane_ledger.jsonl'&#10; +  where 'frontier_ep_wave_lane_ledger.jsonl' = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida2/metrics/run/frontier_ep_wave_lane_ledger.jsonl').name">tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f515697a200&gt;
+quant = 'float8_e4m3fn', deferred = True, damage = None
+
+    @pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
+    @pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","zero_operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
+    def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, monkeypatch, quant, deferred, damage):
+        from tests.integration.run_step5_measured_main import validate
+        run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
+        source=lanes[1]["phases"]["pre_dispatch"]
+        if damage == "prepare" and (not quant or deferred): pytest.skip("No source prepare is reached by this binding")
+        if damage == "inapplicable" and quant and not deferred: pytest.skip("Source prepare is applicable to this binding")
+        if damage in ("gate","router","prepare"):
+            source["compute_proofs"].pop({"gate":"moe_gating_linear","router":"moe_gating_routing_topk","prepare":"moe_input_quantize"}[damage])
+        if damage == "all": source.pop("compute_proofs")
+        if damage in ("operator","zero_operator"):
+            source["operators_ms"].pop("moe_gating_linear") if damage=="operator" else source["operators_ms"].update(moe_gating_linear=0.);source["compute_proofs"].pop("moe_gating_linear")
+        if damage == "peer_only": lanes=lanes[:1]
+        if damage == "duration": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=float("nan")
+        if damage == "count": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=0
+        if damage == "norm": source["compute_proofs"].pop("post_attention_layernorm")
+        if damage == "inapplicable":
+            source["operators_ms"]["moe_input_quantize"]=1.;source["compute_proofs"]["moe_input_quantize"]=dict(exact_lookup=True,duration_ms=1.,kernel_count=3)
+        if damage == "mismatch": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=2.
+        if damage == "fractional": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=1.5
+        (run/"frontier_ep_wave_lane_ledger.jsonl").write_text("".join(json.dumps(row)+"\n" for row in lanes))
+        if damage:
+            with pytest.raises(AssertionError,match="compute|source"):
+                validate(tmp_path,"offline",document)
+        else:
+            from pathlib import Path
+            read_text = Path.read_text
+            def bounded_read(path, *args, **kwargs):
+                assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
+                return read_text(path, *args, **kwargs)
+            monkeypatch.setattr(Path, "read_text", bounded_read)
+&gt;           assert validate(tmp_path,"offline",document)["status"] == "PASS"
+
+tests/integration/test_step5_measured_main.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/run_step5_measured_main.py:227: in validate
+    lanes=[json.loads(line) for line in (run/"frontier_ep_wave_lane_ledger.jsonl").read_text().splitlines()]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida2/metrics/run/frontier_ep_wave_lane_ledger.jsonl')
+args = (), kwargs = {}
+
+    def bounded_read(path, *args, **kwargs):
+&gt;       assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
+E       AssertionError: EP ledger materialized
+E       assert 'frontier_ep_wave_lane_ledger.jsonl' != 'frontier_ep_wave_lane_ledger.jsonl'
+E        +  where 'frontier_ep_wave_lane_ledger.jsonl' = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_completed_position_valida2/metrics/run/frontier_ep_wave_lane_ledger.jsonl').name
+
+tests/integration/test_step5_measured_main.py:84: AssertionError</failure></testcase><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[gate-None-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[gate-float8_e4m3fn-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[gate-float8_e4m3fn-True]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[router-None-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[router-float8_e4m3fn-False]" time="0.028" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[router-float8_e4m3fn-True]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[prepare-None-False]" time="0.015"><skipped type="pytest.skip" message="No source prepare is reached by this binding">/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/tests/integration/test_step5_measured_main.py:61: No source prepare is reached by this binding</skipped></testcase><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[prepare-float8_e4m3fn-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[prepare-float8_e4m3fn-True]" time="0.014"><skipped type="pytest.skip" message="No source prepare is reached by this binding">/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/tests/integration/test_step5_measured_main.py:61: No source prepare is reached by this binding</skipped></testcase><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[all-None-False]" time="0.074" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[all-float8_e4m3fn-False]" time="0.021" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[all-float8_e4m3fn-True]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[operator-None-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[operator-float8_e4m3fn-False]" time="0.025" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[operator-float8_e4m3fn-True]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[zero_operator-None-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[zero_operator-float8_e4m3fn-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[zero_operator-float8_e4m3fn-True]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[peer_only-None-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[peer_only-float8_e4m3fn-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[peer_only-float8_e4m3fn-True]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[duration-None-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[duration-float8_e4m3fn-False]" time="0.021" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[duration-float8_e4m3fn-True]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[count-None-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[count-float8_e4m3fn-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[count-float8_e4m3fn-True]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[norm-None-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[norm-float8_e4m3fn-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[norm-float8_e4m3fn-True]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[inapplicable-None-False]" time="0.019" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[inapplicable-float8_e4m3fn-False]" time="0.015"><skipped type="pytest.skip" message="Source prepare is applicable to this binding">/data/ycfeng/Frontier/.worktrees/step5-d29-ledger-stream/tests/integration/test_step5_measured_main.py:62: Source prepare is applicable to this binding</skipped></testcase><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[inapplicable-float8_e4m3fn-True]" time="0.064" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[mismatch-None-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[mismatch-float8_e4m3fn-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[mismatch-float8_e4m3fn-True]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[fractional-None-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[fractional-float8_e4m3fn-False]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_completed_position_validator_requires_actual_dummy_owner_compute_pairs[fractional-float8_e4m3fn-True]" time="0.020" /><testcase classname="tests.integration.test_step5_measured_main" name="test_real_ep_lane_ledger_releases_rows_and_preserves_bytes" time="0.471"><failure message="AssertionError: Real MetricsStore retained an old EP row&#10;assert {'ep_id': 0, 'cluster': 'DECODE', 'routing_source': {'policy_id': 'position_cyclic', 'source_lanes': ({'lane_id': 0, '...l_rank_ms': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'remainder_ms': 0.0}}}}}} is None&#10; +  where {'ep_id': 0, 'cluster': 'DECODE', 'routing_source': {'policy_id': 'position_cyclic', 'source_lanes': ({'lane_id': 0, '...l_rank_ms': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'remainder_ms': 0.0}}}}}} = &lt;weakref at 0x7f515626f5b0; to 'Row' at 0x7f515626f560&gt;()">tmp_path = PosixPath('/data/ycfeng/tmp/d29_ledger_stream_red2/pytest/test_real_ep_lane_ledger_relea0')
+
+    def test_real_ep_lane_ledger_releases_rows_and_preserves_bytes(tmp_path):
+        import weakref
+        from tests.unit.test_stage_reporting_contract import _store
+        _, _, lanes = _completed_position_validator_inputs(tmp_path / "source", None)
+        store, _ = _store(tmp_path / "output", enable_op_level_tracing=False, store_frontier_stage_batch_ledger=True)
+        ledger = store._frontier_ep_wave_lane_ledger_rows
+        path = tmp_path / "output" / "frontier_ep_wave_lane_ledger.jsonl"
+        assert len(ledger) == 0 and not path.exists()
+        store._write_frontier_stage_batch_ledger()
+        assert not path.exists()
+        class Row(dict):
+            pass
+        expected = b""
+        for index in range(32):
+            row = Row(lanes[index % 2])
+            released = weakref.ref(row)
+            expected += (json.dumps(row, sort_keys=True) + "\n").encode()
+            ledger.append(row)
+            del row
+&gt;           assert released() is None, "Real MetricsStore retained an old EP row"
+E           AssertionError: Real MetricsStore retained an old EP row
+E           assert {'ep_id': 0, 'cluster': 'DECODE', 'routing_source': {'policy_id': 'position_cyclic', 'source_lanes': ({'lane_id': 0, '...l_rank_ms': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'remainder_ms': 0.0}}}}}} is None
+E            +  where {'ep_id': 0, 'cluster': 'DECODE', 'routing_source': {'policy_id': 'position_cyclic', 'source_lanes': ({'lane_id': 0, '...l_rank_ms': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'remainder_ms': 0.0}}}}}} = &lt;weakref at 0x7f515626f5b0; to 'Row' at 0x7f515626f560&gt;()
+
+tests/integration/test_step5_measured_main.py:109: AssertionError</failure></testcase></testsuite></testsuites>

@@ -11,6 +11,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.config import global_vars
+from frontier.config.graph_policy import graph_policy, resolve_capture_size
 from frontier.entities.batch import (
     Batch,
     DecodeCudaGraphMetadata,
@@ -91,12 +92,10 @@ class IterationSchedulingPolicy:
         )
         is_mixed_batch = not is_uniform_decode_batch
 
-        runtime_mode = "NONE"
-        if config_mode == "full_decode_only":
-            if is_uniform_decode_batch and capture_hit:
-                runtime_mode = "FULL"
-        elif config_mode == "piecewise" and capture_hit:
-            runtime_mode = "PIECEWISE"
+        policy = graph_policy(config_mode)
+        runtime_mode = (
+            policy.uniform_decode if is_uniform_decode_batch else policy.other
+        ) if capture_hit else "NONE"
 
         if runtime_mode == "NONE":
             capture_hit = False
@@ -131,10 +130,7 @@ class IterationSchedulingPolicy:
                 8 * i for i in range(1, max_num_seqs // 8 + 1)
             ]
 
-        for capture_size in sorted(cudagraph_capture_sizes):
-            if total_tokens <= capture_size:
-                return True, int(capture_size)
-        return False, int(total_tokens)
+        return resolve_capture_size(total_tokens, cudagraph_capture_sizes)
 
     def _build_spec_decode_batch_metadata(
         self, batch: Batch
@@ -549,7 +545,14 @@ class IterationSchedulingPolicy:
         return reclaimed_requests
 
     def _get_num_waiting_reqs_for_decision_log(self) -> int:
-        if self._cluster_type in (ClusterType.DECODE, ClusterType.DECODE_ATTN):
+        if self._cluster_type == ClusterType.DECODE:
+            # Remote-KV requests are waiting, not running, before D readiness.
+            return (
+                len(self._waiting_requests)
+                + len(self._pending_kv_transfer_start_events)
+                + len(self._kv_transfer_receiving_request_ids)
+            )
+        if self._cluster_type == ClusterType.DECODE_ATTN:
             return len(self._waiting_requests)
         return len(self._request_queue) + len(self._preempted_requests)
 
@@ -559,12 +562,19 @@ class IterationSchedulingPolicy:
         Running counts every admitted request, including one that is admitted
         but not scheduled in the current iteration. Waiting reuses the
         decision-log accessor above so a load balancer and the decision log can
-        never disagree about what is waiting.
+        never disagree about what is waiting. The ordinary capacity is already
+        allocatable blocks; grouped managers exclude their reserved null block
+        when calculating usage. Neither path subtracts a second null block.
         """
 
         return RequestLoad(
             self._get_num_waiting_reqs_for_decision_log(),
             len(self._running_requests),
+            (
+                self._kv_cache_manager.usage
+                if self._kv_cache_manager is not None
+                else self._num_allocated_blocks / self._config.num_blocks
+            ),
         )
 
     def _apply_long_prefill_token_threshold(
@@ -588,12 +598,14 @@ class IterationSchedulingPolicy:
         request_num_tokens: Optional[List[int]] = None,
         batch_size: int = 0,
         batch_num_tokens: int = 0,
+        extra_fields: Optional[Dict[str, Any]] = None,
+        event_time: Optional[float] = None,
     ) -> None:
         if not schedule_decision_logging_enabled():
             return
 
         if available_blocks is None:
-            available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+            available_blocks = self._get_available_kv_blocks()
 
         cluster_name = self._cluster_type.name if self._cluster_type else "MONOLITHIC"
         request_load = self.get_request_load()
@@ -618,10 +630,10 @@ class IterationSchedulingPolicy:
             "batch_num_tokens": int(batch_num_tokens),
             "timestamp": time.time(),
             "timestamp_semantics": "wall_clock_epoch_seconds",
-            "simulation_time": float(self._current_schedule_time),
+            "simulation_time": float(self._current_schedule_time if event_time is None else event_time),
             "simulation_time_semantics": "frontier_event_time_seconds",
         }
-        if self._kv_cache_manager is not None:
+        if self._is_prefix_caching_enabled():
             prefix_cache_stats = self._kv_cache_manager.prefix_cache_stats
             payload.update(
                 {
@@ -633,4 +645,12 @@ class IterationSchedulingPolicy:
                     "prefix_cache_hits": int(prefix_cache_stats.hits),
                 }
             )
+        if extra_fields:
+            duplicate_fields = set(payload).intersection(extra_fields)
+            if duplicate_fields:
+                raise ValueError(
+                    "Schedule decision extra_fields cannot replace canonical fields: "
+                    f"{sorted(duplicate_fields)}"
+                )
+            payload.update(extra_fields)
         _log_frontier_vllm_v1_schedule_decision(payload)

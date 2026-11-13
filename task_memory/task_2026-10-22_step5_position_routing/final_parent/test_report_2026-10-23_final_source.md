@@ -1,0 +1,153 @@
+# Final-source acceptance checks (in progress)
+
+## Modification History
+| Date | Change |
+| --- | --- |
+| 2026-10-23 | Record both actual-main placement failures without timeout; begin focused real-constructor reproduction. |
+| 2026-10-23 | Reconcile final full-unit IDs with baseline and explicit final-source dependency supplement; no new code failures. |
+| 2026-10-23 | Final frozen-source strict77 passes77/77; full902-artifact and cache/provenance audit passes. |
+| 2026-10-23 | Close source re-review; freeze1be91bad, launch final gates and record101PASS environment supplement plus final budget adoption. |
+| 2026-10-23 | Record independent parent verification of the prepare metadata repair before re-review/final freeze. |
+
+## Prepare metadata repair: parent affected checks
+
+Code change3d51b9b2; integrated review snapshot
+1be91bad431d3bd886de7f5d80c19bd7e6c54a25 in
+`/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-04`.
+Python3.10.6, existing frontier-py310 environment; detached local submodule
+3dac53c544e546574cb6e8078cd14053d0916113, cloned locally without network or build.
+
+```bash
+timeout 180s env -u FRONTIER_TEST_CPU_WRITER_FILE -u FRONTIER_TEST_CPU_WRITER_SHA256 PYTHONPATH="$PWD:$PWD/tests/unit" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_comm_operator_families.py tests/unit/test_ep_wave_trace_context.py tests/unit/test_quantization_manager_registry.py tests/unit/test_quantization_module_precision.py tests/unit/test_op_trace_utils.py tests/unit/test_ep_trace.py tests/unit/test_collective_sim_cc_backend.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29_prepare_metadata_parent09 --junitxml=/data/ycfeng/tmp/d29_prepare_metadata_parent09.xml > /data/ycfeng/tmp/d29_prepare_metadata_parent09.log 2>&1
+```
+
+Parent parsed JUnit:196 tests,196 PASS,0 FAIL/ERROR/SKIP,6.911s. The four actual
+MetricsStore CSVs under the basetemp were separately read with csv.DictReader:
+
+| Configured case | Expected and observed prepare row | Result |
+| --- | --- | --- |
+| Llama2, either signature | No prepare row | PASS |
+| Step, matching signature | FP8,profiling,empty approximation_factor | PASS |
+| Step, different signature | BF16,approximation,2.0 | PASS |
+
+Llama2 CSV bytes also equal the retained D30 baseline at
+`/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/cases/dp_dense_online_lanes2_replicas2/metrics/meta_llama_llama_2_7b_hf/online_serving/dp_dense_online_lanes2_replicas2/op_precision_metadata.csv`.
+Genuine grouped-GEMM approximation, unchanged lookup/hash/speedup state and warning
+set independence are covered by the same actual-writer tests. This is parent
+execution, not a sum with owner196 or earlier parent194/53 suites.
+
+## Remaining gates
+
+Independent re-review returned No findings and closed P2 before the final runs
+below were launched. Frozen production source is1be91bad; integrated-04 stays
+unchanged throughout those runs. Earlier60ba strict77 PASS remains tied to60ba;
+main04 is diagnostic. Native/GPU/G3/E2E qualification remains separate.
+
+## Final gate launches
+
+All commands run from integrated-04 with the same common environment:
+PYTHONDONTWRITEBYTECODE=1,TMPDIR=/data/ycfeng/tmp,OMP_NUM_THREADS=1,
+OPENBLAS_NUM_THREADS=1,MKL_NUM_THREADS=1. PYTHONPATH=$PWD for fidelity and
+$PWD:$PWD/tests/unit for the remaining commands. The unit command additionally
+sets FRONTIER_TMP_ROOT=/data/ycfeng/tmp. The CLI unsets FRONTIER_TEST_CPU_WRITER_FILE
+and FRONTIER_TEST_CPU_WRITER_SHA256.
+
+```bash
+/data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root "$PWD" --python-bin /data/ycfeng/envs/frontier-py310/bin/python --label candidate --output-root /data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03 --jobs 4 --clean-cache --continue-on-failure > /data/ycfeng/tmp/d29_workflow_fidelity_final03_run.log 2>&1
+timeout 1800s /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit -q -p no:cacheprovider --continue-on-collection-errors --basetemp=/data/ycfeng/tmp/d29_unit_parent03 --junitxml=/data/ycfeng/tmp/d29_unit_parent03.xml > /data/ycfeng/tmp/d29_unit_parent03.log 2>&1
+timeout 5100s /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d29-parent-position-fixture03/fixture_manifest.json --output-root /data/ycfeng/tmp/d29-parent-position-main05 --mode all > /data/ycfeng/tmp/d29-parent-position-main05.log 2>&1
+```
+
+Strict77 and full-unit reconciliation are complete below; CLI failed as recorded below. The CLI's own timeout remains2400s per mode;
+the outer5100s only permits both modes and receipt generation. Fixture03 remains
+explicit CPU/unadmitted evidence. No original gate or baseline was changed.
+
+## Final-source environment supplement
+
+Python3.12.13 asyncopd-py312 with the same common environment plus
+STEP5_NATIVE_SOURCE_ROOT=/data/ycfeng/tmp/d29_published_sources01/source/vllm and
+VLLM_TARGET_DEVICE=cpu:
+
+```bash
+timeout 180s /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest tests/unit/test_step5_canonical_g3.py tests/unit/test_step5_native_position_cyclic.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29_final_environment_parent02 --junitxml=/data/ycfeng/tmp/d29_final_environment_parent02.xml > /data/ycfeng/tmp/d29_final_environment_parent02.log 2>&1
+```
+
+Parent parsed101PASS,0FAIL/ERROR/SKIP,11.923s. This supplies the known aiohttp/Torch
+coverage on the final source. Full-suite failure/error-set reconciliation must
+still inspect the new raw XML and account for every difference explicitly.
+
+## Final budget
+
+Independent audit followed by root remeasurement confirms111 allocated/110 changed
+paths,9062 source gross and9076 global (including12-line size note and2-line gitlink).
+Root adopts proposal A through repairs/final_scope_reconciliation.json:46 allowance
+adjustments totaling+1258/-1258,all within the same owner; no path/owner/global cap
+increase. All paths fit, and all original step caps remain separate. Reused prior
+step receipts are identified in the immutable raw proposal rather than claimed
+as new test executions. Root additionally verified the actual integrated-04
+submodule,8630 superproject gross,333 submodule gross and98 changed Python paths.
+
+Artifacts:final_ledger_proposal03.json (raw audit),final_budget_parent_receipt.json
+(root check),repairs/final_scope_reconciliation.json (effective allocation).
+
+## Final frozen-source strict77: PASS
+
+Candidate1be91bad431d3bd886de7f5d80c19bd7e6c54a25 compared with retained baseline
+713e6a81708e87b86cf91fd89f3b1f954bdcbead using the unchanged comparator:
+
+```bash
+env PYTHONPATH="$PWD" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03 --baseline-label /data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate --candidate-label /data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03/candidate > /data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03/compare.log 2>&1
+```
+
+Observed77/77 identical;zero mismatches,baseline/candidate failures,missing cases,
+missing evidence,changed definitions,uncompared cases or cache filename differences.
+Parent uses the existing file_digest/missing_evidence_for/side_provenance_findings
+functions and build_cases definitions to recheck every returncode,source/harness
+revision,clean capture,case digest,artifact size/hash,cache inventory and clean-cache
+manifest.451 artifact hashes and519 cache filenames match on each side.
+Receipt:fidelity_final03_audit.json; comparison SHA256
+c6dbe754a43ee58f94c15cc043264f19c6bf110d223e2e26a1a705100e4129ef.
+This is the required final-code legacy gate,not a reuse of60ba's earlier result.
+
+## Final full-unit baseline reconciliation
+
+The recorded full command completed with exit1,not timeout,in1238.567s.
+Raw candidate XML:8607 cases,8015PASS/279FAIL/32ERROR/281SKIP. Retained baseline
+XML has267 failure IDs and31 error IDs; both sets remain exactly present and none
+disappear. The only additions are12 cases whose tracebacks say
+`No module named 'aiohttp'` and one native-position module collection error with
+`No module named 'torch'`.
+
+The final-source Python3.12 supplement above is101PASS. Root verifies all12 exact
+HTTP case IDs pass there, and all16 cases in the formerly uncollectable native
+module pass. These are explicit environment-specific results; the raw Python3.10
+suite remains unsuccessful. No failure is hidden or accepted merely by its name.
+After accounting for these observed dependency additions, there is no new code
+failure/error relative to baseline. This is the cross-environment regression
+acceptance,not a claim that every unit test passes.
+
+Root also verifies zero missing baseline IDs,zero baseline PASS→SKIP transitions,
+and all53 catalogue and196 affected case IDs passing in the new full run. These
+subsets are not added to8015. Exact added IDs,raw totals,source commit and all three
+XML hashes are retained in unit_final03_comparison.json. Raw log/XML stay at
+`/data/ycfeng/tmp/d29_unit_parent03.{log,xml}`; comparison scratch is
+`/data/ycfeng/tmp/d29_unit_delta03.json`. No additional tests were needed after
+these checks settled the recorded regressions.
+
+## Final-code actual-main: FAIL
+
+The full mode-all command exits1 after both modes fail. Offline takes
+1580.9479549312964s; online1560.1816781787202s. Each execution.json says
+returncode1,timed_out=false and source1be91bad. Runner SHA256
+6fc438ca44761b168e8c87ea629758e7c44b4082ab576424a140d1cc2e26d76f;
+fixture-writer SHA25687752f5816cc59baa8eb63733bfe9a4be7dde9b32d890ad5a0afbf3336f0d86b.
+
+Both actual subprocesses fail atcollective_sim_cc_backend.py809 with
+`Step plans require explicitly configured TP8/DP2 placement`,called by the real
+position operator consumer atmoe_operator_times.py145. The wrapper subsequently
+reports `Actual main failed; inspect .../summary.json`; no final request metrics
+are accepted. The existing2400s per-mode and5100s overall bounds did not fire.
+
+Raw artifacts:/data/ycfeng/tmp/d29-parent-position-main05. Further work is recorded
+in repairs/cli_placement_repair.md. Next is a short real-configuration reproduction,
+not another immediate long CLI run.

@@ -1,0 +1,28 @@
+{
+  "status": "PASS_THREE_EXACT_RETAINED_DUPLICATES_REMOVED",
+  "files": [
+    {
+      "removed": "/data/ycfeng/tmp/d29_config_profile_review_20261024.json",
+      "retained": "task_memory/task_2026-10-22_step5_position_routing/runtime_config_scan/evidence/profile_review.json",
+      "bytes": 2977,
+      "sha256": "8b756e44ce23e4f1c78081e3215750a5d949048c8d519999f4e9b9ae2966d447"
+    },
+    {
+      "removed": "/data/ycfeng/tmp/d29_ledger_scope_basis_parent_20261024.json",
+      "retained": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/scope_basis_parent.json",
+      "bytes": 1238,
+      "sha256": "31d588956c8908a3b4bd5df41dd13040f8134e89392f2e655de7953d758f0dca"
+    },
+    {
+      "removed": "/data/ycfeng/tmp/d29_ledger_allocation_parent_20261024.json",
+      "retained": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/allocation_parent.json",
+      "bytes": 481,
+      "sha256": "0c4c22c410fcb35dd523031844f37141d4b8892dc367ac21aaa19653bbbaaad3"
+    }
+  ],
+  "removed_files": 3,
+  "removed_bytes": 4696,
+  "source_or_fixture_deleted": false,
+  "cloud_action": false,
+  "scope": "Completed disposable JSON outputs owned by D29; retained byte-identical receipts remain in task records."
+}

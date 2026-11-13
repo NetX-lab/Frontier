@@ -1,0 +1,1696 @@
+{
+  "task_id": "D23-MRV2-LOAD-DIAG",
+  "config": "/data/ycfeng/tmp/d23_main_actual05_offline/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/config.json",
+  "config_sha256": "f342f1d0edd414105c8f4bc2d904d28d0ecde363c42a9b6bdbc631748790f105",
+  "model_equals_actual_config": true,
+  "subsets": [
+    {
+      "evidence_kind": "diagnostic_source_subset",
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv",
+      "source_bytes": 5606492481,
+      "subset": "/data/ycfeng/tmp/d23_mrv2_load_diag03/cuda_event_prefix_100.csv",
+      "subset_bytes": 5936404,
+      "rows": 100,
+      "columns": 125,
+      "all_source_fields_equal": true,
+      "subset_sha256": "bf5c6c5ebdd249bab0fbf11c1d8ba8fe2411ca50c0977d03eee58b08115a9612",
+      "largest_first_row_cells": [
+        [
+          "quant_signature",
+          53767
+        ],
+        [
+          "typed_operator_contracts",
+          3987
+        ],
+        [
+          "fusion",
+          354
+        ],
+        [
+          "active_operators",
+          149
+        ],
+        [
+          "physical_scope",
+          43
+        ]
+      ],
+      "shape_counts": [
+        {
+          "shape": [
+            "0",
+            "piecewise",
+            "attention_workload",
+            "swa"
+          ],
+          "rows": 1
+        },
+        {
+          "shape": [
+            "0",
+            "full",
+            "attention_workload",
+            "swa"
+          ],
+          "rows": 99
+        }
+      ]
+    },
+    {
+      "evidence_kind": "diagnostic_source_subset",
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv",
+      "source_bytes": 5606492481,
+      "subset": "/data/ycfeng/tmp/d23_mrv2_load_diag03/cuda_event_prefix_200.csv",
+      "subset_bytes": 11869104,
+      "rows": 200,
+      "columns": 125,
+      "all_source_fields_equal": true,
+      "subset_sha256": "190d52a6185920b1863c65c07de6ef376311909bfc86088d667a6a9d7763f39f",
+      "largest_first_row_cells": [
+        [
+          "quant_signature",
+          53767
+        ],
+        [
+          "typed_operator_contracts",
+          3987
+        ],
+        [
+          "fusion",
+          354
+        ],
+        [
+          "active_operators",
+          149
+        ],
+        [
+          "physical_scope",
+          43
+        ]
+      ],
+      "shape_counts": [
+        {
+          "shape": [
+            "0",
+            "piecewise",
+            "attention_workload",
+            "swa"
+          ],
+          "rows": 1
+        },
+        {
+          "shape": [
+            "0",
+            "full",
+            "attention_workload",
+            "swa"
+          ],
+          "rows": 199
+        }
+      ]
+    }
+  ],
+  "plain_loader_timings": [
+    {
+      "rows": 100,
+      "wall_s": 0.2557478789240122,
+      "profiler_enabled": false
+    },
+    {
+      "rows": 200,
+      "wall_s": 0.4535261429846287,
+      "profiler_enabled": false
+    }
+  ],
+  "kernel_source_bytes": 10964211,
+  "scratch_cache_artifacts": [
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_kernel_count_bc7d089f.pkl",
+      "bytes": 200361,
+      "sha256": "52b95cf3f2b2037c7d75519fac1268ca724d99e128d46c56fd6b0c1dcab7beba"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_0d398cf3.pkl",
+      "bytes": 200342,
+      "sha256": "2d13208d99e6425b608877ee5769e67b034e2e8d5dd570977d9605041f35c6b5"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_c7019d55.pkl",
+      "bytes": 200614,
+      "sha256": "4ecfffe6948ae00c108b544d89d361fa4c1fe4485684da46c3c3411972a1672e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_kernel_count_37e71702.pkl",
+      "bytes": 200633,
+      "sha256": "f142d58555438087c0eedc0bf9bff58f0653a180208ace5791a0aee4a43f2fc5"
+    }
+  ],
+  "warm_prefill_models": [
+    "step5_layer_e2e",
+    "step5_layer_e2e_kernel_count"
+  ],
+  "deduplicated_decode_models": [],
+  "deduplicated_decode_loader_calls": 2,
+  "profiles": [
+    {
+      "label": "event_load_100",
+      "wall_s": 0.5633086590096354
+    },
+    {
+      "label": "event_load_200",
+      "wall_s": 1.033775471150875
+    },
+    {
+      "label": "kernel_load_full184",
+      "wall_s": 2.222435661125928
+    },
+    {
+      "label": "event_union_two_roles",
+      "wall_s": 1.1817846889607608
+    },
+    {
+      "label": "kernel_warm_prefill",
+      "wall_s": 4.942950369790196
+    },
+    {
+      "label": "kernel_warm_decode_deduplicated",
+      "wall_s": 4.681278268340975
+    }
+  ],
+  "limits": [
+    "Seconds-scale API profile, not full initialization wall profile",
+    "CUDA_EVENT diagnostic prefixes; original timings/columns are unchanged",
+    "No full manager __init__, estimator fit, runtime query, or CLI run"
+  ],
+  "regression_verdict": "RED_REPEATED_LOAD",
+  "environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "sklearn": "1.7.2",
+    "cpu_only": true,
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "profile_details": {
+    "event_load_100": {
+      "wall_s": 0.5633086590096354,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 184,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.007282018,
+          "cumulative_s": 0.563125275
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.013574166,
+          "cumulative_s": 0.12030233100000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 900,
+          "calls": 900,
+          "self_s": 0.025405010000000002,
+          "cumulative_s": 0.101180642
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 149,
+          "name": "_validate_targets",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.009759357,
+          "cumulative_s": 0.09190941700000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.00035565600000000004,
+          "cumulative_s": 0.057711948000000006
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 2.8004e-05,
+          "cumulative_s": 0.042402194000000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 85,
+          "name": "_row_workload",
+          "primitive_calls": 300,
+          "calls": 300,
+          "self_s": 0.003328295,
+          "cumulative_s": 0.036765612
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 7.3689e-05,
+          "cumulative_s": 0.012694135
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.000180599,
+          "cumulative_s": 0.009073134
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 0.000736937,
+          "cumulative_s": 0.005139356
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.00016996,
+          "cumulative_s": 0.001692287
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.000242603,
+          "cumulative_s": 0.00028339
+        }
+      ],
+      "top_self": [
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1107,
+          "name": "__getitem__",
+          "primitive_calls": 22030,
+          "calls": 22030,
+          "self_s": 0.034350370000000005,
+          "cumulative_s": 0.14796683200000002
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py",
+          "line": 222,
+          "name": "read",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.032483471,
+          "cumulative_s": 0.034340317
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "primitive_calls": 223176,
+          "calls": 223225,
+          "self_s": 0.031068899,
+          "cumulative_s": 0.051792797
+        },
+        {
+          "path": "/usr/lib/python3.10/copy.py",
+          "line": 128,
+          "name": "deepcopy",
+          "primitive_calls": 2200,
+          "calls": 27400,
+          "self_s": 0.029418454,
+          "cumulative_s": 0.05230950400000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 900,
+          "calls": 900,
+          "self_s": 0.025405010000000002,
+          "cumulative_s": 0.101180642
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1232,
+          "name": "_get_value",
+          "primitive_calls": 22030,
+          "calls": 22030,
+          "self_s": 0.022085119,
+          "cumulative_s": 0.075762072
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/indexes/base.py",
+          "line": 3784,
+          "name": "get_loc",
+          "primitive_calls": 22268,
+          "calls": 22268,
+          "self_s": 0.019323963,
+          "cumulative_s": 0.039959098000000005
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/binding.py",
+          "line": 55,
+          "name": "<genexpr>",
+          "primitive_calls": 1800,
+          "calls": 1800,
+          "self_s": 0.018099378000000003,
+          "cumulative_s": 0.03028364
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/indexing.py",
+          "line": 2801,
+          "name": "check_dict_or_set_indexers",
+          "primitive_calls": 22141,
+          "calls": 22141,
+          "self_s": 0.016642459000000002,
+          "cumulative_s": 0.025515443000000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.013574166,
+          "cumulative_s": 0.12030233100000001
+        }
+      ]
+    },
+    "event_load_200": {
+      "wall_s": 1.033775471150875,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 184,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.013757100000000001,
+          "cumulative_s": 1.033501666
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 400,
+          "calls": 400,
+          "self_s": 0.025955483,
+          "cumulative_s": 0.23302539200000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 1800,
+          "calls": 1800,
+          "self_s": 0.049190573,
+          "cumulative_s": 0.198476061
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 149,
+          "name": "_validate_targets",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.020079132,
+          "cumulative_s": 0.18709129300000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.0007340160000000001,
+          "cumulative_s": 0.11550349100000001
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 2.5533e-05,
+          "cumulative_s": 0.07415980900000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 85,
+          "name": "_row_workload",
+          "primitive_calls": 600,
+          "calls": 600,
+          "self_s": 0.006155249000000001,
+          "cumulative_s": 0.070858845
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.000344285,
+          "cumulative_s": 0.018186761000000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 6.5855e-05,
+          "cumulative_s": 0.012470213
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 0.0007402610000000001,
+          "cumulative_s": 0.004952649
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.000307408,
+          "cumulative_s": 0.0033319670000000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.0005009680000000001,
+          "cumulative_s": 0.000591417
+        }
+      ],
+      "top_self": [
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1107,
+          "name": "__getitem__",
+          "primitive_calls": 44030,
+          "calls": 44030,
+          "self_s": 0.067594557,
+          "cumulative_s": 0.293817808
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py",
+          "line": 222,
+          "name": "read",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.06386132700000001,
+          "cumulative_s": 0.066380478
+        },
+        {
+          "path": "/usr/lib/python3.10/copy.py",
+          "line": 128,
+          "name": "deepcopy",
+          "primitive_calls": 4400,
+          "calls": 54800,
+          "self_s": 0.059481564,
+          "cumulative_s": 0.104747244
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "primitive_calls": 426376,
+          "calls": 426425,
+          "self_s": 0.058269890000000005,
+          "cumulative_s": 0.09755147400000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 1800,
+          "calls": 1800,
+          "self_s": 0.049190573,
+          "cumulative_s": 0.198476061
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1232,
+          "name": "_get_value",
+          "primitive_calls": 44030,
+          "calls": 44030,
+          "self_s": 0.043277262000000004,
+          "cumulative_s": 0.150864872
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/indexes/base.py",
+          "line": 3784,
+          "name": "get_loc",
+          "primitive_calls": 44268,
+          "calls": 44268,
+          "self_s": 0.037697792,
+          "cumulative_s": 0.079571061
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/binding.py",
+          "line": 55,
+          "name": "<genexpr>",
+          "primitive_calls": 3600,
+          "calls": 3600,
+          "self_s": 0.035827034,
+          "cumulative_s": 0.059712890000000005
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/indexing.py",
+          "line": 2801,
+          "name": "check_dict_or_set_indexers",
+          "primitive_calls": 44141,
+          "calls": 44141,
+          "self_s": 0.033333717,
+          "cumulative_s": 0.050640727
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 400,
+          "calls": 400,
+          "self_s": 0.025955483,
+          "cumulative_s": 0.23302539200000003
+        }
+      ]
+    },
+    "event_union_two_roles": {
+      "wall_s": 1.1817846889607608,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 305,
+          "name": "load_step5_attention_input_union",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.000702681,
+          "cumulative_s": 1.1816395750000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 184,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.014930843000000001,
+          "cumulative_s": 1.1087725240000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 400,
+          "calls": 400,
+          "self_s": 0.025260039,
+          "cumulative_s": 0.23361265900000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 1800,
+          "calls": 1800,
+          "self_s": 0.049861589000000005,
+          "cumulative_s": 0.20072186
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 149,
+          "name": "_validate_targets",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.01992866,
+          "cumulative_s": 0.18551994300000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.000744133,
+          "cumulative_s": 0.115933406
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 3.9308000000000004e-05,
+          "cumulative_s": 0.079178406
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 85,
+          "name": "_row_workload",
+          "primitive_calls": 600,
+          "calls": 600,
+          "self_s": 0.006253403,
+          "cumulative_s": 0.07155246200000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.000132027,
+          "cumulative_s": 0.024976255000000003
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.000359762,
+          "cumulative_s": 0.018289836
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'update' of '_hashlib.HASH' objects>",
+          "primitive_calls": 12,
+          "calls": 12,
+          "self_s": 0.012170113000000001,
+          "cumulative_s": 0.012170113000000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 7,
+          "calls": 7,
+          "self_s": 0.001738312,
+          "cumulative_s": 0.011614658
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.00034162300000000005,
+          "cumulative_s": 0.003410277
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.000507064,
+          "cumulative_s": 0.0005978940000000001
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_sha256>",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 1.5927000000000002e-05,
+          "cumulative_s": 1.5927000000000002e-05
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'hexdigest' of '_hashlib.HASH' objects>",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 1.1202e-05,
+          "cumulative_s": 1.1202e-05
+        }
+      ],
+      "top_self": [
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1107,
+          "name": "__getitem__",
+          "primitive_calls": 44060,
+          "calls": 44060,
+          "self_s": 0.067845089,
+          "cumulative_s": 0.294491634
+        },
+        {
+          "path": "/usr/lib/python3.10/copy.py",
+          "line": 128,
+          "name": "deepcopy",
+          "primitive_calls": 4541,
+          "calls": 60299,
+          "self_s": 0.06545685400000001,
+          "cumulative_s": 0.116128728
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "primitive_calls": 450521,
+          "calls": 450623,
+          "self_s": 0.063238954,
+          "cumulative_s": 0.106022789
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py",
+          "line": 222,
+          "name": "read",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.060390471,
+          "cumulative_s": 0.063962211
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 1800,
+          "calls": 1800,
+          "self_s": 0.049861589000000005,
+          "cumulative_s": 0.20072186
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1232,
+          "name": "_get_value",
+          "primitive_calls": 44060,
+          "calls": 44060,
+          "self_s": 0.043077575,
+          "cumulative_s": 0.150700454
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/indexes/base.py",
+          "line": 3784,
+          "name": "get_loc",
+          "primitive_calls": 44673,
+          "calls": 44673,
+          "self_s": 0.038051943000000005,
+          "cumulative_s": 0.08025747500000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/binding.py",
+          "line": 55,
+          "name": "<genexpr>",
+          "primitive_calls": 3600,
+          "calls": 3600,
+          "self_s": 0.035917683,
+          "cumulative_s": 0.06020205000000001
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/algorithms.py",
+          "line": 548,
+          "name": "factorize_array",
+          "primitive_calls": 390,
+          "calls": 390,
+          "self_s": 0.034468348,
+          "cumulative_s": 0.046749434000000006
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/indexing.py",
+          "line": 2801,
+          "name": "check_dict_or_set_indexers",
+          "primitive_calls": 44283,
+          "calls": 44283,
+          "self_s": 0.033663165,
+          "cumulative_s": 0.051223014000000004
+        }
+      ]
+    },
+    "kernel_load_full184": {
+      "wall_s": 2.222435661125928,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 184,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.013329494,
+          "cumulative_s": 2.2219383240000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 92,
+          "calls": 92,
+          "self_s": 0.00567851,
+          "cumulative_s": 1.260328257
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 276,
+          "calls": 276,
+          "self_s": 0.066447986,
+          "cumulative_s": 0.45057668100000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.023358014,
+          "cumulative_s": 0.217993711
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 1656,
+          "calls": 1656,
+          "self_s": 0.046646351,
+          "cumulative_s": 0.187229844
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 149,
+          "name": "_validate_targets",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.018029489000000003,
+          "cumulative_s": 0.16848544000000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.0007460650000000001,
+          "cumulative_s": 0.10722466900000001
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 2.6609000000000002e-05,
+          "cumulative_s": 0.067472038
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 85,
+          "name": "_row_workload",
+          "primitive_calls": 552,
+          "calls": 552,
+          "self_s": 0.005889501,
+          "cumulative_s": 0.066484755
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.000382864,
+          "cumulative_s": 0.017290029000000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.000349426,
+          "cumulative_s": 0.003317331
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.000663409,
+          "cumulative_s": 0.001256254
+        }
+      ],
+      "top_self": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/config/model_config.py",
+          "line": 174,
+          "name": "<setcomp>",
+          "primitive_calls": 548,
+          "calls": 548,
+          "self_s": 0.176351845,
+          "cumulative_s": 0.284729051
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/config/model_config.py",
+          "line": 166,
+          "name": "<genexpr>",
+          "primitive_calls": 771036,
+          "calls": 771036,
+          "self_s": 0.153799776,
+          "cumulative_s": 0.201530851
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'replace' of 'str' objects>",
+          "primitive_calls": 771959,
+          "calls": 771959,
+          "self_s": 0.10864549200000001,
+          "cumulative_s": 0.10864549200000001
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "primitive_calls": 1192645,
+          "calls": 1192698,
+          "self_s": 0.10650654700000001,
+          "cumulative_s": 0.140961041
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.any>",
+          "primitive_calls": 8451,
+          "calls": 8451,
+          "self_s": 0.098493779,
+          "cumulative_s": 0.373870081
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 307,
+          "name": "resolve_step5_attention_geometry",
+          "primitive_calls": 25484,
+          "calls": 25484,
+          "self_s": 0.09812150500000001,
+          "cumulative_s": 0.21480406100000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 276,
+          "calls": 276,
+          "self_s": 0.066447986,
+          "cumulative_s": 0.45057668100000003
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1107,
+          "name": "__getitem__",
+          "primitive_calls": 40512,
+          "calls": 40512,
+          "self_s": 0.06260115200000001,
+          "cumulative_s": 0.27160267800000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 124,
+          "name": "_number",
+          "primitive_calls": 130916,
+          "calls": 130916,
+          "self_s": 0.060912046000000004,
+          "cumulative_s": 0.071195297
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py",
+          "line": 222,
+          "name": "read",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.057124294000000006,
+          "cumulative_s": 0.059573764
+        }
+      ]
+    },
+    "kernel_warm_decode_deduplicated": {
+      "wall_s": 4.681278268340975,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_family_trainers.py",
+          "line": 658,
+          "name": "_train_attn_models_for_cluster",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.000214073,
+          "cumulative_s": 4.681145356
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 305,
+          "name": "load_step5_attention_input_union",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.0017089140000000002,
+          "cumulative_s": 4.625163691
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 184,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.030746905,
+          "cumulative_s": 4.486185729000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.012041995000000002,
+          "cumulative_s": 2.563985623
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 555,
+          "calls": 555,
+          "self_s": 0.134706095,
+          "cumulative_s": 0.9193387380000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 736,
+          "calls": 736,
+          "self_s": 0.047114056,
+          "cumulative_s": 0.43836452400000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 3312,
+          "calls": 3312,
+          "self_s": 0.093107251,
+          "cumulative_s": 0.37668275
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 149,
+          "name": "_validate_targets",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.036327727000000004,
+          "cumulative_s": 0.33814202000000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.001197904,
+          "cumulative_s": 0.217859882
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 85,
+          "name": "_row_workload",
+          "primitive_calls": 1104,
+          "calls": 1104,
+          "self_s": 0.011793923000000001,
+          "cumulative_s": 0.133957651
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 4.4449e-05,
+          "cumulative_s": 0.116107835
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_model_registry.py",
+          "line": 127,
+          "name": "_get_model_hash",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 8.8491e-05,
+          "cumulative_s": 0.051304686
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.000684976,
+          "cumulative_s": 0.034842323
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/generic.py",
+          "line": 2450,
+          "name": "to_json",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 1.0873e-05,
+          "cumulative_s": 0.028843547
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/json/_json.py",
+          "line": 140,
+          "name": "to_json",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 1.2334e-05,
+          "cumulative_s": 0.028827725000000002
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'update' of '_hashlib.HASH' objects>",
+          "primitive_calls": 22,
+          "calls": 22,
+          "self_s": 0.022329830000000002,
+          "cumulative_s": 0.022329830000000002
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_md5>",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.021007788000000003,
+          "cumulative_s": 0.021007788000000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.000906166,
+          "cumulative_s": 0.006885012
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.001350571,
+          "cumulative_s": 0.0025249390000000003
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'hexdigest' of '_hashlib.HASH' objects>",
+          "primitive_calls": 4,
+          "calls": 4,
+          "self_s": 2.6737e-05,
+          "cumulative_s": 2.6737e-05
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_sha256>",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 2.5266000000000002e-05,
+          "cumulative_s": 2.5266000000000002e-05
+        }
+      ],
+      "top_self": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/config/model_config.py",
+          "line": 174,
+          "name": "<setcomp>",
+          "primitive_calls": 1096,
+          "calls": 1096,
+          "self_s": 0.356889805,
+          "cumulative_s": 0.578149048
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/config/model_config.py",
+          "line": 166,
+          "name": "<genexpr>",
+          "primitive_calls": 1542072,
+          "calls": 1542072,
+          "self_s": 0.310672967,
+          "cumulative_s": 0.41252050500000004
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "primitive_calls": 2389618,
+          "calls": 2389728,
+          "self_s": 0.221933546,
+          "cumulative_s": 0.292532102
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'replace' of 'str' objects>",
+          "primitive_calls": 1543939,
+          "calls": 1543939,
+          "self_s": 0.22181077400000002,
+          "cumulative_s": 0.22181077400000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 307,
+          "name": "resolve_step5_attention_geometry",
+          "primitive_calls": 51244,
+          "calls": 51244,
+          "self_s": 0.201373778,
+          "cumulative_s": 0.43951245000000005
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.any>",
+          "primitive_calls": 16923,
+          "calls": 16923,
+          "self_s": 0.19838327600000003,
+          "cumulative_s": 0.7603923050000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 555,
+          "calls": 555,
+          "self_s": 0.134706095,
+          "cumulative_s": 0.9193387380000001
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1107,
+          "name": "__getitem__",
+          "primitive_calls": 81025,
+          "calls": 81025,
+          "self_s": 0.125470568,
+          "cumulative_s": 0.544994441
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 124,
+          "name": "_number",
+          "primitive_calls": 263254,
+          "calls": 263254,
+          "self_s": 0.12427309400000001,
+          "cumulative_s": 0.14542047500000002
+        },
+        {
+          "path": "/usr/lib/python3.10/copy.py",
+          "line": 128,
+          "name": "deepcopy",
+          "primitive_calls": 8239,
+          "calls": 107133,
+          "self_s": 0.116942191,
+          "cumulative_s": 0.249661027
+        }
+      ]
+    },
+    "kernel_warm_prefill": {
+      "wall_s": 4.942950369790196,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_family_trainers.py",
+          "line": 658,
+          "name": "_train_attn_models_for_cluster",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.00022096300000000002,
+          "cumulative_s": 4.942707337
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 305,
+          "name": "load_step5_attention_input_union",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.0014897270000000002,
+          "cumulative_s": 4.547828268
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 184,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.02791659,
+          "cumulative_s": 4.44995707
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.011369172,
+          "cumulative_s": 2.527226617
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 555,
+          "calls": 555,
+          "self_s": 0.135137371,
+          "cumulative_s": 0.9105725880000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 149,
+          "name": "_validate_targets",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 0.054813225,
+          "cumulative_s": 0.554305598
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 103,
+          "name": "step5_row_features",
+          "primitive_calls": 736,
+          "calls": 736,
+          "self_s": 0.046512505,
+          "cumulative_s": 0.43403491200000005
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 3312,
+          "calls": 3312,
+          "self_s": 0.09461145,
+          "cumulative_s": 0.37715126800000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 413,
+          "name": "train_step5_attention_models",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.00032175600000000003,
+          "cumulative_s": 0.333942356
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.001235669,
+          "cumulative_s": 0.215531999
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_model_registry.py",
+          "line": 127,
+          "name": "_get_model_hash",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 0.00022371,
+          "cumulative_s": 0.139270203
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 85,
+          "name": "_row_workload",
+          "primitive_calls": 1104,
+          "calls": 1104,
+          "self_s": 0.011773987000000001,
+          "cumulative_s": 0.132952755
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 5.0845000000000005e-05,
+          "cumulative_s": 0.132665842
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_family_trainers.py",
+          "line": 1648,
+          "name": "_fit_single_model",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.000101001,
+          "cumulative_s": 0.095932686
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/generic.py",
+          "line": 2450,
+          "name": "to_json",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 4.3207e-05,
+          "cumulative_s": 0.06778115400000001
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/json/_json.py",
+          "line": 140,
+          "name": "to_json",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 3.8365e-05,
+          "cumulative_s": 0.067725876
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_md5>",
+          "primitive_calls": 6,
+          "calls": 6,
+          "self_s": 0.062997992,
+          "cumulative_s": 0.062997992
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.000690301,
+          "cumulative_s": 0.034416976
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'update' of '_hashlib.HASH' objects>",
+          "primitive_calls": 22,
+          "calls": 22,
+          "self_s": 0.022380364,
+          "cumulative_s": 0.022380364
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.0008423520000000001,
+          "cumulative_s": 0.006782479
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_model_registry.py",
+          "line": 570,
+          "name": "_load_model_from_cache",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 6.0675000000000004e-05,
+          "cumulative_s": 0.0037852510000000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.001297828,
+          "cumulative_s": 0.002471225
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _pickle.load>",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.001997603,
+          "cumulative_s": 0.0024209350000000004
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'hexdigest' of '_hashlib.HASH' objects>",
+          "primitive_calls": 8,
+          "calls": 8,
+          "self_s": 3.5550000000000004e-05,
+          "cumulative_s": 3.5550000000000004e-05
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_sha256>",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 1.8533e-05,
+          "cumulative_s": 1.8533e-05
+        }
+      ],
+      "top_self": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/config/model_config.py",
+          "line": 174,
+          "name": "<setcomp>",
+          "primitive_calls": 1096,
+          "calls": 1096,
+          "self_s": 0.34976391300000004,
+          "cumulative_s": 0.5671817330000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/config/model_config.py",
+          "line": 166,
+          "name": "<genexpr>",
+          "primitive_calls": 1542072,
+          "calls": 1542072,
+          "self_s": 0.306590648,
+          "cumulative_s": 0.407522086
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "primitive_calls": 2554009,
+          "calls": 2554571,
+          "self_s": 0.240853472,
+          "cumulative_s": 0.32803602800000004
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'replace' of 'str' objects>",
+          "primitive_calls": 1543943,
+          "calls": 1543943,
+          "self_s": 0.21794676200000002,
+          "cumulative_s": 0.21794676200000002
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method builtins.any>",
+          "primitive_calls": 18591,
+          "calls": 18591,
+          "self_s": 0.20398300300000002,
+          "cumulative_s": 0.7803920740000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 307,
+          "name": "resolve_step5_attention_geometry",
+          "primitive_calls": 51244,
+          "calls": 51244,
+          "self_s": 0.19878968000000002,
+          "cumulative_s": 0.43427251
+        },
+        {
+          "path": "/usr/lib/python3.10/copy.py",
+          "line": 128,
+          "name": "deepcopy",
+          "primitive_calls": 8477,
+          "calls": 135455,
+          "self_s": 0.14652842700000002,
+          "cumulative_s": 0.262691184
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/series.py",
+          "line": 1107,
+          "name": "__getitem__",
+          "primitive_calls": 94093,
+          "calls": 94093,
+          "self_s": 0.14487370500000002,
+          "cumulative_s": 0.654144747
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 555,
+          "calls": 555,
+          "self_s": 0.135137371,
+          "cumulative_s": 0.9105725880000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 124,
+          "name": "_number",
+          "primitive_calls": 263254,
+          "calls": 263254,
+          "self_s": 0.123202106,
+          "cumulative_s": 0.144248746
+        }
+      ]
+    }
+  },
+  "raw_profile_directory": "/data/ycfeng/tmp/d23_mrv2_load_diag03",
+  "repeated_measurement_source_counts": {
+    "CUDA_EVENT": {
+      "source_rows": 94392,
+      "load_calls_per_initialization": 4,
+      "row_validations": 377568,
+      "typed_metadata_validations": 3398112,
+      "feature_generations": 755136,
+      "workload_constructions": 1132704,
+      "expected_operator_contracts": 377568,
+      "layer_descriptions": 368,
+      "target_validation_passes": 5,
+      "dataframe_hash_calls": 4,
+      "source_sha256_scans": 4,
+      "source_bytes": 5606492481
+    },
+    "KERNEL_ONLY": {
+      "source_rows": 184,
+      "load_calls_per_initialization": 4,
+      "row_validations": 736,
+      "typed_metadata_validations": 6624,
+      "feature_generations": 1472,
+      "workload_constructions": 2208,
+      "expected_operator_contracts": 736,
+      "layer_descriptions": 368,
+      "target_validation_passes": 5,
+      "dataframe_hash_calls": 4,
+      "source_sha256_scans": 4,
+      "source_bytes": 10964211
+    }
+  },
+  "count_basis": "Source-derived full-call counts for unchanged actual config, not counters from a new full initialization"
+}

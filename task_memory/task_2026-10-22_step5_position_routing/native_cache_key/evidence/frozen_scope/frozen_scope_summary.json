@@ -1,0 +1,171 @@
+{
+  "task_id": "D29-NATIVE-KEY-SCOPE-DELTA",
+  "verdict": "PASS_FROZEN_NATIVE_KEY_SCOPE_DELTA",
+  "audit_kind": "BOUND_LEDGER_PLUS_EXACT_TWO_PATH_SUCCESSOR",
+  "source_commit": "376983d2ecc441d1e0a8cb8b943e65a2dcb217b5",
+  "source_tree": "c8f8657f650e4645ec0fc0c86b84283766c09b3c",
+  "fixedpoint": "9870597776229d84af5eb58d49bf9b1756092999",
+  "step_base": "18cc3e9e1008d796a08f3b5637c9b10311979735",
+  "accepted_named_source": "1737ce9c4a761d2c57ee617f5f3a78d7bcfd9a58",
+  "allocated_paths": 114,
+  "changed_paths": 113,
+  "step": {
+    "paths": {
+      "frontier/cc_backend/backends/collective_sim_cc_backend.py": {
+        "added": 1,
+        "deleted": 1,
+        "gross": 2,
+        "net": 0
+      },
+      "tests/unit/test_collective_sim_cc_backend.py": {
+        "added": 1,
+        "deleted": 0,
+        "gross": 1,
+        "net": 1
+      }
+    },
+    "gross": 3,
+    "source_gross": 2,
+    "test_gross": 1,
+    "retained_net": 1,
+    "cumulative_gross_increment": 1,
+    "distinction": "Replacement costs2 step gross while cumulative backend gross remains93; the assertion adds1 cumulative gross. Never add step3 to prior9565."
+  },
+  "totals": {
+    "baseline_owner_actual": {
+      "pricing": 3954,
+      "core_source": 4261,
+      "native": 1350
+    },
+    "owner_actual": {
+      "core_source": 4261,
+      "pricing": 3955,
+      "native": 1350
+    },
+    "owner_caps": {
+      "core_source": 4404,
+      "pricing": 3956,
+      "native": 1582
+    },
+    "owner_paths": {
+      "core_source": 49,
+      "pricing": 46,
+      "native": 19
+    },
+    "source_actual": 9566,
+    "source_cap": 9942,
+    "source_headroom": 376,
+    "global_actual": 9580,
+    "global_cap": 10000,
+    "global_headroom": 420
+  },
+  "environment": {
+    "uid": 10250,
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "bytecode_disabled": true,
+    "MemoryMax_bytes": 32212254720,
+    "timeout_seconds": 60,
+    "cgroup": "10:memory:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-rd0784fb9a62148ebb5189b4899d56258.scope\n9:cpu,cpuacct:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-rd0784fb9a62148ebb5189b4899d56258.scope\n8:perf_event:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n7:devices:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-rd0784fb9a62148ebb5189b4899d56258.scope\n6:freezer:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n5:blkio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-rd0784fb9a62148ebb5189b4899d56258.scope\n4:net_cls,net_prio:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n3:pids:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c/system.slice/run-rd0784fb9a62148ebb5189b4899d56258.scope\n2:cpuset:/kubepods/pod400bc24a-eb35-4b98-a633-874cf06f0c55/469bf31f8ee47ac9501e8996659ba8811dd9d159b63d38c1b300b175357e484c\n1:name=systemd:/system.slice/run-rd0784fb9a62148ebb5189b4899d56258.scope\n0::/system.slice/run-rd0784fb9a62148ebb5189b4899d56258.scope\n",
+    "fallback_used": false
+  },
+  "violations": [],
+  "limits": [
+    "Accounting/bindings only, not implementation review, native admission, regression or CLI acceptance.",
+    "No tests/waves/benchmarks, project imports, largeCSV/trace/model/pickle reads, network/GPU/platform operations or production edits.",
+    "112 actual rows carried only after124-binding/exact two-path guard; only2 changed paths+unedited donor receive cumulative Git counts.",
+    "All17 overlays replay allocations only; historical diagnostic/checkpoint actuals are not re-audited.",
+    "Primary task working files are current authority; dirty primary source is neither required nor used as the candidate.",
+    "Pinned native base/derived files and eight source/patch/image evidence bindings were freshly checked; no registry/image rebuild or runtime qualification.",
+    "The earlier owner dirty-patch receipt is retained as historical corroboration, not the final frozen-target guard."
+  ],
+  "bindings": {
+    "count": 124,
+    "unchanged_count": 122,
+    "changed_count": 2,
+    "baseline_all_digest": "e8c3240577b726dae2f9f3bbc4c64ed0286f52afd5474d788fafe589bbfff694",
+    "candidate_all_digest": "aa9cdac571d68e2b758d916c5977a76c37a40d95f797a468dccd708c87798ae0",
+    "baseline_non_key_digest": "eaf97ec1746ad70a1e2bb97fcd9d9e4a8f176dcb166c09c65e6ac26d74ba01b6",
+    "candidate_non_key_digest": "eaf97ec1746ad70a1e2bb97fcd9d9e4a8f176dcb166c09c65e6ac26d74ba01b6",
+    "algorithm": "SHA256 of sorted 'path oid' lines joined by LF without terminal LF; submodule:<superproject-path> uses pinned blob OID; native:<path> uses derived SHA256"
+  },
+  "candidate_clean_before_after": true,
+  "overlay_count": 17,
+  "new_overlay": {
+    "file": "task_memory/task_2026-10-22_step5_position_routing/repairs/native_collective_key_scope_amendment.json",
+    "decision_id": "D29-NATIVE-KEY-BYTES",
+    "before": {
+      "paths": 114,
+      "owner_paths": {
+        "core_source": 49,
+        "pricing": 46,
+        "native": 19
+      },
+      "owner_caps": {
+        "core_source": 4404,
+        "pricing": 3956,
+        "native": 1582
+      },
+      "source_cap": 9942
+    },
+    "after": {
+      "paths": 114,
+      "owner_paths": {
+        "core_source": 49,
+        "pricing": 46,
+        "native": 19
+      },
+      "owner_caps": {
+        "core_source": 4404,
+        "pricing": 3956,
+        "native": 1582
+      },
+      "source_cap": 9942
+    },
+    "transitions": [
+      {
+        "path": "frontier/cc_backend/collective_plan.py",
+        "before": 140,
+        "delta": -1,
+        "after": 139,
+        "owner": "pricing",
+        "new_path": false
+      },
+      {
+        "path": "tests/unit/test_collective_sim_cc_backend.py",
+        "before": 236,
+        "delta": 1,
+        "after": 237,
+        "owner": "pricing",
+        "new_path": false
+      }
+    ],
+    "zero_sum_by_owner": {
+      "core_source": 0,
+      "pricing": 0,
+      "native": 0
+    },
+    "step_caps_not_measurements": {
+      "repair_delta_ceiling": 3,
+      "source_delta_ceiling": 2,
+      "test_delta_ceiling": 1,
+      "retained_growth_ceiling": 1
+    }
+  },
+  "non_source_gross": {
+    "submodule": 333,
+    "native_patch": 99,
+    "doc": 12,
+    "gitlink": 2
+  },
+  "evidence": {
+    "frozen_scope_receipt.json": {
+      "sha256": "7d083a14bc45b14de1f0b6d9c1c529fd996441a7a7352e84c43de1a402ac7689",
+      "bytes": 299153
+    },
+    "frozen_scope_paths.tsv": {
+      "sha256": "ca84d0fd6c60c64d0278f0f7d523710fc5ff657a132a363b6b6a08d9b0113043",
+      "bytes": 15662
+    }
+  }
+}

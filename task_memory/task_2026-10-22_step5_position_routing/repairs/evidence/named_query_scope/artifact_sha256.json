@@ -1,0 +1,30 @@
+{
+  "task_id": "D29-NAMED-QUERY-SCOPE-DELTA",
+  "algorithm": "sha256",
+  "files": {
+    "changed_file_guard.json": {
+      "sha256": "e06b44ea665bc60c0ab48175d481cf2b08b65d5cef70de95eab79454c968ab79",
+      "bytes": 3763
+    },
+    "check_progress_2026-10-24_named_query_scope.md": {
+      "sha256": "d5373109667011786841f2fbeb686c2a1ac797901ed1ca80190952d7ec897024",
+      "bytes": 3051
+    },
+    "named_query_paths.tsv": {
+      "sha256": "46ba11994a90d63b2c14261adb0bd43e863e2dd62efde0e2b817a48f7e8cff82",
+      "bytes": 14628
+    },
+    "named_query_scope_receipt.json": {
+      "sha256": "60c0b373ec3b5dbccc45951dc72c8c68a20b87d6686e55096075d2903d330057",
+      "bytes": 270419
+    },
+    "recompute_named_query_scope.py": {
+      "sha256": "d3b59ff6ad32b3c255b9336cbaa8f62a44a3c48ac6c702aecf0541c3194bd9e8",
+      "bytes": 25070
+    },
+    "test_report_2026-10-24_named_query_scope.md": {
+      "sha256": "67f3d7c179e888cdf7170221e58eb184e5ccd7df4d0e7e3614c6f79c6630cc7c",
+      "bytes": 12995
+    }
+  }
+}

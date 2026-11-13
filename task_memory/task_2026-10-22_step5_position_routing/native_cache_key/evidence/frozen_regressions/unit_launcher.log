@@ -1,0 +1,8 @@
+{
+  "check": "unit",
+  "raw_exits": [
+    1
+  ],
+  "receipt": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-unit/execution.json",
+  "source_unchanged": true
+}

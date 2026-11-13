@@ -1,0 +1,87 @@
+{
+  "task_id": "D21-P0-G4-USEFUL-ACCOUNTING",
+  "job": "exp-1021-205523-285491",
+  "scope": "Useful scheduled-token conservation across all 24 basic requests, not per-request/rank or dummy-forward coverage",
+  "by_lane_mode": [
+    {
+      "role": "decode",
+      "engine": 0,
+      "mode": "FULL",
+      "forwards": 2224,
+      "unpadded_tokens": 12208,
+      "padded_tokens": 12483
+    },
+    {
+      "role": "decode",
+      "engine": 0,
+      "mode": "PIECEWISE",
+      "forwards": 20,
+      "unpadded_tokens": 260,
+      "padded_tokens": 448
+    },
+    {
+      "role": "decode",
+      "engine": 1,
+      "mode": "FULL",
+      "forwards": 2152,
+      "unpadded_tokens": 12217,
+      "padded_tokens": 12411
+    },
+    {
+      "role": "decode",
+      "engine": 1,
+      "mode": "PIECEWISE",
+      "forwards": 18,
+      "unpadded_tokens": 251,
+      "padded_tokens": 416
+    },
+    {
+      "role": "prefill",
+      "engine": 0,
+      "mode": "NONE",
+      "forwards": 12,
+      "unpadded_tokens": 73536,
+      "padded_tokens": 73536
+    },
+    {
+      "role": "prefill",
+      "engine": 1,
+      "mode": "NONE",
+      "forwards": 12,
+      "unpadded_tokens": 73536,
+      "padded_tokens": 73536
+    }
+  ],
+  "comparisons": [
+    {
+      "role": "prefill",
+      "observed": 147072,
+      "expected": 147072,
+      "absolute_error": 0,
+      "relative_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "role": "decode",
+      "observed": 24936,
+      "expected": 24936,
+      "absolute_error": 0,
+      "relative_error": 0.0,
+      "status": "PASS"
+    }
+  ],
+  "dummy_forward_accounting": "UNVERIFIED_NATIVE_GRAPH_STATS_EXCLUDE_DUMMY_RUN",
+  "all_rank_forward_accounting": "UNVERIFIED",
+  "g4_qualified": false,
+  "formal_ready": false,
+  "native_graph_policy": "FULL_AND_PIECEWISE",
+  "input_sha256": {
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/worker/gpu_worker.py": "dc0c35412670477f73200f935a761091fca455489fd21c665afd95e05b1b8f7e",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/worker/gpu/model_runner.py": "71642a34ca3cee5954ba8834916807810a2252d5e749151369fa31f5bf943624",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/worker/gpu/cudagraph_utils.py": "dfa356ffe5b88656945de785945115cc69b99578e77046101dc2611ba89f707d",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/compilation/cuda_graph.py": "6e34824d2e62cd3bbd2eaee615ebfae3db542ce2d6be9b14d1b012398087fe2e",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-21_step5_priority_runs/native_replay/generation03_runtime_rows.csv": "4f09950719efe3a860bcc9cde1bc92dfe0dac1a17facdf5cfdf13f1a7f0c8f4c",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-21_step5_priority_runs/native_replay/generation03_receipt.json": "5e6e92fabd557117588d6a66280b23eb45713aeb6122363502c062abae4b3117",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/config.json": "7708e7c55d2361872f5054305cb427d77cd6bd22affa457b99370f14de595579"
+  }
+}

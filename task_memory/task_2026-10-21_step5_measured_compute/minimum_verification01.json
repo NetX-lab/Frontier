@@ -1,0 +1,21 @@
+{
+  "base_commit": "6db2250211a3cf312d17138abdc0cbdcb92449ce",
+  "python": "3.10.6",
+  "pandas": "2.3.3",
+  "sklearn": "1.7.2",
+  "new_tests_pass": 78,
+  "combined_pass": 162,
+  "failures": [
+    {
+      "classname": "tests.unit.test_kernel_gap_pricing",
+      "name": "test_every_collective_launches_one_kernel_by_default",
+      "time": "0.001"
+    }
+  ],
+  "unchanged_baseline_sources": {
+    "frontier/operators/spec.py": "3ad986630cd7609ab066e1f6000ffb5dd3655ed5b9c1082339d4a94912ec6251",
+    "frontier/operators/families.py": "e65a3f873e396c1e0345efa3827de05fac05bc49f7c92999c32bf43b2db95e56",
+    "tests/unit/test_kernel_gap_pricing.py": "8f2ac5456200df94ea596d50906871ad5f6739d2015ad5b8d04a779bb8647483"
+  },
+  "baseline_scope": "Source equality of the failed assertion and both operator definitions verified; no baseline suite execution claimed."
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/run_suite.py",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scripts/run_suite.py",
+    "sha256": "ddbdc4ef0536336f4bdc74ee7149dfc3b35c54b27333bb15579bd596418895df",
+    "bytes": 6244
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/audit_strict77.py",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scripts/audit_strict77.py",
+    "sha256": "d5d6404761ac92fede175093ef18703c82a5fc0898b01ba9d148ac2b69c63024",
+    "bytes": 1548
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/run_strict_audit.py",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scripts/run_strict_audit.py",
+    "sha256": "ba97b90a128b90f75c7b4c69fabdb43db206880036b0a5767a1f01cea2505084",
+    "bytes": 1101
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/compare_unit.py",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scripts/compare_unit.py",
+    "sha256": "b0d9dd036de52d15b6b7573f99877e8a8ad8450ebd5ee3d289c8bbfedb2744b2",
+    "bytes": 6516
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/archive_records.py",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/scripts/archive_records.py",
+    "sha256": "9566b7660d97d07763c178aade532046a12691cf3eca84cac3186f020245b56b",
+    "bytes": 2426
+  }
+]

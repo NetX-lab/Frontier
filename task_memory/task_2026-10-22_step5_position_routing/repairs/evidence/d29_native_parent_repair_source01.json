@@ -1,0 +1,121 @@
+{
+  "source_commit": "68275078de024b87cb3fba15f70a46e9db8e619f",
+  "path_count": 19,
+  "gross": 1269,
+  "ceiling": 1582,
+  "remaining": 313,
+  "rows": [
+    {
+      "path": "tests/comparison/calibration/pd_proxy.py",
+      "added": 2,
+      "deleted": 2
+    },
+    {
+      "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+      "added": 22,
+      "deleted": 2
+    },
+    {
+      "path": "tests/integration/step5_environment/test_position_cyclic_graph.py",
+      "added": 293,
+      "deleted": 0
+    },
+    {
+      "path": "tests/integration/step5_native_image/Dockerfile.position_cyclic",
+      "added": 19,
+      "deleted": 0
+    },
+    {
+      "path": "tests/integration/step5_native_image/build_image.py",
+      "added": 69,
+      "deleted": 0
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_canonical.py",
+      "added": 12,
+      "deleted": 4
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_replay.py",
+      "added": 8,
+      "deleted": 4
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_runtime.py",
+      "added": 148,
+      "deleted": 1
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_stage.py",
+      "added": 9,
+      "deleted": 3
+    },
+    {
+      "path": "tests/integration/step5_pd/verify_r2_stage.py",
+      "added": 18,
+      "deleted": 1
+    },
+    {
+      "path": "tests/unit/test_step5_canonical_g3.py",
+      "added": 126,
+      "deleted": 3
+    },
+    {
+      "path": "tests/unit/test_step5_native_image.py",
+      "added": 24,
+      "deleted": 0
+    },
+    {
+      "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+      "added": 152,
+      "deleted": 0
+    },
+    {
+      "path": "tests/unit/test_step5_native_position_cyclic.py",
+      "added": 245,
+      "deleted": 0
+    },
+    {
+      "path": "tests/unit/test_step5_native_reference.py",
+      "added": 2,
+      "deleted": 1
+    },
+    {
+      "path": "native-image/vllm/forward_context.py",
+      "added": 15,
+      "deleted": 0
+    },
+    {
+      "path": "native-image/vllm/models/step5/nvidia/model.py",
+      "added": 10,
+      "deleted": 1
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+      "added": 3,
+      "deleted": 0
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+      "added": 70,
+      "deleted": 0
+    }
+  ],
+  "native_patch_unchanged": true,
+  "local_image": "step5-position-cyclic@sha256:10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d",
+  "published": false,
+  "backend_installed_sources": {
+    "vllm.model_executor.layers.quantization.fp8": "37db0145189cd8870d8ac53a6eeb59ac070af51fe78e933597f51e8948250403",
+    "vllm.model_executor.layers.quantization.utils.quant_utils": "d25a4290d9b8530e38a073125ca6122b40054583814198eb5c8306adf21263d7",
+    "vllm.model_executor.layers.fused_moe.unquantized_fused_moe_method": "1ab96e74cce2d1a8540af0eb5518cf8ff77d02c7b770d55c2556cdb34c74bc1c",
+    "vllm.model_executor.layers.fused_moe.modular_kernel": "82a5d100f42d3df3d20baea4a86e5147d4d5c17e3775ed7b5a1ce4bfb433fe0a",
+    "vllm.model_executor.layers.fused_moe.fused_moe_method_base": "f8defdd0f8aa1f7a4cb68aca64f9d8e737eb9c65f00fa2d66571704aa1532916",
+    "vllm.model_executor.layers.fused_moe.oracle.fp8": "31245dae9406d6beeab9376be89bcda6935c97153436021172015e425c2ac62d",
+    "vllm.model_executor.layers.fused_moe.oracle.unquantized": "eb37b993cfdebb70545e8772c7ec2311e53510385781c2e03303143dff4bba7a",
+    "vllm.model_executor.layers.fused_moe.experts.triton_deep_gemm_moe": "c7209fa5e1ccb184a68b37a0706fc571a76696c2ae79802ddc7f889b1c29684d",
+    "vllm.model_executor.layers.fused_moe.experts.deep_gemm_moe": "016ade628799bde9a22d86ad882b6f49c49e938022fa0f787977dd7db0bb50fe",
+    "vllm.model_executor.layers.fused_moe.experts.triton_moe": "ee6b83b108a0460e6308e35447434165d0778a053aa39f0c6c8ed7f36a3ddbab",
+    "vllm.model_executor.layers.fused_moe.experts.fallback": "eacc78a7d6bf099ea4e311594dcd297e32ce9a02ffb8f6c7610c70ecc59091e3",
+    "vllm.model_executor.layers.fused_moe.prepare_finalize.naive_dp_ep": "3265cd408ccb00db79933bfdc851520954a5e4aa76c2d9bae08b783cd52bc11e"
+  }
+}

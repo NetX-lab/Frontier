@@ -1,0 +1,7 @@
+Running scope as unit: run-r4e5066ba143e441eab5b5c74730d5ece.scope
+Traceback (most recent call last):
+  File "/data/ycfeng/tmp/d29_model_view_control01/verify.py", line 70, in <module>
+    same(path, right / path.relative_to(left), relative)
+  File "/data/ycfeng/tmp/d29_model_view_control01/verify.py", line 49, in same
+    assert left.read_bytes() == right.read_bytes(), label
+AssertionError: profile/op_traces.jsonl

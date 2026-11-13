@@ -1,0 +1,2719 @@
+{
+  "task_id": "D29-IMMUTABLE-PLAN-PREPARATION",
+  "label": "default-contract",
+  "source": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes",
+  "revision": "56529fcd19e7e209e577c5aac3c581b4c5df8b6a",
+  "adapter": "ONE SINGLE-ROLE DIAGNOSTIC FIXED-FILE-BYTE ADAPTER, not P/D/run snapshot",
+  "timings": [
+    {
+      "index": 0,
+      "pricing_s": 0.9410106767900288,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 1,
+      "pricing_s": 0.12004287913441658,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 2,
+      "pricing_s": 0.11966127995401621,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 3,
+      "pricing_s": 0.11888463795185089,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 4,
+      "pricing_s": 0.11792655196040869,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 5,
+      "pricing_s": 0.11851357202976942,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 6,
+      "pricing_s": 0.1185916718095541,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 7,
+      "pricing_s": 0.22549626184627414,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 8,
+      "pricing_s": 0.11930481810122728,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 9,
+      "pricing_s": 0.1198181388899684,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 10,
+      "pricing_s": 0.11859464133158326,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 11,
+      "pricing_s": 0.11870069522410631,
+      "fixed_byte_requests": 80
+    },
+    {
+      "index": 12,
+      "pricing_s": 0.11946497159078717,
+      "fixed_byte_requests": 80
+    }
+  ],
+  "cold_s": 0.9410106767900288,
+  "warm_median_s": 0.11909472802653909,
+  "warm_min_s": 0.11792655196040869,
+  "warm_max_s": 0.22549626184627414,
+  "constructors_warm": {
+    "CollectivePlan": 0,
+    "CollectiveTensor": 0,
+    "CollectivePlanCost": 64
+  },
+  "profile_counts": {
+    "cache_key": 0,
+    "serialized_key_once": 192,
+    "to_dict": 0,
+    "dumps": 800,
+    "loads": 1136,
+    "asdict": 0,
+    "predict": 0,
+    "_predict_step5_ffn_operator": 144,
+    "_step5_position_queries": 16,
+    "_step5_model_points": 16,
+    "_step5_plan_candidates": 64,
+    "_lookup_step5_ffn_operator": 0,
+    "_native_measurement_binding": 176,
+    "_measurement_identity": 240,
+    "predict_collective_plan": 64
+  },
+  "profile": [
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/scheduler/utils/expert_parallel.py",
+      "line": 90,
+      "function": "predict_ep_wave_phase_times",
+      "primitive": 1,
+      "calls": 1,
+      "self_s": 0.000306303,
+      "cumulative_s": 0.22338774300000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 1480,
+      "function": "predict_stage_execution_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 9.5154e-05,
+      "cumulative_s": 0.209195439
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 1512,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 6.3947e-05,
+      "cumulative_s": 0.20686426200000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/kernel_gap.py",
+      "line": 189,
+      "function": "_predict_layer_with_kernel_gap",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00011607700000000001,
+      "cumulative_s": 0.206800315
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 1574,
+      "function": "_predict_moe_layer_execution_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00088964,
+      "cumulative_s": 0.206455192
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 691,
+      "function": "_get_execution_time_internal",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 8.2737e-05,
+      "cumulative_s": 0.20313546300000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 706,
+      "function": "_get_layer_execution_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000120784,
+      "cumulative_s": 0.202735101
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 228,
+      "function": "_predict_step5_position_execution",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000624202,
+      "cumulative_s": 0.202445551
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 187,
+      "function": "_step5_position_queries",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.002362175,
+      "cumulative_s": 0.07552020300000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 72,
+      "function": "_predict_step5_position_operator_times",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.002640599,
+      "cumulative_s": 0.075433096
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 515,
+      "function": "_models_view_for_family",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.001469814,
+      "cumulative_s": 0.051876438000000004
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 135,
+      "function": "_predict_step5_ffn_operator",
+      "primitive": 144,
+      "calls": 144,
+      "self_s": 0.004333905,
+      "cumulative_s": 0.049308232
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 458,
+      "function": "_resolve_cluster_model_contract",
+      "primitive": 384,
+      "calls": 384,
+      "self_s": 0.001352668,
+      "cumulative_s": 0.042967981
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 74,
+      "function": "__init__",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.0007913140000000001,
+      "cumulative_s": 0.036392671
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "line": 803,
+      "function": "predict_collective_plan",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 0.002353838,
+      "cumulative_s": 0.028700645
+    },
+    {
+      "file": "/usr/lib/python3.10/json/__init__.py",
+      "line": 299,
+      "function": "loads",
+      "primitive": 1136,
+      "calls": 1136,
+      "self_s": 0.0015221070000000002,
+      "cumulative_s": 0.027334379000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/layer_contract_resolution.py",
+      "line": 66,
+      "function": "_resolve_typed_layer_contract",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.0007027810000000001,
+      "cumulative_s": 0.026041972
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 108,
+      "function": "_step5_ffn_model",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.001503014,
+      "cumulative_s": 0.021710735000000002
+    },
+    {
+      "file": "/usr/lib/python3.10/json/__init__.py",
+      "line": 183,
+      "function": "dumps",
+      "primitive": 800,
+      "calls": 800,
+      "self_s": 0.0016440320000000001,
+      "cumulative_s": 0.020652424000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 370,
+      "function": "_get_family_model",
+      "primitive": 544,
+      "calls": 544,
+      "self_s": 0.003010281,
+      "cumulative_s": 0.01922008
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 4729,
+      "function": "_get_on_demand_prediction",
+      "primitive": 288,
+      "calls": 288,
+      "self_s": 0.005281121000000001,
+      "cumulative_s": 0.018861343000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 840,
+      "function": "resolve_layer_contract",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.001465177,
+      "cumulative_s": 0.017981643000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 665,
+      "function": "_native_measurement_binding",
+      "primitive": 176,
+      "calls": 176,
+      "self_s": 0.00121368,
+      "cumulative_s": 0.01776258
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/binding.py",
+      "line": 64,
+      "function": "bind_operator_query",
+      "primitive": 304,
+      "calls": 304,
+      "self_s": 0.001565154,
+      "cumulative_s": 0.016881866000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/profiling/common/runtime_identity.py",
+      "line": 96,
+      "function": "canonical_json",
+      "primitive": 624,
+      "calls": 624,
+      "self_s": 0.000515423,
+      "cumulative_s": 0.016613807
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/binding.py",
+      "line": 43,
+      "function": "_registered_operator_matches",
+      "primitive": 304,
+      "calls": 304,
+      "self_s": 0.001006912,
+      "cumulative_s": 0.014150579000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 236,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00010411300000000001,
+      "cumulative_s": 0.013727364
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 210,
+      "function": "_get_prediction_for_features",
+      "primitive": 80,
+      "calls": 80,
+      "self_s": 0.00014756100000000002,
+      "cumulative_s": 0.013623251000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/binding.py",
+      "line": 55,
+      "function": "<genexpr>",
+      "primitive": 608,
+      "calls": 608,
+      "self_s": 0.005954709000000001,
+      "cumulative_s": 0.009962791
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/scheduler/utils/batch_builders.py",
+      "line": 37,
+      "function": "build_ep_lane_batch",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00024377100000000002,
+      "cumulative_s": 0.009867544
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 1023,
+      "function": "_is_mixed_model",
+      "primitive": 144,
+      "calls": 144,
+      "self_s": 0.000329227,
+      "cumulative_s": 0.009283347
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_identity.py",
+      "line": 101,
+      "function": "_resolve_profile_typed_family_for_query",
+      "primitive": 480,
+      "calls": 480,
+      "self_s": 0.0023814350000000003,
+      "cumulative_s": 0.008494942
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/collective_plan.py",
+      "line": 114,
+      "function": "__post_init__",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 0.0005703290000000001,
+      "cumulative_s": 0.007151336
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/scheduler/utils/batch_builders.py",
+      "line": 50,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000286932,
+      "cumulative_s": 0.006873241
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 63,
+      "function": "__init__",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 0.005890551,
+      "cumulative_s": 0.006586309
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 407,
+      "function": "<dictcomp>",
+      "primitive": 80,
+      "calls": 80,
+      "self_s": 0.00022565100000000003,
+      "cumulative_s": 0.0055654780000000004
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 409,
+      "function": "<genexpr>",
+      "primitive": 384,
+      "calls": 384,
+      "self_s": 0.0009136460000000001,
+      "cumulative_s": 0.005176151
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 128,
+      "function": "profiling_name",
+      "primitive": 34544,
+      "calls": 34544,
+      "self_s": 0.005009818,
+      "cumulative_s": 0.005009818
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 748,
+      "function": "_build_grouped_gemm_features",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00011758000000000001,
+      "cumulative_s": 0.004372119000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/scheduler/utils/expert_parallel.py",
+      "line": 160,
+      "function": "get_ep_phase_times_ms",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00036106800000000003,
+      "cumulative_s": 0.003890633
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 158,
+      "function": "is_active",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.00011023200000000001,
+      "cumulative_s": 0.003695878
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 170,
+      "function": "_step5_plan_candidates",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 0.000276801,
+      "cumulative_s": 0.0036062010000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/step5_cost.py",
+      "line": 69,
+      "function": "step5_operator_binding",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.000457267,
+      "cumulative_s": 0.003503978
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_identity.py",
+      "line": 113,
+      "function": "<genexpr>",
+      "primitive": 7488,
+      "calls": 7488,
+      "self_s": 0.002506459,
+      "cumulative_s": 0.003462226
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 308,
+      "function": "_dense_layer_contract_active",
+      "primitive": 48,
+      "calls": 48,
+      "self_s": 6.9971e-05,
+      "cumulative_s": 0.0033757020000000004
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 256,
+      "function": "_parse_prediction_bounds",
+      "primitive": 448,
+      "calls": 448,
+      "self_s": 0.001478771,
+      "cumulative_s": 0.003155737
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 205,
+      "function": "_as_prediction_feature_names",
+      "primitive": 576,
+      "calls": 576,
+      "self_s": 0.0015832350000000001,
+      "cumulative_s": 0.0029381340000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 671,
+      "function": "<dictcomp>",
+      "primitive": 176,
+      "calls": 176,
+      "self_s": 0.000458344,
+      "cumulative_s": 0.002859466
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_identity.py",
+      "line": 125,
+      "function": "_serialize_selected_layer_cache_identity",
+      "primitive": 384,
+      "calls": 384,
+      "self_s": 0.00034953,
+      "cumulative_s": 0.0026599500000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/binding.py",
+      "line": 49,
+      "function": "<genexpr>",
+      "primitive": 608,
+      "calls": 608,
+      "self_s": 0.002567377,
+      "cumulative_s": 0.002567377
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 989,
+      "function": "_moe_phase_time",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.00025917400000000004,
+      "cumulative_s": 0.0025520900000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 1383,
+      "function": "__init__",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 9.5383e-05,
+      "cumulative_s": 0.002448551
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 470,
+      "function": "__init__",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00025508400000000004,
+      "cumulative_s": 0.002350239
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/base_execution_time_predictor.py",
+      "line": 114,
+      "function": "_assemble_stage",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000131314,
+      "cumulative_s": 0.002236023
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 122,
+      "function": "normalize_execution_op_times",
+      "primitive": 144,
+      "calls": 144,
+      "self_s": 0.0012450430000000001,
+      "cumulative_s": 0.002091508
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_load_imbalance.py",
+      "line": 63,
+      "function": "moe_native_binding_context",
+      "primitive": 496,
+      "calls": 496,
+      "self_s": 0.001255309,
+      "cumulative_s": 0.002086009
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 676,
+      "function": "<genexpr>",
+      "primitive": 704,
+      "calls": 704,
+      "self_s": 0.0003213,
+      "cumulative_s": 0.002076652
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 942,
+      "function": "moe_phase_operator_times",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.0005847890000000001,
+      "cumulative_s": 0.001894012
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_identity.py",
+      "line": 64,
+      "function": "_resolve_model_architecture_profile",
+      "primitive": 480,
+      "calls": 480,
+      "self_s": 0.000869789,
+      "cumulative_s": 0.00176782
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1215,
+      "function": "as_single_layer",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00010586300000000001,
+      "cumulative_s": 0.0016655060000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 456,
+      "function": "get_single_layer_post_attention_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.9962e-05,
+      "cumulative_s": 0.0014977640000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1076,
+      "function": "get_single_layer_post_attention_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.2851000000000002e-05,
+      "cumulative_s": 0.001460328
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1067,
+      "function": "get_single_layer_block_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 9.479e-06,
+      "cumulative_s": 0.001370059
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1171,
+      "function": "_get_block_execution_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.0843e-05,
+      "cumulative_s": 0.0013605800000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1275,
+      "function": "finalized_copy",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 3.9549000000000004e-05,
+      "cumulative_s": 0.001336771
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1112,
+      "function": "_get_moe_execution_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 4.5406000000000005e-05,
+      "cumulative_s": 0.0012422330000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 388,
+      "function": "<dictcomp>",
+      "primitive": 544,
+      "calls": 544,
+      "self_s": 0.0011257090000000001,
+      "cumulative_s": 0.0011703
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1122,
+      "function": "<genexpr>",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 4.2982e-05,
+      "cumulative_s": 0.0011550430000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 964,
+      "function": "<genexpr>",
+      "primitive": 576,
+      "calls": 576,
+      "self_s": 0.000256918,
+      "cumulative_s": 0.0011272
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/families.py",
+      "line": 952,
+      "function": "get_operator_family",
+      "primitive": 1920,
+      "calls": 1920,
+      "self_s": 0.0007171380000000001,
+      "cumulative_s": 0.0010870390000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 149,
+      "function": "execution_op_time_values_by_attr",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 0.000346221,
+      "cumulative_s": 0.001064036
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1249,
+      "function": "_clone_mutable_components",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000147009,
+      "cumulative_s": 0.001056662
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 4801,
+      "function": "<dictcomp>",
+      "primitive": 288,
+      "calls": 288,
+      "self_s": 0.00030464800000000003,
+      "cumulative_s": 0.001019926
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 512,
+      "function": "_merge_operator_time_sources",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 9.6983e-05,
+      "cumulative_s": 0.000875305
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 142,
+      "function": "<dictcomp>",
+      "primitive": 144,
+      "calls": 144,
+      "self_s": 0.0008282010000000001,
+      "cumulative_s": 0.0008282010000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 426,
+      "function": "get_single_layer_moe_pre_dispatch_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.6722000000000003e-05,
+      "cumulative_s": 0.0008262300000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 1010,
+      "function": "_activate_measurement_type_for_batch",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 5.2096000000000004e-05,
+      "cumulative_s": 0.000804855
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 995,
+      "function": "get_single_layer_moe_pre_dispatch_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.3263000000000002e-05,
+      "cumulative_s": 0.000771995
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 171,
+      "function": "resolve_width",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.00039439300000000004,
+      "cumulative_s": 0.000769266
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_load_imbalance.py",
+      "line": 65,
+      "function": "<dictcomp>",
+      "primitive": 496,
+      "calls": 496,
+      "self_s": 0.0007582190000000001,
+      "cumulative_s": 0.0007582190000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 174,
+      "function": "build_attention_operator_times_from_op_times",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 4.3762000000000006e-05,
+      "cumulative_s": 0.000729604
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_ep_workload.py",
+      "line": 626,
+      "function": "resolve_ep_lane_workload",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 0.000129869,
+      "cumulative_s": 0.0007226530000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 231,
+      "function": "_coerce_finite_prediction_feature",
+      "primitive": 448,
+      "calls": 448,
+      "self_s": 0.000541232,
+      "cumulative_s": 0.0007152780000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 575,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000111707,
+      "cumulative_s": 0.000712562
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 324,
+      "function": "_legacy_precision_bucket",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.00036964,
+      "cumulative_s": 0.0006873960000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/families.py",
+      "line": 187,
+      "function": "get_moe_profiling_operators",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 5.9709e-05,
+      "cumulative_s": 0.000685543
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 977,
+      "function": "_select_measurement_type_for_batch",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 6.9554e-05,
+      "cumulative_s": 0.000656584
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 357,
+      "function": "profiling_ops",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 0.000228392,
+      "cumulative_s": 0.000625834
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/families.py",
+      "line": 956,
+      "function": "iter_operator_families",
+      "primitive": 304,
+      "calls": 304,
+      "self_s": 0.00015854900000000002,
+      "cumulative_s": 0.000613499
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 267,
+      "function": "typed_metadata_identity",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.00033413400000000004,
+      "cumulative_s": 0.0006051030000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 607,
+      "function": "_get_request_mutation_signature",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 0.00026922000000000003,
+      "cumulative_s": 0.0006008550000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 596,
+      "function": "_get_request_execution_signature",
+      "primitive": 704,
+      "calls": 704,
+      "self_s": 0.00021634400000000001,
+      "cumulative_s": 0.000584464
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 224,
+      "function": "_resolve_thinking_round_plans",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 0.00021765,
+      "cumulative_s": 0.000564371
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_gating_runtime.py",
+      "line": 173,
+      "function": "get_moe_gating_base_model_name",
+      "primitive": 688,
+      "calls": 688,
+      "self_s": 0.000386356,
+      "cumulative_s": 0.000563542
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/collective_plan.py",
+      "line": 118,
+      "function": "<genexpr>",
+      "primitive": 1280,
+      "calls": 1280,
+      "self_s": 0.000438895,
+      "cumulative_s": 0.000547084
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/model_config.py",
+      "line": 866,
+      "function": "get_model_architecture_profile",
+      "primitive": 624,
+      "calls": 624,
+      "self_s": 0.000371819,
+      "cumulative_s": 0.000544636
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 278,
+      "function": "_contract_model_registry",
+      "primitive": 416,
+      "calls": 416,
+      "self_s": 0.00041177000000000005,
+      "cumulative_s": 0.0005402720000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/model_config.py",
+      "line": 872,
+      "function": "supports_share_expert",
+      "primitive": 144,
+      "calls": 144,
+      "self_s": 0.00016222600000000002,
+      "cumulative_s": 0.000536716
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 299,
+      "function": "_admit_routed_ep_aggregate",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 7.644100000000001e-05,
+      "cumulative_s": 0.0005326700000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 196,
+      "function": "<genexpr>",
+      "primitive": 48,
+      "calls": 48,
+      "self_s": 0.000124429,
+      "cumulative_s": 0.0005190440000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/kernel_gap.py",
+      "line": 157,
+      "function": "_record_kernel_count",
+      "primitive": 288,
+      "calls": 288,
+      "self_s": 0.00037067100000000004,
+      "cumulative_s": 0.0005068550000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/registry.py",
+      "line": 25,
+      "function": "iter_families",
+      "primitive": 320,
+      "calls": 320,
+      "self_s": 0.000441663,
+      "cumulative_s": 0.000498016
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 532,
+      "function": "_refresh_op_time_attr_values",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.7732000000000002e-05,
+      "cumulative_s": 0.000497041
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 913,
+      "function": "_get_default_measurement_type_for_cluster",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 4.5607000000000006e-05,
+      "cumulative_s": 0.000463243
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 302,
+      "function": "_legacy_model_registry",
+      "primitive": 400,
+      "calls": 400,
+      "self_s": 0.00034426000000000004,
+      "cumulative_s": 0.000459404
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 223,
+      "function": "__post_init__",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 0.000366472,
+      "cumulative_s": 0.000430053
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 569,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00011024300000000001,
+      "cumulative_s": 0.00041684700000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/profiling/moe/routed_layer_groups.py",
+      "line": 51,
+      "function": "row_metadata",
+      "primitive": 112,
+      "calls": 112,
+      "self_s": 0.000173825,
+      "cumulative_s": 0.000395058
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "line": 225,
+      "function": "_get_attention_parallel_dim_sizes",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 0.00010262300000000001,
+      "cumulative_s": 0.000391551
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 214,
+      "function": "<genexpr>",
+      "primitive": 1472,
+      "calls": 1472,
+      "self_s": 0.000385143,
+      "cumulative_s": 0.000385143
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 127,
+      "function": "_step5_routed_layer_group",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.000198278,
+      "cumulative_s": 0.00037979400000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/registry.py",
+      "line": 19,
+      "function": "get_family",
+      "primitive": 1920,
+      "calls": 1920,
+      "self_s": 0.000369901,
+      "cumulative_s": 0.000369901
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 932,
+      "function": "_should_enable_measurement_family",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 9.978600000000001e-05,
+      "cumulative_s": 0.00036826400000000004
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 724,
+      "function": "execution_signature",
+      "primitive": 704,
+      "calls": 704,
+      "self_s": 0.000273795,
+      "cumulative_s": 0.00036812000000000005
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 438,
+      "function": "get_single_layer_moe_post_combine_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.6093e-05,
+      "cumulative_s": 0.000350276
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 162,
+      "function": "_build_operator_times_subset",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.8293e-05,
+      "cumulative_s": 0.00034860800000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 117,
+      "function": "__init__",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000133005,
+      "cumulative_s": 0.000346013
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1030,
+      "function": "get_single_layer_moe_post_combine_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 7.975e-06,
+      "cumulative_s": 0.000317006
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 826,
+      "function": "get_layer_contract_for_family",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.000184071,
+      "cumulative_s": 0.000316054
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 389,
+      "function": "_get_moe_tokens_input",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.7607000000000002e-05,
+      "cumulative_s": 0.000301103
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 358,
+      "function": "<genexpr>",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.000113338,
+      "cumulative_s": 0.000297348
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 726,
+      "function": "_measurement_identity",
+      "primitive": 240,
+      "calls": 240,
+      "self_s": 0.00023441000000000003,
+      "cumulative_s": 0.000296349
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "line": 213,
+      "function": "_has_runtime_parallelism_metadata",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 0.00011189400000000001,
+      "cumulative_s": 0.00028892800000000004
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 873,
+      "function": "_measurement_family_name",
+      "primitive": 464,
+      "calls": 464,
+      "self_s": 0.000284608,
+      "cumulative_s": 0.000284608
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/binding.py",
+      "line": 78,
+      "function": "<genexpr>",
+      "primitive": 416,
+      "calls": 416,
+      "self_s": 0.000282785,
+      "cumulative_s": 0.000282785
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 219,
+      "function": "<genexpr>",
+      "primitive": 1472,
+      "calls": 1472,
+      "self_s": 0.000275268,
+      "cumulative_s": 0.000275268
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/profiling/moe/inputs.py",
+      "line": 21,
+      "function": "__post_init__",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 0.000140555,
+      "cumulative_s": 0.00027345900000000004
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 395,
+      "function": "<dictcomp>",
+      "primitive": 224,
+      "calls": 224,
+      "self_s": 0.00022353800000000001,
+      "cumulative_s": 0.00026486
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 566,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000104098,
+      "cumulative_s": 0.000259833
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 572,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 9.241800000000001e-05,
+      "cumulative_s": 0.000254795
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/step5_cost.py",
+      "line": 107,
+      "function": "step5_measurements_for_role",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 0.000184147,
+      "cumulative_s": 0.00025178500000000003
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 217,
+      "function": "read_op_time_attr",
+      "primitive": 560,
+      "calls": 560,
+      "self_s": 0.00018857900000000003,
+      "cumulative_s": 0.000247566
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 290,
+      "function": "_contract_precision_registry",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.00018319900000000002,
+      "cumulative_s": 0.00024239900000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 495,
+      "function": "_is_ffn_typed_model_for_cluster",
+      "primitive": 608,
+      "calls": 608,
+      "self_s": 0.000233042,
+      "cumulative_s": 0.000233042
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 793,
+      "function": "supports_share_expert",
+      "primitive": 144,
+      "calls": 144,
+      "self_s": 0.000175321,
+      "cumulative_s": 0.000225719
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 640,
+      "function": "_time_attr_value",
+      "primitive": 416,
+      "calls": 416,
+      "self_s": 0.00016738400000000002,
+      "cumulative_s": 0.000220714
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 432,
+      "function": "get_single_layer_moe_post_dispatch_compute_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.8484e-05,
+      "cumulative_s": 0.00021902300000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/attention/model_binding.py",
+      "line": 306,
+      "function": "bind_layer_attention",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 8.1613e-05,
+      "cumulative_s": 0.000217101
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 312,
+      "function": "_legacy_precision_registry",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 0.000163637,
+      "cumulative_s": 0.000210246
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 316,
+      "function": "_shared_layer_contract_active",
+      "primitive": 48,
+      "calls": 48,
+      "self_s": 7.176e-05,
+      "cumulative_s": 0.00020994400000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/collective_plan.py",
+      "line": 120,
+      "function": "<genexpr>",
+      "primitive": 1088,
+      "calls": 1088,
+      "self_s": 0.00020635800000000002,
+      "cumulative_s": 0.00020635800000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 243,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000101607,
+      "cumulative_s": 0.00019565900000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 396,
+      "function": "__post_init__",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 0.000180327,
+      "cumulative_s": 0.00018526300000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 93,
+      "function": "_step5_measured_layer",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 5.9332e-05,
+      "cumulative_s": 0.000184868
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 133,
+      "function": "is_applicable",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 8.4011e-05,
+      "cumulative_s": 0.00018401000000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_registry.py",
+      "line": 523,
+      "function": "<genexpr>",
+      "primitive": 208,
+      "calls": 208,
+      "self_s": 0.00014122100000000002,
+      "cumulative_s": 0.000182558
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1021,
+      "function": "get_single_layer_moe_post_dispatch_compute_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 8.932e-06,
+      "cumulative_s": 0.000182508
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_load_imbalance.py",
+      "line": 48,
+      "function": "moe_grouped_gemm_schema",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 8.0309e-05,
+      "cumulative_s": 0.00017869
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 179,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.00017736000000000002,
+      "cumulative_s": 0.00017736000000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 511,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 9.722700000000001e-05,
+      "cumulative_s": 0.000177094
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/base_entity.py",
+      "line": 4,
+      "function": "generate_id",
+      "primitive": 384,
+      "calls": 384,
+      "self_s": 0.000173327,
+      "cumulative_s": 0.000173327
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 1360,
+      "function": "get",
+      "primitive": 624,
+      "calls": 624,
+      "self_s": 0.00017281700000000002,
+      "cumulative_s": 0.00017281700000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 4905,
+      "function": "<genexpr>",
+      "primitive": 736,
+      "calls": 736,
+      "self_s": 0.000172716,
+      "cumulative_s": 0.000172716
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 766,
+      "function": "_resolve_moe_execution_inputs",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.2593000000000005e-05,
+      "cumulative_s": 0.00016876600000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 890,
+      "function": "_event_measurement_type_for_replica",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 3.6925e-05,
+      "cumulative_s": 0.000163062
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 429,
+      "function": "get_single_layer_moe_dispatch_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.8915e-05,
+      "cumulative_s": 0.00016284400000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 650,
+      "function": "_get_thinking_round_start_time",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 0.00010917500000000001,
+      "cumulative_s": 0.000162377
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/model_config.py",
+      "line": 806,
+      "function": "get_layer_attention_spec",
+      "primitive": 80,
+      "calls": 80,
+      "self_s": 0.00010475600000000001,
+      "cumulative_s": 0.000160778
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/attention/families.py",
+      "line": 819,
+      "function": "iter_attention_families",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 5.448300000000001e-05,
+      "cumulative_s": 0.000159874
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 818,
+      "function": "get_effective_total_tokens_for_compute",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 0.000103472,
+      "cumulative_s": 0.000151235
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/prediction_model_identity.py",
+      "line": 155,
+      "function": "<dictcomp>",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 0.000148228,
+      "cumulative_s": 0.000148228
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1155,
+      "function": "_get_attention_layer_execution_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 6.3469e-05,
+      "cumulative_s": 0.00014335200000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 991,
+      "function": "<genexpr>",
+      "primitive": 736,
+      "calls": 736,
+      "self_s": 0.00013606300000000002,
+      "cumulative_s": 0.00013606300000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 4789,
+      "function": "<listcomp>",
+      "primitive": 288,
+      "calls": 288,
+      "self_s": 0.00013594600000000002,
+      "cumulative_s": 0.00013594600000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 435,
+      "function": "get_single_layer_moe_combine_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.6380000000000002e-05,
+      "cumulative_s": 0.00012968700000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 187,
+      "function": "<genexpr>",
+      "primitive": 192,
+      "calls": 192,
+      "self_s": 9.0784e-05,
+      "cumulative_s": 0.000128657
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 520,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 7.8089e-05,
+      "cumulative_s": 0.00012629400000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/measurement_input_paths.py",
+      "line": 208,
+      "function": "resolve_event_measurement_type",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 0.000113104,
+      "cumulative_s": 0.00012613700000000002
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 406,
+      "function": "_first_layer",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 6.454900000000001e-05,
+      "cumulative_s": 0.00012128300000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1016,
+      "function": "get_single_layer_moe_dispatch_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 8.814e-06,
+      "cumulative_s": 0.000120995
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 134,
+      "function": "<genexpr>",
+      "primitive": 192,
+      "calls": 192,
+      "self_s": 0.00011788,
+      "cumulative_s": 0.00011788
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 206,
+      "function": "<genexpr>",
+      "primitive": 368,
+      "calls": 368,
+      "self_s": 0.000115879,
+      "cumulative_s": 0.000115879
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/profiling/moe/routed_layer_groups.py",
+      "line": 47,
+      "function": "layer_range",
+      "primitive": 112,
+      "calls": 112,
+      "self_s": 0.00011414,
+      "cumulative_s": 0.00011414
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 1078,
+      "function": "_resolve_config_layer_kind",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 9.2657e-05,
+      "cumulative_s": 0.00011411300000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/attention/profiling_mapping.py",
+      "line": 251,
+      "function": "get_enabled_predictor_metric_name_by_role",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 6.738600000000001e-05,
+      "cumulative_s": 0.000111
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "line": 829,
+      "function": "<dictcomp>",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 0.00010916300000000001,
+      "cumulative_s": 0.00010916300000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 155,
+      "function": "_step5_collective_points",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 8.2162e-05,
+      "cumulative_s": 0.000109096
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 282,
+      "function": "_resolve_moe_layer_classification",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 4.64e-05,
+      "cumulative_s": 0.000107775
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 104,
+      "function": "<listcomp>",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 6.434500000000001e-05,
+      "cumulative_s": 0.000106068
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 829,
+      "function": "<genexpr>",
+      "primitive": 192,
+      "calls": 192,
+      "self_s": 0.00010471,
+      "cumulative_s": 0.00010471
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/families.py",
+      "line": 38,
+      "function": "is_step5_position_context",
+      "primitive": 224,
+      "calls": 224,
+      "self_s": 0.00010364900000000001,
+      "cumulative_s": 0.00010364900000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 136,
+      "function": "_step5_model_points",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 8.678800000000001e-05,
+      "cumulative_s": 0.00010141800000000001
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/binding.py",
+      "line": 88,
+      "function": "<genexpr>",
+      "primitive": 304,
+      "calls": 304,
+      "self_s": 9.969400000000001e-05,
+      "cumulative_s": 9.969400000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "line": 253,
+      "function": "_validate_selected_parallel_dim_sizes",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 9.957600000000001e-05,
+      "cumulative_s": 9.957600000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/tmp/d29_immutable_plan_preparation/compare.py",
+      "line": 27,
+      "function": "serialized_key_once",
+      "primitive": 192,
+      "calls": 192,
+      "self_s": 9.9202e-05,
+      "cumulative_s": 9.9202e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/layer_contract_resolution.py",
+      "line": 47,
+      "function": "_get_ffn_tp_key",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 9.667200000000001e-05,
+      "cumulative_s": 9.667200000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1025,
+      "function": "get_single_layer_moe_combine_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 8.644e-06,
+      "cumulative_s": 9.5153e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 402,
+      "function": "current_thinking_round_index",
+      "primitive": 704,
+      "calls": 704,
+      "self_s": 9.4325e-05,
+      "cumulative_s": 9.4325e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_gating_runtime.py",
+      "line": 66,
+      "function": "validate_moe_gating_runtime_context",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 7.304200000000001e-05,
+      "cumulative_s": 9.182600000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/model_config.py",
+      "line": 876,
+      "function": "get_moe_layer_ids",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 9.084300000000001e-05,
+      "cumulative_s": 9.084300000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 585,
+      "function": "moe_phase_kernel_gap_time",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 7.050700000000001e-05,
+      "cumulative_s": 9.0086e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 350,
+      "function": "require_enabled_for_execution",
+      "primitive": 304,
+      "calls": 304,
+      "self_s": 8.5308e-05,
+      "cumulative_s": 8.5308e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "line": 223,
+      "function": "<genexpr>",
+      "primitive": 448,
+      "calls": 448,
+      "self_s": 8.476000000000001e-05,
+      "cumulative_s": 8.476000000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_load_imbalance.py",
+      "line": 53,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.7133000000000005e-05,
+      "cumulative_s": 8.4397e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/kernel_gap.py",
+      "line": 134,
+      "function": "_counting_kernels",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 6.1559e-05,
+      "cumulative_s": 8.347600000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/base_execution_time_predictor.py",
+      "line": 116,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.682e-05,
+      "cumulative_s": 8.307200000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "line": 161,
+      "function": "<genexpr>",
+      "primitive": 208,
+      "calls": 208,
+      "self_s": 8.2384e-05,
+      "cumulative_s": 8.2384e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_gating_runtime.py",
+      "line": 162,
+      "function": "get_moe_gating_prediction_model_name",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 3.2819e-05,
+      "cumulative_s": 8.025400000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 718,
+      "function": "num_context_tokens",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 7.9867e-05,
+      "cumulative_s": 7.9867e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/model_architectures.py",
+      "line": 302,
+      "function": "_pad_width",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 7.946300000000001e-05,
+      "cumulative_s": 7.946300000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/base_entity.py",
+      "line": 9,
+      "function": "id",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 7.9262e-05,
+      "cumulative_s": 7.9262e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 300,
+      "function": "_validate_prediction_constraints",
+      "primitive": 288,
+      "calls": 288,
+      "self_s": 7.8298e-05,
+      "cumulative_s": 7.8298e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 113,
+      "function": "<genexpr>",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 7.804800000000001e-05,
+      "cumulative_s": 7.804800000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1320,
+      "function": "mlp_norm_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 4.6707000000000005e-05,
+      "cumulative_s": 7.6779e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 920,
+      "function": "get_single_layer_attention_scope_time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 7.693e-06,
+      "cumulative_s": 6.741800000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 195,
+      "function": "num_layers",
+      "primitive": 112,
+      "calls": 112,
+      "self_s": 4.8583000000000006e-05,
+      "cumulative_s": 6.6357e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/step5_cost.py",
+      "line": 28,
+      "function": "step5_layer_metadata",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.3724000000000002e-05,
+      "cumulative_s": 6.5089e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 525,
+      "function": "<genexpr>",
+      "primitive": 368,
+      "calls": 368,
+      "self_s": 6.2332e-05,
+      "cumulative_s": 6.2332e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/attention/families.py",
+      "line": 820,
+      "function": "<genexpr>",
+      "primitive": 112,
+      "calls": 112,
+      "self_s": 4.9408000000000005e-05,
+      "cumulative_s": 6.232500000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/families.py",
+      "line": 45,
+      "function": "_source_prepare_applicable",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 5.2456e-05,
+      "cumulative_s": 6.2303e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/step5_cost.py",
+      "line": 50,
+      "function": "step5_native_expert_features",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 4.5712000000000006e-05,
+      "cumulative_s": 6.110600000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 1038,
+      "function": "_activate_measurement_type",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 6.0582000000000004e-05,
+      "cumulative_s": 6.0582000000000004e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 504,
+      "function": "total_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 5.7144e-05,
+      "cumulative_s": 5.7144e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 880,
+      "function": "current_decode_token_index",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 5.3775000000000006e-05,
+      "cumulative_s": 5.3775000000000006e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 506,
+      "function": "runtime_epoch",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 5.3254e-05,
+      "cumulative_s": 5.3254e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 414,
+      "function": "is_thinking_mode_enabled",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 5.3202e-05,
+      "cumulative_s": 5.3202e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 224,
+      "function": "<genexpr>",
+      "primitive": 192,
+      "calls": 192,
+      "self_s": 5.1331e-05,
+      "cumulative_s": 5.1331e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1626,
+      "function": "add_attn_residual_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.7474e-05,
+      "cumulative_s": 5.1245e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 199,
+      "function": "global_layer_ids",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.3643e-05,
+      "cumulative_s": 5.0188e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 97,
+      "function": "<genexpr>",
+      "primitive": 192,
+      "calls": 192,
+      "self_s": 4.9686000000000005e-05,
+      "cumulative_s": 4.9686000000000005e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1643,
+      "function": "moe_grouped_gemm_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.7645e-05,
+      "cumulative_s": 4.965e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 1189,
+      "function": "_emit_cuda_graph_activation_records",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.949e-05,
+      "cumulative_s": 4.9042e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 957,
+      "function": "<listcomp>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 4.8995e-05,
+      "cumulative_s": 4.8995e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/request.py",
+      "line": 710,
+      "function": "is_decoding",
+      "primitive": 352,
+      "calls": 352,
+      "self_s": 4.8205000000000003e-05,
+      "cumulative_s": 4.8205000000000003e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 365,
+      "function": "<genexpr>",
+      "primitive": 160,
+      "calls": 160,
+      "self_s": 4.7891000000000006e-05,
+      "cumulative_s": 4.7891000000000006e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/model_config.py",
+      "line": 898,
+      "function": "is_moe_layer",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.3755000000000005e-05,
+      "cumulative_s": 4.7717000000000004e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 489,
+      "function": "__post_init__",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 3.3058e-05,
+      "cumulative_s": 4.7714000000000004e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1709,
+      "function": "share_expert_up_proj_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.7191e-05,
+      "cumulative_s": 4.7436000000000005e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 227,
+      "function": "<genexpr>",
+      "primitive": 192,
+      "calls": 192,
+      "self_s": 4.7114e-05,
+      "cumulative_s": 4.7114e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1729,
+      "function": "share_expert_act_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.6562e-05,
+      "cumulative_s": 4.5373e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1719,
+      "function": "share_expert_down_proj_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.5302000000000003e-05,
+      "cumulative_s": 4.5027e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1670,
+      "function": "moe_gating_linear_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.4612e-05,
+      "cumulative_s": 4.3697000000000005e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1680,
+      "function": "moe_gating_routing_topk_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.4109000000000002e-05,
+      "cumulative_s": 4.2577e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/model_config.py",
+      "line": 799,
+      "function": "get_layer_attention_specs",
+      "primitive": 80,
+      "calls": 80,
+      "self_s": 4.2431e-05,
+      "cumulative_s": 4.2431e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/attention/gdn/config.py",
+      "line": 46,
+      "function": "__post_init__",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.6748e-05,
+      "cumulative_s": 4.1923000000000005e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 127,
+      "function": "<genexpr>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 3.7961000000000005e-05,
+      "cumulative_s": 4.0296e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1315,
+      "function": "mlp_all_reduce_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.908e-05,
+      "cumulative_s": 4.0015e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_routing_policy.py",
+      "line": 27,
+      "function": "__post_init__",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.3844e-05,
+      "cumulative_s": 3.9076e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 249,
+      "function": "get_required_time",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 3.8395e-05,
+      "cumulative_s": 3.8395e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/families.py",
+      "line": 142,
+      "function": "<lambda>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.1287e-05,
+      "cumulative_s": 3.7696e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1497,
+      "function": "dp_output_allreduce_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.895e-05,
+      "cumulative_s": 3.7654e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 967,
+      "function": "<genexpr>",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 3.7632e-05,
+      "cumulative_s": 3.7632e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 211,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.7472e-05,
+      "cumulative_s": 3.7472e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 1257,
+      "function": "_require_predictions_for_measurement_type",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.5593e-05,
+      "cumulative_s": 3.5593e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1357,
+      "function": "moe_tensor_parallel_allgather_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.7993000000000002e-05,
+      "cumulative_s": 3.5068000000000004e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1365,
+      "function": "share_expert_tensor_parallel_allreduce_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.8451e-05,
+      "cumulative_s": 3.4423e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 136,
+      "function": "precision_name",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 3.3808e-05,
+      "cumulative_s": 3.3808e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/attention/families.py",
+      "line": 812,
+      "function": "get_attention_family",
+      "primitive": 96,
+      "calls": 96,
+      "self_s": 3.2876e-05,
+      "cumulative_s": 3.2876e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1489,
+      "function": "dp_input_allreduce_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.6578e-05,
+      "cumulative_s": 3.2587000000000005e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1634,
+      "function": "add_ffn_residual_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.6452e-05,
+      "cumulative_s": 3.2075e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 111,
+      "function": "<genexpr>",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 3.1238e-05,
+      "cumulative_s": 3.1238e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_ep_workload.py",
+      "line": 378,
+      "function": "lane",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.0845e-05,
+      "cumulative_s": 3.0845e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "line": 1083,
+      "function": "_build_cuda_graph_activation_records",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.1644e-05,
+      "cumulative_s": 2.9552e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 363,
+      "function": "<dictcomp>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.7547000000000002e-05,
+      "cumulative_s": 2.7547000000000002e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 201,
+      "function": "<genexpr>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.1134e-05,
+      "cumulative_s": 2.6545e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/operators/spec.py",
+      "line": 366,
+      "function": "<genexpr>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.4656000000000002e-05,
+      "cumulative_s": 2.4656000000000002e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 129,
+      "function": "<genexpr>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.8284e-05,
+      "cumulative_s": 2.4311e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 117,
+      "function": "<genexpr>",
+      "primitive": 80,
+      "calls": 80,
+      "self_s": 2.1942e-05,
+      "cumulative_s": 2.1942e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 167,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 2.1231e-05,
+      "cumulative_s": 2.1231e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1147,
+      "function": "_get_moe_tp_allreduce_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 2.0935000000000002e-05,
+      "cumulative_s": 2.0935000000000002e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 156,
+      "function": "<genexpr>",
+      "primitive": 64,
+      "calls": 64,
+      "self_s": 2.0488e-05,
+      "cumulative_s": 2.0488e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/graph_policy.py",
+      "line": 33,
+      "function": "graph_policy",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.9734e-05,
+      "cumulative_s": 1.9734e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 1485,
+      "function": "moe_pre_routing_effective_total_tokens",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.9686e-05,
+      "cumulative_s": 1.9686e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/step5.py",
+      "line": 77,
+      "function": "step5_measurement_type",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.9675e-05,
+      "cumulative_s": 1.9675e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1139,
+      "function": "_get_attn_tp_allreduce_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.8678e-05,
+      "cumulative_s": 1.8678e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 961,
+      "function": "<listcomp>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.7339e-05,
+      "cumulative_s": 1.7339e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 1455,
+      "function": "lane_workload",
+      "primitive": 48,
+      "calls": 48,
+      "self_s": 1.6898e-05,
+      "cumulative_s": 1.6898e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 149,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.6003000000000002e-05,
+      "cumulative_s": 1.6003000000000002e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/step5_cost.py",
+      "line": 66,
+      "function": "<dictcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.5394000000000002e-05,
+      "cumulative_s": 1.5394000000000002e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_routing_policy.py",
+      "line": 17,
+      "function": "_integer",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.5232000000000001e-05,
+      "cumulative_s": 1.5232000000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 87,
+      "function": "<setcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.4928000000000002e-05,
+      "cumulative_s": 1.4928000000000002e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 493,
+      "function": "operator_costs",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.4656000000000002e-05,
+      "cumulative_s": 1.4656000000000002e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 1016,
+      "function": "size",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.0160000000000001e-05,
+      "cumulative_s": 1.3401000000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_routing_workload.py",
+      "line": 197,
+      "function": "<genexpr>",
+      "primitive": 48,
+      "calls": 48,
+      "self_s": 1.3323000000000001e-05,
+      "cumulative_s": 1.3323000000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/execution_time_predictor/moe_operator_times.py",
+      "line": 119,
+      "function": "<listcomp>",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.2639e-05,
+      "cumulative_s": 1.2639e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/time_components.py",
+      "line": 785,
+      "function": "add_time",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.1054000000000001e-05,
+      "cumulative_s": 1.1054000000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/global_vars.py",
+      "line": 214,
+      "function": "get_sys_arch",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 1.0097e-05,
+      "cumulative_s": 1.0097e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 764,
+      "function": "replica_id",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 1.0004000000000001e-05,
+      "cumulative_s": 1.0004000000000001e-05
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/config/global_vars.py",
+      "line": 80,
+      "function": "get_decode_cuda_graph_mode",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 9.795e-06,
+      "cumulative_s": 9.795e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/moe_ep_workload.py",
+      "line": 478,
+      "function": "local_expert_width",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 9.244e-06,
+      "cumulative_s": 9.244e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/stage_execution_time.py",
+      "line": 144,
+      "function": "<genexpr>",
+      "primitive": 32,
+      "calls": 32,
+      "self_s": 7.816000000000001e-06,
+      "cumulative_s": 7.816000000000001e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 760,
+      "function": "global_id",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 5.905e-06,
+      "cumulative_s": 5.905e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 703,
+      "function": "set_global_id",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 5.613e-06,
+      "cumulative_s": 5.613e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/execution_time.py",
+      "line": 1200,
+      "function": "global_layer_id",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 5.411e-06,
+      "cumulative_s": 5.411e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 772,
+      "function": "time",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 4.6350000000000005e-06,
+      "cumulative_s": 4.6350000000000005e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 794,
+      "function": "total_num_tokens",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.9180000000000004e-06,
+      "cumulative_s": 3.9180000000000004e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/entities/batch.py",
+      "line": 782,
+      "function": "num_tokens",
+      "primitive": 16,
+      "calls": 16,
+      "self_s": 3.5550000000000003e-06,
+      "cumulative_s": 3.5550000000000003e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/scheduler/utils/expert_parallel.py",
+      "line": 155,
+      "function": "<genexpr>",
+      "primitive": 7,
+      "calls": 7,
+      "self_s": 2.734e-06,
+      "cumulative_s": 2.734e-06
+    },
+    {
+      "file": "/data/ycfeng/Frontier/.worktrees/step5-d29-artifact-bytes/frontier/scheduler/utils/expert_parallel.py",
+      "line": 107,
+      "function": "<listcomp>",
+      "primitive": 1,
+      "calls": 1,
+      "self_s": 1.9600000000000003e-06,
+      "cumulative_s": 1.9600000000000003e-06
+    }
+  ],
+  "plan_objects": 8,
+  "fresh_operator_proofs": 144,
+  "payload_sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83",
+  "events": 208,
+  "event_bytes": 2889655,
+  "event_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+  "ledger_bytes": 2309545,
+  "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+  "mutation_checks": [
+    "public to_dict mutation detached from immutable plan/key",
+    "normal plan field mutation rejected",
+    "dataclasses.replace creates distinct full key, never inherits derived key",
+    "changed full plan preserves exact missing-key error"
+  ],
+  "fixture_unchanged": true,
+  "excluded": "setup/import/model loading; payload/output equality; cProfile/counters; mutation checks; no trace encoding investigation"
+}

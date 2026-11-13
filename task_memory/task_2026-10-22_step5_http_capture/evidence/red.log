@@ -1,0 +1,36 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+____ test_actual_proxy_eof_preserves_502_and_records_decode_header_failure _____
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d23_step5_http_capture01/red/test_actual_proxy_eof_preserve0')
+
+    def test_actual_proxy_eof_preserves_502_and_records_decode_header_failure(tmp_path):
+        results, records, connections = asyncio.run(exchange(tmp_path, eof=True))
+        assert results == [(502, b'{"error": "ServerDisconnectedError: Server disconnected"}')]
+        assert connections == [["local-0"]]
+        row = records[0]
+        assert row["prefill_status"] == 200 and "decode_status" not in row
+>       capture = row["http_capture"]
+                  ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'http_capture'
+
+tests/unit/test_step5_http_capture.py:91: KeyError
+------------------------------ Captured log call -------------------------------
+ERROR    pd_proxy:pd_proxy.py:197 request local-0 failed: ServerDisconnectedError: Server disconnected
+___ test_actual_proxy_healthy_records_fresh_and_reused_without_policy_change ___
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d23_step5_http_capture01/red/test_actual_proxy_healthy_reco0')
+
+    def test_actual_proxy_healthy_records_fresh_and_reused_without_policy_change(tmp_path):
+        results, records, connections = asyncio.run(exchange(tmp_path, repeat=2))
+        assert results == [(200, SSE), (200, SSE)]
+        assert connections == [["local-0", "local-1"]]
+>       assert [row["http_capture"]["attempts"]["decode"]["connection"] for row in records] == ["fresh", "reused"]
+                ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'http_capture'
+
+tests/unit/test_step5_http_capture.py:106: KeyError
+=========================== short test summary info ============================
+FAILED tests/unit/test_step5_http_capture.py::test_actual_proxy_eof_preserves_502_and_records_decode_header_failure
+FAILED tests/unit/test_step5_http_capture.py::test_actual_proxy_healthy_records_fresh_and_reused_without_policy_change
+2 failed, 1 passed in 0.31s

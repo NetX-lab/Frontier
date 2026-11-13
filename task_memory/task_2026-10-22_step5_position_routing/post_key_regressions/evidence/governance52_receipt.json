@@ -1,0 +1,62 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "source": {
+    "head": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+    "tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+    "status": "",
+    "submodule_head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "submodule_status": ""
+  },
+  "counts": {
+    "pass": 52
+  },
+  "raw_exits": [
+    0
+  ],
+  "duration_seconds": [
+    21.539635474793613
+  ],
+  "retained52_transitions": {
+    "missing": [],
+    "new_ids": [],
+    "pass_to_skip": [],
+    "pass_to_failure_or_error": []
+  },
+  "retained52_status_changes": [],
+  "new_xml": {
+    "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/baseline_environment/governance52/results.xml",
+    "sha256": "1fb0fb13d185781ef44b01a959e8535efa8b46073029a61237661968923f5044",
+    "bytes": 8366
+  },
+  "old_xml": {
+    "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+    "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1",
+    "bytes": 8366
+  },
+  "no_binary_projection": true,
+  "environment": {
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp",
+    "MKL_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPATH": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07:/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/tests/unit:/data/ycfeng/tmp/d29_py312_cpu_extras01/site",
+    "TMPDIR": "/data/ycfeng/tmp",
+    "TMP_SIZE": "67108864K",
+    "VLLM_TARGET_DEVICE": "cpu"
+  },
+  "versions": {
+    "python": "3.12.13",
+    "executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "pytest": "9.0.2",
+    "numpy": "2.2.6",
+    "pandas": "3.0.1",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.7.2",
+    "plotly": "7.1.0",
+    "fasteners": "0.20",
+    "ddsketch": "3.0.1",
+    "torch": "2.9.1",
+    "aiohttp": "3.13.3"
+  }
+}

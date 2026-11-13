@@ -1,0 +1,48 @@
+{
+  "frozen_head": "bfbc87ad6b99d5be357b3fd8b680c8baefc459c4",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-core-closure-01",
+  "submodule": "3dac53c544e546574cb6e8078cd14053d0916113",
+  "sets": [
+    {
+      "name": "core",
+      "base": "d96b3279",
+      "head": "e49b26f8",
+      "paths": [
+        "frontier/profiling/moe/moe_impl.py",
+        "frontier/profiling/moe/moe_wrapper.py",
+        "frontier/moe_routing_runtime.py",
+        "tests/integration/run_step5_measured_main.py",
+        "tests/unit/test_step5_moe_profiling.py",
+        "tests/unit/test_moe_profiling_output_metadata.py",
+        "tests/integration/test_step5_measured_main.py"
+      ],
+      "sha256": "b1d14fa9a893f4062cd4070efee3b260b18758bc772e879b5abccb537f2f1861",
+      "numstat": "3\t4\tfrontier/moe_routing_runtime.py\n3\t0\tfrontier/profiling/moe/moe_impl.py\n2\t1\tfrontier/profiling/moe/moe_wrapper.py\n16\t7\ttests/integration/run_step5_measured_main.py\n69\t1\ttests/integration/test_step5_measured_main.py\n40\t0\ttests/unit/test_moe_profiling_output_metadata.py\n75\t7\ttests/unit/test_step5_moe_profiling.py\n"
+    },
+    {
+      "name": "pricing_join",
+      "base": "84e66115",
+      "head": "a7e2a3ca",
+      "paths": [
+        "frontier/profiling/collectives/step5_dispatch_probe.py",
+        "frontier/profiling/moe/fp8_block_experts.py",
+        "tests/unit/test_collective_sim_cc_backend.py",
+        "tests/unit/test_step5_dispatch_probe.py",
+        "tests/unit/test_step5_moe_pricing.py"
+      ],
+      "sha256": "e5824c97bd4d7e252f040e7642b70d1cc53eec65cf8b303e98d93532d7841d94",
+      "numstat": "2\t0\tfrontier/profiling/collectives/step5_dispatch_probe.py\n8\t3\tfrontier/profiling/moe/fp8_block_experts.py\n27\t1\ttests/unit/test_collective_sim_cc_backend.py\n59\t2\ttests/unit/test_step5_dispatch_probe.py\n2\t2\ttests/unit/test_step5_moe_pricing.py\n"
+    },
+    {
+      "name": "registry_view",
+      "base": "8f96408c",
+      "head": "a5189e19",
+      "paths": [
+        "frontier/execution_time_predictor/prediction_model_registry.py",
+        "tests/unit/test_prediction_measurement_bindings.py"
+      ],
+      "sha256": "84f8ad225dbdcf7efaeab683d43a60a04bb876cdfaf6b6d2fa37eb5af1d8f43b",
+      "numstat": "3\t0\tfrontier/execution_time_predictor/prediction_model_registry.py\n26\t0\ttests/unit/test_prediction_measurement_bindings.py\n"
+    }
+  ]
+}

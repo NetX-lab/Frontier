@@ -1,0 +1,24 @@
+{
+  "status": "STRICT77_PASS",
+  "identical_cases": 77,
+  "mismatches": 0,
+  "comparison_sha256": "c6dbe754a43ee58f94c15cc043264f19c6bf110d223e2e26a1a705100e4129ef",
+  "sides": [
+    {
+      "root": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate",
+      "revision": "713e6a81708e87b86cf91fd89f3b1f954bdcbead",
+      "cases": 77,
+      "artifact_hashes_verified": 451,
+      "cache_files": 519,
+      "capture": "PASS"
+    },
+    {
+      "root": "/data/ycfeng/tmp/d29_workflow_fidelity_20261023_final03/candidate",
+      "revision": "1be91bad431d3bd886de7f5d80c19bd7e6c54a25",
+      "cases": 77,
+      "artifact_hashes_verified": 451,
+      "cache_files": 519,
+      "capture": "PASS"
+    }
+  ]
+}

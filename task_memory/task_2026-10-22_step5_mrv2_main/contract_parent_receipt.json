@@ -1,0 +1,46 @@
+{
+  "task_id": "D23-MRV2-CONTRACT-REUSE/PARENT",
+  "source_commit": "7834dd5ae37eef5c09ae66322b91fb6a6074d3d5",
+  "command": [
+    "tests/performance/step5_mrv2_cpu.py",
+    "--mode",
+    "ffn",
+    "--layers",
+    "3",
+    "88",
+    "--iterations",
+    "2",
+    "--no-profile",
+    "--trace",
+    "--output",
+    "/data/ycfeng/tmp/d23_parent_contract_verify01"
+  ],
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "baseline": {
+    "path": "/data/ycfeng/tmp/d23_parent_red01/receipt.json",
+    "sha256": "c4f05816644f4cd8228695f97b377db0d6835bcb3bb4e4ba1896081a0dfbb070"
+  },
+  "candidate": {
+    "path": "/data/ycfeng/tmp/d23_parent_contract_verify01/receipt.json",
+    "sha256": "68d63c7e3bec88ca8b2935257ce2d53a369535f41acbfda2f26320f35673d689"
+  },
+  "lane_queries": 64,
+  "baseline_seconds": 0.5329560060054064,
+  "candidate_seconds": 0.07391306664794683,
+  "speedup": 7.210578997403984,
+  "cost_dictionaries_equal": true,
+  "artifact_descriptors_equal": true,
+  "source_truth": "PASS",
+  "latency_gate": "RED",
+  "query_budget_seconds": 0.0009682395241477273,
+  "trace": {
+    "seconds": 0.0694979471154511,
+    "event_count": 456,
+    "bytes": 344788,
+    "persisted_truth": "PASS",
+    "profile_enabled": false
+  },
+  "native_admitted": false,
+  "full_cli_accepted": false
+}

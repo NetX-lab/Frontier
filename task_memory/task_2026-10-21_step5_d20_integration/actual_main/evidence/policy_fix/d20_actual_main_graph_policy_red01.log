@@ -1,0 +1,216 @@
+.F..FF.F..F.                                                             [100%]
+=================================== FAILURES ===================================
+_ test_attention_policy_is_independent_from_generic_operator_family[prefill-full_decode_only] _
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+>           return STEP5_GRAPH_MODES[graph_mode][1]
+E           KeyError: 'full_decode_only'
+
+frontier/execution_time_predictor/step5.py:70: KeyError
+
+The above exception was the direct cause of the following exception:
+
+mode = 'full_decode_only', role = <ClusterType.PREFILL: 2>
+
+    @pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise"])
+    @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
+                                      ClusterType.MONOLITHIC, ClusterType.DECODE_FFN])
+    def test_attention_policy_is_independent_from_generic_operator_family(mode, role):
+        decode = MeasurementType.KERNEL_ONLY if mode == "none" else MeasurementType.CUDA_EVENT
+        expected = {
+            ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+            ClusterType.DECODE: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.DECODE_FFN: (),
+        }
+>       assert step5_measurements_for_role(role, mode) == expected[role]
+
+tests/unit/test_step5_measured_manager.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/step5_cost.py:22: in step5_measurements_for_role
+    decode = step5_measurement_type(decode_graph_mode)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+            return STEP5_GRAPH_MODES[graph_mode][1]
+        except (KeyError, TypeError) as exc:
+>           raise ValueError(f"Unsupported Step graph_mode={graph_mode!r}") from exc
+E           ValueError: Unsupported Step graph_mode='full_decode_only'
+
+frontier/execution_time_predictor/step5.py:72: ValueError
+_ test_attention_policy_is_independent_from_generic_operator_family[decode-full_decode_only] _
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+>           return STEP5_GRAPH_MODES[graph_mode][1]
+E           KeyError: 'full_decode_only'
+
+frontier/execution_time_predictor/step5.py:70: KeyError
+
+The above exception was the direct cause of the following exception:
+
+mode = 'full_decode_only', role = <ClusterType.DECODE: 5>
+
+    @pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise"])
+    @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
+                                      ClusterType.MONOLITHIC, ClusterType.DECODE_FFN])
+    def test_attention_policy_is_independent_from_generic_operator_family(mode, role):
+        decode = MeasurementType.KERNEL_ONLY if mode == "none" else MeasurementType.CUDA_EVENT
+        expected = {
+            ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+            ClusterType.DECODE: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.DECODE_FFN: (),
+        }
+>       assert step5_measurements_for_role(role, mode) == expected[role]
+
+tests/unit/test_step5_measured_manager.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/step5_cost.py:22: in step5_measurements_for_role
+    decode = step5_measurement_type(decode_graph_mode)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+            return STEP5_GRAPH_MODES[graph_mode][1]
+        except (KeyError, TypeError) as exc:
+>           raise ValueError(f"Unsupported Step graph_mode={graph_mode!r}") from exc
+E           ValueError: Unsupported Step graph_mode='full_decode_only'
+
+frontier/execution_time_predictor/step5.py:72: ValueError
+_ test_attention_policy_is_independent_from_generic_operator_family[decode-piecewise] _
+
+mode = 'piecewise', role = <ClusterType.DECODE: 5>
+
+    @pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise"])
+    @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
+                                      ClusterType.MONOLITHIC, ClusterType.DECODE_FFN])
+    def test_attention_policy_is_independent_from_generic_operator_family(mode, role):
+        decode = MeasurementType.KERNEL_ONLY if mode == "none" else MeasurementType.CUDA_EVENT
+        expected = {
+            ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+            ClusterType.DECODE: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.DECODE_FFN: (),
+        }
+>       assert step5_measurements_for_role(role, mode) == expected[role]
+E       AssertionError: assert (<Measurement...CUDA_EVENT'>,) == (<Measurement...'CUDA_EVENT'>)
+E         
+E         At index 0 diff: <MeasurementType.CUDA_EVENT: 'CUDA_EVENT'> != <MeasurementType.KERNEL_ONLY: 'KERNEL_ONLY'>
+E         Right contains one more item: <MeasurementType.CUDA_EVENT: 'CUDA_EVENT'>
+E         Use -v to get more diff
+
+tests/unit/test_step5_measured_manager.py:28: AssertionError
+_ test_attention_policy_is_independent_from_generic_operator_family[monolithic-full_decode_only] _
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+>           return STEP5_GRAPH_MODES[graph_mode][1]
+E           KeyError: 'full_decode_only'
+
+frontier/execution_time_predictor/step5.py:70: KeyError
+
+The above exception was the direct cause of the following exception:
+
+mode = 'full_decode_only', role = <ClusterType.MONOLITHIC: 1>
+
+    @pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise"])
+    @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
+                                      ClusterType.MONOLITHIC, ClusterType.DECODE_FFN])
+    def test_attention_policy_is_independent_from_generic_operator_family(mode, role):
+        decode = MeasurementType.KERNEL_ONLY if mode == "none" else MeasurementType.CUDA_EVENT
+        expected = {
+            ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+            ClusterType.DECODE: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.DECODE_FFN: (),
+        }
+>       assert step5_measurements_for_role(role, mode) == expected[role]
+
+tests/unit/test_step5_measured_manager.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/step5_cost.py:22: in step5_measurements_for_role
+    decode = step5_measurement_type(decode_graph_mode)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+            return STEP5_GRAPH_MODES[graph_mode][1]
+        except (KeyError, TypeError) as exc:
+>           raise ValueError(f"Unsupported Step graph_mode={graph_mode!r}") from exc
+E           ValueError: Unsupported Step graph_mode='full_decode_only'
+
+frontier/execution_time_predictor/step5.py:72: ValueError
+_ test_attention_policy_is_independent_from_generic_operator_family[decode_ffn-full_decode_only] _
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+>           return STEP5_GRAPH_MODES[graph_mode][1]
+E           KeyError: 'full_decode_only'
+
+frontier/execution_time_predictor/step5.py:70: KeyError
+
+The above exception was the direct cause of the following exception:
+
+mode = 'full_decode_only', role = <ClusterType.DECODE_FFN: 4>
+
+    @pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise"])
+    @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
+                                      ClusterType.MONOLITHIC, ClusterType.DECODE_FFN])
+    def test_attention_policy_is_independent_from_generic_operator_family(mode, role):
+        decode = MeasurementType.KERNEL_ONLY if mode == "none" else MeasurementType.CUDA_EVENT
+        expected = {
+            ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+            ClusterType.DECODE: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+            ClusterType.DECODE_FFN: (),
+        }
+>       assert step5_measurements_for_role(role, mode) == expected[role]
+
+tests/unit/test_step5_measured_manager.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/step5_cost.py:22: in step5_measurements_for_role
+    decode = step5_measurement_type(decode_graph_mode)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+graph_mode = 'full_decode_only'
+
+    def step5_measurement_type(graph_mode: str) -> MeasurementType:
+        """Select actual graph latency or eager device activity without relabelling."""
+        try:
+            return STEP5_GRAPH_MODES[graph_mode][1]
+        except (KeyError, TypeError) as exc:
+>           raise ValueError(f"Unsupported Step graph_mode={graph_mode!r}") from exc
+E           ValueError: Unsupported Step graph_mode='full_decode_only'
+
+frontier/execution_time_predictor/step5.py:72: ValueError
+=========================== short test summary info ============================
+FAILED tests/unit/test_step5_measured_manager.py::test_attention_policy_is_independent_from_generic_operator_family[prefill-full_decode_only]
+FAILED tests/unit/test_step5_measured_manager.py::test_attention_policy_is_independent_from_generic_operator_family[decode-full_decode_only]
+FAILED tests/unit/test_step5_measured_manager.py::test_attention_policy_is_independent_from_generic_operator_family[decode-piecewise]
+FAILED tests/unit/test_step5_measured_manager.py::test_attention_policy_is_independent_from_generic_operator_family[monolithic-full_decode_only]
+FAILED tests/unit/test_step5_measured_manager.py::test_attention_policy_is_independent_from_generic_operator_family[decode_ffn-full_decode_only]
+5 failed, 7 passed, 2 deselected in 1.69s

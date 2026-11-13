@@ -1,0 +1,35 @@
+diff --git a/frontier/metrics/ep_wave_metrics.py b/frontier/metrics/ep_wave_metrics.py
+index b5a1ae01..7290697f 100644
+--- a/frontier/metrics/ep_wave_metrics.py
++++ b/frontier/metrics/ep_wave_metrics.py
+@@ -117,9 +117,9 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
+                     ))
+                 cursor += duration * 1e-3
+             if ledger_enabled and communication is not None:
+-                from dataclasses import asdict
++                from dataclasses import fields
+                 collective_proofs={name:dict(plan=communication.plans[name].to_dict(),
+-                    cost=asdict(communication.costs[name])) for _,name,_ in operators if name in communication.plans}
++                    cost={field.name:getattr(communication.costs[name],field.name) for field in fields(communication.costs[name])}) for _,name,_ in operators if name in communication.plans}
+                 if collective_proofs:
+                     ledger_phases[phase]["collective_proofs"] = collective_proofs
+             if ledger_enabled and step5_frame is not None:
+diff --git a/frontier/metrics/op_trace_utils.py b/frontier/metrics/op_trace_utils.py
+index 100df60a..9f4a2e1f 100644
+--- a/frontier/metrics/op_trace_utils.py
++++ b/frontier/metrics/op_trace_utils.py
+@@ -295,12 +295,12 @@ def compute_op_trace_meta(
+         if metadata.attention_spec.global_layer_id != ctx.global_layer_id:
+             raise ValueError("Step trace metadata differs from the actual layer identity")
+         if ctx.collective_plans is not None and op_name in ctx.collective_plans:
+-            from dataclasses import asdict
++            from dataclasses import fields
+             plan=ctx.collective_plans[op_name];cost=ctx.collective_costs[op_name]
+             if cost.plan_key != plan.cache_key():
+                 raise ValueError("Trace collective plan and cost identities disagree")
+             evidence=__import__("json").loads(cost.count_receipt_json)["evidence_kind"]
+-            return dict(collective_plan=plan.to_dict(),collective_cost=asdict(cost),
++            return dict(collective_plan=plan.to_dict(),collective_cost={field.name:getattr(cost,field.name) for field in fields(cost)},
+                 numerical_source="cpu_fixture_composition_not_native" if evidence == "cpu_fixture" else "joint_htsim+measured_local+effective_remainder_no_overlap",
+                 kernel_count=cost.kernel_counts[ctx.step5_moe_frame["ep_id"]],
+                 algorithmic_stage_count=len(plan.stages),evidence_kind=evidence)

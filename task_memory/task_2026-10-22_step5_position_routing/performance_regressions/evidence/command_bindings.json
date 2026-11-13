@@ -1,0 +1,37 @@
+{
+  "task_id": "D29-PERFORMANCE-FINAL-REGRESSIONS",
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "scripts": [
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/archive_evidence.py",
+      "sha256": "a011038fae354e82e030593d3d759070c486142f9a0c43ac172b01af0fb812ce",
+      "bytes": 1967
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/audit_strict.py",
+      "sha256": "159045b0ceaa29fe6b202663f2554117984ed3afd60f94ccc9eb71326ef73bcc",
+      "bytes": 2724
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/compare_results.py",
+      "sha256": "aab8d53849d5ef23ac2f804a9fdb391531f4d9c39fb19bae891fa70d9371d084",
+      "bytes": 8512
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/finalize_receipt.py",
+      "sha256": "f2db776d893ad43a14f4a7189b12da84031b172f1f5f680534a8875ed4295a82",
+      "bytes": 5329
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29_performance_regressions_final05/run_suite.py",
+      "sha256": "62ce1aa3e4f6229c7e782bcd98eb2048ef35d88e790e607a9e2ae493908d392a",
+      "bytes": 7118
+    }
+  ],
+  "original_auditor": {
+    "path": "/data/ycfeng/tmp/step5_workflow_fidelity_20261022/audit_evidence.py",
+    "sha256": "8d985f0f964c5ec6b16b4a0c3963490db38de26b9e0ec664927479ca849b4cb9"
+  },
+  "read_only_source_namespace": true,
+  "changed_gates": false
+}

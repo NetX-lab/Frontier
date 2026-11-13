@@ -1,0 +1,224 @@
+{
+  "task_id": "D29-EMISSION-IMMUTABLE-WORK",
+  "session_id": "ses_e96a5c1c7ffeoPBK7V08CMas7v",
+  "artifacts": {
+    "h2": {
+      "path": "frontier/cc_backend/collective_plan.py",
+      "diff_sha256": "749afd3b8e074636633f1acac7981f954d93a3afe6ae590e9bae46bbbaddf1b3",
+      "module_sha256": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+      "numstat": "4\t1\tfrontier/cc_backend/collective_plan.py",
+      "added": 4,
+      "removed": 1,
+      "gross": 5,
+      "net": 3,
+      "status": "Unallocated scratch artifact only; h3/combined have a public mutable-receipt alias limitation."
+    },
+    "h3": {
+      "path": "frontier/cc_backend/collective_plan.py",
+      "diff_sha256": "dde564f893ffc40a7a0046aaca6c4c864fadaaec85ecccf59103983618281500",
+      "module_sha256": "ff447c663f7692cce527d0c1dc2fb62d98231d6992870d50c841ad161d7c5815",
+      "numstat": "4\t2\tfrontier/cc_backend/collective_plan.py",
+      "added": 4,
+      "removed": 2,
+      "gross": 6,
+      "net": 2,
+      "status": "Unallocated scratch artifact only; h3/combined have a public mutable-receipt alias limitation."
+    },
+    "combined": {
+      "path": "frontier/cc_backend/collective_plan.py",
+      "diff_sha256": "fc99a1f8c7718bbddf6cbe65b13d8f3c2d2e9a64cd6ccd85e899be6f314a1515",
+      "module_sha256": "37d05bbc94845abba133428ed6fcf12535e0e3e70a6b73ba0e721945c3fc3262",
+      "numstat": "8\t3\tfrontier/cc_backend/collective_plan.py",
+      "added": 8,
+      "removed": 3,
+      "gross": 11,
+      "net": 5,
+      "status": "Unallocated scratch artifact only; h3/combined have a public mutable-receipt alias limitation."
+    }
+  },
+  "public_to_dict_limit": {
+    "constructor_accepts_bytearray_receipt": true,
+    "original_to_dict_detaches_bytearray": true,
+    "same_measured_h3_conversion_aliases_bytearray_red": true,
+    "decision": "Do not recommend unguarded H3 or combined source edit for the general public API. Canonical real-wave gains are diagnostic only; preserving accepted mutable-value semantics needs a new parent-owned design, not another control here."
+  },
+  "measurements": {
+    "baseline": {
+      "median_ms": 49.60093693807721,
+      "min_ms": 49.285017885267735,
+      "max_ms": 159.7470468841493,
+      "getters": {
+        "attention_time_component": 0,
+        "attention_operator_times": 0,
+        "moe_or_mlp_time_component": 16,
+        "mlp_operator_times": 0,
+        "moe_operator_times": 0,
+        "communication_time_component": 16,
+        "communication_operator_times": 0
+      },
+      "original_named_counts": {
+        "asdict": 208,
+        "deepcopy": 21472,
+        "to_dict": 192,
+        "cache_key": 64,
+        "compute_op_trace_meta": 208
+      },
+      "control_named_counts": {
+        "serialized_key_once": 0,
+        "plan_fields": 0,
+        "immutable_snapshot": 0
+      },
+      "key_reads_total": 64,
+      "plan_conversion_calls_total": 192,
+      "whole_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "snapshot_checks": true,
+      "wrong_key_negatives": 64,
+      "late_json_prefix_bytes": 3902,
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "driver_sha256_at_run": "9ed0d963c6c7f82fc68dca982165cf28a90ccc8ffd1c86923385089ad1012fa5"
+    },
+    "h1": {
+      "median_ms": 46.843556221574545,
+      "min_ms": 45.670730993151665,
+      "max_ms": 165.33312015235424,
+      "getters": {
+        "attention_time_component": 0,
+        "attention_operator_times": 0,
+        "moe_or_mlp_time_component": 16,
+        "mlp_operator_times": 0,
+        "moe_operator_times": 0,
+        "communication_time_component": 16,
+        "communication_operator_times": 0
+      },
+      "original_named_counts": {
+        "asdict": 208,
+        "deepcopy": 13408,
+        "to_dict": 192,
+        "cache_key": 64,
+        "compute_op_trace_meta": 208
+      },
+      "control_named_counts": {
+        "serialized_key_once": 0,
+        "plan_fields": 0,
+        "immutable_snapshot": 144
+      },
+      "key_reads_total": 64,
+      "plan_conversion_calls_total": 192,
+      "whole_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "snapshot_checks": true,
+      "wrong_key_negatives": 64,
+      "late_json_prefix_bytes": 3902,
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "driver_sha256_at_run": "8c3297ec19b2f238d28bc8a81f970ae8ef4d73f6b4442e96594eeb46c48aad39"
+    },
+    "h2": {
+      "median_ms": 39.95575988665223,
+      "min_ms": 38.17449323832989,
+      "max_ms": 312.83000065013766,
+      "getters": {
+        "attention_time_component": 0,
+        "attention_operator_times": 0,
+        "moe_or_mlp_time_component": 16,
+        "mlp_operator_times": 0,
+        "moe_operator_times": 0,
+        "communication_time_component": 16,
+        "communication_operator_times": 0
+      },
+      "original_named_counts": {
+        "asdict": 144,
+        "deepcopy": 19632,
+        "to_dict": 128,
+        "cache_key": 0,
+        "compute_op_trace_meta": 208
+      },
+      "control_named_counts": {
+        "serialized_key_once": 64,
+        "plan_fields": 0,
+        "immutable_snapshot": 0
+      },
+      "key_reads_total": 64,
+      "plan_conversion_calls_total": 128,
+      "whole_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "snapshot_checks": true,
+      "wrong_key_negatives": 64,
+      "late_json_prefix_bytes": 3902,
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "driver_sha256_at_run": "8c3297ec19b2f238d28bc8a81f970ae8ef4d73f6b4442e96594eeb46c48aad39"
+    },
+    "h3": {
+      "median_ms": 40.49303196370602,
+      "min_ms": 40.20005092024803,
+      "max_ms": 152.93732518330216,
+      "getters": {
+        "attention_time_component": 0,
+        "attention_operator_times": 0,
+        "moe_or_mlp_time_component": 16,
+        "mlp_operator_times": 0,
+        "moe_operator_times": 0,
+        "communication_time_component": 16,
+        "communication_operator_times": 0
+      },
+      "original_named_counts": {
+        "asdict": 16,
+        "deepcopy": 15568,
+        "to_dict": 0,
+        "cache_key": 64,
+        "compute_op_trace_meta": 208
+      },
+      "control_named_counts": {
+        "serialized_key_once": 0,
+        "plan_fields": 192,
+        "immutable_snapshot": 0
+      },
+      "key_reads_total": 64,
+      "plan_conversion_calls_total": 192,
+      "whole_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "snapshot_checks": true,
+      "wrong_key_negatives": 64,
+      "late_json_prefix_bytes": 3902,
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "driver_sha256_at_run": "8c3297ec19b2f238d28bc8a81f970ae8ef4d73f6b4442e96594eeb46c48aad39"
+    },
+    "combined": {
+      "median_ms": 31.080367043614388,
+      "min_ms": 30.48599325120449,
+      "max_ms": 142.66848796978593,
+      "getters": {
+        "attention_time_component": 0,
+        "attention_operator_times": 0,
+        "moe_or_mlp_time_component": 16,
+        "mlp_operator_times": 0,
+        "moe_operator_times": 0,
+        "communication_time_component": 16,
+        "communication_operator_times": 0
+      },
+      "original_named_counts": {
+        "asdict": 16,
+        "deepcopy": 15696,
+        "to_dict": 0,
+        "cache_key": 0,
+        "compute_op_trace_meta": 208
+      },
+      "control_named_counts": {
+        "serialized_key_once": 64,
+        "plan_fields": 128,
+        "immutable_snapshot": 0
+      },
+      "key_reads_total": 64,
+      "plan_conversion_calls_total": 128,
+      "whole_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+      "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+      "snapshot_checks": true,
+      "wrong_key_negatives": 64,
+      "late_json_prefix_bytes": 3902,
+      "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+      "driver_sha256_at_run": "8c3297ec19b2f238d28bc8a81f970ae8ef4d73f6b4442e96594eeb46c48aad39"
+    }
+  },
+  "observation_script_initial_failure": "Missing scratch parent in the first untimed observation run, fixed once before setup completed; no control timing rerun.",
+  "baseline_initial_inventory_limit": "Its monkeypatched copy function missed default-captured recursive entries; observations.json corrects this using sys.setprofile and reproduces 21,472 calls."
+}

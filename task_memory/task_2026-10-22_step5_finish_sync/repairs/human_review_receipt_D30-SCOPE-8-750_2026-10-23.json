@@ -1,0 +1,20 @@
+{
+  "decision_id": "D30-SCOPE-8-750",
+  "change_marker": "D30-SCOPE-8-750",
+  "requesting_user": "YC",
+  "reviewer_identity": "YC",
+  "answer_verbatim": "批准，继续",
+  "recorded_date": "2026-10-23",
+  "case": "D30 Step finish-sync canonical stage source coverage",
+  "analysis_artifact": "/data/ycfeng/tmp/d30_unit_delta01.json",
+  "analysis_timestamp": "2026-10-22T11:24:51.513672+00:00",
+  "analysis_source": "713e6a81708e87b86cf91fd89f3b1f954bdcbead",
+  "isolated_red": "/data/ycfeng/tmp/d30_canonical_count_red01.xml",
+  "requirements": "task_memory/task_2026-10-22_step5_finish_sync/requirements.md#original-request--decision-d30-scope-8-750",
+  "extends_decision": "D30-SCOPE-7-750",
+  "additional_scope": ["tests/unit/test_step5_canonical_g3.py"],
+  "additional_behavior": "Expect13 observed source modules and require vllm.v1.engine.core; no production change.",
+  "max_source_test_files": 8,
+  "max_total_added_deleted_lines": 750,
+  "status": "APPROVED"
+}

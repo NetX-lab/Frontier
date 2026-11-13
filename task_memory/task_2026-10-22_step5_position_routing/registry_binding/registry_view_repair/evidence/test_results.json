@@ -1,0 +1,66 @@
+{
+  "red": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "4",
+    "skipped": "0",
+    "tests": "4",
+    "time": "36.539",
+    "timestamp": "2026-10-23T09:34:22.443633+08:00",
+    "hostname": "kun-workspace-vgen2",
+    "source_log": "/data/ycfeng/tmp/d29_registry_view_red02.log",
+    "source_xml": "/data/ycfeng/tmp/d29_registry_view_red02.xml",
+    "expected_failures": {
+      "test_mixed_native_non_native_views_keep_both_insert_orders[False-False]": "ValueError: Model 'moe_gating_linear' has multiple layer contracts",
+      "test_mixed_native_non_native_views_keep_both_insert_orders[False-True]": "ValueError: Model 'moe_gating_linear' has multiple layer contracts",
+      "test_mixed_native_non_native_views_keep_both_insert_orders[True-False]": "ValueError: Model 'moe_gating_linear' has ambiguous native bindings",
+      "test_mixed_native_non_native_views_keep_both_insert_orders[True-True]": "ValueError: Model 'moe_gating_linear' has ambiguous native bindings"
+    },
+    "test_classes": [
+      "tests.unit.test_prediction_measurement_bindings"
+    ]
+  },
+  "tight_green": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "4",
+    "time": "35.853",
+    "timestamp": "2026-10-23T09:35:22.090404+08:00",
+    "hostname": "kun-workspace-vgen2",
+    "source_log": "/data/ycfeng/tmp/d29_registry_view_green01.log",
+    "source_xml": "/data/ycfeng/tmp/d29_registry_view_green01.xml",
+    "expected_failures": {},
+    "test_classes": [
+      "tests.unit.test_prediction_measurement_bindings"
+    ]
+  },
+  "final_green": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "217",
+    "time": "213.845",
+    "timestamp": "2026-10-23T09:36:40.052355+08:00",
+    "hostname": "kun-workspace-vgen2",
+    "source_log": "/data/ycfeng/tmp/d29_registry_view_final01.log",
+    "source_xml": "/data/ycfeng/tmp/d29_registry_view_final01.xml",
+    "expected_failures": {},
+    "test_classes": [
+      "tests.unit.test_moe_grouped_gemm_padded_features",
+      "tests.unit.test_prediction_measurement_bindings",
+      "tests.unit.test_predictor_cache_atomicity",
+      "tests.unit.test_shared_prediction_model_manager_mixed_layer_moe",
+      "tests.unit.test_step5_contract_reuse",
+      "tests.unit.test_step5_measured_ffn",
+      "tests.unit.test_step5_measured_ffn_replay",
+      "tests.unit.test_step5_measured_manager",
+      "tests.unit.test_step5_measured_public_predictor",
+      "tests.unit.test_step5_measured_training",
+      "tests.unit.test_step5_model_bundle",
+      "tests.unit.test_step5_model_identity_reuse"
+    ]
+  }
+}

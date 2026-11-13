@@ -1,0 +1,83 @@
+{
+  "status": "NO_NEW_FAILURES_FOUR_CONFIRMED_INHERITED_FAILURES",
+  "aggregate_is_latest_result_per_test_id_not_sum": true,
+  "latest_focused": {
+    "pass": 448,
+    "fail": 0
+  },
+  "combined": {
+    "pass": 998,
+    "fail": 4,
+    "total": 1002
+  },
+  "baseline_common_ids": 980,
+  "added_vs_bc8ae27": 22,
+  "missing_vs_bc8ae27": 0,
+  "inherited_failures": [
+    {
+      "classname": "tests.unit.test_step5_linear_op_ownership",
+      "name": "test_step_attention_scope_owns_projections_without_enabling_execution[profiling]",
+      "message": "Starting bc8ae27 already enables Step attention/FFN; unchanged old test asserts False."
+    },
+    {
+      "classname": "tests.unit.test_step5_linear_op_ownership",
+      "name": "test_step_attention_scope_owns_projections_without_enabling_execution[runtime]",
+      "message": "Starting bc8ae27 already enables Step attention/FFN; unchanged old test asserts False."
+    },
+    {
+      "classname": "tests.unit.test_step5_linear_op_ownership",
+      "name": "test_step_ffn_merge_serializes_in_the_full_hidden_tp1_row[profiling]",
+      "message": "Starting bc8ae27 already enables Step attention/FFN; unchanged old test asserts False."
+    },
+    {
+      "classname": "tests.unit.test_step5_linear_op_ownership",
+      "name": "test_step_ffn_merge_serializes_in_the_full_hidden_tp1_row[runtime]",
+      "message": "Starting bc8ae27 already enables Step attention/FFN; unchanged old test asserts False."
+    }
+  ],
+  "snapshot_only_limitations": [
+    {
+      "classname": "tests.unit.test_step5_boundary_probe",
+      "name": "test_description_reuses_launcher_with_six_hundred_second_cap",
+      "reason": "git archive baseline snapshot has no .git; no semantic product difference"
+    }
+  ],
+  "original_d18_ids": 851,
+  "original_d18_missing": 1,
+  "original_d18_current_pass": 846,
+  "original_d18_changed_to_fail": [
+    [
+      "tests.unit.test_step5_linear_op_ownership",
+      "test_step_attention_scope_owns_projections_without_enabling_execution[profiling]"
+    ],
+    [
+      "tests.unit.test_step5_linear_op_ownership",
+      "test_step_attention_scope_owns_projections_without_enabling_execution[runtime]"
+    ],
+    [
+      "tests.unit.test_step5_linear_op_ownership",
+      "test_step_ffn_merge_serializes_in_the_full_hidden_tp1_row[profiling]"
+    ],
+    [
+      "tests.unit.test_step5_linear_op_ownership",
+      "test_step_ffn_merge_serializes_in_the_full_hidden_tp1_row[runtime]"
+    ]
+  ],
+  "logs": [
+    "affected_final01.log",
+    "focused_final02.log",
+    "bc8ae27_baseline01.log"
+  ],
+  "commands": [
+    "commands_final01.json",
+    "commands_focused_final02.json",
+    "baseline_commands01.json"
+  ],
+  "original_d18_missing_predates_bc8ae27": true,
+  "original_d18_missing_ids": [
+    [
+      "tests.unit.test_step5_attention_profiling",
+      "test_smoke_grid_and_runtime_stays_disabled"
+    ]
+  ]
+}

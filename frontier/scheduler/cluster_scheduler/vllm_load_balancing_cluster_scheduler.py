@@ -2,6 +2,7 @@
 
 from typing import List, Tuple
 
+from frontier.config import global_vars
 from frontier.entities import Batch, Request
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
@@ -13,7 +14,8 @@ from frontier.types import ClusterType, ReplicaSchedulerType
 class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     """Model single-frontend vLLM V1 DP routing with delayed load snapshots.
 
-    Supported scope, and nothing wider: one co-location Replica, one modeled
+    Supported scope: one co-location Replica, or one structural Step PD role
+    endpoint with one Replica. Each endpoint has one modeled
     frontend, the `vllm_v1` replica scheduler, and a report key whose ordering
     actually holds -- a MoE model, whose attention-DP lanes share each stage-0
     forward, or a single lane, where the question does not arise. Everything
@@ -25,17 +27,21 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if (
-            self._cluster_type is not ClusterType.MONOLITHIC
+            self._cluster_type not in (
+                ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE,
+            )
             or self._num_replicas != 1
             or self._replica_scheduler_type is not ReplicaSchedulerType.VLLM_V1
         ):
             raise ValueError(
-                "vllm_load_balancing supports one co-location Replica with "
+                "vllm_load_balancing supports one co-location Replica or one Step PD role with "
                 "vllm_v1, got "
                 f"cluster_type={self._cluster_type.name}, "
                 f"num_replicas={self._num_replicas}, "
                 f"replica_scheduler={self._replica_scheduler_type}"
             )
+        if self._cluster_type != ClusterType.MONOLITHIC:
+            self._validate_pd_scope()
         # The load report is keyed by the Replica's stage-0 forward group. A
         # MoE Replica binds one group for every lane of one forward, so peer
         # lanes share the key. A dense Replica has no per-forward collective
@@ -52,9 +58,52 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
                 )
         self._serving_replica_id = next(iter(self._cluster.replicas))
         self._num_pipeline_stages = self._config.replica_config.num_pipeline_stages
-        self._load_balancer = VllmDPLoadBalancer(self._replica_dp_size)
+        self._load_balancer = VllmDPLoadBalancer(
+            self._replica_dp_size,
+            policy_version=self._config.cluster_scheduler_config.policy_version,
+        )
         self._last_admitted_key = [-1] * self._replica_dp_size
         self._held_key: list[int | None] = [None] * self._replica_dp_size
+
+    def _validate_pd_scope(self) -> None:
+        """Admit only the qualified structural path, not arbitrary PD roles."""
+        replica = self._config.replica_config
+        families = {
+            replica.model_config.get_layer_attention_spec(layer).family_id
+            for layer in range(replica.model_config.num_layers)
+        }
+        if (
+            global_vars.SYS_ARCH != "pd-disaggregation"
+            or self._available_clusters != {ClusterType.PREFILL, ClusterType.DECODE}
+            or families != {"step5_attention"}
+            or self._config.cluster_scheduler_config.policy_version != "v0.28.0"
+            or replica.num_pipeline_stages != 1
+            or replica.moe_tensor_parallel_size != 1
+            or replica.moe_expert_parallel_size != replica.attn_tensor_parallel_size * replica.attn_dp
+            or self._kv_cache_transfer_predictor is None
+            or self._kv_cache_transfer_predictor._config.kv_connector != "nixl"
+        ):
+            raise ValueError(
+                "vllm_load_balancing PD requires paired Step PREFILL/DECODE endpoints, "
+                "v0.28.0, PP1, MoE TP1/EP=attention TP*DP and NIXL"
+            )
+        if not self._config.execution_time_predictor_config.enable_dummy_mode:
+            if not all(callable(getattr(self._predictor, name, None)) for name in (
+                "get_nixl_transfer_coverage", "get_nixl_transfer_time_ms",
+            )):
+                raise ValueError(
+                    "vllm_load_balancing requires measured NIXL coverage from "
+                    "the configured cost provider"
+                )
+
+    def select_kv_transfer_target(self, time: float, request: Request) -> tuple[int, int]:
+        """Place the proxy's D request once, before C16 attempts reservation."""
+        if self._cluster_type != ClusterType.DECODE:
+            raise ValueError("NIXL transfer target selection requires DECODE")
+        return self._serving_replica_id, self._load_balancer.select(time, request.id)
+
+    def abandon_kv_transfer_target_selection(self, request: Request) -> None:
+        self._load_balancer.finish_requests([request.id])
 
     def schedule_at(self, time: float) -> List[Tuple[int, int, Request]]:
         """Route every queued request at this simulation time.
@@ -65,8 +114,14 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         """
 
         self.sort_requests()
+        if self._cluster_type == ClusterType.DECODE and self._request_queue:
+            raise ValueError("Step DECODE requests must enter through NIXL target placement")
         mapping = [
-            (self._serving_replica_id, self._load_balancer.select(time), request)
+            (
+                self._serving_replica_id,
+                self._load_balancer.select(time, request_id=request.id),
+                request,
+            )
             for request in self._request_queue
         ]
         self._request_queue.clear()
@@ -120,6 +175,16 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         """
 
         lane_id = self._lane_index(replica_local_id)
+        if batch is not None and batch.completed:
+            # A preempted in-flight sample can finish a request whose execution
+            # signature is now stale. Stale-drop callbacks apply no output and
+            # leave batch.completed false; they must not release ownership.
+            self._load_balancer.finish_requests(
+                request.id for request in batch.requests
+                if request.completed or (
+                    self._cluster_type == ClusterType.PREFILL and request.is_prefill_complete
+                )
+            )
         key = self._held_key[lane_id]
         if key is None:
             key = self._next_report_key(replica_id, lane_id)

@@ -1,0 +1,91 @@
+{
+  "task_id": "D29-IMMUTABLE-COST-FIELDS",
+  "label": "baseline",
+  "source_revision_during_measurement": "7540414341d5b81a86b18b9562d1506c0ba74285",
+  "source_root": "/data/ycfeng/Frontier/.worktrees/step5-d29-cost-fields",
+  "source_hashes": {
+    "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+    "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+    "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+    "frontier/execution_time_predictor/moe_routing_workload.py": "d9423f3f318cd355f2773ea6a65a9bf9d297cdc3ec7c8c46230b38456ccacbfc",
+    "frontier/execution_time_predictor/shared_prediction_model_manager.py": "d18bde6f67c28b14353b2da4ea8cf9deaa3927a23b727f62607007e9b16a7198",
+    "frontier/cc_backend/collective_plan.py": "690b20dde386e092cbc549a40569f11e2b1b76f341c9b7eed850ee0ccc581b1d",
+    "frontier/entities/execution_time.py": "fcd2e592c0eb165b6398db368ecd5e6ab812d5d00f7fb53fad7035bb5f4bc64c",
+    "frontier/entities/time_components.py": "b19f7158159d034a5e9dc090811a3026815053c8eb6615a688a72f4be9d897f2",
+    "frontier/moe_routing_policy.py": "bbfab0881ab66a8c5f8d23ce865722cfc06bfafe47fd099ec394ba98639855d4"
+  },
+  "events": 208,
+  "collective_events_and_cost_objects": 64,
+  "bytes": 2889655,
+  "sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+  "all_event_metadata_proofs_and_order_equal": true,
+  "whole_jsonl_sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11",
+  "ledger_bytes": 2309545,
+  "ledger_sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf",
+  "emission_seconds": [
+    0.1597470468841493,
+    0.04951360495761037,
+    0.04960093693807721,
+    0.049528992269188166,
+    0.04938592715188861,
+    0.05057730479165912,
+    0.05122328596189618,
+    0.049606443382799625,
+    0.04954046290367842,
+    0.15099458117038012,
+    0.049738708417862654,
+    0.049439387395977974,
+    0.049285017885267735,
+    0.04983654711395502,
+    0.04932411015033722
+  ],
+  "median_emission_s": 0.04960093693807721,
+  "emission_only_counters": {
+    "asdict": 208,
+    "deepcopy": 21472,
+    "to_dict": 192,
+    "cache_key": 64,
+    "compute_op_trace_meta": 208
+  },
+  "admitted_cost_field_types": [
+    [
+      "count_receipt_json",
+      "str"
+    ],
+    [
+      "duration_ms",
+      "float"
+    ],
+    [
+      "kernel_counts",
+      "tuple"
+    ],
+    [
+      "local_rank_ms",
+      "tuple"
+    ],
+    [
+      "model_identity",
+      "str"
+    ],
+    [
+      "network_ms",
+      "float"
+    ],
+    [
+      "plan_key",
+      "str"
+    ],
+    [
+      "remainder_ms",
+      "float"
+    ]
+  ],
+  "public_getter_and_pending_snapshot_mutations_isolated": true,
+  "pending_meta_mutation_does_not_change_source": true,
+  "fresh_trace_ledger_mappings_independent": true,
+  "wrong_plan_key_negatives": 64,
+  "wrong_plan_key_exact_error": "Trace collective plan and cost identities disagree",
+  "late_json_error_restores_buffer_and_prefix_bytes": 3902,
+  "limits": "Actual trace+prepared source; pricing/setup, ledger encoding, flush and verification excluded from emission timing. No diagnostic reuse control or unallocated source behavior.15 sequential CPU measurements, not whole CLI admission."
+}

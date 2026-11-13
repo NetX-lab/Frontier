@@ -1,0 +1,27 @@
+{
+  "base_engine_resources_unchanged": true,
+  "capture02_manifest_unchanged": true,
+  "config_sha256": "046b6f25c1f993790c135e6740cdf7bed247078f3b99f2713be2bfa97277854f",
+  "copied_git_files": 21,
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage",
+  "imported_modules_bound": 16,
+  "installed_native_pins": 50,
+  "interpreter": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "native_pressure": "UNVERIFIED_WITHOUT_OBSERVED_NATIVE_ALLOCATION_PRESSURE",
+  "prefill_pool": "AUTOMATIC_UNCHANGED",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "role_num_gpu_blocks_override": {
+    "decode": 32000
+  },
+  "routing_status": "BLOCKED_NATIVE_BALANCED_UNSUPPORTED",
+  "source": {
+    "commit": "6e73330c2d04af382cf65a2c689c5401ca202485",
+    "repository": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage"
+  },
+  "stage": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage",
+  "status": "PASS_BUILD",
+  "submissions": 0,
+  "task_id": "D28-D24-PRESSURE-STAGE",
+  "utc_end": "2026-10-22T02:30:30.774226+00:00",
+  "utc_start": "2026-10-22T02:30:30.317161+00:00"
+}

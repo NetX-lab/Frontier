@@ -1,0 +1,59 @@
+{
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "proposed_sha256": "1a297cc550ae91c3150970597a7c468be593a5c2fb4a4395d823fdacbae16c65",
+  "setup_sha256": "b6c869b2b01bd118b02aaf0a9755ee6b87e25a7f00c9667cbd52d50a2cca2b80",
+  "whole_jsonl_sha256": "d784f7a7593416d58b325a9d6512b9b29fe86ce656f85b5446c14220c61ae441",
+  "body_sha256": "18d320438ee1fb5f077b12aaa83da8055b47d8cf256d88aedcca159a5d7b819c",
+  "negatives": {
+    "late_json_failure": {
+      "error": "TypeError: Object of type object is not JSON serializable",
+      "prefix_bytes": 3902,
+      "buffer_restored": true,
+      "equal": true
+    },
+    "circular_reference": {
+      "error": "ValueError: Circular reference detected",
+      "prefix_bytes": 3902,
+      "buffer_restored": true,
+      "equal": true
+    }
+  },
+  "reps": 11,
+  "median_ms": {
+    "actual": 28.974,
+    "proposed": 19.566
+  },
+  "min_ms": {
+    "actual": 26.443,
+    "proposed": 18.141
+  },
+  "raw_seconds": {
+    "actual": [
+      0.026443005073815584,
+      0.02967158518731594,
+      0.029483634047210217,
+      0.030433520209044218,
+      0.02897391840815544,
+      0.030688735656440258,
+      0.030933537054806948,
+      0.028452327009290457,
+      0.028806219808757305,
+      0.028858214151114225,
+      0.027792498003691435
+    ],
+    "proposed": [
+      0.018263183068484068,
+      0.018140689004212618,
+      0.019837141036987305,
+      0.019902524072676897,
+      0.019460846669971943,
+      0.019149451050907373,
+      0.019849303178489208,
+      0.018883501179516315,
+      0.019565867260098457,
+      0.13798413425683975,
+      0.01961163291707635
+    ]
+  },
+  "median_delta_ms": -9.408
+}

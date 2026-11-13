@@ -1,0 +1,152 @@
+{
+  "status": "PASS_CHANGED_CACHE_BYTES_MATCH_FROZEN_BUNDLES",
+  "observed_utc": "2026-10-25T06:05:59.064176+00:00",
+  "files": 14,
+  "bytes": 21025604,
+  "rows": [
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_routing_topk_c733e553.pkl",
+      "bytes": 847010,
+      "actual_sha256": "ea7c8bbe066ba7362848018b857901572c05058b05fc43d75597849b2f113055",
+      "expected_bundle_sha256": [
+        "ea7c8bbe066ba7362848018b857901572c05058b05fc43d75597849b2f113055"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_grouped_gemm_a800d7a6.pkl",
+      "bytes": 3128441,
+      "actual_sha256": "5017ed7b22b865420e52a7cf73cdc547af9aba15ffeb857271207020c2ecd0f8",
+      "expected_bundle_sha256": [
+        "5017ed7b22b865420e52a7cf73cdc547af9aba15ffeb857271207020c2ecd0f8"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_linear_852eb571.pkl",
+      "bytes": 850702,
+      "actual_sha256": "3767bad389480241f6efd992c775847d8673497b84746597c49a891487eab997",
+      "expected_bundle_sha256": [
+        "3767bad389480241f6efd992c775847d8673497b84746597c49a891487eab997"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_routing_topk_c847d631.pkl",
+      "bytes": 850750,
+      "actual_sha256": "ffb183c6f541dfe61854fa65e6740b3e048428cf89a3085b13f42722a4ec78ea",
+      "expected_bundle_sha256": [
+        "ffb183c6f541dfe61854fa65e6740b3e048428cf89a3085b13f42722a4ec78ea"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_input_quantize_a6aff04c.pkl",
+      "bytes": 850526,
+      "actual_sha256": "b641df0b702a867807e5f8e69876eba966f21885ec1a93386d856fa94452736e",
+      "expected_bundle_sha256": [
+        "b641df0b702a867807e5f8e69876eba966f21885ec1a93386d856fa94452736e"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_grouped_gemm_82e252d5.pkl",
+      "bytes": 3138397,
+      "actual_sha256": "725a481f616e307b28753fb05563f7460cfd42c370e2948d2412bdcc2f82e925",
+      "expected_bundle_sha256": [
+        "725a481f616e307b28753fb05563f7460cfd42c370e2948d2412bdcc2f82e925"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_linear_bd98f779.pkl",
+      "bytes": 846962,
+      "actual_sha256": "6ed7ad2aff0c1f7b9167a01929f965c343ad3b1a65a1be4877099c5ad4728c0d",
+      "expected_bundle_sha256": [
+        "6ed7ad2aff0c1f7b9167a01929f965c343ad3b1a65a1be4877099c5ad4728c0d"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_grouped_gemm_39ab238f.pkl",
+      "bytes": 3128445,
+      "actual_sha256": "eabd3fa0359b8391bb18251dd668600a470e0cffc28c5a86668f5fc1d546e7f3",
+      "expected_bundle_sha256": [
+        "eabd3fa0359b8391bb18251dd668600a470e0cffc28c5a86668f5fc1d546e7f3"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_linear_f8b39552.pkl",
+      "bytes": 850706,
+      "actual_sha256": "250deb17ab88138a636ff4a83d2cd94303c6946bfb50da499654999622c95e6a",
+      "expected_bundle_sha256": [
+        "250deb17ab88138a636ff4a83d2cd94303c6946bfb50da499654999622c95e6a"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_routing_topk_d8381157.pkl",
+      "bytes": 850754,
+      "actual_sha256": "4c6e2b68c168ebb50dbf572d0b6a5c85b146402303991db1cc754b223b5f3036",
+      "expected_bundle_sha256": [
+        "4c6e2b68c168ebb50dbf572d0b6a5c85b146402303991db1cc754b223b5f3036"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_input_quantize_b7b02acb.pkl",
+      "bytes": 850530,
+      "actual_sha256": "a1ad5d8683fd58f999073a8d892ed6642e806aee821c05e5c2cb7b6954c74ff7",
+      "expected_bundle_sha256": [
+        "a1ad5d8683fd58f999073a8d892ed6642e806aee821c05e5c2cb7b6954c74ff7"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_grouped_gemm_1a5cf25d.pkl",
+      "bytes": 3138401,
+      "actual_sha256": "600af2643d319ad033a2392939e778da25c16fbc4f0a9f5a5556cd15380e723b",
+      "expected_bundle_sha256": [
+        "600af2643d319ad033a2392939e778da25c16fbc4f0a9f5a5556cd15380e723b"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_routing_topk_08c09088.pkl",
+      "bytes": 847014,
+      "actual_sha256": "2c3299481298937f72d166e13bc977608f43cbdbed995c7a1c3566e8f5316555",
+      "expected_bundle_sha256": [
+        "2c3299481298937f72d166e13bc977608f43cbdbed995c7a1c3566e8f5316555"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-parent-position-fixture03/cache/moe_gating_linear_5a1b39ba.pkl",
+      "bytes": 846966,
+      "actual_sha256": "08c9e031fe31ffb8474bba4a5237a5d0c1c060f216d5f91f3ae7a24570ec5114",
+      "expected_bundle_sha256": [
+        "08c9e031fe31ffb8474bba4a5237a5d0c1c060f216d5f91f3ae7a24570ec5114"
+      ],
+      "matches_frozen_bundle": true,
+      "metadata_unchanged_during_read": true
+    }
+  ],
+  "cache_models_loaded": 0,
+  "new_pricing_workload_shape_platform_calls": 0,
+  "original_source_after": "Still unavailable; the original metadata guard remains a recorded failure.",
+  "limits": "This compares fourteen cache files after the job; it does not repeat the complete workflow or establish full-workload memory."
+}

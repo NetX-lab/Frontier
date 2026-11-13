@@ -1,0 +1,93 @@
+WORKER_HOST_DRIVER 570.124.06
+WORKER_DEVICE NVIDIA H200 2.13.0+cu130
+WORKER_LIBCUDA ['/usr/local/cuda-13.0/compat/libcuda.so.580.82.07']
+
+=== Single-GPU Mode ===
+Using GPU: 0
+WARNING 12:26:00 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+======================================================================
+                  Linear Op Profiling Configuration                   
+======================================================================
+
+[Execution]
+----------------------------------------------------------------------
+  Mode                           : Non-Ray (multiprocessing), 1 GPUs
+  Output Directory               : /mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/linear
+  Profile Method                 : record_function
+  Disable Replicated Ops         : No
+
+[Model: stepfun-ai/Step-5-Preview]
+----------------------------------------------------------------------
+  Embedding Dim                  : 4096
+  MLP Hidden Dim                 : 1536
+  Num Q Heads                    : 64
+  Num KV Heads                   : 4
+  Is MoE                         : Yes
+
+[Precision & Quantization]
+----------------------------------------------------------------------
+  Precision (dtype)              : BF16 (torch.bfloat16)
+  FP8 Quantization               : N/A
+  Block Shape                    : N/A
+
+[Operations by TP Sharding]
+----------------------------------------------------------------------
+                                 : Attention Ops (attn_tp=[8]):
+                                       - input_layernorm            : BF16, TP=[1] (Replicated)
+                                       - attn_pre_proj (QKV)        : BF16, TP=[8] (Sharded)
+                                       - attn_rope                  : BF16, TP=[8] (Sharded)
+                                       - attn_post_proj             : BF16, TP=[8] (Sharded)
+                                   
+                                     FFN Ops (ffn_tp=[8]):
+                                       - post_attention_layernorm   : BF16, TP=[1] (Replicated)
+                                       - mlp_up_proj                : BF16, TP=[8] (Sharded)
+                                       - mlp_act                    : BF16, TP=[8] (Sharded)
+                                       - mlp_down_proj              : BF16, TP=[8] (Sharded)
+                                       - share_expert_up_proj       : BF16, TP=[8] (Sharded)
+                                       - share_expert_act           : BF16, TP=[8] (Sharded)
+                                       - share_expert_down_proj     : BF16, TP=[8] (Sharded)
+                                   
+                                     Common Ops:
+                                       - add                        : BF16, TP=[1] (Replicated)
+                                       - emb (embedding)            : BF16, TP=[1] (Replicated)
+
+[Profiling Matrix]
+----------------------------------------------------------------------
+  Attention TP Sizes             : [8]
+  FFN TP Sizes                   : [8]
+  Replicated TP Size             : [1]
+  Max Tokens                     : 6144
+  Token Count Samples            : 4
+  Total Combinations             : ~8 (2 TP configs x 4 token counts)
+======================================================================
+
+[--yes flag set, proceeding without confirmation]
+
+  0%|          | 0/8 [00:00<?, ?it/s]INFO 12:26:05 quantization_manager.py:286] Quantization configured from model config: model=stepfun-ai/Step-5-Preview default=BF16 quant_method=fp8
+USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm']
+ 12%|█▎        | 1/8 [00:07<00:55,  7.97s/it]USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm']
+ 25%|██▌       | 2/8 [00:08<00:20,  3.35s/it]USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm']
+USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:08 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm']
+ 50%|█████     | 4/8 [00:08<00:05,  1.29s/it]INFO 12:26:08 quantization_manager.py:286] Quantization configured from model config: model=stepfun-ai/Step-5-Preview default=BF16 quant_method=fp8
+USDT:2026-10-21 12:26:09 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:09 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm', 'mlp_up_proj', 'mlp_act', 'mlp_down_proj', 'share_expert_up_proj', 'share_expert_act', 'share_expert_down_proj', 'step5_ffn_merge']
+ 62%|██████▎   | 5/8 [00:09<00:03,  1.25s/it]USDT:2026-10-21 12:26:09 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:09 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm', 'mlp_up_proj', 'mlp_act', 'mlp_down_proj', 'share_expert_up_proj', 'share_expert_act', 'share_expert_down_proj', 'step5_ffn_merge']
+ 75%|███████▌  | 6/8 [00:09<00:01,  1.06it/s]USDT:2026-10-21 12:26:09 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:09 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm', 'mlp_up_proj', 'mlp_act', 'mlp_down_proj', 'share_expert_up_proj', 'share_expert_act', 'share_expert_down_proj', 'step5_ffn_merge']
+ 88%|████████▊ | 7/8 [00:09<00:00,  1.37it/s]USDT:2026-10-21 12:26:10 743:743 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:26:10 743:743 SyncActivityProfilerHandler.cpp:59] profiler_stop
+[DEBUG] Collected operations: ['emb', 'input_layernorm', 'post_attention_layernorm', 'mlp_up_proj', 'mlp_act', 'mlp_down_proj', 'share_expert_up_proj', 'share_expert_act', 'share_expert_down_proj', 'step5_ffn_merge']
+100%|██████████| 8/8 [00:10<00:00,  1.64it/s]✓ Saved linear-op profiling data to: /mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/linear/compute/h200/stepfun-ai/Step-5-Preview/linear_op_kernel_only.csv
+100%|██████████| 8/8 [00:10<00:00,  1.28s/it]

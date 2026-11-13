@@ -1,0 +1,343 @@
+.....................F......FF.......................................... [ 16%]
+........................................................................ [ 32%]
+........................................................................ [ 49%]
+........................................................................ [ 65%]
+.......s................................................................ [ 81%]
+......................FF.........s.s......................s............. [ 98%]
+........                                                                 [100%]
+=================================== FAILURES ===================================
+_ test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers _
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_core_closure_parent01/test_selected_sources_reach_re0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f99c7d22260>
+
+    def test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers(tmp_path, monkeypatch):
+        from frontier.config.model_config import BaseModelConfig
+        from frontier.execution_time_predictor.moe_dataset_training import MoeDatasetTraining
+        from frontier.execution_time_predictor.step5 import step5_operator_training_rows
+        from tests.unit.test_step5_measured_training import _manager
+        from tests.unit.test_step5_measured_ffn import _config, _tables
+        model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+        replica = SimpleNamespace(model_config=model, model_name="stepfun-ai/Step-5-Preview", device="h800",
+            attn_tensor_parallel_size=8, moe_tensor_parallel_size=1, moe_expert_parallel_size=16,
+            moe_routing_distribution_type="position_cyclic", speculative_decoding_config=None)
+        linear, moe = _tables(tmp_path, model, expert_parallel_size=16)
+        linear_rows = pd.read_csv(linear)
+        linear_rows["measurement_type"] = "CUDA_EVENT"
+        linear_rows.to_csv(linear, index=False)
+        rows, facts = _position_source_rows(model)
+        rows.to_csv(moe, index=False)
+        manager = _manager(tmp_path / "selected", MeasurementType.CUDA_EVENT)
+        manager._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(replica_config=replica)}
+        def forbidden(*args, **kwargs):
+            pytest.fail("unbound legacy MoE helper reached")
+        monkeypatch.setattr(manager, "_get_moe_op_tp_key", forbidden)
+        monkeypatch.setattr(manager, "_is_moe_op_ep_agnostic", forbidden)
+>       manager._validate_moe_dataset_contract(str(moe), replica, list(facts), ClusterType.MONOLITHIC, operator_facts=facts)
+
+tests/unit/test_moe_grouped_gemm_padded_features.py:298: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/layer_contract_resolution.py:399: in _validate_moe_dataset_contract
+    filter_moe_operator_rows(df, operator_facts=facts,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    num_tokens  ...  time_stats.moe_input_quantize.kernel_count
+0           8  ...                                           3
+1           8  ...                                           3
+
+[2 rows x 22 columns]
+operator_facts = {'spec': OperatorSpec(name='moe_gating_linear', role=<OperatorRole.PROJECTION: 'projection'>, phases=(<OperatorPhase.P...mily_ids=('moe',), tensor_parallel_sizes=(1,), selected_padded_ffn_width=1536), 'model_name': 'moe_gating_linear', ...}
+requested_runtime_path = 'position_cyclic'
+source_name = '/data/ycfeng/tmp/d29_core_closure_parent01/test_selected_sources_reach_re0/moe.csv'
+
+    def filter_moe_operator_rows(df, *, operator_facts, requested_runtime_path, source_name):
+        """Admit an already bound physical scope without resolving another operator.
+    
+        Native row metadata is supplied by the caller from its selected contract;
+        neither weight precision nor the presence of a timing column selects it.
+        """
+        path = validate_moe_gating_routing_runtime_path(requested_runtime_path)
+        if path != "position_cyclic":
+            return filter_moe_gating_routing_topk_rows(
+                df, requested_runtime_path=path, source_name=source_name,
+            ) if operator_facts["spec"].name == "moe_gating_routing_topk" else df
+        from frontier.operators.families import MOE_FAMILY, get_moe_profiling_operators
+        from frontier.operators.typed_contracts import parse_typed_operator_contracts, validate_typed_operator_metadata
+        from frontier.moe_gating_runtime import validate_moe_gating_runtime_context
+    
+        spec, binding, contract = (operator_facts[key] for key in ("spec", "binding", "layer_contract"))
+        context = operator_facts["native_context"]
+        selected = get_moe_profiling_operators(context)
+        if (context["model_architecture_profile"] != "step5" or context["routing_runtime_path"] != path
+                or spec not in selected or binding.operator != spec or binding.family_id != "moe"):
+            raise ValueError("MoE operator_facts do not bind an applicable Step physical scope")
+        scope = operator_facts["frame_scope"]
+        expected_scope = "source_local" if spec.ep_agnostic else "dp_gathered"
+        if (scope != expected_scope or contract.tensor_parallel_mode != spec.tp_mode
+                or (contract.expert_parallel_size is None) != spec.ep_agnostic):
+            raise ValueError("MoE bound frame/TP/EP facts conflict with the selected spec")
+        metadata = operator_facts["row_metadata"]
+        if not metadata:
+            raise ValueError("MoE position rows require selected native row metadata")
+        required = {"model_architecture_profile", "routing_runtime_path", "moe_frame_scope",
+                    "typed_operator_contracts", "num_tokens", "live_routing_token_count",
+                    "masked_routing_token_count", "num_tensor_parallel_workers", "expert_parallel_size",
+                    "gating_runtime_context", "profiling_precision", "routing_input", *metadata}
+        missing = sorted(required - set(df.columns))
+        if missing:
+>           raise ValueError(f"MoE physical scope metadata missing {missing}. Source: {source_name}")
+E           ValueError: MoE physical scope metadata missing ['routing_input']. Source: /data/ycfeng/tmp/d29_core_closure_parent01/test_selected_sources_reach_re0/moe.csv
+
+frontier/moe_routing_runtime.py:97: ValueError
+_______ test_independent_selected_actual_fit_cache_binds_native_context ________
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_core_closure_parent01/test_independent_selected_actu0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f99c820f820>
+
+    def test_independent_selected_actual_fit_cache_binds_native_context(tmp_path, monkeypatch):
+        from frontier.config.model_config import BaseModelConfig
+        from sklearn.ensemble import RandomForestRegressor
+        model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+        rows, facts = _position_source_rows(model)
+        rows["model_arch"] = model.model_arch
+        path = tmp_path / "moe.csv"
+        rows.to_csv(path, index=False)
+        predictor = object.__new__(_ConcreteMoEPredictor)
+        predictor._model_config, predictor._moe_input_file = model, str(path)
+        predictor._replica_config = SimpleNamespace(model_config=model, moe_tensor_parallel_size=1, moe_expert_parallel_size=16)
+        predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+        predictor._config = SimpleNamespace(no_cache=False, k_fold_cv_splits=2, num_training_job_threads=1)
+        predictor._cache_dir, predictor._kernel_gap_ms = str(tmp_path), None
+        monkeypatch.setattr(predictor, "to_dict", lambda: {})
+        monkeypatch.setattr(predictor, "_get_estimator", lambda: RandomForestRegressor(n_estimators=2, random_state=0))
+        monkeypatch.setattr(predictor, "_get_grid_search_params", lambda: {})
+>       first = predictor._train_moe_models(operator_facts=facts)
+
+tests/unit/test_moe_grouped_gemm_padded_features.py:389: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/moe_dataset_training.py:392: in _train_moe_models
+    self._validate_moe_dataset_contract(moe_df, moe_input_file, list(operator_facts),
+frontier/execution_time_predictor/moe_dataset_training.py:254: in _validate_moe_dataset_contract
+    filter_moe_operator_rows(moe_df, operator_facts=facts,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    num_tokens  ...  model_arch
+0           8  ...     generic
+1           8  ...     generic
+
+[2 rows x 23 columns]
+operator_facts = {'spec': OperatorSpec(name='moe_gating_linear', role=<OperatorRole.PROJECTION: 'projection'>, phases=(<OperatorPhase.P...mily_ids=('moe',), tensor_parallel_sizes=(1,), selected_padded_ffn_width=1536), 'model_name': 'moe_gating_linear', ...}
+requested_runtime_path = 'position_cyclic'
+source_name = '/data/ycfeng/tmp/d29_core_closure_parent01/test_independent_selected_actu0/moe.csv'
+
+    def filter_moe_operator_rows(df, *, operator_facts, requested_runtime_path, source_name):
+        """Admit an already bound physical scope without resolving another operator.
+    
+        Native row metadata is supplied by the caller from its selected contract;
+        neither weight precision nor the presence of a timing column selects it.
+        """
+        path = validate_moe_gating_routing_runtime_path(requested_runtime_path)
+        if path != "position_cyclic":
+            return filter_moe_gating_routing_topk_rows(
+                df, requested_runtime_path=path, source_name=source_name,
+            ) if operator_facts["spec"].name == "moe_gating_routing_topk" else df
+        from frontier.operators.families import MOE_FAMILY, get_moe_profiling_operators
+        from frontier.operators.typed_contracts import parse_typed_operator_contracts, validate_typed_operator_metadata
+        from frontier.moe_gating_runtime import validate_moe_gating_runtime_context
+    
+        spec, binding, contract = (operator_facts[key] for key in ("spec", "binding", "layer_contract"))
+        context = operator_facts["native_context"]
+        selected = get_moe_profiling_operators(context)
+        if (context["model_architecture_profile"] != "step5" or context["routing_runtime_path"] != path
+                or spec not in selected or binding.operator != spec or binding.family_id != "moe"):
+            raise ValueError("MoE operator_facts do not bind an applicable Step physical scope")
+        scope = operator_facts["frame_scope"]
+        expected_scope = "source_local" if spec.ep_agnostic else "dp_gathered"
+        if (scope != expected_scope or contract.tensor_parallel_mode != spec.tp_mode
+                or (contract.expert_parallel_size is None) != spec.ep_agnostic):
+            raise ValueError("MoE bound frame/TP/EP facts conflict with the selected spec")
+        metadata = operator_facts["row_metadata"]
+        if not metadata:
+            raise ValueError("MoE position rows require selected native row metadata")
+        required = {"model_architecture_profile", "routing_runtime_path", "moe_frame_scope",
+                    "typed_operator_contracts", "num_tokens", "live_routing_token_count",
+                    "masked_routing_token_count", "num_tensor_parallel_workers", "expert_parallel_size",
+                    "gating_runtime_context", "profiling_precision", "routing_input", *metadata}
+        missing = sorted(required - set(df.columns))
+        if missing:
+>           raise ValueError(f"MoE physical scope metadata missing {missing}. Source: {source_name}")
+E           ValueError: MoE physical scope metadata missing ['routing_input']. Source: /data/ycfeng/tmp/d29_core_closure_parent01/test_independent_selected_actu0/moe.csv
+
+frontier/moe_routing_runtime.py:97: ValueError
+_ test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill _
+
+    def test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill():
+        from frontier.config.model_config import BaseModelConfig
+        from frontier.profiling.moe.main import _validate_canonical_moe_result_df
+        rows, facts = _position_source_rows(BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"))
+        rows["moe_input_id"], rows["moe_source_lane_id"], rows["moe_ep_rank"] = ["empty", "live"], 0, None
+        expected = {(name, "3-87", "source_local", 0, None) for name in ("empty", "live")}
+>       _validate_canonical_moe_result_df(rows, model="cpu_fixture", operator_facts=facts, expected_cells=expected)
+
+tests/unit/test_moe_grouped_gemm_padded_features.py:409: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/profiling/moe/main.py:528: in _validate_canonical_moe_result_df
+    filter_moe_operator_rows(df, operator_facts=facts, requested_runtime_path="position_cyclic", source_name=model)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    num_tokens  live_routing_token_count  ...  moe_source_lane_id  moe_ep_rank
+0           8                         0 ...    0         None
+1           8                         4  ...                   0         None
+
+[2 rows x 25 columns]
+operator_facts = {'spec': OperatorSpec(name='moe_gating_linear', role=<OperatorRole.PROJECTION: 'projection'>, phases=(<OperatorPhase.P...mily_ids=('moe',), tensor_parallel_sizes=(1,), selected_padded_ffn_width=1536), 'model_name': 'moe_gating_linear', ...}
+requested_runtime_path = 'position_cyclic', source_name = 'cpu_fixture'
+
+    def filter_moe_operator_rows(df, *, operator_facts, requested_runtime_path, source_name):
+        """Admit an already bound physical scope without resolving another operator.
+    
+        Native row metadata is supplied by the caller from its selected contract;
+        neither weight precision nor the presence of a timing column selects it.
+        """
+        path = validate_moe_gating_routing_runtime_path(requested_runtime_path)
+        if path != "position_cyclic":
+            return filter_moe_gating_routing_topk_rows(
+                df, requested_runtime_path=path, source_name=source_name,
+            ) if operator_facts["spec"].name == "moe_gating_routing_topk" else df
+        from frontier.operators.families import MOE_FAMILY, get_moe_profiling_operators
+        from frontier.operators.typed_contracts import parse_typed_operator_contracts, validate_typed_operator_metadata
+        from frontier.moe_gating_runtime import validate_moe_gating_runtime_context
+    
+        spec, binding, contract = (operator_facts[key] for key in ("spec", "binding", "layer_contract"))
+        context = operator_facts["native_context"]
+        selected = get_moe_profiling_operators(context)
+        if (context["model_architecture_profile"] != "step5" or context["routing_runtime_path"] != path
+                or spec not in selected or binding.operator != spec or binding.family_id != "moe"):
+            raise ValueError("MoE operator_facts do not bind an applicable Step physical scope")
+        scope = operator_facts["frame_scope"]
+        expected_scope = "source_local" if spec.ep_agnostic else "dp_gathered"
+        if (scope != expected_scope or contract.tensor_parallel_mode != spec.tp_mode
+                or (contract.expert_parallel_size is None) != spec.ep_agnostic):
+            raise ValueError("MoE bound frame/TP/EP facts conflict with the selected spec")
+        metadata = operator_facts["row_metadata"]
+        if not metadata:
+            raise ValueError("MoE position rows require selected native row metadata")
+        required = {"model_architecture_profile", "routing_runtime_path", "moe_frame_scope",
+                    "typed_operator_contracts", "num_tokens", "live_routing_token_count",
+                    "masked_routing_token_count", "num_tensor_parallel_workers", "expert_parallel_size",
+                    "gating_runtime_context", "profiling_precision", "routing_input", *metadata}
+        missing = sorted(required - set(df.columns))
+        if missing:
+>           raise ValueError(f"MoE physical scope metadata missing {missing}. Source: {source_name}")
+E           ValueError: MoE physical scope metadata missing ['routing_input']. Source: cpu_fixture
+
+frontier/moe_routing_runtime.py:97: ValueError
+____ test_position_runtime_binds_retained_source_and_full_plan_policy[None] ____
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_core_closure_parent01/test_position_runtime_binds_re0')
+foreign = None
+
+    @pytest.mark.parametrize("foreign", [None, {"quant_dtype":"float8_e4m3fn"}])
+    def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, foreign):
+        import json
+        from types import SimpleNamespace
+        from dataclasses import asdict
+        from frontier.execution_time_predictor.moe_routing_workload import MoeRoutingWorkload
+        from frontier.cc_backend.collective_plan import CollectivePlan,CollectiveTensor
+        from tests.unit.test_moe_position_routing import source,materialize
+        from frontier.profiling.moe.inputs import MoESourceFrame
+        lane=materialize(source()).lane(0)
+        tensors=[vars(CollectiveTensor("output","bfloat16",2,4,4))]
+        context=dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=None,defer_input_quant=False,
+            native_facts=dict(shared={"image":"cpu_fixture"}),collective_tensors=dict(dispatch=tensors,output=tensors))
+        frames=[asdict(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context)) for s in lane.routing_source.source_lanes]
+        receipt=dict(moe_ep_rank=0,total_routed_tokens=0,routing_input=json.dumps(dict(source_frames=frames)),native_context=json.dumps(context))
+        model=SimpleNamespace(_frontier_moe_physical_rows=(receipt,))
+        class Predictor(MoeRoutingWorkload):
+            _step5_ffn_model=lambda self,*a:(model,None)
+            _build_grouped_gemm_features=lambda self,*a,**k:dict(num_tokens=17,total_routed_tokens=0)
+        p=Predictor();p._replica_config=SimpleNamespace(device="h800",attn_tensor_parallel_size=8)
+        p._model_config=SimpleNamespace(supports_share_expert=lambda:True)
+        p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(tmp_path)))
+        measured=dict(shared=context["native_facts"]["shared"],execution_policy={"0":{"branches":["cpu_fixture"]}})
+        counts={}
+        for phase in ("dispatch","combine","routed_tp","shared_tp"):
+            groups=tuple((i,8+i) for i in range(8)) if phase in ("dispatch","combine") else (tuple(range(8)),tuple(range(8,16)))
+            plan=CollectivePlan(phase,(16,1),tuple(CollectiveTensor(**t) for t in tensors),groups,"none",json.dumps(measured),json.dumps(dict(actual_buffer="cpu_fixture",compute_context=context)))
+            counts[plan.cache_key()]=dict(context=measured,buffer_receipt=json.loads(plan.buffer_json))
+        path=tmp_path/"h800/collective_local.json";path.parent.mkdir();path.write_text(json.dumps(dict(counts=counts)))
+>       native,features,plans=p._step5_position_queries(lane)
+
+tests/unit/test_moe_routing_runtime.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/moe_routing_workload.py:134: in _step5_position_queries
+    group = next(group for group in resolve_routed_layer_groups(self._model_config)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model_config = namespace(supports_share_expert=<function test_position_runtime_binds_retained_source_and_full_plan_policy.<locals>.<lambda> at 0x7f99c74636d0>)
+
+    def resolve_routed_layer_groups(model_config) -> Tuple[RoutedLayerGroup, ...]:
+        """Return the routed layer groups, or ``()`` when one model-wide setting applies."""
+    
+>       resolver = _ROUTED_LAYER_GROUP_RESOLVERS.get(model_config.model_type)
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'model_type'
+
+frontier/profiling/moe/routed_layer_groups.py:118: AttributeError
+__ test_position_runtime_binds_retained_source_and_full_plan_policy[foreign1] __
+
+tmp_path = PosixPath('/data/ycfeng/tmp/d29_core_closure_parent01/test_position_runtime_binds_re1')
+foreign = {'quant_dtype': 'float8_e4m3fn'}
+
+    @pytest.mark.parametrize("foreign", [None, {"quant_dtype":"float8_e4m3fn"}])
+    def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path, foreign):
+        import json
+        from types import SimpleNamespace
+        from dataclasses import asdict
+        from frontier.execution_time_predictor.moe_routing_workload import MoeRoutingWorkload
+        from frontier.cc_backend.collective_plan import CollectivePlan,CollectiveTensor
+        from tests.unit.test_moe_position_routing import source,materialize
+        from frontier.profiling.moe.inputs import MoESourceFrame
+        lane=materialize(source()).lane(0)
+        tensors=[vars(CollectiveTensor("output","bfloat16",2,4,4))]
+        context=dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=None,defer_input_quant=False,
+            native_facts=dict(shared={"image":"cpu_fixture"}),collective_tensors=dict(dispatch=tensors,output=tensors))
+        frames=[asdict(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context)) for s in lane.routing_source.source_lanes]
+        receipt=dict(moe_ep_rank=0,total_routed_tokens=0,routing_input=json.dumps(dict(source_frames=frames)),native_context=json.dumps(context))
+        model=SimpleNamespace(_frontier_moe_physical_rows=(receipt,))
+        class Predictor(MoeRoutingWorkload):
+            _step5_ffn_model=lambda self,*a:(model,None)
+            _build_grouped_gemm_features=lambda self,*a,**k:dict(num_tokens=17,total_routed_tokens=0)
+        p=Predictor();p._replica_config=SimpleNamespace(device="h800",attn_tensor_parallel_size=8)
+        p._model_config=SimpleNamespace(supports_share_expert=lambda:True)
+        p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(tmp_path)))
+        measured=dict(shared=context["native_facts"]["shared"],execution_policy={"0":{"branches":["cpu_fixture"]}})
+        counts={}
+        for phase in ("dispatch","combine","routed_tp","shared_tp"):
+            groups=tuple((i,8+i) for i in range(8)) if phase in ("dispatch","combine") else (tuple(range(8)),tuple(range(8,16)))
+            plan=CollectivePlan(phase,(16,1),tuple(CollectiveTensor(**t) for t in tensors),groups,"none",json.dumps(measured),json.dumps(dict(actual_buffer="cpu_fixture",compute_context=context)))
+            counts[plan.cache_key()]=dict(context=measured,buffer_receipt=json.loads(plan.buffer_json))
+        path=tmp_path/"h800/collective_local.json";path.parent.mkdir();path.write_text(json.dumps(dict(counts=counts)))
+>       native,features,plans=p._step5_position_queries(lane)
+
+tests/unit/test_moe_routing_runtime.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+frontier/execution_time_predictor/moe_routing_workload.py:134: in _step5_position_queries
+    group = next(group for group in resolve_routed_layer_groups(self._model_config)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model_config = namespace(supports_share_expert=<function test_position_runtime_binds_retained_source_and_full_plan_policy.<locals>.<lambda> at 0x7f99c7169510>)
+
+    def resolve_routed_layer_groups(model_config) -> Tuple[RoutedLayerGroup, ...]:
+        """Return the routed layer groups, or ``()`` when one model-wide setting applies."""
+    
+>       resolver = _ROUTED_LAYER_GROUP_RESOLVERS.get(model_config.model_type)
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'model_type'
+
+frontier/profiling/moe/routed_layer_groups.py:118: AttributeError
+=========================== short test summary info ============================
+FAILED tests/unit/test_moe_grouped_gemm_padded_features.py::test_selected_sources_reach_real_preflights_loader_and_both_trainers_before_old_helpers
+FAILED tests/unit/test_moe_grouped_gemm_padded_features.py::test_independent_selected_actual_fit_cache_binds_native_context
+FAILED tests/unit/test_moe_grouped_gemm_padded_features.py::test_selected_output_inventory_uses_declared_cells_without_structural_zero_fill
+FAILED tests/unit/test_moe_routing_runtime.py::test_position_runtime_binds_retained_source_and_full_plan_policy[None]
+FAILED tests/unit/test_moe_routing_runtime.py::test_position_runtime_binds_retained_source_and_full_plan_policy[foreign1]
+5 failed, 431 passed, 4 skipped, 3 deselected in 274.93s (0:04:34)

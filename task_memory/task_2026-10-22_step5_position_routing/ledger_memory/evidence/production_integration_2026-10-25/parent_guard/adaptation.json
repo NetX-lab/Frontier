@@ -1,0 +1,11 @@
+{
+  "prior": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/audit.py",
+  "prior_sha256": "235f6bd71c2fbe92740278c438a88e97a2b7ec44110993e9ff3b8cc52404f714",
+  "new_sha256": "8044468da664fccef96b2423d4232b32ff8ab1a0be8c85fa369d8196bba3d636",
+  "changes": [
+    "Bind same complete audit to actual production2ca5e571 and local checkout.",
+    "Permit only pre-existing untracked .cortexkit/.pi paths at primary; retain full status and index hashes, reject any other change.",
+    "Task ID names production guard."
+  ],
+  "scope_predicates_unchanged": true
+}

@@ -100,6 +100,28 @@ class ReplicaScheduleEvent(BaseEvent):
                 ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, lane_id)
                 for lane_id in replica_scheduler.consume_dp_sync_release()
             )
+            events.extend(
+                ReplicaScheduleEvent(tick_time, self._replica_id, self._cluster_type, lane_id)
+                for lane_id, tick_time in replica_scheduler.consume_dp_dispatch_host_ticks()
+            )
+            if replica_scheduler.engine_loop_idle:
+                events.extend(self._connector_step_events(scheduler, metrics_store, replica_scheduler))
+        return events
+
+    def _connector_step_events(self, scheduler, metrics_store, replica_scheduler) -> List[BaseEvent]:
+        """Report the NIXL READs that a pass with no forward found, its connector-only step.
+
+        While READs stay posted, the idle engine steps again when the earliest
+        wire time ends.
+        """
+        from frontier.events.kv_cache_transfer_end_event import report_nixl_reads
+
+        events = report_nixl_reads(scheduler, metrics_store, replica_scheduler, self.time)
+        wire_end = replica_scheduler.next_nixl_read_end
+        if wire_end is not None:
+            events.append(
+                ReplicaScheduleEvent(wire_end, self._replica_id, self._cluster_type, self._replica_local_id)
+            )
         return events
 
     def _events_for_schedule_pass(

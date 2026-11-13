@@ -1,0 +1,44 @@
+{
+  "original": {
+    "evidence": {
+      "path": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+      "sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d",
+      "bytes": 1978121
+    },
+    "unique_cases": 8093,
+    "counts": {
+      "skipped": 178,
+      "error": 31,
+      "pass": 7617,
+      "failure": 267
+    }
+  },
+  "latest": {
+    "evidence": {
+      "path": "/data/ycfeng/tmp/d30_unit_candidate01.xml",
+      "sha256": "7bcfb335e7488995aafe498d6fb7c11c7280a055fa0e118fc9886eebbcff2802",
+      "bytes": 1983189
+    },
+    "unique_cases": 8124,
+    "counts": {
+      "skipped": 179,
+      "error": 31,
+      "pass": 7647,
+      "failure": 267
+    }
+  },
+  "e41": {
+    "evidence": {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/unit/results.xml",
+      "sha256": "2a14e4db9990282224e77807cb043f64415ac9399503446aa0b32fb3ed6c61fb",
+      "bytes": 2119174
+    },
+    "unique_cases": 8607,
+    "counts": {
+      "skipped": 281,
+      "error": 32,
+      "pass": 8015,
+      "failure": 279
+    }
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "task_id": "D24-NATIVE-STAGE",
+  "status": "PASS_PACKAGE_STATIC",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "interpreter": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "python_sources_compiled": [
+    "compare_attention_state.py",
+    "launcher_scope.py",
+    "native_pd_worker.py",
+    "probe_nixl_read.py",
+    "probe_runtime_inventory.py",
+    "r2_bootstrap/sitecustomize.py",
+    "r2_controls.py",
+    "r2_observation.py",
+    "r2_reference.py",
+    "r2_runtime.py",
+    "r2_verdict.py",
+    "role_capacity_observation.py",
+    "role_state_observation.py",
+    "submit_native_pd.py",
+    "tests/__init__.py",
+    "tests/comparison/calibration/pd_metrics.py",
+    "tests/comparison/calibration/pd_proxy.py",
+    "tests/comparison/calibration/pd_replay.py",
+    "tests/comparison/calibration/serving_metrics.py",
+    "tests/comparison/dp_placement_pp/vllm_replay.py",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+    "tests/integration/step5_pd/canonical_replay.py",
+    "tests/integration/step5_pd/r2_replay.py",
+    "tests/integration/step5_pd/run_waves.py",
+    "verify_r2_stage.py"
+  ],
+  "bash_scripts_checked": [
+    "stage/submit.sh",
+    "spawn_arguments.command"
+  ],
+  "staged_imports": [
+    {
+      "cwd": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02",
+      "mode": "isolated Python; staged worker and replay path setup; no vLLM import",
+      "modules": {
+        "native_pd_worker": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/native_pd_worker.py",
+          "sha256": "7a5bda64661758feacd5b68d525a7947af9addf5491008b38f1ed36bbb262509"
+        },
+        "pd_metrics": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/pd_metrics.py",
+          "sha256": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857"
+        },
+        "pd_proxy": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/pd_proxy.py",
+          "sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce"
+        },
+        "pd_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/pd_replay.py",
+          "sha256": "bcb86bdf1af5ccd28802cf2c5d951d328cb994b3fe1101f3f3b70b5c4be5cb4c"
+        },
+        "probe_nixl_read": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/probe_nixl_read.py",
+          "sha256": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997"
+        },
+        "probe_runtime_inventory": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/probe_runtime_inventory.py",
+          "sha256": "4bc60d138f42d9370a3743d6890c0460f18811868b9673a00d898aea0b476a6d"
+        },
+        "r2_controls": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_controls.py",
+          "sha256": "7d0d6840a8605bd1cbb3bc25979435b5d125aa354ea36fc0ba76cbc758672bf7"
+        },
+        "r2_observation": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_observation.py",
+          "sha256": "774280921282530c3df3eb22d8f20435d8b99766ffe412f7cafac20a045e5b81"
+        },
+        "r2_reference": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_reference.py",
+          "sha256": "30fbfd0a9eb440cc5dd42e3fc550eff2c2f1782fabdbce1bea92212bca8f7698"
+        },
+        "r2_runtime": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_runtime.py",
+          "sha256": "b71bc59620648ea2d575d1c32906b3da7b682ba2353efd56a0614f1c2900326a"
+        },
+        "role_capacity_observation": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/role_capacity_observation.py",
+          "sha256": "d7a99b5bab66d10f1ae9aaae7a2e9698a8cc55b44142ee295e0f22691f127899"
+        },
+        "role_state_observation": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/role_state_observation.py",
+          "sha256": "5fa8c349c05e3ca2d75e5c369e6fad6d7f2b4b34e1f2f90ec78902f11c38510d"
+        },
+        "serving_metrics": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/serving_metrics.py",
+          "sha256": "e3acad6140dbf72120ab8caac7f0d92002011314ab36e91278f1e54963f35744"
+        },
+        "tests": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/__init__.py",
+          "sha256": "81f3a00ab4ffe271061304ef43806ead6265602dd02005a40aa946e20c3f7f22"
+        },
+        "tests.integration.step5_pd.canonical_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/integration/step5_pd/canonical_replay.py",
+          "sha256": "5a5459fbba3cb012dedb5c69f088e6653b61a7d26b3e508ce86b72c73add56c6"
+        },
+        "tests.integration.step5_pd.r2_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/integration/step5_pd/r2_replay.py",
+          "sha256": "35e346e2cf2e657cadf4feb8a74d4822ba18584ec67c4ea31f93bb075580885b"
+        },
+        "vllm_burst_driver": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+          "sha256": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6"
+        },
+        "vllm_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/dp_placement_pp/vllm_replay.py",
+          "sha256": "f491f231f50652dacf05f6ac00d94bee64ea5b4fb649f24bd5e039a586b4115a"
+        }
+      }
+    },
+    {
+      "cwd": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage",
+      "mode": "isolated Python; staged worker and replay path setup; no vLLM import",
+      "modules": {
+        "native_pd_worker": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/native_pd_worker.py",
+          "sha256": "7a5bda64661758feacd5b68d525a7947af9addf5491008b38f1ed36bbb262509"
+        },
+        "pd_metrics": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/pd_metrics.py",
+          "sha256": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857"
+        },
+        "pd_proxy": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/pd_proxy.py",
+          "sha256": "1720b0e8145ab0fcd1ff19c716e59490f18591188cf50308a2a43e6ce61650ce"
+        },
+        "pd_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/pd_replay.py",
+          "sha256": "bcb86bdf1af5ccd28802cf2c5d951d328cb994b3fe1101f3f3b70b5c4be5cb4c"
+        },
+        "probe_nixl_read": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/probe_nixl_read.py",
+          "sha256": "22995e66121122adb3924502ec4c763a500c88e90fc6fba5b340a832098ac997"
+        },
+        "probe_runtime_inventory": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/probe_runtime_inventory.py",
+          "sha256": "4bc60d138f42d9370a3743d6890c0460f18811868b9673a00d898aea0b476a6d"
+        },
+        "r2_controls": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_controls.py",
+          "sha256": "7d0d6840a8605bd1cbb3bc25979435b5d125aa354ea36fc0ba76cbc758672bf7"
+        },
+        "r2_observation": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_observation.py",
+          "sha256": "774280921282530c3df3eb22d8f20435d8b99766ffe412f7cafac20a045e5b81"
+        },
+        "r2_reference": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_reference.py",
+          "sha256": "30fbfd0a9eb440cc5dd42e3fc550eff2c2f1782fabdbce1bea92212bca8f7698"
+        },
+        "r2_runtime": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/r2_runtime.py",
+          "sha256": "b71bc59620648ea2d575d1c32906b3da7b682ba2353efd56a0614f1c2900326a"
+        },
+        "role_capacity_observation": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/role_capacity_observation.py",
+          "sha256": "d7a99b5bab66d10f1ae9aaae7a2e9698a8cc55b44142ee295e0f22691f127899"
+        },
+        "role_state_observation": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/role_state_observation.py",
+          "sha256": "5fa8c349c05e3ca2d75e5c369e6fad6d7f2b4b34e1f2f90ec78902f11c38510d"
+        },
+        "serving_metrics": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/calibration/serving_metrics.py",
+          "sha256": "e3acad6140dbf72120ab8caac7f0d92002011314ab36e91278f1e54963f35744"
+        },
+        "tests": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/__init__.py",
+          "sha256": "81f3a00ab4ffe271061304ef43806ead6265602dd02005a40aa946e20c3f7f22"
+        },
+        "tests.integration.step5_pd.canonical_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/integration/step5_pd/canonical_replay.py",
+          "sha256": "5a5459fbba3cb012dedb5c69f088e6653b61a7d26b3e508ce86b72c73add56c6"
+        },
+        "tests.integration.step5_pd.r2_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/integration/step5_pd/r2_replay.py",
+          "sha256": "35e346e2cf2e657cadf4feb8a74d4822ba18584ec67c4ea31f93bb075580885b"
+        },
+        "vllm_burst_driver": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+          "sha256": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6"
+        },
+        "vllm_replay": {
+          "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage/tests/comparison/dp_placement_pp/vllm_replay.py",
+          "sha256": "f491f231f50652dacf05f6ac00d94bee64ea5b4fb649f24bd5e039a586b4115a"
+        }
+      }
+    }
+  ],
+  "preflight_reproduced": true,
+  "creator_expectation": "i-fengyicheng",
+  "local_mount_source_target": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02",
+  "cloud_mount_declaration": "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp",
+  "cloud_destination_string": "/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d24_capture02",
+  "cloud_access": false,
+  "total_gpu": 32,
+  "budget_seconds": 5400,
+  "budget_gpu_hours": 48,
+  "actual_platform_mount_creator_resources": "UNVERIFIED_PARENT_LIVE_CHECK_REQUIRED",
+  "native_validation": "UNVERIFIED_NOT_RUN",
+  "submission_markers_present": false,
+  "job_created": false
+}

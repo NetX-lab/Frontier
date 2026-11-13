@@ -1,0 +1,205 @@
+{
+  "status": "PASS_RECOVERED_RUNTIME_ARTIFACTS_AND_CURRENT_SOURCE",
+  "collected_utc": "2026-10-24T20:00:59.288239+00:00",
+  "source": "2ca5e57113b0bc99ab84e926e5bb492b3670072e",
+  "current_head": "cc3d2215504fe3ba8f9ea7a620d9f6e973102eaa",
+  "git_status_before_commit": " M task_memory/task_2026-10-22_step5_position_routing/plan.md\n M task_memory/task_2026-10-22_step5_position_routing/progress.md\n M task_memory/task_2026-10-22_step5_position_routing/requirements.md\n M task_memory/task_2026-10-22_step5_position_routing/summary.md\n?? .cortexkit/\n?? .pi/\n",
+  "runtime_probe_receipts": [
+    {
+      "label": "configured_runtime_local_probe",
+      "exit_code": 0,
+      "receipt_sha256": "56c48cd3b927e111f7ef7f0d2fb1f287859e685666fae63d7dce8703d74c1cd5"
+    },
+    {
+      "label": "configured_runtime_image_probe",
+      "exit_code": 0,
+      "receipt_sha256": "cbdc6e0dfb7f8161da6a0f2b4d426927808e33aa3098fbb8fdbc6a3bc5c7797d"
+    }
+  ],
+  "runtime_files": [
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/canonical_runtime_probe.execution.json",
+      "bytes": 1235,
+      "sha256": "c4f0622e8f9678aff1291225719bb6d1fd8db0b019f05e767cbe2cae0b3a37ac"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/canonical_runtime_probe.stderr",
+      "bytes": 67,
+      "sha256": "cb210f4102727cd6ea26f8ca207b1fd1ac40eb97b7771bb4613cd771f22ab3b1"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/canonical_runtime_probe.stdout",
+      "bytes": 2942,
+      "sha256": "dd0af747e8479d7c2c07d098bf45459596b5d6a23cfb0a3e3157ebb58d323a0f"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/complete_python_runtime.py",
+      "bytes": 3938,
+      "sha256": "fc8839b05286f0dc033fb74a0711a9f1d03ef8a42948018d5a57366e5f85e778"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/configure_python_runtime.py",
+      "bytes": 2995,
+      "sha256": "fb576bce3f0cb594cd5bd3fb3d0457cfb07ef05afef07b047180616f5d048d60"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/configured_runtime_image_probe.execution.json",
+      "bytes": 2082,
+      "sha256": "cbdc6e0dfb7f8161da6a0f2b4d426927808e33aa3098fbb8fdbc6a3bc5c7797d"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/configured_runtime_image_probe.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/configured_runtime_image_probe.stdout",
+      "bytes": 3500,
+      "sha256": "74e89c577d83b601cc4220d61e8036cac5e60ed5edcd7020cd630b9270c2fb73"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/configured_runtime_local_probe.execution.json",
+      "bytes": 1577,
+      "sha256": "56c48cd3b927e111f7ef7f0d2fb1f287859e685666fae63d7dce8703d74c1cd5"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/configured_runtime_local_probe.stderr",
+      "bytes": 67,
+      "sha256": "e2a32324404b7eae4608455c946b3f59be08ca0d07ca91ad696c9a998ee74d84"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/configured_runtime_local_probe.stdout",
+      "bytes": 3500,
+      "sha256": "6aebaf55f3fd8bb46c61799f177e1b2bb554036204beb9a1e64523a7ed13688b"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/copied_runtime_image_probe.execution.json",
+      "bytes": 1823,
+      "sha256": "6810cdcb372670976c883ccd3a9f019de1fc49638fe4988a909a75ac01bb5998"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/copied_runtime_image_probe.stderr",
+      "bytes": 741,
+      "sha256": "88a3aa201c09f7d06486885e7cf553b93d8842c790d648d580aae52a71b16f4a"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/copied_runtime_image_probe.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/copied_runtime_local_probe.execution.json",
+      "bytes": 1292,
+      "sha256": "81272407ea37361d087c65a046a0a851cc07965fe68f34f29b6df68ea9a201b0"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/copied_runtime_local_probe.stderr",
+      "bytes": 808,
+      "sha256": "a27e42c3e9e7e6b457c4d1c30e0e23727ec726032589cdc27fd22dbe65f407a2"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/copied_runtime_local_probe.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/image_environment_probe.execution.json",
+      "bytes": 1352,
+      "sha256": "ee53fb6459607c9bfec2cba796047e0c24301eaecca16cddef9c037a507d92e5"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/image_environment_probe.py",
+      "bytes": 1787,
+      "sha256": "91d44b4a764c2086715b5a771e4f2de80d8616b3ca54fce47aabe0781f992240"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/image_environment_probe.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/image_environment_probe.stdout",
+      "bytes": 979,
+      "sha256": "b21ca319385e3b96ad6981baef5584c29622620000b1e406c443612623082fed"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/prepare_python_runtime.py",
+      "bytes": 3373,
+      "sha256": "528e0048c366f7264d55c0eb8dae74af71b74081cd1e5e2e11fb7c7d79e06c96"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_completed.execution.json",
+      "bytes": 1310,
+      "sha256": "c4c2abf2092176d100e2f7877f0ca3d774354273aea03aebcc747f96219d9452"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_completed.json",
+      "bytes": 9046,
+      "sha256": "d4ba27bc87dd63905bc872ac180ec58d4e7e72a99a3f883e754ca8bdcb9efb3e"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_completed.stderr",
+      "bytes": 67,
+      "sha256": "9263b7a8a28c56e095aa0008441fb1fbbc1fa34caa76dbc66a59602b4436c8a0"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_completed.stdout",
+      "bytes": 1454,
+      "sha256": "c9db42033cb88a0ce37cc586e5a237e8aa5f27bc9e89b157b67254186c3b6abb"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_configured.execution.json",
+      "bytes": 1297,
+      "sha256": "603fc95c1fdfa332960135e7a50f0aa90b8bc1d9ba20007dd1d3504b597305c4"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_configured.json",
+      "bytes": 1948,
+      "sha256": "01e6155a67d5d7d88ef7265f0e90f227c97756066258e10392e277b9fe99fdc1"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_configured.stderr",
+      "bytes": 67,
+      "sha256": "162fb1a8665c430f64e44c02f8aca609e24a741d3174627dcd526a2b696b0dcd"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_configured.stdout",
+      "bytes": 1948,
+      "sha256": "01e6155a67d5d7d88ef7265f0e90f227c97756066258e10392e277b9fe99fdc1"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_copy.execution.json",
+      "bytes": 1121,
+      "sha256": "1dfa252ef67e6117c7eea546241a3e7918c2fc00f5a91750a0f3ea657d302a53"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_copy.stderr",
+      "bytes": 78,
+      "sha256": "29abb6120bd443d73e6e8ecae24261677988f223bfab8d204b68c0d2c1f1774d"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_copy.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_probe.py",
+      "bytes": 3004,
+      "sha256": "5669d6b0f64b40abbff96efbd431305983cb8e3db81c3e87f0f962b81b37e350"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/resume_state.json",
+      "bytes": 40955,
+      "sha256": "11fef63ef4fc79384b4ab6074d9687e4e0ad987b04feb15143bdfccbecde2ca7"
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/runtime_acceptance.json",
+      "bytes": 10696,
+      "sha256": "90602bea2bde4073f26b38d16ccc652e93a80d25b6de6137c6dea997e3c8b3c4"
+    }
+  ],
+  "validation_type": "Metadata/hash/parse inspection only; no runtime probe, wave or suite rerun",
+  "new_pricing_calls": 0,
+  "new_shape_calls": 0,
+  "new_platform_operations": 0
+}

@@ -347,8 +347,10 @@ class _FullStructureGPTModel(torch.nn.Module):
             self.final_norm = None
 
         # LM head: separate weight when tie_word_embeddings is False
-        tie_word_embeddings = getattr(config, "tie_word_embeddings", True)
-        if stage_slice.include_lm_head and not tie_word_embeddings:
+        if (
+            stage_slice.include_lm_head
+            and getattr(config, "tie_word_embeddings", None) is False
+        ):
             self.lm_head = VocabParallelEmbedding(
                 config.vocab_size,
                 config.embedding_dim,

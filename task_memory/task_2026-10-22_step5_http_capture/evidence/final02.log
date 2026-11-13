@@ -1,0 +1,5 @@
+........................................................................ [ 36%]
+........................................................................ [ 73%]
+....................................................                     [100%]
+196 passed in 77.89s (0:01:17)
+{"command": ["/data/ycfeng/envs/asyncopd-py312/bin/python", "-m", "pytest", "tests/unit/test_step5_http_capture.py", "tests/unit/test_calibration_pd_harness.py", "tests/unit/test_step5_canonical_g3.py", "tests/unit/test_step5_canonical_native.py", "tests/unit/test_step5_client_metrics.py", "-q", "-p", "no:cacheprovider", "--basetemp=/data/ycfeng/tmp/d23_step5_http_capture01/final02"], "returncode": 0, "wall_s": 78.53259207773954, "peak_child_rss_kib": 535428}

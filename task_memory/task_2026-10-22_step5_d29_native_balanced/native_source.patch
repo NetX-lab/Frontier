@@ -1,0 +1,211 @@
+--- a/native-image/vllm/forward_context.py
++++ b/native-image/vllm/forward_context.py
+@@ -182,6 +182,9 @@
+     # tokens. Consumers can use it to skip work for padded tokens. None when
+     # the producer does not set it.
+     is_padding: torch.Tensor | None = None
++
++    # Actual device logical positions, scoped by the outer text-model forward.
++    routing_positions: torch.Tensor | None = None
+ 
+     # If True, bypass the compiled model call, e.g. by using .forward() directly
+     skip_compiled: bool = False
+@@ -235,6 +238,18 @@
+ 
+ def is_forward_context_available() -> bool:
+     return _forward_context is not None
++
++
++@contextmanager
++def set_routing_positions(positions: torch.Tensor):
++    """Bind routing positions without replacing or resetting the forward context."""
++    context = get_forward_context()
++    previous = context.routing_positions
++    context.routing_positions = positions
++    try:
++        yield
++    finally:
++        context.routing_positions = previous
+ 
+ 
+ def in_piecewise_cudagraph() -> bool:
+--- a/native-image/vllm/models/step5/nvidia/model.py
++++ b/native-image/vllm/models/step5/nvidia/model.py
+@@ -32,7 +32,11 @@
+     get_tp_group,
+     tensor_model_parallel_all_reduce,
+ )
+-from vllm.forward_context import get_forward_context, is_forward_context_available
++from vllm.forward_context import (
++    get_forward_context,
++    is_forward_context_available,
++    set_routing_positions,
++)
+ from vllm.logger import init_logger
+ from vllm.model_executor.determinism.batch_invariant import (
+     linear_batch_invariant,
+@@ -2407,6 +2411,11 @@
+         intermediate_tensors: IntermediateTensors | None = None,
+         inputs_embeds: torch.Tensor | None = None,
+     ):
++        if envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY == "position_cyclic":
++            with set_routing_positions(positions):
++                return self.model(
++                    input_ids, positions, intermediate_tensors, inputs_embeds
++                )
+         return self.model(input_ids, positions, intermediate_tensors, inputs_embeds)
+ 
+     def compute_logits(self, hidden_states: torch.Tensor) -> torch.Tensor:
+--- a/native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py
++++ b/native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py
+@@ -123,6 +123,9 @@
+             top_k=top_k,
+             global_num_experts=global_num_experts,
+             eplb_state=eplb_state,
++            scoring_func=scoring_func,
++            renormalize=renormalize,
++            routed_scaling_factor=routed_scaling_factor,
+         )
+ 
+     if zero_expert_type is not None:
+--- a/native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py
++++ b/native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py
+@@ -7,6 +7,7 @@
+ 
+ import vllm.envs as envs
+ from vllm.distributed.eplb.eplb_state import EplbLayerState
++from vllm.forward_context import get_forward_context
+ from vllm.logger import init_logger
+ from vllm.model_executor.layers.fused_moe.config import RoutingMethodType
+ from vllm.model_executor.layers.fused_moe.router.base_router import BaseRouter
+@@ -24,6 +25,10 @@
+         router_logits: torch.Tensor,
+         top_k: int,
+         indices_type: torch.dtype | None = None,
++        *,
++        positions: torch.Tensor | None = None,
++        renormalize: bool = True,
++        routed_scaling_factor: float = 1.0,
+     ) -> tuple[torch.Tensor, torch.Tensor]:
+         """Route tokens to experts.
+ 
+@@ -88,6 +93,10 @@
+         router_logits: torch.Tensor,
+         top_k: int,
+         indices_type: torch.dtype | None = None,
++        *,
++        positions: torch.Tensor | None = None,
++        renormalize: bool = True,
++        routed_scaling_factor: float = 1.0,
+     ) -> tuple[torch.Tensor, torch.Tensor]:
+         """Randomly select experts for each token using the specified distribution.
+ 
+@@ -215,6 +224,42 @@
+         }
+ 
+ 
++class PositionCyclicRouting(RoutingStrategy):
++    """Select experts from actual logical positions and score unbiased logits."""
++
++    def route_tokens(
++        self,
++        hidden_states: torch.Tensor,
++        router_logits: torch.Tensor,
++        top_k: int,
++        indices_type: torch.dtype | None = None,
++        *,
++        positions: torch.Tensor | None = None,
++        renormalize: bool = True,
++        routed_scaling_factor: float = 1.0,
++    ) -> tuple[torch.Tensor, torch.Tensor]:
++        if router_logits.ndim != 2:
++            raise ValueError("position_cyclic requires logits with shape [M, E]")
++        rows, experts = router_logits.shape
++        if not 1 <= top_k <= experts:
++            raise ValueError("position_cyclic requires 1 <= top_k <= num_experts")
++        if positions is None:
++            raise ValueError("position_cyclic requires scoped routing_positions")
++        if positions.shape != (rows,) or positions.dtype not in (
++            torch.int8, torch.int16, torch.int32, torch.int64
++        ):
++            raise ValueError("routing_positions must be a signed integer tensor [M]")
++        if positions.device != router_logits.device:
++            raise ValueError("routing_positions and logits must be on the same device")
++        ids = (positions.to(torch.int64)[:, None] * top_k
++               + torch.arange(top_k, device=positions.device)) % experts
++        weights = torch.sigmoid(router_logits.float().gather(1, ids))
++        if renormalize:
++            weights = weights / weights.sum(dim=-1, keepdim=True)
++        weights = weights * routed_scaling_factor
++        return weights, ids.to(indices_type or torch.int32)
++
++
+ class RoutingSimulator:
+     """Token-to-Expert Routing Simulator.
+ 
+@@ -232,6 +277,7 @@
+         "normal_routing": DistributionBasedRouting(
+             distribution="normal", mean=0.0, std=1.0
+         ),
++        "position_cyclic": PositionCyclicRouting(),
+     }
+ 
+     @classmethod
+@@ -262,6 +308,10 @@
+         strategy_name: str,
+         top_k: int,
+         indices_type: torch.dtype | None = None,
++        *,
++        positions: torch.Tensor | None = None,
++        renormalize: bool = True,
++        routed_scaling_factor: float = 1.0,
+     ) -> tuple[torch.Tensor, torch.Tensor]:
+         """Simulate token-to-expert routing using the specified strategy.
+ 
+@@ -295,6 +345,9 @@
+             router_logits=router_logits,
+             top_k=top_k,
+             indices_type=indices_type,
++            positions=positions,
++            renormalize=renormalize,
++            routed_scaling_factor=routed_scaling_factor,
+         )
+ 
+ 
+@@ -306,7 +359,16 @@
+         top_k: int,
+         global_num_experts: int,
+         eplb_state: EplbLayerState | None = None,
++        *,
++        scoring_func: str = "softmax",
++        renormalize: bool = True,
++        routed_scaling_factor: float = 1.0,
+     ):
++        if (envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY == "position_cyclic"
++                and scoring_func != "sigmoid"):
++            raise ValueError("position_cyclic supports configured sigmoid scoring only")
++        self.renormalize = renormalize
++        self.routed_scaling_factor = routed_scaling_factor
+         super().__init__(
+             top_k=top_k,
+             global_num_experts=global_num_experts,
+@@ -327,11 +389,19 @@
+     ) -> tuple[torch.Tensor, torch.Tensor]:
+         """Use routing simulator to compute routing."""
+         routing_strategy = envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY
++        context = get_forward_context() if routing_strategy == "position_cyclic" else None
+         topk_weights, topk_ids = RoutingSimulator.simulate_routing(
+             hidden_states=hidden_states,
+             router_logits=router_logits,
+             strategy_name=routing_strategy,
+             top_k=self.top_k,
+             indices_type=indices_type,
++            positions=context.routing_positions if context is not None else None,
++            renormalize=self.renormalize,
++            routed_scaling_factor=self.routed_scaling_factor,
+         )
++        if context is not None and envs.VLLM_MOE_SKIP_PADDING and context.is_padding is not None:
++            mask = context.is_padding[:router_logits.shape[0], None]
++            topk_ids = topk_ids.masked_fill(mask, -1)
++            topk_weights = topk_weights.masked_fill(mask, 0)
+         return topk_weights, topk_ids

@@ -1,0 +1,33 @@
+{
+  "argv": [
+    "timeout",
+    "60s",
+    "sudo",
+    "-n",
+    "systemd-run",
+    "--scope",
+    "--quiet",
+    "-p",
+    "MemoryMax=30G",
+    "runuser",
+    "-u",
+    "brainpp",
+    "--",
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "TMPDIR=/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "NUMEXPR_NUM_THREADS=1",
+    "/data/ycfeng/envs/frontier-py310/bin/python",
+    "-B",
+    "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/merge_ledger/parent_guard/audit.py"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "start_utc": "2026-10-24T19:06:09.685893+00:00",
+  "end_utc": "2026-10-24T19:06:11.891980+00:00",
+  "duration_s": 2.206078120972961,
+  "returncode": 0,
+  "script_sha256": "8044468da664fccef96b2423d4232b32ff8ab1a0be8c85fa369d8196bba3d636"
+}

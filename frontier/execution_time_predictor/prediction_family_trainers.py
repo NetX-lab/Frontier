@@ -7,6 +7,7 @@ frame, and hands one model at a time to the shared fitting routine.
 """
 
 import functools
+import json
 import os
 import numpy as np
 import pandas as pd
@@ -64,6 +65,7 @@ from frontier.moe_routing_runtime import (
 from frontier.operators.families import (
     FFN_FAMILY,
     SHARE_EXPERT_FAMILY,
+    STEP5_FFN_FAMILY,
     get_family_profiling_names,
 )
 from frontier.profiling.cpu_overhead.validation import cpu_overhead_feature_columns, cpu_overhead_model_names
@@ -80,9 +82,49 @@ logger = init_logger(__name__)
 class PredictionFamilyTrainers(KernelCountTraining):
     """Per-family model training for the execution-time predictor."""
 
+    def _train_step5_input_layernorm_for_cluster(
+        self, cluster_type, replica_config, execution_time_predictor_config,
+        linear_ops_file: str, trained_model_signatures: set,
+    ) -> Dict[str, BaseEstimator]:
+        """Fit the outside-root norm and explicitly measured optional stage scopes."""
+        config = replica_config.model_config
+        if _resolve_model_architecture_profile_id(config) != "step5":
+            raise ValueError("Step input normalization requires the Step architecture profile")
+        tp_size = self._get_linear_op_tp_key("input_layernorm", cluster_type, replica_config, config.is_moe)
+        signature = ("step5_input_layernorm", replica_config.device, config.get_quant_signature(),
+                     self._active_measurement_type, linear_ops_file, tp_size)
+        if signature in trained_model_signatures:
+            return {}
+        frame = self._load_linear_op_df(
+            linear_ops_file, tp_size, required_columns=["time_stats.input_layernorm.median"],
+        )
+        context = {
+            "cluster_type": str(cluster_type), "device": replica_config.device,
+            "model_name": replica_config.model_name, "model_architecture_profile": "step5",
+            "input_file": linear_ops_file, "tensor_parallel_size": tp_size,
+            "step5_generic_compute": config,
+        }
+        from frontier.execution_time_predictor.step5 import (
+            STEP5_STAGE_BOUNDARY_NAMES, step5_operator_training_rows,
+        )
+
+        names = ["input_layernorm", *(name for name in STEP5_STAGE_BOUNDARY_NAMES
+                                     if f"time_stats.{name}.median" in frame)]
+        # Validate optional explicit targets before publishing any part of this fit.
+        for name in names:
+            step5_operator_training_rows(name, frame, context, self._active_measurement_type)
+        models = {
+            name: self._train_single_model(
+                name, frame, ["num_tokens"], f"time_stats.{name}.median",
+                execution_time_predictor_config, training_context=context,
+            ) for name in names
+        }
+        trained_model_signatures.add(signature)
+        return models
+
     def _train_ffn_models_for_cluster(self, cluster_type: ClusterType, replica_config, execution_time_predictor_config,
-                                        linear_ops_file: str, moe_file: str,
-                                        is_moe_model: bool, trained_model_signatures: set) -> Dict[str, BaseEstimator]:
+                                         linear_ops_file: str, moe_file: str,
+                                         is_moe_model: bool, trained_model_signatures: set, *, operator_facts=None) -> Dict[str, BaseEstimator]:
         """
         Train FFN/MoE models for a specific cluster.
 
@@ -96,6 +138,14 @@ class PredictionFamilyTrainers(KernelCountTraining):
         """
         models = {}
 
+        if operator_facts is None and is_moe_model and getattr(replica_config, "moe_routing_distribution_type", None) == "position_cyclic":
+            from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
+            for facts in position_moe_operator_facts(pd.read_csv(moe_file), replica_config):
+                models.update(self._train_ffn_models_for_cluster(cluster_type, replica_config,
+                    execution_time_predictor_config, linear_ops_file, moe_file, is_moe_model,
+                    trained_model_signatures, operator_facts=facts))
+            return models
+
         ffn_tp_key = self._get_ffn_tp_key(cluster_type, replica_config, is_moe_model)
         tp_size = ffn_tp_key
 
@@ -103,13 +153,14 @@ class PredictionFamilyTrainers(KernelCountTraining):
         model_config = replica_config.model_config
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
         architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
-        primary_contract = self._resolve_typed_layer_contract(
+        primary_contract = next(iter(operator_facts.values()))["layer_contract"] if operator_facts else self._resolve_typed_layer_contract(
             "moe_grouped_gemm" if is_moe_model else "mlp_up_proj",
             cluster_type,
             replica_config,
             is_moe_model=is_moe_model,
         )
-        typed_contract_hash = self._get_ffn_contract_signature(
+        typed_contract_hash = tuple((name, _serialize_selected_layer_cache_identity(facts["layer_contract"]))
+                                    for name, facts in operator_facts.items()) if operator_facts else self._get_ffn_contract_signature(
             cluster_type,
             replica_config,
             is_moe_model,
@@ -123,6 +174,11 @@ class PredictionFamilyTrainers(KernelCountTraining):
             f"_layer_contracts{typed_contract_hash}"
             f"_family{self._measurement_family_name(active_measurement_type)}"
         )
+        if operator_facts:
+            ffn_signature += json.dumps({name: dict(native_context=dict(facts["native_context"]),
+                frame_scope=facts["frame_scope"], precision=facts["precision"].name,
+                row_metadata=dict(facts["row_metadata"]), features=list(facts["feature_columns"]),
+                gating_context=facts.get("gating_runtime_context")) for name, facts in operator_facts.items()}, sort_keys=True)
 
         if ffn_signature in trained_model_signatures:
             logger.info(f"Skipping FFN models training for {cluster_type} - already trained with signature {ffn_signature}")
@@ -139,6 +195,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
             'model_architecture_profile': architecture_profile_id,
             'use_qk_norm': bool(getattr(model_config, 'use_qk_norm', False)),
         }
+        if architecture_profile_id == "step5":
+            training_context["step5_generic_compute"] = model_config
 
         # Choose input file based on model type
         if is_moe_model:
@@ -151,9 +209,12 @@ class PredictionFamilyTrainers(KernelCountTraining):
             # MoE core operations with per-operation feature selection
             # Split gating into moe_gating_linear and moe_gating_routing_topk (Step 1.6)
             # Aligned with frontier/training/moe_trainer.py _get_feature_cols() method
-            base_moe_model_names = _get_moe_family_model_names()
+            position = getattr(replica_config, "moe_routing_distribution_type", "balanced") == "position_cyclic"
+            if position and not operator_facts:
+                raise ValueError("Position MoE training requires committed native row bindings before legacy enumeration")
+            base_moe_model_names = list(operator_facts) if position else _get_moe_family_model_names()
             moe_model_names = list(base_moe_model_names)
-            if should_enable_prefill_hot_moe_gating_contract(
+            if not position and should_enable_prefill_hot_moe_gating_contract(
                 model_config=model_config,
                 model_arch=model_arch,
                 model_name=replica_config.model_name,
@@ -179,6 +240,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
                 base_moe_model_names,
                 cluster_type,
                 **_layer_contract_kwargs(primary_contract),
+                **({"operator_facts": operator_facts} if position else {}),
             )
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
                 getattr(replica_config, "moe_routing_distribution_type", "balanced")
@@ -203,6 +265,14 @@ class PredictionFamilyTrainers(KernelCountTraining):
                 Optional[int],
                 Optional[ResolvedLayerContract],
             ]:
+                if position:
+                    facts = operator_facts[model_name]
+                    contract = facts["layer_contract"]
+                    tp, ep = contract.tensor_parallel_size, contract.expert_parallel_size
+                    op_df = self._load_moe_df(moe_input_file, replica_config, load_imbalance=False,
+                        tensor_parallel_size=tp, expert_parallel_size=ep, operator_facts=facts,
+                        **_layer_contract_kwargs(contract, operator_name=facts["spec"].name))
+                    return op_df, tp, ep, contract
                 base_model_name = get_moe_gating_base_model_name(model_name)
                 op_layer_contract = self._resolve_typed_layer_contract(
                     base_model_name,
@@ -309,7 +379,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     )
 
                     op_moe_df, op_feature_cols = select_moe_operator_features(
-                        model_name, op_moe_df
+                        model_name, op_moe_df, operator_facts=operator_facts[model_name] if position else None,
                     )
                     logger.info(
                         f"  {model_name}: features {op_feature_cols} (TP={moe_tp_key})"
@@ -318,7 +388,9 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     # Store feature_cols in training_context for this specific operation
                     op_training_context['feature_cols'] = op_feature_cols
 
-                    target_op_name = get_moe_gating_base_model_name(model_name)
+                    if position:
+                        op_training_context["operator_facts"] = operator_facts[model_name]
+                    target_op_name = operator_facts[model_name]["spec"].profiling_name() if position else get_moe_gating_base_model_name(model_name)
                     train_kwargs: Dict[str, Any] = dict(
                         model_name=model_name,
                         df=op_moe_df,
@@ -331,7 +403,10 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     models[model_name] = self._train_single_model(
                         **train_kwargs,
                     )
-                    if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
+                    from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+                    schema = moe_grouped_gemm_schema(op_feature_cols, native_context=operator_facts[model_name]["native_context"]
+                        if position and not operator_facts[model_name]["spec"].ep_agnostic else None)
+                    if schema is not None and schema.uses_block_size_m_ranges:
                         models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(
                             op_moe_df
                         )
@@ -496,6 +571,17 @@ class PredictionFamilyTrainers(KernelCountTraining):
             trained_model_signatures.add(layernorm_signature)
             logger.info(f"Trained {layernorm_model_name} for {cluster_type}")
 
+        if architecture_profile_id == "step5":
+            for name in get_family_profiling_names(STEP5_FFN_FAMILY):
+                signature = f"{name}_{ffn_signature}"
+                if signature in trained_model_signatures:
+                    continue
+                models[name] = self._train_single_model(
+                    name, linear_ops_df, ["num_tokens"], f"time_stats.{name}.median",
+                    execution_time_predictor_config, training_context=layernorm_context,
+                )
+                trained_model_signatures.add(signature)
+
         # Mark this FFN configuration as trained
         trained_model_signatures.add(ffn_signature)
         return models
@@ -617,6 +703,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
         tp_size = replica_config.attn_tensor_parallel_size
 
         model_config = replica_config.model_config
+        if model_config is not None:
+            resolve_runtime_attention_family(model_config).require_enabled_for_execution()
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
         architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
         attention_signature = (
@@ -625,7 +713,9 @@ class PredictionFamilyTrainers(KernelCountTraining):
             f"_family{self._measurement_family_name(self._active_measurement_type)}"
         )
 
-        if attention_signature in trained_model_signatures:
+        is_step5 = (model_config is not None
+                    and resolve_runtime_attention_family(model_config).family_id == "step5_attention")
+        if not is_step5 and attention_signature in trained_model_signatures:
             logger.info(f"Skipping attention models training for {cluster_type} - already trained")
             return models
 
@@ -640,6 +730,27 @@ class PredictionFamilyTrainers(KernelCountTraining):
             'model_architecture_profile': architecture_profile_id,
             'use_qk_norm': bool(getattr(model_config, 'use_qk_norm', False)),
         }
+
+        if is_step5:
+            from frontier.execution_time_predictor.step5 import (
+                load_step5_attention_input_union, step5_attention_input_hash, train_step5_attention_models,
+            )
+
+            attention_df, fit_config = load_step5_attention_input_union(
+                self, cluster_type, replica_config, replica_scheduler_config,
+                execution_time_predictor_config, attn_file, self._active_measurement_type,
+            )
+            union_hash = step5_attention_input_hash(self, attention_df, fit_config, self._active_measurement_type)
+            attention_signature = f"{attention_signature}_inputs{union_hash}"
+            if attention_signature in trained_model_signatures:
+                return models
+            inputs = attention_df.attrs["measurement_identity"].get("attention_inputs")
+            training_context["input_file"] = [source["path"] for source in inputs] if inputs else attn_file
+            models = train_step5_attention_models(
+                self, attention_df, fit_config, training_context,
+            )
+            trained_model_signatures.add(attention_signature)
+            return models
 
         # ========== Part 1: Linear operations from linear_op.csv ==========
         # These include: input_layernorm, attn_pre_proj, attn_post_proj, attn_rope
@@ -1522,26 +1633,60 @@ class PredictionFamilyTrainers(KernelCountTraining):
             training_context,
             explicit_layer_contract=layer_contract,
         )
-        fit = functools.partial(
-            self._fit_single_model,
-            execution_time_predictor_config=execution_time_predictor_config,
-            training_context=training_context,
-            persist_exact_lookup=persist_exact_lookup,
-            layer_contract=layer_contract,
-        )
-        model, profiling_precision = fit(model_name, df, feature_cols, target_col)
-        self._store_model_precision(
-            model_name,
-            profiling_precision,
-            model,
-            **_layer_contract_kwargs(layer_contract),
-        )
-        if not count_kernels:
-            return model
-        return self._paired_with_kernel_count_model(
-            model, model_name, df, feature_cols, target_col,
-            train=lambda *count_model_args: fit(*count_model_args)[0],
-        )
+        frames = [(df, training_context)]
+        step5_compute = training_context.get("step5_generic_compute")
+        operator_facts = training_context.get("operator_facts")
+        if operator_facts is not None and (layer_contract != operator_facts["layer_contract"]
+                or feature_cols != list(operator_facts["feature_columns"])):
+            raise ValueError("MoE fit must use the bound selected layer contract and feature schema")
+        if operator_facts is not None or step5_compute is not None:
+            from frontier.execution_time_predictor.step5 import step5_operator_training_rows
+
+            frames = step5_operator_training_rows(
+                model_name, df, training_context, self._active_measurement_type,
+            )
+        for frame, context in frames:
+            if operator_facts is not None:
+                count_target = f"time_stats.{operator_facts['spec'].profiling_name()}.kernel_count"
+                if frame.groupby(feature_cols)[count_target].nunique().gt(1).any():
+                    raise ValueError("MoE selected physical key has conflicting measured kernel counts")
+            fit = functools.partial(
+                self._fit_single_model,
+                execution_time_predictor_config=execution_time_predictor_config,
+                training_context=context,
+                persist_exact_lookup=persist_exact_lookup,
+                layer_contract=layer_contract,
+            )
+            model, profiling_precision = fit(model_name, frame, feature_cols, target_col)
+            self._store_model_precision(
+                model_name, profiling_precision, model, **_layer_contract_kwargs(layer_contract),
+            )
+            if not count_kernels:
+                continue
+            if operator_facts is not None or (step5_compute is not None and (self._active_measurement_type is MeasurementType.KERNEL_ONLY
+                                              or f"time_stats.{model_name}.kernel_count" in frame)):
+                count_name = f"{model_name}_kernel_count"
+                count_target = f"time_stats.{operator_facts['spec'].profiling_name() if operator_facts else model_name}.kernel_count"
+                count_model, count_precision = fit(count_name, frame, feature_cols, count_target)
+                self._store_model_precision(
+                    count_name, count_precision, count_model, **_layer_contract_kwargs(layer_contract),
+                )
+                count_model._frontier_operator_name = operator_facts["spec"].profiling_name() if operator_facts else model_name
+                model._frontier_kernel_count_model = count_model
+                if operator_facts is not None:
+                    if set(model._frontier_exact_lookup) != set(count_model._frontier_exact_lookup):
+                        raise ValueError("MoE physical duration/count exact feature keys differ")
+                    if "native_binding" in frame:
+                        from frontier.moe_load_imbalance import moe_physical_row_receipts
+                        for fitted in (model, count_model):
+                            fitted._frontier_moe_physical_rows = moe_physical_row_receipts(frame)
+                    self._store_model_in_cache(model_name, model._frontier_model_hash, model)
+            elif step5_compute is None:
+                model = self._paired_with_kernel_count_model(
+                    model, model_name, frame, feature_cols, target_col,
+                    train=lambda *count_model_args: fit(*count_model_args)[0],
+                )
+        return model
 
     def _fit_single_model(
         self,
@@ -1597,7 +1742,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
         profiling_precision = self._get_profiling_precision_from_df(df)
         measurement_type = self._validate_active_measurement_type(df)
         hash_args = (
-            model_name,
+            json.dumps([model_name, training_context["measurement_identity"]], sort_keys=True) if training_context and training_context.get("operator_facts") else model_name,
             df,
             execution_time_predictor_config,
             profiling_precision,
@@ -1609,6 +1754,12 @@ class PredictionFamilyTrainers(KernelCountTraining):
         )
         cached_model = self._load_model_from_cache(model_name, model_hash)
         if cached_model is not None:
+            if training_context and "measurement_identity" in training_context:
+                self._validate_cached_measurement_identity(
+                    model_name=model_name, model=cached_model,
+                    requested_identity=training_context["measurement_identity"],
+                )
+                cached_model._frontier_cache_model_name = model_name
             if layer_contract is not None:
                 requested_identity = _serialize_selected_layer_cache_identity(
                     layer_contract
@@ -1720,6 +1871,18 @@ class PredictionFamilyTrainers(KernelCountTraining):
         setattr(best_estimator, "_frontier_model_hash", model_hash)
         if layer_contract is not None:
             self._model_contract_identity(best_estimator, layer_contract)
+
+        if training_context and "measurement_identity" in training_context:
+            self._set_measurement_identity(best_estimator, training_context["measurement_identity"])
+            best_estimator._frontier_cache_model_name = model_name
+        if training_context and training_context.get("step5_training"):
+            from frontier.execution_time_predictor.step5 import set_step5_model_coverage
+
+            set_step5_model_coverage(best_estimator, df)
+        if training_context and (training_context.get("step5_stage_boundary") or training_context.get("operator_facts")):
+            best_estimator._frontier_feature_bounds = {
+                name: (float(df[name].min()), float(df[name].max())) for name in feature_cols
+            }
 
         if persist_exact_lookup:
             setattr(

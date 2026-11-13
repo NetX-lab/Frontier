@@ -1,0 +1,181 @@
+{
+  "task_id": "D29-POST-KEY-FROZEN-REGRESSIONS",
+  "source_after": {
+    "head": "46fe83ac55876c10f6dd8ff792705e87efd1905f",
+    "tree": "bbbca98802261662e02d32a59c1a4d6ab20a12e5",
+    "status": "",
+    "submodule_head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "submodule_status": ""
+  },
+  "source_inventory": {
+    "path": "/data/ycfeng/tmp/d29_post_key_regressions_20261024/source_before.json",
+    "bytes": 504415,
+    "sha256": "78e1eb2d5a3aa3dcf80868f1a23fe264967e57e3e8d653aa17d86fcee63a496e"
+  },
+  "source_files_rehashed": 2629,
+  "source_hash_differences": [],
+  "guarded_input_count": 13,
+  "input_differences": [],
+  "input_before_after": [
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d29_unit_parent05.xml",
+        "bytes": 2109680,
+        "sha256": "cb64bf1bfbba142b5ad7b3fbad90343d1f9134e6a627c35af5017bfc3654a4d8"
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d29_unit_parent05.xml",
+        "bytes": 2109680,
+        "sha256": "cb64bf1bfbba142b5ad7b3fbad90343d1f9134e6a627c35af5017bfc3654a4d8"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+        "bytes": 1978121,
+        "sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d"
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d30_unit_baseline01.xml",
+        "bytes": 1978121,
+        "sha256": "4c1629eaf42bde40b033f43e480f77aa5c81cba8ca4dca00398f43cc9eeda25d"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d30_unit_candidate01.xml",
+        "bytes": 1983189,
+        "sha256": "7bcfb335e7488995aafe498d6fb7c11c7280a055fa0e118fc9886eebbcff2802"
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d30_unit_candidate01.xml",
+        "bytes": 1983189,
+        "sha256": "7bcfb335e7488995aafe498d6fb7c11c7280a055fa0e118fc9886eebbcff2802"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d30_canonical_count_green01.xml",
+        "bytes": 11260,
+        "sha256": "d54490d4f939869a618213df89ad704deed1dd34325d86b189b625ed5d7cdbda"
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d30_canonical_count_green01.xml",
+        "bytes": 11260,
+        "sha256": "d54490d4f939869a618213df89ad704deed1dd34325d86b189b625ed5d7cdbda"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/d29_regression_baseline01.json",
+        "bytes": 38478,
+        "sha256": "70a15ffd158e1971aa207e5017f2cf50a84e7b4ceb853f93965312d379d042b0"
+      },
+      "after": {
+        "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-07/task_memory/task_2026-10-22_step5_position_routing/repairs/evidence/d29_regression_baseline01.json",
+        "bytes": 38478,
+        "sha256": "70a15ffd158e1971aa207e5017f2cf50a84e7b4ceb853f93965312d379d042b0"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/manifest.json",
+        "bytes": 25878,
+        "sha256": "e8e6278666903b793d9f0eafe04871378b14fef3413c9fe58721677295e8a50c"
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/manifest.json",
+        "bytes": 25878,
+        "sha256": "e8e6278666903b793d9f0eafe04871378b14fef3413c9fe58721677295e8a50c"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/results.jsonl",
+        "bytes": 117454,
+        "sha256": "ece79d9f5ba9b3262d90e7e12388c86a9d7a12d8e6814765dad1a8a97817299a"
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/results.jsonl",
+        "bytes": 117454,
+        "sha256": "ece79d9f5ba9b3262d90e7e12388c86a9d7a12d8e6814765dad1a8a97817299a"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp",
+        "bytes": 21234672,
+        "sha256": "8818d1146c32505707dee41147cfe17de46a0c9f3cf6bb8fc7b1b3fe30e15637"
+      },
+      "after": {
+        "path": "/data/ycfeng/Frontier/.worktrees/verify-step5-d29-integrated-06/frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp",
+        "bytes": 21234672,
+        "sha256": "8818d1146c32505707dee41147cfe17de46a0c9f3cf6bb8fc7b1b3fe30e15637"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d29_group_reuse_parent01.xml",
+        "sha256": "a37987c7b72f64a87be43623b3136d93e12c8b103b00856cf525b8918177cb4f",
+        "bytes": 13377
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d29_group_reuse_parent01.xml",
+        "bytes": 13377,
+        "sha256": "a37987c7b72f64a87be43623b3136d93e12c8b103b00856cf525b8918177cb4f"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d29_group_reuse_trainers_parent01.xml",
+        "sha256": "6b411b2457883e46b96c136ffa5b43f420fcac465c8481bbe2ec798f3186e5d9",
+        "bytes": 594
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d29_group_reuse_trainers_parent01.xml",
+        "bytes": 594,
+        "sha256": "6b411b2457883e46b96c136ffa5b43f420fcac465c8481bbe2ec798f3186e5d9"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d29_artifact_parse_parent01.xml",
+        "sha256": "33ffaf6016ec49a718c099c9f23f10700a5b6007e4edb235e07cca6749cd4fe9",
+        "bytes": 19773
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d29_artifact_parse_parent01.xml",
+        "bytes": 19773,
+        "sha256": "33ffaf6016ec49a718c099c9f23f10700a5b6007e4edb235e07cca6749cd4fe9"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d29_loader_family_parent01.xml",
+        "sha256": "d7db803efc54dabf9b22e56e15d59413c5d644947901142c314aae40690fdacf",
+        "bytes": 4774
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d29_loader_family_parent01.xml",
+        "bytes": 4774,
+        "sha256": "d7db803efc54dabf9b22e56e15d59413c5d644947901142c314aae40690fdacf"
+      }
+    },
+    {
+      "before": {
+        "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+        "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1",
+        "bytes": 8366
+      },
+      "after": {
+        "path": "/data/ycfeng/tmp/d29_loader_governance_parent01.xml",
+        "bytes": 8366,
+        "sha256": "9a2c72314570ef9be14644c10a809811378471db81e43e5ebcb66e833488fdd1"
+      }
+    }
+  ],
+  "script_binding_count": 8,
+  "script_binding_differences": [],
+  "source_native_binary_present": false,
+  "verdict": "PASS"
+}

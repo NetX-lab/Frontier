@@ -1,0 +1,13 @@
+{
+  "returncode": 0,
+  "timed_out": false,
+  "command": [
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/bin/python",
+    "-B",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_execution/evidence/execution_preparation_2026-10-25/python_runtime_probe.py",
+    "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025"
+  ],
+  "cwd": "/data/ycfeng/Frontier/.worktrees/step5-preview",
+  "wall_s": 2.7717022635042667,
+  "configured_address_space_bytes": 32212254720
+}

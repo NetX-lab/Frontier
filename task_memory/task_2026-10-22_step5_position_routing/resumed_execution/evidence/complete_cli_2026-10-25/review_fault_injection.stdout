@@ -1,0 +1,9 @@
+{"status": "FAIL", "job_name": null, "creator": null, "business_status": "UNAVAILABLE", "final_poll": null}
+{"status": "FAIL", "job_name": "exp-1025-fault-only-000001", "creator": "i-fengyicheng", "business_status": "UNAVAILABLE", "final_poll": null}
+{"status": "PASS_COMPLETE_CPU_FIXTURE_PLATFORM_AND_BUSINESS", "job_name": "exp-1025-fault-only-000001", "creator": "i-fengyicheng", "business_status": "PASS_COMPLETE_CPU_FIXTURE_CLI", "final_poll": "succeeded"}
+{
+  "status": "PASS_TWO_REPRODUCED_DEFECTS_AND_THREE_REPAIRED_SCENARIOS",
+  "new_platform_calls": 0,
+  "new_workload_calls": 0,
+  "wall_s": 0.2679100460372865
+}

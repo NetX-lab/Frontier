@@ -1,0 +1,41 @@
+{
+  "decision_id": "D29-PREPARED-POINT-REUSE",
+  "authority": "D29-REPAIR-PATH-AUTHORITY",
+  "apply_after": "trace_serialization_scope_amendment.json",
+  "effective_unique_paths": 112,
+  "owner": "core_source",
+  "owner_gross_ceiling": 4404,
+  "repair_delta_ceiling": 250,
+  "source_delta_ceiling": 180,
+  "test_delta_ceiling": 70,
+  "repair_paths": [
+    "frontier/execution_time_predictor/moe_routing_workload.py",
+    "tests/unit/test_prediction_measurement_bindings.py",
+    "tests/unit/test_moe_routing_runtime.py"
+  ],
+  "path_ceiling_adjustments": [
+    {"path": "frontier/execution_time_predictor/moe_routing_workload.py", "before": 175, "delta": 148, "after": 323},
+    {"path": "tests/unit/test_prediction_measurement_bindings.py", "before": 260, "delta": 39, "after": 299},
+    {"path": "tests/unit/test_moe_routing_runtime.py", "before": 53, "delta": 25, "after": 78},
+    {"path": "tests/integration/test_step5_measured_main.py", "before": 283, "delta": -23, "after": 260},
+    {"path": "frontier/scheduler/utils/layer_workload.py", "before": 43, "delta": -21, "after": 22},
+    {"path": "frontier/profiling/moe/main.py", "before": 136, "delta": -20, "after": 116},
+    {"path": "tests/integration/run_step5_measured_main.py", "before": 66, "delta": -19, "after": 47},
+    {"path": "frontier/profiling/moe/inputs.py", "before": 138, "delta": -15, "after": 123},
+    {"path": "tests/unit/test_step5_attention_profiling.py", "before": 30, "delta": -15, "after": 15},
+    {"path": "frontier/profiling/step5/vllm_wrapper.py", "before": 29, "delta": -14, "after": 15},
+    {"path": "frontier/profiling/common/runtime_identity.py", "before": 146, "delta": -13, "after": 133},
+    {"path": "frontier/profiling/common/step5_job.py", "before": 80, "delta": -13, "after": 67},
+    {"path": "frontier/profiling/moe/moe_wrapper.py", "before": 179, "delta": -10, "after": 169},
+    {"path": "tests/unit/test_moe_profiling_output_metadata.py", "before": 135, "delta": -10, "after": 125},
+    {"path": "frontier/profiling/common/layers/layernorm.py", "before": 21, "delta": -9, "after": 12},
+    {"path": "tests/unit/test_moe_routing_conservation.py", "before": 71, "delta": -8, "after": 63},
+    {"path": "tests/integration/step5_measured_compute_fixture.py", "before": 155, "delta": -7, "after": 148},
+    {"path": "tests/unit/test_step5_request_free_profiling.py", "before": 30, "delta": -5, "after": 25},
+    {"path": "frontier/profiling/moe/moe_impl.py", "before": 62, "delta": -6, "after": 56},
+    {"path": "frontier/profiling/moe/load_distribution.py", "before": 5, "delta": -4, "after": 1}
+  ],
+  "reason": "The actual 16-EP DECODE wave repeatedly scans fixed physical-row receipts and 168 plan keys. Parent prototype verification prepares 16464 rows and 168 keys once, reducing warm decodes from 28003 to 1968 while all 80 current-file reads remain. The full replay payload is unchanged; the separate matrix has 36 positive comparisons and 24 negative records. Transfer 212 unused CORE path-allowance lines; existing target headroom supplies the remaining 38 of the conservative 250-gross allocation.",
+  "acceptance": "Preserve _step5_position_queries(lane), current group/family/registry/source/point selection, fresh native context and numerical duration/count/proof checks. Preparation is predictor-local and tracks actual estimator, attached row-tuple identity, measurement identity and current artifact text. Rebuild on supported replacements or text changes, retain read/parse errors and ambiguity/buffer/context/policy rejection. Compare full costs, source proofs and plan keys on the real wave plus existing multiple-point/layer/EP/family and replacement seams. Derive actual gross/net and per-path consumption from Git; do not copy prototype line estimates.",
+  "limits": "Three existing paths only, source<=180 and tests<=70 (binding test<=45, runtime test<=25), total<=250 gross. No numeric or whole-proof cache, global cache, new public interface/module/configuration, read suppression, fallback, changed cache identity or reduced workflow gates. Keep other residual proposals unallocated. Including the concurrent trace20 reservation, conservative CORE consumption is at most 4240/4404, leaving164. Final union review/freeze precedes full CLI and regression acceptance."
+}

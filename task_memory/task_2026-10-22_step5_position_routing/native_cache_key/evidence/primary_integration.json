@@ -1,0 +1,52 @@
+{
+  "status": "PASS_PRIMARY_SOURCE_AND_FROZEN_BINDINGS",
+  "integrated_head": "9584941cce9427ac7e5f64e4afa88273a706263c",
+  "integrated_tree": "f0ff4db9a99336427f679d1840e1eded74d8b93d",
+  "source_commit": "376983d2ecc441d1e0a8cb8b943e65a2dcb217b5",
+  "source_merge": "c668a938856f41ae0ce541f4c8780d2ac875984d",
+  "scope_artifacts_verified": 9,
+  "frozen_artifacts_verified": 24,
+  "bindings_verified": 124,
+  "unchanged_non_key_digest": "eaf97ec1746ad70a1e2bb97fcd9d9e4a8f176dcb166c09c65e6ac26d74ba01b6",
+  "fresh_cumulative": {
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py": 93,
+    "frontier/cc_backend/collective_plan.py": 139,
+    "tests/unit/test_collective_sim_cc_backend.py": 237
+  },
+  "totals": {
+    "baseline_owner_actual": {
+      "pricing": 3954,
+      "core_source": 4261,
+      "native": 1350
+    },
+    "owner_actual": {
+      "core_source": 4261,
+      "pricing": 3955,
+      "native": 1350
+    },
+    "owner_caps": {
+      "core_source": 4404,
+      "pricing": 3956,
+      "native": 1582
+    },
+    "owner_paths": {
+      "core_source": 49,
+      "pricing": 46,
+      "native": 19
+    },
+    "source_actual": 9566,
+    "source_cap": 9942,
+    "source_headroom": 376,
+    "global_actual": 9580,
+    "global_cap": 10000,
+    "global_headroom": 420
+  },
+  "preserved_untracked": [
+    ".cortexkit/.gitignore",
+    ".pi/subagents.json"
+  ],
+  "script_sha256": "8ffffd2cfbbff47af402b49846c00dc5e5a9ff88fae9629e84cccbbc3e9fb939",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "limits": "No suites or probes rerun. Source equivalence carries the frozen results, not native admission or full-CLI acceptance. Unrelated untracked files are preserved."
+}

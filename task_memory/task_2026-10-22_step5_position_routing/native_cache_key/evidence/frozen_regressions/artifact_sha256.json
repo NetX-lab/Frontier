@@ -1,0 +1,130 @@
+{
+  "files": {
+    "unit_execution.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-unit/execution.json",
+      "bytes": 12661,
+      "sha256": "2b41c8004467e0e00700305f7b00c92e0d0db0533e17f19c0561daccb9e6fe11"
+    },
+    "matrix_execution.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/execution.json",
+      "bytes": 22464,
+      "sha256": "27c10f8ca50dce7b37b23df75f62fa0d77722427c90d1fd53c473832fbb659a0"
+    },
+    "unit_comparison.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen_unit_comparison.json",
+      "bytes": 1172,
+      "sha256": "aa9513422db655353b567638a8f10b5789de494d889978c03d611bcad6976033"
+    },
+    "unit_comparison.log": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen_unit_comparison.log",
+      "bytes": 1172,
+      "sha256": "aa9513422db655353b567638a8f10b5789de494d889978c03d611bcad6976033"
+    },
+    "matrix_comparison.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/comparison.json",
+      "bytes": 3819,
+      "sha256": "02a558b25c3184b87b0bd32ed9a2aa626811c13b58c932b2edc5044b0e950b19"
+    },
+    "matrix_compare.log": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/compare.log",
+      "bytes": 594,
+      "sha256": "e7d08b852c0de9944e0b97e23cc08d6e33f6be4fe5d5de9252d4f5ac89ce7ceb"
+    },
+    "unit_launcher.log": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen_unit_launcher.log",
+      "bytes": 175,
+      "sha256": "2b6f0d191ca388dfed756e6909e9bf6ad57412c747baa4ec7d0494383fd69048"
+    },
+    "matrix_launcher.log": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen_matrix_launcher.log",
+      "bytes": 186,
+      "sha256": "4c41619877bf81663dd60b4ca76a1037ca296c0f9f738bb5e6309d7a9241cf95"
+    },
+    "host_audit_failure.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-matrix/postrun_receipt.json",
+      "bytes": 2796,
+      "sha256": "10851c028689e8ae7946bad91c632480d19b2dfdd09f6cab617a031ea9c1ecb1"
+    },
+    "host_audit_failure.log": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen_matrix_audit.log",
+      "bytes": 3442,
+      "sha256": "f2eb94974f342e76e1fd2c438a5c92efd0f62b6c1ccbaec12689354a1271fd14"
+    },
+    "cache_only_mount_launch.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-audit-02/launch.json",
+      "bytes": 5080,
+      "sha256": "af8b7aec61731bac3a542822280d2fb9d4db579e3e3ce757720b4c55372f6068"
+    },
+    "cache_only_mount_failure.log": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-audit-02/audit.log",
+      "bytes": 112,
+      "sha256": "0d64c45d44890ba3dfe0e74e8ec8839d7a2abc023dfe14dfff313df412af6bba"
+    },
+    "correct_namespace_launch.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-audit-03/launch.json",
+      "bytes": 5068,
+      "sha256": "1d28cbc2b58866d32cc91dccaf24769925bca6356c4d7ea9b2d37a8ceadc7cfa"
+    },
+    "correct_namespace_audit.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-audit-03/postrun_receipt.json",
+      "bytes": 2798,
+      "sha256": "709753ecbf783c38617c64875cefe7b41ac6d3d35de575fab5cb3977dcda7ad6"
+    },
+    "correct_namespace_audit.log": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-audit-03/audit.log",
+      "bytes": 3444,
+      "sha256": "d4ab5f11bdf1960f5c50ddad8bd19a5b34021fe5411312b0011464c5be014762"
+    },
+    "environment_comparison.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-audit-03/environment_comparison.json",
+      "bytes": 646,
+      "sha256": "392de1395d2ac2ae3cf32e0f2cb0482d862aec34cd69ffb9015c68a03d941bd1"
+    },
+    "correct_namespace_comparison.json": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen-audit-03/comparison.json",
+      "bytes": 3819,
+      "sha256": "02a558b25c3184b87b0bd32ed9a2aa626811c13b58c932b2edc5044b0e950b19"
+    }
+  },
+  "retained_scripts": {
+    "compare_frozen_unit.py": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/compare_frozen_unit.py",
+      "bytes": 1115,
+      "sha256": "1e8c92bc6f7d117acf021d201347b072e9197b1513e3f902d56732cdf6aaf973"
+    },
+    "audit_frozen_matrix.py": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/audit_frozen_matrix.py",
+      "bytes": 1526,
+      "sha256": "0b4625c3a4ab0400d8dd89db6d5da26c20c31fa18a1ef90e5f6f1ff4b546ffb5"
+    },
+    "audit_frozen_matrix02.py": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/audit_frozen_matrix02.py",
+      "bytes": 1536,
+      "sha256": "ed0eec89b478b2e25c8354fe13d4d37a044aac8c9ab36cd16b9871daced166e6"
+    },
+    "audit_frozen_matrix03.py": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/audit_frozen_matrix03.py",
+      "bytes": 1536,
+      "sha256": "7fa01fe6fb3db5888785ed2396d2801f501b30b0da37a440fabeb8ef5a6da3a2"
+    },
+    "run_frozen_audit.py": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/run_frozen_audit.py",
+      "bytes": 2508,
+      "sha256": "41671edaf1e04c1142afd7da9ff387da32b91a0f2aa7558cdd66352139af6c8c"
+    },
+    "frozen_checks.py": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/frozen_checks.py",
+      "bytes": 1713,
+      "sha256": "a5a4536bd80a76b73745184ec34b62cdbeef0b8fbdb6d1be260e8ec6fe1bc039"
+    },
+    "archive_frozen.py": {
+      "source": "/data/ycfeng/tmp/d29_native_cache_key_20261024.xBHOmb/archive_frozen.py",
+      "bytes": 3179,
+      "sha256": "c19384efabf51545b96885f8457f7d1b084adb9977a7f15d0f923a8585c14dd6"
+    }
+  },
+  "status": "PASS_FROZEN_BEHAVIOR_PRESERVATION_ONLY",
+  "source": "376983d2ecc441d1e0a8cb8b943e65a2dcb217b5",
+  "script_scope": "Current retained script bytes; exact executed commands and mount adaptations are in launch/execution receipts.",
+  "limits": "Independent clean accounting/integration/native/whole-CLI acceptance remain separate. Raw unit XML/logs and caches are referenced, not copied."
+}

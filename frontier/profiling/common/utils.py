@@ -1,6 +1,7 @@
 """Utility functions for profiling."""
 
 from typing import Optional
+from dataclasses import replace
 
 import pandas as pd
 import torch
@@ -42,6 +43,26 @@ def raise_if_fp8_requested(op_name: str, error_message: str) -> None:
 def configure_quantization_manager_for_model_name(model_name: str) -> None:
     quant_manager = get_quantization_manager()
     model_config = BaseModelConfig.create_from_name(model_name)
+    if model_config.get_model_architecture_profile().profile_id == "step5":
+        from frontier.attention.step5 import describe_step5_layer
+
+        # Native module exclusions distinguish dense/shared BF16 from routed FP8.
+        # The generic operation defaults do not contain those module identities.
+        quantized_operations = {
+            projection.operator_name
+            for layer_id in range(model_config.num_layers)
+            for projection in describe_step5_layer(
+                model_config, layer_id, attention_tp_size=1,
+                moe_tp_size=1, expert_parallel_size=1,
+            ).projections
+            if projection.weight_precision is PrecisionType.FP8
+            and projection.operator_name in quant_manager.MODEL_CONFIG_QUANT_OPS
+        }
+        if model_config.quantization_config is not None:
+            model_config.quantization_config = replace(
+                model_config.quantization_config,
+                quantized_operations=sorted(quantized_operations),
+            )
     quant_manager.configure_from_model_config(model_config)
 
 

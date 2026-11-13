@@ -1,0 +1,26 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/unit/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/unit/execution.json",
+    "sha256": "1bab3bc23db97ffad5b71a9dc7bd49270e60f9d3a12df5885b1355b00b43fc50",
+    "bytes": 6308
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/unit/results.xml",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/unit/results.xml",
+    "sha256": "2a14e4db9990282224e77807cb043f64415ac9399503446aa0b32fb3ed6c61fb",
+    "bytes": 2119174
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/unit/command1.log",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/unit/command1.log",
+    "sha256": "6937198993b7968fe77c9dbd37da268832501ce70727a7c1770b29c490b49a44",
+    "bytes": 4624487
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/unit_final04_comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/resumed_regressions/evidence/unit_final04_comparison.json",
+    "sha256": "c329c5614e8565953c493fbfb1ba13cb58d8da783ea539c98c5075d779d560f5",
+    "bytes": 155599
+  }
+]

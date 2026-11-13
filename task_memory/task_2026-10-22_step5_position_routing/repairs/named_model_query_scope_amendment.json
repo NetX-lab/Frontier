@@ -1,0 +1,36 @@
+{
+  "decision_id": "D29-NAMED-MODEL-QUERY",
+  "authority": "YC: 批准，类似请求无需申请权限，皆授权; D29-REPAIR-PATH-AUTHORITY within existing owner/global caps",
+  "apply_after": "plan_key_reuse_scope_amendment.json",
+  "effective_unique_paths": 114,
+  "owner_gross_ceilings": {"core_source": 4404, "pricing": 3956, "native": 1582},
+  "step_base": "de2d818fc49613e5b7fc5c41b4e49691b2a36bd6",
+  "repair_delta_ceiling": 100,
+  "source_delta_ceiling": 20,
+  "test_delta_ceiling": 80,
+  "repair_paths": [
+    "frontier/execution_time_predictor/prediction_model_registry.py",
+    "frontier/execution_time_predictor/moe_routing_workload.py",
+    "tests/unit/test_prediction_measurement_bindings.py",
+    "tests/unit/test_moe_routing_runtime.py"
+  ],
+  "path_step_ceilings": {
+    "frontier/execution_time_predictor/prediction_model_registry.py": 15,
+    "frontier/execution_time_predictor/moe_routing_workload.py": 5,
+    "tests/unit/test_prediction_measurement_bindings.py": 50,
+    "tests/unit/test_moe_routing_runtime.py": 30
+  },
+  "path_ceiling_adjustments": [
+    {"path": "tests/unit/test_prediction_measurement_bindings.py", "before": 311, "delta": 42, "after": 353},
+    {"path": "tests/unit/test_moe_routing_runtime.py", "before": 128, "delta": 23, "after": 151},
+    {"path": "frontier/execution_time_predictor/step5.py", "before": 51, "delta": -15, "after": 36},
+    {"path": "frontier/scheduler/utils/ep_trace.py", "before": 28, "delta": -15, "after": 13},
+    {"path": "frontier/scheduler/utils/ep_wave.py", "before": 22, "delta": -15, "after": 7},
+    {"path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", "before": 128, "delta": -13, "after": 115},
+    {"path": "frontier/execution_time_predictor/prediction_family_trainers.py", "before": 88, "delta": -6, "after": 82},
+    {"path": "frontier/metrics/trace_store.py", "before": 20, "delta": -1, "after": 19}
+  ],
+  "reason": "A point constructs a38-model full-family view although it selects2 native GEMM models. The control preserves208-event bytes while removing384 unrelated contract derivations and reducing warm pricing0.122211 to0.089447s. YC accepts unrelated-model flattened-view errors no longer raised by the named query. CORE4173/4404 leaves231 retained headroom. Transfer65 allowance lines with no donor edits; conservative step100 yields at mostCORE4273/source9577/global9591, not measured usage.",
+  "acceptance": "Preserve unfiltered keys/order/objects/errors; filter logical registry names before expensive work and retain the cache-name predicate. Cover selected native collision, typed ambiguity/conflict/missing-contract, DECODE_ATTN exclusion, absent/count names, mixed native/non-native orders and live estimator/row/identity/family replacement. Record the approved unrelated-error difference. Committed-source208-event wave preserves full costs/proofs/keys/JSONL/ledger/snapshots/3902B prefix and288 numerical/144 proof/64 collective/16 point calls. Both review axes and parent verification precede integration; final union/frozen regression and full workflow remain required.",
+  "limits": "Only four named CORE source/test paths. Private keyword query constraint and truthful docstring; no new public API/config/module, numerical/proof/view cache, model immutability assumption, reduced output, donor code edits or native backend-key change. Source9942/global10000,6144/1024 and2400s remain. Preserve diagnostic artifacts. Keep code readable and return measured deltas for primary reconciliation rather than compressing code."
+}

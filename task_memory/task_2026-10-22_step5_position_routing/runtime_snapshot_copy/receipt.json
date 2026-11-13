@@ -1,0 +1,140 @@
+{
+  "task_id": "D29-SNAPSHOT-COPY-FINISH",
+  "modification_history": [
+    {
+      "date": "2026-10-24",
+      "change": "Final finite static rejection receipt; zero controls and records-only delivery."
+    }
+  ],
+  "status": "complete",
+  "disposition": "NO_ALLOC",
+  "disposition_basis": "Supported static counterexamples; not a runtime control result.",
+  "target_candidate": "1461573de388b72450189bc0c1b88b4ac32491f0",
+  "main_revision": "2e8d6168fd72d13955216d59320c9f68b306eca5",
+  "owner_start": "886608ea574dd2107d0b30771d63d8057d23cac6",
+  "worktree": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+  "supported_seam": {
+    "constructor": "frontier/entities/execution_time.py:203",
+    "component_getter": "frontier/entities/execution_time.py:732",
+    "operator_getter": "frontier/entities/execution_time.py:758",
+    "accepted_object_domain": "frontier/entities/time_components.py:394",
+    "validation": "frontier/entities/time_components.py:396-414"
+  },
+  "source_binding_count": 25,
+  "source_binding_verification": {
+    "observed": true,
+    "candidate_head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+    "main_head": "2e8d6168fd72d13955216d59320c9f68b306eca5",
+    "baseline": "886608ea574dd2107d0b30771d63d8057d23cac6",
+    "all_three_blob_ids_equal": true,
+    "all_current_target_disk_bytes_equal": true,
+    "source_control_execution": false
+  },
+  "recovered_controls_used": 0,
+  "control_usage": {
+    "ceiling": 1,
+    "used": 0,
+    "remaining_original_allowance": 1,
+    "launch_attempts": 0,
+    "currently_authorized_additional_launches": 0,
+    "candidate_pickle_invocations": 0,
+    "benchmark_invocations": 0,
+    "reason_not_run": "Final explicit user instruction: No additional control."
+  },
+  "environment": {
+    "python_executable": "/usr/bin/python3",
+    "python_version": "3.10.6",
+    "inspection_bytecode_disabled": true,
+    "conda_used": false,
+    "systemd_version": "249 (249.11-0ubuntu3.6)",
+    "timeout_version": "GNU coreutils 8.32",
+    "control_threads_configured": false,
+    "control_memory_limit_exercised": false,
+    "control_timing_results": null
+  },
+  "contribution": {
+    "current_measurement_performed": false,
+    "current_candidate_speedup": null,
+    "newly_implemented_savings_s": 0,
+    "zero_basis": "Inferred delivery contribution: the rejected candidate is not implemented or allocated.",
+    "historical_getter_attribution_only": true,
+    "historical_profiled_total_getter_cumulative_s": 0.034,
+    "historical_total_is_current_wall_time_bound": false,
+    "prior_loader_json_key_savings_added": false
+  },
+  "limitations": [
+    "No contract control, pickle roundtrip, benchmark, or fresh performance profile was executed.",
+    "Ordinary mutable graph, alias, and exhaustive getter parity of pickle are not established.",
+    "The optimized C implementation is neither invoked nor independently source-inspected; the rejection is inferred from the standard serialization/reduction contract and its local reference implementation.",
+    "Historical profiler timings are old-source attribution, not current wall-time savings.",
+    "Primary strict/full-unit/auditor results and ledger admission are outside this record owner."
+  ],
+  "source_allocation": "none",
+  "source_or_config_changes": [],
+  "new_tickets": [],
+  "delegation_count": 0,
+  "primary_supervisor": {
+    "id_reported_by_primary": 73779,
+    "queried": false,
+    "restarted": false
+  },
+  "ledger_admission": {
+    "reported_by_primary": "unadmitted",
+    "admitted_by_this_task": false
+  },
+  "exact_changed_paths": [
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/requirements.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/plan.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/progress.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/evidence.json",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/test_report_2026-10-24_snapshot_copy.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/summary.md",
+    "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/receipt.json"
+  ],
+  "artifacts": {
+    "requirements.md": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/requirements.md",
+    "plan.md": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/plan.md",
+    "progress.md": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/progress.md",
+    "evidence.json": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/evidence.json",
+    "test_report_2026-10-24_snapshot_copy.md": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/test_report_2026-10-24_snapshot_copy.md",
+    "summary.md": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/summary.md",
+    "receipt.json": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish/task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/receipt.json"
+  },
+  "recovery_receipt": "/data/ycfeng/Frontier/.worktrees/d29-ledger-final-1f6b4314/task_memory/task_2026-10-22_step5_position_routing/handoff_late_failures/receipt.json",
+  "verification": {
+    "record_consistency": "PASS",
+    "all_markdown_modification_histories": "PASS",
+    "json_parse": "PASS",
+    "source_binding": "PASS",
+    "records_only_scope": "PASS",
+    "staged_diff_check": "Verified immediately before enclosing commit."
+  },
+  "commit_locator": {
+    "repository": "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+    "expected_parent": "886608ea574dd2107d0b30771d63d8057d23cac6",
+    "subject": "docs: close D29 snapshot-copy diagnosis without allocation",
+    "scope": "seven record files only",
+    "resolve_command": [
+      "git",
+      "-C",
+      "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+      "log",
+      "-1",
+      "--format=%H",
+      "--",
+      "task_memory/task_2026-10-22_step5_position_routing/runtime_snapshot_copy/receipt.json"
+    ],
+    "full_id_delivery": "Supplied in final response; self-referential commit ID is resolved from Git rather than embedded in committed bytes."
+  },
+  "commit_command": [
+    "git",
+    "-C",
+    "/data/ycfeng/Frontier/.worktrees/d29-snapshot-copy-finish",
+    "-c",
+    "core.hooksPath=/dev/null",
+    "commit",
+    "-m",
+    "docs: close D29 snapshot-copy diagnosis without allocation"
+  ],
+  "commit_hook_override_reason": "Per-command override avoids an unapproved test or other hook operation; no configuration file is edited."
+}

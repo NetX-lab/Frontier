@@ -48,6 +48,26 @@ class ReplicaStageScheduler:
         self._is_busy = False
         self._last_stale_drops: list[Batch] = []
         self._num_forwards_started = 0
+        self._held_forward_start_batch: Batch | None = None
+
+    @property
+    def held_forward_start_batch(self) -> Batch | None:
+        return self._held_forward_start_batch
+
+    def hold_forward_start(self, batch: Batch) -> None:
+        if not self._is_busy or self._held_forward_start_batch is not None:
+            raise ValueError("forward start hold requires one newly admitted batch")
+        self._held_forward_start_batch = batch
+
+    def take_forward_start_batch(self) -> Batch | None:
+        """Consume one agreed continuation, even when schedule events repeat."""
+        batch = self._held_forward_start_batch
+        if batch is None or not self._stage_execution_context.forward_start_resolved:
+            return None
+        if not self._stage_execution_context.is_active(batch._stage_admission_ticket):
+            raise ValueError("held forward lost its stage owner before continuation")
+        self._held_forward_start_batch = None
+        return batch
 
     # gurantee only one batch is in current stage at a time;
     # other batches are in the self._batch_queue
@@ -188,6 +208,8 @@ class ReplicaStageScheduler:
         self._insertion_counter += 1
 
     def on_stage_end(self) -> None:
+        if self._held_forward_start_batch is not None:
+            raise ValueError("a held forward cannot end before its continuation")
         self._is_busy = False
 
     def consume_last_stale_drops(self) -> list[Batch]:

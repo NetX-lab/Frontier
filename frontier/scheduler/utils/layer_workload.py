@@ -8,10 +8,13 @@ from frontier.moe_ep_workload import (
     resolve_routing_details,
 )
 from frontier.types import ClusterType
+from frontier.moe_routing_policy import build_wave_routing_source, resolve_routing_count_policy, validate_position_routing_scope
 
 
 def materialize_layer_workload(
-    *, scheduler: Any, batch: Any, target_replica_id: int, global_layer_id: int
+    *, scheduler: Any, batch: Any, target_replica_id: int, global_layer_id: int,
+    routing_token_count: int | None = None,
+    source_batches=None,
 ) -> Any:
     """Validate scheduler inputs and build a canonical per-layer EP workload."""
 
@@ -48,11 +51,24 @@ def materialize_layer_workload(
         raise ValueError("moe_expert_parallel_size must be an exact positive int")
     if type(router_topk) is not int or router_topk <= 0:
         raise ValueError("router_topk must be an exact positive int")
-    # A decode CUDA-graph step routes its padding tokens too, so routing uses
-    # the same compute width as every other operator of the step.
-    routing_token_count = batch.get_effective_total_tokens_for_compute(scheduler._cluster_type)
+    # Physical routing width includes graph padding; a source policy masks it.
+    if routing_token_count is None:
+        routing_token_count = batch.get_effective_total_tokens_for_compute(scheduler._cluster_type)
+    policy_id = getattr(replica_config, "moe_routing_distribution_type", "balanced")
+    policy = resolve_routing_count_policy(policy_id)
+    routing_source = None
+    if policy.requires_source:
+        validate_position_routing_scope(replica_config, scheduler._cluster_type)
+        if source_batches is None:
+            raise ValueError("source-based layer materialization requires explicit source_batches")
+        if len(source_batches) != replica_config.attn_dp:
+            raise ValueError("routing sources must match the admitted attention DP lanes")
+        routing_source = build_wave_routing_source(
+            source_batches, policy_id=policy_id, cluster_type=scheduler._cluster_type,
+            gathered_physical_rows=routing_token_count, model_config=model_config,
+        )
     return materialize_layer_ep_workload(
-        routing_ratios=resolve_routing_details(
+        routing_ratios=None if policy.requires_source else resolve_routing_details(
             routing_details, target_replica_id, global_layer_id
         ),
         target_replica_id=target_replica_id,
@@ -62,4 +78,6 @@ def materialize_layer_workload(
         total_expert_num=total_expert_num,
         moe_expert_parallel_size=moe_ep_size,
         expert_to_ep=build_contiguous_expert_ownership(total_expert_num, moe_ep_size),
+        policy_id=policy_id,
+        routing_source=routing_source,
     )

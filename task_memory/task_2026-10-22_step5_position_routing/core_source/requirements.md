@@ -1,0 +1,31 @@
+# CORE/SOURCE implementation requirements
+
+## Modification History
+| Date | Change |
+| --- | --- |
+| 2026-10-23 | Record delegated implementation scope and approval. |
+| 2026-10-23 | Carry root-authorized peer imports and published source inputs into the continuation. |
+| 2026-10-23 | Retain F4 frozen-fit correction and C2 complete compute/buffer binding. |
+| 2026-10-23 | Record root-authorized f41d1ee9 development use with native producer association still pending. |
+
+TaskID: D29-CORE-SOURCE-IMPLEMENTATION.
+
+[Original Request] Implement the complete owned CORE/SOURCE chain, starting with count/source descriptors, source_frame_tensors and provenance verification. Authority: [central requirements](../requirements.md), decision D29-SCOPE-107-10000. Own exactly the 44 retained core/source paths in ../scope.json, excluding H04 and H17, with gross code/test/config diff <=4404. All contributors' responsibilities on owned shared paths remain required. Preserve legacy fixtures/defaults, D26/D27/D30 and the original actual-main 2400s limit. No platform/GPU/Docker/SSH/cloud operations, peer edits/imports, extra agents or scope expansion.
+
+Root owns integration, strict77/full-unit/review/image/native runs and the <=12-line module-size exception update. PRICING supplies the sole selected operator registry, native numerical layout/prepare/inclusive invocation/plan APIs; NATIVE supplies the actual factory and set_routing_positions. Missing peer prerequisites fail explicitly, never trigger duplicate implementations or fabricated source/timing evidence.
+
+[Original Request] 2026-10-23 continuation: root authorizes development integration of PRICING7b86614 and NATIVE2c4cc9e, preserving each peer history. This is interface integration, not acceptance. Continue selected bindings/trainers/preflight/exact pair and wrapper/main plumbing inside the same44 paths/4404 gross quota. Native N1-N4 repairs belong to the native owner; require its corrected tip before final qualification. The root's local unpublished image is not a final installed-source receipt and must not be baked into production evidence. Peer writes, extra agents and platform operations remain prohibited.
+
+[Original Request] 2026-10-23 source delivery: commit owned WIP, then root authorizes import of native6827507 or main67d5b5e. Native N1-N4 independently reviewed with no new findings; parent485PASS. Published Linux/amd64 image is hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee, not the index10cdd7af identity. Authentic installed receipt SHA b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09 and2907-file source export are supplied by root. Source artifacts are committed under ../image_publication/ at67d5b5e; source export is /data/ycfeng/tmp/d29_published_sources01/source. Use these actual inputs for source checks/plans. This removes root's image/receipt prerequisite only; GPU/runtime/NONE/PW/FULL/G3 remain unverified and operations remain unauthorized.
+
+[Original Request] 2026-10-23 foundation P2 correction from reviewer ses_e9abd8364ffee5sQKdpiQh3yH4: actual native_router._select_experts was absent from callable provenance. Add the actual bound implementation to the existing verifier; demonstrate RED→GREEN at the actual adapter seam while retaining class, module/file/hash and select_experts. Commit early for root re-review, continue pending scope, no duplicate verifier/fallback or native semantic changes.
+
+[Original Request] 2026-10-23 delivery: root authorizes import8e61c2d after preserving/committing owned edits. H04/H17, native schemas/ranges and explicit CPU plan cost payload are delivered; interface authority is not final source/runtime acceptance. Submodule1a16426 may be used only in an isolated local checkout while preserving existing checkouts; final gitlink belongs to root. Continue all remaining44/4404 scope and fresh actual-main within original2400s. Retain F1/P2 correction795a583 and RED→GREEN evidence. No platform/GPU/Docker/extra agents or peer edits.
+
+[Original Request] 2026-10-23 updates: root authorizes PRICING27b3499 and then bfe6f2ae development imports with history intact. F4a/F4b independently closed: retain full per-rank execution_policy and buffer/count/cache identity; only PRICING collective_model_context owns frozen-fit normalization, excluding mutable enabled_communicators. No CORE normalization or pooling distinct frozen runtimes.
+
+[Original Request] 2026-10-23 compute review: C1 actual routing observation and C2 H04 complete compute/plan binding belong to PRICING. CORE must construct and carry plans and compute from the same actual native point, not only shared/frozen-fit identity. Precise delivered seam: full point equals json.loads(plan.buffer_json)["compute_context"], retained from observed buffer/count evidence, with unchanged complete plan.context_json.execution_policy. Native collector's absent association is a concrete peer prerequisite. CPU fixtures remain explicitly synthetic and do not establish native evidence.
+
+[Original Request] 2026-10-23 F3–F6 and F4a/F4b: root authorizes27b3499 then bfe6f2ae development imports;1934 reports F4a/F4b closed/NoFindings. Retain full actual per-rank runtime/ordered branches/buffers/diagnostics in plan context and exact count/cache keys. Only PRICING collective_model_context owns frozen affine-fit identity; CORE must not duplicate it. Final compute review C1 (bound router config/logits/IDs/weights) and C2 (same canonical actual compute/plan context and dispatch layouts before pricing) are PRICING repairs. CORE must preserve the same actual context/evidence in callers and fixtures, await precise changed peer contracts, and continue independent owned items. No expanded scope or runtime acceptance is granted.
+
+[Original Request] 2026-10-23 latest delivery: root authorizes development import f41d1ee9/code989a883d after committing owned edits. Complete observed point comes from actual producer/count artifacts in buffer.compute_context, not candidate prediction copied into a receipt. Root resumed PRICING producer association work; CORE preserves observed handoff once delivered. No duplicated normalization, peer edits or phase acceptance before verification.

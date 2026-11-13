@@ -76,11 +76,13 @@ def start_dummy_forward(
     num_layers = scheduler._predictor._num_layers_per_pipeline_stage
     first_layer_id, _ = scheduler.get_pipeline_stage_layer_bounds(stage_id, num_layers)
     execution_time = _predict_layer(scheduler, stage_id, dummy_forward, first_layer_id)
+    launch_start_time = time + dummy_forward._forward_start_host_delay
     dummy_forward.stage_start_time = time
-    dummy_forward._forward_launch_start_time = time
+    dummy_forward._forward_launch_start_time = launch_start_time
     dummy_forward._forward_launch_time = execution_time.forward_launch_time * 1e-3
     return _enter_layer(
-        scheduler, time, replica_id, stage_id, dummy_forward, first_layer_id, execution_time
+        scheduler, launch_start_time, replica_id, stage_id, dummy_forward, first_layer_id,
+        execution_time,
     )
 
 

@@ -1,0 +1,12 @@
+{
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+  "task_id": "D20-ACTUAL-MAIN",
+  "limitations": [
+    "Synthetic CPU compute profiles and 3.5 ms READ cost; no native admission or accuracy claim.",
+    "Fixture max_model_len=8192, not canonical 7168; actual run matches fixture capacity.",
+    "One request per mode, not formal 128 requests, 16 warmups, or three repetitions.",
+    "CPU overhead is explicitly skipped; collective_sim uses the built-in H800 topology."
+  ]
+}

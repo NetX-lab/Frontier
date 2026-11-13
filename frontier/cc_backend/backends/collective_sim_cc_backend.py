@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 import math
 import os
 import sys
@@ -13,6 +14,7 @@ from typing import Any, Dict, Optional, Tuple
 from frontier.cc_backend.base_cc_backend import BaseCCBackend
 from frontier.cc_backend.cc_backend_config import CollectiveSimCCBackendConfig
 from frontier.cc_backend.cc_backend_factory import CCBackendFactory
+from frontier.cc_backend.collective_profile import CollectiveProfileInputs
 from frontier.logger import init_logger
 from frontier.types import CCBackendType, ClusterType
 
@@ -69,6 +71,9 @@ class CollectiveSimCCBackend(BaseCCBackend):
         self._prediction_cache_hits = 0
         self._prediction_cache_instance_hits = 0
         self._prediction_cache_misses = 0
+        self._collective_artifact_bytes = None
+        self._collective_artifact = None
+        self._collective_profile_inputs = CollectiveProfileInputs()
 
         self._repo_root = self._resolve_collective_sim_repo_root()
         self._python_root = self._repo_root / "python"
@@ -796,6 +801,94 @@ class CollectiveSimCCBackend(BaseCCBackend):
         raise NotImplementedError(
             "collective-sim backend does not support broadcast prediction"
         )
+
+    def bind_collective_profile_inputs(self, inputs):
+        self._collective_profile_inputs = inputs
+        self.collective_profile_bytes()
+
+    def collective_profile_bytes(self):
+        if self._collective_artifact_bytes is None:
+            self._collective_artifact_bytes = self._collective_profile_inputs.read(
+                self._config.profiling_data_dir, self._device_type)
+        return self._collective_artifact_bytes
+
+    def predict_collective_plan(self, plan):
+        """Price one qualified joint workload, never native full-duration lookup."""
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectivePlanCost, collective_model_context
+        if not isinstance(plan, CollectivePlan):
+            raise TypeError("predict_collective_plan requires an immutable CollectivePlan")
+        dims = self._validate_selected_parallel_dim_sizes(
+            self._get_attention_parallel_dim_sizes(), context="Step plan")
+        if dims != {"TP":8, "CP":1, "DP":2, "EP":1} or self._placement_order != ("TP","DP"):
+            raise ValueError("Step plans require explicitly configured TP8/DP2 placement")
+        if self._collective_artifact is None:
+            self._collective_artifact = json.loads(self.collective_profile_bytes().decode("utf-8"))
+        artifact = self._collective_artifact
+        context=json.loads(plan.context_json)
+        if artifact.get("evidence_kind") == "cpu_fixture" or context.get("shared",{}).get("evidence_kind") == "cpu_fixture":
+            if (artifact.get("evidence_kind") != "cpu_fixture" or context.get("shared",{}).get("evidence_kind") != "cpu_fixture" or
+                    artifact.get("schema_version") != "step5.collective_local.v1" or artifact.get("device_type") != self._device_type or
+                    artifact.get("native_admitted") is not False or artifact.get("candidate_only") is not True):
+                raise ValueError("CPU plan composition requires matching explicit unadmitted fixture identities")
+            key=plan.cache_key();entry=artifact["counts"][key];buffers=json.loads(plan.buffer_json)
+            cost=CollectivePlanCost(**entry["cost"]);receipt=json.loads(cost.count_receipt_json)
+            if (entry.get("evidence_kind") != "cpu_fixture" or receipt.get("evidence_kind") != "cpu_fixture" or
+                    buffers.get("evidence_kind") != "cpu_fixture" or entry.get("plan_key") != key or cost.plan_key != key or
+                    entry.get("context") != context or entry.get("buffer_receipt") != buffers or
+                    receipt != {k:v for k,v in entry.items() if k != "cost"}):
+                raise ValueError("CPU count/cost receipt differs from the exact fixture workload")
+            return cost
+        qualification = artifact["qualification"]
+        if (artifact["schema_version"] != "step5.collective_local.v1" or
+                artifact["device_type"] != self._device_type or
+                artifact.get("candidate_only",True) or
+                artifact["evidence_kind"] != "native_measurement" or
+                qualification["status"] != "PASS" or not qualification["independent"] or
+                not qualification["observations"] or not qualification["parent_receipt"]):
+            raise ValueError("Step collective model requires independent parent qualification")
+        scenario = self._build_scenario(kind="plan", tensor_bytes=0, mapped_domain="DP",
+                                       participant_ranks=(), parallel_dim_sizes=dims)
+        scenario.pop("scenario_profile", None)
+        collective = scenario["collective"]
+        collective.pop("participant_ranks")
+        collective["intra_server_combine_rule"] = "sum"
+        frozen = {k:v for k,v in scenario.items() if k != "runner"}
+        from dataclasses import asdict
+        from collective_sim_core.schema import Scenario
+        if asdict(Scenario.from_dict(artifact["frozen_scenario"])) != asdict(Scenario.from_dict(frozen)):
+            raise ValueError("Collective model differs from the frozen network/local configuration")
+        context = json.loads(plan.context_json)
+        if not context.get("execution_policy"):
+            raise ValueError("Step plan requires actual collective execution policy receipts")
+        model_context=collective_model_context(context)
+        matching = [r for r in artifact["models"] if r["context"] == model_context and
+                    r["phase"] == plan.phase and r["graph_mode"] == plan.graph_mode and
+                    r["uniform"] == (plan.sizes[0] == plan.sizes[1]) and
+                    r["tensors"] == [vars(t) for t in plan.tensors]]
+        if len(matching) != 1:
+            raise ValueError("Step plan has missing or ambiguous qualified parameter context")
+        model = matching[0]
+        counts = artifact["counts"][plan.cache_key()]
+        if counts["plan_key"] != plan.cache_key() or counts["context"] != context:
+            raise ValueError("Actual native count receipt differs from the complete workload")
+        parameters = model["parameters"]
+        if parameters["context"] != model_context:
+            raise ValueError("Collective fit differs from the selected frozen runtime policy")
+        if parameters["evidence_kind"] != "native_measurement" or counts["evidence_kind"] != "native_measurement":
+            raise ValueError("CPU fixtures are not native parameter or kernel-count evidence")
+        collective.update(plan=plan.to_dict(), local_parameters={**parameters,"context":context})
+        key = ("plan", plan.cache_key(), self.collective_profile_bytes())
+        cached = self._get_cached_prediction(key)
+        if cached is not None:
+            return cached
+        result = self._collective_sim_predict(scenario, repo_root=str(self._repo_root))
+        breakdown = result["breakdown"]
+        cost = CollectivePlanCost(result["predicted_time_ms"], breakdown["network_ms"],
+            tuple(breakdown["local_rank_ms"]), breakdown["remainder_ms"],
+            tuple(counts["kernel_counts"]), json.dumps(counts, sort_keys=True),
+            plan.cache_key(), parameters["model_identity"])
+        self._set_cached_prediction(key, cost)
+        return cost
 
     def predict_send_recv(
         self,

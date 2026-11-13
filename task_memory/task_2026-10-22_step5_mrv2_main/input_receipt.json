@@ -1,0 +1,84 @@
+{
+  "tested_core": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+  "fixture_generation_complete": true,
+  "native_admitted": false,
+  "actual_cli_complete": false,
+  "input_hashes": {
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json": "0ed8dd433a49e324804cb50980055e010c3af90f5c9b0cf1220490b940a3fbe3",
+    "/data/ycfeng/tmp/d23_main_actual03_offline/synthetic_read_cost.json": "3975d5ec0bf247d0c961bd74af47bd9411de6db59abe37a6251f8e0575d101fa",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/linear_op.csv": "1888054d21b1a0a6e14a26c4acce11b84c2b3c6a327f34cf791ce01482344d81",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_cuda_event/moe.csv": "b49b1aa9b9190c121d9bc01fb35fa617a8daf120bdebd6d0006072aae5e778d2",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/linear_op.csv": "f6e1ac57d9383db0c2debc02ae241eb6ba0f126a65e038a16191eb106c79997b",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_compute_kernel_only/moe.csv": "c05b10c1601ae204bebf3742b969ea1aebb55945d43662c2d95fb6bbfc69a20d",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv": "27baaf5c63315a41e5a78096aa318d50c4c134cae5c338abd8a940cae61b7179",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_kernel_only.csv": "b00a44e2e62efde9313f3e38f04d9d320558d78d15dbae13be747926c7c7dd81",
+    "/data/ycfeng/tmp/d23_main_fixture02/fixture_kernel_gap.csv": "8a7d7ed0fe08428b52ccb350324fe6ddbd5c7181e5545844a931549060752555",
+    "/data/ycfeng/tmp/d23_main_environment.json": "b99ce2c49ae7580cf13888af12f4b3127eca8361817ddebb9a2b7e08d43f6734",
+    "/data/ycfeng/tmp/d23_main_fixture02_rows.json": "6b177d0d03a7032bba75244ad7bf10993ed45ab2bf86f2e9e904e25f84c8a07c",
+    "/data/ycfeng/tmp/d23_main_fixture02_kernel_rows.json": "272f266eab78cdff5464bc6fb794474d4efac5844266da22fba8e350800708cc"
+  },
+  "environment": {
+    "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+    "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+    "platform": "Linux-5.10.25-nvidia-gpu-x86_64-with-glibc2.35",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "sklearn": "1.7.2",
+    "torch": "not installed; CPU DES uses source metadata only"
+  },
+  "fixture_census": {
+    "rows": 94392,
+    "layers": 92,
+    "kinds": {
+      "attention_workload": 94208,
+      "mrv2_dp_dummy": 184
+    },
+    "modes": {
+      "piecewise": 184,
+      "full": 94208
+    },
+    "decode_context_count": 1023,
+    "decode_context_min": 6144,
+    "decode_context_max": 7166,
+    "descriptors": [
+      {
+        "descriptor": [
+          "piecewise",
+          16,
+          null,
+          null,
+          null
+        ],
+        "rows": 92
+      },
+      {
+        "descriptor": [
+          "full",
+          1,
+          1,
+          null,
+          1
+        ],
+        "rows": 92
+      }
+    ],
+    "wall_s": 36.14623341336846
+  },
+  "kernel_census": {
+    "rows": 184,
+    "layers": 92,
+    "kinds": {
+      "attention_workload": 92,
+      "mrv2_dp_dummy": 92
+    },
+    "graphs": {
+      "none": 184
+    },
+    "physical_scope": {
+      "native_attention_layer_without_tp_allreduce": 92,
+      "mrv2_dp_dummy_attention_layer_without_tp_allreduce": 92
+    }
+  },
+  "htsim_gitlink": "d28fe917370c2d55230c3ea226e5660785b44aca",
+  "htsim_binary_sha256": "812fb3d86489d76a4d50e2f0ea936bdb6d25dfe740c06050a0d0c1a1f9f4631e"
+}

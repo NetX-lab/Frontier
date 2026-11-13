@@ -1,0 +1,26 @@
+{
+  "status": "PASS_REGRESSION_COMPARISON_WITH_EXPLICIT_ENVIRONMENT_SUPPLEMENTS",
+  "source_revision": "79f1a3fd35d42b751cd1520c764ddac717b923d9",
+  "worker_receipt": "../performance_regressions/evidence/final_acceptance.json",
+  "worker_receipt_sha256": "66251ecab160c71fa8aa73dcb2493ebac586b331b9be3b00ae37ad78549a9704",
+  "comparison_sha256": "55a787e63413241c4f285698f990ab3043d67545453ce11d987209efa6e53f58",
+  "unit_xml_sha256": "cb64bf1bfbba142b5ad7b3fbad90343d1f9134e6a627c35af5017bfc3654a4d8",
+  "raw_counts": {"pass": 8018, "failure": 279, "error": 32, "skipped": 281},
+  "raw_exit": 1,
+  "raw_junit_seconds": 1203.307,
+  "unchanged_e41_cases_and_statuses": 8607,
+  "new_passing_cases": [
+    "tests.unit.test_collective_sim_cc_backend::test_collective_artifact_reuses_only_identical_current_text",
+    "tests.unit.test_moe_grouped_gemm_padded_features::test_moe_loader_derives_family_once_without_skipping_unselected_rows",
+    "tests.unit.test_prediction_measurement_bindings::test_fixed_predictor_groups_reused_by_queries_and_binding_selection"
+  ],
+  "missing_or_changed_e41_cases": 0,
+  "exact_failure_and_error_sets_equal_e41": true,
+  "locked_historical_failure_error_counts": [267, 31],
+  "environment_supplement_pass": 101,
+  "governance_supplement_pass": 52,
+  "parent_verified": "Reparse original XMLs;compare every e41 ID/status and all3 new cases;verify12 added dependency failures in supplement101 and5 retained Torch failures in governance52;rehash all execution/log/XML and archive-manifest entries",
+  "suites_are_separate_not_summed": true,
+  "raw_unit_is_all_green": false,
+  "full_cli_native_g3_e2e_accepted": false
+}

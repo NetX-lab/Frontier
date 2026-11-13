@@ -1,0 +1,125 @@
+{
+  "task_id": "D29-NARROW-MODEL-VIEW-CONTRACT",
+  "cases": [
+    {
+      "case": "unfiltered order/objects, selected set, absent name, count exclusion and writer names",
+      "pass": true,
+      "full_models": 38,
+      "selected_models": 2
+    },
+    {
+      "case": "normal actual point result",
+      "pass": true
+    },
+    {
+      "case": "registered native label collision: moe_grouped_gemm",
+      "old_full_and_point": {
+        "ok": false,
+        "type": "ValueError",
+        "message": "Conflicting native model artifacts for 'moe_grouped_gemm:82e252d5'"
+      },
+      "new_unfiltered": {
+        "ok": false,
+        "type": "ValueError",
+        "message": "Conflicting native model artifacts for 'moe_grouped_gemm:82e252d5'"
+      },
+      "new_point": {
+        "ok": false,
+        "type": "ValueError",
+        "message": "Conflicting native model artifacts for 'moe_grouped_gemm:82e252d5'"
+      },
+      "equivalent": true
+    },
+    {
+      "case": "registered native label collision: moe_gating_linear",
+      "old_full_and_point": {
+        "ok": false,
+        "type": "ValueError",
+        "message": "Conflicting native model artifacts for 'moe_gating_linear:852eb571'"
+      },
+      "new_unfiltered": {
+        "ok": false,
+        "type": "ValueError",
+        "message": "Conflicting native model artifacts for 'moe_gating_linear:852eb571'"
+      },
+      "new_point": {
+        "ok": true
+      },
+      "equivalent": false
+    },
+    {
+      "case": "rows",
+      "old": {
+        "ok": true
+      },
+      "new": {
+        "ok": true
+      },
+      "pass": true
+    },
+    {
+      "case": "identity",
+      "old": {
+        "ok": true
+      },
+      "new": {
+        "ok": true
+      },
+      "pass": true
+    },
+    {
+      "case": "empty_rows",
+      "old": {
+        "ok": false,
+        "type": "ValueError",
+        "message": "Position expert query lacks a unique actual source/native point receipt"
+      },
+      "new": {
+        "ok": false,
+        "type": "ValueError",
+        "message": "Position expert query lacks a unique actual source/native point receipt"
+      },
+      "pass": true
+    },
+    {
+      "case": "malformed_rows",
+      "old": {
+        "ok": false,
+        "type": "JSONDecodeError",
+        "message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+      },
+      "new": {
+        "ok": false,
+        "type": "JSONDecodeError",
+        "message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+      },
+      "pass": true
+    },
+    {
+      "case": "live estimator replacement via production registrar",
+      "pass": true
+    },
+    {
+      "case": "live family KERNEL_ONLY",
+      "old": {
+        "ok": true
+      },
+      "new": {
+        "ok": true
+      },
+      "pass": true
+    },
+    {
+      "case": "live family CUDA_EVENT",
+      "old": {
+        "ok": true
+      },
+      "new": {
+        "ok": true
+      },
+      "pass": true
+    }
+  ],
+  "status": "NORMAL_AND_SELECTED_FAILURES_MATCH_UNRELATED_ERROR_TIMING_DIFFERS",
+  "limits": "Cached-manager real point; this does not test every public registry state or establish full CLI/native acceptance."
+}

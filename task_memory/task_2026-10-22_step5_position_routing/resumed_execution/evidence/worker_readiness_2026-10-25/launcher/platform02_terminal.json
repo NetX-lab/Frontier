@@ -1,0 +1,94 @@
+{
+  "collected_utc": "2026-10-24T21:08:20.976688+00:00",
+  "job_name": "exp-1025-050336-389487",
+  "creator": "i-fengyicheng",
+  "platform_status": {
+    "phase": "Succeeded",
+    "reason": "RJobSucceeded",
+    "message": "RJob succeeded",
+    "taskStatuses": {
+      "default": {
+        "succeeded": 1,
+        "taskStage": "stepmind-task-stage-1"
+      }
+    },
+    "finishTime": "2026-10-24T21:06:08Z",
+    "taskStage": "stepmind-task-stage-1"
+  },
+  "stop_annotations": {},
+  "replica_name": "exp-1025-050336-389487-cfcd2084",
+  "api": "original personal Python RJobClient; exact current job/replica only",
+  "replica_status": {
+    "conditions": [
+      {
+        "type": "Initialized",
+        "status": "True",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-10-24T21:03:41Z",
+        "reason": "PodCompleted"
+      },
+      {
+        "type": "Ready",
+        "status": "False",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-10-24T21:06:07Z",
+        "reason": "PodCompleted"
+      },
+      {
+        "type": "ContainersReady",
+        "status": "False",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-10-24T21:06:07Z",
+        "reason": "PodCompleted"
+      },
+      {
+        "type": "PodScheduled",
+        "status": "True",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-10-24T21:03:41Z"
+      }
+    ],
+    "hostIP": "10.191.0.24",
+    "podIP": "10.191.0.24",
+    "podIPs": [
+      {
+        "ip": "10.191.0.24"
+      }
+    ],
+    "startTime": "2026-10-24T21:03:41Z",
+    "containerStatuses": [
+      {
+        "name": "default",
+        "state": {
+          "terminated": {
+            "exitCode": 0,
+            "reason": "Completed",
+            "startedAt": "2026-10-24T21:05:58Z",
+            "finishedAt": "2026-10-24T21:06:06Z",
+            "containerID": "containerd://0a164ab5e1c9cda2ea4c3ccb5b9f6da77be419de2bbd9a0f71d84e6db7f01adf"
+          }
+        },
+        "lastState": {},
+        "ready": false,
+        "restartCount": 0,
+        "image": "sha256:c5b699cacd61ca801a528a070a7804e3932328bb7dd109591c21a2c4a51fdb6e",
+        "imageID": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+        "containerID": "containerd://0a164ab5e1c9cda2ea4c3ccb5b9f6da77be419de2bbd9a0f71d84e6db7f01adf",
+        "started": false
+      }
+    ],
+    "qosClass": "Guaranteed",
+    "phase": "Succeeded",
+    "nodeName": "gpu-h800-0326.host.platform.shaipower.com",
+    "finishTimestamp": "2026-10-24T21:06:08Z"
+  },
+  "replica_metadata_name": "exp-1025-050336-389487-cfcd2084",
+  "pod_read": {
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"pods \\\"exp-1025-050336-389487-cfcd2084\\\" is forbidden: User \\\"e7163316ad76ba7266a33f9787afd70a\\\" cannot get resource \\\"pods\\\" in API group \\\"\\\" in the namespace \\\"shai-core\\\"\",\"reason\":\"Forbidden\",\"details\":{\"name\":\"exp-1025-050336-389487-cfcd2084\",\"kind\":\"pods\"},\"code\":403}\n"
+  },
+  "log_status_code": 200,
+  "log_rows": 3,
+  "query_wall_s": 0.47012042673304677
+}

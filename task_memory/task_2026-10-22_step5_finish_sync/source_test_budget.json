@@ -1,0 +1,56 @@
+{
+  "task_id": "D30-STEP-FINISH-SYNC",
+  "decision_id": "D30-SCOPE-7-750",
+  "baseline": "b8be2871f5f8e2ea762b7471599240dcfff5fa97",
+  "files": [
+    {
+      "path": "frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py",
+      "added": 17,
+      "deleted": 7,
+      "module_lines": 1811
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_observation.py",
+      "added": 39,
+      "deleted": 0,
+      "module_lines": 1258
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_verdict.py",
+      "added": 6,
+      "deleted": 1,
+      "module_lines": 1478
+    },
+    {
+      "path": "tests/unit/test_step5_finish_sync.py",
+      "added": 305,
+      "deleted": 0,
+      "module_lines": 305
+    },
+    {
+      "path": "tests/unit/test_step5_measured_pd.py",
+      "added": 42,
+      "deleted": 47,
+      "module_lines": 416
+    },
+    {
+      "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+      "added": 2,
+      "deleted": 1,
+      "module_lines": 1364
+    },
+    {
+      "path": "tests/unit/test_step5_pd_placement.py",
+      "added": 117,
+      "deleted": 16,
+      "module_lines": 306
+    }
+  ],
+  "source_test_files": 7,
+  "insertions": 528,
+  "deletions": 72,
+  "total_changed_lines": 600,
+  "max_changed_lines": 750,
+  "status": "PASS",
+  "native_validation": "UNVERIFIED"
+}

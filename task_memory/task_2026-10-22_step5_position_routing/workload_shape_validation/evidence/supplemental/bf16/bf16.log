@@ -1,0 +1,35 @@
+Running scope as unit: run-rd183ec5fa8354a0695fbe3d9e2404ffa.scope
+WARNING 21:47:13 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 21:47:13 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+{"case": "bf16", "event_count": 576, "ledger_lane_count": 48, "status": "PASS_CPU_FIXTURE_PRODUCTION_SHAPE", "waves": [{"layer": 88, "live_calls": {"_get_on_demand_prediction": 256, "_predict_step5_ffn_operator": 128, "_step5_position_queries": 16, "predict_collective_plan": 64}, "operator_names": ["moe_gating_linear", "moe_gating_routing_topk", "moe_grouped_gemm", "moe_tensor_parallel_allreduce", "post_attention_layernorm", "share_expert_act", "share_expert_down_proj", "share_expert_tensor_parallel_allreduce", "share_expert_up_proj", "step5_ffn_merge", "step5_moe_combine", "step5_moe_dispatch"], "operators_per_wave": 192, "profiled_pricing_s": 1.8065948956646025, "routing_source": {"gathered_physical_rows": 2, "policy_id": "position_cyclic", "source_lanes": [{"forward_group_id": 4, "gating_runtime_context": "standalone_legacy", "graph_mode": "FULL", "intervals": [{"length": 1, "start": 6147}], "lane_id": 0, "live_rows": 1, "physical_rows": 1, "source_batch_id": 1, "source_global_id": 0}, {"forward_group_id": 4, "gating_runtime_context": "standalone_legacy", "graph_mode": "FULL", "intervals": [], "lane_id": 1, "live_rows": 0, "physical_rows": 1, "source_batch_id": 2, "source_global_id": 1}]}}, {"layer": 89, "live_calls": {"_get_on_demand_prediction": 256, "_predict_step5_ffn_operator": 128, "_step5_position_queries": 16, "predict_collective_plan": 64}, "operator_names": ["moe_gating_linear", "moe_gating_routing_topk", "moe_grouped_gemm", "moe_tensor_parallel_allreduce", "post_attention_layernorm", "share_expert_act", "share_expert_down_proj", "share_expert_tensor_parallel_allreduce", "share_expert_up_proj", "step5_ffn_merge", "step5_moe_combine", "step5_moe_dispatch"], "operators_per_wave": 192, "profiled_pricing_s": 0.16099410830065608, "routing_source": {"gathered_physical_rows": 2, "policy_id": "position_cyclic", "source_lanes": [{"forward_group_id": 4, "gating_runtime_context": "standalone_legacy", "graph_mode": "FULL", "intervals": [{"length": 1, "start": 6147}], "lane_id": 0, "live_rows": 1, "physical_rows": 1, "source_batch_id": 19, "source_global_id": 0}, {"forward_group_id": 4, "gating_runtime_context": "standalone_legacy", "graph_mode": "FULL", "intervals": [], "lane_id": 1, "live_rows": 0, "physical_rows": 1, "source_batch_id": 20, "source_global_id": 1}]}}, {"layer": 90, "live_calls": {"_get_on_demand_prediction": 256, "_predict_step5_ffn_operator": 128, "_step5_position_queries": 16, "predict_collective_plan": 64}, "operator_names": ["moe_gating_linear", "moe_gating_routing_topk", "moe_grouped_gemm", "moe_tensor_parallel_allreduce", "post_attention_layernorm", "share_expert_act", "share_expert_down_proj", "share_expert_tensor_parallel_allreduce", "share_expert_up_proj", "step5_ffn_merge", "step5_moe_combine", "step5_moe_dispatch"], "operators_per_wave": 192, "profiled_pricing_s": 0.2752408031374216, "routing_source": {"gathered_physical_rows": 2, "policy_id": "position_cyclic", "source_lanes": [{"forward_group_id": 4, "gating_runtime_context": "standalone_legacy", "graph_mode": "FULL", "intervals": [{"length": 1, "start": 6147}], "lane_id": 0, "live_rows": 1, "physical_rows": 1, "source_batch_id": 37, "source_global_id": 0}, {"forward_group_id": 4, "gating_runtime_context": "standalone_legacy", "graph_mode": "FULL", "intervals": [], "lane_id": 1, "live_rows": 0, "physical_rows": 1, "source_batch_id": 38, "source_global_id": 1}]}}]}

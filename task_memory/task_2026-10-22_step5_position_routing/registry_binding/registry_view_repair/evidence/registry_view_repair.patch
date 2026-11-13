@@ -1,0 +1,62 @@
+diff --git a/frontier/execution_time_predictor/prediction_model_registry.py b/frontier/execution_time_predictor/prediction_model_registry.py
+index 995dfc60..03eed35f 100644
+--- a/frontier/execution_time_predictor/prediction_model_registry.py
++++ b/frontier/execution_time_predictor/prediction_model_registry.py
+@@ -375,6 +375,7 @@ class PredictionModelRegistry:
+         precision_key: Optional[str] = None,
+         requested_identity: Optional[str] = None,
+         native_binding: Optional[Mapping[str, Any]] = None,
++        include_native: bool = True,
+     ) -> Optional[BaseEstimator]:
+         if precision_key is not None:
+             precision_key = precision_key.upper()
+@@ -388,6 +389,7 @@ class PredictionModelRegistry:
+             identity: candidate
+             for (candidate_name, identity), candidate in source.items()
+             if candidate_name == model_name
++            and (include_native or not isinstance(identity, tuple))
+         }
+         if requested_identity is not None:
+             typed_candidates = {
+@@ -540,6 +542,7 @@ class PredictionModelRegistry:
+                 family_name,
+                 model_name,
+                 requested_identity=identity,
++                include_native=False,
+             )
+             if identity is not None and model is None:
+                 raise ValueError(
+diff --git a/tests/unit/test_prediction_measurement_bindings.py b/tests/unit/test_prediction_measurement_bindings.py
+index eddc2884..ece59df4 100644
+--- a/tests/unit/test_prediction_measurement_bindings.py
++++ b/tests/unit/test_prediction_measurement_bindings.py
+@@ -172,3 +172,29 @@ def test_unique_legacy_registry_default_and_precision_labels_unchanged(tmp_path)
+     assert manager.get_model("legacy", "BF16") is first
+     assert manager.get_models()["kernel_only"] == {"legacy": second}
+     assert manager._contract_model_registry("kernel_only") == {}
++
++
++@pytest.mark.parametrize("native_first", [False, True])
++@pytest.mark.parametrize("typed", [False, True])
++def test_mixed_native_non_native_views_keep_both_insert_orders(bound, tmp_path, native_first, typed):
++    trained, replica, _, _, _ = bound
++    name = "moe_gating_linear"
++    native = next(model for key, model in trained._contract_precision_registry("kernel_only")["FP32"].items()
++                  if key[0] == name)
++    non_native = SimpleNamespace()
++    if typed:
++        non_native._frontier_layer_cache_identity = native._frontier_layer_cache_identity
++    manager = _manager(tmp_path / "mixed")
++    manager._cluster_configs = trained._cluster_configs
++    manager._get_measurement_types_for_cluster = lambda *args: (MeasurementType.KERNEL_ONLY,)
++    manager._event_measurement_type_for_replica = lambda *args: MeasurementType.CUDA_EVENT
++    for model in (native, non_native) if native_first else (non_native, native):
++        manager._store_model_precision(name, "FP32", model)
++    non_native._frontier_layer_cache_identity = native._frontier_layer_cache_identity
++    expected = {name: non_native, f"{name}:{native._frontier_model_hash}": native}
++    assert manager.get_models()["kernel_only"] == expected
++    assert manager.get_models_for_cluster(ClusterType.MONOLITHIC)["kernel_only"] == expected
++    with pytest.raises(ValueError, match="ambiguous native|multiple layer contracts"):
++        manager.get_model(name, "FP32")
++    binding = manager._native_measurement_binding(manager._measurement_identity(native))
++    assert manager.get_model(name, "FP32", native_binding=binding) is native

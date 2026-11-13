@@ -1,0 +1,41 @@
+{
+  "task_id": "D29-MOUNTED-CPYTHON-RUNTIME",
+  "status": "PREFIX_CONFIGURED_IMPORT_VERIFICATION_PENDING",
+  "started_utc": "2026-10-24T19:50:22.618625+00:00",
+  "ended_utc": "2026-10-24T19:50:22.650776+00:00",
+  "wall_s": 0.03213512105867267,
+  "hypothesis_before_execution": "Debian site.py requires a distinct base prefix to add the existing site-packages directory; a copied binary plus a shared stdlib establishes that prefix without copying dependencies again.",
+  "prefix": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025",
+  "base_prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+  "base_binary_sha256": "dbb04ace02303fa5cb3a6d1aa0e7a180d8dd23d3257cc6a0b155d0ee219432a2",
+  "shared_stdlib": {
+    "path": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025/lib/python3.10",
+    "target": "/data/ycfeng/envs/frontier-runtime-py310-d29-20261025/lib/python3.10"
+  },
+  "base_probe_command": [
+    "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025/bin/python3.10",
+    "-B",
+    "-S",
+    "-c",
+    "import json,sys; print(json.dumps({'prefix':sys.prefix,'base_prefix':sys.base_prefix,'version':list(sys.version_info[:3])}))"
+  ],
+  "base_probe_state": {
+    "prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+    "base_prefix": "/data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025",
+    "version": [
+      3,
+      10,
+      6
+    ]
+  },
+  "pyvenv_cfg": "home = /data/ycfeng/envs/frontier-runtime-base-py310-d29-20261025/bin\ninclude-system-site-packages = false\nversion = 3.10.6\n",
+  "pyvenv_cfg_sha256": "16d91e196c87c1859a55ecd629ecefaaa806a1b1f2181b98ffd0f16a81d2af89",
+  "original_environment_modified": false,
+  "existing_copied_files_modified": false,
+  "dependency_installations": 0,
+  "pricing_wave_calls": 0,
+  "gpu_calls": 0,
+  "limitations": [
+    "This only configures the copied runtime; original strict local/image dependency probes must pass."
+  ]
+}

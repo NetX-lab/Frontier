@@ -1,0 +1,396 @@
+diff --git a/frontier/moe_routing_runtime.py b/frontier/moe_routing_runtime.py
+index c13f5011..c744ed7d 100644
+--- a/frontier/moe_routing_runtime.py
++++ b/frontier/moe_routing_runtime.py
+@@ -91,7 +91,7 @@ def filter_moe_operator_rows(df, *, operator_facts, requested_runtime_path, sour
+     required = {"model_architecture_profile", "routing_runtime_path", "moe_frame_scope",
+                 "typed_operator_contracts", "num_tokens", "live_routing_token_count",
+                 "masked_routing_token_count", "num_tensor_parallel_workers", "expert_parallel_size",
+-                "gating_runtime_context", "profiling_precision", *metadata}
++                "gating_runtime_context", "profiling_precision", "routing_input", *metadata}
+     missing = sorted(required - set(df.columns))
+     if missing:
+         raise ValueError(f"MoE physical scope metadata missing {missing}. Source: {source_name}")
+@@ -126,9 +126,8 @@ def filter_moe_operator_rows(df, *, operator_facts, requested_runtime_path, sour
+                or value < 0 for value in (physical, live, masked)) or physical <= 0 or physical != live + masked:
+             raise ValueError("MoE physical rows must equal live plus masked rows")
+         validate_moe_gating_runtime_context(row["gating_runtime_context"])
+-        if "routing_input" in row:
+-            from frontier.execution_time_predictor.moe_routing_workload import validate_position_moe_source_row
+-            validate_position_moe_source_row(row)
++        from frontier.execution_time_predictor.moe_routing_workload import validate_position_moe_source_row
++        validate_position_moe_source_row(row)
+         if row_scope == scope:
+             validate_typed_operator_metadata(typed[target], operator_name=target,
+                                             expected_metadata=contract.typed_metadata_identity())
+diff --git a/frontier/profiling/moe/moe_impl.py b/frontier/profiling/moe/moe_impl.py
+index 153485eb..9afca08e 100644
+--- a/frontier/profiling/moe/moe_impl.py
++++ b/frontier/profiling/moe/moe_impl.py
+@@ -296,6 +296,7 @@ class SigmoidBiasGatingNetwork(nn.Module):
+                 raise ValueError("position profiler requires the selected native routing environment")
+             from vllm.forward_context import set_forward_context, set_routing_positions
+             from vllm.model_executor.layers.fused_moe.router.router_factory import create_fused_moe_router
++            from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
+             self.native_router = create_fused_moe_router(
+                 top_k=router_topk, global_num_experts=num_experts, scoring_func=router.scoring_func,
+                 renormalize=router.renormalize, routed_scaling_factor=router.routed_scaling_factor,
+@@ -305,6 +306,8 @@ class SigmoidBiasGatingNetwork(nn.Module):
+                 raise ValueError("position profiling must execute the native Simulated router")
+             native_callables += (create_fused_moe_router, type(self.native_router),
+                                  self.native_router.select_experts, self.native_router._select_experts,
++                                 self.native_router._compute_routing, RoutingSimulator.simulate_routing,
++                                 RoutingSimulator._routing_strategies["position_cyclic"].route_tokens,
+                                  set_forward_context, set_routing_positions)
+             self.routing_assignment_policy = "position_modulo_experts"
+         manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+diff --git a/frontier/profiling/moe/moe_wrapper.py b/frontier/profiling/moe/moe_wrapper.py
+index 3f7215c0..1f2b9cb2 100644
+--- a/frontier/profiling/moe/moe_wrapper.py
++++ b/frontier/profiling/moe/moe_wrapper.py
+@@ -995,7 +995,7 @@ class MoEWrapper:
+         row = self._build_profile_result(stats, num_tokens=physical, native_context=context)
+         from frontier.profiling.common.runtime_identity import canonical_json
+         from frontier.moe_load_imbalance import moe_native_binding_context
+-        provenance = [self.gating.native_facts, experts.provenance, context["native_facts"]]
++        provenance = [self.gating.native_facts, experts.provenance, experts.point_diagnostics]
+         facts = dict(shared=provenance[0]["shared"], imports={}, callables={})
+         for item in provenance:
+             if item["shared"] != facts["shared"]:
+@@ -1007,6 +1007,7 @@ class MoEWrapper:
+             live_routing_token_count=live, masked_routing_token_count=physical-live,
+             gating_runtime_context=frames[selected].gating_runtime_context,
+             native_context=canonical_json(context), native_facts=canonical_json(facts),
++            point_diagnostics=canonical_json(experts.point_diagnostics),
+             native_binding=canonical_json(moe_native_binding_context(context)),
+             moe_quantization_mode=self.quantization_mode, moe_gating_linear_backend=self.gating.linear_backend,
+             routing_input=canonical_json(cell.to_json()["routing_input"]))
+diff --git a/tests/integration/run_step5_measured_main.py b/tests/integration/run_step5_measured_main.py
+index d6488486..97509b08 100644
+--- a/tests/integration/run_step5_measured_main.py
++++ b/tests/integration/run_step5_measured_main.py
+@@ -229,16 +229,25 @@ def validate(root, mode, document):
+         for row in lanes:
+             source=row["routing_source"]
+             require(sum(s["physical_rows"] for s in source["source_lanes"])==source["gathered_physical_rows"],"Physical source conservation failed")
++            from frontier.moe_routing_policy import source_lane_index_for_ep
++            from frontier.operators.families import get_moe_profiling_operators
++            from frontier.operators.binding import bind_operator_query
++            replica=cluster[row["cluster"].lower()+"_replica_config"]
++            owner=source["source_lanes"][source_lane_index_for_ep(row["ep_id"],attention_tp_size=replica["attn_tensor_parallel_size"],
++                source_lane_count=len(source["source_lanes"]),participant_ep_ids=range(replica["world_size"]))]
++            context=row["phases"]["dispatch"]["collective_proofs"]["step5_moe_dispatch"]["plan"]["buffers"]["compute_context"]
++            applicable={op.name for op in get_moe_profiling_operators(context)}
++            require({name for phase in row["phases"].values() for name in phase["operators_ms"]} >= applicable,"Missing applicable compute source operators")
++            empty+=int(owner["live_rows"]==0)
+             for phase in row["phases"].values():
+                 require("moe_shuffling" not in phase["operators_ms"],"Position path charged legacy shuffle")
++                compute={name for name,duration in phase["operators_ms"].items() if (duration>0 or name in applicable) and bind_operator_query(name).operator.trace_kind.value=="COMPUTE"}
++                require(set(phase.get("compute_proofs",{})) == compute,"Missing actual compute source proof correspondence")
++                require(all(bind_operator_query(name).family_id!="moe" or name in applicable for name in compute),"Inapplicable compute source operator")
+                 for name,proof in phase.get("compute_proofs",{}).items():
+-                    require(proof["exact_lookup"] and proof["duration_ms"]>0 and proof["kernel_count"]>0,"Missing exact positive compute pair")
+-                    if name=="moe_grouped_gemm":
+-                        from frontier.moe_routing_policy import TokenInterval,position_cyclic_expert_counts
+-                        replica=cluster["prefill_replica_config"]
+-                        counts=position_cyclic_expert_counts([TokenInterval(**i) for s in source["source_lanes"] for i in s["intervals"]],replica["router_topk"],replica["total_expert_num"])
+-                        width=replica["total_expert_num"]//replica["moe_expert_parallel_size"]
+-                        empty+=int(not sum(counts[row["ep_id"]*width:(row["ep_id"]+1)*width]))
++                    require(proof["exact_lookup"] and math.isfinite(proof["duration_ms"]) and proof["duration_ms"]>0 and
++                            not isinstance(proof["kernel_count"],bool) and math.isfinite(proof["kernel_count"]) and proof["kernel_count"]>0 and proof["kernel_count"]==int(proof["kernel_count"]) and
++                            proof["duration_ms"]==phase["operators_ms"].get(name),"Missing exact positive compute pair")
+                 for proof in phase.get("collective_proofs",{}).values():
+                     plan,cost=proof["plan"],proof["cost"]
+                     require(plan["sizes"]==[s["physical_rows"] for s in source["source_lanes"]],"Collective physical sizes mismatch")
+diff --git a/tests/integration/test_step5_measured_main.py b/tests/integration/test_step5_measured_main.py
+index 0b83dd64..1b27dbe3 100644
+--- a/tests/integration/test_step5_measured_main.py
++++ b/tests/integration/test_step5_measured_main.py
+@@ -13,6 +13,74 @@ from tests.integration.step5_measured_compute_fixture import (
+ from tests.integration.run_step5_measured_main import command, write_read_cost
+ 
+ 
++def _completed_position_validator_inputs(root, quant, deferred=False):
++    """CPU artifact fault-injection seam, not an actual completed simulation."""
++    from dataclasses import asdict
++    from frontier.moe_routing_policy import SourceLaneRouting, TokenInterval, WaveRoutingSource
++    from tests.integration.run_step5_measured_main import write_json
++    run = root / "metrics" / "run"
++    run.mkdir(parents=True)
++    replica = dict(attn_tensor_parallel_size=8,attn_dp=2,moe_tensor_parallel_size=1,
++        moe_expert_parallel_size=16,world_size=16,moe_routing_distribution_type="position_cyclic",router_topk=8,total_expert_num=352)
++    write_json(run/"config.json",dict(simulation_mode="offline",decode_cuda_graph_mode="full_and_piecewise",
++        use_cuda_graph=False,cudagraph_capture_sizes=CAPTURE_SIZES,cluster_config=dict(prefill_replica_config=replica,
++        decode_replica_config=replica,replica_scheduler_config=dict(max_model_len=7168,batch_size_cap=128,
++        enable_prefix_caching=False,enable_chunked_prefill=False))))
++    write_json(run/"system_metrics.json",dict(simulation_metadata=dict(total_requests=1,completed_requests=1)))
++    (run/"request_metrics.csv").write_text("request_num_prefill_tokens,request_num_decode_tokens,request_e2e_time,client_ttft,tpot\n6144,1024,2,1,0.001\n")
++    document = write_read_cost(root/"read.json")
++    transfer=dict(status="completed",target_bound=True,bytes=document["measurements"][0]["transfer_bytes_per_rank"],duration_ms=3.5)
++    (run/"frontier_transfer_ledger.jsonl").write_text(json.dumps(transfer)+"\n")
++    write_json(run/"event_trace.json",[dict(event_type="KV_CACHE_TRANSFER_END",payload_kind="prefix_pages_per_worker_lane",
++        target_ready_time=1,source_release_time=1,time=1,target_reserved_common_blocks=4*(6128//16),source_prompt_common_blocks=6128//16)])
++    stages=[dict(request_ids=[0],cluster_type="PREFILL",request_num_tokens=[6128],stage_start_ts=0,execution_time=dict(total_time_ms=1))]
++    stages += [dict(request_ids=[0],cluster_type="DECODE",request_num_tokens=[16 if i==0 else 1],stage_start_ts=1+i,
++        execution_time=dict(total_time_ms=1)) for i in range(1024)]
++    (run/"frontier_stage_batch_ledger.jsonl").write_text("".join(json.dumps(row)+"\n" for row in stages))
++    source=WaveRoutingSource("position_cyclic",(SourceLaneRouting(0,1,1,0,"NONE","standalone_legacy",16,16,(TokenInterval(6128,16),)),
++        SourceLaneRouting(1,2,2,0,"NONE","standalone_legacy",1,0,())),17)
++    context=dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=quant,defer_input_quant=deferred)
++    names=["post_attention_layernorm","moe_gating_linear","moe_gating_routing_topk"]+(["moe_input_quantize"] if quant and not deferred else [])
++    proof=dict(exact_lookup=True,duration_ms=1.,kernel_count=3)
++    phases={"pre_dispatch":dict(operators_ms={n:1. for n in names},compute_proofs={n:dict(proof) for n in names}),
++        "routed_compute":dict(operators_ms=dict(moe_grouped_gemm=1.),compute_proofs=dict(moe_grouped_gemm=dict(proof))),
++        "dispatch":dict(operators_ms=dict(step5_moe_dispatch=1.),collective_proofs=dict(step5_moe_dispatch=dict(
++            plan=dict(sizes=[16,1],buffers=dict(compute_context=context)),cost=dict(kernel_counts=[3]*16,
++            count_receipt_json=json.dumps(dict(evidence_kind="cpu_fixture")),duration_ms=1.,network_ms=0.,local_rank_ms=[1.]*16,remainder_ms=0.))))}
++    lanes=[dict(ep_id=0,cluster="DECODE",routing_source=asdict(source),phases=json.loads(json.dumps(phases))),
++           dict(ep_id=8,cluster="DECODE",routing_source=asdict(source),phases=phases)]
++    return run,document,lanes
++
++
++@pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
++@pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","zero_operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
++def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, quant, deferred, damage):
++    from tests.integration.run_step5_measured_main import validate
++    run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
++    source=lanes[1]["phases"]["pre_dispatch"]
++    if damage == "prepare" and (not quant or deferred): pytest.skip("No source prepare is reached by this binding")
++    if damage == "inapplicable" and quant and not deferred: pytest.skip("Source prepare is applicable to this binding")
++    if damage in ("gate","router","prepare"):
++        source["compute_proofs"].pop({"gate":"moe_gating_linear","router":"moe_gating_routing_topk","prepare":"moe_input_quantize"}[damage])
++    if damage == "all": source.pop("compute_proofs")
++    if damage in ("operator","zero_operator"):
++        source["operators_ms"].pop("moe_gating_linear") if damage=="operator" else source["operators_ms"].update(moe_gating_linear=0.);source["compute_proofs"].pop("moe_gating_linear")
++    if damage == "peer_only": lanes=lanes[:1]
++    if damage == "duration": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=float("nan")
++    if damage == "count": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=0
++    if damage == "norm": source["compute_proofs"].pop("post_attention_layernorm")
++    if damage == "inapplicable":
++        source["operators_ms"]["moe_input_quantize"]=1.;source["compute_proofs"]["moe_input_quantize"]=dict(exact_lookup=True,duration_ms=1.,kernel_count=3)
++    if damage == "mismatch": source["compute_proofs"]["moe_gating_linear"]["duration_ms"]=2.
++    if damage == "fractional": source["compute_proofs"]["moe_gating_linear"]["kernel_count"]=1.5
++    (run/"frontier_ep_wave_lane_ledger.jsonl").write_text("".join(json.dumps(row)+"\n" for row in lanes))
++    if damage:
++        with pytest.raises(AssertionError,match="compute|source"):
++            validate(tmp_path,"offline",document)
++    else:
++        assert validate(tmp_path,"offline",document)["status"] == "PASS"
++
++
+ @pytest.mark.parametrize("quant,deferred", [(None, False), ("float8_e4m3fn", False), ("float8_e4m3fn", True)])
+ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(tmp_path, monkeypatch, quant, deferred):
+     torch = pytest.importorskip("torch")
+@@ -55,7 +123,7 @@ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(t
+             activation_layout=dict(shape=[17,4],stride=[4,1],dtype="bfloat16",element_size=2),
+             source_activation_layout=dict(shape=[16,4],stride=[4,1],dtype="bfloat16",element_size=2),
+             native_padding=dict(scheme="triton_expert_assignment",alignment=16,num_tokens_post_padded=0))
+-    native = SimpleNamespace(prepare_source=prepare,prepared_context=context,provenance=facts,
++    native = SimpleNamespace(prepare_source=prepare,prepared_context=context,provenance=facts,point_diagnostics=facts,
+                              apply_prepared=lambda *a,**k: pytest.fail("source cell cannot time gathered experts"))
+     monkeypatch.setattr(fp8_block_experts,"get_native_routed_experts",lambda **k:native)
+     class Timer:
+diff --git a/tests/unit/test_moe_profiling_output_metadata.py b/tests/unit/test_moe_profiling_output_metadata.py
+index f0fb931e..bae54872 100644
+--- a/tests/unit/test_moe_profiling_output_metadata.py
++++ b/tests/unit/test_moe_profiling_output_metadata.py
+@@ -170,3 +170,43 @@ def test_explicit_source_input_parser_preserves_one_cell_protocol_and_rejects_mi
+     path.write_text(json.dumps(payload))
+     with pytest.raises(ValueError, match="distinct"):
+         read_routing_profile_inputs(path)
++
++
++@pytest.mark.parametrize("trainer", ["shared", "independent"])
++@pytest.mark.parametrize("damage", ["absent", "invalid"])
++def test_automatic_position_training_requires_supplied_source_before_estimators(tmp_path, monkeypatch, trainer, damage):
++    from frontier.config import global_vars
++    from frontier.config.model_config import BaseModelConfig
++    from frontier.types import ClusterType, MeasurementType
++    from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
++    from tests.integration import step5_measured_compute_fixture as fixture
++    from tests.unit.test_step5_measured_ffn import _config, _replica
++    from tests.unit.test_step5_measured_training import _manager
++    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
++    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
++    monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", list(fixture.CAPTURE_SIZES))
++    monkeypatch.setattr(fixture, "range", lambda *a: (6144,6145) if a == (6143,7167) else range(*a), raising=False)
++    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
++    paths, _ = fixture.position_compute_tables(tmp_path, model, device="h800", measurement=MeasurementType.CUDA_EVENT)
++    replica = _replica(model)
++    replica.moe_expert_parallel_size, replica.moe_routing_distribution_type = 16, "position_cyclic"
++    manager = _manager(tmp_path / "cache", MeasurementType.CUDA_EVENT)
++    manager._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(replica_config=replica)}
++    rows = pd.read_csv(paths[1])
++    for facts in position_moe_operator_facts(rows, replica):
++        manager._validate_moe_dataset_contract(str(paths[1]), replica, list(facts), ClusterType.MONOLITHIC, operator_facts=facts)
++    if damage == "absent": rows = rows.drop(columns="routing_input")
++    else: rows["routing_input"] = "{}"
++    rows.to_csv(paths[1], index=False)
++    def forbidden(*args, **kwargs): pytest.fail("Unvalidated source reached estimator or legacy helper")
++    if trainer == "shared":
++        monkeypatch.setattr(manager, "_train_single_model", forbidden)
++        call = lambda: manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC, replica, _config(), str(paths[0]), str(paths[1]), True, set())
++    else:
++        predictor = object.__new__(_ConcreteMoEPredictor)
++        predictor._model_config, predictor._replica_config, predictor._moe_input_file = model, replica, str(paths[1])
++        predictor._moe_routing_distribution_type, predictor._active_measurement_type = "position_cyclic", MeasurementType.CUDA_EVENT
++        monkeypatch.setattr(predictor, "_get_profiling_metadata", forbidden)
++        call = predictor._train_moe_models
++    with pytest.raises((ValueError, KeyError), match="routing_input|source_frames"):
++        call()
+diff --git a/tests/unit/test_step5_moe_profiling.py b/tests/unit/test_step5_moe_profiling.py
+index 82295e52..328616c2 100644
+--- a/tests/unit/test_step5_moe_profiling.py
++++ b/tests/unit/test_step5_moe_profiling.py
+@@ -347,11 +347,16 @@ def test_position_adapter_binds_one_source_tensor_pair_and_real_factory_contract
+     config.get_current_vllm_config_or_none = lambda: object()
+     config.VllmConfig = lambda: pytest.fail("an active config must be retained")
+     factory = ModuleType("vllm.model_executor.layers.fused_moe.router.router_factory")
++    simulator = ModuleType("vllm.model_executor.layers.fused_moe.router.routing_simulator_router")
++    simulator.RoutingSimulator = SimpleNamespace(simulate_routing=lambda *args: None,
++        _routing_strategies={"position_cyclic": SimpleNamespace(route_tokens=lambda *args: None)})
+     class Router:
+         routing_method_type = SimpleNamespace(name="Simulated")
+         def select_experts(self, x, logits):
+             return self._select_experts(x, logits)
+         def _select_experts(self, x, logits):
++            return self._compute_routing(x, logits)
++        def _compute_routing(self, x, logits):
+             calls["inputs"] = (state.routing_positions, state.is_padding, logits.dtype)
+             if calls.get("fail"):
+                 raise RuntimeError("native routing failure")
+@@ -360,7 +365,7 @@ def test_position_adapter_binds_one_source_tensor_pair_and_real_factory_contract
+         calls["factory"] = kwargs
+         return Router()
+     factory.create_fused_moe_router = create_fused_moe_router
+-    for module in (gate_module, bias_module, context, config, factory):
++    for module in (gate_module, bias_module, context, config, factory, simulator):
+         monkeypatch.setitem(sys.modules, module.__name__, module)
+     monkeypatch.setattr(moe_impl, "ensure_vllm_single_rank_parallel_state", lambda: None)
+     monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY", "position_cyclic")
+@@ -380,29 +385,46 @@ def test_position_adapter_binds_one_source_tensor_pair_and_real_factory_contract
+     assert calls["factory"]["scoring_func"] == "sigmoid" and calls["factory"]["routed_scaling_factor"] == 3.
+     assert gate.gate.forward in calls["provenance"]["callables"]
+     assert gate.native_router._select_experts in calls["provenance"]["callables"]
++    assert gate.native_router._compute_routing in calls["provenance"]["callables"]
+     calls["fail"] = True
+     with pytest.raises(RuntimeError, match="native routing failure"):
+         gate(torch.zeros((3, 4)))
+     assert state.routing_positions is None and state.is_padding is None
+ 
+ 
+-def test_position_adapter_rejects_only_replaced_bound_router_implementation(installed_profile_receipt, tmp_path, monkeypatch):
++@pytest.mark.parametrize("implementation", ["_select_experts", "_compute_routing", "simulate_routing", "route_tokens"])
++def test_position_adapter_rejects_only_replaced_bound_router_implementation(installed_profile_receipt, tmp_path, monkeypatch, implementation):
+     """Fault injection at the real constructor/verifier, not image qualification."""
+     torch = pytest.importorskip("torch")
+     from types import MethodType, ModuleType
+     from frontier.profiling.moe import moe_impl
+     from frontier.profiling.common.runtime_identity import file_sha256
++    import ast
+     path, modules, manifest = installed_profile_receipt
+     router_name = "vllm.model_executor.layers.fused_moe.router.routing_simulator_router"
++    published = Path("/data/ycfeng/tmp/d29_published_sources01/source")
++    if not published.is_dir(): pytest.skip("Requires supplied published native source export for actual delegation")
++    def classes(name, selected):
++        tree = ast.parse((published / (name.replace(".", "/") + ".py")).read_text())
++        return "\n".join(ast.unparse(node) for node in tree.body if isinstance(node, ast.ClassDef) and node.name in selected)
++    fused_name, base_name = (router_name.rsplit(".", 1)[0] + "." + name for name in ("fused_moe_router", "base_router"))
++    prefix = "from __future__ import annotations\nimport torch\nfrom abc import ABC, abstractmethod\nfrom collections.abc import Callable\nfrom types import SimpleNamespace\n"
+     sources = {
+         "vllm.model_executor.layers.fused_moe.router.gate_linear": "import torch\nclass GateLinear(torch.nn.Module):\n    def __init__(self, *args, **kwargs):\n        super().__init__()\n    def forward(self, x):\n        return x, None\n",
+-        router_name: "from types import SimpleNamespace\nclass Router:\n    routing_method_type = SimpleNamespace(name='Simulated')\n    def select_experts(self, *args):\n        return self._select_experts(*args)\n    def _select_experts(self, *args):\n        return args\n",
+-        "vllm.model_executor.layers.fused_moe.router.router_factory": f"from {router_name} import Router\ndef create_fused_moe_router(**kwargs):\n    return Router()\n",
++        fused_name: prefix + classes(fused_name, {"FusedMoERouter"}),
++        base_name: prefix + f"from {fused_name} import FusedMoERouter\n" + classes(base_name, {"BaseRouter"}),
++        router_name: prefix + f"from {base_name} import BaseRouter\n" + "logger=SimpleNamespace(warning_once=lambda *args: None)\nenvs=SimpleNamespace(VLLM_MOE_ROUTING_SIMULATION_STRATEGY='position_cyclic', VLLM_MOE_SKIP_PADDING=True)\nRoutingMethodType=SimpleNamespace(Simulated=SimpleNamespace(name='Simulated'))\nget_forward_context=lambda: SimpleNamespace(routing_positions=torch.tensor([6128]), is_padding=None)\n" + classes(router_name, {"RoutingStrategy", "DistributionBasedRouting", "PositionCyclicRouting", "RoutingSimulator", "RoutingSimulatorRouter"}),
++        "vllm.model_executor.layers.fused_moe.router.router_factory": f"from {router_name} import RoutingSimulatorRouter\ndef create_fused_moe_router(**kwargs):\n    return RoutingSimulatorRouter(kwargs['top_k'], kwargs['global_num_experts'], scoring_func=kwargs['scoring_func'])\n",
+         "vllm.forward_context": "from contextlib import contextmanager\n@contextmanager\ndef set_forward_context(*args, **kwargs):\n    yield\n@contextmanager\ndef set_routing_positions(*args):\n    yield\n",
+     }
+     receipt_path = path.parent / manifest["native_binding"]["native_source_receipt"]
+     receipt = json.loads(receipt_path.read_text())
+     for name, source in sources.items():
++        if name not in modules:
++            source_path = Path(manifest["native_binding"]["installed_package"]).parent / (name.replace(".", "/") + ".py")
++            spec = importlib.util.spec_from_file_location(name, source_path)
++            modules[name] = importlib.util.module_from_spec(spec)
++            monkeypatch.setitem(sys.modules, name, modules[name])
+         module = modules[name]
+         Path(module.__file__).write_text(source)
+         exec(compile(source, module.__file__, "exec"), module.__dict__)
+@@ -425,19 +447,24 @@ def test_position_adapter_rejects_only_replaced_bound_router_implementation(inst
+     monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST", str(path))
+     kwargs = dict(hidden_dim=4, num_experts=352, router_topk=8, router=STEP5_ROUTER, routing_runtime_path="position_cyclic")
+     native = moe_impl.SigmoidBiasGatingNetwork(**kwargs).native_router
++    simulator = modules[router_name].RoutingSimulator
++    target = native if implementation.startswith("_") else simulator if implementation == "simulate_routing" else simulator._routing_strategies["position_cyclic"]
+     router_type, original_select = type(native), native.select_experts.__func__
++    original_internal = native._select_experts.__func__
+     original_hash = file_sha256(modules[router_name].__file__)
+     original_origin = (modules[router_name].__file__, modules[router_name].__spec__.origin)
+     foreign = tmp_path / "foreign_router.py"
+-    foreign.write_text("def replacement(self, *args):\n    return args\n")
++    foreign.write_text("import torch\ndef replacement(self=None, *args, **kwargs):\n    return torch.zeros((1, 8)), torch.zeros((1, 8), dtype=torch.int64)\n")
+     namespace = {"__name__": router_name}
+     exec(compile(foreign.read_text(), str(foreign), "exec"), namespace)
+-    native._select_experts = MethodType(namespace["replacement"], native)
++    setattr(target, implementation, namespace["replacement"] if implementation == "simulate_routing" else MethodType(namespace["replacement"], target))
+     assert type(native) is router_type and native.select_experts.__func__ is original_select
++    if implementation != "_select_experts": assert native._select_experts.__func__ is original_internal
++    assert native.select_experts(torch.zeros((1, 4)), torch.zeros((1, 352)))
+     assert file_sha256(modules[router_name].__file__) == original_hash
+     assert (modules[router_name].__file__, modules[router_name].__spec__.origin) == original_origin
+     # Preserve the factory callable and router module; only its result is injected.
+-    monkeypatch.setattr(modules["vllm.model_executor.layers.fused_moe.router.router_factory"], "Router", lambda: native)
++    monkeypatch.setattr(modules["vllm.model_executor.layers.fused_moe.router.router_factory"], "RoutingSimulatorRouter", lambda *args, **kwargs: native)
+     with pytest.raises(ValueError, match="bound native callable code/source"):
+         moe_impl.SigmoidBiasGatingNetwork(**kwargs)
+ 
+@@ -535,6 +562,47 @@ def test_actual_source_context_is_explicit_and_does_not_mutate_wrapper_context()
+     assert wrapper.gating_runtime_context == "prefill_hot"
+ 
+ 
++def test_position_row_preserves_full_point_diagnostics_outside_stable_context(installed_profile_receipt, monkeypatch):
++    torch = pytest.importorskip("torch")
++    from types import SimpleNamespace
++    import csv, io
++    monkeypatch.setattr(sys.modules["vllm"],"__version__","0.0.0-cpu-fixture",raising=False)
++    from frontier.profiling.moe import moe_wrapper, fp8_block_experts
++    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput, MoERoutingProfileCell
++    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++    path, modules, _ = installed_profile_receipt
++    extra = "vllm.model_executor.layers.fused_moe.oracle.unquantized"
++    monkeypatch.delitem(sys.modules, extra)
++    full = verify_step5_profile_runtime(path)
++    stable = dict(shared=full["shared"], imports={}, callables={})
++    context = dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=None,
++                   defer_input_quant=False,native_facts=stable)
++    experts = SimpleNamespace(provenance=stable,point_diagnostics=full,prepare_source=lambda x:(x,None),
++        prepared_context=lambda *args,**kwargs:dict(context))
++    monkeypatch.setattr(fp8_block_experts,"get_native_routed_experts",lambda **kwargs:experts)
++    wrapper = object.__new__(moe_wrapper.MoEWrapper)
++    for name,value in dict(quantization_mode="bf16",activation="swiglustep",num_experts_per_device=22,num_experts=352,
++        hidden_dim=4,expert_hidden_dim=4,router_topk=8,block_shape=None,expert_parallel_size=16,_dtype=torch.bfloat16,
++        routing_runtime_path="position_cyclic",model_config=SimpleNamespace(model_type="step5",
++            get_model_architecture_profile=lambda:SimpleNamespace(profile_id="step5"))).items(): setattr(wrapper,name,value)
++    wrapper.gating=SimpleNamespace(native_facts=stable,linear_backend="cpu_fixture",bind_source_frame=lambda *a,**kw:None)
++    wrapper._materialize_gating_hidden_states=lambda rows:torch.zeros(rows,4,dtype=torch.bfloat16)
++    wrapper._run_gating_with_runtime_context=lambda x,**kw:(torch.zeros(len(x),8),torch.zeros(len(x),8,dtype=torch.int32))
++    wrapper._build_local_expert_map=lambda device:None
++    wrapper._profile_cell_callable=lambda run,names:{name:dict(median=1.,kernel_count=3) for name in names}
++    wrapper._build_profile_result=lambda stats,**kwargs:dict(time_stats=stats)
++    cell=MoERoutingProfileCell(MoERoutingProfileInput("point",(MoESourceFrame(0,(16,),(6128,),16,"standalone_legacy"),
++        MoESourceFrame(1,(),(),1,"standalone_legacy")),17),"source_local",1)
++    first=wrapper._profile_position_cell(cell)
++    monkeypatch.setitem(sys.modules,extra,modules[extra]);experts.point_diagnostics=verify_step5_profile_runtime(path)
++    second=wrapper._profile_position_cell(cell)
++    assert first["native_context"]==second["native_context"] and experts.provenance is stable
++    assert extra not in json.loads(first["native_facts"])["imports"] and extra in json.loads(second["native_facts"])["imports"]
++    stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=second);writer.writeheader();writer.writerow(second)
++    restored=next(csv.DictReader(io.StringIO(stream.getvalue())))
++    assert json.loads(restored["point_diagnostics"])==experts.point_diagnostics and restored["native_context"]==second["native_context"]
++
++
+ def test_masked_expert_sentinel_is_filtered_before_local_map_and_bincount():
+     torch = pytest.importorskip("torch")
+     from frontier.profiling.moe.load_distribution import compute_expert_token_counts

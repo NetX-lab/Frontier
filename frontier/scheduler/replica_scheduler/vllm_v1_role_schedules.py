@@ -5,6 +5,7 @@ that stays on the scheduler itself.  A disaggregated cluster instead drives one
 role per replica, and each of those roles has its own entry point here.
 """
 
+from collections import deque
 from typing import List, Optional, Tuple
 
 from frontier.config import global_vars
@@ -353,6 +354,20 @@ class DisaggregatedRoleScheduling:
         num_tokens_list: List[int] = []
 
         waiting_queue = self._build_decode_waiting_queue()
+        ready_request_ids = self._kv_transfer_ready_request_ids
+        if ready_request_ids:
+            ready_requests = []
+            ordinary_requests = []
+            for request in waiting_queue:
+                if request.id in ready_request_ids:
+                    if request.id not in self._allocation_map:
+                        raise RuntimeError(
+                            f"D-ready request {request.id} has no reserved allocation"
+                        )
+                    ready_requests.append(request)
+                else:
+                    ordinary_requests.append(request)
+            waiting_queue = deque((*ready_requests, *ordinary_requests))
 
         self._current_iteration_token_budget = token_budget
         while waiting_queue and token_budget > 0:
@@ -372,6 +387,14 @@ class DisaggregatedRoleScheduling:
                 break
 
             num_new_tokens = self._get_request_next_num_tokens(request)
+
+            # Keep an admitted transfer tail in one first-D step. Its profile
+            # and sampling boundary do not cover a partially scheduled tail.
+            if (
+                request.id in ready_request_ids and request.is_recomputing
+                and num_new_tokens > token_budget
+            ):
+                break
 
             # Keep draft tokens within max_model_len; the request itself fits
             # (checked on arrival).
@@ -417,6 +440,8 @@ class DisaggregatedRoleScheduling:
 
             # Add to running requests
             self._running_requests.append(request)
+            if request.id in ready_request_ids:
+                self.consume_kv_transfer_target_ready(request)
 
             # Clear preempted flag if set
             if was_preempted:

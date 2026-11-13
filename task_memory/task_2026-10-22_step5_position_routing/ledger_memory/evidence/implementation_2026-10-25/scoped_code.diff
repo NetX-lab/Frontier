@@ -1,0 +1,203 @@
+diff --git a/frontier/metrics/metrics_store.py b/frontier/metrics/metrics_store.py
+index 7a1d753b..fec1e9a9 100644
+--- a/frontier/metrics/metrics_store.py
++++ b/frontier/metrics/metrics_store.py
+@@ -263,6 +263,28 @@ def _iter_mla_attention_operation_metrics(execution_time: ExecutionTime):
+     )
+ 
+ 
++class _EPLaneLedger:
++    def __init__(self, path: str) -> None:
++        self._path = path
++        self._stream = None
++        self._count = 0
++
++    def append(self, row: dict[str, Any]) -> None:
++        if self._stream is None:
++            os.makedirs(os.path.dirname(self._path), exist_ok=True)
++            self._stream = open(self._path, "w", encoding="utf-8")
++        self._stream.write(json.dumps(row, sort_keys=True) + "\n")
++        self._stream.flush()
++        self._count += 1
++
++    def __len__(self) -> int:
++        return self._count
++
++    def close(self) -> None:
++        if self._stream is not None:
++            self._stream.close()
++
++
+ class MetricsStore:
+     def __init__(
+         self,
+@@ -377,7 +399,9 @@ class MetricsStore:
+             tuple[str, int, int | None, int, int], dict[str, Any]
+         ] = {}
+         self._frontier_stage_batch_ledger_rows: list[dict[str, Any]] = []
+-        self._frontier_ep_wave_lane_ledger_rows: list[dict[str, Any]] = []
++        self._frontier_ep_wave_lane_ledger_rows = _EPLaneLedger(
++            os.path.join(self._config.output_dir, "frontier_ep_wave_lane_ledger.jsonl")
++        )
+         self._frontier_stage_batch_ledger_summary = (
+             self._new_frontier_stage_batch_ledger_summary()
+         )
+@@ -4993,12 +5017,7 @@ class MetricsStore:
+         return summary
+ 
+     def _write_frontier_stage_batch_ledger(self) -> None:
+-        if self._frontier_ep_wave_lane_ledger_rows:
+-            os.makedirs(self._config.output_dir, exist_ok=True)
+-            path = os.path.join(self._config.output_dir, "frontier_ep_wave_lane_ledger.jsonl")
+-            with open(path, "w", encoding="utf-8") as handle:
+-                for row in self._frontier_ep_wave_lane_ledger_rows:
+-                    handle.write(json.dumps(row, sort_keys=True) + "\n")
++        self._frontier_ep_wave_lane_ledger_rows.close()
+         if (
+             not self._frontier_stage_batch_ledger_rows
+             and self._frontier_stage_batch_ledger_summary["total_rows"] == 0
+diff --git a/tests/integration/run_step5_measured_main.py b/tests/integration/run_step5_measured_main.py
+index 054060b9..46151ff6 100644
+--- a/tests/integration/run_step5_measured_main.py
++++ b/tests/integration/run_step5_measured_main.py
+@@ -175,6 +175,17 @@ def command(mode, root, fixture, read_cost):
+     return [sys.executable, "-B", "-m", "frontier.main", *args]
+ 
+ 
++def _ep_lane_rows(path):
++    with path.open() as stream:
++        found = False
++        for line in stream:
++            row = json.loads(line)
++            require("routing_source" in row, "Missing actual position source census")
++            found = True
++            yield row
++        require(found, "Missing actual position source census")
++
++
+ def validate(root, mode, document):
+     [config_path] = list((root / "metrics").rglob("config.json"))
+     run = config_path.parent
+@@ -224,10 +235,8 @@ def validate(root, mode, document):
+     first_decode = min(decode, key=lambda row: row["stage_start_ts"])
+     require(first_decode["stage_start_ts"] >= read_end["target_ready_time"], "D launched before READ readiness")
+     if cluster["prefill_replica_config"]["moe_routing_distribution_type"] == "position_cyclic":
+-        lanes=[json.loads(line) for line in (run/"frontier_ep_wave_lane_ledger.jsonl").read_text().splitlines()]
+-        require(lanes and all("routing_source" in row for row in lanes),"Missing actual position source census")
+         empty=0
+-        for row in lanes:
++        for row in _ep_lane_rows(run/"frontier_ep_wave_lane_ledger.jsonl"):
+             source=row["routing_source"]
+             require(sum(s["physical_rows"] for s in source["source_lanes"])==source["gathered_physical_rows"],"Physical source conservation failed")
+             from frontier.moe_routing_policy import source_lane_index_for_ep
+diff --git a/tests/integration/test_step5_measured_main.py b/tests/integration/test_step5_measured_main.py
+index 00a6ec26..5ed9da5c 100644
+--- a/tests/integration/test_step5_measured_main.py
++++ b/tests/integration/test_step5_measured_main.py
+@@ -54,7 +54,7 @@ def _completed_position_validator_inputs(root, quant, deferred=False):
+ 
+ @pytest.mark.parametrize("quant,deferred", [(None,False),("float8_e4m3fn",False),("float8_e4m3fn",True)])
+ @pytest.mark.parametrize("damage", [None,"gate","router","prepare","all","operator","zero_operator","peer_only","duration","count","norm","inapplicable","mismatch","fractional"])
+-def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, quant, deferred, damage):
++def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(tmp_path, monkeypatch, quant, deferred, damage):
+     from tests.integration.run_step5_measured_main import validate
+     run,document,lanes=_completed_position_validator_inputs(tmp_path,quant,deferred)
+     source=lanes[1]["phases"]["pre_dispatch"]
+@@ -78,9 +78,69 @@ def test_completed_position_validator_requires_actual_dummy_owner_compute_pairs(
+         with pytest.raises(AssertionError,match="compute|source"):
+             validate(tmp_path,"offline",document)
+     else:
++        from pathlib import Path
++        read_text = Path.read_text
++        def bounded_read(path, *args, **kwargs):
++            assert path.name != "frontier_ep_wave_lane_ledger.jsonl", "EP ledger materialized"
++            return read_text(path, *args, **kwargs)
++        monkeypatch.setattr(Path, "read_text", bounded_read)
+         assert validate(tmp_path,"offline",document)["status"] == "PASS"
+ 
+ 
++def test_real_ep_lane_ledger_releases_rows_and_preserves_bytes(tmp_path, monkeypatch):
++    import weakref
++    from pathlib import Path
++    from frontier.config import global_vars
++    for name, value in vars(global_vars).copy().items():
++        if name.isupper() or name == "_IS_MOE_INITIALIZED": monkeypatch.setattr(global_vars, name, value)
++    from tests.unit.test_stage_reporting_contract import _store
++    _, _, lanes = _completed_position_validator_inputs(tmp_path / "source", None)
++    store, _ = _store(tmp_path / "output", enable_op_level_tracing=False, store_frontier_stage_batch_ledger=True)
++    ledger = store._frontier_ep_wave_lane_ledger_rows
++    path = Path(store._config.output_dir) / "frontier_ep_wave_lane_ledger.jsonl"
++    assert len(ledger) == 0 and not path.exists()
++    store._write_frontier_stage_batch_ledger()
++    assert not path.exists()
++    class Row(dict):
++        pass
++    expected = b""
++    for index in range(32):
++        row = Row(lanes[index % 2])
++        released = weakref.ref(row)
++        expected += (json.dumps(row, sort_keys=True) + "\n").encode()
++        ledger.append(row)
++        del row
++        assert released() is None, "Real MetricsStore retained an old EP row"
++        assert len(ledger) == index + 1 and path.read_bytes() == expected
++    store._write_frontier_stage_batch_ledger()
++    store._write_frontier_stage_batch_ledger()
++    assert len(ledger) == 32 and path.read_bytes() == expected
++
++
++@pytest.mark.parametrize("damage,exception,message", [
++    ("missing", FileNotFoundError, "frontier_ep_wave_lane_ledger"),
++    ("empty", AssertionError, "Missing actual position source census"),
++    ("malformed", json.JSONDecodeError, "Expecting"),
++    ("source", AssertionError, "Missing actual position source census"),
++    ("null", TypeError, "not iterable"),
++    ("null_source", TypeError, "not subscriptable"),
++    ("proof", AssertionError, "Missing exact positive compute pair"),
++    ("precedence", AssertionError, "Missing exact positive compute pair"),
++])
++def test_completed_position_ep_ledger_stream_failures(tmp_path, damage, exception, message):
++    from tests.integration.run_step5_measured_main import validate
++    run, document, lanes = _completed_position_validator_inputs(tmp_path, None)
++    if damage == "null_source": lanes[0]["routing_source"] = None
++    if damage in ("proof", "precedence"):
++        lanes[0]["phases"]["pre_dispatch"]["compute_proofs"]["moe_gating_linear"]["exact_lookup"] = False
++    text = "".join(json.dumps(row) + "\n" for row in lanes)
++    text = {"empty": "", "malformed": "{\n", "source": "{}\n", "null": "null\n"}.get(damage, text)
++    if damage == "precedence": text += "{\n"
++    if damage != "missing": (run / "frontier_ep_wave_lane_ledger.jsonl").write_text(text)
++    with pytest.raises(exception, match=message):
++        validate(tmp_path, "offline", document)
++
++
+ @pytest.mark.parametrize("quant,deferred", [(None, False), ("float8_e4m3fn", False), ("float8_e4m3fn", True)])
+ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(tmp_path, monkeypatch, quant, deferred):
+     torch = pytest.importorskip("torch")
+diff --git a/tests/performance/step5_actual06_iteration.py b/tests/performance/step5_actual06_iteration.py
+index 90afa290..53af0c17 100644
+--- a/tests/performance/step5_actual06_iteration.py
++++ b/tests/performance/step5_actual06_iteration.py
+@@ -479,6 +479,8 @@ def main(args):
+     backend_before = {role.name: cluster.cc_backend.get_prediction_cache_stats().copy()
+                       for role, cluster in simulator._clusters.items()}
+     ledger_before = len(simulator._metric_store._frontier_ep_wave_lane_ledger_rows)
++    ledger_path = Path(simulator._metric_store._frontier_ep_wave_lane_ledger_rows._path)
++    ledger_position = ledger_path.stat().st_size if ledger_before else 0
+     stage_ledger_before = len(simulator._metric_store._frontier_stage_batch_ledger_rows)
+     start = time.perf_counter()
+     if args.profile:
+@@ -519,9 +521,11 @@ def main(args):
+     (output / "source_truth.json").write_text(json.dumps(truth, indent=2))
+     (output / "boundaries.json").write_text(json.dumps(totals, indent=2))
+     ledger_digest = hashlib.sha256()
+-    for row in simulator._metric_store._frontier_ep_wave_lane_ledger_rows[ledger_before:]:
+-        ledger_digest.update(json.dumps(row, sort_keys=True).encode())
+-        ledger_digest.update(b"\n")
++    if len(simulator._metric_store._frontier_ep_wave_lane_ledger_rows) > ledger_before:
++        with ledger_path.open("rb") as stream:
++            stream.seek(ledger_position)
++            for line in stream:
++                ledger_digest.update(line)
+     (output / "stage_ledger_prefix.json").write_text(json.dumps(
+         simulator._metric_store._frontier_stage_batch_ledger_rows[stage_ledger_before:], indent=2))
+     (output / "backend_cache.json").write_text(json.dumps(backend_snapshot(simulator), indent=2))

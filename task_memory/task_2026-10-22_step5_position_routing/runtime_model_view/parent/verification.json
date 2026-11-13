@@ -1,0 +1,322 @@
+{
+  "task_id": "D29-NAMED-MODEL-QUERY-PARENT",
+  "status": "PASS_COMPONENT_REPLAY_AND_FOCUSED_TESTS",
+  "source_commit": "1737ce9c4a761d2c57ee617f5f3a78d7bcfd9a58",
+  "records_commit": "3d75c786781802ad2753cbdd81d989c9b694660c",
+  "sources_at_replay": {
+    "baseline": {
+      "root": "/data/ycfeng/Frontier/.worktrees/step5-d29-plan-key",
+      "head": "d1e2fb8c0162c58e7e694fab2d3a900638f0d50a",
+      "hashes": {
+        "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+        "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+        "frontier/execution_time_predictor/moe_routing_workload.py": "d1561f20e0a0f045af8ddeabe88bd36b017cc554e9fcc44dd2d6ba4c0adb3d46",
+        "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+        "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+        "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+        "tests/unit/test_moe_routing_runtime.py": "e52190ec893dfc431ac96b37b9cdb7de92649ecd21bb7adb9fb273b67f739262",
+        "tests/unit/test_prediction_measurement_bindings.py": "18c1c2b6741441db5f2f98dcd3fecf92d43d22fa8659988a94102b2a47bd3f27",
+        "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+        "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+        "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+        "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+        "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+        "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+        "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+        "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+        "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+        "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+        "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+        "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+        "frontier/execution_time_predictor/prediction_model_registry.py": "6689aa89aabc2c10521a62488295adb68e6e0d0d17c576cafb777003b2cfcc54"
+      },
+      "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+    },
+    "candidate": {
+      "root": "/data/ycfeng/Frontier/.worktrees/step5-d29-named-query",
+      "head": "3d75c786781802ad2753cbdd81d989c9b694660c",
+      "hashes": {
+        "frontier/cc_backend/collective_profile.py": "fd6860fab8dfd0553bf49bfa6f05989c2fb14f3cd12135af56d67a430ea244bc",
+        "frontier/execution_time_predictor/shared_prediction_model_manager.py": "af77a1b1cd57b280e12fa1fb214b0978271366b209a2864bf68453346e49f9ec",
+        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": "c3f69446c96a722b57473a2e981be7b6e56aa465042393660d8df05342c9144c",
+        "frontier/execution_time_predictor/moe_routing_workload.py": "0c8525f01124d43e5c21d5ec5a037a8719339e5e4301b3f44958cc90618899b4",
+        "frontier/cc_backend/base_cc_backend.py": "260953fc000985252b7b6597f352d41ca63211e31eafa3e10ed1e200c7da3c18",
+        "frontier/cc_backend/backends/collective_sim_cc_backend.py": "6bc5be6bb5f98bdbbf80721dd1138808dfec64791eca69a4fbd9c18a5ab2aea5",
+        "tests/unit/test_collective_sim_cc_backend.py": "3029b8417709e7a02ba47d44dc172ee51a9466a70bf5478edefc8efeb84a8229",
+        "tests/unit/test_moe_routing_runtime.py": "5a4a5d8bbafa5dce3dbe9b0374e7ada80091fe20102cb55b1e3fa6d44a0e2dac",
+        "tests/unit/test_prediction_measurement_bindings.py": "ed8a6a164ffa36fd7ee5d32161e859d457623f317291e91f26864b4a7513d295",
+        "tests/unit/test_step5_measured_ffn.py": "ff8d368dc7be3382103442333fc5a0b3d38f33bd14a6bd84931a75c31fc8550b",
+        "frontier/cc_backend/collective_plan.py": "3158bc296ebb607c97d4305825a3b98e1111ac847e91483f8d362599597a6e06",
+        "frontier/metrics/op_trace_utils.py": "fb89d1c3406df2fe55372e2f3055b9abcbd484d7566fa11a3410d76af4e5aec5",
+        "frontier/metrics/ep_wave_metrics.py": "d438286b0611e0c23c8fd9037c29d4fac6286edcdcb820f2ec2f843bb8396e1e",
+        "frontier/metrics/trace_store.py": "07d7cbbb081829f558b6a4c101201baf112e5387e2045ee244436853fb463a0d",
+        "frontier/metrics/metrics_store.py": "5f223a363eb3870493dedbcc0376c65fc82785c0467525a643430f948a6e0fce",
+        "frontier/execution_time_predictor/moe_operator_times.py": "8d68e8ed141c5cf8e7491a0d001175abc9f2bcc9455de2042ac46b02eceb2b04",
+        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": "680eff5309be2cc68105bf32f276a924e6a0420117ecd95030a77498cecd15a1",
+        "frontier/scheduler/utils/expert_parallel.py": "601f531f2cae4847fac74a2b86b3af5ae3e1f8a710d0ae909a1ec65a49f6fdb2",
+        "frontier/scheduler/utils/ep_wave.py": "c47bd606495569d3c7fe6ce5f03f95c0ba30154cd76bde81c85252dd1385890a",
+        "tests/unit/test_step5_measured_ffn_replay.py": "1c64b7554d92cac63b67a7412c3fbd7aa9470ac59d712465137c86256dabee67",
+        "data/config/models/stepfun-ai__Step-5-Preview.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+        "tests/unit/test_step5_moe_pricing.py": "86985242ad39898819a0a3f954b0e6450ab58de0bc28ea4305484d4f8b07fb21",
+        "frontier/execution_time_predictor/prediction_model_registry.py": "f1eaedb9a1d27c7f9d7505a6961f8000ff195248d0ac73305d083ea51cd4ddb0"
+      },
+      "submodule_pin": "3dac53c544e546574cb6e8078cd14053d0916113"
+    }
+  },
+  "owner_artifacts_checked": [
+    "freeze.json",
+    "run.py",
+    "fixture_wiring.py",
+    "prepare.log",
+    "baseline.log",
+    "candidate.log",
+    "verification.json",
+    "baseline/wave_result.json",
+    "candidate/wave_result.json",
+    "red.log",
+    "green.log",
+    "final-green.log",
+    "final-green.xml",
+    "focused-baseline.log",
+    "focused-candidate.log",
+    "focused-baseline.xml",
+    "focused-candidate.xml",
+    "governance-baseline.log",
+    "governance-candidate.log",
+    "governance-baseline.xml",
+    "governance-candidate.xml"
+  ],
+  "full_file_comparisons": [
+    {
+      "path": "pricing_payload.json",
+      "bytes": 647510,
+      "sha256": "3d745054625520bf71c4da53c1b5a3de2c72f0b8814e8a6a57acdeb537c5ca83"
+    },
+    {
+      "path": "ledger.json",
+      "bytes": 2309545,
+      "sha256": "006dc7e8f76e2c8d2f59a42d3163aae75d474a4149eb08a3e85d688e948482bf"
+    },
+    {
+      "path": "contexts/op_traces.jsonl",
+      "bytes": 109,
+      "sha256": "cb551e4cb844fb99df5be4c23079cb351473b945c81c5fcff0263588ceb572f7"
+    },
+    {
+      "path": "iteration-0/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-1/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-10/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-11/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-12/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-13/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-14/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-2/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-3/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-4/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-5/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-6/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-7/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-8/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "iteration-9/op_traces.jsonl",
+      "bytes": 2889764,
+      "sha256": "1850a9b6a90cc7bb087b881e72d8cc00f5a669fa0be0f54bb25f3361a38d7e11"
+    },
+    {
+      "path": "ownership/op_traces.jsonl",
+      "bytes": 109,
+      "sha256": "cb551e4cb844fb99df5be4c23079cb351473b945c81c5fcff0263588ceb572f7"
+    }
+  ],
+  "diagnostic_headers": {
+    "late-json-failure/op_traces.jsonl": {
+      "metadata_timestamps": [
+        1792820003.6809633,
+        1792820003.7256799
+      ],
+      "other_header_values_equal": true,
+      "prefix_bytes": 3902,
+      "prefix_sha256": "f5e7f5a67660096a71d14abfe690dbc432d09a480c85c9999dea0cd16979f1ec"
+    },
+    "profile/op_traces.jsonl": {
+      "metadata_timestamps": [
+        1792820003.4743056,
+        1792820003.6252618
+      ],
+      "other_header_values_equal": true,
+      "prefix_bytes": 0,
+      "prefix_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "parent_counts": {
+    "pass": 125,
+    "skipped": 1
+  },
+  "retained_baseline_cases": 118,
+  "retained_status_changes": [],
+  "new_cases_all_pass": [
+    "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[cache_name]",
+    "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_gating_linear]",
+    "tests.unit.test_moe_routing_runtime::test_named_point_keeps_selected_collision_and_cache_name_guard[moe_grouped_gemm]",
+    "tests.unit.test_prediction_measurement_bindings::test_named_native_view_keeps_selected_objects_and_unfiltered_order",
+    "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[ambiguity]",
+    "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[conflict]",
+    "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[decode_attn]",
+    "tests.unit.test_prediction_measurement_bindings::test_named_typed_view_preserves_contract_errors_and_role_exclusion[missing]"
+  ],
+  "owner_governance_counts": {
+    "failure": 1,
+    "pass": 14
+  },
+  "operation_counts": {
+    "baseline": {
+      "_get_on_demand_prediction": 288,
+      "_predict_step5_ffn_operator": 144,
+      "predict_collective_plan": 64,
+      "_step5_position_queries": 16,
+      "cache_key": 192,
+      "loads": 1136,
+      "dumps": 800,
+      "_models_view_for_family": 16,
+      "_resolve_cluster_model_contract": 384,
+      "_get_family_model": 544
+    },
+    "candidate": {
+      "_get_on_demand_prediction": 288,
+      "_predict_step5_ffn_operator": 144,
+      "predict_collective_plan": 64,
+      "_step5_position_queries": 16,
+      "cache_key": 192,
+      "loads": 1136,
+      "dumps": 704,
+      "_models_view_for_family": 16,
+      "_resolve_cluster_model_contract": 0,
+      "_get_family_model": 160
+    }
+  },
+  "warm_median_s": {
+    "baseline": 0.12152454722672701,
+    "candidate": 0.09014253644272685
+  },
+  "protected_body_sha256": "1cabc04f024e6e1c8ee8d9902e74fee6e5dff4d95faeeaab0f8902e67d6d8555",
+  "reused_verifier": {
+    "path": "/data/ycfeng/Frontier/.worktrees/step5-d29-named-query/task_memory/task_2026-10-22_step5_position_routing/runtime_model_view/repair_evidence/verify.py",
+    "sha256": "60f49c707f87f5bb7e1009255a35e05de696ad202e44c8f8c7a5a09124174db2",
+    "scope": "Unchanged prefix through all wave/source/input checks; owner suite/archive phase is not executed."
+  },
+  "parent_artifacts": {
+    "pytest.xml": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/pytest.xml",
+      "bytes": 20476,
+      "sha256": "506d2f01bd7b05a194b99bc4eb35a5f33416cde02cbf62304751f205e258bff3"
+    },
+    "pytest.log": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/pytest.log",
+      "bytes": 270,
+      "sha256": "0829639939f9f74280f9851a0533f230679dc6bfb9030b757de4c1c7d641f0ba"
+    },
+    "prepare.log": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/prepare.log",
+      "bytes": 6723,
+      "sha256": "403d85a4fb6920baece6a3b3b4070d78276a98fb0c6832b5b0ba31a6813d8e8d"
+    },
+    "baseline.log": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/baseline.log",
+      "bytes": 8225,
+      "sha256": "9924f78b2959d02fde9e52e9ebb19725cc64f452b5f35f0912d5ad01e0343062"
+    },
+    "candidate.log": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/candidate.log",
+      "bytes": 8231,
+      "sha256": "20469e6b0df571d7dca87c19ebda9432ae61fe16a823815fbfb0f5f1e5a97eaa"
+    },
+    "wave/freeze.json": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/wave/freeze.json",
+      "bytes": 34861,
+      "sha256": "c22a35291691af9b2c6a069ea5f3c94b5b25c7cd84a151bf99adc15a5fd1d10a"
+    },
+    "wave/run.py": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/wave/run.py",
+      "bytes": 13771,
+      "sha256": "b69629fd3ecc754120badc5d9ba540e4add7d1ee1b1d8ab05878ab97e3866a9d"
+    },
+    "wave/fixture_wiring.py": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/wave/fixture_wiring.py",
+      "bytes": 3574,
+      "sha256": "bffe25039ecb0aae94b5eab905aff0c4cecb150eabbfcf4912aa6d5f9e7b95f1"
+    },
+    "wave/baseline/wave_result.json": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/wave/baseline/wave_result.json",
+      "bytes": 25927,
+      "sha256": "af18076057a8739d9eec8ea72ce077166741d612f906395c3e38227d8666f939"
+    },
+    "wave/candidate/wave_result.json": {
+      "path": "/data/ycfeng/tmp/d29_named_query_parent01/wave/candidate/wave_result.json",
+      "bytes": 28841,
+      "sha256": "1941af158a0b9d81071ce254808f5d8c80d272a4e4ae7a9f1107a77a726b03b2"
+    }
+  },
+  "limits": [
+    "The two replay arms ran concurrently with isolated caches while focused tests were active; timing is observational.",
+    "Owner governance baseline/candidate evidence was checked without repeating that suite.",
+    "Owner session labels remain in reused scripts; this receipt identifies the parent execution.",
+    "No full CLI, strict77, full-unit or native/GPU qualification for this successor."
+  ]
+}

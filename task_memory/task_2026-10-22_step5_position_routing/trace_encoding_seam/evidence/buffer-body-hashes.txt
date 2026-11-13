@@ -1,0 +1,7 @@
+1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156  contracts-py310-r2/timing-buffer/actual
+1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156  contracts-py310-r2/timing-buffer/P1
+1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156  control-py310/buffer-baseline
+1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156  control-py310/buffer-reuse
+1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156  control-trial2/buffer-baseline
+1b4f9ee2cb3c2333b2f9c87118b963482613078739aa588482e03f4dfe7bf156  control-trial2/buffer-reuse
+All six bodies hash-identical. Files are root-owned (written under sudo systemd-run); not removed without explicit sudo-rm authorization. Reference copy: control-py310/buffer-baseline/op_traces.jsonl

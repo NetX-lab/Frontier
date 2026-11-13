@@ -1,0 +1,198 @@
+diff --git a/frontier/profiling/collectives/step5_dispatch_probe.py b/frontier/profiling/collectives/step5_dispatch_probe.py
+index 156496453f4d4b4d3790334ba84d8b97711e24cd..a3b674cf3c89a6e53815e346da31a4b36e9436da 100644
+--- a/frontier/profiling/collectives/step5_dispatch_probe.py
++++ b/frontier/profiling/collectives/step5_dispatch_probe.py
+@@ -325,7 +325,7 @@ def compare_dispatch(case, calls, *, rows, sizes, dp_ranks, tp_ranks, hidden):
+             "observed_row_bytes": observed_bytes, "differences": differences}
+ 
+ 
+-def create_native_config(args):
++def create_native_config(args, *, engine_limits=None):
+     """Use the same text-submodel and quantization mappings as native serving."""
+     from vllm.engine.arg_utils import EngineArgs
+     from vllm.model_executor.model_loader.utils import configure_quant_config
+@@ -338,6 +338,9 @@ def create_native_config(args):
+         enable_expert_parallel=True, all2all_backend="allgather_reducescatter",
+         distributed_executor_backend="external_launcher", enforce_eager=True,
+         disable_custom_all_reduce=args.disable_custom_all_reduce,
++        **({name: value for name, value in engine_limits.items()
++            if name in ("max_model_len", "max_num_batched_tokens", "max_num_seqs")}
++           if engine_limits is not None else {}),
+     ).create_engine_config()
+     config = config.with_hf_config(config.model_config.hf_text_config,
+                                    architectures=["Step5ForCausalLM"])
+diff --git a/tests/integration/step5_environment/test_position_cyclic_graph.py b/tests/integration/step5_environment/test_position_cyclic_graph.py
+index 39a75dbb80c9f51d2cce4b1f3d4d2cb90b1a26c6..7cb2125ac6894e26decf5bf9134840bfc498d571 100644
+--- a/tests/integration/step5_environment/test_position_cyclic_graph.py
++++ b/tests/integration/step5_environment/test_position_cyclic_graph.py
+@@ -250,7 +250,11 @@ def main():
+     args.tensor_parallel_size, args.data_parallel_size, args.gpus_per_node = 8, 2, 8
+     args.disable_custom_all_reduce = False
+     supplied = json.loads(args.cases.read_text())
++    limits = supplied['engine_limits']
++    assert set(limits) == {'max_model_len', 'max_num_batched_tokens', 'max_num_seqs'}
++    assert all(type(value) is int and value > 0 for value in limits.values())
+     args.tokens_per_dp_rank = tuple(len(row['positions']) for row in supplied['modules'][0]['dp'])
++    args.routing_input_file = None  # Controlled T2 cases are not bound profiling inputs.
+     from frontier.profiling.collectives.step5_dispatch_probe import (
+         create_native_config, probe_plan, validate_launcher, diagnostic_scope)
+     import torch
+@@ -266,9 +270,17 @@ def main():
+     report = dict(rank=rank, g3_qualified=False, mrv2_serving_qualified=False,
+                    real_backend_graphs_qualified=False, diagnostic_errors=[],
+                   torch=torch.__version__, python=__import__('sys').version)
++    def observe_limits(config, role):
++        with diagnostic_scope(report['diagnostic_errors'], 'engine_limits:'+role):
++            actual = dict(max_model_len=config.model_config.max_model_len,
++                          max_num_batched_tokens=config.scheduler_config.max_num_batched_tokens,
++                          max_num_seqs=config.scheduler_config.max_num_seqs)
++            report.setdefault('engine_limits', {})[role] = actual
++            assert actual == limits, (role, actual, limits)
+     with diagnostic_scope(report['diagnostic_errors'], 'source_origins'):
+         report['origins'] = origins(args.installed_root)
+-    config = create_native_config(args)
++    config = create_native_config(args, engine_limits=limits)
++    observe_limits(config, 'modules')
+     with set_current_vllm_config(config):
+         init_worker_distributed_environment(config, rank, 'env://', local)
+         init_workspace_manager(device)
+@@ -276,9 +288,10 @@ def main():
+     graph_config = EngineArgs(model=str(args.model_path), load_format='dummy',
+         language_model_only=True, skip_tokenizer_init=True, tensor_parallel_size=8,
+         data_parallel_size=2, enable_expert_parallel=True,
+-        distributed_executor_backend='external_launcher').create_engine_config()
++        distributed_executor_backend='external_launcher', **limits).create_engine_config()
+     graph_config = graph_config.with_hf_config(graph_config.model_config.hf_text_config,
+                                              architectures=['Step5ForCausalLM'])
++    observe_limits(graph_config, 'graph')
+     with set_current_vllm_config(graph_config):
+         with diagnostic_scope(report['diagnostic_errors'], 'graph_binding'):
+             report['graph_binding'] = graph_binding(graph_config, supplied['graph'], device)
+diff --git a/tests/unit/test_step5_dispatch_probe.py b/tests/unit/test_step5_dispatch_probe.py
+index 106abe2624513bec3c990f759b486826094f63a4..b5e19843d13e5ce863b7ea49ff415ebd2952c3ca 100644
+--- a/tests/unit/test_step5_dispatch_probe.py
++++ b/tests/unit/test_step5_dispatch_probe.py
+@@ -33,6 +33,47 @@ def arguments(model_path, tmp_path, *extra):
+                              "--output-dir", str(tmp_path / "output"), *extra])
+ 
+ 
++@pytest.mark.parametrize("limits", [None, {"max_model_len": 7168,
++    "max_num_batched_tokens": 8192, "max_num_seqs": 128, "unrelated": "excluded"}])
++def test_native_config_binds_only_supplied_limits_before_text_submodel(model_path, tmp_path, monkeypatch, limits):
++    calls=[];events=[];metadata=SimpleNamespace(max_position_embeddings=1048576)
++    names=("max_model_len", "max_num_batched_tokens", "max_num_seqs")
++    defaults=dict(zip(names,(1048576,2048,256)))
++    expected=defaults if limits is None else {name:limits[name] for name in names}
++    class EngineArgs:
++        def __init__(self, **kwargs): calls.append(kwargs)
++        def create_engine_config(self):
++            kwargs=calls[-1];events.append("create")
++            values={name:kwargs.get(name,defaults[name]) for name in names}
++            def with_hf_config(hf, *, architectures):
++                assert hf is metadata and architectures == ["Step5ForCausalLM"]
++                events.append("text_submodel")
++                return SimpleNamespace(model_config=SimpleNamespace(hf_config=hf,max_model_len=values[names[0]]),
++                    scheduler_config=SimpleNamespace(**{name:values[name] for name in names[1:]}),quant_config=object())
++            return SimpleNamespace(model_config=SimpleNamespace(hf_text_config=metadata),with_hf_config=with_hf_config)
++    model_class=object()
++    def quant(config, cls):
++        assert cls is model_class
++        events.append("quant")
++    modules={"vllm.engine.arg_utils":SimpleNamespace(EngineArgs=EngineArgs),
++        "vllm.model_executor.model_loader.utils":SimpleNamespace(configure_quant_config=quant),
++        "vllm.models.step5.nvidia.model":SimpleNamespace(Step5ForCausalLM=model_class)}
++    for name,module in modules.items(): monkeypatch.setitem(sys.modules,name,module)
++    args=arguments(model_path,tmp_path)
++    config=(probe.create_native_config(args) if limits is None else
++            probe.create_native_config(args,engine_limits=limits))
++    assert events == ["create","text_submodel","quant"] and len(calls) == 1
++    assert {name:calls[0][name] for name in names if name in calls[0]} == ({} if limits is None else expected)
++    assert "unrelated" not in calls[0] and calls[0]["enforce_eager"] is True
++    assert {k:v for k,v in calls[0].items() if k not in names} == dict(model=str(model_path.resolve()),
++        load_format="dummy",skip_tokenizer_init=True,language_model_only=True,tensor_parallel_size=4,
++        data_parallel_size=2,enable_expert_parallel=True,all2all_backend="allgather_reducescatter",
++        distributed_executor_backend="external_launcher",enforce_eager=True,disable_custom_all_reduce=False)
++    assert config.model_config.max_model_len == expected["max_model_len"]
++    assert vars(config.scheduler_config) == {name:expected[name] for name in names[1:]}
++    assert config.model_config.hf_config is metadata and metadata.max_position_embeddings == 1048576
++
++
+ def test_plan_has_two_native_layers_and_no_cost_rows(model_path, tmp_path):
+     plan = probe.probe_plan(arguments(model_path, tmp_path))
+     assert plan["parallelism"] == {"tp": 4, "dp": 2, "ep": 8}
+diff --git a/tests/unit/test_step5_native_position_cyclic.py b/tests/unit/test_step5_native_position_cyclic.py
+index 68c56f246b4f4fc06b18cc159bba1d2c3d53e52b..fef3a95ee647b3a933bc021fd130ff8a728b222b 100644
+--- a/tests/unit/test_step5_native_position_cyclic.py
++++ b/tests/unit/test_step5_native_position_cyclic.py
+@@ -243,3 +243,71 @@ def test_t2_replays_dummy_before_assertion_and_baseline(native):
+             ids=ids, weights=weights, context=NS(routing_positions=None), counts=counts, mode=mode)
+         execute(body, execution)
+         assert calls == [mode] and execution['baseline'] == counts
++
++
++@pytest.mark.parametrize('drift', [None, 'modules', 'graph'])
++def test_t2_entrypoint_supplies_and_observes_final_engine_limits(tmp_path, monkeypatch, drift):
++    import json
++    import sys
++    from tests.integration.step5_environment import test_position_cyclic_graph as t2
++    limits = dict(max_model_len=7168, max_num_batched_tokens=8192, max_num_seqs=128)
++    cases = tmp_path/'cases.json'
++    cases.write_text(json.dumps(dict(engine_limits=limits, modules=[dict(dp=[dict(positions=[0])]*2)], graph=[])))
++    calls, failures = [], []
++    class Config:
++        def __init__(self, kwargs, final=False):
++            self.kwargs, self.final = kwargs, final
++            self.model_config = NS(hf_text_config=NS(), max_model_len=kwargs['max_model_len'])
++            self.scheduler_config = NS(**{key: kwargs[key] for key in limits if key != 'max_model_len'})
++        def with_hf_config(self, *args, **kwargs):
++            value = Config(self.kwargs, final=True)
++            if ('modules' if self.kwargs.get('enforce_eager') else 'graph') == drift:
++                value.scheduler_config.max_num_seqs += 1
++            return value
++    class EngineArgs:
++        def __init__(self, **kwargs):
++            calls.append(kwargs); self.kwargs = kwargs
++        def create_engine_config(self):
++            if failures: raise failures[0]
++            return Config(self.kwargs)
++    @contextmanager
++    def current(config):
++        assert config.final
++        yield
++    from frontier.profiling.collectives import step5_dispatch_probe as probe
++    monkeypatch.setitem(sys.modules, 'vllm.config', NS(set_current_vllm_config=current))
++    monkeypatch.setitem(sys.modules, 'vllm.engine.arg_utils', NS(EngineArgs=EngineArgs))
++    monkeypatch.setitem(sys.modules, 'vllm.models.step5.nvidia.model', NS(Step5ForCausalLM=object))
++    monkeypatch.setitem(sys.modules, 'vllm.model_executor.model_loader.utils', NS(configure_quant_config=lambda *a: None))
++    monkeypatch.setitem(sys.modules, 'vllm.v1.worker.gpu_worker', NS(init_worker_distributed_environment=lambda *a: None))
++    monkeypatch.setitem(sys.modules, 'vllm.v1.worker.workspace', NS(init_workspace_manager=lambda *a: None))
++    monkeypatch.setitem(sys.modules, 'torch', NS(__version__='host-fixture', device=lambda *a: None,
++                                              cuda=NS(set_device=lambda *a: None)))
++    monkeypatch.setattr(Config, 'quant_config', None, raising=False)
++    def plan(args):
++        assert args.routing_input_file is None
++        return dict(topology={})
++    monkeypatch.setattr(probe, 'probe_plan', plan)
++    monkeypatch.setattr(probe, 'validate_launcher', lambda *a: None)
++    monkeypatch.setattr(t2, 'origins', lambda *a: {})
++    monkeypatch.setattr(t2, 'native_modules', lambda *a: [])
++    monkeypatch.setattr(t2, 'graph_binding', lambda *a: {})
++    monkeypatch.setenv('VLLM_MOE_ROUTING_SIMULATION_STRATEGY', 'position_cyclic')
++    monkeypatch.setenv('RANK', '0'); monkeypatch.setenv('LOCAL_RANK', '0')
++    monkeypatch.setattr(sys, 'argv', ['t2', '--model-path', str(tmp_path), '--cases', str(cases),
++                                   '--output', str(tmp_path/'output'), '--installed-root', str(tmp_path)])
++    t2.main()
++    report = json.loads((tmp_path/'output/rank_0.json').read_text())
++    assert len(calls) == 2 and all({key: row[key] for key in limits} == limits for row in calls)
++    assert calls[0]['enforce_eager'] is True and 'enforce_eager' not in calls[1]
++    for role in ('modules', 'graph'):
++        assert report['engine_limits'][role] == limits | {'max_num_seqs': 129 if role == drift else 128}
++    assert bool(report['diagnostic_errors']) == bool(drift)
++    assert report['status'] == ('UNVERIFIED' if drift else 'PASS_THIN_GRAPH_AND_EAGER_MODULES')
++    cases.write_text(json.dumps(dict(modules=[], graph=[])))
++    with pytest.raises(KeyError, match='engine_limits'): t2.main()
++    assert len(calls) == 2
++    cases.write_text(json.dumps(dict(engine_limits=limits, modules=[dict(dp=[dict(positions=[0])]*2)], graph=[])))
++    failures.append(LookupError('native constructor failure'))
++    with pytest.raises(LookupError) as caught: t2.main()
++    assert caught.value is failures[0] and len(calls) == 3

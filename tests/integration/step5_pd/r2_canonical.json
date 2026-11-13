@@ -1,0 +1,28 @@
+{
+  "case_id": "h800_32",
+  "region_size": 8,
+  "capture_limits": {
+    "max_record_bytes": 1073741824,
+    "max_capture_bytes_per_request": 1073741824,
+    "max_capture_seconds_per_request": 600,
+    "max_events": 500000
+  },
+  "resident_identity": {
+    "chunk_bytes": 1048576,
+    "max_bytes": 68719476736,
+    "max_seconds": 600
+  },
+  "waves": [
+    {"name": "warmup16", "spacing_s": 1, "num_decode_tokens": 1024, "prompt_lengths": [6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144], "capture_content": false, "templates": "warmup"},
+    {"name": "canonical6144", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6144]},
+    {"name": "boundary6143", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6143]},
+    {"name": "boundary6145", "spacing_s": 0, "num_decode_tokens": 1023, "prompt_lengths": [6145]},
+    {"name": "native_ready6144a", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6144], "capture_content": false},
+    {"name": "native_ready6144b", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6144], "capture_content": false},
+    {"name": "concurrent8", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144], "capture_content": false},
+    {"name": "cancel6144", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6144], "cancel_after_first_content": true},
+    {"name": "abort_read6144", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6144], "capture_content": false, "cancel_after_decode_submit_s": 0.01},
+    {"name": "reuse6144", "spacing_s": 0, "num_decode_tokens": 1024, "prompt_lengths": [6144]}
+  ],
+  "gating_wave": "canonical6144"
+}

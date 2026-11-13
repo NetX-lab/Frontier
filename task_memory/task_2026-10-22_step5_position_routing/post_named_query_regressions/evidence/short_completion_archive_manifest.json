@@ -1,0 +1,26 @@
+[
+  {
+    "source": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/catalogue53/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions/task_memory/task_2026-10-22_step5_position_routing/post_named_query_regressions/evidence/catalogue53/execution.json",
+    "sha256": "82cc158bdff9b22aeed04ed75e4dd9ac30e201e2ec5df33c77ea71b756fc0664",
+    "bytes": 7426
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/catalogue53/comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions/task_memory/task_2026-10-22_step5_position_routing/post_named_query_regressions/evidence/catalogue53/comparison.json",
+    "sha256": "ea5f99ac8538e5a9f9f0c160f39f149ae0a2c143504f6361b0f6e088f395f749",
+    "bytes": 1301
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/governance52/execution.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions/task_memory/task_2026-10-22_step5_position_routing/post_named_query_regressions/evidence/governance52/execution.json",
+    "sha256": "f501bb5bddd0c3b3bb23ef1bb3f4a80ee884e47591e3e4449510d2800731f94a",
+    "bytes": 7542
+  },
+  {
+    "source": "/data/ycfeng/tmp/d29_post_named_query_regressions_20261024/governance52/comparison.json",
+    "retained": "/data/ycfeng/Frontier/.worktrees/d29-post-named-query-regressions/task_memory/task_2026-10-22_step5_position_routing/post_named_query_regressions/evidence/governance52/comparison.json",
+    "sha256": "496764f470d42239d54c5b55e4b55eca5cde154d10dac92599ec5422fc158fcb",
+    "bytes": 1372
+  }
+]

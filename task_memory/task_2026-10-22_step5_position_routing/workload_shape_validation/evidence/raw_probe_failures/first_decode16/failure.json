@@ -1,0 +1,6 @@
+{
+  "message": "(60, 0, 'add_attn_residual', 0.0)",
+  "status": "UNVERIFIED",
+  "traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/run_case.py\", line 254, in <module>\n    inspect_case(args, parameters)\n  File \"/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_position_routing/workload_shape_validation/run_case.py\", line 180, in inspect_case\n    assert duration > 0, (layer_id, record.ep_id, name, duration)\nAssertionError: (60, 0, 'add_attn_residual', 0.0)\n",
+  "type": "AssertionError"
+}

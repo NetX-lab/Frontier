@@ -1,0 +1,6 @@
+Running scope as unit: run-r9be41f09892f4670bcd2c00f90f4d23a.scope
+.....s.................................................................. [ 57%]
+.....................................................                    [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/unit/test_step5_moe_pricing.py:106: could not import 'torch': No module named 'torch'
+124 passed, 1 skipped in 11.83s

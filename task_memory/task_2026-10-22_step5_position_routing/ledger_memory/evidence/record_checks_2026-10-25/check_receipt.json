@@ -1,0 +1,31 @@
+{
+  "initial_default_exit": 2,
+  "cause": "csv.DictWriter emits standard CRLF line terminators in two raw TSV evidence files.",
+  "raw_evidence_bytes_unchanged": true,
+  "tsv_checks": [
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-24/paths.tsv",
+      "raw_crlf_rows": 117,
+      "data_rows": 116,
+      "sha256": "0513d330e25b0ba72be1a11d53d650cea89431d842e108ba73a759f8c2745743",
+      "source_total": 9682
+    },
+    {
+      "path": "task_memory/task_2026-10-22_step5_position_routing/ledger_memory/evidence/composed_scope_2026-10-25/paths.tsv",
+      "raw_crlf_rows": 117,
+      "data_rows": 116,
+      "sha256": "0513d330e25b0ba72be1a11d53d650cea89431d842e108ba73a759f8c2745743",
+      "source_total": 9682
+    }
+  ],
+  "final_command": [
+    "git",
+    "-c",
+    "core.whitespace=cr-at-eol",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "final_exit": 0,
+  "configuration_persisted": false
+}

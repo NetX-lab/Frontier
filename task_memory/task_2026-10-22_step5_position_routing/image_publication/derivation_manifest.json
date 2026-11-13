@@ -1,0 +1,23 @@
+{
+  "base_image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+  "installed_native_root": "/usr/local/lib/python3.12/dist-packages/vllm",
+  "paths": [
+    "vllm/forward_context.py",
+    "vllm/models/step5/nvidia/model.py",
+    "vllm/model_executor/layers/fused_moe/router/router_factory.py",
+    "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py"
+  ],
+  "base_source_sha256": {
+    "vllm/forward_context.py": "24a1b39218b88539e387b696dcced722d14a24d9f01932a44feb93dd4986b85d",
+    "vllm/models/step5/nvidia/model.py": "6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0",
+    "vllm/model_executor/layers/fused_moe/router/router_factory.py": "794abb7c210758911d349ca6fbd82690f0ef48ba4f8a7ec2ff0f87ca3ad50224",
+    "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": "24662a8cbd10365ae349000184bcc0ad063eff72dead1b3cf5b6f40fe0cc3e47"
+  },
+  "derived_source_sha256": {
+    "vllm/forward_context.py": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
+    "vllm/models/step5/nvidia/model.py": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
+    "vllm/model_executor/layers/fused_moe/router/router_factory.py": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+    "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725"
+  },
+  "patch_sha256": "7a03c3de88329cd6123b00a9519849b4434b79411f7f14500a9bc02ee2d73df7"
+}

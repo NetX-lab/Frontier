@@ -23,7 +23,10 @@ from frontier.entities.time_components import (
     OverheadTime,
     ResidualTime,
 )
-from frontier.operators.families import get_comm_operator
+from frontier.operators.families import STEP5_FFN_FAMILY, get_comm_operator
+
+
+_MOE_BRANCH_MERGE_OPERATORS = STEP5_FFN_FAMILY.e2e_trace_ops()
 
 
 # Each operator has one physical EP phase and one existing public scalar source.
@@ -132,6 +135,8 @@ class ExecutionTime(BaseEntity):
         global_layer_id: int | None = None,
         attention_family_id: str | None = None,
         attention_variant_id: str | None = None,
+        attn_dsa_indexer_time: float = 0.0,
+        attn_dsa_mla_time: float = 0.0,
     ) -> None:
         self._id = ExecutionTime.generate_id()
 
@@ -321,6 +326,12 @@ class ExecutionTime(BaseEntity):
             "attn_mla_v_up_proj_time",
             attn_mla_v_up_proj_time,
         )
+        attn_dsa_indexer_time = read_op_time_attr(
+            "attn_dsa_indexer_time", attn_dsa_indexer_time
+        )
+        attn_dsa_mla_time = read_op_time_attr(
+            "attn_dsa_mla_time", attn_dsa_mla_time
+        )
         expert_parallel_alltoall_time = read_op_time_attr(
             "expert_parallel_alltoall_time",
             0.0,
@@ -357,6 +368,8 @@ class ExecutionTime(BaseEntity):
             attn_mla_decode_q_latent_proj_time=attn_mla_decode_q_latent_proj_time,
             attn_mla_decode_time=attn_mla_decode_time,
             attn_mla_v_up_proj_time=attn_mla_v_up_proj_time,
+            attn_dsa_indexer_time=attn_dsa_indexer_time,
+            attn_dsa_mla_time=attn_dsa_mla_time,
             attn_norm_time=attn_norm_time,
             operator_times=attention_operator_times,
         )
@@ -371,6 +384,8 @@ class ExecutionTime(BaseEntity):
                 share_expert_up_proj_time=share_expert_up_proj_time,
                 share_expert_down_proj_time=share_expert_down_proj_time,
                 share_expert_act_time=share_expert_act_time,
+                step5_ffn_merge_time=read_op_time_attr("step5_ffn_merge_time", 0.0),
+                moe_input_quantize_time=read_op_time_attr("moe_input_quantize_time", 0.0),
                 operator_times=moe_operator_times,
             )
         else:
@@ -394,6 +409,7 @@ class ExecutionTime(BaseEntity):
             attn_tensor_parallel_allreduce_time=attn_tensor_parallel_allreduce_time,
             moe_tensor_parallel_allreduce_time=moe_tensor_parallel_allreduce_time,
             tensor_parallel_allreduce_time=legacy_tensor_parallel_allreduce_time,
+            embedding_allreduce_time=read_op_time_attr("embedding_allreduce_time", 0.0),
             tensor_parallel_allgather_time=tensor_parallel_allgather_time,
             share_expert_tensor_parallel_allreduce_time=share_expert_tensor_parallel_allreduce_time,
             dp_input_allreduce_time=dp_input_allreduce_time,
@@ -532,6 +548,10 @@ class ExecutionTime(BaseEntity):
         compute_counts = dict(kernel_counts)
 
         def collective_count(op_name: str, time_ms: float) -> float:
+            costs=self._communication_time.operator_times
+            if costs is not None and op_name in costs.costs:
+                # Finite costs model the full device scope, including protocol service.
+                return 0.0
             return get_comm_operator(op_name).kernel_count if time_ms > 0 else 0.0
 
         part_counts = {
@@ -923,11 +943,48 @@ class ExecutionTime(BaseEntity):
         """Project the same disjoint operators used by the EP scheduling phases."""
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("MoE phase timing is only available for MoE models")
+        if self._attention_family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+
+            return timing_operator_times(self, phase)
+        position=self._communication_time.operator_times
+        if position is not None and "step5_moe_dispatch" in position.op_times:
+            if phase in ("dispatch","combine"):
+                name="step5_moe_"+phase
+                return (("COMM",name,position.get_required_time(name)),)
+            components=list(_MOE_PHASE_COMPONENTS[phase])
+            if phase == "pre_dispatch":
+                components=[entry for entry in components if entry[1] != "moe_shuffling"]
+                if "moe_input_quantize" in self._op_times:
+                    components.append(("COMPUTE","moe_input_quantize",None))
+            if phase == "routed_compute":
+                components=[entry for entry in components if entry[1] != "moe_tensor_parallel_allreduce"]
+            if phase == "post_combine":
+                components.insert(0,("COMM","moe_tensor_parallel_allreduce","mlp_all_reduce_time"))
+            result=tuple((kind,name,float(self._op_times.get(name,0.) if attr is None else getattr(self,attr)))
+                         for kind,name,attr in components)
+            if phase == "post_combine":
+                result=result[:-1]+tuple(("COMPUTE",op.name,float(self._op_times[op.name]))
+                    for op in _MOE_BRANCH_MERGE_OPERATORS if op.name in self._op_times)+result[-1:]
+            return result
         if phase in ("dispatch", "combine"):
             name = f"expert_parallel_alltoall_{phase}"
             return (("COMM", name, self._get_required_moe_ep_phase_time(name)),)
-        return tuple((kind, name, float(getattr(self, attr)))
-                     for kind, name, attr in _MOE_PHASE_COMPONENTS[phase])
+        operators = tuple((kind, name, float(getattr(self, attr)))
+                          for kind, name, attr in _MOE_PHASE_COMPONENTS[phase])
+        merge_operators = tuple(
+            ("COMPUTE", operator.name, float(self._op_times[operator.name]))
+            for operator in _MOE_BRANCH_MERGE_OPERATORS
+            if operator.name in self._op_times
+        )
+        if merge_operators:
+            # The ordinary Step DP1 path sums branches in FP32 before one TP reduction.
+            reduction = ("COMM", "moe_tensor_parallel_allreduce", self.mlp_all_reduce_time)
+            if phase == "routed_compute":
+                operators = tuple(op for op in operators if op[1] != reduction[1])
+            elif phase == "post_combine":
+                operators = operators[:-1] + merge_operators + (reduction,) + operators[-1:]
+        return operators
 
     def _moe_phase_time(self, phase: str) -> float:
         return (
@@ -959,9 +1016,7 @@ class ExecutionTime(BaseEntity):
     def get_single_layer_moe_dispatch_time(self) -> float:
         """Get the exact named EP dispatch latency for one MoE layer."""
 
-        return self._get_required_moe_ep_phase_time(
-            "expert_parallel_alltoall_dispatch"
-        )
+        return self._moe_phase_time("dispatch")
 
     def get_single_layer_moe_post_dispatch_compute_time(self) -> float:
         """Return lane-local routed compute after EP dispatch, in milliseconds."""
@@ -970,9 +1025,7 @@ class ExecutionTime(BaseEntity):
     def get_single_layer_moe_combine_time(self) -> float:
         """Get the exact named EP combine latency for one MoE layer."""
 
-        return self._get_required_moe_ep_phase_time(
-            "expert_parallel_alltoall_combine"
-        )
+        return self._moe_phase_time("combine")
 
     def get_single_layer_moe_post_combine_time(self) -> float:
         """Return shared work after EP combine, in milliseconds."""
@@ -1064,6 +1117,14 @@ class ExecutionTime(BaseEntity):
         """
         if not isinstance(self._moe_or_mlp_time, MoETime):
             return 0.0
+        if (self._communication_time.operator_times is not None and
+                "step5_moe_dispatch" in self._communication_time.operator_times.op_times):
+            return sum(self._moe_phase_time(phase) for phase in (
+                "pre_dispatch", "dispatch", "routed_compute", "combine", "post_combine")) - self._residual_time.add_time
+        if self._attention_family_id == "deepseek_v4_attention":
+            return sum(self._moe_phase_time(phase) for phase in (
+                "pre_dispatch", "dispatch", "routed_compute", "combine", "post_combine",
+            ))
         return (
             self._moe_or_mlp_time.total_time()
             + self._get_expert_parallel_communication_time()
@@ -1097,6 +1158,10 @@ class ExecutionTime(BaseEntity):
 
         Includes all attention operations + TP allreduce.
         """
+        if self._attention_family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+
+            return sum(value for _, _, value in timing_operator_times(self, "attention"))
         return (
             self._attention_time.total_time()
             + self._get_attn_tp_allreduce_time()
@@ -1391,6 +1456,20 @@ class ExecutionTime(BaseEntity):
         )
 
     @property
+    def attn_dsa_indexer_time(self) -> float:
+        """Inclusive sparse-indexer time for one physical layer."""
+        return self._time_attr_value(
+            "attn_dsa_indexer_time", self._attention_time.attn_dsa_indexer_time
+        )
+
+    @property
+    def attn_dsa_mla_time(self) -> float:
+        """Inclusive sparse MLA time for one physical layer."""
+        return self._time_attr_value(
+            "attn_dsa_mla_time", self._attention_time.attn_dsa_mla_time
+        )
+
+    @property
     def attn_norm_time(self) -> float:
         """Attention layer norm time (one physical layer)."""
         return self._time_attr_value(
@@ -1428,6 +1507,26 @@ class ExecutionTime(BaseEntity):
     def schedule_time(self) -> float:
         """Scheduling overhead time (not scaled by layers)."""
         return self._overhead_time.schedule_time
+
+    @property
+    def embedding_time(self) -> float:
+        """Input embedding work owned once by a stage."""
+        return self._time_attr_value("embedding_time", 0.0)
+
+    @property
+    def input_cast_time(self) -> float:
+        """Input hidden-state cast owned once by a stage."""
+        return self._time_attr_value("input_cast_time", 0.0)
+
+    @property
+    def final_residual_time(self) -> float:
+        """Standalone residual add after the last physical layer."""
+        return self._time_attr_value("final_residual_time", 0.0)
+
+    @property
+    def embedding_allreduce_time(self) -> float:
+        """Vocabulary-sharded embedding reduction owned once by a stage."""
+        return self._time_attr_value("embedding_allreduce_time", 0.0)
 
     @property
     def sampler_e2e_time(self) -> float:
@@ -1589,6 +1688,15 @@ class ExecutionTime(BaseEntity):
         return 0.0
 
     @property
+    def moe_input_quantize_time(self) -> float:
+        """Source-local MoE activation prepare time for one physical layer."""
+        if isinstance(self._moe_or_mlp_time, MoETime):
+            return self._time_attr_value(
+                "moe_input_quantize_time", self._moe_or_mlp_time.moe_input_quantize_time,
+            )
+        return 0.0
+
+    @property
     def moe_shuffling_time(self) -> float:
         """MoE shuffling time (one physical layer)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
@@ -1629,6 +1737,11 @@ class ExecutionTime(BaseEntity):
         return 0.0
 
     @property
+    def step5_ffn_merge_time(self) -> float:
+        """Return the independent routed/shared branch sum, in milliseconds."""
+        return self._time_attr_value("step5_ffn_merge_time", 0.0)
+
+    @property
     def share_expert_time(self) -> float:
         """Total shared expert time (one physical layer)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
@@ -1661,6 +1774,10 @@ class ExecutionTime(BaseEntity):
         # Add pipeline parallel communication (not scaled by layers)
         pipeline_stage_execution_time = (
             total_computation_time
+            + self.embedding_time
+            + self.embedding_allreduce_time
+            + self.input_cast_time
+            + self.final_residual_time
             + self.pipeline_parallel_communication_time
             + self._decode_draft_proposer_time
             + self._mtp_terminal_overshoot_time

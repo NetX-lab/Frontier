@@ -1,0 +1,19 @@
+{
+  "test_commit": "047f7313387cb68f45e2214c61ed160864459343",
+  "parent_worktree": "verify-step5-d29-integrated-03",
+  "source_revision": "ca135d89310384ae3fac8072708811985f01d515",
+  "xml": "/data/ycfeng/tmp/d29_catalogue_parent08.xml",
+  "sha256": "81224ee67a8bc7d4f9fd9acdc23dc31c075354674490fa8e4ea2539afe2873fe",
+  "tests": 53,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "covered_original_regressions": [
+    "tests.unit.test_dsv4_precision_metadata::test_inventory_uses_canonical_v4_scopes_without_generic_duplicate_owners",
+    "tests.unit.test_moe_share_expert_operator_families::test_moe_family_declares_predictor_tp_and_ep_metadata",
+    "tests.unit.test_moe_share_expert_operator_families::test_moe_family_declares_router_dispatch_and_grouped_gemm_ops",
+    "tests.unit.test_moe_share_expert_operator_families::test_quantization_default_registry_uses_moe_and_share_expert_family_names",
+    "tests.unit.test_moe_share_expert_operator_families::test_sklearn_moe_dataset_contract_filters_gating_context_from_operator_precision",
+    "tests.unit.test_moe_share_expert_operator_families::test_sklearn_moe_training_uses_moe_family_profiling_names"
+  ]
+}

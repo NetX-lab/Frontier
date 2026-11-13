@@ -6,7 +6,9 @@ import pytest
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
+    STEP5_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     get_attention_family,
@@ -112,11 +114,14 @@ def test_attention_family_accessors_are_thin_registry_views() -> None:
         LATENT_MLA_ATTENTION_FAMILY,
         DSA_ATTENTION_FAMILY,
         GATED_DELTA_NET_ATTENTION_FAMILY,
+        DEEPSEEK_V4_ATTENTION_FAMILY,
+        STEP5_ATTENTION_FAMILY,
     )
     assert tuple(iter_execution_enabled_families()) == (
         DENSE_ATTENTION_FAMILY,
         LATENT_MLA_ATTENTION_FAMILY,
         GATED_DELTA_NET_ATTENTION_FAMILY,
+        STEP5_ATTENTION_FAMILY,
     )
 
 
@@ -165,6 +170,8 @@ def test_build_operator_manifest_returns_wave_b_dense_families() -> None:
         "add_attn_residual",
         "add_ffn_residual",
         "emb",
+        "input_cast",
+        "final_residual",
         "mlp_up_proj",
         "mlp_act",
         "mlp_down_proj",

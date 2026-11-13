@@ -1,0 +1,93 @@
+{
+  "source": "/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01/stage/evidence/replay/proxy_requests.jsonl",
+  "sha256": "21f92c4d09a8775debe64ecc78b0b81ceac686b344ba797cd16f9cba3bab7c38",
+  "rows": {
+    "canonical6144": {
+      "row": 17,
+      "request_id": "d21h80032g301-canonical6144-0",
+      "remote_num_tokens": 6128,
+      "group_lengths": [
+        33,
+        33,
+        33,
+        383
+      ],
+      "nonnull": [
+        32,
+        32,
+        32,
+        383
+      ],
+      "null_positions": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        []
+      ]
+    },
+    "boundary6143": {
+      "row": 18,
+      "request_id": "d21h80032g301-boundary6143-0",
+      "remote_num_tokens": 6112,
+      "group_lengths": [
+        33,
+        33,
+        33,
+        382
+      ],
+      "nonnull": [
+        32,
+        32,
+        32,
+        382
+      ],
+      "null_positions": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        []
+      ]
+    },
+    "boundary6145": {
+      "row": 19,
+      "request_id": "d21h80032g301-boundary6145-0",
+      "remote_num_tokens": 6128,
+      "group_lengths": [
+        33,
+        33,
+        33,
+        383
+      ],
+      "nonnull": [
+        32,
+        32,
+        32,
+        383
+      ],
+      "null_positions": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        []
+      ]
+    }
+  }
+}

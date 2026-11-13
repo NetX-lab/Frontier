@@ -1,0 +1,15 @@
+{
+  "suite": "catalogue53",
+  "raw_exits": [
+    0
+  ],
+  "junit": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/catalogue53/results.xml",
+  "receipt": "/data/ycfeng/tmp/d29_ledger_final_1461573d_20261025/regressions/catalogue53/execution.json",
+  "source_after": {
+    "head": "1461573de388b72450189bc0c1b88b4ac32491f0",
+    "tree": "447a285aa403af747f838a3bf404b2b17e2eacf7",
+    "status": "",
+    "submodule_head": "3dac53c544e546574cb6e8078cd14053d0916113",
+    "submodule_status": ""
+  }
+}

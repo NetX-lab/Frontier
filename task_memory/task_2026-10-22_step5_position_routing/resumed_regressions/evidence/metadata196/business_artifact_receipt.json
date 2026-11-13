@@ -1,0 +1,75 @@
+{
+  "baseline": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate/cases/dp_dense_online_lanes2_replicas2/metrics/meta_llama_llama_2_7b_hf/online_serving/dp_dense_online_lanes2_replicas2/op_precision_metadata.csv",
+  "cases": [
+    {
+      "path": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac0/op_precision_metadata.csv",
+      "prepare_rows": [],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP16",
+          "data_source": "profiling",
+          "approximation_factor": ""
+        }
+      ],
+      "sha256": "ecc18c4726a8933b1f6c45a91a8f0fc9c2e66f351ea9b91c1361370a192eb7d6",
+      "legacy_baseline_bytes_equal": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac1/op_precision_metadata.csv",
+      "prepare_rows": [
+        {
+          "operation": "moe_input_quantize",
+          "precision": "FP8",
+          "data_source": "profiling",
+          "approximation_factor": ""
+        }
+      ],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP8",
+          "data_source": "approximation",
+          "approximation_factor": "0.5"
+        }
+      ],
+      "sha256": "ba1395602b8f4cf203517152e5d231709e36281ae69faca90d488c226d0f8f20",
+      "legacy_baseline_bytes_equal": null
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac2/op_precision_metadata.csv",
+      "prepare_rows": [],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP16",
+          "data_source": "profiling",
+          "approximation_factor": ""
+        }
+      ],
+      "sha256": "ecc18c4726a8933b1f6c45a91a8f0fc9c2e66f351ea9b91c1361370a192eb7d6",
+      "legacy_baseline_bytes_equal": true
+    },
+    {
+      "path": "/data/ycfeng/tmp/d29-e41-final-regressions-20261023-6dah8l8s/metadata196/basetemp/test_precision_csv_requires_ac3/op_precision_metadata.csv",
+      "prepare_rows": [
+        {
+          "operation": "moe_input_quantize",
+          "precision": "BF16",
+          "data_source": "approximation",
+          "approximation_factor": "2.0"
+        }
+      ],
+      "grouped_gemm": [
+        {
+          "operation": "moe_grouped_gemm",
+          "precision": "FP8",
+          "data_source": "approximation",
+          "approximation_factor": "0.5"
+        }
+      ],
+      "sha256": "5677278d6d0903af2a447a8060613b4988bd8d0f82d983b675578b312afbe922",
+      "legacy_baseline_bytes_equal": null
+    }
+  ]
+}
