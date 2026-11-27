@@ -88,6 +88,7 @@ class ExecutionTimePredictionModelManager(
         self._models_by_precision_eager_by_contract = {}
         self._models_by_precision_device_event_by_contract = {}
         self._models_by_precision_kernel_only_by_contract = {}
+        self._cpu_overhead_models = {}
 
         if self._all_dummy_mode:
             logger.info("ExecutionTimePredictionModelManager running in DUMMY mode")

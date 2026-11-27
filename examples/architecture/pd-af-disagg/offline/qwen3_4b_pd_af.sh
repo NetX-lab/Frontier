@@ -57,13 +57,16 @@ for path in "${REQUIRED[@]}"; do
 done
 
 case "$WEIGHT_STREAM_LAYERS" in
-  0) CPU_OVERHEAD_FILE="" ;;
+  0) CPU_OVERHEAD_TEMPLATE="" ;;
   1|2|3)
-    CPU_OVERHEAD_FILE="data/profiling/cpu_overhead/hpp2_16rank/Qwen3-4B/cpu_overheads_kernel_only_stream${WEIGHT_STREAM_LAYERS}.csv"
-    if [ ! -f "$CPU_OVERHEAD_FILE" ]; then
-      echo "ERROR: missing stream CPU-overhead table: $CPU_OVERHEAD_FILE" >&2
+    STREAM_CPU_OVERHEAD_FILE="data/profiling/cpu_overhead/hpp2_16rank/Qwen3-4B/cpu_overheads_kernel_only_stream${WEIGHT_STREAM_LAYERS}.csv"
+    if [ ! -f "$STREAM_CPU_OVERHEAD_FILE" ]; then
+      echo "ERROR: missing stream CPU-overhead table: $STREAM_CPU_OVERHEAD_FILE" >&2
       exit 2
     fi
+    # Keep {NETWORK_DEVICE}/{MODEL} placeholders so only hpp2_16rank resolves
+    # the HPP2 streaming table while h200_dgx stays unpopulated (host term = 0).
+    CPU_OVERHEAD_TEMPLATE="./data/profiling/cpu_overhead/{NETWORK_DEVICE}/{MODEL}/cpu_overheads_kernel_only_stream${WEIGHT_STREAM_LAYERS}.csv"
     ;;
   *)
     echo "ERROR: WEIGHT_STREAM_LAYERS must be 0, 1, 2, or 3; got $WEIGHT_STREAM_LAYERS" >&2
@@ -171,10 +174,10 @@ CMD=(
   --no-metrics_config_write_json_trace
 )
 
-if [ -n "$CPU_OVERHEAD_FILE" ]; then
+if [ -n "$CPU_OVERHEAD_TEMPLATE" ]; then
   CMD+=(
     --random_forrest_execution_time_predictor_config_cpu_overhead_kernel_only_input_file
-    "$CPU_OVERHEAD_FILE"
+    "$CPU_OVERHEAD_TEMPLATE"
   )
 fi
 
