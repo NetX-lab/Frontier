@@ -32,6 +32,8 @@ PREFILL_TOKENS="${PREFILL_TOKENS:-512}"
 DECODE_TOKENS="${DECODE_TOKENS:-64}"
 ARRIVAL_PATTERN="${ARRIVAL_PATTERN:-burst}"
 WEIGHT_STREAM_LAYERS="${WEIGHT_STREAM_LAYERS:-0}"
+AF_MICRO_BATCH="${AF_MICRO_BATCH:-1}"
+DECODE_ATTN_MICRO_BATCH_SIZE="${DECODE_ATTN_MICRO_BATCH_SIZE:-8}"
 
 cd "$REPO_ROOT"
 
@@ -107,9 +109,9 @@ CMD=(
   --cluster_config_decode_attn_cluster_num_replicas 1
   --cluster_config_decode_ffn_cluster_num_replicas 1
 
-  --cluster_config_decode_attn_af_pipeline_num_micro_batch 1
-  --cluster_config_decode_ffn_af_pipeline_num_micro_batch 1
-  --cluster_config_decode_attn_micro_batch_size 8
+  --cluster_config_decode_attn_af_pipeline_num_micro_batch "$AF_MICRO_BATCH"
+  --cluster_config_decode_ffn_af_pipeline_num_micro_batch "$AF_MICRO_BATCH"
+  --cluster_config_decode_attn_micro_batch_size "$DECODE_ATTN_MICRO_BATCH_SIZE"
 
   # PREFILL: 8x H200, dense attention TP8.  The dense FFN follows attn TP8;
   # moe_tp=8 only satisfies the shared role contract and is unused by a dense FFN.

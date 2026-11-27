@@ -169,7 +169,7 @@ def test_macro_wave_uses_aggregate_compute_and_max_stage_transfer_tokens() -> No
     )
 
 
-def test_dense_pp1_scheduler_uses_one_metadata_macro_wave() -> None:
+def test_dense_pp1_scheduler_emits_physical_stage_siblings() -> None:
     requests = [_make_decode_request(index) for index in range(6)]
     scheduler = _make_decode_attn_scheduler(
         requests,
@@ -180,26 +180,40 @@ def test_dense_pp1_scheduler_uses_one_metadata_macro_wave() -> None:
     first_batch = scheduler._schedule_decode_attn_only(is_micro_batch=True)
 
     assert first_batch is not None
-    assert len(scheduler._af_pending_micro_batches) == 0
-    assert first_batch.afd_stage_idx == 0
-    assert first_batch.afd_stage_represents_all_stages is True
-    assert first_batch.afd_stage_metadata is not None
-    assert first_batch.afd_stage_metadata.original_stage_token_lens == [2, 2, 2]
-    assert [request.id for request in first_batch.requests] == [
-        request.id for request in requests
-    ]
-    assert (
-        first_batch.get_effective_total_tokens_for_compute(
-            ClusterType.DECODE_ATTN
-        )
-        == 6
+    stage_batches = [first_batch, *scheduler._af_pending_micro_batches]
+    assert len(stage_batches) == 3
+    assert [len(batch.requests) for batch in stage_batches] == [2, 2, 2]
+    assert [batch.afd_stage_idx for batch in stage_batches] == [0, 1, 2]
+    assert all(
+        batch.afd_stage_represents_all_stages is False
+        for batch in stage_batches
     )
-    assert (
-        first_batch.get_effective_total_tokens_for_transfer(
-            ClusterType.DECODE_ATTN
+    assert [
+        request.id
+        for batch in stage_batches
+        for request in batch.requests
+    ] == [request.id for request in requests]
+    for batch in stage_batches:
+        assert batch.afd_stage_metadata is not None
+        assert batch.afd_stage_metadata.original_stage_token_lens == [2, 2, 2]
+        assert (
+            batch.get_effective_total_tokens_for_compute(
+                ClusterType.DECODE_ATTN
+            )
+            == 2
         )
-        == 2
-    )
+        assert (
+            batch.get_effective_total_tokens_for_transfer(
+                ClusterType.DECODE_ATTN
+            )
+            == 2
+        )
+        assert (
+            batch.get_effective_total_tokens_for_compute(
+                ClusterType.DECODE_FFN
+            )
+            == 2
+        )
 
 
 def test_single_stage_cuda_graph_scheduler_emits_both_role_captures() -> None:

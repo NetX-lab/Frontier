@@ -8,7 +8,7 @@ def release_batch_admission(scheduler: Any, batch: Any, stage_id: int | None = N
     ticket = getattr(batch, "_stage_admission_ticket", None)
     if ticket is None:
         return
-    stage_id = getattr(batch, "afd_stage_idx", None) if stage_id is None else stage_id
+    stage_id = getattr(ticket, "stage_id", None) if stage_id is None else stage_id
     if type(stage_id) is not int or stage_id < 0:
         raise ValueError("stage_id is required to release a stage admission ticket")
     scheduler.get_stage_execution_context(int(ticket.replica_id), stage_id).release(ticket)

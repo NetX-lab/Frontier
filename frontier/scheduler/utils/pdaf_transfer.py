@@ -1649,11 +1649,21 @@ def prepare_dp_padding(
                 "Inconsistent num_stages across DP lanes: "
                 f"expected {num_stages}, got {metadata.num_stages}"
             )
-        stage_lens = AFDStageMetadata.compute_stage_token_lens(
-            num_reqs=len(batch.requests),
-            num_tokens_per_req=list(num_tokens),
-            num_stages=num_stages,
+        represents_all_stages = bool(
+            getattr(batch, "afd_stage_represents_all_stages", False)
         )
+        if (
+            not represents_all_stages
+            and type(metadata.original_stage_token_lens) is list
+            and 0 < len(metadata.original_stage_token_lens) <= num_stages
+        ):
+            stage_lens = list(metadata.original_stage_token_lens)
+        else:
+            stage_lens = AFDStageMetadata.compute_stage_token_lens(
+                num_reqs=len(batch.requests),
+                num_tokens_per_req=list(num_tokens),
+                num_stages=num_stages,
+            )
         while len(stage_lens) < num_stages:
             stage_lens.append(1)
         if len(stage_lens) != num_stages:
@@ -1673,6 +1683,11 @@ def prepare_dp_padding(
             batch,
             metadata.with_dp_padding(
                 dp_stage_max_tokens=dp_stage_max_tokens,
+                ffn_cudagraph_capture_sizes=(
+                    metadata.ffn_cudagraph_capture_sizes
+                    if metadata.ffn_use_cuda_graph
+                    else None
+                ),
             ),
         )
         for batch, metadata, _ in batches_with_meta
