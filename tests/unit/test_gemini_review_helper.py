@@ -10,6 +10,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HELPER_PATH = REPO_ROOT / ".github" / "scripts" / "gemini_review_helper.py"
 WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "gemini-review.yml"
+CODEX_WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "codex-review.yml"
 STYLEGUIDE_PATH = REPO_ROOT / ".gemini" / "styleguide.md"
 
 
@@ -47,11 +48,60 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
     ]
     assert len(gemini_steps) == 1
     settings = json.loads(gemini_steps[0]["with"]["settings"])
+    assert settings["model"]["maxSessionTurns"] <= 10
     assert settings["telemetry"]["enabled"] is False
     assert settings["tools"]["autoAccept"] is True
     assert "read_file" in settings["tools"]["core"]
     assert "write_file" not in settings["tools"]["core"]
     assert "run_shell_command" not in settings["tools"]["core"]
+
+
+def test_codex_workflow_yaml_and_guardrails_are_valid() -> None:
+    assert CODEX_WORKFLOW_PATH.is_file()
+    raw_text = CODEX_WORKFLOW_PATH.read_text(encoding="utf-8")
+    workflow = yaml.safe_load(raw_text)
+
+    triggers = workflow.get("on", workflow.get(True))
+    assert isinstance(triggers, dict)
+    pr_trigger = triggers["pull_request"]
+    assert "qwen3-4b-pd-af-simulator" in pr_trigger["branches"]
+    assert set(pr_trigger["types"]) >= {
+        "opened",
+        "reopened",
+        "synchronize",
+        "ready_for_review",
+    }
+    assert "edited" not in pr_trigger["types"]
+
+    review_job = workflow["jobs"]["review"]
+    publish_job = workflow["jobs"]["publish"]
+    assert review_job["permissions"] == {"contents": "read"}
+    assert publish_job["permissions"] == {"pull-requests": "write"}
+    assert review_job["timeout-minutes"] <= 20
+    assert publish_job["timeout-minutes"] <= 10
+    assert "artifact_name" in review_job["outputs"]
+    download_steps = [
+        step
+        for step in publish_job["steps"]
+        if str(step.get("uses", "")).startswith("actions/download-artifact@")
+    ]
+    assert len(download_steps) == 1
+    assert download_steps[0]["with"]["name"] == "${{ needs.review.outputs.artifact_name }}"
+
+    codex_steps = [
+        step
+        for step in review_job["steps"]
+        if str(step.get("uses", "")).startswith("openai/codex-action@")
+    ]
+    assert len(codex_steps) == 1
+    codex_with = codex_steps[0]["with"]
+    assert codex_with["sandbox"] == "read-only"
+    assert codex_with["safety-strategy"] == "drop-sudo"
+    assert "project_doc_max_bytes" in codex_with["codex-args"]
+    assert codex_with["prompt-file"]
+    assert codex_with["output-file"]
+    assert ":(exclude)data/profiling" in raw_text
+    assert "MAX_LEN = 65000" in raw_text
 
 
 def test_build_diff_artifacts_filters_noisy_paths_and_annotates_lines() -> None:
@@ -159,3 +209,93 @@ def test_build_review_payload_handles_non_json_fallback() -> None:
     assert payload["comments"] == []
     assert "纯文本审查结论" in payload["body"]
     assert payload["commit_id"] == "1234567890abcdef"
+
+
+def test_build_review_payload_preserves_dotfile_paths_for_inline_comments() -> None:
+    helper = _load_helper()
+    raw_output = json.dumps(
+        {
+            "verdict": "COMMENT",
+            "summary": "发现 1 个工作流超时风险。",
+            "comments": [
+                {
+                    "path": ".github/workflows/codex-review.yml",
+                    "line": 20,
+                    "severity": "MEDIUM",
+                    "category": "可维护性",
+                    "title": "缺少超时配置",
+                    "body": "建议配置 timeout-minutes。",
+                },
+                {
+                    "path": "./.github/workflows/codex-review.yml",
+                    "line": 44,
+                    "severity": "MEDIUM",
+                    "category": "性能",
+                    "title": "未排除大文件",
+                    "body": "建议排除 profiling CSV。",
+                },
+            ],
+        },
+        ensure_ascii=False,
+    )
+
+    payload = helper.build_review_payload(
+        raw_response=raw_output,
+        pr_meta={"head_sha": "bae65cd7bdd718fe"},
+        valid_diff_lines={".github/workflows/codex-review.yml": [20, 44]},
+    )
+
+    assert len(payload["comments"]) == 2
+    assert [c["path"] for c in payload["comments"]] == [
+        ".github/workflows/codex-review.yml",
+        ".github/workflows/codex-review.yml",
+    ]
+    assert [c["line"] for c in payload["comments"]] == [20, 44]
+    assert "补充审查意见" not in payload["body"]
+
+
+def test_normalize_truncate_and_cli_stats(tmp_path: Path) -> None:
+    helper = _load_helper()
+    assert (
+        helper.normalize_repo_path("./.github/workflows/codex-review.yml")
+        == ".github/workflows/codex-review.yml"
+    )
+    assert helper.normalize_repo_path("/frontier/main.py") == "frontier/main.py"
+
+    oversized = "x" * 70_000
+    truncated = helper.truncate_review_body(oversized, max_chars=65_000)
+    assert len(truncated) <= 65_000
+    assert "已截断" in truncated
+
+    cli_json = tmp_path / "stdout.log"
+    cli_json.write_text(
+        json.dumps(
+            {
+                "response": "{}",
+                "stats": {
+                    "models": {
+                        "gemini-4-neon": {
+                            "api": {"totalRequests": 3},
+                            "tokens": {
+                                "prompt": 12000,
+                                "cached": 4000,
+                                "candidates": 800,
+                                "thoughts": 1500,
+                                "total": 14300,
+                            },
+                        }
+                    },
+                    "tools": {
+                        "totalCalls": 2,
+                        "byName": {"read_file": {"count": 2}},
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    summary = helper.summarize_cli_stats(cli_json)
+    assert summary is not None
+    assert "gemini-4-neon" in summary
+    assert "thoughts=1500" in summary
+    assert "read_file=2" in summary
