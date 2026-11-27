@@ -30,6 +30,7 @@ ONLINE_CASES = (
     "online/moe_cuda_graph_online.sh",
 )
 ALL_CASES = OFFLINE_CASES + ONLINE_CASES
+PROFILED_CASES = ("offline/qwen3_4b_pd_af.sh",)
 MOE_CASES = (
     "offline/moe_model_basic.sh",
     "offline/moe_model_ep.sh",
@@ -39,7 +40,7 @@ MOE_CASES = (
 
 
 def test_pdaf_example_surface_contains_offline_and_online_cases() -> None:
-    expected = {*ALL_CASES, "run_all.sh"}
+    expected = {*ALL_CASES, *PROFILED_CASES, "run_all.sh"}
     actual = {
         path.relative_to(EXAMPLES_ROOT).as_posix()
         for path in EXAMPLES_ROOT.rglob("*.sh")
@@ -122,7 +123,7 @@ def test_pdaf_example_scripts_emit_the_release_cli_contract(
     assert forbidden_options.isdisjoint(argv)
 
 
-@pytest.mark.parametrize("relative", ALL_CASES)
+@pytest.mark.parametrize("relative", ALL_CASES + PROFILED_CASES)
 def test_pdaf_example_scripts_are_executable_and_shell_valid(relative: str) -> None:
     script = EXAMPLES_ROOT / relative
     assert os.access(script, os.X_OK), relative
@@ -339,3 +340,28 @@ def test_pdaf_representative_examples_write_complete_metrics(
     assert payload["simulation_metadata"]["completed_requests"] == 1
     assert payload["kv_cache_transfer_statistics"]["total_transfers"] > 0
     assert payload["m2n_transfer_statistics"]["total_transfers"] > 0
+
+
+def test_qwen3_4b_pdaf_script_uses_network_device_template_for_weight_streaming(
+    tmp_path: Path,
+) -> None:
+    argv = _capture_cli(
+        tmp_path,
+        "offline/qwen3_4b_pd_af.sh",
+        env_overrides={
+            "OUT_DIR": str(tmp_path / "out"),
+            "WEIGHT_STREAM_LAYERS": "3",
+        },
+    )
+
+    assert argv[:2] == ["-m", "frontier.main"]
+    assert _option_value(argv, "--sys_arch") == "pd-af-disaggregation"
+    assert "--no-enable_parallel_clusters" in argv
+    assert _option_value(argv, "--replica_config_model_name") == "Qwen3-4B"
+    stream_template = _option_value(
+        argv,
+        "--random_forrest_execution_time_predictor_config_cpu_overhead_kernel_only_input_file",
+    )
+    assert "{NETWORK_DEVICE}" in stream_template
+    assert "{MODEL}" in stream_template
+    assert stream_template.endswith("cpu_overheads_kernel_only_stream3.csv")

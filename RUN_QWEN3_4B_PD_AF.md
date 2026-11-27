@@ -78,11 +78,11 @@ outputs/qwen3-4b-pd-af/qwen3_4b/offline_batch/<RUN_ID>/
 
 ```text
 TTFT                 21.300 ms
-TPOT                  1.789 ms
-request E2E         134.004 ms
-tokens/s          34,386.9  （仿真聚合值）
-requests/s            59.70  （仿真聚合值）
-DECODE_ATTN E2E      98.97 ms / 64 个 decode step
+TPOT                  1.661 ms
+request E2E         125.926 ms
+tokens/s          36,592.8  （仿真聚合值）
+requests/s            63.53  （仿真聚合值）
+DECODE_ATTN E2E      90.89 ms / 64 个 decode step
 DECODE_FFN E2E        9.46 ms / 64 个 decode step
 KV transfer           1.69 ms 总计（8 次传输）
 M2N transfer          4.06 ms 总计（4536 次传输）
@@ -95,21 +95,22 @@ M2N transfer          4.06 ms 总计（4536 次传输）
 全常驻 smoke（`1 request，prefill 64，decode 4`）：
 
 ```text
-TTFT 8.736 ms, TPOT 1.411 ms, FFN E2E 0.064 ms
+TTFT 8.736 ms, TPOT 1.395 ms, DECODE_ATTN E2E 4.053 ms, FFN E2E 0.064 ms
 ```
 
 流式 3 层 smoke（同一 workload，33 层常驻 + 3 层流式）：
 
 ```text
-TTFT 8.736 ms, TPOT 2.629 ms, FFN E2E 1.891 ms
+TTFT 8.736 ms, TPOT 2.004 ms, DECODE_ATTN E2E 4.053 ms, FFN E2E 1.891 ms
 ```
 
 流式 3 层跑 8-request baseline：
 
 ```text
 TTFT              21.300 ms
-TPOT               3.007 ms
-request E2E      210.746 ms
+TPOT               2.270 ms
+request E2E      164.297 ms
+DECODE_ATTN E2E   90.895 ms / 64 个 decode step
 DECODE_FFN E2E    47.830 ms / 64 个 decode step
 ```
 
@@ -133,9 +134,14 @@ DECODE_FFN E2E    47.830 ms / 64 个 decode step
      `attn_pre_proj`/`attn_post_proj` = FP8，`mlp_act`/norms/`attn_rope`/`emb`
      = BF16，全部 `data_source=profiling`（没有 2 倍 approximation）。
 
-3. **DECODE_FFN 的 CPU overhead**
-   - CPU 表过滤在 FFN 角色下改用 `moe_tensor_parallel_size`，
+3. **DECODE_FFN 的 CPU overhead 与跨集群隔离**
+   - CPU 表过滤与去重签名在 FFN 角色下改用 `moe_tensor_parallel_size`，
      因此 TP16 HPP2 表能被正确加载。
+   - 共享模型管理器按 `(family, network_device|model|tp|csv)` 隔离 CPU
+     overhead 模型，避免 `DECODE_FFN`（HPP2）的 PCIe host-bounce 与流式权重
+     CPU overhead 泄露给同属 `kernel_only` family 的 `DECODE_ATTN`（H200）。
+   - 运行脚本在 `WEIGHT_STREAM_LAYERS=1|2|3` 时保留 `{NETWORK_DEVICE}/{MODEL}`
+     路径占位符，确保只有 `hpp2_16rank` 加载流式表。
 
 4. **FP8 常驻权重内存核算**
    - `ParamCounter` 和 `system_metrics.model_weight_memory` 按配置的 MLP

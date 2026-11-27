@@ -1453,13 +1453,20 @@ class PredictionFamilyTrainers(KernelCountTraining):
             return models
 
         _, _, _, _, cpu_overhead_input_file, _ = self._get_input_files_for_config(replica_config, execution_time_predictor_config)
-        
-        cpu_signature = f"cpu_overhead_{replica_config.network_device}_{replica_config.model_name}_{replica_config.attn_tensor_parallel_size}_family{self._measurement_family_name(self._active_measurement_type)}"
-        
+        family_name = self._measurement_family_name(self._active_measurement_type)
+        scope_key = self._cpu_overhead_scope_key(
+            cluster_type,
+            replica_config,
+            execution_time_predictor_config,
+            self._active_measurement_type,
+            cpu_overhead_input_file,
+        )
+        cpu_signature = f"cpu_overhead_{scope_key}_family{family_name}"
+
         if cpu_signature in trained_model_signatures:
             logger.info(f"Skipping CPU overhead models training for {cluster_type} - already trained")
             return models
-        
+
         cpu_overhead_df = self._load_cpu_overhead_df(cpu_overhead_input_file, replica_config)
         if cpu_overhead_df.empty:
             logger.warning(
@@ -1475,7 +1482,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
             'cluster_type': str(cluster_type),
             'device': replica_config.device,
             'model_name': replica_config.model_name,
-            'tensor_parallel_size': replica_config.attn_tensor_parallel_size,
+            'tensor_parallel_size': self._cpu_overhead_tp(cluster_type, replica_config),
             'network_device': replica_config.network_device,
             'input_file': cpu_overhead_input_file,
         }
@@ -1495,8 +1502,16 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     execution_time_predictor_config=execution_time_predictor_config,
                     training_context=training_context,
                     persist_exact_lookup=True,
+                    register_model=False,
                 )
                 trained_model_signatures.add(model_signature)
+
+        if models and scope_key is not None:
+            cpu_models = getattr(self, "_cpu_overhead_models", None)
+            if cpu_models is None:
+                cpu_models = {}
+                self._cpu_overhead_models = cpu_models
+            cpu_models[(family_name, scope_key)] = dict(models)
 
         trained_model_signatures.add(cpu_signature)
         return models
@@ -1512,6 +1527,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
         persist_exact_lookup: bool = True,
         layer_contract: Optional[ResolvedLayerContract] = None,
         count_kernels: bool = True,
+        register_model: bool = True,
     ) -> BaseEstimator:
         """Train a single model and register it under the active measurement family.
 
@@ -1530,12 +1546,13 @@ class PredictionFamilyTrainers(KernelCountTraining):
             layer_contract=layer_contract,
         )
         model, profiling_precision = fit(model_name, df, feature_cols, target_col)
-        self._store_model_precision(
-            model_name,
-            profiling_precision,
-            model,
-            **_layer_contract_kwargs(layer_contract),
-        )
+        if register_model:
+            self._store_model_precision(
+                model_name,
+                profiling_precision,
+                model,
+                **_layer_contract_kwargs(layer_contract),
+            )
         if not count_kernels:
             return model
         return self._paired_with_kernel_count_model(

@@ -317,6 +317,47 @@ class PredictionModelRegistry:
                 return stored_bucket
         return {}
 
+    @staticmethod
+    def _cpu_overhead_tp(cluster_type: Optional[ClusterType], replica_config: Any) -> int:
+        if (
+            cluster_type == ClusterType.DECODE_FFN
+            or getattr(replica_config, "cluster_prefix", None) == "decode_ffn"
+        ):
+            return int(
+                getattr(
+                    replica_config,
+                    "moe_tensor_parallel_size",
+                    getattr(replica_config, "attn_tensor_parallel_size", 1),
+                )
+            )
+        return int(getattr(replica_config, "attn_tensor_parallel_size", 1))
+
+    def _cpu_overhead_scope_key(
+        self,
+        cluster_type: ClusterType,
+        replica_config: Any,
+        execution_time_predictor_config: Any,
+        measurement_type: MeasurementType,
+        cpu_overhead_input_file: Optional[str] = None,
+    ) -> Optional[str]:
+        if cpu_overhead_input_file is None:
+            if execution_time_predictor_config is None:
+                return None
+            _, _, _, _, cpu_overhead_input_file, _ = (
+                self._resolve_measurement_input_files_for_config(
+                    replica_config, execution_time_predictor_config, measurement_type
+                )
+            )
+        model_config = getattr(replica_config, "model_config", None)
+        model_name = (
+            model_config.get_name()
+            if model_config is not None and hasattr(model_config, "get_name")
+            else getattr(replica_config, "model_name", "")
+        )
+        tp = self._cpu_overhead_tp(cluster_type, replica_config)
+        norm_path = os.path.normpath(cpu_overhead_input_file) if cpu_overhead_input_file else ""
+        return f"{getattr(replica_config, 'network_device', '')}|{model_name}|{tp}|{norm_path}"
+
     def _store_model_precision(
         self,
         model_name: str,
@@ -486,6 +527,36 @@ class PredictionModelRegistry:
                 )
             if model is not None:
                 models[model_name] = model
+
+        cpu_models = getattr(self, "_cpu_overhead_models", None)
+        if cpu_models:
+            if cluster_type is not None:
+                cluster_config = (getattr(self, "_cluster_configs", None) or {}).get(cluster_type)
+                measurement_type = {
+                    "eager": MeasurementType.CUDA_EVENT,
+                    "device_event": MeasurementType.DEVICE_EVENT,
+                    "kernel_only": MeasurementType.KERNEL_ONLY,
+                }[family_name]
+                if cluster_config is not None:
+                    scope_key = self._cpu_overhead_scope_key(
+                        cluster_type,
+                        getattr(cluster_config, "replica_config", None),
+                        getattr(cluster_config, "execution_time_predictor_config", None),
+                        measurement_type,
+                    )
+                    if scope_key is not None:
+                        models.update(cpu_models.get((family_name, scope_key), {}))
+            else:
+                matching = [
+                    bucket for (fam, _scope), bucket in cpu_models.items() if fam == family_name
+                ]
+                if len(matching) == 1:
+                    models.update(matching[0])
+                elif len(matching) > 1:
+                    raise ValueError(
+                        f"CPU overhead models in family '{family_name}' have multiple "
+                        "cluster scopes; use get_models_for_cluster()."
+                    )
         return models
 
     def get_model(
