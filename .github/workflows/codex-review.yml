@@ -5,7 +5,7 @@ name: Codex PR Review
 on:
   pull_request:
     branches: [qwen3-4b-pd-af-simulator]
-    types: [opened, reopened, synchronize, ready_for_review]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
 
 concurrency:
   group: codex-pr-review-${{ github.event.pull_request.number }}
@@ -16,22 +16,186 @@ jobs:
     if: >-
       github.event.pull_request.draft == false &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.actor != 'dependabot[bot]'
+      github.actor != 'dependabot[bot]' &&
+      (github.event.action != 'edited' || github.event.changes.base != null)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     outputs:
-      review_body: ${{ steps.codex.outputs.final-message }}
+      has_review: ${{ steps.prepare_publish.outputs.has_review }}
+      skipped_files: ${{ steps.prepare.outputs.skipped_files }}
     steps:
-      - name: Check out PR merge commit
+      - name: Check OPENAI_API_KEY secret
+        env:
+          HAS_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+        run: |
+          if [ "${HAS_OPENAI_API_KEY}" != "true" ]; then
+            echo "::error::未配置仓库 Secret OPENAI_API_KEY。请在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中添加 OPENAI_API_KEY。"
+            exit 1
+          fi
+
+      - name: Check out PR head commit
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Prepare filtered PR context and Codex prompt
+        id: prepare
+        env:
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PROMPT_FILE: ${{ runner.temp }}/codex-review-prompt.md
+        run: |
+          python3 - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+
+          repo = os.environ["REPO"]
+          pr_number = os.environ["PR_NUMBER"]
+          pr_title = (os.environ.get("PR_TITLE") or "").strip()
+          pr_body = (os.environ.get("PR_BODY") or "").strip() or "（无 PR 描述）"
+          if len(pr_body) > 4000:
+              pr_body = pr_body[:4000].rstrip() + "\n...(PR 描述过长已截断)"
+          base_ref = os.environ["BASE_REF"]
+          head_ref = os.environ["HEAD_REF"]
+          base_sha = os.environ["BASE_SHA"]
+          head_sha = os.environ["HEAD_SHA"]
+          prompt_file = Path(os.environ["PROMPT_FILE"])
+
+          exclude_specs = [
+              ":(exclude)data/profiling",
+              ":(exclude)figs",
+              ":(exclude)cache",
+              ":(exclude)outputs",
+              ":(exclude)frontier/cc_backend/backends/collective-sim",
+              ":(exclude)*.csv",
+              ":(exclude)*.png",
+              ":(exclude)*.jpg",
+              ":(exclude)*.jpeg",
+              ":(exclude)*.gif",
+              ":(exclude)*.pdf",
+              ":(exclude)*.pkl",
+              ":(exclude)*.zip",
+              ":(exclude)*.tar",
+              ":(exclude)*.gz",
+              ":(exclude)*.lock",
+          ]
+
+          all_files = [
+              line.strip()
+              for line in subprocess.check_output(
+                  ["git", "diff", "--name-only", f"{base_sha}...{head_sha}"],
+                  text=True,
+              ).splitlines()
+              if line.strip()
+          ]
+          reviewable_files = [
+              line.strip()
+              for line in subprocess.check_output(
+                  [
+                      "git",
+                      "diff",
+                      "--name-only",
+                      f"{base_sha}...{head_sha}",
+                      "--",
+                      ".",
+                      *exclude_specs,
+                  ],
+                  text=True,
+              ).splitlines()
+              if line.strip()
+          ]
+          skipped_count = max(0, len(all_files) - len(reviewable_files))
+
+          gh_output = os.environ.get("GITHUB_OUTPUT")
+          if gh_output:
+              with open(gh_output, "a", encoding="utf-8") as fh:
+                  fh.write(f"reviewable_files={len(reviewable_files)}\n")
+                  fh.write(f"skipped_files={skipped_count}\n")
+
+          if not reviewable_files:
+              print("No reviewable files after excluding profiling/data/artifact paths.")
+              raise SystemExit(0)
+
+          exclude_cli = " ".join(f"'{spec}'" for spec in exclude_specs)
+          diff_cmd = (
+              f"git diff --no-ext-diff --no-textconv {base_sha}...{head_sha} "
+              f"-- . {exclude_cli}"
+          )
+          file_lines = [f"- `{p}`" for p in reviewable_files[:100]]
+          if len(reviewable_files) > 100:
+              file_lines.append(f"- ...（共 {len(reviewable_files)} 个待审查文件）")
+          file_list_md = "\n".join(file_lines)
+
+          parts = [
+              "你是 Frontier（LLM 推理离散事件仿真器）仓库的资深代码审查工程师。请审查以下 Pull Request：",
+              "",
+              "## PR 上下文",
+              f"- 仓库：`{repo}`",
+              f"- PR：`#{pr_number}` — {pr_title}",
+              f"- 分支：`{head_ref}` -> `{base_ref}`",
+              f"- Base SHA：`{base_sha}`",
+              f"- Head SHA：`{head_sha}`（当前工作区已检出此提交）",
+              f"- 待审查文件数：{len(reviewable_files)}（已自动排除 {skipped_count} 个 profiling/数据/图表/子模块文件）",
+              "",
+              "### PR 描述",
+              pr_body,
+              "",
+              "### 待审查文件列表",
+              file_list_md,
+              "",
+              "## 审查步骤",
+              "1. 运行以下命令查看已排除大体积数据路径的 PR diff：",
+              f"   `{diff_cmd}`",
+              "2. 参考 `.gemini/styleguide.md` 与 `AGENTS.md` 中的 Frontier 架构约束，按需定向核对相关调用方，重点关注：",
+              "   - 仿真保真度与数值正确性（基线一致性、时间/字节单位、除零/空 batch/边界条件、事件时序与状态隔离）；",
+              "   - 正确性回归、逻辑缺陷、数据丢失、配置或公开 CLI 契约破坏；",
+              "   - 安全与可靠性风险（密钥/注入、超时、API 限制、模块边界与可移植性）。",
+              "3. 仅在 diff 本身不足以确认问题时再读取直接相关的调用方；不要扫描 `data/profiling/`、`figs/` 等大体积数据目录。",
+              "",
+              "## 严格约束",
+              "- 当前为**离线只读沙箱**：禁止修改文件、禁止运行项目代码、**禁止执行任何联网命令（如 `curl`、`wget` 等）**。",
+              "- **禁止输出多余免责声明**（例如“本次为静态审查 / 无法访问外部文档 / 未运行测试”等）。",
+              "- **严格控制信噪比**：仅报告 `CRITICAL`（严重）、`HIGH`（高）、`MEDIUM`（中）级别且确实可操作的问题；忽略 `LOW` / `NIT` / 纯风格偏好和极低概率边缘假设。如果没有中高优先级问题，直接明确说明即可，不要硬凑发现。",
+              f"- **严禁输出 Runner 本地绝对路径**（如 `/home/runner/work/...`）或 `file://` 链接。行号必须以当前检出的 PR head（diff 新侧行号）为准，统一使用标准 GitHub 链接 `[path/to/file.py:行号](https://github.com/{repo}/blob/{head_sha}/path/to/file.py#L行号)`。",
+              "",
+              "## 输出格式（简体中文 Markdown）",
+              "请严格按以下结构输出，不要重复输出顶级标题（发布脚本会自动添加 bot 标题）：",
+              "",
+              "### 变更与总体评价",
+              "用 2-4 句概括本次变更目的、核心风险点与结论（✅ 建议合并 / ⚠️ 建议确认后合并 / 🛑 建议修复后再合并）。",
+              "",
+              "### 审查发现",
+              "- 若存在中高优先级问题，按严重度从高到低列出，每条格式为：",
+              f"  - **🔴 [严重]** / **🟠 [高]** / **🟡 [中]** **简短标题** — [path/to/file:行号](https://github.com/{repo}/blob/{head_sha}/path/to/file#L行号)",
+              "    简要说明触发条件、影响范围与明确修改建议（必要时附精简代码片段）。",
+              "- 若无中高优先级问题，仅写：`未发现中高优先级可操作问题。`",
+          ]
+          prompt_file.write_text("\n".join(parts) + "\n", encoding="utf-8")
+          print(
+              f"Prepared Codex prompt for PR #{pr_number}: "
+              f"{len(reviewable_files)} reviewable, {skipped_count} skipped."
+          )
+          PY
+
+      - name: Skip review when no reviewable code files changed
+        if: steps.prepare.outputs.reviewable_files == '0'
+        run: |
+          echo "本次 PR 改动均位于忽略路径（profiling/数据/图表/子模块），跳过 Codex PR Review。" >> "${GITHUB_STEP_SUMMARY}"
+
       - name: Run Codex review
         id: codex
+        if: steps.prepare.outputs.reviewable_files != '0'
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -39,35 +203,102 @@ jobs:
           effort: medium
           sandbox: read-only
           safety-strategy: drop-sudo
-          prompt: |
-            Review this Frontier pull request using:
-            git diff --no-ext-diff --no-textconv ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+          codex-args: '["--config", "project_doc_max_bytes=131072"]'
+          prompt-file: ${{ runner.temp }}/codex-review-prompt.md
+          output-file: ${{ runner.temp }}/codex-review.md
 
-            Use AGENTS.md and relevant callers to verify findings. Focus on
-            correctness regressions, compatibility breaks, and data loss.
-            Do not modify files or run project code.
-            For each finding, give the file, line, and triggering conditions.
-            Return a concise Markdown review in Simplified Chinese. If no
-            actionable issue is found, say so explicitly.
+      - name: Validate non-empty Codex review output
+        id: prepare_publish
+        if: steps.prepare.outputs.reviewable_files != '0'
+        env:
+          OUTPUT_FILE: ${{ runner.temp }}/codex-review.md
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          output_path = Path(os.environ["OUTPUT_FILE"])
+          text = output_path.read_text(encoding="utf-8").strip() if output_path.is_file() else ""
+          has_review = "true" if text else "false"
+          gh_output = os.environ.get("GITHUB_OUTPUT")
+          if gh_output:
+              with open(gh_output, "a", encoding="utf-8") as fh:
+                  fh.write(f"has_review={has_review}\n")
+          print(f"Codex review output chars: {len(text)} (has_review={has_review})")
+          PY
+
+      - name: Upload Codex review body artifact
+        if: steps.prepare_publish.outputs.has_review == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-review-body-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/codex-review.md
+          retention-days: 1
+          if-no-files-found: error
 
   publish:
     needs: review
-    if: needs.review.outputs.review_body != ''
+    if: needs.review.outputs.has_review == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       pull-requests: write
     steps:
+      - name: Download Codex review body artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: codex-review-body-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/codex-review
+
       - name: Post review to the pull request
         uses: actions/github-script@v7
         env:
-          REVIEW_BODY: ${{ needs.review.outputs.review_body }}
+          REVIEW_FILE: ${{ runner.temp }}/codex-review/codex-review.md
+          SKIPPED_FILES: ${{ needs.review.outputs.skipped_files }}
         with:
           script: |
+            const fs = require('node:fs');
             const pr = context.payload.pull_request;
+            const { owner, repo } = context.repo;
+            const headSha = pr.head.sha;
+            const shortSha = headSha.slice(0, 10);
+
+            let rawBody = fs.readFileSync(process.env.REVIEW_FILE, 'utf8').trim();
+            if (!rawBody) {
+              core.info('Codex review body is empty after trim; skipping review submission.');
+              return;
+            }
+
+            // Safety net: rewrite any accidental runner-local absolute paths into valid GitHub blob URLs.
+            rawBody = rawBody.replace(
+              /(?:file:\/\/)?\/home\/runner\/work\/[^/\s)]+\/[^/\s)]+\/([^\s:)]+?):(\d+)/g,
+              `https://github.com/${owner}/${repo}/blob/${headSha}/$1#L$2`
+            );
+            rawBody = rawBody.replace(
+              /(?:file:\/\/)?\/home\/runner\/work\/[^/\s)]+\/[^/\s)]+\/([^\s)]+)/g,
+              `https://github.com/${owner}/${repo}/blob/${headSha}/$1`
+            );
+
+            const skippedCount = Number.parseInt(process.env.SKIPPED_FILES || '0', 10) || 0;
+            const header =
+              '<!-- codex-code-review-bot -->\n' +
+              `## 🤖 Codex Code Review（commit \`${shortSha}\`）\n\n`;
+            const footer =
+              skippedCount > 0
+                ? `\n\n---\n<sub>已按规范自动排除 ${skippedCount} 个 profiling/数据/图表/子模块文件。</sub>`
+                : '';
+
+            const MAX_LEN = 65000;
+            const truncateNotice = '\n\n...(审查内容超出 GitHub 单条评论长度上限，已截断)';
+            let body = `${header}${rawBody}${footer}`;
+            if (body.length > MAX_LEN) {
+              body = body.slice(0, MAX_LEN - truncateNotice.length) + truncateNotice;
+            }
+
             await github.rest.pulls.createReview({
               ...context.repo,
               pull_number: pr.number,
-              commit_id: pr.head.sha,
+              commit_id: headSha,
               event: 'COMMENT',
-              body: process.env.REVIEW_BODY,
+              body,
             });

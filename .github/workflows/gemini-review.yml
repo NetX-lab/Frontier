@@ -88,7 +88,7 @@ jobs:
           settings: |-
             {
               "model": {
-                "maxSessionTurns": 25
+                "maxSessionTurns": 8
               },
               "context": {
                 "fileName": [
@@ -111,15 +111,19 @@ jobs:
             }
           prompt: |-
             你是 Frontier（LLM 推理离散事件仿真器）仓库的资深代码审查工程师。
-            请按照以下步骤完成本次 Pull Request 的中文代码审查，并**严格只输出一个 JSON 对象**：
+            `.gemini/styleguide.md` 已自动注入上下文，无需再次读取。请按照以下步骤完成本次 Pull Request 的中文代码审查，并**严格只输出一个 JSON 对象**：
 
-            1. 使用 `read_file` 阅读 `.gemini/styleguide.md`、`.gemini-review-ctx/pr_context.md` 和 `.gemini-review-ctx/pr_diff.txt`。
-            2. 结合 diff 改动，按需使用 `read_file` / `search_file_content` / `glob` 检查仓库内相关调用方、配置定义、边界条件或 `AGENTS.md` 中的架构约束，确认问题真实存在再下结论（不要凭猜测误报）。
+            1. 在**同一轮**内并行使用 `read_file` 阅读 `.gemini-review-ctx/pr_context.md` 和 `.gemini-review-ctx/pr_diff.txt`。
+            2. **严格控制上下文与工具轮次**（降低成本与耗时）：
+               - 仅当 diff 本身不足以确认问题时，才定向使用 `search_file_content` 或小范围 `read_file` 检查直接相关的调用方或定义，确认问题真实存在再下结论（不要凭猜测误报）。
+               - **禁止整文件读取 `AGENTS.md`**（体积过大；常规约束已包含在 `.gemini/styleguide.md` 中，仅在确有必要时用 `search_file_content` 精准检索关键词）。
+               - **禁止遍历或扫描 `data/profiling/`、`figs/`、`cache/`、`outputs/` 等大体积目录**。
+               - 对于配置、CI 工作流、文档或小型改动 PR，读完 diff 后应在 1~3 轮内直接输出最终 JSON。
             3. **严格控制信噪比**：
                - 全程使用**简体中文**。
                - **只报告 `CRITICAL`（严重）、`HIGH`（高）、`MEDIUM`（中）级别问题**，彻底忽略 `LOW` / `NIT` / 纯格式风格问题。
                - 最多输出 15 条最具价值的问题；若无中高优先级问题，`comments` 返回空数组 `[]`。
-            4. 行号要求：`.gemini-review-ctx/pr_diff.txt` 中每行新增/上下文行前缀的 `L<数字>` 即新文件精确行号。行内评论的 `path` 必须是相对仓库根目录的路径，`line` 必须是对应 diff hunk 中带 `L<数字>` 的整数行号；如问题跨文件或不在 diff 行内，可填相关文件并将 `line` 设为 `null`。
+            4. 行号要求：`.gemini-review-ctx/pr_diff.txt` 中每行新增/上下文行前缀的 `L<数字>` 即新文件精确行号。行内评论的 `path` 必须是相对仓库根目录的路径（保留 `.github/` 等点开头前缀），`line` 必须是对应 diff hunk 中带 `L<数字>` 的整数行号；如问题跨文件或不在 diff 行内，可填相关文件并将 `line` 设为 `null`。
 
             最终回复**只能包含如下格式的纯 JSON（不要附加多余解释文本）**：
             ```json
@@ -154,8 +158,9 @@ jobs:
             --repo "${{ github.repository }}" \
             --context-dir .gemini-review-ctx \
             --response-file .gemini-review-ctx/gemini_response.txt \
+            --cli-json-file gemini-artifacts/stdout.log \
             --max-comments 15
 
       - name: Cleanup temporary review context
         if: always()
-        run: rm -rf .gemini-review-ctx
+        run: rm -rf .gemini-review-ctx gemini-artifacts

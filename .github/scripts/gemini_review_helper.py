@@ -84,11 +84,28 @@ VERDICT_BADGES: dict[str, str] = {
 
 HUNK_HEADER_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 DIFF_GIT_RE = re.compile(r"^diff --git a/(.+?) b/(.+)$")
+MAX_REVIEW_BODY_CHARS = 65_000
+
+
+def normalize_repo_path(file_path: str) -> str:
+    """Normalize a repo-relative path without stripping leading dots on dotfiles."""
+    normalized = file_path.strip()
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized.lstrip("/")
+
+
+def truncate_review_body(body: str, max_chars: int = MAX_REVIEW_BODY_CHARS) -> str:
+    """Ensure review body stays under GitHub's 65,536-character API limit."""
+    if len(body) <= max_chars:
+        return body
+    notice = "\n\n...(审查内容超出 GitHub 单条评论长度上限，已截断)\n"
+    return body[: max(0, max_chars - len(notice))].rstrip() + notice
 
 
 def should_ignore_path(file_path: str) -> bool:
     """Return True if the path matches an ignored data/artifact/submodule rule."""
-    normalized = file_path.lstrip("./")
+    normalized = normalize_repo_path(file_path)
     for pattern in IGNORED_GLOBS:
         if fnmatch.fnmatch(normalized, pattern):
             return True
@@ -471,7 +488,7 @@ def build_review_payload(
     short_sha = head_sha[:10] if head_sha else "unknown"
 
     if parsed is None:
-        fallback_body = (
+        fallback_body = truncate_review_body(
             "<!-- gemini-code-review-bot -->\n"
             f"## 🤖 Gemini Code Review（commit `{short_sha}`）\n\n"
             "> 模型未返回标准 JSON 结构，以下为原始审查结果：\n\n"
@@ -502,7 +519,7 @@ def build_review_payload(
         if not body_text and not title_text:
             continue
 
-        raw_path = str(entry.get("path") or "").strip().lstrip("./")
+        raw_path = normalize_repo_path(str(entry.get("path") or ""))
         raw_line = entry.get("line")
         line_no: int | None = None
         if isinstance(raw_line, int) and raw_line > 0:
@@ -633,12 +650,66 @@ def build_review_payload(
 
     payload = {
         "event": "COMMENT",
-        "body": "\n".join(body_lines) + "\n",
+        "body": truncate_review_body("\n".join(body_lines) + "\n"),
         "comments": inline_comments,
     }
     if head_sha:
         payload["commit_id"] = head_sha
     return payload
+
+
+def summarize_cli_stats(cli_json_path: Path) -> str | None:
+    """Format token and tool usage from Gemini CLI JSON output if available."""
+    if not cli_json_path.is_file():
+        return None
+    try:
+        data = json.loads(cli_json_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    stats = data.get("stats")
+    if not isinstance(stats, dict):
+        return None
+
+    lines = ["### Gemini CLI Usage Stats", ""]
+    models = stats.get("models")
+    if isinstance(models, dict) and models:
+        for model_name, model_stats in models.items():
+            if not isinstance(model_stats, dict):
+                continue
+            tokens = model_stats.get("tokens")
+            api = model_stats.get("api")
+            reqs = api.get("totalRequests") if isinstance(api, dict) else None
+            if isinstance(tokens, dict):
+                prompt_tok = tokens.get("prompt", tokens.get("input", 0))
+                cached_tok = tokens.get("cached", 0)
+                cand_tok = tokens.get("candidates", tokens.get("output", 0))
+                thought_tok = tokens.get("thoughts", 0)
+                total_tok = tokens.get("total", 0)
+                req_part = f", requests={reqs}" if reqs is not None else ""
+                lines.append(
+                    f"- `{model_name}`: input={prompt_tok} (cached={cached_tok}), "
+                    f"output={cand_tok}, thoughts={thought_tok}, total={total_tok}{req_part}"
+                )
+
+    tools = stats.get("tools")
+    if isinstance(tools, dict):
+        total_calls = tools.get("totalCalls")
+        by_name = tools.get("byName")
+        if total_calls is not None:
+            detail = ""
+            if isinstance(by_name, dict) and by_name:
+                counts = [
+                    f"{name}={info.get('count', 0)}"
+                    for name, info in sorted(by_name.items())
+                    if isinstance(info, dict)
+                ]
+                if counts:
+                    detail = f" ({', '.join(counts)})"
+            lines.append(f"- Tool calls: {total_calls}{detail}")
+
+    return "\n".join(lines) + "\n" if len(lines) > 2 else None
 
 
 def _submit_review(repo: str, pr_number: str, payload: dict[str, Any]) -> subprocess.CompletedProcess[str]:
@@ -671,6 +742,15 @@ def cmd_post(args: argparse.Namespace) -> int:
         (context_dir / "valid_diff_lines.json").read_text(encoding="utf-8")
     )
     raw_response = Path(args.response_file).read_text(encoding="utf-8")
+
+    if args.cli_json_file:
+        stats_md = summarize_cli_stats(Path(args.cli_json_file))
+        if stats_md:
+            print(stats_md.strip())
+            step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+            if step_summary:
+                with open(step_summary, "a", encoding="utf-8") as fh:
+                    fh.write("\n" + stats_md)
 
     payload = build_review_payload(
         raw_response=raw_response,
@@ -707,7 +787,9 @@ def cmd_post(args: argparse.Namespace) -> int:
                 extra_lines.append(f"  {line}" if line else "")
             extra_lines.append("")
         fallback_payload = dict(payload)
-        fallback_payload["body"] = payload["body"] + "\n".join(extra_lines) + "\n"
+        fallback_payload["body"] = truncate_review_body(
+            payload["body"] + "\n".join(extra_lines) + "\n"
+        )
         fallback_payload["comments"] = []
         retry = _submit_review(args.repo, str(args.pr_number), fallback_payload)
         if retry.returncode == 0:
@@ -739,6 +821,7 @@ def main(argv: list[str] | None = None) -> int:
     post.add_argument("--repo", required=True)
     post.add_argument("--context-dir", default=".gemini-review-ctx")
     post.add_argument("--response-file", required=True)
+    post.add_argument("--cli-json-file", default="")
     post.add_argument("--max-comments", type=int, default=15)
     post.add_argument("--dry-run", action="store_true")
     post.set_defaults(func=cmd_post)
