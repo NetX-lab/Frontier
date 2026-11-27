@@ -84,11 +84,39 @@ jobs:
           GEMINI_CLI_TRUST_WORKSPACE: 'true'
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          gemini_model: ${{ vars.GEMINI_MODEL }}
+          gemini_model: ${{ vars.GEMINI_MODEL || 'gemini-4-hydrogen' }}
           settings: |-
             {
               "model": {
-                "maxSessionTurns": 8
+                "maxSessionTurns": 16
+              },
+              "modelConfigs": {
+                "customOverrides": [
+                  {
+                    "match": {
+                      "model": "chat-base-3"
+                    },
+                    "modelConfig": {
+                      "generateContentConfig": {
+                        "thinkingConfig": {
+                          "thinkingLevel": "${{ vars.GEMINI_THINKING_LEVEL || 'HIGH' }}"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "model": "${{ vars.GEMINI_MODEL || 'gemini-4-hydrogen' }}"
+                    },
+                    "modelConfig": {
+                      "generateContentConfig": {
+                        "thinkingConfig": {
+                          "thinkingLevel": "${{ vars.GEMINI_THINKING_LEVEL || 'HIGH' }}"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               "context": {
                 "fileName": [
@@ -114,11 +142,11 @@ jobs:
             `.gemini/styleguide.md` 已自动注入上下文，无需再次读取。请按照以下步骤完成本次 Pull Request 的中文代码审查，并**严格只输出一个 JSON 对象**：
 
             1. 在**同一轮**内并行使用 `read_file` 阅读 `.gemini-review-ctx/pr_context.md` 和 `.gemini-review-ctx/pr_diff.txt`。
-            2. **严格控制上下文与工具轮次**（降低成本与耗时）：
-               - 仅当 diff 本身不足以确认问题时，才定向使用 `search_file_content` 或小范围 `read_file` 检查直接相关的调用方或定义，确认问题真实存在再下结论（不要凭猜测误报）。
+            2. **严格控制上下文与工具轮次**（降低成本并避免撞上限）：
+               - 仅当 diff 本身不足以确认问题时，才定向使用 `search_file_content`、`read_many_files` 或并行的 `read_file` 批量核查直接相关的调用方或定义，**避免逐个文件串行读取**。
                - **禁止整文件读取 `AGENTS.md`**（体积过大；常规约束已包含在 `.gemini/styleguide.md` 中，仅在确有必要时用 `search_file_content` 精准检索关键词）。
                - **禁止遍历或扫描 `data/profiling/`、`figs/`、`cache/`、`outputs/` 等大体积目录**。
-               - 对于配置、CI 工作流、文档或小型改动 PR，读完 diff 后应在 1~3 轮内直接输出最终 JSON。
+               - 本次会话硬上限为 16 轮：小型/配置/文档 PR 应在 1~3 轮内输出；多文件核心代码 PR 务必在 **第 10 轮前** 结束查阅并直接输出最终 JSON，切勿耗尽轮次。
             3. **严格控制信噪比**：
                - 全程使用**简体中文**。
                - **只报告 `CRITICAL`（严重）、`HIGH`（高）、`MEDIUM`（中）级别问题**，彻底忽略 `LOW` / `NIT` / 纯格式风格问题。

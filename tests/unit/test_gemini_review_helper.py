@@ -48,7 +48,13 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
     ]
     assert len(gemini_steps) == 1
     settings = json.loads(gemini_steps[0]["with"]["settings"])
-    assert settings["model"]["maxSessionTurns"] <= 10
+    assert 12 <= settings["model"]["maxSessionTurns"] <= 20
+    overrides = settings["modelConfigs"]["customOverrides"]
+    assert len(overrides) >= 1
+    assert all(
+        "HIGH" in o["modelConfig"]["generateContentConfig"]["thinkingConfig"]["thinkingLevel"]
+        for o in overrides
+    )
     assert settings["telemetry"]["enabled"] is False
     assert settings["tools"]["autoAccept"] is True
     assert "read_file" in settings["tools"]["core"]
