@@ -48,7 +48,7 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
     ]
     assert len(gemini_steps) == 1
     settings = json.loads(gemini_steps[0]["with"]["settings"])
-    assert 12 <= settings["model"]["maxSessionTurns"] <= 20
+    assert 25 <= settings["model"]["maxSessionTurns"] <= 50
     overrides = settings["modelConfigs"]["customOverrides"]
     assert len(overrides) >= 1
     assert all(
