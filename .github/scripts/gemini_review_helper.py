@@ -138,44 +138,119 @@ def split_unified_diff(diff_text: str) -> list[tuple[str, str]]:
     return [(path, "\n".join(lines)) for path, lines in sections]
 
 
+def is_test_path(file_path: str) -> bool:
+    """Return True if the path points to a test file whose diff needs no extra expansion."""
+    normalized = normalize_repo_path(file_path)
+    parts = normalized.split("/")
+    base = parts[-1] if parts else normalized
+    return (
+        normalized.startswith("tests/")
+        or "tests" in parts[:-1]
+        or base.startswith("test_")
+        or base.endswith("_test.py")
+    )
+
+
 def annotate_file_diff(
-    raw_diff: str, max_file_bytes: int
+    raw_diff: str,
+    max_file_bytes: int,
+    file_lines: list[str] | None = None,
+    extra_context_lines: int = 0,
 ) -> tuple[str, list[int], bool]:
     """Annotate diff hunks with right-side line numbers and collect valid lines.
 
     GitHub's PR Review API allows `side: "RIGHT"` inline comments on added (`+`)
-    and context (` `) lines inside diff hunks.
+    and context (` `) lines inside diff hunks (`L<num>`). When `file_lines` and
+    `extra_context_lines > 0` are provided, surrounding file lines outside the
+    GitHub `-U3` hunk are emitted with a `C<num>` prefix for reading context
+    only (never added to `valid_lines`).
     """
     valid_lines: list[int] = []
-    annotated_lines: list[str] = []
-    new_line_no: int | None = None
-    in_hunk = False
+    raw_lines = raw_diff.splitlines()
 
-    for line in raw_diff.splitlines():
+    # Pre-scan hunk start/end right-side line ranges so surrounding context windows
+    # can avoid overlapping adjacent hunks.
+    hunks: list[dict[str, Any]] = []
+    preamble: list[str] = []
+    current_hunk: dict[str, Any] | None = None
+
+    for line in raw_lines:
         hunk_match = HUNK_HEADER_RE.match(line)
         if hunk_match:
-            new_line_no = int(hunk_match.group(3))
-            in_hunk = True
-            annotated_lines.append(line)
+            if current_hunk is not None:
+                hunks.append(current_hunk)
+            start_no = int(hunk_match.group(3))
+            current_hunk = {
+                "header": line,
+                "start": start_no,
+                "end": start_no - 1,
+                "body": [],
+            }
             continue
-
-        if not in_hunk or new_line_no is None:
-            annotated_lines.append(line)
-            continue
-
-        if line.startswith("+") and not line.startswith("+++"):
-            valid_lines.append(new_line_no)
-            annotated_lines.append(f"L{new_line_no} {line}")
-            new_line_no += 1
-        elif line.startswith("-") and not line.startswith("---"):
-            annotated_lines.append(f"     {line}")
-        elif line.startswith("\\"):
-            annotated_lines.append(line)
+        if current_hunk is None:
+            preamble.append(line)
         else:
-            # Context line inside hunk (starts with ' ' or empty line)
-            valid_lines.append(new_line_no)
-            annotated_lines.append(f"L{new_line_no} {line}")
-            new_line_no += 1
+            current_hunk["body"].append(line)
+            if line.startswith("+") and not line.startswith("+++"):
+                current_hunk["end"] += 1
+            elif line.startswith("-") and not line.startswith("---"):
+                pass
+            elif line.startswith("\\"):
+                pass
+            else:
+                current_hunk["end"] += 1
+
+    if current_hunk is not None:
+        hunks.append(current_hunk)
+
+    annotated_lines: list[str] = list(preamble)
+    last_emitted_line = 0
+    total_file_lines = len(file_lines) if file_lines is not None else 0
+
+    for idx, hunk in enumerate(hunks):
+        hunk_start: int = hunk["start"]
+        hunk_end: int = hunk["end"]
+        next_hunk_start = (
+            hunks[idx + 1]["start"] if idx + 1 < len(hunks) else total_file_lines + 1
+        )
+
+        # Leading extra context lines before this hunk (C<num>)
+        if file_lines is not None and extra_context_lines > 0 and hunk_start > 1:
+            lead_start = max(last_emitted_line + 1, hunk_start - extra_context_lines)
+            lead_end = min(total_file_lines, hunk_start - 1)
+            for ln in range(lead_start, lead_end + 1):
+                annotated_lines.append(f"C{ln}   {file_lines[ln - 1]}")
+                last_emitted_line = ln
+
+        annotated_lines.append(hunk["header"])
+        new_line_no = hunk_start
+        for line in hunk["body"]:
+            if line.startswith("+") and not line.startswith("+++"):
+                valid_lines.append(new_line_no)
+                annotated_lines.append(f"L{new_line_no} {line}")
+                last_emitted_line = max(last_emitted_line, new_line_no)
+                new_line_no += 1
+            elif line.startswith("-") and not line.startswith("---"):
+                annotated_lines.append(f"     {line}")
+            elif line.startswith("\\"):
+                annotated_lines.append(line)
+            else:
+                valid_lines.append(new_line_no)
+                annotated_lines.append(f"L{new_line_no} {line}")
+                last_emitted_line = max(last_emitted_line, new_line_no)
+                new_line_no += 1
+
+        # Trailing extra context lines after this hunk (C<num>)
+        if file_lines is not None and extra_context_lines > 0 and hunk_end >= hunk_start:
+            trail_start = max(last_emitted_line + 1, hunk_end + 1)
+            trail_end = min(
+                total_file_lines,
+                next_hunk_start - 1,
+                hunk_end + extra_context_lines,
+            )
+            for ln in range(trail_start, trail_end + 1):
+                annotated_lines.append(f"C{ln}   {file_lines[ln - 1]}")
+                last_emitted_line = ln
 
     annotated_text = "\n".join(annotated_lines)
     truncated = False
@@ -185,7 +260,7 @@ def annotate_file_diff(
         clipped = encoded[:max_file_bytes].decode("utf-8", errors="ignore")
         annotated_text = (
             clipped.rstrip()
-            + "\n... [该文件 diff 过长已截断，请按需使用 read_file 查看完整文件]"
+            + "\n... [该文件 diff 过长已截断，请按需使用带行号范围的 read_file 查看]"
         )
 
     return annotated_text, sorted(set(valid_lines)), truncated
@@ -195,6 +270,8 @@ def build_diff_artifacts(
     diff_text: str,
     max_diff_bytes: int = 120_000,
     max_file_bytes: int = 30_000,
+    repo_root: Path | None = None,
+    extra_context_lines: int = 0,
 ) -> dict[str, Any]:
     """Filter, annotate, and budget a unified diff for Gemini review."""
     valid_diff_lines: dict[str, list[int]] = {}
@@ -210,8 +287,28 @@ def build_diff_artifacts(
             skipped_files.append(file_path)
             continue
 
+        file_lines: list[str] | None = None
+        ctx_lines = 0
+        if (
+            repo_root is not None
+            and extra_context_lines > 0
+            and not is_test_path(file_path)
+        ):
+            candidate = repo_root / normalize_repo_path(file_path)
+            if candidate.is_file():
+                try:
+                    file_lines = candidate.read_text(
+                        encoding="utf-8", errors="replace"
+                    ).splitlines()
+                    ctx_lines = extra_context_lines
+                except OSError:
+                    file_lines = None
+
         annotated, valid_lines, was_truncated = annotate_file_diff(
-            raw_diff, max_file_bytes=max_file_bytes
+            raw_diff,
+            max_file_bytes=max_file_bytes,
+            file_lines=file_lines,
+            extra_context_lines=ctx_lines,
         )
         reviewable_files.append(file_path)
         valid_diff_lines[file_path] = valid_lines
@@ -308,10 +405,13 @@ def cmd_prepare(args: argparse.Namespace) -> int:
     )
     pr_meta = json.loads(meta_proc.stdout)
     diff_text = _fetch_pr_diff(args.repo, str(args.pr_number))
+    repo_root = Path(args.repo_root) if args.repo_root else Path.cwd()
     artifacts = build_diff_artifacts(
         diff_text,
         max_diff_bytes=args.max_diff_bytes,
         max_file_bytes=args.max_file_bytes,
+        repo_root=repo_root,
+        extra_context_lines=args.extra_context_lines,
     )
 
     head_sha = str(pr_meta.get("headRefOid", ""))
@@ -812,6 +912,8 @@ def main(argv: list[str] | None = None) -> int:
     prep.add_argument("--pr-number", required=True)
     prep.add_argument("--repo", required=True)
     prep.add_argument("--output-dir", default=".gemini-review-ctx")
+    prep.add_argument("--repo-root", default="")
+    prep.add_argument("--extra-context-lines", type=int, default=12)
     prep.add_argument("--max-diff-bytes", type=int, default=120_000)
     prep.add_argument("--max-file-bytes", type=int, default=30_000)
     prep.set_defaults(func=cmd_prepare)

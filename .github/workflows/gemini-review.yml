@@ -76,11 +76,17 @@ jobs:
         id: prepare
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HELPER_PATH: ${{ runner.temp }}/gemini_review_helper.py
         run: |
-          python3 .github/scripts/gemini_review_helper.py prepare \
+          if ! gh api "repos/${{ github.repository }}/contents/.github/scripts/gemini_review_helper.py?ref=${{ github.sha }}" --jq .content | base64 -d > "${HELPER_PATH}"; then
+            cp .github/scripts/gemini_review_helper.py "${HELPER_PATH}"
+          fi
+          python3 "${HELPER_PATH}" prepare \
             --pr-number "${{ steps.pr.outputs.number }}" \
             --repo "${{ github.repository }}" \
-            --output-dir .gemini-review-ctx
+            --output-dir .gemini-review-ctx \
+            --repo-root "${PWD}" \
+            --extra-context-lines 12
 
       - name: Skip review when no reviewable code files changed
         if: steps.prepare.outputs.reviewable_files == '0'
@@ -100,7 +106,13 @@ jobs:
           settings: |-
             {
               "model": {
-                "maxSessionTurns": -1
+                "maxSessionTurns": -1,
+                "compressionThreshold": 0.15,
+                "summarizeToolOutput": {
+                  "run_shell_command": {
+                    "tokenBudget": 2000
+                  }
+                }
               },
               "modelConfigs": {
                 "customOverrides": [
@@ -111,7 +123,7 @@ jobs:
                     "modelConfig": {
                       "generateContentConfig": {
                         "thinkingConfig": {
-                          "thinkingLevel": "${{ vars.GEMINI_THINKING_LEVEL || 'HIGH' }}"
+                          "thinkingLevel": "${{ vars.GEMINI_THINKING_LEVEL || 'MEDIUM' }}"
                         }
                       }
                     }
@@ -123,7 +135,7 @@ jobs:
                     "modelConfig": {
                       "generateContentConfig": {
                         "thinkingConfig": {
-                          "thinkingLevel": "${{ vars.GEMINI_THINKING_LEVEL || 'HIGH' }}"
+                          "thinkingLevel": "${{ vars.GEMINI_THINKING_LEVEL || 'MEDIUM' }}"
                         }
                       }
                     }
@@ -140,6 +152,7 @@ jobs:
               },
               "tools": {
                 "useRipgrep": true,
+                "truncateToolOutputThreshold": 24000,
                 "core": [
                   "read_file",
                   "read_many_files",
@@ -162,16 +175,19 @@ jobs:
             `.gemini/styleguide.md` 已自动注入上下文，无需再次读取。请按照以下步骤完成本次 Pull Request 的中文代码审查，并**严格只输出一个 JSON 对象**：
 
             1. 在**同一轮**内并行使用 `read_file` 阅读 `.gemini-review-ctx/pr_context.md` 和 `.gemini-review-ctx/pr_diff.txt`。
-            2. **严格控制上下文与工具轮次**（降低成本并避免无效探索）：
-               - 仅当 diff 本身不足以确认问题时，才定向查阅直接相关的调用方或定义；对大文件优先用 `grep_search` 或只读命令（如 `rg -n`、`sed -n '起,止p'`、`git grep`）精准定位目标片段，或批量并行调用 `read_file`，**避免逐个文件串行翻页读取**。
-               - **禁止整文件读取 `AGENTS.md`**（体积过大；常规约束已包含在 `.gemini/styleguide.md` 中，仅在确有必要时用 `grep_search` / `rg -n` 精准检索关键词）。
+               - `.gemini-review-ctx/pr_diff.txt` 已为非测试源码自动预展开了 hunk 周边各 12 行上下文（`C<数字>` 前缀），**不要重复 `read_file` 已在 diff 中展示过的代码段**。
+            2. **严格控制 Token 消耗与工具调用预算**：
+               - 仅当 diff 及其 `C<数字>` 周边上下文仍不足以确认某个真实疑点时，才定向查阅直接相关的调用方或定义；**严禁为了“通读确认”去浏览没有疑点的文件**。
+               - 优先用 `grep_search`（或 `rg -n`）定位精确行号，再调用带精确 `start_line` / `end_line` 的 `read_file`（**单次跨度 ≤ 120 行，严禁不带行号范围读取大文件**）。
+               - **禁止对 `tests/` 目录下的测试文件调用 `read_file`**（测试改动已在 `pr_diff.txt` 中完整展示）。
+               - **禁止整文件读取 `AGENTS.md`**（常规约束已包含在 `.gemini/styleguide.md` 中，仅在确有必要时用 `grep_search` / `rg -n` 精准检索关键词）。
                - **禁止遍历或扫描 `data/profiling/`、`figs/`、`cache/`、`outputs/` 等大体积目录**。
-               - 尽量批量并行查阅直接相关的调用方并尽早收口输出最终 JSON，避免无意义的全仓漫游。
+               - 将额外 `read_file` 总调用尽量控制在 **12 次以内**、总 API 轮次控制在 **6~10 轮以内**，足以做出判断后立即输出最终 JSON。
             3. **严格控制信噪比**：
                - 全程使用**简体中文**。
                - **只报告 `CRITICAL`（严重）、`HIGH`（高）、`MEDIUM`（中）级别问题**，彻底忽略 `LOW` / `NIT` / 纯格式风格问题。
                - 最多输出 15 条最具价值的问题；若无中高优先级问题，`comments` 返回空数组 `[]`。
-            4. 行号要求：`.gemini-review-ctx/pr_diff.txt` 中每行新增/上下文行前缀的 `L<数字>` 即新文件精确行号。行内评论的 `path` 必须是相对仓库根目录的路径（保留 `.github/` 等点开头前缀），`line` 必须是对应 diff hunk 中带 `L<数字>` 的整数行号；如问题跨文件或不在 diff 行内，可填相关文件并将 `line` 设为 `null`。
+            4. 行号要求：`.gemini-review-ctx/pr_diff.txt` 中前缀为 **`L<数字>`** 的行才是 GitHub PR diff 内可挂行内评论的精确行号（`C<数字>` 仅作上下文参考，不可直接挂行内评论）。行内评论的 `path` 必须是相对仓库根目录的路径（保留 `.github/` 等点开头前缀），`line` 必须是对应 diff hunk 中带 `L<数字>` 的整数行号；如问题跨文件或位于 `C<数字>` / diff 之外，可填相关文件并将 `line` 设为 `null`。
 
             最终回复**只能包含如下格式的纯 JSON（不要附加多余解释文本）**：
             ```json
@@ -201,6 +217,7 @@ jobs:
           GEMINI_RESPONSE: ${{ steps.gemini_review.outputs.summary }}
           ARTIFACT_NAME: gemini-review-bundle-${{ github.run_id }}-${{ github.run_attempt }}
           BUNDLE_DIR: ${{ runner.temp }}/gemini-review-bundle
+          HELPER_PATH: ${{ runner.temp }}/gemini_review_helper.py
         run: |
           python3 - <<'PY'
           import json
@@ -230,10 +247,10 @@ jobs:
           (bundle_dir / "gemini_response.txt").write_text(response_text, encoding="utf-8")
           for filename in ("pr_meta.json", "valid_diff_lines.json"):
               shutil.copy2(ctx_dir / filename, bundle_dir / filename)
-          shutil.copy2(
-              Path(".github/scripts/gemini_review_helper.py"),
-              bundle_dir / "gemini_review_helper.py",
-          )
+          helper_src = Path(os.environ["HELPER_PATH"])
+          if not helper_src.is_file():
+              helper_src = Path(".github/scripts/gemini_review_helper.py")
+          shutil.copy2(helper_src, bundle_dir / "gemini_review_helper.py")
 
           artifact_name = os.environ["ARTIFACT_NAME"]
           has_review = "true" if response_text else "false"

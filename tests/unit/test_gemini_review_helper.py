@@ -74,14 +74,17 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
     assert len(gemini_steps) == 1
     settings = json.loads(gemini_steps[0]["with"]["settings"])
     assert settings["model"]["maxSessionTurns"] == -1
+    assert 0 < settings["model"]["compressionThreshold"] <= 0.3
+    assert settings["model"]["summarizeToolOutput"]["run_shell_command"]["tokenBudget"] <= 4000
     overrides = settings["modelConfigs"]["customOverrides"]
     assert len(overrides) >= 1
     assert all(
-        "HIGH" in o["modelConfig"]["generateContentConfig"]["thinkingConfig"]["thinkingLevel"]
+        "MEDIUM" in o["modelConfig"]["generateContentConfig"]["thinkingConfig"]["thinkingLevel"]
         for o in overrides
     )
     assert settings["telemetry"]["enabled"] is False
     assert settings["tools"]["useRipgrep"] is True
+    assert 8000 <= settings["tools"]["truncateToolOutputThreshold"] <= 30000
     core_tools = settings["tools"]["core"]
     assert "read_file" in core_tools
     assert "grep_search" in core_tools
@@ -347,3 +350,55 @@ def test_normalize_truncate_and_cli_stats(tmp_path: Path) -> None:
     assert "gemini-4-neon" in summary
     assert "thoughts=1500" in summary
     assert "read_file=2" in summary
+
+
+def test_build_diff_artifacts_expands_surrounding_context_only_for_source_files(
+    tmp_path: Path,
+) -> None:
+    helper = _load_helper()
+    src_file = tmp_path / "frontier" / "core.py"
+    src_file.parent.mkdir(parents=True)
+    src_file.write_text("\n".join(f"src_line_{i}" for i in range(1, 41)) + "\n", encoding="utf-8")
+
+    test_file = tmp_path / "tests" / "unit" / "test_core.py"
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text("\n".join(f"test_line_{i}" for i in range(1, 41)) + "\n", encoding="utf-8")
+
+    sample_diff = "\n".join(
+        [
+            "diff --git a/frontier/core.py b/frontier/core.py",
+            "--- a/frontier/core.py",
+            "+++ b/frontier/core.py",
+            "@@ -18,3 +18,4 @@ def f():",
+            " src_line_18",
+            "-old_19",
+            "+src_line_19",
+            "+src_line_20",
+            " src_line_21",
+            "diff --git a/tests/unit/test_core.py b/tests/unit/test_core.py",
+            "--- a/tests/unit/test_core.py",
+            "+++ b/tests/unit/test_core.py",
+            "@@ -18,2 +18,3 @@ def test_f():",
+            " test_line_18",
+            "+test_line_19",
+            " test_line_20",
+        ]
+    )
+
+    artifacts = helper.build_diff_artifacts(
+        sample_diff,
+        repo_root=tmp_path,
+        extra_context_lines=5,
+    )
+    # Valid inline comment lines must strictly match original -U3 diff lines (L<num> only).
+    assert artifacts["valid_diff_lines"]["frontier/core.py"] == [18, 19, 20, 21]
+    assert artifacts["valid_diff_lines"]["tests/unit/test_core.py"] == [18, 19, 20]
+
+    # Non-test source file gets C<num> surrounding context lines; test file does not.
+    diff_out = artifacts["annotated_diff"]
+    assert "C13   src_line_13" in diff_out
+    assert "C17   src_line_17" in diff_out
+    assert "C22   src_line_22" in diff_out
+    assert "C26   src_line_26" in diff_out
+    assert "C13   test_line_13" not in diff_out
+    assert "C21   test_line_21" not in diff_out
