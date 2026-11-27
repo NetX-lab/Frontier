@@ -257,3 +257,7 @@ worktreess/
 
 # Per-host bindings of the agent skills under skills/ (skills/README.md).
 skills/*/site.local.md
+
+# Local Gemini CLI runtime settings & GitHub Actions credentials (keep .gemini/styleguide.md tracked).
+.gemini/settings.json
+gha-creds-*.json
