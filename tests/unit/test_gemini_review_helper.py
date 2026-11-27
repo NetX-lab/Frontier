@@ -47,6 +47,17 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
     assert publish_job["timeout-minutes"] <= 10
     assert "artifact_name" in review_job["outputs"]
     assert "pr_number" in review_job["outputs"]
+    upload_steps = [
+        step
+        for step in review_job["steps"]
+        if str(step.get("uses", "")).startswith("actions/upload-artifact@")
+    ]
+    assert len(upload_steps) == 1
+    upload_with = upload_steps[0]["with"]
+    upload_path_parts = [p for p in str(upload_with["path"]).split("/") if p]
+    if not upload_with.get("include-hidden-files", False):
+        assert all(not part.startswith(".") for part in upload_path_parts)
+
     publish_downloads = [
         step
         for step in publish_job["steps"]

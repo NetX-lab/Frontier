@@ -200,6 +200,7 @@ jobs:
         env:
           GEMINI_RESPONSE: ${{ steps.gemini_review.outputs.summary }}
           ARTIFACT_NAME: gemini-review-bundle-${{ github.run_id }}-${{ github.run_attempt }}
+          BUNDLE_DIR: ${{ runner.temp }}/gemini-review-bundle
         run: |
           python3 - <<'PY'
           import json
@@ -208,7 +209,10 @@ jobs:
           from pathlib import Path
 
           ctx_dir = Path(".gemini-review-ctx")
-          ctx_dir.mkdir(parents=True, exist_ok=True)
+          bundle_dir = Path(os.environ["BUNDLE_DIR"])
+          if bundle_dir.exists():
+              shutil.rmtree(bundle_dir)
+          bundle_dir.mkdir(parents=True, exist_ok=True)
 
           response_text = ""
           cli_stdout = Path("gemini-artifacts/stdout.log")
@@ -223,10 +227,12 @@ jobs:
               response_text = os.environ.get("GEMINI_RESPONSE", "")
 
           response_text = response_text.strip()
-          (ctx_dir / "gemini_response.txt").write_text(response_text, encoding="utf-8")
+          (bundle_dir / "gemini_response.txt").write_text(response_text, encoding="utf-8")
+          for filename in ("pr_meta.json", "valid_diff_lines.json"):
+              shutil.copy2(ctx_dir / filename, bundle_dir / filename)
           shutil.copy2(
               Path(".github/scripts/gemini_review_helper.py"),
-              ctx_dir / "gemini_review_helper.py",
+              bundle_dir / "gemini_review_helper.py",
           )
 
           artifact_name = os.environ["ARTIFACT_NAME"]
@@ -237,7 +243,7 @@ jobs:
                   fh.write(f"has_review={has_review}\n")
                   fh.write(f"artifact_name={artifact_name}\n")
           print(
-              f"Prepared Gemini review bundle: {len(response_text)} chars "
+              f"Prepared Gemini review bundle in {bundle_dir}: {len(response_text)} chars "
               f"(has_review={has_review}, artifact_name={artifact_name})"
           )
           PY
@@ -247,7 +253,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.prepare_publish.outputs.artifact_name }}
-          path: .gemini-review-ctx
+          path: ${{ runner.temp }}/gemini-review-bundle
           retention-days: 1
           if-no-files-found: error
 
