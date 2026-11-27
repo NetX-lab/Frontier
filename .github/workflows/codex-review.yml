@@ -1,0 +1,73 @@
+# Add OPENAI_API_KEY under the repository's Settings > Secrets and variables > Actions.
+# To test, open a ready-for-review PR from a branch in this repository.
+name: Codex PR Review
+
+on:
+  pull_request:
+    branches: [qwen3-4b-pd-af-simulator]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+concurrency:
+  group: codex-pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      review_body: ${{ steps.codex.outputs.final-message }}
+    steps:
+      - name: Check out PR merge commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Codex review
+        id: codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-6.2-sol
+          effort: medium
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          prompt: |
+            Review this Frontier pull request using:
+            git diff --no-ext-diff --no-textconv ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+
+            Use AGENTS.md and relevant callers to verify findings. Focus on
+            correctness regressions, compatibility breaks, and data loss.
+            Do not modify files or run project code.
+            For each finding, give the file, line, and triggering conditions.
+            Return a concise Markdown review in Simplified Chinese. If no
+            actionable issue is found, say so explicitly.
+
+  publish:
+    needs: review
+    if: needs.review.outputs.review_body != ''
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post review to the pull request
+        uses: actions/github-script@v7
+        env:
+          REVIEW_BODY: ${{ needs.review.outputs.review_body }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            await github.rest.pulls.createReview({
+              ...context.repo,
+              pull_number: pr.number,
+              commit_id: pr.head.sha,
+              event: 'COMMENT',
+              body: process.env.REVIEW_BODY,
+            });
