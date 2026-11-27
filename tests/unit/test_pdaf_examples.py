@@ -391,3 +391,39 @@ def test_qwen3_4b_accepts_poisson_arrivals(tmp_path: Path) -> None:
     assert _option_value(argv, "--interval_generator_config_type") == "poisson"
     assert _option_value(argv, "--poisson_request_interval_generator_config_qps") == "5"
     assert "--offline_use_generated_request_arrivals" in argv
+
+
+def test_qwen3_4b_af_microbatch_defaults_and_overrides(tmp_path: Path) -> None:
+    default_argv = _capture_cli(
+        tmp_path,
+        "offline/qwen3_4b_pd_af.sh",
+        env_overrides={"OUT_DIR": (tmp_path / "out_default").as_posix()},
+    )
+    assert _option_value(
+        default_argv, "--cluster_config_decode_attn_af_pipeline_num_micro_batch"
+    ) == "1"
+    assert _option_value(
+        default_argv, "--cluster_config_decode_ffn_af_pipeline_num_micro_batch"
+    ) == "1"
+    assert _option_value(
+        default_argv, "--cluster_config_decode_attn_micro_batch_size"
+    ) == "8"
+
+    af2_argv = _capture_cli(
+        tmp_path,
+        "offline/qwen3_4b_pd_af.sh",
+        env_overrides={
+            "OUT_DIR": (tmp_path / "out_af2").as_posix(),
+            "AF_MICRO_BATCH": "2",
+            "DECODE_ATTN_MICRO_BATCH_SIZE": "32",
+        },
+    )
+    assert _option_value(
+        af2_argv, "--cluster_config_decode_attn_af_pipeline_num_micro_batch"
+    ) == "2"
+    assert _option_value(
+        af2_argv, "--cluster_config_decode_ffn_af_pipeline_num_micro_batch"
+    ) == "2"
+    assert _option_value(
+        af2_argv, "--cluster_config_decode_attn_micro_batch_size"
+    ) == "32"

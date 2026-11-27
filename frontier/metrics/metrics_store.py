@@ -28,6 +28,7 @@ from frontier.operators.spec import OperatorFamilySpec
 
 if TYPE_CHECKING:
     from frontier.metrics.trace_store import TraceStore
+from frontier.metrics.af_overlap_tracker import AFOverlapTracker
 from frontier.metrics.capability_context import CapabilityContext
 from frontier.metrics.cdf_sketch import CDFSketch
 from frontier.metrics.trace_store import TraceStore
@@ -257,6 +258,7 @@ class MetricsStore:
         self._total_requests = 0
         self._completed_requests = 0
         self._completed_request_ids = set()
+        self._af_overlap_tracker = AFOverlapTracker()
 
         self._cluster_configs = cluster_configs
 
@@ -2475,6 +2477,22 @@ class MetricsStore:
                     self._m2n_transfer_metrics["total_data_transferred"]
                 )
 
+        tracker = getattr(self, "_af_overlap_tracker", None)
+        if (
+            tracker is not None
+            and self._simulation_config.sys_arch == "pd-af-disaggregation"
+            and tracker.has_data()
+        ):
+            decode_attn_cfg = self._cluster_configs.get(ClusterType.DECODE_ATTN)
+            af_mb = (
+                getattr(decode_attn_cfg, "af_pipeline_num_micro_batch", None)
+                if decode_attn_cfg is not None
+                else None
+            )
+            system_metrics["af_pipeline_overlap_statistics"] = tracker.summarize(
+                af_pipeline_num_micro_batch=af_mb,
+            )
+
         # 9. Per-cluster utilization summary
         cluster_utilization = {}
         for cluster_type in self._cluster_configs.keys():
@@ -3812,6 +3830,22 @@ class MetricsStore:
         cluster_type: ClusterType,
         replica_local_id: int | None = None,
     ) -> None:
+        tracker = getattr(self, "_af_overlap_tracker", None)
+        if (
+            tracker is not None
+            and self._config.write_metrics
+            and batch_stage is not None
+            and cluster_type in (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN)
+        ):
+            tracker.record_stage_start(
+                cluster_type=cluster_type,
+                replica_id=replica_id,
+                replica_local_id=replica_local_id,
+                stage_id=stage_id,
+                batch_id=batch_stage._batch_id,
+                start_time=time,
+            )
+
         if (
             self._config.write_metrics
             and batch_stage is not None
@@ -4116,6 +4150,22 @@ class MetricsStore:
         cluster_type: ClusterType,
         replica_local_id: int | None = None,
     ) -> None:
+        tracker = getattr(self, "_af_overlap_tracker", None)
+        if (
+            tracker is not None
+            and batch_stage is not None
+            and cluster_type in (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN)
+        ):
+            tracker.record_stage_end(
+                cluster_type=cluster_type,
+                replica_id=replica_id,
+                replica_local_id=replica_local_id,
+                stage_id=stage_id,
+                batch_id=batch_stage._batch_id,
+                end_time=time,
+                fallback_start_time=getattr(batch_stage, "_scheduled_at", None),
+            )
+
         if self._config.store_utilization_metrics:
             replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
             busy_meter, mfu_meter = self._get_stage_utilization_meters(
@@ -4343,6 +4393,21 @@ class MetricsStore:
         replica_local_id: int | None,
         completion_source: str = "manual_flush",
     ) -> None:
+        tracker = getattr(self, "_af_overlap_tracker", None)
+        if (
+            tracker is not None
+            and self._config.write_metrics
+            and cluster_type in (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN)
+        ):
+            tracker.record_stage_end(
+                cluster_type=cluster_type,
+                replica_id=replica_id,
+                replica_local_id=replica_local_id,
+                stage_id=stage_id,
+                batch_id=batch_id,
+                end_time=time,
+            )
+
         if (
             not self._config.write_metrics
             or not self._should_capture_frontier_stage_batch_ledger()
@@ -5600,6 +5665,14 @@ class MetricsStore:
         )
         self._m2n_transfer_metrics["transfer_times"].put(transfer_id, duration)
         self._m2n_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
+        tracker = getattr(self, "_af_overlap_tracker", None)
+        if tracker is not None:
+            tracker.record_m2n_transfer(
+                source_cluster_type=source_cluster_type,
+                target_cluster_type=target_cluster_type,
+                start_time=transfer_info.transfer_start_time,
+                end_time=time,
+            )
         self._complete_transfer_ledger_end(
             transfer_info=transfer_info,
             end_time=time,

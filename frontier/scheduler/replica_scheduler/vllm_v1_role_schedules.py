@@ -462,15 +462,8 @@ class DisaggregatedRoleScheduling:
         return token_budget, scheduled, num_tokens_list
 
     def _should_use_dense_decode_attn_metadata_wave(self) -> bool:
-        """Return whether dense PP=1 PDAF needs one DES macro-wave batch."""
-        if self._cluster_type != ClusterType.DECODE_ATTN:
-            return False
-        if self._replica_is_moe:
-            return False
-        return (
-            self._num_stages == 1
-            and self._af_pipeline_num_micro_batch > 1
-        )
+        """Dense PP=1 PD-AF now emits physical AF microbatches for real A<->F overlap."""
+        return False
 
     def _schedule_decode_attn_only(
         self, is_micro_batch: bool = True

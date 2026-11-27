@@ -197,7 +197,7 @@ def _branch_scheduler(model_config, *, layer_id: int):
     scheduler._batch_group_creation_counter = 0
     scheduler._raw_batch_waiting_for_m2n_back = {}
     scheduler._stage_execution_contexts = {
-        (0, 2): StageExecutionContext(replica_id=0, stage_id=2, ep_size=1)
+        (0, 0): StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
     }
 
     dense_result = [(0, 0)]
@@ -264,9 +264,9 @@ def _builder_scheduler(model_config, *, ep_size: int = 1):
     scheduler._batch_group_creation_counter = 0
     scheduler._ep_routed_token_allocation_cache = {}
     scheduler._stage_execution_contexts = {
-        (0, 2): StageExecutionContext(
+        (0, 0): StageExecutionContext(
             replica_id=0,
-            stage_id=2,
+            stage_id=0,
             ep_size=ep_size,
         )
     }
@@ -618,7 +618,7 @@ def test_dense_ffn_batch_uses_full_stage_parent_scope(
     mixed_model_config,
 ) -> None:
     scheduler, queue_sink = _builder_scheduler(mixed_model_config, ep_size=2)
-    context = scheduler.get_stage_execution_context(0, 2)
+    context = scheduler.get_stage_execution_context(0, 0)
     source_batch = _source_batch(layer_id=3, afd_stage_idx=2)
 
     scheduler._schedule_dense_ffn_from_m2n_group(
@@ -755,9 +755,9 @@ def _atomicity_scheduler(
     scheduler._raw_batch_waiting_for_m2n_back = {}
     scheduler._ep_routed_token_allocation_cache = {}
     scheduler._stage_execution_contexts = {
-        (0, source_batch.afd_stage_idx): StageExecutionContext(
+        (0, 0): StageExecutionContext(
             replica_id=0,
-            stage_id=source_batch.afd_stage_idx,
+            stage_id=0,
             ep_size=ep_size,
         )
     }
@@ -783,7 +783,7 @@ def test_decode_ffn_wave_materialization_attaches_one_parent_ticket(
         layer_id=4,
         ep_size=2,
     )
-    context = scheduler.get_stage_execution_context(0, 2)
+    context = scheduler.get_stage_execution_context(0, 0)
 
     affected = scheduler.schedule_ffn_with_m2n_immediate()
 
@@ -818,7 +818,7 @@ def test_decode_ffn_dense_groups_keep_counter_order_around_a_queued_ep_wave(
             for layer_id in (3, 4, 3)
         ]
     )
-    context = scheduler.get_stage_execution_context(0, 2)
+    context = scheduler.get_stage_execution_context(0, 0)
     for _ in range(3):
         scheduler.schedule_ffn_with_m2n_immediate()
 
@@ -835,7 +835,7 @@ def test_decode_ffn_dense_groups_keep_counter_order_around_a_queued_ep_wave(
     def stage_scheduler(replica_local_id):
         return ReplicaStageScheduler(
             replica_id=0,
-            stage_id=2,
+            stage_id=0,
             is_last_stage=True,
             is_moe=True,
             execution_time_predictor=object(),

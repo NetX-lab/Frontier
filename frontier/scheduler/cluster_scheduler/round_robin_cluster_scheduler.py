@@ -1034,9 +1034,11 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
                 "[FFN-GROUP] Affected EP lanes prepared for commit: "
                 f"{sorted(affected_ep_pairs)}"
             )
+            # DECODE_FFN batches enter ReplicaScheduleEvent at physical pipeline
+            # stage 0; afd_stage_idx is the logical AF microbatch slot, not a PP stage.
             stage_context = self.get_stage_execution_context(
                 target_replica_id,
-                afd_stage_idx,
+                0,
             )
             stage_ticket = stage_context.enqueue_ep_wave(
                 operation_id=shared_group_id,
@@ -1120,9 +1122,11 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             f"layer={layer_global_id} source_batches={source_batch_ids} "
             f"total_tokens={sum(all_num_tokens)}"
         )
+        # DECODE_FFN batches enter ReplicaScheduleEvent at physical pipeline
+        # stage 0; afd_stage_idx is the logical AF microbatch slot, not a PP stage.
         stage_context = self.get_stage_execution_context(
             target_replica_id,
-            afd_stage_idx,
+            0,
         )
         stage_ticket = stage_context.enqueue_full_stage(
             operation_id=shared_group_id,
