@@ -174,27 +174,6 @@ jobs:
             ```
             说明：`suggestion` 仅在你能给出可直接替换该行/该段代码的精确代码片段时填写（纯代码，不含 Markdown 围栏），否则填 `null`。
 
-      - name: Log Gemini CLI usage stats
-        if: always() && steps.prepare.outputs.reviewable_files != '0'
-        run: |
-          python3 - <<'PY'
-          import importlib.util, os
-          from pathlib import Path
-
-          spec = importlib.util.spec_from_file_location("h", ".github/scripts/gemini_review_helper.py")
-          mod = importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(mod)
-          stats_md = mod.summarize_cli_stats(Path("gemini-artifacts/stdout.log"))
-          if stats_md:
-              print(stats_md.strip())
-              summary = os.environ.get("GITHUB_STEP_SUMMARY")
-              if summary:
-                  with open(summary, "a", encoding="utf-8") as fh:
-                      fh.write("\n" + stats_md)
-          else:
-              print("No Gemini CLI JSON stats found in gemini-artifacts/stdout.log.")
-          PY
-
       - name: Post Gemini code review to PR
         if: steps.prepare.outputs.reviewable_files != '0'
         env:
@@ -208,6 +187,68 @@ jobs:
             --context-dir .gemini-review-ctx \
             --response-file .gemini-review-ctx/gemini_response.txt \
             --max-comments 15
+
+      - name: Log Gemini CLI usage stats
+        if: always() && steps.prepare.outputs.reviewable_files != '0'
+        continue-on-error: true
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          p = Path("gemini-artifacts/stdout.log")
+          if not p.is_file():
+              print("No gemini-artifacts/stdout.log found.")
+              raise SystemExit(0)
+          try:
+              data = json.loads(p.read_text(encoding="utf-8"))
+          except Exception as exc:
+              print(f"Could not parse Gemini CLI JSON stats: {exc}")
+              raise SystemExit(0)
+
+          stats = data.get("stats") if isinstance(data, dict) else None
+          if not isinstance(stats, dict):
+              print("No stats object found in Gemini CLI JSON output.")
+              raise SystemExit(0)
+
+          lines = ["### Gemini CLI Usage Stats", ""]
+          models = stats.get("models")
+          if isinstance(models, dict):
+              for model_name, ms in models.items():
+                  if not isinstance(ms, dict):
+                      continue
+                  tok = ms.get("tokens")
+                  api = ms.get("api")
+                  reqs = api.get("totalRequests") if isinstance(api, dict) else None
+                  if isinstance(tok, dict):
+                      req_part = f", requests={reqs}" if reqs is not None else ""
+                      lines.append(
+                          f"- `{model_name}`: input={tok.get('prompt', tok.get('input', 0))} "
+                          f"(cached={tok.get('cached', 0)}), output={tok.get('candidates', tok.get('output', 0))}, "
+                          f"thoughts={tok.get('thoughts', 0)}, total={tok.get('total', 0)}{req_part}"
+                      )
+          tools = stats.get("tools")
+          if isinstance(tools, dict) and tools.get("totalCalls") is not None:
+              by_name = tools.get("byName")
+              detail = ""
+              if isinstance(by_name, dict) and by_name:
+                  counts = [
+                      f"{k}={v.get('count', 0)}"
+                      for k, v in sorted(by_name.items())
+                      if isinstance(v, dict)
+                  ]
+                  if counts:
+                      detail = f" ({', '.join(counts)})"
+              lines.append(f"- Tool calls: {tools.get('totalCalls')}{detail}")
+
+          if len(lines) > 2:
+              out = "\n".join(lines) + "\n"
+              print(out.strip())
+              summary = os.environ.get("GITHUB_STEP_SUMMARY")
+              if summary:
+                  with open(summary, "a", encoding="utf-8") as fh:
+                      fh.write("\n" + out)
+          PY
 
       - name: Cleanup temporary review context
         if: always()
