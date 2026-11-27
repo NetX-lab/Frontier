@@ -20,15 +20,19 @@ jobs:
   review:
     name: Gemini PR 自动代码审查
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.draft == false &&
-       github.event.pull_request.head.repo.full_name == github.repository)
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       github.actor != 'dependabot[bot]')
     permissions:
       contents: read
-      pull-requests: write
-      issues: write
+      pull-requests: read
+    outputs:
+      pr_number: ${{ steps.pr.outputs.number }}
+      has_review: ${{ steps.prepare_publish.outputs.has_review }}
+      artifact_name: ${{ steps.prepare_publish.outputs.artifact_name }}
 
     steps:
       - name: Check GEMINI_API_KEY secret
@@ -60,6 +64,14 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Ensure ripgrep is installed
+        run: |
+          if ! command -v rg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ripgrep
+          fi
+          rg --version | head -n 1
+
       - name: Prepare PR context and annotated diff
         id: prepare
         env:
@@ -88,7 +100,7 @@ jobs:
           settings: |-
             {
               "model": {
-                "maxSessionTurns": 35
+                "maxSessionTurns": -1
               },
               "modelConfigs": {
                 "customOverrides": [
@@ -127,14 +139,22 @@ jobs:
                 "enabled": false
               },
               "tools": {
+                "useRipgrep": true,
                 "core": [
                   "read_file",
                   "read_many_files",
                   "list_directory",
                   "glob",
-                  "search_file_content"
-                ],
-                "autoAccept": true
+                  "grep_search",
+                  "run_shell_command(rg)",
+                  "run_shell_command(git grep)",
+                  "run_shell_command(git show)",
+                  "run_shell_command(sed -n)",
+                  "run_shell_command(nl)",
+                  "run_shell_command(head)",
+                  "run_shell_command(tail)",
+                  "run_shell_command(wc)"
+                ]
               }
             }
           prompt: |-
@@ -142,11 +162,11 @@ jobs:
             `.gemini/styleguide.md` 已自动注入上下文，无需再次读取。请按照以下步骤完成本次 Pull Request 的中文代码审查，并**严格只输出一个 JSON 对象**：
 
             1. 在**同一轮**内并行使用 `read_file` 阅读 `.gemini-review-ctx/pr_context.md` 和 `.gemini-review-ctx/pr_diff.txt`。
-            2. **严格控制上下文与工具轮次**（降低成本并避免撞上限）：
-               - 仅当 diff 本身不足以确认问题时，才定向使用 `search_file_content`、`read_many_files` 或并行的 `read_file` 批量核查直接相关的调用方或定义，**避免逐个文件串行读取**。
-               - **禁止整文件读取 `AGENTS.md`**（体积过大；常规约束已包含在 `.gemini/styleguide.md` 中，仅在确有必要时用 `search_file_content` 精准检索关键词）。
+            2. **严格控制上下文与工具轮次**（降低成本并避免无效探索）：
+               - 仅当 diff 本身不足以确认问题时，才定向查阅直接相关的调用方或定义；对大文件优先用 `grep_search` 或只读命令（如 `rg -n`、`sed -n '起,止p'`、`git grep`）精准定位目标片段，或批量并行调用 `read_file`，**避免逐个文件串行翻页读取**。
+               - **禁止整文件读取 `AGENTS.md`**（体积过大；常规约束已包含在 `.gemini/styleguide.md` 中，仅在确有必要时用 `grep_search` / `rg -n` 精准检索关键词）。
                - **禁止遍历或扫描 `data/profiling/`、`figs/`、`cache/`、`outputs/` 等大体积目录**。
-               - 本次会话硬上限为 35 轮：小型/配置/文档 PR 应在 1~4 轮内输出；多文件核心代码 PR 尽量批量并行查阅直接相关调用方，务必在 **第 25 轮前** 结束查阅并直接输出最终 JSON，切勿耗尽轮次。
+               - 尽量批量并行查阅直接相关的调用方并尽早收口输出最终 JSON，避免无意义的全仓漫游。
             3. **严格控制信噪比**：
                - 全程使用**简体中文**。
                - **只报告 `CRITICAL`（严重）、`HIGH`（高）、`MEDIUM`（中）级别问题**，彻底忽略 `LOW` / `NIT` / 纯格式风格问题。
@@ -174,19 +194,62 @@ jobs:
             ```
             说明：`suggestion` 仅在你能给出可直接替换该行/该段代码的精确代码片段时填写（纯代码，不含 Markdown 围栏），否则填 `null`。
 
-      - name: Post Gemini code review to PR
+      - name: Prepare review bundle for publish
+        id: prepare_publish
         if: steps.prepare.outputs.reviewable_files != '0'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_RESPONSE: ${{ steps.gemini_review.outputs.summary }}
+          ARTIFACT_NAME: gemini-review-bundle-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          python3 -c "import os, pathlib; pathlib.Path('.gemini-review-ctx/gemini_response.txt').write_text(os.environ.get('GEMINI_RESPONSE', ''), encoding='utf-8')"
-          python3 .github/scripts/gemini_review_helper.py post \
-            --pr-number "${{ steps.pr.outputs.number }}" \
-            --repo "${{ github.repository }}" \
-            --context-dir .gemini-review-ctx \
-            --response-file .gemini-review-ctx/gemini_response.txt \
-            --max-comments 15
+          python3 - <<'PY'
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          ctx_dir = Path(".gemini-review-ctx")
+          ctx_dir.mkdir(parents=True, exist_ok=True)
+
+          response_text = ""
+          cli_stdout = Path("gemini-artifacts/stdout.log")
+          if cli_stdout.is_file():
+              try:
+                  parsed = json.loads(cli_stdout.read_text(encoding="utf-8"))
+                  if isinstance(parsed, dict) and isinstance(parsed.get("response"), str):
+                      response_text = parsed["response"]
+              except Exception:
+                  pass
+          if not response_text.strip():
+              response_text = os.environ.get("GEMINI_RESPONSE", "")
+
+          response_text = response_text.strip()
+          (ctx_dir / "gemini_response.txt").write_text(response_text, encoding="utf-8")
+          shutil.copy2(
+              Path(".github/scripts/gemini_review_helper.py"),
+              ctx_dir / "gemini_review_helper.py",
+          )
+
+          artifact_name = os.environ["ARTIFACT_NAME"]
+          has_review = "true" if response_text else "false"
+          gh_output = os.environ.get("GITHUB_OUTPUT")
+          if gh_output:
+              with open(gh_output, "a", encoding="utf-8") as fh:
+                  fh.write(f"has_review={has_review}\n")
+                  fh.write(f"artifact_name={artifact_name}\n")
+          print(
+              f"Prepared Gemini review bundle: {len(response_text)} chars "
+              f"(has_review={has_review}, artifact_name={artifact_name})"
+          )
+          PY
+
+      - name: Upload Gemini review bundle artifact
+        if: steps.prepare_publish.outputs.has_review == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prepare_publish.outputs.artifact_name }}
+          path: .gemini-review-ctx
+          retention-days: 1
+          if-no-files-found: error
 
       - name: Log Gemini CLI usage stats
         if: always() && steps.prepare.outputs.reviewable_files != '0'
@@ -253,3 +316,30 @@ jobs:
       - name: Cleanup temporary review context
         if: always()
         run: rm -rf .gemini-review-ctx gemini-artifacts
+
+  publish:
+    name: 发布 Gemini PR 审查评论
+    needs: review
+    if: needs.review.outputs.has_review == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Download Gemini review bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.review.outputs.artifact_name }}
+          path: ${{ runner.temp }}/gemini-review-ctx
+
+      - name: Post Gemini code review to PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CTX_DIR: ${{ runner.temp }}/gemini-review-ctx
+        run: |
+          python3 "${CTX_DIR}/gemini_review_helper.py" post \
+            --pr-number "${{ needs.review.outputs.pr_number }}" \
+            --repo "${{ github.repository }}" \
+            --context-dir "${CTX_DIR}" \
+            --response-file "${CTX_DIR}/gemini_response.txt" \
+            --max-comments 15

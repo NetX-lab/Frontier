@@ -35,11 +35,25 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
     assert set(pr_trigger["types"]) >= {"opened", "synchronize"}
 
     review_job = workflow["jobs"]["review"]
+    publish_job = workflow["jobs"]["publish"]
     assert review_job["permissions"] == {
         "contents": "read",
-        "pull-requests": "write",
-        "issues": "write",
+        "pull-requests": "read",
     }
+    assert publish_job["permissions"] == {
+        "pull-requests": "write",
+    }
+    assert review_job["timeout-minutes"] <= 20
+    assert publish_job["timeout-minutes"] <= 10
+    assert "artifact_name" in review_job["outputs"]
+    assert "pr_number" in review_job["outputs"]
+    publish_downloads = [
+        step
+        for step in publish_job["steps"]
+        if str(step.get("uses", "")).startswith("actions/download-artifact@")
+    ]
+    assert len(publish_downloads) == 1
+    assert publish_downloads[0]["with"]["name"] == "${{ needs.review.outputs.artifact_name }}"
 
     gemini_steps = [
         step
@@ -48,7 +62,7 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
     ]
     assert len(gemini_steps) == 1
     settings = json.loads(gemini_steps[0]["with"]["settings"])
-    assert 25 <= settings["model"]["maxSessionTurns"] <= 50
+    assert settings["model"]["maxSessionTurns"] == -1
     overrides = settings["modelConfigs"]["customOverrides"]
     assert len(overrides) >= 1
     assert all(
@@ -56,10 +70,27 @@ def test_workflow_yaml_and_embedded_settings_are_valid() -> None:
         for o in overrides
     )
     assert settings["telemetry"]["enabled"] is False
-    assert settings["tools"]["autoAccept"] is True
-    assert "read_file" in settings["tools"]["core"]
-    assert "write_file" not in settings["tools"]["core"]
-    assert "run_shell_command" not in settings["tools"]["core"]
+    assert settings["tools"]["useRipgrep"] is True
+    core_tools = settings["tools"]["core"]
+    assert "read_file" in core_tools
+    assert "grep_search" in core_tools
+    assert "search_file_content" not in core_tools
+    assert "write_file" not in core_tools
+    assert "replace" not in core_tools
+    # Wildcard shell must never be enabled; only explicit read-only command prefixes are allowed.
+    assert "run_shell_command" not in core_tools
+    shell_rules = [t for t in core_tools if t.startswith("run_shell_command(")]
+    allowed_readonly_shell = {
+        "run_shell_command(rg)",
+        "run_shell_command(git grep)",
+        "run_shell_command(git show)",
+        "run_shell_command(sed -n)",
+        "run_shell_command(nl)",
+        "run_shell_command(head)",
+        "run_shell_command(tail)",
+        "run_shell_command(wc)",
+    }
+    assert set(shell_rules) == allowed_readonly_shell
 
 
 def test_codex_workflow_yaml_and_guardrails_are_valid() -> None:
