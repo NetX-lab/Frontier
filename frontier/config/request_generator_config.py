@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -65,6 +66,10 @@ class PoissonRequestIntervalGeneratorConfig(BaseRequestIntervalGeneratorConfig):
         default=0.5,
         metadata={"help": "Queries per second for Poisson Request Interval Generator."},
     )
+
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.qps) or self.qps <= 0:
+            raise ValueError("Poisson qps must be finite and greater than zero")
 
     @staticmethod
     def get_type():
@@ -227,6 +232,14 @@ class SyntheticRequestGeneratorConfig(BaseRequestGeneratorConfig):
     )
 
     def __post_init__(self):
+        if (
+            self.duration is not None
+            and self.duration > 0
+            and self.interval_generator_config.get_type() == RequestIntervalGeneratorType.STATIC
+        ):
+            raise ValueError(
+                "A static burst has zero inter-arrival time. Use num_requests without duration."
+            )
         self.max_tokens = self.length_generator_config.max_tokens
 
     @staticmethod

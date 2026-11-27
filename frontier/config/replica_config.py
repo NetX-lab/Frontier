@@ -112,6 +112,10 @@ class ReplicaConfig:
     cluster_prefix: str = None
     local_expert_num: int = None
     model_name: str = "meta-llama/Llama-2-7b-hf"
+    streamed_ffn_layers: int = field(
+        default=0,
+        metadata={"help": "Dense decode-FFN layers streamed through one temporary layer buffer."},
+    )
 
     def __post_init__(self):
         if type(self.attn_dp) is not int or self.attn_dp <= 0:
@@ -133,6 +137,17 @@ class ReplicaConfig:
         self.node_config: BaseNodeSKUConfig = BaseNodeSKUConfig.create_from_type_string(
             self.network_device
         )
+
+        if type(self.streamed_ffn_layers) is not int or not (
+            0 <= self.streamed_ffn_layers <= self.model_config.num_layers
+        ):
+            raise ValueError("streamed_ffn_layers must be an integer between zero and the model layer count")
+        if self.streamed_ffn_layers and (
+            self.cluster_prefix != "decode_ffn"
+            or self.model_config.is_moe
+            or self.num_pipeline_stages != 1
+        ):
+            raise ValueError("streamed_ffn_layers requires a dense decode_ffn role with one pipeline stage")
 
         # Auto-set total_expert_num from model config if not explicitly set and model is MoE
         if (

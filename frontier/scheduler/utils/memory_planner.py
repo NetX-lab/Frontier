@@ -118,10 +118,13 @@ class MemoryPlanner:
         )
 
     def _get_parameter_memory_per_device(self) -> int:
-        return self._param_counter.get_parameter_memory_per_device_bytes()
+        return (
+            self._param_counter.get_parameter_memory_per_device_bytes()
+            + self._param_counter.get_ffn_streaming_buffer_bytes_per_device()
+        )
 
     def get_parameter_memory_per_device_bytes(self) -> int:
-        """Return parameter memory per device in bytes."""
+        """Return capacity reserved for resident weights and their streaming buffer."""
         return self._get_parameter_memory_per_device()
 
     def _get_kv_cache_memory_per_device_per_request(self) -> int:
@@ -301,6 +304,17 @@ class MemoryPlanner:
         # the batch size is bounded by an activation-memory proxy.
         if kv_cache_memory_per_device_per_request == 0:
             if self._cluster_type == ClusterType.DECODE_FFN:
+                if memory_for_kv_cache <= 0:
+                    self._raise_memory_oom(
+                        reason="insufficient_activation_budget",
+                        message="No memory remains for decode-FFN activations after reserving weights, staging and overhead.",
+                        details={
+                            "requested_memory_bytes": requested_memory,
+                            "parameter_memory_per_device_bytes": parameter_memory_per_device,
+                            "non_kv_cache_overhead_bytes": overhead_bytes,
+                            "available_activation_bytes": memory_for_kv_cache,
+                        },
+                    )
                 estimated_memory_per_request = max(
                     parameter_memory_per_device // 100,
                     1024 * 1024,

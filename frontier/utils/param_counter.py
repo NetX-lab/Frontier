@@ -578,6 +578,20 @@ class ParamCounter:
         """Public accessor for the configured resident MLP weight width."""
         return self._get_mlp_parameter_bytes_per_element()
 
+    def get_ffn_streaming_buffer_bytes_per_device(self) -> int:
+        """Model one reusable layer buffer for non-overlapped dense FFN streaming."""
+        if not getattr(self._replica_config, "streamed_ffn_layers", 0):
+            return 0
+        return int(
+            self.get_num_mlp_params_per_layer() * self.get_mlp_parameter_bytes_per_element()
+        )
+
+    def get_streamed_ffn_weight_bytes_per_device(self) -> int:
+        """Return the logical weights kept off-device between decode steps."""
+        return self.get_ffn_streaming_buffer_bytes_per_device() * getattr(
+            self._replica_config, "streamed_ffn_layers", 0
+        )
+
     def get_parameter_memory_per_device_bytes(self) -> int:
         """Return resident parameter bytes under the accepted D57 policy."""
 
@@ -591,6 +605,7 @@ class ParamCounter:
                 * self.get_num_mlp_parameters_per_device()
             )
             + 2 * self.get_num_mtp_parameters_per_device()
+            - self.get_streamed_ffn_weight_bytes_per_device()
         )
 
     def _get_mtp_embed_params(self, proposer_model_config) -> int:

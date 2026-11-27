@@ -95,6 +95,7 @@ class ClusterRoleConfigBuilder:
         return ReplicaConfig(
             model_name=get_field_value("model_name"),
             memory_margin_fraction=get_field_value("memory_margin_fraction"),
+            streamed_ffn_layers=get_field_value("streamed_ffn_layers"),
             num_pipeline_stages=num_pipeline_stages,
             attn_tensor_parallel_size=attn_tensor_parallel_size,
             attn_dp=attn_dp,
