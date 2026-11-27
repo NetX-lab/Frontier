@@ -7,7 +7,7 @@ import os
 import pickle
 from abc import abstractmethod
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import product
 from typing import (
     TYPE_CHECKING,
@@ -164,6 +164,9 @@ class ProfilingMetadata:
     model_arch: str
     model_architecture_profile: str
     measurement_type: MeasurementType
+    profiling_precision_by_op: Mapping[str, PrecisionType] = field(
+        default_factory=dict
+    )
 
 
 def _build_exact_feature_lookup(
@@ -1529,6 +1532,14 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         return filtered_df
 
     def _load_cpu_overhead_df(self, file_path: str) -> pd.DataFrame:
+        tensor_parallel_degree = (
+            self._replica_config.moe_tensor_parallel_size
+            if (
+                getattr(self._replica_config, "cluster_prefix", None) == "decode_ffn"
+                or self._cluster_type == ClusterType.DECODE_FFN
+            )
+            else self._replica_config.attn_tensor_parallel_size
+        )
         if not os.path.exists(file_path):
             logger.warning(
                 "CPU overhead profiling file not found: %s. "
@@ -1540,7 +1551,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 "tensor_parallel_degree=%s in file '%s'. "
                 "CPU overhead predictions will default to 0 in this run.",
                 self._model_config.get_name(),
-                self._replica_config.attn_tensor_parallel_size,
+                tensor_parallel_degree,
                 file_path,
             )
             return pd.DataFrame()
@@ -1557,7 +1568,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 "tensor_parallel_degree=%s in file '%s'. "
                 "CPU overhead predictions will default to 0 in this run.",
                 self._model_config.get_name(),
-                self._replica_config.attn_tensor_parallel_size,
+                tensor_parallel_degree,
                 file_path,
             )
             return pd.DataFrame()
@@ -1573,7 +1584,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             (df["model_name"] == self._model_config.get_name())
             & (
                 df["tensor_parallel_degree"]
-                == self._replica_config.attn_tensor_parallel_size
+                == tensor_parallel_degree
             )
         ]
 
@@ -1583,7 +1594,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 "tensor_parallel_degree=%s in file '%s'. "
                 "CPU overhead predictions will default to 0 in this run.",
                 self._model_config.get_name(),
-                self._replica_config.attn_tensor_parallel_size,
+                tensor_parallel_degree,
                 file_path,
             )
 
@@ -2377,6 +2388,42 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         profiling_precision = PrecisionType.from_string(precision_values[0])
 
+        precision_by_op: Dict[str, PrecisionType] = {}
+        if "profiling_precision_by_op" in df.columns:
+            raw_precision_by_op = (
+                df["profiling_precision_by_op"].dropna().unique().tolist()
+            )
+            if len(raw_precision_by_op) > 1:
+                raise ValueError(
+                    "Multiple profiling_precision_by_op values found in "
+                    f"'{file_path}': {raw_precision_by_op}. "
+                    "Profiling data should have consistent per-operator precision."
+                )
+            if raw_precision_by_op:
+                raw_value = raw_precision_by_op[0]
+                if raw_value is not None and str(raw_value).strip():
+                    try:
+                        decoded = json.loads(str(raw_value))
+                    except json.JSONDecodeError as exc:
+                        raise ValueError(
+                            "Invalid profiling_precision_by_op JSON in "
+                            f"'{file_path}': {raw_value!r}"
+                        ) from exc
+                    if not isinstance(decoded, dict):
+                        raise ValueError(
+                            "profiling_precision_by_op in "
+                            f"'{file_path}' must be a JSON object"
+                        )
+                    for op_name, op_precision in decoded.items():
+                        if not isinstance(op_name, str) or not op_name.strip():
+                            raise ValueError(
+                                "profiling_precision_by_op in "
+                                f"'{file_path}' has an empty operator name"
+                            )
+                        precision_by_op[op_name] = PrecisionType.from_string(
+                            str(op_precision)
+                        )
+
         # Check for quant_signature column
         if "quant_signature" not in df.columns:
             raise ValueError(
@@ -2427,6 +2474,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             model_arch=actual_arch,
             model_architecture_profile=actual_profile,
             measurement_type=measurement_type,
+            profiling_precision_by_op=precision_by_op,
         )
 
     def _validate_active_measurement_type(
@@ -2454,9 +2502,14 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             for operation_name in operation_names
         ]
         normalized_operation_names = list(dict.fromkeys(normalized_operation_names))
+        precision_by_op = {
+            get_moe_gating_base_model_name(op_name): precision
+            for op_name, precision in metadata.profiling_precision_by_op.items()
+        }
         quant_manager.register_profiling_metadata(
             operation_names=normalized_operation_names,
             profiling_precision=metadata.profiling_precision,
+            profiling_precision_by_op=precision_by_op,
             profiling_quant_signature=metadata.quant_signature,
             expected_quant_signature=expected_quant,
             file_path=file_path,
@@ -2491,7 +2544,20 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             return
         metadata = self._get_profiling_metadata(df, file_path)
         self._validate_active_measurement_type(metadata, file_path)
-        self._register_profiling_metadata_for_ops(operation_names, metadata, file_path)
+        present_operations = {
+            column[len("time_stats.") : -len(".median")]
+            for column in df.columns
+            if column.startswith("time_stats.") and column.endswith(".median")
+        }
+        operation_names = [
+            operation_name
+            for operation_name in operation_names
+            if operation_name in present_operations
+        ]
+        if operation_names:
+            self._register_profiling_metadata_for_ops(
+                operation_names, metadata, file_path
+            )
 
     def _register_additional_profiling_metadata_from_files(self) -> None:
         return

@@ -543,16 +543,53 @@ class ParamCounter:
             + num_moe_layers * (routed_moe_params + share_expert_params)
         )
 
+    def _get_mlp_parameter_bytes_per_element(self) -> float:
+        """Return the resident MLP weight width selected by the model config.
+
+        The historical D57 policy assumes 2 bytes.  FP8 checkpoints keep the
+        same logical parameter count but halve the resident FFN footprint; the
+        HPP2 SRAM budget (192 MiB per rank) cannot be validated otherwise.
+        """
+        quant = getattr(self._model_config, "quantization_config", None)
+        default_bytes = float(
+            self._model_config.get_default_precision().bytes_per_element
+        )
+        if quant is None or quant.quant_method is None:
+            return default_bytes
+        quantized_ops = set(
+            quant.quantized_operations
+            or {
+                "attn_pre_proj",
+                "attn_post_proj",
+                "mlp_up_proj",
+                "mlp_down_proj",
+                "moe_grouped_gemm",
+            }
+        )
+        if "mlp_up_proj" not in quantized_ops:
+            return default_bytes
+        if quant.quant_method in {"fp8", "int8"}:
+            return 1.0
+        if quant.quant_method == "fp4":
+            return 0.5
+        return default_bytes
+
+    def get_mlp_parameter_bytes_per_element(self) -> float:
+        """Public accessor for the configured resident MLP weight width."""
+        return self._get_mlp_parameter_bytes_per_element()
+
     def get_parameter_memory_per_device_bytes(self) -> int:
         """Return resident parameter bytes under the accepted D57 policy."""
 
-        # Qwen3.8 routed experts physically use MXFP4, but the integration
-        # keeps the established 2-byte MLP/MoE/MTP approximation, which can
-        # overestimate resident model-weight memory. Capacity checks remain
-        # active; no MXFP4 capacity helper is introduced here.
+        # Attention and MTP remain at the established 2-byte approximation.
+        # The MLP multiplier follows the configured FP8/FP4 weight width so
+        # the HPP2 decode-FFN SRAM budget reflects the actual FFN checkpoint.
         return (
             self.get_attention_parameter_memory_per_device_bytes()
-            + 2 * self.get_num_mlp_parameters_per_device()
+            + int(
+                self._get_mlp_parameter_bytes_per_element()
+                * self.get_num_mlp_parameters_per_device()
+            )
             + 2 * self.get_num_mtp_parameters_per_device()
         )
 

@@ -2595,8 +2595,11 @@ class MetricsStore:
                     param_counter.get_num_mlp_parameters_per_device()
                 )
 
-                # Calculate memory in bytes (FP16: 2 bytes per parameter)
-                model_weight_memory_bytes = 2 * num_params_per_device
+                # Calculate memory in bytes.  Attention/MTP keep the 2-byte
+                # approximation; the MLP term follows the configured FP8 width.
+                model_weight_memory_bytes = (
+                    param_counter.get_parameter_memory_per_device_bytes()
+                )
                 model_weight_memory_gb = model_weight_memory_bytes / (1024**3)
 
                 # Calculate memory breakdown
@@ -2608,7 +2611,10 @@ class MetricsStore:
                         // cluster_config.replica_config.num_pipeline_stages
                     )
                 )
-                mlp_memory_bytes = 2 * num_mlp_params_per_device
+                mlp_memory_bytes = int(
+                    param_counter.get_mlp_parameter_bytes_per_element()
+                    * num_mlp_params_per_device
+                )
 
                 # Calculate memory utilization percentage
                 total_device_memory_gb = (

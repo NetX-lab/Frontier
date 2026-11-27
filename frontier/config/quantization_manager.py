@@ -5,7 +5,7 @@ import math
 import json
 import threading
 from pathlib import Path
-from typing import Dict, Optional, Set, Any, List
+from typing import Dict, Optional, Set, Any, List, Mapping
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
@@ -412,18 +412,23 @@ class QuantizationManager:
         profiling_quant_signature: str,
         expected_quant_signature: str,
         file_path: str,
+        profiling_precision_by_op: Optional[Mapping[str, PrecisionType]] = None,
     ) -> None:
+        precision_by_op = profiling_precision_by_op or {}
         for op_name in operation_names:
             if not self._is_operation_supported(op_name):
                 registry_path = self.DEFAULT_CONFIG_DIR / self.REGISTRY_FILE
                 raise ValueError(
                     f"Unsupported operation '{op_name}'. See registry: {registry_path}"
                 )
+            op_profiling_precision = precision_by_op.get(
+                op_name, profiling_precision
+            )
             target_precision = self.get_precision(op_name)
-            precision_match = target_precision == profiling_precision
+            precision_match = target_precision == op_profiling_precision
             quant_match = profiling_quant_signature == expected_quant_signature
             with self._lock:
-                self._operation_profiling_precision[op_name] = profiling_precision
+                self._operation_profiling_precision[op_name] = op_profiling_precision
                 if precision_match:
                     self._operation_data_sources[op_name] = "profiling"
                     self._operation_approximation_factors.pop(op_name, None)
@@ -431,7 +436,7 @@ class QuantizationManager:
                     if not quant_match:
                         warning_key = (
                             op_name,
-                            profiling_precision.name,
+                            op_profiling_precision.name,
                             target_precision.name,
                             profiling_quant_signature,
                             expected_quant_signature,
@@ -450,7 +455,7 @@ class QuantizationManager:
                     continue
 
                 scale = self._get_approximation_scale(
-                    target_precision, profiling_precision
+                    target_precision, op_profiling_precision
                 )
                 self._operation_data_sources[op_name] = "approximation"
                 self._operation_approximation_factors[op_name] = scale
@@ -461,7 +466,7 @@ class QuantizationManager:
                 self._operation_speedup_factors[op_name] = 1.0 / scale
                 warning_key = (
                     op_name,
-                    profiling_precision.name,
+                    op_profiling_precision.name,
                     target_precision.name,
                     profiling_quant_signature,
                     expected_quant_signature,
@@ -470,7 +475,7 @@ class QuantizationManager:
                 if warning_key not in self._warned_approximations:
                     self._warned_approximations.add(warning_key)
                     reason_parts = [
-                        f"precision mismatch ({profiling_precision.name} -> {target_precision.name})"
+                        f"precision mismatch ({op_profiling_precision.name} -> {target_precision.name})"
                     ]
                     if not quant_match:
                         reason_parts.append(

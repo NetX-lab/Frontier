@@ -10,7 +10,7 @@ logger = init_logger(__name__)
 @dataclass
 class BaseDeviceSKUConfig(BaseFixedConfig):
     fp16_tflops: int
-    total_memory_gb: int
+    total_memory_gb: float
     gpu_platform: str = "cuda"
 
 
@@ -108,3 +108,21 @@ class MI355XDeviceSKUConfig(BaseDeviceSKUConfig):
     @staticmethod
     def get_type():
         return DeviceSKUType.MI355X
+
+
+@dataclass
+class HPP2DeviceSKUConfig(BaseDeviceSKUConfig):
+    """HPP2.0 die/rank: 32 APC, ~380 TFLOPS FP16, 192 MiB APC DM.
+
+    ``total_memory_gb`` is the per-die/rank APC DM budget, not per card.
+    The HPP2 decode-FFN role is priced from KERNEL_ONLY tables, so the
+    CUDA-style event family is only a simulator bookkeeping default here.
+    """
+
+    fp16_tflops: int = 380
+    total_memory_gb: float = 0.1875
+    gpu_platform: str = "cuda"
+
+    @staticmethod
+    def get_type():
+        return DeviceSKUType.HPP2

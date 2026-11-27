@@ -553,13 +553,21 @@ class ProfilingDataFrameLoaders:
         df = validate_cpu_overhead_dataframe(df)
 
         model_config = replica_config.model_config
+        tensor_parallel_degree = (
+            replica_config.moe_tensor_parallel_size
+            if (
+                getattr(replica_config, "cluster_prefix", None) == "decode_ffn"
+                or getattr(self, "_cluster_type", None) == ClusterType.DECODE_FFN
+            )
+            else replica_config.attn_tensor_parallel_size
+        )
 
         logger.info(f"Original CPU overhead data: {len(df)} rows")
-        logger.info(f"Filtering conditions: model_name='{model_config.get_name()}', tensor_parallel_degree={replica_config.attn_tensor_parallel_size}")
+        logger.info(f"Filtering conditions: model_name='{model_config.get_name()}', tensor_parallel_degree={tensor_parallel_degree}")
 
         filtered_df = df[
             (df["model_name"] == model_config.get_name())
-            & (df["tensor_parallel_degree"] == replica_config.attn_tensor_parallel_size)
+            & (df["tensor_parallel_degree"] == tensor_parallel_degree)
         ]
 
         logger.info(f"After filtering: {len(filtered_df)} rows")
@@ -568,7 +576,7 @@ class ProfilingDataFrameLoaders:
                 "No CPU overhead profiling rows found for model_name='%s', "
                 "tensor_parallel_degree=%s in file '%s'.",
                 model_config.get_name(),
-                replica_config.attn_tensor_parallel_size,
+                tensor_parallel_degree,
                 file_path,
             )
         return filtered_df

@@ -177,3 +177,62 @@ def test_attention_package_keeps_trace_mapper_lazy_export_after_config_import() 
         "get_attention_trace_op_times"
     )
     assert get_attention_trace_op_times.__name__ == "get_attention_trace_op_times"
+
+
+def test_register_profiling_metadata_uses_per_operator_precision() -> None:
+    """A mixed FP8/BF16 table must not approximate its BF16 operators."""
+
+    QuantizationManager.reset()
+    try:
+        manager = QuantizationManager()
+        signature = "method=fp8|act=none|serialized=False|block=none"
+        model = SimpleNamespace(
+            get_default_precision=lambda: quantization_manager_module.PrecisionType.BF16,
+            get_name=lambda: "dense-fixture",
+            torch_dtype="bfloat16",
+            quantization_config=SimpleNamespace(
+                quant_method="fp8",
+                quantized_operations=None,
+                to_dict=lambda: {
+                    "quant_method": "fp8",
+                    "activation_scheme": None,
+                    "is_checkpoint_fp8_serialized": False,
+                    "weight_block_size": None,
+                    "ignored_layers": [],
+                    "quantized_operations": None,
+                },
+            ),
+            get_quant_signature=lambda: signature,
+        )
+        manager.configure_from_model_config(model)
+        manager.register_profiling_metadata(
+            operation_names=[
+                "mlp_up_proj",
+                "mlp_down_proj",
+                "mlp_act",
+                "post_attention_layernorm",
+            ],
+            profiling_precision=quantization_manager_module.PrecisionType.FP8,
+            profiling_precision_by_op={
+                "mlp_up_proj": quantization_manager_module.PrecisionType.FP8,
+                "mlp_down_proj": quantization_manager_module.PrecisionType.FP8,
+                "mlp_act": quantization_manager_module.PrecisionType.BF16,
+                "post_attention_layernorm": quantization_manager_module.PrecisionType.BF16,
+            },
+            profiling_quant_signature=signature,
+            expected_quant_signature=signature,
+            file_path="fixture.csv",
+        )
+
+        metadata = {
+            row["operation"]: row
+            for row in manager.get_operation_precision_metadata()
+        }
+        assert metadata["mlp_up_proj"]["precision"] == "FP8"
+        assert metadata["mlp_up_proj"]["data_source"] == "profiling"
+        assert metadata["mlp_act"]["precision"] == "BF16"
+        assert metadata["mlp_act"]["data_source"] == "profiling"
+        assert metadata["mlp_act"]["approximation_factor"] is None
+        assert metadata["post_attention_layernorm"]["data_source"] == "profiling"
+    finally:
+        QuantizationManager.reset()

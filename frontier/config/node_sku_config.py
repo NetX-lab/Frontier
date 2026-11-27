@@ -112,3 +112,15 @@ class MI355XUBBNodeSKUConfig(BaseNodeSKUConfig):
     @staticmethod
     def get_type():
         return NodeSKUType.MI355X_UBB
+
+
+@dataclass
+class Hpp2_16RankNodeSKUConfig(BaseNodeSKUConfig):
+    """One eight-card HPP2 drawer: two dies per card, sixteen ranks."""
+
+    device_sku_type: DeviceSKUType = DeviceSKUType.HPP2
+    num_devices_per_node: int = 16
+
+    @staticmethod
+    def get_type():
+        return NodeSKUType.HPP2_16RANK

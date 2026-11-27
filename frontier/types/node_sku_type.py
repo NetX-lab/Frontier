@@ -12,3 +12,4 @@ class NodeSKUType(BaseIntEnum):
     H800_DGX = 8
     H20_DGX = 9
     MI355X_UBB = 10
+    HPP2_16RANK = 11
