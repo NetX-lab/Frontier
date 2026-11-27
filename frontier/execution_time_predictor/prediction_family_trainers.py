@@ -500,6 +500,97 @@ class PredictionFamilyTrainers(KernelCountTraining):
         trained_model_signatures.add(ffn_signature)
         return models
 
+    def _train_post_attention_layernorm_for_cluster(
+        self,
+        *,
+        cluster_type: ClusterType,
+        replica_config,
+        execution_time_predictor_config,
+        linear_ops_file: str,
+        trained_model_signatures: set,
+    ) -> Optional[BaseEstimator]:
+        """Train the role-local post-attention RMSNorm model.
+
+        ``DECODE_ATTN`` executes the post-attention norm but owns no FFN, so
+        the FFN trainer never materializes a norm model for that role.  Without
+        this role-local model the ``DECODE_ATTN`` model view falls back to the
+        bare ``post_attention_layernorm`` key, which the HPP2 FFN cluster
+        overwrites in PD-AF.  That prices an H200 norm with HPP2 SOL values.
+        """
+
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not bool(
+            getattr(model_config, "post_attn_norm", False)
+        ):
+            return None
+        if not os.path.exists(linear_ops_file):
+            raise FileNotFoundError(
+                f"Linear ops input file {linear_ops_file} not found for "
+                f"post_attention_layernorm on {cluster_type}"
+            )
+
+        is_moe_model = bool(getattr(model_config, "is_moe", False))
+        tp_key = self._get_linear_op_tp_key(
+            "post_attention_layernorm",
+            cluster_type,
+            replica_config,
+            is_moe_model=is_moe_model,
+        )
+        layernorm_df = self._load_linear_op_df(linear_ops_file, tp_key)
+        family_name = self._measurement_family_name(self._active_measurement_type)
+        scoped_key = (family_name, cluster_type, "post_attention_layernorm")
+        scoped_models = getattr(self, "_cluster_scoped_models", None)
+        if scoped_models is None:
+            scoped_models = {}
+            self._cluster_scoped_models = scoped_models
+        existing = scoped_models.get(scoped_key)
+        if existing is not None:
+            return existing
+
+        model_arch_getter = getattr(model_config, "get_model_arch", None)
+        training_context = {
+            "cluster_type": str(cluster_type),
+            "device": replica_config.device,
+            "model_name": replica_config.model_name,
+            "tensor_parallel_size": tp_key,
+            "is_moe_model": is_moe_model,
+            "model_arch": (
+                model_arch_getter() if callable(model_arch_getter) else "generic"
+            ),
+            "model_architecture_profile": _resolve_model_architecture_profile_id(
+                model_config
+            ),
+            "input_file": linear_ops_file,
+            "pipeline_stages": getattr(replica_config, "num_pipeline_stages", 1),
+            "network_device": getattr(replica_config, "network_device", ""),
+            "block_size": getattr(self, "_block_size", None),
+        }
+        model = self._train_single_model(
+            model_name="post_attention_layernorm",
+            df=layernorm_df,
+            feature_cols=["num_tokens"],
+            target_col="time_stats.post_attention_layernorm.median",
+            execution_time_predictor_config=execution_time_predictor_config,
+            training_context=training_context,
+            # Keep the global bare key owned by the FFN trainer; this instance
+            # is selected only by the role-local model-manager view.
+            register_model=False,
+        )
+        scoped_models[scoped_key] = model
+        signature = (
+            f"post_attention_layernorm_{cluster_type.name}_"
+            f"{replica_config.device}_{replica_config.model_name}_"
+            f"tp{tp_key}_{family_name}"
+        )
+        trained_model_signatures.add(signature)
+        logger.info(
+            "Trained role-local post_attention_layernorm for %s (device=%s, tp=%s)",
+            cluster_type,
+            replica_config.device,
+            tp_key,
+        )
+        return model
+
     def _train_dense_mlp_models_for_cluster(
         self,
         *,

@@ -89,6 +89,11 @@ class ExecutionTimePredictionModelManager(
         self._models_by_precision_device_event_by_contract = {}
         self._models_by_precision_kernel_only_by_contract = {}
         self._cpu_overhead_models = {}
+        # Role-local models that must not participate in the bare
+        # family:model_name merge (currently the DECODE_ATTN norm).
+        self._cluster_scoped_models: Dict[
+            Tuple[str, ClusterType, str], BaseEstimator
+        ] = {}
 
         if self._all_dummy_mode:
             logger.info("ExecutionTimePredictionModelManager running in DUMMY mode")
@@ -442,6 +447,18 @@ class ExecutionTimePredictionModelManager(
                         trained_model_signatures=trained_model_signatures,
                     )
                     family_models.update(attention_models)
+
+                if cluster_type == ClusterType.DECODE_ATTN:
+                    # DECODE_ATTN owns the post-attention norm but not the FFN
+                    # trainer, so materialize its H200/HPP-device norm model
+                    # explicitly instead of reusing the FFN cluster's value.
+                    self._train_post_attention_layernorm_for_cluster(
+                        cluster_type=cluster_type,
+                        replica_config=replica_config,
+                        execution_time_predictor_config=execution_time_predictor_config,
+                        linear_ops_file=linear_ops_file,
+                        trained_model_signatures=trained_model_signatures,
+                    )
 
                 if cluster_type in [ClusterType.PREFILL, ClusterType.DECODE_FFN, ClusterType.DECODE, ClusterType.MONOLITHIC]:
                     ffn_models = self._train_ffn_models_for_cluster(

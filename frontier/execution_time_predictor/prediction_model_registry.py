@@ -509,8 +509,23 @@ class PredictionModelRegistry:
             model_name
             for model_name, _identity in self._contract_model_registry(family_name)
         )
+        scoped_models = getattr(self, "_cluster_scoped_models", None) or {}
+        scoped_norm = (
+            scoped_models.get(
+                (family_name, cluster_type, "post_attention_layernorm")
+            )
+            if cluster_type is not None
+            else None
+        )
         models: Dict[str, BaseEstimator] = {}
         for model_name in sorted(names):
+            if (
+                model_name == "post_attention_layernorm"
+                and scoped_norm is not None
+            ):
+                # The role-local model is authoritative; do not look up the
+                # bare FFN-cluster key that PD-AF would otherwise leak.
+                continue
             if self._is_ffn_typed_model_for_cluster(cluster_type, model_name):
                 continue
             contract = self._resolve_cluster_model_contract(cluster_type, model_name)
@@ -557,6 +572,8 @@ class PredictionModelRegistry:
                         f"CPU overhead models in family '{family_name}' have multiple "
                         "cluster scopes; use get_models_for_cluster()."
                     )
+        if scoped_norm is not None:
+            models["post_attention_layernorm"] = scoped_norm
         return models
 
     def get_model(

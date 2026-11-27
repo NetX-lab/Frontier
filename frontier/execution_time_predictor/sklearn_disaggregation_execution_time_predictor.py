@@ -88,6 +88,30 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 f"{valid_values}, got {distribution_type!r}"
             ) from exc
 
+    @staticmethod
+    def _split_cluster_tp_allreduce_times(
+        cluster_type: ClusterType,
+        attention_tp_allreduce_time: float,
+        moe_tp_allreduce_time: float,
+    ) -> tuple[float, float]:
+        """Keep TP all-reduce on the component the role actually executes.
+
+        A full block runs both the attention-output and FFN-output TP
+        all-reduces.  ``DECODE_ATTN`` runs only the former and ``DECODE_FFN``
+        only the latter; the other split field must be zero.  Otherwise both
+        ``ExecutionTime`` getters fall back to the shared legacy scalar and
+        the block prices one collective twice.
+        """
+
+        if cluster_type == ClusterType.DECODE_ATTN:
+            return float(attention_tp_allreduce_time), 0.0
+        if cluster_type == ClusterType.DECODE_FFN:
+            return 0.0, float(moe_tp_allreduce_time)
+        return (
+            float(attention_tp_allreduce_time),
+            float(moe_tp_allreduce_time),
+        )
+
     def __init__(
         self,
         predictor_config: BaseExecutionTimePredictorConfig,
@@ -827,6 +851,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             add_attn_residual_time = (
                 0.0 if architecture_profile.skip_decode_attn_residual else base_time
             )
+            attn_tp_allreduce_time, moe_tp_allreduce_time = (
+                self._split_cluster_tp_allreduce_times(
+                    cluster_type, tp_comm_time, 0.0
+                )
+            )
             return ExecutionTime(
                 num_layers_per_pipeline_stage=1,
                 attention_rope_execution_time=base_time,
@@ -841,6 +870,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_attn_residual_time=add_attn_residual_time,
                 add_ffn_residual_time=0.0,
                 tensor_parallel_communication_time=tp_comm_time,
+                attn_tensor_parallel_allreduce_time=attn_tp_allreduce_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=0.0,
                 expert_parallel_communication_time=0.0,
                 moe_gating_time=0.0,
@@ -876,6 +907,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time=base_time,
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
+                attn_tensor_parallel_allreduce_time=0.0,
                 moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=0.0,
                 expert_parallel_communication_time=ep_communication_time,
@@ -1593,6 +1625,19 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             add_attn_residual_time = self._get_add_layer_act_execution_time(batch)
             if architecture_profile.skip_decode_attn_residual:
                 add_attn_residual_time = 0.0
+            tp_allreduce_time = self._predict_one_op_time(
+                "tensor_parallel_communication_time",
+                communication_time.tensor_parallel_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            )
+            attn_tp_allreduce_time, moe_tp_allreduce_time = (
+                self._split_cluster_tp_allreduce_times(
+                    cluster_type, tp_allreduce_time, 0.0
+                )
+            )
             # Attention-only cluster
             return ExecutionTime(
                 num_layers_per_pipeline_stage=1,
@@ -1670,14 +1715,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     num_layers,
                 ),  # First residual connection: x + attention(x)
                 add_ffn_residual_time=0.0,
-                tensor_parallel_communication_time=self._predict_one_op_time(
-                    "tensor_parallel_communication_time",
-                    communication_time.tensor_parallel_time,
-                    batch,
-                    stage_id,
-                    cluster_type,
-                    num_layers,
-                ),
+                tensor_parallel_communication_time=tp_allreduce_time,
+                attn_tensor_parallel_allreduce_time=attn_tp_allreduce_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=communication_time.pipeline_parallel_time,
                 schedule_time=overhead_time.schedule_time,
                 sampler_e2e_time=overhead_time.sampler_e2e_time,
@@ -2009,6 +2049,19 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     add_attn_residual_time = 0.0
                     add_ffn_residual_time = add_time
                     add_time = 0.0
+                tp_allreduce_time = self._predict_one_op_time(
+                    "tensor_parallel_communication_time",
+                    communication_time.tensor_parallel_time,
+                    batch,
+                    stage_id,
+                    cluster_type,
+                    num_layers,
+                )
+                attn_tp_allreduce_time, moe_tp_allreduce_time = (
+                    self._split_cluster_tp_allreduce_times(
+                        cluster_type, 0.0, tp_allreduce_time
+                    )
+                )
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=1,
                     mlp_norm_time=self._predict_one_op_time(
@@ -2067,14 +2120,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         cluster_type,
                         num_layers,
                     ),
-                    tensor_parallel_communication_time=self._predict_one_op_time(
-                        "tensor_parallel_communication_time",
-                        communication_time.tensor_parallel_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
+                    tensor_parallel_communication_time=tp_allreduce_time,
+                    attn_tensor_parallel_allreduce_time=attn_tp_allreduce_time,
+                    moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                     pipeline_parallel_communication_time=communication_time.pipeline_parallel_time,
                     schedule_time=overhead_time.schedule_time,
                     sampler_e2e_time=overhead_time.sampler_e2e_time,

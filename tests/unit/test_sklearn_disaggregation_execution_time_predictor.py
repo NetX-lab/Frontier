@@ -12,14 +12,14 @@ from frontier.config import (
 )
 from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.entities import EPBatchGroup, Request
-from frontier.entities.time_components import AttentionTime
+from frontier.entities.time_components import AttentionTime, MLPTime
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
 )
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
-from frontier.model_architectures import ModelArchitectureProfile
+from frontier.model_architectures import ModelArchitectureProfile, ResidualAddPolicy
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.operators.families import get_comm_operator
 from frontier.operators.spec import CommPayloadContext
@@ -116,6 +116,23 @@ def _dummy_predictor(model_config: object) -> SklearnDisaggregationExecutionTime
         num_pipeline_stages=1,
     )
     return predictor
+
+
+def _zero_overhead_time() -> SimpleNamespace:
+    return SimpleNamespace(
+        schedule_time=0.0,
+        sampler_e2e_time=0.0,
+        prepare_inputs_e2e_time=0.0,
+        process_model_outputs_time=0.0,
+        ray_comm_time=0.0,
+        pp_producer_send_path_runtime_time=0.0,
+        pp_receiver_head_runtime_time=0.0,
+        pp_prefill_consumer_active_runtime_time=0.0,
+        pp_stage_boundary_residual_runtime_time=0.0,
+        pp_stage_boundary_handoff_time=0.0,
+        forward_launch_time=0.0,
+        forward_drain_time=0.0,
+    )
 
 
 def test_disaggregation_aggregate_constructor_preserves_all_routing_maps(
@@ -727,6 +744,124 @@ def test_dummy_decode_attn_allows_zero_moe_ep_for_attention_only_cluster() -> No
 
     assert execution_time._is_moe is False
     assert execution_time.expert_parallel_communication_time == 0.0
+
+
+def test_dummy_decode_attn_counts_attention_tp_allreduce_once() -> None:
+    predictor = _LayerDisaggregationPredictor()
+    predictor._dummy_execution_time = 10.0
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=_ProfileOnlyStep3ModelConfig(),
+        attn_tensor_parallel_size=4,
+        moe_tensor_parallel_size=0,
+        moe_expert_parallel_size=0,
+        num_pipeline_stages=1,
+    )
+
+    execution_time = predictor._get_dummy_execution_time_for_cluster(
+        batch=SimpleNamespace(),
+        pipeline_stage=0,
+        cluster_type=ClusterType.DECODE_ATTN,
+    )
+
+    assert execution_time.attention_all_reduce_time == pytest.approx(10.0)
+    assert execution_time.mlp_all_reduce_time == pytest.approx(0.0)
+
+
+def test_live_decode_attn_counts_attention_tp_allreduce_once() -> None:
+    predictor = _LayerDisaggregationPredictor()
+    predictor._enable_dummy_mode = False
+    predictor._cluster_type = ClusterType.DECODE_ATTN
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=_ProfileOnlyStep3ModelConfig(),
+        attn_tensor_parallel_size=2,
+        moe_tensor_parallel_size=0,
+        moe_expert_parallel_size=0,
+        num_pipeline_stages=1,
+    )
+    predictor._get_cluster_model_architecture_profile = (
+        lambda _cluster_type: _ProfileOnlyStep3ModelConfig().get_model_architecture_profile()
+    )
+    predictor._admit_routed_ep_aggregate = lambda *_args, **_kwargs: None
+    predictor._is_zero_token_decode_ffn_ep_barrier = lambda *_args, **_kwargs: False
+    predictor._activate_measurement_type_for_batch = lambda _batch: None
+    predictor._emit_cuda_graph_activation_records = lambda *_args, **_kwargs: None
+    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
+        tensor_parallel_time=10.0,
+        pipeline_parallel_time=0.0,
+    )
+    predictor._get_overhead_time = lambda *_args, **_kwargs: _zero_overhead_time()
+    predictor._predict_one_op_time = lambda _name, value, *_args, **_kwargs: value
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.5
+    predictor._get_add_layer_act_execution_time = lambda _batch: 0.25
+    predictor.predict_attention_layer_time = MagicMock(
+        return_value=AttentionTime(attention_decode_execution_time=1.0)
+    )
+
+    execution_time = predictor.predict_stage_execution_time(
+        batch=SimpleNamespace(id=1, total_num_tokens=8, requests=[]),
+        stage_id=0,
+        cluster_type=ClusterType.DECODE_ATTN,
+        num_layers=1,
+        layer_id=0,
+    )
+
+    assert execution_time.attention_all_reduce_time == pytest.approx(10.0)
+    assert execution_time.mlp_all_reduce_time == pytest.approx(0.0)
+
+
+def test_live_decode_ffn_dense_counts_mlp_tp_allreduce_once() -> None:
+    predictor = _LayerDisaggregationPredictor()
+    predictor._enable_dummy_mode = False
+    predictor._cluster_type = ClusterType.DECODE_FFN
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=1,
+        moe_expert_parallel_size=0,
+    )
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=_ProfileOnlyStep3ModelConfig(),
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=2,
+        moe_expert_parallel_size=0,
+        num_pipeline_stages=1,
+        router_topk=1,
+    )
+    predictor._get_cluster_model_architecture_profile = lambda _cluster_type: SimpleNamespace(
+        residual_add_policy=ResidualAddPolicy.FFN_RESIDUAL_ONLY,
+    )
+    predictor._resolve_moe_layer_classification = lambda *_args, **_kwargs: False
+    predictor._admit_routed_ep_aggregate = lambda *_args, **_kwargs: None
+    predictor._is_zero_token_decode_ffn_ep_barrier = lambda *_args, **_kwargs: False
+    predictor._activate_measurement_type_for_batch = lambda _batch: None
+    predictor._emit_cuda_graph_activation_records = lambda *_args, **_kwargs: None
+    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
+        tensor_parallel_time=10.0,
+        pipeline_parallel_time=0.0,
+    )
+    predictor._get_overhead_time = lambda *_args, **_kwargs: _zero_overhead_time()
+    predictor._predict_one_op_time = lambda _name, value, *_args, **_kwargs: value
+    predictor._get_add_layer_act_execution_time = lambda _batch: 0.25
+    predictor.predict_mlp_layer_time = MagicMock(
+        return_value=MLPTime(
+            mlp_layer_up_proj_execution_time=1.0,
+            mlp_layer_down_proj_execution_time=2.0,
+            mlp_layer_act_execution_time=0.5,
+            mlp_norm_time=0.0,
+        )
+    )
+
+    execution_time = predictor.predict_stage_execution_time(
+        batch=SimpleNamespace(id=2, total_num_tokens=8, requests=[]),
+        stage_id=0,
+        cluster_type=ClusterType.DECODE_FFN,
+        num_layers=1,
+        layer_id=0,
+        include_ffn=True,
+        include_moe=False,
+    )
+
+    assert execution_time.attention_all_reduce_time == pytest.approx(0.0)
+    assert execution_time.mlp_all_reduce_time == pytest.approx(10.0)
 
 
 def test_dummy_decode_ffn_rejects_zero_moe_ep_for_moe_cluster() -> None:
