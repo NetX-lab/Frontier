@@ -2614,7 +2614,7 @@ class MetricsStore:
                 mlp_memory_bytes = int(
                     param_counter.get_mlp_parameter_bytes_per_element()
                     * num_mlp_params_per_device
-                )
+                ) - param_counter.get_streamed_ffn_weight_bytes_per_device()
 
                 # Calculate memory utilization percentage
                 total_device_memory_gb = (
@@ -2692,6 +2692,14 @@ class MetricsStore:
                     },
                 }
 
+                if cluster_type == ClusterType.DECODE_FFN:
+                    cluster_memory_info["weight_residency"] = {
+                        "streamed_ffn_layers": getattr(replica_config, "streamed_ffn_layers", 0),
+                        "resident_weight_bytes": model_weight_memory_bytes,
+                        "off_device_weight_bytes": param_counter.get_streamed_ffn_weight_bytes_per_device(),
+                        "planned_staging_buffer_bytes": param_counter.get_ffn_streaming_buffer_bytes_per_device(),
+                        "measured_peak_bytes": None,
+                    }
                 model_weight_memory[cluster_type.name] = cluster_memory_info
 
                 # Add cluster configuration to system architecture info

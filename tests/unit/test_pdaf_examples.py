@@ -56,23 +56,22 @@ def _capture_cli(
 ) -> list[str]:
     capture_path = tmp_path / (relative.replace("/", "_") + ".argv")
     fake_python = tmp_path / "capture_python.sh"
-    fake_python.write_text(
-        "#!/bin/bash\n"
-        "set -euo pipefail\n"
-        "printf '%s\\n' \"$@\" > \"$CAPTURE_PATH\"\n",
-        encoding="utf-8",
+    fake_python.write_bytes(
+        b"#!/bin/bash\n"
+        b"set -euo pipefail\n"
+        b"printf '%s\\n' \"$@\" > \"$CAPTURE_PATH\"\n"
     )
     fake_python.chmod(0o755)
 
     env = os.environ.copy()
     env.update(
         {
-            "CAPTURE_PATH": str(capture_path),
-            "PYTHON_BIN": str(fake_python),
+            "CAPTURE_PATH": capture_path.as_posix(),
+            "PYTHON_BIN": fake_python.as_posix(),
             "NUM_REQUESTS": "1",
             "PREFILL_TOKENS": "16",
             "DECODE_TOKENS": "4",
-            "METRICS_OUTPUT_DIR": str(tmp_path / "metrics"),
+            "METRICS_OUTPUT_DIR": (tmp_path / "metrics").as_posix(),
         }
     )
     if env_overrides is not None:
@@ -349,7 +348,7 @@ def test_qwen3_4b_pdaf_script_uses_network_device_template_for_weight_streaming(
         tmp_path,
         "offline/qwen3_4b_pd_af.sh",
         env_overrides={
-            "OUT_DIR": str(tmp_path / "out"),
+            "OUT_DIR": (tmp_path / "out").as_posix(),
             "WEIGHT_STREAM_LAYERS": "3",
         },
     )
@@ -365,3 +364,30 @@ def test_qwen3_4b_pdaf_script_uses_network_device_template_for_weight_streaming(
     assert "{NETWORK_DEVICE}" in stream_template
     assert "{MODEL}" in stream_template
     assert stream_template.endswith("cpu_overheads_kernel_only_stream3.csv")
+    assert _option_value(argv, "--cluster_config_decode_ffn_replica_config_streamed_ffn_layers") == "3"
+
+
+def test_qwen3_4b_default_uses_burst_arrivals(tmp_path: Path) -> None:
+    argv = _capture_cli(
+        tmp_path,
+        "offline/qwen3_4b_pd_af.sh",
+        env_overrides={"OUT_DIR": (tmp_path / "out").as_posix(), "QPS": "5"},
+    )
+    assert _option_value(argv, "--interval_generator_config_type") == "static"
+    assert "--poisson_request_interval_generator_config_qps" not in argv
+    assert "--offline_use_generated_request_arrivals" not in argv
+
+
+def test_qwen3_4b_accepts_poisson_arrivals(tmp_path: Path) -> None:
+    argv = _capture_cli(
+        tmp_path,
+        "offline/qwen3_4b_pd_af.sh",
+        env_overrides={
+            "OUT_DIR": (tmp_path / "out").as_posix(),
+            "ARRIVAL_PATTERN": "poisson",
+            "QPS": "5",
+        },
+    )
+    assert _option_value(argv, "--interval_generator_config_type") == "poisson"
+    assert _option_value(argv, "--poisson_request_interval_generator_config_qps") == "5"
+    assert "--offline_use_generated_request_arrivals" in argv

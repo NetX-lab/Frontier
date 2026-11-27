@@ -57,8 +57,12 @@ bash examples/architecture/pd-af-disagg/offline/qwen3_4b_pd_af.sh
 
 ```bash
 PYTHON_BIN=.venv/bin/python \
-NUM_REQUESTS=8 PREFILL_TOKENS=512 DECODE_TOKENS=64 QPS=1.0 \
+NUM_REQUESTS=8 PREFILL_TOKENS=512 DECODE_TOKENS=64 ARRIVAL_PATTERN=burst \
 RUN_ID=my_run bash examples/architecture/pd-af-disagg/offline/qwen3_4b_pd_af.sh
+
+# 让请求按生成的时间到达，名义到达率为每秒 1 个请求
+PYTHON_BIN=.venv/bin/python ARRIVAL_PATTERN=poisson QPS=1 RUN_ID=poisson1 \
+bash examples/architecture/pd-af-disagg/offline/qwen3_4b_pd_af.sh
 
 # 0 = 36 层 FFN 全部常驻；1/2/3 = 流式对应层数
 PYTHON_BIN=.venv/bin/python WEIGHT_STREAM_LAYERS=3 RUN_ID=stream3 \
@@ -74,16 +78,21 @@ outputs/qwen3-4b-pd-af/qwen3_4b/offline_batch/<RUN_ID>/
 └── op_precision_metadata.csv
 ```
 
-## Baseline 结果（8 requests，prefill 512，decode 64，QPS 1.0）
+## Baseline 结果（8 个请求同时到达，每个输入 512、输出 64 个 token）
+
+默认 `ARRIVAL_PATTERN=burst` 让所有请求在时刻 0 到达，该模式下 `QPS` 不参与调度。下面两组权重策略沿用 PR #1 的 P→A NVLink 参考参数（3172.5 Gbit/s，启动延迟 0.0208 ms）。比较 GPU 与 GPU+LPU 时，两端应使用相同的到达序列和请求长度。
+
+`system_metrics.json` 的 `throughput_metrics.decode_tokens_per_second` 是整轮生成的输出 token 数除以从首个请求到达到最后一个请求完成的时间。`tokens_per_second` 使用同一分母，分子同时计入输入和输出。本轮两种口径的分子分别是 512 和 4,608；画解码输出吞吐图时取前者。
 
 ```text
 TTFT                 21.300 ms
 TPOT                  1.661 ms
 request E2E         125.926 ms
-tokens/s          36,592.8  （仿真聚合值）
+输出 tokens/s       4,065.87
+总 tokens/s        36,592.79  （含输入和输出）
 requests/s            63.53  （仿真聚合值）
-DECODE_ATTN E2E      90.89 ms / 64 个 decode step
-DECODE_FFN E2E        9.46 ms / 64 个 decode step
+DECODE_ATTN E2E      90.89 ms / 63 个后续 decode step
+DECODE_FFN E2E        9.46 ms / 63 个后续 decode step
 KV transfer           1.69 ms 总计（8 次传输）
 M2N transfer          4.06 ms 总计（4536 次传输）
 ```
@@ -110,8 +119,10 @@ TTFT 8.736 ms, TPOT 2.004 ms, DECODE_ATTN E2E 4.053 ms, FFN E2E 1.891 ms
 TTFT              21.300 ms
 TPOT               2.270 ms
 request E2E      164.297 ms
-DECODE_ATTN E2E   90.895 ms / 64 个 decode step
-DECODE_FFN E2E    47.830 ms / 64 个 decode step
+输出 tokens/s   3,116.31
+总 tokens/s    28,046.76  （含输入和输出）
+DECODE_ATTN E2E   90.895 ms / 63 个后续 decode step
+DECODE_FFN E2E    47.830 ms / 63 个后续 decode step
 ```
 
 流式 3 层是一阶上界：权重流式时间被分摊到 36 层的 CPU overhead 表里，
@@ -146,7 +157,7 @@ DECODE_FFN E2E    47.830 ms / 64 个 decode step
 4. **FP8 常驻权重内存核算**
    - `ParamCounter` 和 `system_metrics.model_weight_memory` 按配置的 MLP
      权重宽度计算（FP8 为 1 byte），不再固定按 2 bytes。
-   - DECODE_FFN 现在显示 168.1 MB / 83.5% 的 192 MiB SRAM 预算。
+   - 在 TP16 配置下，每个 HPP2 rank 的 36 层 FFN 权重共 168,099,840 字节。流式 3 层时，33 层常驻权重占 154,091,520 字节，串行传输另留一个 4,669,440 字节的单层暂存区，两项合计 158,760,960 字节（158.76 MB）。`system_metrics.json` 的 `model_weight_memory.DECODE_FFN.weight_residency` 分别列出常驻、离卡和计划暂存字节数。
 
 ## 从 LUT 拟合的 analytical 参数
 
@@ -161,9 +172,7 @@ DECODE_FFN E2E    47.830 ms / 64 个 decode step
 
 - HPP2 FFN 表是 **SOL 理论值**，不是实测；H200 attention/linear 表是
   2026-11-26 实测。
-- 全常驻 baseline 假设 36 层 FFN 都能放进每 die 192 MiB。按约 170 MiB
-  可用算是临界情况；用 `WEIGHT_STREAM_LAYERS=3` 跑 33 层常驻 + 3 层流式，
-  或者降低 batch / 提高 SRAM 预算。
+- 模拟器以每个 die 名义 192 MiB 计算容量，AI Lab 的 FFN 表另列 170 MB 的可用预算。TP16 全常驻时在后一个预算下只余约 1.90 MB。筛选卡数时，FFN 容量规划器会拒绝常驻权重、计划暂存与显式预留已耗尽设备预算的配置；最终能否部署还需核对激活和工作区的实际峰值。
 - H200 CPU overhead 表没有安装；H200 host 项按 0 计并打 warning。
   HPP2 CPU overhead 已使用。
 - `moe_grouped_gemm`/`moe_*` 的 warning 来自共享默认 MoE 路径；

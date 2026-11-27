@@ -239,6 +239,14 @@ class ClusterConfig(ClusterRoleConfigBuilder, ClusterTopologySummary):
             "mode_dependency": "pd-af-disaggregation",
         },
     )
+    decode_ffn_replica_config_streamed_ffn_layers: Optional[int] = field(
+        default=None,
+        kw_only=True,
+        metadata={
+            "help": "Dense FFN layers whose weights are streamed per decode step.",
+            "mode_dependency": "pd-af-disaggregation",
+        },
+    )
     decode_ffn_replica_config_num_pipeline_stages: Optional[int] = field(
         default=None,
         metadata={

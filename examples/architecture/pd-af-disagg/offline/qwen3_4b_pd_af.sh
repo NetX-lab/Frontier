@@ -30,7 +30,7 @@ OUT_DIR="${OUT_DIR:-$REPO_ROOT/outputs/qwen3-4b-pd-af}"
 NUM_REQUESTS="${NUM_REQUESTS:-8}"
 PREFILL_TOKENS="${PREFILL_TOKENS:-512}"
 DECODE_TOKENS="${DECODE_TOKENS:-64}"
-QPS="${QPS:-1.0}"
+ARRIVAL_PATTERN="${ARRIVAL_PATTERN:-burst}"
 WEIGHT_STREAM_LAYERS="${WEIGHT_STREAM_LAYERS:-0}"
 
 cd "$REPO_ROOT"
@@ -70,6 +70,27 @@ case "$WEIGHT_STREAM_LAYERS" in
     ;;
   *)
     echo "ERROR: WEIGHT_STREAM_LAYERS must be 0, 1, 2, or 3; got $WEIGHT_STREAM_LAYERS" >&2
+    exit 2
+    ;;
+esac
+
+case "$ARRIVAL_PATTERN" in
+  burst)
+    ARRIVAL_ARGS=(--interval_generator_config_type static)
+    ARRIVAL_DESCRIPTION="all requests arrive at time 0"
+    if [ -n "${QPS:-}" ]; then
+      echo "Note: QPS is ignored for a burst; set ARRIVAL_PATTERN=poisson to use QPS." >&2
+    fi
+    ;;
+  poisson)
+    QPS="${QPS:-1.0}"
+    ARRIVAL_ARGS=(--interval_generator_config_type poisson
+                  --poisson_request_interval_generator_config_qps "$QPS"
+                  --offline_use_generated_request_arrivals)
+    ARRIVAL_DESCRIPTION="Poisson arrivals, offered QPS=$QPS"
+    ;;
+  *)
+    echo "ERROR: ARRIVAL_PATTERN must be burst or poisson; got $ARRIVAL_PATTERN" >&2
     exit 2
     ;;
 esac
@@ -118,6 +139,7 @@ CMD=(
   --cluster_config_decode_ffn_replica_config_total_expert_num 1
   --cluster_config_decode_ffn_replica_config_router_topk 1
   --cluster_config_decode_ffn_replica_config_device hpp2
+  --cluster_config_decode_ffn_replica_config_streamed_ffn_layers "$WEIGHT_STREAM_LAYERS"
   --cluster_config_decode_ffn_replica_config_network_device hpp2_16rank
   --cluster_config_decode_ffn_replica_config_memory_margin_fraction 0.0
 
@@ -154,8 +176,7 @@ CMD=(
   --length_generator_config_type fixed
   --fixed_request_length_generator_config_prefill_tokens "$PREFILL_TOKENS"
   --fixed_request_length_generator_config_decode_tokens "$DECODE_TOKENS"
-  --interval_generator_config_type poisson
-  --poisson_request_interval_generator_config_qps "$QPS"
+  "${ARRIVAL_ARGS[@]}"
 
   # Use the filled HPP2 CPU-overhead table.  H200 clusters have no table and
   # will log a warning and price their host terms as 0.
@@ -191,7 +212,7 @@ echo " model: Qwen3-4B"
 echo " PREFILL:    h200 x8, attn TP8"
 echo " DECODE_ATTN:h200 x8, attn TP8"
 echo " DECODE_FFN: hpp2 x8/16 ranks, FFN TP16"
-echo " requests:   $NUM_REQUESTS, prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS, qps=$QPS"
+echo " requests:   $NUM_REQUESTS, prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS; $ARRIVAL_DESCRIPTION"
 echo " weight stream: $WEIGHT_STREAM_LAYERS layer(s) (0 = all resident)"
 echo " metrics:    $OUT_DIR/$RUN_ID"
 echo "========================================================="
