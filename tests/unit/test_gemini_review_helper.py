@@ -70,8 +70,8 @@ def test_codex_workflow_yaml_and_guardrails_are_valid() -> None:
         "reopened",
         "synchronize",
         "ready_for_review",
-        "edited",
     }
+    assert "edited" not in pr_trigger["types"]
 
     review_job = workflow["jobs"]["review"]
     publish_job = workflow["jobs"]["publish"]
@@ -79,7 +79,14 @@ def test_codex_workflow_yaml_and_guardrails_are_valid() -> None:
     assert publish_job["permissions"] == {"pull-requests": "write"}
     assert review_job["timeout-minutes"] <= 20
     assert publish_job["timeout-minutes"] <= 10
-    assert "github.event.changes.base" in review_job["if"]
+    assert "artifact_name" in review_job["outputs"]
+    download_steps = [
+        step
+        for step in publish_job["steps"]
+        if str(step.get("uses", "")).startswith("actions/download-artifact@")
+    ]
+    assert len(download_steps) == 1
+    assert download_steps[0]["with"]["name"] == "${{ needs.review.outputs.artifact_name }}"
 
     codex_steps = [
         step

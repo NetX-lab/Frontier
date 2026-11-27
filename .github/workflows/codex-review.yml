@@ -5,7 +5,7 @@ name: Codex PR Review
 on:
   pull_request:
     branches: [qwen3-4b-pd-af-simulator]
-    types: [opened, reopened, synchronize, ready_for_review, edited]
+    types: [opened, reopened, synchronize, ready_for_review]
 
 concurrency:
   group: codex-pr-review-${{ github.event.pull_request.number }}
@@ -16,14 +16,14 @@ jobs:
     if: >-
       github.event.pull_request.draft == false &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.actor != 'dependabot[bot]' &&
-      (github.event.action != 'edited' || github.event.changes.base != null)
+      github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
     outputs:
       has_review: ${{ steps.prepare_publish.outputs.has_review }}
+      artifact_name: ${{ steps.prepare_publish.outputs.artifact_name }}
       skipped_files: ${{ steps.prepare.outputs.skipped_files }}
     steps:
       - name: Check OPENAI_API_KEY secret
@@ -212,26 +212,32 @@ jobs:
         if: steps.prepare.outputs.reviewable_files != '0'
         env:
           OUTPUT_FILE: ${{ runner.temp }}/codex-review.md
+          ARTIFACT_NAME: codex-review-body-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           python3 - <<'PY'
           import os
           from pathlib import Path
 
           output_path = Path(os.environ["OUTPUT_FILE"])
+          artifact_name = os.environ["ARTIFACT_NAME"]
           text = output_path.read_text(encoding="utf-8").strip() if output_path.is_file() else ""
           has_review = "true" if text else "false"
           gh_output = os.environ.get("GITHUB_OUTPUT")
           if gh_output:
               with open(gh_output, "a", encoding="utf-8") as fh:
                   fh.write(f"has_review={has_review}\n")
-          print(f"Codex review output chars: {len(text)} (has_review={has_review})")
+                  fh.write(f"artifact_name={artifact_name}\n")
+          print(
+              f"Codex review output chars: {len(text)} "
+              f"(has_review={has_review}, artifact_name={artifact_name})"
+          )
           PY
 
       - name: Upload Codex review body artifact
         if: steps.prepare_publish.outputs.has_review == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: codex-review-body-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ steps.prepare_publish.outputs.artifact_name }}
           path: ${{ runner.temp }}/codex-review.md
           retention-days: 1
           if-no-files-found: error
@@ -247,7 +253,7 @@ jobs:
       - name: Download Codex review body artifact
         uses: actions/download-artifact@v4
         with:
-          name: codex-review-body-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ needs.review.outputs.artifact_name }}
           path: ${{ runner.temp }}/codex-review
 
       - name: Post review to the pull request
